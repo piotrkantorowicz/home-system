@@ -24,31 +24,31 @@ export default function Dashboard() {
 
   const goalItems = [
     {
-      label: t('diet-planner:dashboard.goal_calories'),
+      label: t('dashboard.goal_calories'),
       value: goalsData?.dailyCalorieTarget ?? '\u2014',
       unit: ' kcal',
       color: 'bg-orange-500',
     },
     {
-      label: t('diet-planner:dashboard.goal_protein'),
+      label: t('dashboard.goal_protein'),
       value: goalsData?.proteinGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-blue-500',
     },
     {
-      label: t('diet-planner:dashboard.goal_carbs'),
+      label: t('dashboard.goal_carbs'),
       value: goalsData?.carbsGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-emerald-500',
     },
     {
-      label: t('diet-planner:dashboard.goal_fat'),
+      label: t('dashboard.goal_fat'),
       value: goalsData?.fatGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-amber-500',
     },
     {
-      label: t('diet-planner:dashboard.goal_fiber'),
+      label: t('dashboard.goal_fiber'),
       value: goalsData?.fiberGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-purple-500',
@@ -163,16 +163,16 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <CardTitle className="text-lg">
-                    {t('diet-planner:dashboard.goals_title')}
+                    {t('dashboard.goals_title')}
                   </CardTitle>
-                  <CardDescription>{t('diet-planner:dashboard.goals_subtitle')}</CardDescription>
+                  <CardDescription>{t('dashboard.goals_subtitle')}</CardDescription>
                 </div>
               </div>
               <Link
                 to="/diet-planner/goals"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                {t('diet-planner:dashboard.goals_edit')}
+                {t('dashboard.goals_edit')}
               </Link>
             </div>
           </CardHeader>

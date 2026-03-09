@@ -29,7 +29,7 @@ type GoalFormData = z.infer<typeof goalSchema>;
 const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
 export default function Goals() {
-  const { t } = useTranslation('diet-planner');
+  const { t } = useTranslation();
   const { data: goals, isLoading } = useGoals();
   const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
