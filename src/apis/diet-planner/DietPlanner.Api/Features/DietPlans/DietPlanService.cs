@@ -1,12 +1,14 @@
 using DietPlanner.Api.Common.Exceptions;
 using DietPlanner.Api.Common.Models;
 using DietPlanner.Api.Data;
+using DietPlanner.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietPlanner.Api.Features.DietPlans;
 
 public interface IDietPlanService
 {
+    Task<DietPlanDetailDto> CreateAsync(string userId, CreateDietPlanRequest request);
     Task<PagedResult<DietPlanSummaryDto>> GetUserPlansAsync(string userId, int page, int pageSize);
     Task<DietPlanDetailDto> GetByIdAsync(Guid id, string userId);
     Task DeleteAsync(Guid id, string userId, bool permanent = false);
@@ -27,6 +29,26 @@ public class DietPlanService : IDietPlanService
         _db = db;
         _logger = logger;
         _env = env;
+    }
+
+    public async Task<DietPlanDetailDto> CreateAsync(string userId, CreateDietPlanRequest request)
+    {
+        var plan = new DietPlan
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = request.Name,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        _db.DietPlans.Add(plan);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Diet plan created: {PlanId} for user {UserId}", plan.Id, userId);
+
+        return DietPlanDetailDto.FromEntity(plan, 0);
     }
 
     public async Task<PagedResult<DietPlanSummaryDto>> GetUserPlansAsync(

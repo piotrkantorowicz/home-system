@@ -70,9 +70,10 @@
   "diet_plans": {
     "title": "Plany Dietetyczne",
     "subtitle": "Zarządzaj swoimi planami posiłków i śledź wartości odżywcze",
+    "new_plan": "Nowy Plan",
     "import_plan": "Importuj Plan Diety",
     "no_plans_yet": "Brak planów dietetycznych",
-    "start_importing": "Zacznij od zaimportowania swojego pierwszego planu diety",
+    "start_importing": "Zacznij od utworzenia lub zaimportowania swojego pierwszego planu diety",
     "import_first_plan": "Zaimportuj Swój Pierwszy Plan",
     "total_days": "Łącznie Dni",
     "total_meals": "Łącznie Posiłków",
@@ -207,6 +208,14 @@
     "deleting": "Usuwanie...",
     "saving": "Zapisywanie...",
     "loading": "Ładowanie..."
+  },
+  "diet_plan_form": {
+    "title": "Utwórz Nowy Plan Diety",
+    "name_label": "Nazwa Planu *",
+    "name_placeholder": "np. Dieta Tydzień 1",
+    "start_date_label": "Data Początku *",
+    "end_date_label": "Data Końca *",
+    "create_btn": "Utwórz Plan"
   },
   "product_form": {
     "edit_title": "Edytuj Produkt",

@@ -90,6 +90,30 @@ export function useMeals(id: string, from?: string, to?: string) {
   });
 }
 
+interface CreateDietPlanData {
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
+export function useCreateDietPlan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateDietPlanData): Promise<DietPlan> => {
+      const response = await api.POST('/api/v1/diet-plans', {
+        body: data as never,
+      });
+
+      if (response.error) throw new Error('Failed to create diet plan');
+      return response.data as DietPlan;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diet-plans'] });
+    },
+  });
+}
+
 export function useValidateImport() {
   return useMutation({
     mutationFn: async (importData: components['schemas']['ImportDto']) => {
