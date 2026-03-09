@@ -11,8 +11,7 @@ namespace DietPlanner.Api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "user_goals");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS user_goals;");
         }
 
         /// <inheritdoc />
