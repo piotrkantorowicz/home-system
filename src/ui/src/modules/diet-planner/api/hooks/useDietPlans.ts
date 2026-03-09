@@ -227,6 +227,54 @@ export function useDeleteMeal(dietPlanId: string) {
   });
 }
 
+export type DailyNutrition = {
+  date: string;
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  totalFiber: number;
+  mealCount: number;
+  caloriesStatus: string;
+  proteinStatus: string;
+  carbsStatus: string;
+  fatStatus: string;
+  fiberStatus: string;
+};
+
+export type DailyNutritionResponse = {
+  goals: {
+    dailyCalorieTarget: number | null;
+    proteinGrams: number | null;
+    carbsGrams: number | null;
+    fatGrams: number | null;
+    fiberGrams: number | null;
+  } | null;
+  days: DailyNutrition[];
+};
+
+export function useDailyNutrition(dietPlanId: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: ['diet-plans', dietPlanId, 'daily-nutrition', { from, to }],
+    queryFn: async (): Promise<DailyNutritionResponse> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (api as any).GET('/api/v1/diet-plans/{id}/daily-nutrition', {
+        params: {
+          path: { id: dietPlanId },
+          query: { from, to },
+        },
+      });
+
+      if (response.error) {
+        throw new Error('Failed to fetch daily nutrition');
+      }
+
+      return response.data as DailyNutritionResponse;
+    },
+    enabled: !!dietPlanId,
+  });
+}
+
 export function useDeleteDietPlan() {
   const queryClient = useQueryClient();
 

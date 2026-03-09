@@ -48,6 +48,20 @@
     "save_btn": "Zapisz Cele",
     "save_success": "Cele zapisane pomyślnie!"
   },
+  "nutrition": {
+    "title": "Żywienie vs Cele",
+    "calories": "Kalorie",
+    "protein": "Białko",
+    "carbs": "Węglowodany",
+    "fat": "Tłuszcz",
+    "fiber": "Błonnik",
+    "status_met": "Cel osiągnięty",
+    "status_partial": "Częściowo osiągnięty",
+    "status_missed": "Nieosiągnięty",
+    "status_exceeded": "Przekroczony",
+    "status_no_goal": "Brak celu",
+    "no_goals": "Ustaw cele żywieniowe, aby śledzić postępy"
+  },
   "products": {
     "title": "Produkty",
     "subtitle": "Zarządzaj swoimi produktami spożywczymi i ich informacjami żywieniowymi",

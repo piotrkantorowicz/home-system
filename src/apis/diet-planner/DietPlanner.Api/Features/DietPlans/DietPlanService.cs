@@ -1,7 +1,10 @@
 using DietPlanner.Api.Common.Exceptions;
 using DietPlanner.Api.Common.Models;
+using DietPlanner.Api.Common.Utils;
 using DietPlanner.Api.Data;
 using DietPlanner.Api.Domain;
+using DietPlanner.Api.Features.Goals;
+using DietPlanner.Api.Features.Recipes;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietPlanner.Api.Features.DietPlans;
@@ -13,6 +16,7 @@ public interface IDietPlanService
     Task<DietPlanDetailDto> GetByIdAsync(Guid id, string userId);
     Task DeleteAsync(Guid id, string userId, bool permanent = false);
     Task<List<MealEntryDto>> GetMealsAsync(Guid id, string userId, DateOnly? from, DateOnly? to);
+    Task<DailyNutritionResponse> GetDailyNutritionAsync(Guid id, string userId, DateOnly? from, DateOnly? to);
 }
 
 public class DietPlanService : IDietPlanService
@@ -20,15 +24,21 @@ public class DietPlanService : IDietPlanService
     private readonly AppDbContext _db;
     private readonly ILogger<DietPlanService> _logger;
     private readonly IWebHostEnvironment _env;
+    private readonly INutritionCalculator _nutritionCalculator;
+    private readonly IGoalService _goalService;
 
     public DietPlanService(
         AppDbContext db,
         ILogger<DietPlanService> logger,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        INutritionCalculator nutritionCalculator,
+        IGoalService goalService)
     {
         _db = db;
         _logger = logger;
         _env = env;
+        _nutritionCalculator = nutritionCalculator;
+        _goalService = goalService;
     }
 
     public async Task<DietPlanDetailDto> CreateAsync(string userId, CreateDietPlanRequest request)
@@ -188,5 +198,109 @@ public class DietPlanService : IDietPlanService
             .ToListAsync();
 
         return meals.Select(MealEntryDto.FromEntity).ToList();
+    }
+
+    public async Task<DailyNutritionResponse> GetDailyNutritionAsync(
+        Guid id, string userId, DateOnly? from, DateOnly? to)
+    {
+        var plan = await _db.DietPlans
+            .AsNoTracking()
+            .FirstOrDefaultAsync(dp => dp.Id == id)
+            ?? throw new NotFoundException("Diet plan", id);
+
+        if (plan.UserId != userId)
+            throw new ForbiddenException("You can only access your own diet plans");
+
+        var startDate = from ?? plan.StartDate;
+        var endDate = to ?? plan.EndDate;
+
+        var meals = await _db.MealEntries
+            .Include(me => me.Recipe)
+                .ThenInclude(r => r.Ingredients)
+                    .ThenInclude(i => i.Product)
+            .Where(me => me.DietPlanId == id &&
+                         me.Date >= startDate &&
+                         me.Date <= endDate)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var goals = await _goalService.GetAsync(userId);
+        var mealsByDate = meals.GroupBy(m => m.Date).ToDictionary(g => g.Key, g => g.ToList());
+
+        var days = new List<DailyNutritionDto>();
+
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            var dayMeals = mealsByDate.GetValueOrDefault(date, []);
+            decimal totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, totalFiber = 0;
+
+            foreach (var meal in dayMeals)
+            {
+                if (meal.Recipe == null) continue;
+
+                var nutrition = _nutritionCalculator.CalculateNutritionForServings(meal.Recipe, meal.Servings);
+                totalCalories += nutrition.Calories;
+                totalProtein += nutrition.Protein;
+                totalCarbs += nutrition.Carbs;
+                totalFat += nutrition.Fat;
+
+                // Calculate fiber separately (not included in NutritionInfo)
+                if (meal.Recipe.Ingredients != null)
+                {
+                    decimal recipeTotalFiber = 0;
+                    foreach (var ingredient in meal.Recipe.Ingredients)
+                    {
+                        if (ingredient.Product?.FiberPer100g == null) continue;
+                        var grams = UnitConverter.ConvertToGrams(
+                            ingredient.Amount, ingredient.Unit, ingredient.Product);
+                        recipeTotalFiber += ingredient.Product.FiberPer100g.Value * (grams / 100m);
+                    }
+                    var recipeServings = Math.Max(meal.Recipe.Servings, 1);
+                    totalFiber += Math.Round(recipeTotalFiber / recipeServings * meal.Servings, 1);
+                }
+            }
+
+            days.Add(new DailyNutritionDto
+            {
+                Date = date,
+                TotalCalories = Math.Round(totalCalories, 1),
+                TotalProtein = Math.Round(totalProtein, 1),
+                TotalCarbs = Math.Round(totalCarbs, 1),
+                TotalFat = Math.Round(totalFat, 1),
+                TotalFiber = Math.Round(totalFiber, 1),
+                MealCount = dayMeals.Count,
+                CaloriesStatus = ComputeStatus(totalCalories, goals?.DailyCalorieTarget),
+                ProteinStatus = ComputeStatus(totalProtein, goals?.ProteinGrams),
+                CarbsStatus = ComputeStatus(totalCarbs, goals?.CarbsGrams),
+                FatStatus = ComputeStatus(totalFat, goals?.FatGrams),
+                FiberStatus = ComputeStatus(totalFiber, goals?.FiberGrams),
+            });
+        }
+
+        return new DailyNutritionResponse
+        {
+            Goals = goals,
+            Days = days,
+        };
+    }
+
+    private static string ComputeStatus(decimal actual, decimal? goal)
+    {
+        if (!goal.HasValue || goal.Value == 0) return "no_goal";
+
+        var ratio = actual / goal.Value;
+
+        return ratio switch
+        {
+            >= 0.9m and <= 1.1m => "met",
+            >= 0.7m and < 0.9m => "partial",
+            > 1.1m => "exceeded",
+            _ => "missed",
+        };
+    }
+
+    private static string ComputeStatus(decimal actual, int? goal)
+    {
+        return ComputeStatus(actual, goal.HasValue ? (decimal?)goal.Value : null);
     }
 }
