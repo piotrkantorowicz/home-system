@@ -51,7 +51,7 @@ export function MealForm({
   isSubmitting,
   mode,
 }: MealFormProps) {
-  const { t } = useTranslation('diet-planner');
+  const { t } = useTranslation();
   const [recipeSearch, setRecipeSearch] = useState(initialValues?.recipeName ?? '');
   const [showRecipeList, setShowRecipeList] = useState(false);
   const [form, setForm] = useState<MealFormData>({

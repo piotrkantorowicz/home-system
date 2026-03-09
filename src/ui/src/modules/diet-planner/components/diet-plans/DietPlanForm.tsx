@@ -25,7 +25,7 @@ interface DietPlanFormProps {
 }
 
 export function DietPlanForm({ open, onClose, onSubmit, isSubmitting }: DietPlanFormProps) {
-  const { t } = useTranslation('diet-planner');
+  const { t } = useTranslation();
   const [form, setForm] = useState<DietPlanFormData>({
     name: '',
     startDate: '',
