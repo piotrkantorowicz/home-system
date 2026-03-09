@@ -14,6 +14,29 @@ public static class DietPlanEndpoints
             .WithTags("Diet Plans")
             .RequireAuthorization();
 
+        // POST /api/v1/diet-plans - Create a new diet plan manually
+        group.MapPost("/", async (
+            HttpContext context,
+            [FromBody] CreateDietPlanRequest request,
+            [FromServices] IDietPlanService service,
+            [FromServices] IValidator<CreateDietPlanRequest> validator) =>
+        {
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
+
+            var userId = context.User.GetUserId();
+            var result = await service.CreateAsync(userId, request);
+
+            return Results.Created($"/api/v1/diet-plans/{result.Id}", result);
+        })
+        .RequireRateLimiting("api")
+        .WithName("CreateDietPlan")
+        .WithSummary("Create a new diet plan")
+        .WithDescription("Creates an empty diet plan with a name and date range. Meals can be added manually afterwards.")
+        .Produces<DietPlanDetailDto>(StatusCodes.Status201Created)
+        .Produces(StatusCodes.Status400BadRequest);
+
         // POST /api/v1/diet-plans/validate - Validate import JSON (dry run)
         group.MapPost("/validate", async (
             HttpContext context,

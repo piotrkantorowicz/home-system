@@ -70,9 +70,10 @@
   "diet_plans": {
     "title": "Diet Plans",
     "subtitle": "Manage your meal plans and track your nutrition",
+    "new_plan": "New Plan",
     "import_plan": "Import Diet Plan",
     "no_plans_yet": "No diet plans yet",
-    "start_importing": "Get started by importing your first diet plan",
+    "start_importing": "Get started by creating or importing your first diet plan",
     "import_first_plan": "Import Your First Plan",
     "total_days": "Total Days",
     "total_meals": "Total Meals",
@@ -207,6 +208,14 @@
     "deleting": "Deleting...",
     "saving": "Saving...",
     "loading": "Loading..."
+  },
+  "diet_plan_form": {
+    "title": "Create New Diet Plan",
+    "name_label": "Plan Name *",
+    "name_placeholder": "e.g., Week 1 Diet",
+    "start_date_label": "Start Date *",
+    "end_date_label": "End Date *",
+    "create_btn": "Create Plan"
   },
   "product_form": {
     "edit_title": "Edit Product",

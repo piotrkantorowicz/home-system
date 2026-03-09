@@ -93,6 +93,18 @@ public class DietPlanDetailDto
 }
 
 /// <summary>
+/// Request to manually create a new diet plan.
+/// </summary>
+public record CreateDietPlanRequest(
+    [property: Description("Diet plan name")]
+    string Name,
+    [property: Description("Plan start date (inclusive, YYYY-MM-DD)")]
+    DateOnly StartDate,
+    [property: Description("Plan end date (inclusive, YYYY-MM-DD)")]
+    DateOnly EndDate
+);
+
+/// <summary>
 /// Request to create a new meal entry.
 /// </summary>
 public record CreateMealEntryRequest(

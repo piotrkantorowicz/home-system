@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Upload, Eye, Trash2, Calendar } from 'lucide-react';
-import { useDietPlans, useDeleteDietPlan } from '@modules/diet-planner/api/hooks/useDietPlans';
+import { Upload, Eye, Trash2, Calendar, Plus } from 'lucide-react';
+import {
+  useDietPlans,
+  useDeleteDietPlan,
+  useCreateDietPlan,
+} from '@modules/diet-planner/api/hooks/useDietPlans';
+import { DietPlanForm } from '@modules/diet-planner/components/diet-plans/DietPlanForm';
 import {
   Button,
   Card,
@@ -20,12 +25,15 @@ import {
 
 export default function DietPlanList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [createFormOpen, setCreateFormOpen] = useState(false);
 
   const { data, isLoading, error } = useDietPlans({ page, pageSize: 50 });
   const deleteMutation = useDeleteDietPlan();
+  const createMutation = useCreateDietPlan();
 
   const handleDelete = async () => {
     if (planToDelete) {
@@ -40,6 +48,12 @@ export default function DietPlanList() {
     setDeleteDialogOpen(true);
   };
 
+  const handleCreatePlan = async (data: { name: string; startDate: string; endDate: string }) => {
+    const plan = await createMutation.mutateAsync(data);
+    setCreateFormOpen(false);
+    navigate(`/diet-planner/diet-plans/${plan.id}`);
+  };
+
   return (
     <div className="p-8 lg:p-10 animate-fade-in-up">
       <div className="mb-8 flex items-center justify-between">
@@ -47,12 +61,18 @@ export default function DietPlanList() {
           <h1 className="text-4xl font-bold tracking-tight mb-2">{t('diet_plans.title')}</h1>
           <p className="text-muted-foreground text-[0.95rem]">{t('diet_plans.subtitle')}</p>
         </div>
-        <Link to="/diet-planner/diet-plans/import">
-          <Button>
-            <Upload className="mr-2 h-4 w-4" />
-            {t('diet_plans.import_plan')}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setCreateFormOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('diet_plans.new_plan')}
           </Button>
-        </Link>
+          <Link to="/diet-planner/diet-plans/import">
+            <Button>
+              <Upload className="mr-2 h-4 w-4" />
+              {t('diet_plans.import_plan')}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {error && (
@@ -72,12 +92,18 @@ export default function DietPlanList() {
           </div>
           <p className="text-xl font-semibold mb-2">{t('diet_plans.no_plans_yet')}</p>
           <p className="text-muted-foreground mb-6">{t('diet_plans.start_importing')}</p>
-          <Link to="/diet-planner/diet-plans/import">
-            <Button>
-              <Upload className="mr-2 h-4 w-4" />
-              {t('diet_plans.import_first_plan')}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setCreateFormOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('diet_plans.new_plan')}
             </Button>
-          </Link>
+            <Link to="/diet-planner/diet-plans/import">
+              <Button>
+                <Upload className="mr-2 h-4 w-4" />
+                {t('diet_plans.import_first_plan')}
+              </Button>
+            </Link>
+          </div>
         </div>
       ) : (
         <>
@@ -171,6 +197,13 @@ export default function DietPlanList() {
           )}
         </>
       )}
+
+      <DietPlanForm
+        open={createFormOpen}
+        onClose={() => setCreateFormOpen(false)}
+        onSubmit={handleCreatePlan}
+        isSubmitting={createMutation.isPending}
+      />
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>

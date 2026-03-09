@@ -52,7 +52,7 @@ type Meal = {
 };
 
 export default function DietPlanDetail() {
-  const { t } = useTranslation('diet-planner');
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data: plan, isLoading: planLoading } = useDietPlan(id!);
   const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(new Date());
