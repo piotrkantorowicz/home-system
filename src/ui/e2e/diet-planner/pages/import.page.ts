@@ -22,7 +22,7 @@ export class ImportPage {
   }
 
   async goto() {
-    await this.page.goto('/diet-plans/import');
+    await this.page.goto('/diet-planner/diet-plans/import');
   }
 
   async loadSample() {
@@ -70,7 +70,7 @@ export class ImportPage {
       this.importButton
     );
 
-    await this.page.waitForURL('/diet-plans', { timeout: 15000 });
+    await this.page.waitForURL('/diet-planner/diet-plans', { timeout: 15000 });
   }
 
   private async clickAndHandleRateLimit(

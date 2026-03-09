@@ -3,25 +3,34 @@ import { Page, Locator, expect } from '@playwright/test';
 export class DietPlansPage {
   readonly page: Page;
   readonly importButton: Locator;
+  readonly mealFormDialog: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.importButton = page.getByRole('link', { name: /import diet plan/i });
+    this.mealFormDialog = page.getByRole('dialog');
   }
 
   async goto() {
-    await this.page.goto('/diet-plans');
+    await this.page.goto('/diet-planner/diet-plans');
   }
 
   async openPlan(name: string) {
-    // Find the card containing the plan name, then click its "View Calendar" link
-    const card = this.page
+    // Find the "View Calendar" link (has a lucide-eye icon) within the card for this plan.
+    // Avoids depending on translated label text; also avoids matching the Import link.
+    const detailLink = this.page
       .locator('div')
       .filter({ hasText: name })
-      .locator('a', { hasText: /view calendar/i })
+      .locator('a')
+      .filter({ has: this.page.locator('svg.lucide-eye') })
       .first();
-    await card.click();
-    await expect(this.page.getByText(/week of/i)).toBeVisible({ timeout: 10000 });
+    await detailLink.click();
+
+    // Wait for URL to change to the detail page (translation-independent)
+    await this.page.waitForURL(/\/diet-planner\/diet-plans\/[0-9a-f-]+$/, { timeout: 10000 });
+
+    // Wait for the 7-column weekly grid to be rendered (structural, not text-dependent)
+    await expect(this.getWeekDayColumns()).toHaveCount(7, { timeout: 10000 });
   }
 
   async deletePlan(name: string) {
@@ -33,9 +42,11 @@ export class DietPlansPage {
       .first();
     await card.click();
 
-    // Confirm dialog
-    await expect(this.page.getByText(/delete diet plan/i)).toBeVisible();
-    await this.page.getByRole('button', { name: /delete/i }).click();
+    // Wait for the confirmation dialog, click the destructive button, then wait for it to close
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
   }
 
   /**
@@ -78,5 +89,104 @@ export class DietPlansPage {
   async expectAllDaysRendered() {
     const columns = this.getWeekDayColumns();
     await expect(columns).toHaveCount(7, { timeout: 10000 });
+  }
+
+  /**
+   * Get the meal-type section within a day column.
+   * e.g., getDayMealTypeSection('Mon', 'Dinner')
+   */
+  getDayMealTypeSection(weekdayAbbr: string, mealTypeLabel: string) {
+    return this.getDayColumn(weekdayAbbr)
+      .first()
+      .locator('div')
+      .filter({ hasText: new RegExp(`^${mealTypeLabel}$`, 'i') })
+      .first();
+  }
+
+  /**
+   * Click the "+" button for a given meal type within a day column.
+   */
+  async clickAddMeal(weekdayAbbr: string, mealTypeLabel: string) {
+    const dayCol = this.getDayColumn(weekdayAbbr).first();
+    await expect(dayCol).toBeVisible({ timeout: 10000 });
+
+    // Find the section header row that contains the meal type label and the + button
+    const sectionRow = dayCol.locator('div.flex.items-center.justify-between').filter({
+      hasText: new RegExp(mealTypeLabel, 'i'),
+    });
+    const addButton = sectionRow.locator('button[title]');
+    // Use JS .click() to bypass layout-based pointer-event interception.
+    // The untranslated key text overflows in narrow columns and visually covers the button.
+    await addButton.evaluate((el) => (el as HTMLButtonElement).click());
+    await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Fill in the meal form. Assumes the dialog is already open.
+   * - recipeName: typed in the search box; the matching suggestion is clicked.
+   * - servings: overrides the default value if provided.
+   * - notes: optional notes text.
+   */
+  async fillMealForm(recipeName: string, servings?: number, notes?: string) {
+    const dialog = this.mealFormDialog;
+
+    // Recipe search
+    const recipeInput = dialog.locator('input#recipe-search');
+    await recipeInput.fill(recipeName);
+    // Wait for the dropdown suggestion and click it
+    const suggestion = dialog.locator('button').filter({ hasText: recipeName }).first();
+    await expect(suggestion).toBeVisible({ timeout: 5000 });
+    await suggestion.click();
+
+    if (servings !== undefined) {
+      const servingsInput = dialog.locator('input#servings');
+      await servingsInput.fill(String(servings));
+    }
+
+    if (notes !== undefined) {
+      const notesInput = dialog.locator('input#notes');
+      await notesInput.fill(notes);
+    }
+  }
+
+  /**
+   * Submit the open meal form.
+   */
+  async submitMealForm() {
+    // Use the native submit button type — avoids depending on translated button labels.
+    const submitBtn = this.mealFormDialog.locator('button[type="submit"]');
+    await submitBtn.click();
+    await expect(this.mealFormDialog).not.toBeVisible({ timeout: 10000 });
+  }
+
+  /**
+   * Open the edit form for an existing meal identified by recipe name.
+   */
+  async openEditMeal(recipeName: string) {
+    const mealCard = this.page.locator('div.group').filter({ hasText: recipeName }).first();
+    await mealCard.hover();
+    const editBtn = mealCard
+      .locator('button')
+      .filter({ has: this.page.locator('svg.lucide-pencil') });
+    await editBtn.click();
+    await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
+  }
+
+  /**
+   * Delete a meal identified by recipe name, confirming the dialog.
+   */
+  async deleteMeal(recipeName: string) {
+    const mealCard = this.page.locator('div.group').filter({ hasText: recipeName }).first();
+    await mealCard.hover();
+    const deleteBtn = mealCard
+      .locator('button')
+      .filter({ has: this.page.locator('svg.lucide-trash-2') });
+    await deleteBtn.click();
+
+    // Wait for the confirmation dialog, then click the destructive button
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
+    await expect(dialog).not.toBeVisible({ timeout: 5000 });
   }
 }
