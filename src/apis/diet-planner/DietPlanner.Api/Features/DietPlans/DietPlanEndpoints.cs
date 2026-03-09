@@ -1,6 +1,7 @@
 using DietPlanner.Api.Common.Extensions;
 using DietPlanner.Api.Features.DietPlans.Import;
 using DietPlanner.Api.Common.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietPlanner.Api.Features.DietPlans;
@@ -130,6 +131,73 @@ public static class DietPlanEndpoints
         .WithName("DeleteDietPlan")
         .WithSummary("Delete diet plan")
         .WithDescription("Deletes a diet plan and all associated meal entries. You can only delete plans you created. The 'permanent' flag is accepted for consistency but diet plans are always physically deleted.")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status404NotFound);
+
+        // POST /api/v1/diet-plans/{id}/meals - Add a meal entry
+        group.MapPost("/{id:guid}/meals", async (
+            Guid id,
+            HttpContext context,
+            [FromBody] CreateMealEntryRequest request,
+            [FromServices] IMealEntryService service,
+            [FromServices] IValidator<CreateMealEntryRequest> validator) =>
+        {
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
+
+            var userId = context.User.GetUserId();
+            var result = await service.CreateAsync(id, userId, request);
+
+            return Results.Created($"/api/v1/diet-plans/{id}/meals/{result.Id}", result);
+        })
+        .RequireRateLimiting("api")
+        .WithName("CreateMealEntry")
+        .WithSummary("Add a meal entry to a diet plan")
+        .Produces<MealEntryDto>(StatusCodes.Status201Created)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
+
+        // PUT /api/v1/diet-plans/{id}/meals/{mealId} - Update a meal entry
+        group.MapPut("/{id:guid}/meals/{mealId:guid}", async (
+            Guid id,
+            Guid mealId,
+            HttpContext context,
+            [FromBody] UpdateMealEntryRequest request,
+            [FromServices] IMealEntryService service,
+            [FromServices] IValidator<UpdateMealEntryRequest> validator) =>
+        {
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
+
+            var userId = context.User.GetUserId();
+            var result = await service.UpdateAsync(id, mealId, userId, request);
+
+            return Results.Ok(result);
+        })
+        .RequireRateLimiting("api")
+        .WithName("UpdateMealEntry")
+        .WithSummary("Update a meal entry")
+        .Produces<MealEntryDto>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
+
+        // DELETE /api/v1/diet-plans/{id}/meals/{mealId} - Delete a meal entry
+        group.MapDelete("/{id:guid}/meals/{mealId:guid}", async (
+            Guid id,
+            Guid mealId,
+            HttpContext context,
+            [FromServices] IMealEntryService service) =>
+        {
+            var userId = context.User.GetUserId();
+            await service.DeleteAsync(id, mealId, userId);
+
+            return Results.NoContent();
+        })
+        .RequireRateLimiting("api")
+        .WithName("DeleteMealEntry")
+        .WithSummary("Delete a meal entry")
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound);
 

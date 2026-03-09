@@ -186,6 +186,28 @@
       "snack": "Przekąska"
     }
   },
+  "meal_form": {
+    "add_title": "Dodaj Posiłek",
+    "edit_title": "Edytuj Posiłek",
+    "date_label": "Data",
+    "meal_type_label": "Typ Posiłku",
+    "recipe_label": "Przepis",
+    "recipe_placeholder": "Szukaj przepisów...",
+    "servings_label": "Porcje",
+    "notes_label": "Notatki",
+    "notes_placeholder": "Opcjonalne notatki...",
+    "add_btn": "Dodaj Posiłek",
+    "save_btn": "Zapisz Zmiany",
+    "delete_title": "Usuń Posiłek",
+    "delete_description": "Czy na pewno chcesz usunąć \"{{name}}\" z tego dnia? Tej operacji nie można cofnąć."
+  },
+  "common": {
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "deleting": "Usuwanie...",
+    "saving": "Zapisywanie...",
+    "loading": "Ładowanie..."
+  },
   "product_form": {
     "edit_title": "Edytuj Produkt",
     "create_title": "Utwórz Nowy Produkt",
