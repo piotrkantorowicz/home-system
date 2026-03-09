@@ -35,4 +35,3 @@ export function registerModule(mod: AppModule): void {
 export function getModules(): readonly AppModule[] {
   return modules;
 }
-

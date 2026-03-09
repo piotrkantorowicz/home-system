@@ -186,6 +186,28 @@
       "snack": "Snack"
     }
   },
+  "meal_form": {
+    "add_title": "Add Meal",
+    "edit_title": "Edit Meal",
+    "date_label": "Date",
+    "meal_type_label": "Meal Type",
+    "recipe_label": "Recipe",
+    "recipe_placeholder": "Search recipes...",
+    "servings_label": "Servings",
+    "notes_label": "Notes",
+    "notes_placeholder": "Optional notes...",
+    "add_btn": "Add Meal",
+    "save_btn": "Save Changes",
+    "delete_title": "Delete Meal",
+    "delete_description": "Are you sure you want to remove \"{{name}}\" from this day? This action cannot be undone."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "saving": "Saving...",
+    "loading": "Loading..."
+  },
   "product_form": {
     "edit_title": "Edit Product",
     "create_title": "Create New Product",

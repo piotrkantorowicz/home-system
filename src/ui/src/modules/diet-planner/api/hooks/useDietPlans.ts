@@ -135,6 +135,74 @@ export function useExecuteImport() {
   });
 }
 
+interface CreateMealEntryData {
+  date: string;
+  mealType: string;
+  recipeId: string;
+  servings: number;
+  notes?: string;
+  mealTime?: string;
+  sequenceOrder?: number;
+}
+
+export function useCreateMeal(dietPlanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateMealEntryData) => {
+      const response = await api.POST('/api/v1/diet-plans/{id}/meals', {
+        params: { path: { id: dietPlanId } },
+        body: data as never,
+      });
+
+      if (response.error) throw new Error('Failed to create meal entry');
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diet-plans', dietPlanId, 'meals'] });
+      queryClient.invalidateQueries({ queryKey: ['diet-plans', dietPlanId] });
+    },
+  });
+}
+
+export function useUpdateMeal(dietPlanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ mealId, data }: { mealId: string; data: CreateMealEntryData }) => {
+      const response = await api.PUT('/api/v1/diet-plans/{id}/meals/{mealId}', {
+        params: { path: { id: dietPlanId, mealId } },
+        body: data as never,
+      });
+
+      if (response.error) throw new Error('Failed to update meal entry');
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diet-plans', dietPlanId, 'meals'] });
+    },
+  });
+}
+
+export function useDeleteMeal(dietPlanId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (mealId: string) => {
+      const response = await api.DELETE('/api/v1/diet-plans/{id}/meals/{mealId}', {
+        params: { path: { id: dietPlanId, mealId } },
+      });
+
+      if (response.error) throw new Error('Failed to delete meal entry');
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diet-plans', dietPlanId, 'meals'] });
+      queryClient.invalidateQueries({ queryKey: ['diet-plans', dietPlanId] });
+    },
+  });
+}
+
 export function useDeleteDietPlan() {
   const queryClient = useQueryClient();
 

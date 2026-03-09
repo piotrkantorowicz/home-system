@@ -212,6 +212,9 @@ builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IDietPlanService,
     DietPlanner.Api.Features.DietPlans.DietPlanService>();
 
+builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IMealEntryService,
+    DietPlanner.Api.Features.DietPlans.MealEntryService>();
+
 // Import services
 builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.Import.IImportValidator,
     DietPlanner.Api.Features.DietPlans.Import.ImportValidator>();
