@@ -162,14 +162,20 @@ export default function ProductList() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Link to={`/diet-planner/products/${product.id}`} aria-label={t('common.view')}>
+                        <Link
+                          to={`/diet-planner/products/${product.id}`}
+                          aria-label={t('common.view')}
+                        >
                           <Button variant="ghost" size="icon" className="hover:text-primary">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                         {product.isOwner && (
                           <>
-                            <Link to={`/diet-planner/products/${product.id}/edit`} aria-label={t('common.edit')}>
+                            <Link
+                              to={`/diet-planner/products/${product.id}/edit`}
+                              aria-label={t('common.edit')}
+                            >
                               <Button variant="ghost" size="icon" className="hover:text-primary">
                                 <Edit className="h-4 w-4" />
                               </Button>

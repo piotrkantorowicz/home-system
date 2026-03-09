@@ -1,4 +1,4 @@
-import { cleanupTestData } from './utils/cleanup';
+import { cleanupTestData } from '../diet-planner/utils/cleanup';
 
 async function globalTeardown() {
   console.log('Running global teardown...');

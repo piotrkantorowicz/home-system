@@ -14,7 +14,7 @@ test.describe('Diet Plans CRUD', () => {
     await importPage.goto();
     await importPage.runImportWizard(planData);
 
-    await page.waitForURL('/diet-plans');
+    await page.waitForURL('/diet-planner/diet-plans');
     await expect(page.getByText(planName)).toBeVisible();
   });
 
