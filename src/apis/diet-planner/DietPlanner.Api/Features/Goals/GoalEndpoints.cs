@@ -24,10 +24,10 @@ public static class GoalEndpoints
         .WithDescription("Returns the authenticated user's daily nutrition goals. Returns empty defaults if no goals have been set yet.")
         .Produces<GoalResponse>(StatusCodes.Status200OK);
 
-        group.MapPut("/", async ([FromBody] UpsertGoalRequest req,
+        group.MapPost("/", async ([FromBody] CreateGoalRequest req,
             HttpContext context,
             [FromServices] IGoalService svc,
-            [FromServices] IValidator<UpsertGoalRequest> validator) =>
+            [FromServices] IValidator<CreateGoalRequest> validator) =>
         {
             var validation = await validator.ValidateAsync(req);
             if (!validation.IsValid)
@@ -36,14 +36,37 @@ public static class GoalEndpoints
             }
 
             var userId = context.User.GetUserId();
-            var result = await svc.UpsertAsync(userId, req);
+            var result = await svc.CreateAsync(userId, req);
+            return Results.Created("/api/v1/goals", result);
+        })
+        .RequireRateLimiting("api")
+        .WithName("CreateGoals")
+        .WithSummary("Create user's nutrition goals")
+        .WithDescription("Creates daily nutrition goals for the authenticated user. Fails if goals already exist — use PUT to update.")
+        .Produces<GoalResponse>(StatusCodes.Status201Created)
+        .ProducesValidationProblem();
+
+        group.MapPut("/", async ([FromBody] UpdateGoalRequest req,
+            HttpContext context,
+            [FromServices] IGoalService svc,
+            [FromServices] IValidator<UpdateGoalRequest> validator) =>
+        {
+            var validation = await validator.ValidateAsync(req);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(validation.ToDictionary());
+            }
+
+            var userId = context.User.GetUserId();
+            var result = await svc.UpdateAsync(userId, req);
             return Results.Ok(result);
         })
         .RequireRateLimiting("api")
-        .WithName("UpsertGoals")
-        .WithSummary("Create or update user's nutrition goals")
-        .WithDescription("Upserts daily nutrition goals for the authenticated user. One goal record per user — creates on first call, updates on subsequent calls.")
+        .WithName("UpdateGoals")
+        .WithSummary("Update user's nutrition goals")
+        .WithDescription("Updates existing daily nutrition goals for the authenticated user. Fails if no goals exist — use POST to create first.")
         .Produces<GoalResponse>(StatusCodes.Status200OK)
-        .ProducesValidationProblem();
+        .ProducesValidationProblem()
+        .Produces(StatusCodes.Status404NotFound);
     }
 }

@@ -12,7 +12,7 @@ export type Goal = {
   updatedAt: string | null;
 };
 
-export type UpsertGoalData = {
+export type GoalData = {
   dailyCalorieTarget: number | null;
   proteinGrams: number | null;
   carbsGrams: number | null;
@@ -36,11 +36,33 @@ export function useGoals() {
   });
 }
 
+export function useCreateGoals() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: GoalData) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (api as any).POST('/api/v1/goals', {
+        body: data,
+      });
+
+      if (response.error) {
+        throw new Error('Failed to create goals');
+      }
+
+      return response.data as Goal;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+    },
+  });
+}
+
 export function useUpdateGoals() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UpsertGoalData) => {
+    mutationFn: async (data: GoalData) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (api as any).PUT('/api/v1/goals', {
         body: data,

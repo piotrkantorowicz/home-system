@@ -14,7 +14,7 @@ import {
   Label,
 } from '@shared/components/ui';
 import { Target, Loader2, Save } from 'lucide-react';
-import { useGoals, useUpdateGoals } from '@modules/diet-planner/api/hooks/useGoals';
+import { useGoals, useCreateGoals, useUpdateGoals } from '@modules/diet-planner/api/hooks/useGoals';
 
 const goalSchema = z.object({
   dailyCalorieTarget: z.coerce.number().min(0).max(20000).nullable().optional(),
@@ -26,10 +26,16 @@ const goalSchema = z.object({
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
+const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+
 export default function Goals() {
   const { t } = useTranslation('diet-planner');
   const { data: goals, isLoading } = useGoals();
+  const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
+
+  const goalsExist = goals != null && goals.id !== EMPTY_GUID;
+  const saveMutation = goalsExist ? updateMutation : createMutation;
 
   const {
     register,
@@ -48,7 +54,7 @@ export default function Goals() {
   });
 
   useEffect(() => {
-    if (goals) {
+    if (goals && goalsExist) {
       reset({
         dailyCalorieTarget: goals.dailyCalorieTarget,
         proteinGrams: goals.proteinGrams,
@@ -57,10 +63,10 @@ export default function Goals() {
         fiberGrams: goals.fiberGrams,
       });
     }
-  }, [goals, reset]);
+  }, [goals, goalsExist, reset]);
 
   const onSubmit = async (data: GoalFormData) => {
-    await updateMutation.mutateAsync({
+    await saveMutation.mutateAsync({
       dailyCalorieTarget: data.dailyCalorieTarget ?? null,
       proteinGrams: data.proteinGrams ?? null,
       carbsGrams: data.carbsGrams ?? null,
@@ -180,8 +186,8 @@ export default function Goals() {
 
         {/* Submit */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={updateMutation.isPending || !isDirty}>
-            {updateMutation.isPending ? (
+          <Button type="submit" disabled={saveMutation.isPending || !isDirty}>
+            {saveMutation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 {t('common.saving')}
@@ -195,7 +201,7 @@ export default function Goals() {
           </Button>
         </div>
 
-        {updateMutation.isSuccess && (
+        {saveMutation.isSuccess && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">
             {t('goals.save_success')}
           </p>

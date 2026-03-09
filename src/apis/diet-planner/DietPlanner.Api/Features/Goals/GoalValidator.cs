@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace DietPlanner.Api.Features.Goals;
 
-public class UpsertGoalValidator : AbstractValidator<UpsertGoalRequest>
+public abstract class BaseGoalValidator<T> : AbstractValidator<T> where T : IGoalRequest
 {
-    public UpsertGoalValidator()
+    protected BaseGoalValidator()
     {
         RuleFor(x => x.DailyCalorieTarget)
             .InclusiveBetween(0, 20000)
@@ -27,3 +27,6 @@ public class UpsertGoalValidator : AbstractValidator<UpsertGoalRequest>
             .When(x => x.FiberGrams.HasValue);
     }
 }
+
+public class CreateGoalValidator : BaseGoalValidator<CreateGoalRequest> { }
+public class UpdateGoalValidator : BaseGoalValidator<UpdateGoalRequest> { }
