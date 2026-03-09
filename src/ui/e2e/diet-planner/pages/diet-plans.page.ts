@@ -12,18 +12,25 @@ export class DietPlansPage {
   }
 
   async goto() {
-    await this.page.goto('/diet-plans');
+    await this.page.goto('/diet-planner/diet-plans');
   }
 
   async openPlan(name: string) {
-    // Find the card containing the plan name, then click its "View Calendar" link
-    const card = this.page
+    // Find the "View Calendar" link (has a lucide-eye icon) within the card for this plan.
+    // Avoids depending on translated label text; also avoids matching the Import link.
+    const detailLink = this.page
       .locator('div')
       .filter({ hasText: name })
-      .locator('a', { hasText: /view calendar/i })
+      .locator('a')
+      .filter({ has: this.page.locator('svg.lucide-eye') })
       .first();
-    await card.click();
-    await expect(this.page.getByText(/week of/i)).toBeVisible({ timeout: 10000 });
+    await detailLink.click();
+
+    // Wait for URL to change to the detail page (translation-independent)
+    await this.page.waitForURL(/\/diet-planner\/diet-plans\/[0-9a-f-]+$/, { timeout: 10000 });
+
+    // Wait for the 7-column weekly grid to be rendered (structural, not text-dependent)
+    await expect(this.getWeekDayColumns()).toHaveCount(7, { timeout: 10000 });
   }
 
   async deletePlan(name: string) {
@@ -35,9 +42,11 @@ export class DietPlansPage {
       .first();
     await card.click();
 
-    // Confirm dialog
-    await expect(this.page.getByText(/delete diet plan/i)).toBeVisible();
-    await this.page.getByRole('button', { name: /delete/i }).click();
+    // Wait for the confirmation dialog, click the destructive button, then wait for it to close
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
   }
 
   /**
@@ -106,7 +115,9 @@ export class DietPlansPage {
       hasText: new RegExp(mealTypeLabel, 'i'),
     });
     const addButton = sectionRow.locator('button[title]');
-    await addButton.click();
+    // Use JS .click() to bypass layout-based pointer-event interception.
+    // The untranslated key text overflows in narrow columns and visually covers the button.
+    await addButton.evaluate((el) => (el as HTMLButtonElement).click());
     await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
   }
 
@@ -142,9 +153,8 @@ export class DietPlansPage {
    * Submit the open meal form.
    */
   async submitMealForm() {
-    const submitBtn = this.mealFormDialog.getByRole('button', {
-      name: /add meal|save changes/i,
-    });
+    // Use the native submit button type — avoids depending on translated button labels.
+    const submitBtn = this.mealFormDialog.locator('button[type="submit"]');
     await submitBtn.click();
     await expect(this.mealFormDialog).not.toBeVisible({ timeout: 10000 });
   }
@@ -173,9 +183,10 @@ export class DietPlansPage {
       .filter({ has: this.page.locator('svg.lucide-trash-2') });
     await deleteBtn.click();
 
-    // Confirm deletion dialog
-    await expect(this.page.getByText(/delete meal/i)).toBeVisible({ timeout: 5000 });
-    await this.page.getByRole('button', { name: /^delete$/i }).click();
-    await expect(this.page.getByText(/delete meal/i)).not.toBeVisible({ timeout: 5000 });
+    // Wait for the confirmation dialog, then click the destructive button
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
+    await expect(dialog).not.toBeVisible({ timeout: 5000 });
   }
 }

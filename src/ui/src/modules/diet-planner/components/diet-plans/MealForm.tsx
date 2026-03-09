@@ -172,7 +172,7 @@ export function MealForm({
             <Input
               id="servings"
               type="number"
-              min="0.1"
+              min="0.5"
               max="50"
               step="0.5"
               value={form.servings}

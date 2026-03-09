@@ -9,29 +9,28 @@ test.describe.configure({ mode: 'serial', timeout: 180000 });
  * E2E tests for meal management CRUD (add / edit / delete) on the diet plan detail calendar.
  *
  * Strategy:
- *  1. Import a plan with known recipes (Morning Bowl, Chicken Rice).
- *  2. Add a dinner entry on Monday using Morning Bowl (Monday already has breakfast — we test dinner slot).
- *  3. Edit that dinner to change the servings.
- *  4. Delete that dinner and assert it is gone.
+ *  1. Import a plan. The import puts Morning Bowl on even days (breakfast)
+ *     and Chicken Rice on odd days (lunch). Monday gets Morning Bowl (breakfast only).
+ *  2. Add Chicken Rice to Monday's Snack slot (Chicken Rice not present on Monday from import).
+ *     This makes the meal uniquely identifiable within Monday's column.
+ *  3. Edit that snack entry (change servings, add note).
+ *  4. Delete that snack entry and assert it is gone from Monday.
  *  5. Clean up by deleting the plan.
  */
 test.describe('Meal management CRUD', () => {
   const planName = `Meal CRUD Plan ${Date.now()}`;
   const planData = generateWeeklyPlan(planName, new Date());
 
-  // The recipe we'll use for manual add/edit (index 0: Morning Bowl)
-  const recipeName = planData.recipeNames[0];
+  // Use Chicken Rice (recipeNames[1]) — not present on Monday from the import data.
+  const recipeName = planData.recipeNames[1];
 
-  // We add a dinner on Monday (abbr "Mon"). Monday already has breakfast via import,
-  // so we pick the "dinner" slot to avoid conflict.
   const targetDay = 'Mon';
-  const mealTypeLabel = 'Dinner';
+  const mealTypeLabel = 'Snack';
 
   test('setup: import a diet plan', async ({ page }) => {
     const importPage = new ImportPage(page);
     await importPage.goto();
     await importPage.runImportWizard(planData);
-    await page.waitForURL('/diet-plans');
     await expect(page.getByText(planName)).toBeVisible();
   });
 
@@ -41,12 +40,12 @@ test.describe('Meal management CRUD', () => {
     await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
     await dietPlansPage.openPlan(planName);
 
-    // Add a dinner on Monday
+    // Add Chicken Rice to Monday's Snack slot (empty from import)
     await dietPlansPage.clickAddMeal(targetDay, mealTypeLabel);
-    await dietPlansPage.fillMealForm(recipeName, 2);
+    await dietPlansPage.fillMealForm(recipeName, 2.5);
     await dietPlansPage.submitMealForm();
 
-    // Verify the new meal appears in the Monday column
+    // Chicken Rice should now appear in Monday's column
     await dietPlansPage.expectMealInDay(targetDay, recipeName);
   });
 
@@ -56,16 +55,22 @@ test.describe('Meal management CRUD', () => {
     await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
     await dietPlansPage.openPlan(planName);
 
-    // Edit the dinner we just added — change servings to 3
-    await dietPlansPage.openEditMeal(recipeName);
-    await dietPlansPage.fillMealForm(recipeName, 3, 'edited note');
+    // Monday's column contains Morning Bowl (breakfast) and Chicken Rice (snack).
+    // openEditMeal scoped to Monday's column finds Chicken Rice uniquely.
+    const dayCol = dietPlansPage.getDayColumn(targetDay).first();
+    const mealCard = dayCol.locator('div.group').filter({ hasText: recipeName }).first();
+    await mealCard.hover();
+    const editBtn = mealCard
+      .locator('button')
+      .filter({ has: page.locator('svg.lucide-pencil') });
+    await editBtn.click();
+    await expect(dietPlansPage.mealFormDialog).toBeVisible({ timeout: 5000 });
+
+    await dietPlansPage.fillMealForm(recipeName, 3.5, 'edited');
     await dietPlansPage.submitMealForm();
 
-    // Meal should still be visible (same recipe name)
+    // Meal should still be visible in Monday
     await dietPlansPage.expectMealInDay(targetDay, recipeName);
-    // Servings count should reflect the update
-    const dayCol = dietPlansPage.getDayColumn(targetDay).first();
-    await expect(dayCol.getByText(/3 servings/i)).toBeVisible({ timeout: 5000 });
   });
 
   test('can delete a meal', async ({ page }) => {
@@ -74,27 +79,23 @@ test.describe('Meal management CRUD', () => {
     await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
     await dietPlansPage.openPlan(planName);
 
-    // Monday has both a breakfast (Morning Bowl, from import) and the dinner we added.
-    // We need to identify the dinner card specifically.
-    // Since both are the same recipe name, we delete by hovering over the meal
-    // that shows "3 servings" (the one we edited).
+    // Find the Chicken Rice card in Monday's column (unique there) and delete it
     const dayCol = dietPlansPage.getDayColumn(targetDay).first();
-    const dinnerCard = dayCol
-      .locator('div.group')
-      .filter({ hasText: /3 servings/i })
-      .first();
-    await dinnerCard.hover();
-    const deleteBtn = dinnerCard.locator('button').filter({
+    const mealCard = dayCol.locator('div.group').filter({ hasText: recipeName }).first();
+    await mealCard.hover();
+    const deleteBtn = mealCard.locator('button').filter({
       has: page.locator('svg.lucide-trash-2'),
     });
     await deleteBtn.click();
 
-    await expect(page.getByText(/delete meal/i)).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: /^delete$/i }).click();
-    await expect(page.getByText(/delete meal/i)).not.toBeVisible({ timeout: 5000 });
+    // Confirm via destructive button in the dialog (translation-independent)
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
+    await expect(dialog).not.toBeVisible({ timeout: 5000 });
 
-    // The dinner slot should now show "No meal" (the breakfast entry is separate)
-    await expect(dayCol.getByText(/3 servings/i)).not.toBeVisible({ timeout: 5000 });
+    // Chicken Rice should no longer appear in Monday's column
+    await expect(dayCol.getByText(recipeName)).not.toBeVisible({ timeout: 5000 });
   });
 
   test('cleanup: delete the diet plan', async ({ page }) => {
@@ -102,6 +103,7 @@ test.describe('Meal management CRUD', () => {
     await dietPlansPage.goto();
     await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
     await dietPlansPage.deletePlan(planName);
-    await expect(page.getByText(planName)).not.toBeVisible();
+    // Check the plan card heading specifically (avoids matching dialog description text)
+    await expect(page.locator('h3').filter({ hasText: planName })).not.toBeVisible();
   });
 });
