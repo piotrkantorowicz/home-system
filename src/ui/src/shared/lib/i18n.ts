@@ -17,15 +17,13 @@ export function initI18n(modules: readonly AppModule[]) {
     pl: { translation: pl as unknown as Record<string, unknown> },
   };
 
-  // Merge module translations into the main 'translation' namespace
+  // Register each module's translations under their own namespace
   for (const mod of modules) {
     for (const [lang, namespaces] of Object.entries(mod.i18nResources)) {
       if (!resources[lang]) resources[lang] = {};
-      const existing = (resources[lang].translation ?? {}) as Record<string, unknown>;
-      for (const [, translations] of Object.entries(namespaces)) {
-        Object.assign(existing, translations);
+      for (const [nsName, translations] of Object.entries(namespaces)) {
+        resources[lang][nsName] = translations;
       }
-      resources[lang].translation = existing;
     }
   }
 
