@@ -1,253 +1,111 @@
 # Diet Planner API
 
-A .NET 10 Web API for diet planning with JSON import capabilities, Authentik authentication, and PostgreSQL database.
+.NET 10 Web API for diet planning — products, recipes, diet plans, and nutrition tracking.
 
-## Features
-
-- **Import diet plans from JSON** with comprehensive pre-validation
-- **Global products and recipes** with creator tracking
-- **On-the-fly nutrition calculation** with unit conversion
-- **Authentik OIDC authentication** for secure access
-- **Soft delete support** for products and recipes
-- **Rate limiting and security hardening**
-- **Comprehensive validation** using FluentValidation
-
-## Project Structure
-
-```
-diet-planner/
-├── infrastructure/              # Docker Compose setup for Authentik + PostgreSQL
-├── DietPlanner.Api/            # Main API project
-│   ├── Domain/                 # Entity models
-│   ├── Data/                   # DbContext and migrations
-│   ├── Features/               # Feature-based organization
-│   ├── Common/                 # Shared utilities and middleware
-│   └── Program.cs
-├── DietPlanner.Tests/          # Test project
-└── IMPLEMENTATION-PLAN.md      # Detailed implementation guide
-```
-
-## Quick Start
-
-### Prerequisites
+## Requirements
 
 - .NET 10 SDK
-- Docker and Docker Compose
-- PostgreSQL client tools (optional, for database access)
+- PostgreSQL 16 (via Docker: `docker compose --profile diet-planner up -d` from `infrastructure/`)
+- Authentik running locally (see `infrastructure/README.md`)
 
-### 1. Start Infrastructure
+## Configuration
 
-```bash
-cd infrastructure
-cp .env.example .env
-
-# Generate secure secrets
-echo "AUTHENTIK_SECRET_KEY=$(openssl rand -base64 36)" > .env
-echo "AUTHENTIK_DB_PASSWORD=$(openssl rand -base64 24)" >> .env
-echo "DIETPLANNER_DB_PASSWORD=$(openssl rand -base64 24)" >> .env
-
-# Start services
-docker compose up -d
-
-# Wait ~30 seconds, then check health
-docker compose ps
-
-# Create Authentik admin user
-docker compose exec authentik-server ak create_admin_user
-```
-
-### 2. Configure Authentik
-
-1. Open http://localhost:9000/if/admin/
-2. Login with the admin credentials you just created
-3. Follow the setup guide in `infrastructure/README.md` to:
-   - Create an OAuth2/OIDC Provider
-   - Create an Application
-   - Note the Client ID and Client Secret
-
-### 3. Configure API
-
-Update `DietPlanner.Api/appsettings.Development.json`:
+Sensitive values go in `appsettings.Development.json` (gitignored). Copy and fill in:
 
 ```json
 {
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=dietplanner;Username=dietplanner;Password=<DIETPLANNER_DB_PASSWORD>"
+  },
   "Authentication": {
     "Authentik": {
-      "Authority": "http://localhost:9000/application/o/diet-planner/",
-      "Audience": "diet-planner-api",
-      "ClientId": "diet-planner-api",
-      "ClientSecret": "YOUR_CLIENT_SECRET_FROM_AUTHENTIK",
-      "RequireHttpsMetadata": false
+      "Authority": "http://localhost:9000/application/o/diet-planner-ui",
+      "Audience": "<OIDC_CLIENT_ID>",
+      "ClientId": "<OIDC_CLIENT_ID>",
+      "ClientSecret": "<OIDC_CLIENT_SECRET>"
     }
-  },
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=dietplanner;Username=dietplanner;Password=YOUR_DB_PASSWORD_FROM_ENV"
   }
 }
 ```
 
-### 4. Run Database Migrations
+## Running
 
 ```bash
-cd DietPlanner.Api
-dotnet ef migrations add InitialCreate
-dotnet ef database update
-```
-
-### 5. Run the API
-
-```bash
+cd src/apis/diet-planner/DietPlanner.Api
 dotnet run
 ```
 
-The API will be available at http://localhost:5000
+API starts on http://localhost:5000. Database migrations are applied automatically on startup in development.
 
-### 6. Test the API
+- **API docs (Scalar)**: http://localhost:5000/swagger
+- **OpenAPI schema**: http://localhost:5000/openapi/v1.json
+- **Health check**: http://localhost:5000/health
 
-Access the Swagger UI at http://localhost:5000/swagger
-
-Or test with curl:
-
-```bash
-# Health check (no auth required)
-curl http://localhost:5000/health
-
-# Get a token
-TOKEN=$(curl -X POST http://localhost:9000/application/o/token/ \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=diet-planner-api" \
-  -d "client_secret=YOUR_CLIENT_SECRET" \
-  -d "username=YOUR_ADMIN_USERNAME" \
-  -d "password=YOUR_ADMIN_PASSWORD" \
-  -d "scope=openid profile email" | jq -r '.access_token')
-
-# Use the token to access protected endpoints
-curl http://localhost:5000/api/v1/products \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-## Development
-
-### Run Tests
+## Testing
 
 ```bash
-dotnet test
+# All tests
+dotnet test src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj
+
+# Single test
+dotnet test --filter "FullyQualifiedName~ClassName.MethodName"
 ```
 
-### Build
+Integration tests use Testcontainers — they spin up a real PostgreSQL instance automatically, no manual DB setup needed.
 
-```bash
-dotnet build
-```
+**Test structure:**
+- `Unit/` — pure logic tests (validators, calculators, utils)
+- `Integration/` — full service tests against real PostgreSQL
+- `Builders/` — test data builders for domain entities
 
-### Database Migrations
+## Architecture
 
-```bash
-# Create a new migration
-dotnet ef migrations add MigrationName --project DietPlanner.Api
+Feature-folder layout under `Features/<Feature>/`:
 
-# Apply migrations
-dotnet ef database update --project DietPlanner.Api
+| File | Purpose |
+|---|---|
+| `<Feature>Endpoints.cs` | Minimal API route definitions (`Map*Endpoints` extension method) |
+| `<Feature>Service.cs` | Business logic behind `I<Feature>Service` interface |
+| `<Feature>Dtos.cs` | Request/response records; responses have `static FromEntity()` factory |
+| `<Feature>Validator.cs` | FluentValidation validators |
 
-# Remove last migration (if not applied)
-dotnet ef migrations remove --project DietPlanner.Api
-```
+Each feature's endpoints are registered in `Program.cs` via `app.Map*Endpoints()`.
+
+**Common infrastructure:**
+
+| Component | Location |
+|---|---|
+| Custom exceptions | `Common/Exceptions/` |
+| Global error handling | `Common/Middleware/ErrorHandlingMiddleware.cs` |
+| User ID extraction | `Common/Extensions/ClaimsPrincipalExtensions.cs` → `context.User.GetUserId()` |
+| Pagination model | `Common/Models/PagedResult<T>` |
+| Unit conversion | `Common/Utils/UnitConverter.cs` |
+
+## Key Behaviours
+
+- **Auth**: JWT Bearer via Authentik OIDC. All `/api/v1/*` routes require authorization.
+- **Soft deletes**: `DeletedAt` column with EF global query filters. Use `.IgnoreQueryFilters()` to include deleted records.
+- **Rate limiting**: `"api"` policy (100 req/min per user), `"import"` policy (25 req/min per user).
+- **Migrations**: Applied automatically on startup in development.
+- **Request size**: Max 5 MB (configurable via `RateLimiting:MaxImportSizeMB`).
 
 ## API Endpoints
 
-### Products
-
-- `GET /api/v1/products` - List products (with pagination and search)
-- `GET /api/v1/products/{id}` - Get product details
-- `POST /api/v1/products` - Create product
-- `PUT /api/v1/products/{id}` - Update product (owner only)
-- `DELETE /api/v1/products/{id}` - Soft delete product (owner only)
-
-### Recipes
-
-- `GET /api/v1/recipes` - List recipes (with pagination and search)
-- `GET /api/v1/recipes/{id}` - Get recipe with ingredients & nutrition
-- `POST /api/v1/recipes` - Create recipe
-- `PUT /api/v1/recipes/{id}` - Update recipe (owner only)
-- `DELETE /api/v1/recipes/{id}` - Soft delete recipe (owner only)
-
-### Diet Plans
-
-- `GET /api/v1/diet-plans` - List user's diet plans
-- `GET /api/v1/diet-plans/{id}` - Get plan with all meals
-- `POST /api/v1/diet-plans` - Create empty plan
-- `DELETE /api/v1/diet-plans/{id}` - Delete plan
-- `POST /api/v1/diet-plans/validate` - Validate import JSON (dry run)
-- `POST /api/v1/diet-plans/import` - Import full plan from JSON
-- `GET /api/v1/diet-plans/{id}/meals` - Get meals by date range
-- `GET /api/v1/diet-plans/{id}/nutrition` - Get nutrition summary
-- `GET /api/v1/diet-plans/{id}/shopping` - Get shopping list
-
-### Health
-
-- `GET /health` - Health check endpoint
-
-## Import JSON Format
-
-See `IMPLEMENTATION-PLAN.md` for detailed JSON format documentation and examples.
-
-Basic structure:
-
-```json
-{
-  "planName": "January 2025 Diet",
-  "startDate": "2025-01-01",
-  "endDate": "2025-01-31",
-  "products": [...],
-  "recipes": [...],
-  "schedule": [...]
-}
-```
-
-## Technology Stack
-
-- **.NET 10** - Latest .NET framework
-- **PostgreSQL 16** - Database
-- **Entity Framework Core 10** - ORM
-- **Authentik** - OIDC authentication
-- **FluentValidation** - Input validation
-- **Swagger/OpenAPI** - API documentation
-- **xUnit** - Testing framework
-
-## Documentation
-
-- [Implementation Plan](IMPLEMENTATION-PLAN.md) - Detailed technical specification
-- [Infrastructure Setup](infrastructure/README.md) - Docker and Authentik configuration
-
-## Security Features
-
-- JWT Bearer authentication with Authentik
-- Rate limiting on import endpoints (5 requests/minute)
-- Request size limits (5MB max)
-- Ownership-based authorization
-- Soft delete for data retention
-- Input validation on all endpoints
-
-## Performance Optimizations
-
-- In-memory caching for products and recipes
-- Bulk operations for import
-- Database query optimization with eager loading
-- GIN indexes for full-text search
-
-## License
-
-MIT License
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## Support
-
-For issues and questions, please open an issue on the GitHub repository.
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/products` | List products (search, pagination, ownership filter) |
+| POST | `/api/v1/products` | Create product |
+| GET | `/api/v1/products/{id}` | Get product |
+| PUT | `/api/v1/products/{id}` | Update product |
+| DELETE | `/api/v1/products/{id}` | Soft delete product |
+| GET | `/api/v1/recipes` | List recipes |
+| POST | `/api/v1/recipes` | Create recipe with ingredients |
+| GET | `/api/v1/recipes/{id}` | Get recipe with nutrition |
+| PUT | `/api/v1/recipes/{id}` | Update recipe |
+| DELETE | `/api/v1/recipes/{id}` | Soft delete recipe |
+| GET | `/api/v1/diet-plans` | List user's diet plans |
+| GET | `/api/v1/diet-plans/{id}` | Get plan details |
+| DELETE | `/api/v1/diet-plans/{id}` | Delete plan |
+| GET | `/api/v1/diet-plans/{id}/meals` | Get meals for date range |
+| POST | `/api/v1/diet-plans/validate` | Validate import JSON (dry run) |
+| POST | `/api/v1/diet-plans/import` | Execute import |
