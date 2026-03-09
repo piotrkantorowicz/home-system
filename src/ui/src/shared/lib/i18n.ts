@@ -2,8 +2,8 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import type { AppModule } from './module-registry';
 
-import en from '../locales/en.json';
-import pl from '../locales/pl.json';
+import sharedEn from '../locales/en.json';
+import sharedPl from '../locales/pl.json';
 
 const STORAGE_KEY = 'home-system-lang';
 
@@ -11,28 +11,27 @@ export function initI18n(modules: readonly AppModule[]) {
   const storedLang = localStorage.getItem(STORAGE_KEY);
   const defaultLang = storedLang === 'en' || storedLang === 'pl' ? storedLang : 'en';
 
-  // Start with shared common translations
-  const resources: Record<string, Record<string, unknown>> = {
-    en: { translation: en as unknown as Record<string, unknown> },
-    pl: { translation: pl as unknown as Record<string, unknown> },
-  };
+  // Build fresh translation objects (spread to avoid mutating imported modules)
+  const enTranslation: Record<string, unknown> = { ...sharedEn };
+  const plTranslation: Record<string, unknown> = { ...sharedPl };
 
-  // Merge each module's translations into the default 'translation' namespace
-  // so all components can use useTranslation() without specifying a namespace.
+  // Merge each module's locale entries into the translation objects
   for (const mod of modules) {
-    for (const [lang, namespaces] of Object.entries(mod.i18nResources)) {
-      if (!resources[lang]) resources[lang] = {};
-      const merged = (resources[lang].translation ?? {}) as Record<string, unknown>;
-      for (const translations of Object.values(namespaces)) {
-        Object.assign(merged, translations as Record<string, unknown>);
-      }
-      resources[lang].translation = merged;
+    for (const nsContent of Object.values(mod.i18nResources.en)) {
+      Object.assign(enTranslation, nsContent as Record<string, unknown>);
+    }
+    for (const nsContent of Object.values(mod.i18nResources.pl)) {
+      Object.assign(plTranslation, nsContent as Record<string, unknown>);
     }
   }
 
   i18n.use(initReactI18next).init({
     lng: defaultLang,
-    resources,
+    initImmediate: false,
+    resources: {
+      en: { translation: enTranslation },
+      pl: { translation: plTranslation },
+    },
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
