@@ -57,7 +57,7 @@ export const dietPlannerModule: AppModule = {
       name: 'Goals',
       href: '/diet-planner/goals',
       icon: Target,
-      translationKey: 'diet-planner:goals.nav',
+      translationKey: 'common.goals',
     },
     {
       name: 'Import Plan',

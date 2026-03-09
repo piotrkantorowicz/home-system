@@ -19,6 +19,7 @@
     "products": "Produkty",
     "recipes": "Przepisy",
     "diet_plans": "Plany Dietetyczne",
+    "goals": "Cele",
     "import_plan": "Importuj Plan",
     "logout": "Wyloguj",
     "welcome_back": "Witaj ponownie, {{name}}!",
