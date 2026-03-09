@@ -7,6 +7,37 @@ import sharedPl from '../locales/pl.json';
 
 const STORAGE_KEY = 'home-system-lang';
 
+/**
+ * Deep-merge source into target. For overlapping keys whose values are both
+ * plain objects, the merge recurses instead of overwriting.
+ */
+function deepMerge(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+): Record<string, unknown> {
+  for (const key of Object.keys(source)) {
+    const tVal = target[key];
+    const sVal = source[key];
+
+    if (
+      tVal &&
+      sVal &&
+      typeof tVal === 'object' &&
+      typeof sVal === 'object' &&
+      !Array.isArray(tVal) &&
+      !Array.isArray(sVal)
+    ) {
+      target[key] = deepMerge(
+        { ...(tVal as Record<string, unknown>) },
+        sVal as Record<string, unknown>,
+      );
+    } else {
+      target[key] = sVal;
+    }
+  }
+  return target;
+}
+
 export function initI18n(modules: readonly AppModule[]) {
   const storedLang = localStorage.getItem(STORAGE_KEY);
   const defaultLang = storedLang === 'en' || storedLang === 'pl' ? storedLang : 'en';
@@ -15,13 +46,14 @@ export function initI18n(modules: readonly AppModule[]) {
   const enTranslation: Record<string, unknown> = { ...sharedEn };
   const plTranslation: Record<string, unknown> = { ...sharedPl };
 
-  // Merge each module's locale entries into the translation objects
+  // Deep-merge each module's locale entries so overlapping keys like "common"
+  // are merged recursively instead of being replaced.
   for (const mod of modules) {
     for (const nsContent of Object.values(mod.i18nResources.en)) {
-      Object.assign(enTranslation, nsContent as Record<string, unknown>);
+      deepMerge(enTranslation, nsContent as Record<string, unknown>);
     }
     for (const nsContent of Object.values(mod.i18nResources.pl)) {
-      Object.assign(plTranslation, nsContent as Record<string, unknown>);
+      deepMerge(plTranslation, nsContent as Record<string, unknown>);
     }
   }
 
