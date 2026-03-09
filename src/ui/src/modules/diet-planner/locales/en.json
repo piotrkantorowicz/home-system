@@ -1,0 +1,251 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Welcome to DietPlanner",
+    "products_desc": "Manage your food products and ingredients",
+    "recipes_desc": "Browse and create recipes",
+    "diet_plans_desc": "Plan your meals and track nutrition",
+    "total_products": "Total products",
+    "total_recipes": "Total recipes",
+    "active_plans": "Active plans",
+    "getting_started": {
+      "title": "Getting Started",
+      "subtitle": "Follow these steps to set up your diet planning",
+      "step1_title": "Add Products",
+      "step1_desc": "Start by adding food products with their nutritional information",
+      "step2_title": "Create Recipes",
+      "step2_desc": "Combine products into recipes with automatic nutrition calculation",
+      "step3_title": "Import or Plan Meals",
+      "step3_desc": "Import a complete diet plan or manually schedule your meals"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Manage your food products and their nutritional information",
+    "add_product": "Add Product",
+    "add_first_product": "Add Your First Product",
+    "search_placeholder": "Search products...",
+    "show_only_mine": "Show Only Mine",
+    "showing_my_products": "Showing My Products",
+    "no_products_found": "No products found",
+    "start_creating": "Get started by creating your first product",
+    "adjust_search": "Try adjusting your search criteria",
+    "table": {
+      "name": "Name",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "unit": "Unit",
+      "owner": "Owner"
+    },
+    "delete_dialog": {
+      "title": "Delete Product",
+      "description": "Are you sure you want to delete this product? This action cannot be undone. The product will only be deleted if it's not used in any recipes.",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "recipes": {
+    "title": "Recipes",
+    "subtitle": "Browse and manage your recipes with nutrition info",
+    "create_recipe": "Create Recipe",
+    "search_placeholder": "Search recipes...",
+    "show_my_recipes": "Showing My Recipes",
+    "show_only_mine": "Show Only Mine",
+    "no_recipes_found": "No recipes found",
+    "start_creating": "Get started by creating your first recipe",
+    "create_first_recipe": "Create Your First Recipe",
+    "servings": "{{count}} servings",
+    "prep_time": "min",
+    "per_serving": "Per Serving",
+    "view": "View",
+    "delete_dialog": {
+      "title": "Delete Recipe",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone. The recipe will only be deleted if it's not used in any meal plans.",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "diet_plans": {
+    "title": "Diet Plans",
+    "subtitle": "Manage your meal plans and track your nutrition",
+    "import_plan": "Import Diet Plan",
+    "no_plans_yet": "No diet plans yet",
+    "start_importing": "Get started by importing your first diet plan",
+    "import_first_plan": "Import Your First Plan",
+    "total_days": "Total Days",
+    "total_meals": "Total Meals",
+    "created": "Created {{date}}",
+    "view_calendar": "View Calendar",
+    "delete_dialog": {
+      "title": "Delete Diet Plan",
+      "description": "Are you sure you want to delete \"{{name}}\"? This will delete all associated meal entries. This action cannot be undone.",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "import_wizard": {
+    "title": "Import Diet Plan",
+    "subtitle": "Import a complete diet plan from JSON with products, recipes, and meals",
+    "steps": {
+      "upload": "Upload JSON",
+      "validate": "Validate",
+      "review": "Review",
+      "complete": "Complete"
+    },
+    "step1": {
+      "title": "Step 1: Upload or Paste JSON",
+      "label": "Diet Plan JSON",
+      "placeholder": "Paste your JSON here...",
+      "continue": "Continue",
+      "load_sample": "Load Sample",
+      "expected_format": "Expected Format:",
+      "invalid_json": "Invalid JSON format. Please check your input."
+    },
+    "step2": {
+      "title": "Step 2: Validate Import Data",
+      "plan_name": "Plan Name:",
+      "date_range": "Date Range:",
+      "products": "Products:",
+      "recipes": "Recipes:",
+      "schedule_days": "Schedule Days:",
+      "validate": "Validate Data",
+      "validating": "Validating..."
+    },
+    "step3": {
+      "title": "Step 3: Review & Confirm",
+      "success": "Validation Successful!",
+      "what_imported": "What will be imported:",
+      "new_products": "New Products:",
+      "new_recipes": "New Recipes:",
+      "meal_entries": "Meal Entries:",
+      "warning_title": "Before you proceed:",
+      "warning_products": "This will create {{count}} new products",
+      "warning_recipes": "This will create {{count}} new recipes",
+      "warning_undone": "This action cannot be undone",
+      "confirm": "Confirm & Import",
+      "importing": "Importing..."
+    },
+    "step4": {
+      "success_title": "Import Successful!",
+      "success_message": "Your diet plan has been imported successfully. Redirecting to diet plans..."
+    }
+  },
+  "product_detail": {
+    "back": "Back to Products",
+    "loading": "Loading product...",
+    "not_found": "Product not found",
+    "nutrition_facts": "Nutrition Facts (per 100g)",
+    "carbohydrates": "Carbohydrates",
+    "fat": "Fat",
+    "conversions": "Conversions",
+    "macro_distribution": "Macro Distribution",
+    "total_macros": "Total Macros",
+    "default_unit": "Default Unit",
+    "density": "Density",
+    "weight_per_piece": "Weight per Piece",
+    "no_conversion": "No conversion data available",
+    "density_info": "1 ml = {{value}}g",
+    "piece_info": "1 piece = {{value}}g"
+  },
+  "recipe_detail": {
+    "back": "Back to Recipes",
+    "loading": "Loading recipe...",
+    "not_found": "Recipe not found",
+    "nutrition_per_serving": "Nutrition Per Serving",
+    "total_nutrition": "Total Recipe Nutrition",
+    "macro_distribution": "Macro Distribution (Per Serving)",
+    "ingredients": "Ingredients ({{count}})",
+    "instructions": "Instructions",
+    "total_calories": "Total Calories",
+    "total_protein": "Total Protein",
+    "total_carbs": "Total Carbs",
+    "total_fat": "Total Fat",
+    "table": {
+      "product": "Product",
+      "amount": "Amount",
+      "unit": "Unit",
+      "calories": "Calories",
+      "protein": "Protein"
+    }
+  },
+  "diet_plan_detail": {
+    "back": "Back to Diet Plans",
+    "loading": "Loading diet plan...",
+    "not_found": "Diet plan not found",
+    "days": "days",
+    "meals": "meals",
+    "week_of": "Week of {{date}}",
+    "daily_totals": "Daily Totals",
+    "no_meal": "No meal",
+    "meal_types": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    }
+  },
+  "product_form": {
+    "edit_title": "Edit Product",
+    "create_title": "Create New Product",
+    "update_subtitle": "Update {{name}}",
+    "create_subtitle": "Add a new food product to your database",
+    "basic_info": "Basic Information",
+    "name_label": "Product Name *",
+    "name_placeholder": "e.g., Chicken Breast",
+    "unit_label": "Default Unit *",
+    "units": {
+      "g": "Grams (g)",
+      "ml": "Milliliters (ml)",
+      "piece": "Piece"
+    },
+    "nutrition_header": "Nutrition (per 100g)",
+    "calories_label": "Calories (kcal) *",
+    "protein_label": "Protein (g) *",
+    "carbs_label": "Carbs (g) *",
+    "fat_label": "Fat (g) *",
+    "macro_warning": "Warning: Total macros ({{total}}g) exceed 100g. Please verify your values.",
+    "macro_summary": "Macro Summary",
+    "conversions_header": "Optional Conversions",
+    "density_label": "Density (g/ml)",
+    "density_placeholder": "e.g., 1.0 for water",
+    "density_help": "For converting between grams and milliliters",
+    "piece_label": "Grams per Piece",
+    "piece_placeholder": "e.g., 150 for a medium apple",
+    "piece_help": "Average weight of one piece in grams",
+    "create_btn": "Create Product",
+    "update_btn": "Update Product",
+    "saving": "Saving..."
+  },
+  "recipe_form": {
+    "edit_title": "Edit Recipe",
+    "create_title": "Create New Recipe",
+    "update_subtitle": "Update {{name}}",
+    "create_subtitle": "Add a new recipe with ingredients and instructions",
+    "basic_info": "Basic Information",
+    "name_label": "Recipe Name *",
+    "name_placeholder": "e.g., Grilled Chicken Salad",
+    "description_label": "Description",
+    "description_placeholder": "Brief description of the recipe",
+    "servings_label": "Servings *",
+    "prep_time_label": "Prep Time (minutes)",
+    "ingredients_header": "Ingredients",
+    "add_ingredient": "Add Ingredient",
+    "product_label": "Product *",
+    "product_placeholder": "Search product...",
+    "amount_label": "Amount *",
+    "unit_label": "Unit *",
+    "no_ingredients": "No ingredients added yet",
+    "add_first_ingredient": "Add First Ingredient",
+    "instructions_header": "Instructions",
+    "instructions_label": "Cooking Instructions",
+    "instructions_placeholder": "Step-by-step cooking instructions...",
+    "summary_header": "Recipe Summary",
+    "total_ingredients": "Total Ingredients:",
+    "servings_summary": "Servings:",
+    "prep_time_summary": "Prep Time:",
+    "create_btn": "Create Recipe",
+    "update_btn": "Update Recipe"
+  }
+}

@@ -1,0 +1,87 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace DietPlanner.Api.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddDomainImprovements : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<decimal>(
+                name: "fiber_per_100g",
+                table: "products",
+                type: "numeric",
+                nullable: true);
+
+            migrationBuilder.AddColumn<TimeOnly>(
+                name: "meal_time",
+                table: "meal_entries",
+                type: "time without time zone",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "sequence_order",
+                table: "meal_entries",
+                type: "integer",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "deleted_at",
+                table: "diet_plans",
+                type: "timestamp with time zone",
+                nullable: true);
+
+            migrationBuilder.CreateTable(
+                name: "user_goals",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    daily_calorie_target = table.Column<int>(type: "integer", nullable: true),
+                    protein_grams = table.Column<decimal>(type: "numeric", nullable: true),
+                    carbs_grams = table.Column<decimal>(type: "numeric", nullable: true),
+                    fat_grams = table.Column<decimal>(type: "numeric", nullable: true),
+                    fiber_grams = table.Column<decimal>(type: "numeric", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_goals", x => x.id);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_user_goals_user",
+                table: "user_goals",
+                column: "user_id",
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "user_goals");
+
+            migrationBuilder.DropColumn(
+                name: "fiber_per_100g",
+                table: "products");
+
+            migrationBuilder.DropColumn(
+                name: "meal_time",
+                table: "meal_entries");
+
+            migrationBuilder.DropColumn(
+                name: "sequence_order",
+                table: "meal_entries");
+
+            migrationBuilder.DropColumn(
+                name: "deleted_at",
+                table: "diet_plans");
+        }
+    }
+}

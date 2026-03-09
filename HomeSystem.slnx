@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/apis/diet-planner/">
+    <Project Path="src/apis/diet-planner/DietPlanner.Api/DietPlanner.Api.csproj" />
+    <Project Path="src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj" />
+  </Folder>
+</Solution>

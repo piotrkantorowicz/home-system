@@ -1,0 +1,33 @@
+{
+  "common": {
+    "add": "Dodaj",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "search": "Szukaj...",
+    "view": "Podgląd",
+    "actions": "Akcje",
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "you": "Ty",
+    "shared": "Wspólne",
+    "previous": "Poprzednia",
+    "next": "Następna",
+    "showing_range": "Wyświetlono {{start}} do {{end}} z {{total}} elementów",
+    "dashboard": "Panel Główny",
+    "products": "Produkty",
+    "recipes": "Przepisy",
+    "diet_plans": "Plany Dietetyczne",
+    "import_plan": "Importuj Plan",
+    "logout": "Wyloguj",
+    "welcome_back": "Witaj ponownie, {{name}}!",
+    "modules": "Moduły",
+    "diet_planner": "Planer Diety",
+    "unit": {
+      "g": "g",
+      "ml": "ml",
+      "piece": "sztuka"
+    }
+  }
+}

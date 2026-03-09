@@ -1,0 +1,33 @@
+{
+  "common": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "search": "Search...",
+    "view": "View",
+    "actions": "Actions",
+    "loading": "Loading...",
+    "error": "Error",
+    "you": "You",
+    "shared": "Shared",
+    "previous": "Previous",
+    "next": "Next",
+    "showing_range": "Showing {{start}} to {{end}} of {{total}} items",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "recipes": "Recipes",
+    "diet_plans": "Diet Plans",
+    "import_plan": "Import Plan",
+    "logout": "Logout",
+    "welcome_back": "Welcome back, {{name}}!",
+    "modules": "Modules",
+    "diet_planner": "Diet Planner",
+    "unit": {
+      "g": "g",
+      "ml": "ml",
+      "piece": "piece"
+    }
+  }
+}

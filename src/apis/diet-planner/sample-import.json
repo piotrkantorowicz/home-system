@@ -1,0 +1,69 @@
+{
+  "planName": "Test Diet Plan - January 2026",
+  "startDate": "2026-01-13",
+  "endDate": "2026-01-15",
+  "products": [
+    {
+      "name": "Chicken Breast",
+      "caloriesPer100g": 165,
+      "proteinPer100g": 31,
+      "carbsPer100g": 0,
+      "fatPer100g": 3.6,
+      "unit": "g",
+      "densityGramsPerMl": null,
+      "gramPerPiece": null
+    },
+    {
+      "name": "Brown Rice",
+      "caloriesPer100g": 123,
+      "proteinPer100g": 2.6,
+      "carbsPer100g": 25.6,
+      "fatPer100g": 0.9,
+      "unit": "g"
+    },
+    {
+      "name": "Olive Oil",
+      "caloriesPer100g": 884,
+      "proteinPer100g": 0,
+      "carbsPer100g": 0,
+      "fatPer100g": 100,
+      "unit": "ml",
+      "densityGramsPerMl": 0.92
+    }
+  ],
+  "recipes": [
+    {
+      "name": "Grilled Chicken with Rice",
+      "description": "Simple healthy meal",
+      "servings": 2,
+      "prepTimeMinutes": 30,
+      "instructions": "1. Season chicken with salt and pepper\n2. Grill for 6-7 minutes per side\n3. Cook rice according to package instructions\n4. Serve together",
+      "ingredients": [
+        { "product": "Chicken Breast", "amount": 300, "unit": "g" },
+        { "product": "Brown Rice", "amount": 200, "unit": "g" },
+        { "product": "Olive Oil", "amount": 15, "unit": "ml" }
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "date": "2026-01-13",
+      "meals": [
+        { "type": "lunch", "recipe": "Grilled Chicken with Rice", "servings": 1 }
+      ]
+    },
+    {
+      "date": "2026-01-14",
+      "meals": [
+        { "type": "lunch", "recipe": "Grilled Chicken with Rice", "servings": 1 },
+        { "type": "dinner", "recipe": "Grilled Chicken with Rice", "servings": 1.5 }
+      ]
+    },
+    {
+      "date": "2026-01-15",
+      "meals": [
+        { "type": "lunch", "recipe": "Grilled Chicken with Rice", "servings": 1 }
+      ]
+    }
+  ]
+}

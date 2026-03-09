@@ -1,0 +1,143 @@
+version: "3.8"
+
+services:
+  # ============================================
+  # PostgreSQL for Authentik
+  # ============================================
+  authentik-db:
+    image: postgres:16-alpine
+    container_name: authentik-db
+    restart: unless-stopped
+    volumes:
+      - authentik_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: authentik
+      POSTGRES_USER: authentik
+      POSTGRES_PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-system-shared
+
+  # ============================================
+  # Redis for Authentik (with authentication)
+  # ============================================
+  authentik-redis:
+    image: redis:7-alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --requirepass ${AUTHENTIK_REDIS_PASSWORD:-changeme}
+    volumes:
+      - authentik_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${AUTHENTIK_REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-system-shared
+
+  # ============================================
+  # Authentik Server
+  # ============================================
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2024.12.3
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    ports:
+      - "9000:9000"   # HTTP
+      - "9443:9443"   # HTTPS
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS_PASSWORD:-changeme}
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    depends_on:
+      authentik-db:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+    networks:
+      - home-system-shared
+
+  # ============================================
+  # Authentik Worker (background tasks)
+  # ============================================
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2024.12.3
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS_PASSWORD:-changeme}
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+    depends_on:
+      authentik-db:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+    networks:
+      - home-system-shared
+
+# ============================================
+# Module-specific services
+# Use profiles to start only what you need:
+#   docker compose --profile diet-planner up
+# ============================================
+
+  # ============================================
+  # PostgreSQL for Diet Planner API
+  # ============================================
+  dietplanner-db:
+    image: postgres:16-alpine
+    container_name: dietplanner-db
+    restart: unless-stopped
+    profiles: ["diet-planner"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - dietplanner_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: dietplanner
+      POSTGRES_USER: dietplanner
+      POSTGRES_PASSWORD: ${DIETPLANNER_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dietplanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - home-system-shared
+
+networks:
+  home-system-shared:
+    driver: bridge
+
+volumes:
+  authentik_db_data:
+  authentik_redis_data:
+  authentik_media:
+  authentik_templates:
+  dietplanner_db_data:

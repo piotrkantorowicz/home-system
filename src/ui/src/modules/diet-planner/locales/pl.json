@@ -1,0 +1,251 @@
+{
+  "dashboard": {
+    "title": "Panel Główny",
+    "subtitle": "Witaj w DietPlanner",
+    "products_desc": "Zarządzaj produktami i składnikami",
+    "recipes_desc": "Przeglądaj i twórz przepisy",
+    "diet_plans_desc": "Planuj posiłki i śledź wartości odżywcze",
+    "total_products": "Łącznie produktów",
+    "total_recipes": "Łącznie przepisów",
+    "active_plans": "Aktywne plany",
+    "getting_started": {
+      "title": "Pierwsze kroki",
+      "subtitle": "Wykonaj te kroki, aby skonfigurować planowanie diety",
+      "step1_title": "Dodaj Produkty",
+      "step1_desc": "Zacznij od dodania produktów spożywczych i ich wartości odżywczych",
+      "step2_title": "Utwórz Przepisy",
+      "step2_desc": "Łącz produkty w przepisy z automatycznym obliczaniem wartości odżywczych",
+      "step3_title": "Importuj lub Planuj Posiłki",
+      "step3_desc": "Zaimportuj kompletny plan diety lub ręcznie zaplanuj posiłki"
+    }
+  },
+  "products": {
+    "title": "Produkty",
+    "subtitle": "Zarządzaj swoimi produktami spożywczymi i ich informacjami żywieniowymi",
+    "add_product": "Dodaj Produkt",
+    "add_first_product": "Dodaj Swój Pierwszy Produkt",
+    "search_placeholder": "Szukaj produktów...",
+    "show_only_mine": "Pokaż Tylko Moje",
+    "showing_my_products": "Pokazuję Moje Produkty",
+    "no_products_found": "Nie znaleziono produktów",
+    "start_creating": "Zacznij od utworzenia swojego pierwszego produktu",
+    "adjust_search": "Spróbuj zmienić kryteria wyszukiwania",
+    "table": {
+      "name": "Nazwa",
+      "calories": "Kalorie",
+      "protein": "Białko",
+      "carbs": "Węglowodany",
+      "fat": "Tłuszcz",
+      "unit": "Jednostka",
+      "owner": "Właściciel"
+    },
+    "delete_dialog": {
+      "title": "Usuń Produkt",
+      "description": "Czy na pewno chcesz usunąć ten produkt? Tej operacji nie można cofnąć. Produkt zostanie usunięty tylko jeśli nie jest używany w żadnych przepisach.",
+      "confirm": "Usuń",
+      "deleting": "Usuwanie..."
+    }
+  },
+  "recipes": {
+    "title": "Przepisy",
+    "subtitle": "Przeglądaj i zarządzaj swoimi przepisami oraz informacjami o wartościach odżywczych",
+    "create_recipe": "Utwórz Przepis",
+    "search_placeholder": "Szukaj przepisów...",
+    "show_my_recipes": "Pokazuję Moje Przepisy",
+    "show_only_mine": "Pokaż Tylko Moje",
+    "no_recipes_found": "Nie znaleziono przepisów",
+    "start_creating": "Zacznij od utworzenia swojego pierwszego przepisu",
+    "create_first_recipe": "Utwórz Swój Pierwszy Przepis",
+    "servings": "{{count}} porcji",
+    "prep_time": "min",
+    "per_serving": "Na porcję",
+    "view": "Podgląd",
+    "delete_dialog": {
+      "title": "Usuń Przepis",
+      "description": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć. Przepis zostanie usunięty tylko jeśli nie jest używany w żadnych planach posiłków.",
+      "confirm": "Usuń",
+      "deleting": "Usuwanie..."
+    }
+  },
+  "diet_plans": {
+    "title": "Plany Dietetyczne",
+    "subtitle": "Zarządzaj swoimi planami posiłków i śledź wartości odżywcze",
+    "import_plan": "Importuj Plan Diety",
+    "no_plans_yet": "Brak planów dietetycznych",
+    "start_importing": "Zacznij od zaimportowania swojego pierwszego planu diety",
+    "import_first_plan": "Zaimportuj Swój Pierwszy Plan",
+    "total_days": "Łącznie Dni",
+    "total_meals": "Łącznie Posiłków",
+    "created": "Utworzono {{date}}",
+    "view_calendar": "Zobacz Kalendarz",
+    "delete_dialog": {
+      "title": "Usuń Plan Diety",
+      "description": "Czy na pewno chcesz usunąć \"{{name}}\"? Spowoduje to usunięcie wszystkich powiązanych wpisów posiłków. Tej operacji nie można cofnąć.",
+      "confirm": "Usuń",
+      "deleting": "Usuwanie..."
+    }
+  },
+  "import_wizard": {
+    "title": "Import Planu Diety",
+    "subtitle": "Zaimportuj kompletny plan diety z JSON z produktami, przepisami i posiłkami",
+    "steps": {
+      "upload": "Prześlij JSON",
+      "validate": "Waliduj",
+      "review": "Przejrzyj",
+      "complete": "Zakończ"
+    },
+    "step1": {
+      "title": "Krok 1: Prześlij lub Wklej JSON",
+      "label": "JSON Planu Diety",
+      "placeholder": "Wklej swój JSON tutaj...",
+      "continue": "Kontynuuj",
+      "load_sample": "Załaduj Próbkę",
+      "expected_format": "Oczekiwany Format:",
+      "invalid_json": "Nieprawidłowy format JSON. Sprawdź swoje dane wejściowe."
+    },
+    "step2": {
+      "title": "Krok 2: Waliduj Dane Importu",
+      "plan_name": "Nazwa Planu:",
+      "date_range": "Zakres Dat:",
+      "products": "Produkty:",
+      "recipes": "Przepisy:",
+      "schedule_days": "Dni w Harmonogramie:",
+      "validate": "Waliduj Dane",
+      "validating": "Walidacja..."
+    },
+    "step3": {
+      "title": "Krok 3: Przejrzyj i Potwierdź",
+      "success": "Walidacja Zakończona Sukcesem!",
+      "what_imported": "Co zostanie zaimportowane:",
+      "new_products": "Nowe Produkty:",
+      "new_recipes": "Nowe Przepisy:",
+      "meal_entries": "Wpisy Posiłków:",
+      "warning_title": "Zanim przejdziesz dalej:",
+      "warning_products": "To utworzy {{count}} nowych produktów",
+      "warning_recipes": "To utworzy {{count}} nowych przepisów",
+      "warning_undone": "Tej operacji nie można cofnąć",
+      "confirm": "Potwierdź i Importuj",
+      "importing": "Importowanie..."
+    },
+    "step4": {
+      "success_title": "Import Zakończony Sukcesem!",
+      "success_message": "Twój plan diety został pomyślnie zaimportowany. Przekierowywanie do planów diety..."
+    }
+  },
+  "product_detail": {
+    "back": "Powrót do Produktów",
+    "loading": "Ładowanie produktu...",
+    "not_found": "Produkt nie znalezion",
+    "nutrition_facts": "Wartości Odżywcze (na 100g)",
+    "carbohydrates": "Węglowodany",
+    "fat": "Tłuszcz",
+    "conversions": "Przeliczniki",
+    "macro_distribution": "Rozkład Makroskładników",
+    "total_macros": "Łącznie Makro",
+    "default_unit": "Jednostka Domyślna",
+    "density": "Gęstość",
+    "weight_per_piece": "Waga Sztuki",
+    "no_conversion": "Brak dostępnych danych przeliczeniowych",
+    "density_info": "1 ml = {{value}}g",
+    "piece_info": "1 sztuka = {{value}}g"
+  },
+  "recipe_detail": {
+    "back": "Powrót do Przepisów",
+    "loading": "Ładowanie przepisu...",
+    "not_found": "Przepis nie znalezion",
+    "nutrition_per_serving": "Wartości Odżywcze na Porcję",
+    "total_nutrition": "Całkowite Wartości Odżywcze Przepisu",
+    "macro_distribution": "Rozkład Makroskładników (Na Porcję)",
+    "ingredients": "Składniki ({{count}})",
+    "instructions": "Instrukcje",
+    "total_calories": "Całkowite Kalorie",
+    "total_protein": "Całkowite Białko",
+    "total_carbs": "Całkowite Węglowodany",
+    "total_fat": "Całkowity Tłuszcz",
+    "table": {
+      "product": "Produkt",
+      "amount": "Ilość",
+      "unit": "Jedn.",
+      "calories": "Kalorie",
+      "protein": "Białko"
+    }
+  },
+  "diet_plan_detail": {
+    "back": "Powrót do Planów Diety",
+    "loading": "Ładowanie planu diety...",
+    "not_found": "Plan diety nie znalezion",
+    "days": "dni",
+    "meals": "posiłków",
+    "week_of": "Tydzień {{date}}",
+    "daily_totals": "Sumy Dzienne",
+    "no_meal": "Brak posiłku",
+    "meal_types": {
+      "breakfast": "Śniadanie",
+      "lunch": "Obiad",
+      "dinner": "Kolacja",
+      "snack": "Przekąska"
+    }
+  },
+  "product_form": {
+    "edit_title": "Edytuj Produkt",
+    "create_title": "Utwórz Nowy Produkt",
+    "update_subtitle": "Aktualizuj {{name}}",
+    "create_subtitle": "Dodaj nowy produkt spożywczy do swojej bazy danych",
+    "basic_info": "Podstawowe Informacje",
+    "name_label": "Nazwa Produktu *",
+    "name_placeholder": "np. Pierś z Kurczaka",
+    "unit_label": "Jednostka Domyślna *",
+    "units": {
+      "g": "Gramy (g)",
+      "ml": "Mililitry (ml)",
+      "piece": "Sztuka"
+    },
+    "nutrition_header": "Wartości Odżywcze (na 100g)",
+    "calories_label": "Kalorie (kcal) *",
+    "protein_label": "Białko (g) *",
+    "carbs_label": "Węglowodany (g) *",
+    "fat_label": "Tłuszcz (g) *",
+    "macro_warning": "Ostrzeżenie: Suma makro ({{total}}g) przekracza 100g. Sprawdź swoje wartości.",
+    "macro_summary": "Podsumowanie Makro",
+    "conversions_header": "Opcjonalne Przeliczniki",
+    "density_label": "Gęstość (g/ml)",
+    "density_placeholder": "np. 1.0 dla wody",
+    "density_help": "Do przeliczania między gramami a mililitrami",
+    "piece_label": "Waga Sztuki (g)",
+    "piece_placeholder": "np. 150 dla średniego jabłka",
+    "piece_help": "Średnia waga jednej sztuki w gramach",
+    "create_btn": "Utwórz Produkt",
+    "update_btn": "Aktualizuj Produkt",
+    "saving": "Zapisywanie..."
+  },
+  "recipe_form": {
+    "edit_title": "Edytuj Przepis",
+    "create_title": "Utwórz Nowy Przepis",
+    "update_subtitle": "Aktualizuj {{name}}",
+    "create_subtitle": "Dodaj nowy przepis ze składnikami i instrukcjami",
+    "basic_info": "Podstawowe Informacje",
+    "name_label": "Nazwa Przepisu *",
+    "name_placeholder": "np. Sałatka z Grillowanym Kurczakiem",
+    "description_label": "Opis",
+    "description_placeholder": "Krótki opis przepisu",
+    "servings_label": "Porcje *",
+    "prep_time_label": "Czas Przygotowania (minuty)",
+    "ingredients_header": "Składniki",
+    "add_ingredient": "Dodaj Składnik",
+    "product_label": "Produkt *",
+    "product_placeholder": "Szukaj produktu...",
+    "amount_label": "Ilość *",
+    "unit_label": "Jednostka *",
+    "no_ingredients": "Jeszcze nie dodano składników",
+    "add_first_ingredient": "Dodaj Pierwszy Składnik",
+    "instructions_header": "Instrukcje",
+    "instructions_label": "Instrukcje Gotowania",
+    "instructions_placeholder": "Instrukcje gotowania krok po kroku...",
+    "summary_header": "Podsumowanie Przepisu",
+    "total_ingredients": "Liczba Składników:",
+    "servings_summary": "Porcje:",
+    "prep_time_summary": "Czas Przygotowania:",
+    "create_btn": "Utwórz Przepis",
+    "update_btn": "Aktualizuj Przepis"
+  }
+}
