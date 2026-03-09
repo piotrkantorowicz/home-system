@@ -215,6 +215,9 @@ builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IDietPlanService,
 builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IMealEntryService,
     DietPlanner.Api.Features.DietPlans.MealEntryService>();
 
+builder.Services.AddScoped<DietPlanner.Api.Features.Goals.IGoalService,
+    DietPlanner.Api.Features.Goals.GoalService>();
+
 // Import services
 builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.Import.IImportValidator,
     DietPlanner.Api.Features.DietPlans.Import.ImportValidator>();
@@ -291,6 +294,7 @@ app.MapGet("/api/v1/info", () => Results.Ok(new
 DietPlanner.Api.Features.Products.ProductEndpoints.MapProductEndpoints(app);
 DietPlanner.Api.Features.Recipes.RecipeEndpoints.MapRecipeEndpoints(app);
 DietPlanner.Api.Features.DietPlans.DietPlanEndpoints.MapDietPlanEndpoints(app);
+DietPlanner.Api.Features.Goals.GoalEndpoints.MapGoalEndpoints(app);
 
 // ==============================================
 // Database Migration on Startup (Development only)

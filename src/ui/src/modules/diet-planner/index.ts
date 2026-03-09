@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Home, Package, BookOpen, CalendarDays, Upload } from 'lucide-react';
+import { Home, Package, BookOpen, CalendarDays, Upload, Target } from 'lucide-react';
 import type { AppModule } from '@shared/lib/module-registry';
 import en from './locales/en.json';
 import pl from './locales/pl.json';
@@ -16,6 +16,7 @@ const RecipeDetail = lazy(() => import('./pages/recipes/RecipeDetail'));
 const DietPlanList = lazy(() => import('./pages/diet-plans/DietPlanList'));
 const DietPlanDetail = lazy(() => import('./pages/diet-plans/DietPlanDetail'));
 const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
+const Goals = lazy(() => import('./pages/Goals'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -53,6 +54,12 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'common.diet_plans',
     },
     {
+      name: 'Goals',
+      href: '/diet-planner/goals',
+      icon: Target,
+      translationKey: 'diet-planner:goals.nav',
+    },
+    {
       name: 'Import Plan',
       href: '/diet-planner/diet-plans/import',
       icon: Upload,
@@ -69,6 +76,7 @@ export const dietPlannerModule: AppModule = {
     { path: 'recipes/new', Component: RecipeCreate },
     { path: 'recipes/:id', Component: RecipeDetail },
     { path: 'recipes/:id/edit', Component: RecipeEdit },
+    { path: 'goals', Component: Goals },
     { path: 'diet-plans', Component: DietPlanList },
     { path: 'diet-plans/import', Component: ImportWizard },
     { path: 'diet-plans/:id', Component: DietPlanDetail },

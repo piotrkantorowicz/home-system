@@ -1,16 +1,59 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
-import { Package, BookOpen, CalendarDays, Loader2, ArrowRight } from 'lucide-react';
+import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { useDietPlans } from '@modules/diet-planner/api/hooks/useDietPlans';
+import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { data: productsData, isLoading: productsLoading } = useProducts({ pageSize: 1 });
   const { data: recipesData, isLoading: recipesLoading } = useRecipes({ pageSize: 1 });
   const { data: dietPlansData, isLoading: dietPlansLoading } = useDietPlans({ pageSize: 1 });
+  const { data: goalsData } = useGoals();
+
+  const hasGoals =
+    goalsData &&
+    (goalsData.dailyCalorieTarget !== null ||
+      goalsData.proteinGrams !== null ||
+      goalsData.carbsGrams !== null ||
+      goalsData.fatGrams !== null ||
+      goalsData.fiberGrams !== null);
+
+  const goalItems = [
+    {
+      label: t('diet-planner:dashboard.goal_calories'),
+      value: goalsData?.dailyCalorieTarget ?? '\u2014',
+      unit: ' kcal',
+      color: 'bg-orange-500',
+    },
+    {
+      label: t('diet-planner:dashboard.goal_protein'),
+      value: goalsData?.proteinGrams ?? '\u2014',
+      unit: 'g',
+      color: 'bg-blue-500',
+    },
+    {
+      label: t('diet-planner:dashboard.goal_carbs'),
+      value: goalsData?.carbsGrams ?? '\u2014',
+      unit: 'g',
+      color: 'bg-emerald-500',
+    },
+    {
+      label: t('diet-planner:dashboard.goal_fat'),
+      value: goalsData?.fatGrams ?? '\u2014',
+      unit: 'g',
+      color: 'bg-amber-500',
+    },
+    {
+      label: t('diet-planner:dashboard.goal_fiber'),
+      value: goalsData?.fiberGrams ?? '\u2014',
+      unit: 'g',
+      color: 'bg-purple-500',
+    },
+  ];
 
   const productCount = productsData?.totalCount ?? 0;
   const recipeCount = recipesData?.totalCount ?? 0;
@@ -108,6 +151,54 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Goal Progress */}
+      {goalsData && hasGoals && (
+        <Card className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-orange-500/10 p-2.5">
+                  <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">
+                    {t('diet-planner:dashboard.goals_title')}
+                  </CardTitle>
+                  <CardDescription>{t('diet-planner:dashboard.goals_subtitle')}</CardDescription>
+                </div>
+              </div>
+              <Link
+                to="/diet-planner/goals"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {t('diet-planner:dashboard.goals_edit')}
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {goalItems.map((item) => (
+                <div key={item.label} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-medium">
+                      {item.value}
+                      {item.unit}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${item.color}`}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Getting Started */}
       <Card className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
