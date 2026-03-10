@@ -185,6 +185,7 @@ export default function ProductDetail() {
         protein={product.proteinPer100g}
         carbs={product.carbsPer100g}
         fat={product.fatPer100g}
+        fiber={product.fiberPer100g ?? 0}
         t={t}
         className="mt-6"
       />

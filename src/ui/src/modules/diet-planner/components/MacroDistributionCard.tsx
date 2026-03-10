@@ -5,6 +5,7 @@ interface MacroDistributionCardProps {
   protein: number;
   carbs: number;
   fat: number;
+  fiber?: number;
   t: TFunction;
   title?: string;
   className?: string;
@@ -22,17 +23,23 @@ const macros = [
     gradient: 'from-emerald-500 to-teal-500',
   },
   { key: 'fat' as const, labelKey: 'product_detail.fat', gradient: 'from-amber-500 to-orange-500' },
+  {
+    key: 'fiber' as const,
+    labelKey: 'products.table.fiber',
+    gradient: 'from-violet-500 to-purple-500',
+  },
 ];
 
 export function MacroDistributionCard({
   protein,
   carbs,
   fat,
+  fiber = 0,
   t,
   title,
   className,
 }: MacroDistributionCardProps) {
-  const values = { protein, carbs, fat };
+  const values = { protein, carbs, fat, fiber };
   const total = protein + carbs + fat;
   const pct = (val: number) => (total > 0 ? (val / total) * 100 : 0);
 

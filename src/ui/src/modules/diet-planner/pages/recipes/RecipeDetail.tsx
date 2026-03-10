@@ -242,6 +242,7 @@ export default function RecipeDetail() {
             protein={Number(recipe.nutritionPerServing.protein)}
             carbs={Number(recipe.nutritionPerServing.carbs)}
             fat={Number(recipe.nutritionPerServing.fat)}
+            fiber={Number(recipe.nutritionPerServing.fiber ?? 0)}
             t={t}
             title={t('recipe_detail.macro_distribution')}
             className="mb-6"
