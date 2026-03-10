@@ -138,6 +138,7 @@ public class ProductServiceIntegrationTests(DatabaseFixture fixture) : IAsyncLif
             ProteinPer100g: 25,
             CarbsPer100g: 0,
             FatPer100g: 15,
+            FiberPer100g: null,
             DefaultUnit: "g"
         );
 

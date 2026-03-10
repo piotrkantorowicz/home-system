@@ -9,13 +9,14 @@ public class NutritionCalculator : INutritionCalculator
     {
         if (recipe.Ingredients == null || !recipe.Ingredients.Any())
         {
-            return new NutritionInfo(0, 0, 0, 0);
+            return new NutritionInfo(0, 0, 0, 0, 0);
         }
 
         decimal totalCalories = 0;
         decimal totalProtein = 0;
         decimal totalCarbs = 0;
         decimal totalFat = 0;
+        decimal totalFiber = 0;
 
         foreach (var ingredient in recipe.Ingredients)
         {
@@ -29,13 +30,15 @@ public class NutritionCalculator : INutritionCalculator
             totalProtein += (product.ProteinPer100g ?? 0) * factor;
             totalCarbs += (product.CarbsPer100g ?? 0) * factor;
             totalFat += (product.FatPer100g ?? 0) * factor;
+            totalFiber += (product.FiberPer100g ?? 0) * factor;
         }
 
         return new NutritionInfo(
             Math.Round(totalCalories, 1),
             Math.Round(totalProtein, 1),
             Math.Round(totalCarbs, 1),
-            Math.Round(totalFat, 1)
+            Math.Round(totalFat, 1),
+            Math.Round(totalFiber, 1)
         );
     }
 
@@ -48,7 +51,8 @@ public class NutritionCalculator : INutritionCalculator
             Math.Round(total.Calories / servings, 1),
             Math.Round(total.Protein / servings, 1),
             Math.Round(total.Carbs / servings, 1),
-            Math.Round(total.Fat / servings, 1)
+            Math.Round(total.Fat / servings, 1),
+            Math.Round(total.Fiber / servings, 1)
         );
     }
 
@@ -60,7 +64,8 @@ public class NutritionCalculator : INutritionCalculator
             Math.Round(perServing.Calories * servings, 1),
             Math.Round(perServing.Protein * servings, 1),
             Math.Round(perServing.Carbs * servings, 1),
-            Math.Round(perServing.Fat * servings, 1)
+            Math.Round(perServing.Fat * servings, 1),
+            Math.Round(perServing.Fiber * servings, 1)
         );
     }
 }

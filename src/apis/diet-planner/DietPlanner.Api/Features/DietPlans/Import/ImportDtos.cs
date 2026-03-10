@@ -46,6 +46,9 @@ public class ImportProductDto
     [Description("Fat per 100g in grams (0-100)")]
     public decimal? FatPer100g { get; set; }
 
+    [Description("Fiber per 100g in grams (0-100)")]
+    public decimal? FiberPer100g { get; set; }
+
     [Description("Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece")]
     public string Unit { get; set; } = "g";
 

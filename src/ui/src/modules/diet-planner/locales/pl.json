@@ -65,6 +65,7 @@
       "protein": "Białko",
       "carbs": "Węglowodany",
       "fat": "Tłuszcz",
+      "fiber": "Błonnik",
       "unit": "Jednostka",
       "owner": "Właściciel"
     },
@@ -169,6 +170,7 @@
     "nutrition_facts": "Wartości Odżywcze (na 100g)",
     "carbohydrates": "Węglowodany",
     "fat": "Tłuszcz",
+    "fiber": "Błonnik",
     "conversions": "Przeliczniki",
     "macro_distribution": "Rozkład Makroskładników",
     "total_macros": "Łącznie Makro",
@@ -192,6 +194,7 @@
     "total_protein": "Całkowite Białko",
     "total_carbs": "Całkowite Węglowodany",
     "total_fat": "Całkowity Tłuszcz",
+    "total_fiber": "Całkowity Błonnik",
     "table": {
       "product": "Produkt",
       "amount": "Ilość",
@@ -265,6 +268,7 @@
     "protein_label": "Białko (g) *",
     "carbs_label": "Węglowodany (g) *",
     "fat_label": "Tłuszcz (g) *",
+    "fiber_label": "Błonnik (g)",
     "macro_warning": "Ostrzeżenie: Suma makro ({{total}}g) przekracza 100g. Sprawdź swoje wartości.",
     "macro_summary": "Podsumowanie Makro",
     "conversions_header": "Opcjonalne Przeliczniki",

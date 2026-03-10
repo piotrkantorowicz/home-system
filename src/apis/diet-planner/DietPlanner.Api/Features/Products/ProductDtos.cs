@@ -13,6 +13,7 @@ public interface IProductRequest
     decimal? ProteinPer100g { get; }
     decimal? CarbsPer100g { get; }
     decimal? FatPer100g { get; }
+    decimal? FiberPer100g { get; }
     string DefaultUnit { get; }
     decimal? DensityGramsPerMl { get; }
     decimal? GramPerPiece { get; }
@@ -27,6 +28,7 @@ public record CreateProductRequest(
     [property: Description("Protein per 100g in grams (0-100)")] decimal? ProteinPer100g,
     [property: Description("Carbohydrates per 100g in grams (0-100)")] decimal? CarbsPer100g,
     [property: Description("Fat per 100g in grams (0-100)")] decimal? FatPer100g,
+    [property: Description("Fiber per 100g in grams (0-100)")] decimal? FiberPer100g,
     [property: Description("Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece")] string DefaultUnit = "g",
     [property: Description("Density in g/ml (required for accurate volume unit conversion)")] decimal? DensityGramsPerMl = null,
     [property: Description("Weight of one piece in grams (required when unit is 'piece')")] decimal? GramPerPiece = null
@@ -41,6 +43,7 @@ public record UpdateProductRequest(
     [property: Description("Protein per 100g in grams (0-100)")] decimal? ProteinPer100g,
     [property: Description("Carbohydrates per 100g in grams (0-100)")] decimal? CarbsPer100g,
     [property: Description("Fat per 100g in grams (0-100)")] decimal? FatPer100g,
+    [property: Description("Fiber per 100g in grams (0-100)")] decimal? FiberPer100g,
     [property: Description("Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece")] string DefaultUnit = "g",
     [property: Description("Density in g/ml (required for accurate volume unit conversion)")] decimal? DensityGramsPerMl = null,
     [property: Description("Weight of one piece in grams (required when unit is 'piece')")] decimal? GramPerPiece = null

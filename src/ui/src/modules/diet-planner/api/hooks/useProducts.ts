@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '../client';
-import type { components } from '../generated/schema';
 
 type Product = {
   id: string;
@@ -9,11 +8,24 @@ type Product = {
   proteinPer100g: number;
   carbsPer100g: number;
   fatPer100g: number;
+  fiberPer100g?: number | null;
   defaultUnit: string;
   densityGramsPerMl?: number | null;
   gramPerPiece?: number | null;
   isOwner: boolean;
   createdAt: string;
+};
+
+type ProductBody = {
+  name: string;
+  caloriesPer100g?: number | null;
+  proteinPer100g?: number | null;
+  carbsPer100g?: number | null;
+  fatPer100g?: number | null;
+  fiberPer100g?: number | null;
+  defaultUnit?: string;
+  densityGramsPerMl?: number | null;
+  gramPerPiece?: number | null;
 };
 
 type ProductsResponse = {
@@ -77,9 +89,9 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (productData: components['schemas']['CreateProductRequest']) => {
+    mutationFn: async (productData: ProductBody) => {
       const response = await api.POST('/api/v1/products', {
-        body: productData,
+        body: productData as never,
       });
 
       if (response.error) {
@@ -98,12 +110,12 @@ export function useUpdateProduct(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (productData: components['schemas']['UpdateProductRequest']) => {
+    mutationFn: async (productData: ProductBody) => {
       const response = await api.PUT('/api/v1/products/{id}', {
         params: {
           path: { id },
         },
-        body: productData,
+        body: productData as never,
       });
 
       if (response.error) {

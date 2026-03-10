@@ -121,6 +121,12 @@ export default function ProductDetail() {
                   <span className="text-muted-foreground">{t('product_detail.fat')}</span>
                   <span className="font-medium">{product.fatPer100g.toFixed(1)}g</span>
                 </div>
+                {product.fiberPer100g != null && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
+                    <span className="font-medium">{product.fiberPer100g.toFixed(1)}g</span>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-3">

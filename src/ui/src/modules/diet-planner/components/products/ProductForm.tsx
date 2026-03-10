@@ -18,6 +18,7 @@ const productSchema = z.object({
   proteinPer100g: z.number().min(0, 'Protein must be 0 or greater'),
   carbsPer100g: z.number().min(0, 'Carbs must be 0 or greater'),
   fatPer100g: z.number().min(0, 'Fat must be 0 or greater'),
+  fiberPer100g: z.number().min(0, 'Fiber must be 0 or greater').optional(),
   defaultUnit: z.string(),
   densityGramsPerMl: z.number().positive().optional(),
   gramPerPiece: z.number().positive().optional(),
@@ -55,6 +56,7 @@ export function ProductForm({
   const protein = watch('proteinPer100g') || 0;
   const carbs = watch('carbsPer100g') || 0;
   const fat = watch('fatPer100g') || 0;
+  const fiber = watch('fiberPer100g') || 0;
 
   const totalMacros = Number(protein) + Number(carbs) + Number(fat);
   const isMacroWarning = totalMacros > 100;
@@ -157,6 +159,22 @@ export function ProductForm({
                 <p className="mt-1.5 text-sm text-destructive">{errors.fatPer100g.message}</p>
               )}
             </div>
+
+            <div>
+              <Label htmlFor="fiberPer100g">{t('product_form.fiber_label')}</Label>
+              <Input
+                id="fiberPer100g"
+                type="number"
+                step="0.1"
+                {...register('fiberPer100g', {
+                  setValueAs: (v) => (v === '' || isNaN(v) ? undefined : Number(v)),
+                })}
+                placeholder="0"
+              />
+              {errors.fiberPer100g && (
+                <p className="mt-1.5 text-sm text-destructive">{errors.fiberPer100g.message}</p>
+              )}
+            </div>
           </div>
 
           {isMacroWarning && (
@@ -169,7 +187,7 @@ export function ProductForm({
 
           <div className="rounded-xl bg-muted/50 p-5">
             <p className="text-sm font-semibold mb-3">{t('product_form.macro_summary')}</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">
                   {t('products.table.protein')}
@@ -187,6 +205,12 @@ export function ProductForm({
                   {t('products.table.fat')}
                 </p>
                 <p className="text-lg font-semibold mt-0.5">{Number(fat).toFixed(1)}g</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                  {t('products.table.fiber')}
+                </p>
+                <p className="text-lg font-semibold mt-0.5">{Number(fiber).toFixed(1)}g</p>
               </div>
             </div>
           </div>

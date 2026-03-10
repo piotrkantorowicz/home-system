@@ -158,6 +158,14 @@ export default function RecipeDetail() {
                       </span>
                     </div>
                   )}
+                  {recipe.nutritionPerServing.fiber != null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
+                      <span className="font-medium">
+                        {Number(recipe.nutritionPerServing.fiber).toFixed(1)}g
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -210,6 +218,16 @@ export default function RecipeDetail() {
                         </span>
                         <span className="font-medium">
                           {Number(recipe.totalNutrition.fat).toFixed(1)}g
+                        </span>
+                      </div>
+                    )}
+                    {recipe.totalNutrition.fiber != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('recipe_detail.total_fiber')}
+                        </span>
+                        <span className="font-medium">
+                          {Number(recipe.totalNutrition.fiber).toFixed(1)}g
                         </span>
                       </div>
                     )}

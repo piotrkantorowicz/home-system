@@ -41,6 +41,12 @@ public abstract class BaseProductValidator<T> : AbstractValidator<T>
             .LessThanOrEqualTo(100).When(x => x.FatPer100g.HasValue)
             .WithMessage("Fat per 100g cannot exceed 100g");
 
+        RuleFor(x => x.FiberPer100g)
+            .GreaterThanOrEqualTo(0).When(x => x.FiberPer100g.HasValue)
+            .WithMessage("Fiber cannot be negative")
+            .LessThanOrEqualTo(100).When(x => x.FiberPer100g.HasValue)
+            .WithMessage("Fiber per 100g cannot exceed 100g");
+
         RuleFor(x => x.DefaultUnit)
             .NotEmpty().WithMessage("Default unit is required")
             .Must(UnitConverter.IsValidUnit)

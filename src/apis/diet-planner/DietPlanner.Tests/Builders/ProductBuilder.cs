@@ -20,5 +20,5 @@ public class ProductBuilder
     public ProductBuilder WithGramPerPiece(decimal g) { _gramPerPiece = g; return this; }
 
     public CreateProductRequest Build() =>
-        new(_name, _calories, _protein, _carbs, _fat, _unit, _density, _gramPerPiece);
+        new(_name, _calories, _protein, _carbs, _fat, null, _unit, _density, _gramPerPiece);
 }
