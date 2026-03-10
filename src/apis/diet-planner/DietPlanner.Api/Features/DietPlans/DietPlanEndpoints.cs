@@ -243,25 +243,5 @@ public static class DietPlanEndpoints
         .WithDescription("Returns all meals for a diet plan within the specified date range.")
         .Produces<List<MealEntryDto>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
-
-        // GET /api/v1/diet-plans/{id}/daily-nutrition - Get daily nutrition totals with goal comparison
-        group.MapGet("/{id:guid}/daily-nutrition", async (
-            Guid id,
-            HttpContext context,
-            [FromServices] IDietPlanService service,
-            [FromQuery] DateOnly? from,
-            [FromQuery] DateOnly? to) =>
-        {
-            var userId = context.User.GetUserId();
-            var result = await service.GetDailyNutritionAsync(id, userId, from, to);
-
-            return Results.Ok(result);
-        })
-        .RequireRateLimiting("api")
-        .WithName("GetDailyNutrition")
-        .WithSummary("Get daily nutrition totals with goal comparison")
-        .WithDescription("Returns per-day aggregated nutrition totals for a diet plan within the specified date range, compared against the user's nutrition goals.")
-        .Produces<DailyNutritionResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
     }
 }

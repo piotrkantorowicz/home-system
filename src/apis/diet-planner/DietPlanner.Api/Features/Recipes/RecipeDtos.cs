@@ -67,8 +67,7 @@ public record NutritionInfo(
     [property: Description("Total calories (kcal)")] decimal Calories,
     [property: Description("Total protein (grams)")] decimal Protein,
     [property: Description("Total carbohydrates (grams)")] decimal Carbs,
-    [property: Description("Total fat (grams)")] decimal Fat,
-    [property: Description("Total fiber (grams)")] decimal Fiber
+    [property: Description("Total fat (grams)")] decimal Fat
 );
 
 /// <summary>

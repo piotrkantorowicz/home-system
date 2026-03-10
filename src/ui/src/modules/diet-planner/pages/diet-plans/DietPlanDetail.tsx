@@ -13,7 +13,6 @@ import {
 import {
   useDietPlan,
   useMeals,
-  useDailyNutrition,
   useCreateMeal,
   useUpdateMeal,
   useDeleteMeal,
@@ -28,7 +27,6 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
-import { DayNutritionSummary } from '@modules/diet-planner/components/diet-plans/DayNutritionSummary';
 import { cn } from '@shared/lib/utils';
 
 function parseLocalDate(dateStr: string) {
@@ -84,7 +82,6 @@ export default function DietPlanDetail() {
   }, [selectedWeekStart]);
 
   const { data: meals, isLoading: mealsLoading } = useMeals(id!, weekRange.start, weekRange.end);
-  const { data: dailyNutrition } = useDailyNutrition(id!, weekRange.start, weekRange.end);
 
   const mealsByDay = useMemo(() => {
     if (!meals) return {};
@@ -315,29 +312,6 @@ export default function DietPlanDetail() {
                       )}
                     </div>
                   ))}
-
-                  {/* Daily nutrition vs goals */}
-                  {dailyNutrition && (
-                    <DayNutritionSummary
-                      nutrition={
-                        dailyNutrition.days.find((d) => d.date === dateStr) ?? {
-                          date: dateStr,
-                          totalCalories: 0,
-                          totalProtein: 0,
-                          totalCarbs: 0,
-                          totalFat: 0,
-                          totalFiber: 0,
-                          mealCount: 0,
-                          caloriesStatus: 'no_goal',
-                          proteinStatus: 'no_goal',
-                          carbsStatus: 'no_goal',
-                          fatStatus: 'no_goal',
-                          fiberStatus: 'no_goal',
-                        }
-                      }
-                      goals={dailyNutrition.goals}
-                    />
-                  )}
                 </CardContent>
               </Card>
             );

@@ -13,7 +13,6 @@ public class NutritionCalculatorTests
         decimal? protein = null,
         decimal? carbs = null,
         decimal? fat = null,
-        decimal? fiber = null,
         decimal? density = null,
         decimal? gramPerPiece = null) =>
         new()
@@ -24,7 +23,6 @@ public class NutritionCalculatorTests
             ProteinPer100g = protein,
             CarbsPer100g = carbs,
             FatPer100g = fat,
-            FiberPer100g = fiber,
             DensityGramsPerMl = density,
             GramPerPiece = gramPerPiece
         };
@@ -55,7 +53,6 @@ public class NutritionCalculatorTests
         result.Protein.Should().Be(0);
         result.Carbs.Should().Be(0);
         result.Fat.Should().Be(0);
-        result.Fiber.Should().Be(0);
     }
 
     [Fact]
@@ -174,17 +171,6 @@ public class NutritionCalculatorTests
 
         result.Calories.Should().Be(400);
         result.Protein.Should().Be(40);
-    }
-
-    [Fact]
-    public void CalculateTotalNutrition_WithFiber_CalculatesCorrectly()
-    {
-        var product = MakeProduct(calories: 200, protein: 20, carbs: 10, fat: 8, fiber: 5);
-        var recipe = MakeRecipe(1, Ingredient(product, 200, "g"));
-
-        var result = _sut.CalculateTotalNutrition(recipe);
-
-        result.Fiber.Should().Be(10); // 5g per 100g * 2 = 10g
     }
 
     [Fact]

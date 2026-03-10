@@ -48,20 +48,6 @@
     "save_btn": "Save Goals",
     "save_success": "Goals saved successfully!"
   },
-  "nutrition": {
-    "title": "Nutrition vs Goals",
-    "calories": "Calories",
-    "protein": "Protein",
-    "carbs": "Carbs",
-    "fat": "Fat",
-    "fiber": "Fiber",
-    "status_on_track": "On track",
-    "status_slightly_off": "Slightly off",
-    "status_off": "Off target",
-    "status_far_off": "Far off target",
-    "status_no_goal": "No goal set",
-    "no_goals": "Set nutrition goals to track progress"
-  },
   "products": {
     "title": "Products",
     "subtitle": "Manage your food products and their nutritional information",
