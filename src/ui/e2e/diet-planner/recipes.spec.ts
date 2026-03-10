@@ -76,7 +76,7 @@ test.describe('Recipes CRUD', () => {
     await page.click('button[type="submit"]');
 
     // Verify update in detail or list
-    await page.waitForURL(/\/recipes\/.+/); // detail page
+    await page.waitForURL(/\/diet-planner\/recipes\/.+/); // detail page
     await expect(page.getByText('4 servings')).toBeVisible();
   });
 

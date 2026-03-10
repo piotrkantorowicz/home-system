@@ -19,7 +19,7 @@ export class RecipesPage {
   }
 
   async goto() {
-    await this.page.goto('/recipes');
+    await this.page.goto('/diet-planner/recipes');
   }
 
   async createRecipe(data: {
@@ -30,7 +30,7 @@ export class RecipesPage {
     instructions?: string;
   }) {
     await this.createButton.click();
-    await this.page.waitForURL('/recipes/new');
+    await this.page.waitForURL('/diet-planner/recipes/new');
 
     await this.page.fill('input[name="name"]', data.name);
     await this.page.fill('input[name="servings"]', data.servings.toString());
@@ -63,7 +63,7 @@ export class RecipesPage {
     }
 
     await this.page.click('button[type="submit"]');
-    await this.page.waitForURL(/\/recipes$/);
+    await this.page.waitForURL(/\/diet-planner\/recipes$/);
   }
 
   async searchRecipes(query: string) {

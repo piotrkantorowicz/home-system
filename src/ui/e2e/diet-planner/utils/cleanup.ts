@@ -50,6 +50,35 @@ async function permanentDeleteAll(
   }
 }
 
+/**
+ * Delete all meal entries by listing them and deleting each one.
+ */
+async function deleteAllMealEntries(apiContext: APIRequestContext) {
+  let page = 1;
+
+  while (true) {
+    const res = await apiContext.get(`/api/v1/meals?pageSize=100&page=${page}`);
+    if (!res.ok()) break;
+    const data = await res.json();
+    const items = data.items || [];
+    if (items.length === 0) break;
+
+    for (const item of items) {
+      const delRes = await apiContext.delete(`/api/v1/meals/${item.id}`);
+      if (delRes.ok()) {
+        console.log(`  Deleted meal entry: ${item.id}`);
+      } else if (delRes.status() === 404) {
+        console.log(`  Meal entry ${item.id} already gone (404)`);
+      } else {
+        console.warn(`  Failed to delete meal entry ${item.id}: ${delRes.status()}`);
+      }
+    }
+
+    if (items.length < 100) break;
+    page++;
+  }
+}
+
 export async function cleanupTestData() {
   const authStatePath = path.resolve('playwright/.auth/user.json');
 
@@ -82,27 +111,19 @@ export async function cleanupTestData() {
 
     // --- Phase 1: Permanently delete tracked IDs (includes soft-deleted items invisible to queries) ---
     const tracked = getTrackedIds();
-    const trackedTotal = tracked.plans.length + tracked.recipes.length + tracked.products.length;
+    const trackedTotal = tracked.recipes.length + tracked.products.length;
     console.log(
-      `Found ${trackedTotal} tracked items (${tracked.plans.length} plans, ${tracked.recipes.length} recipes, ${tracked.products.length} products)`
+      `Found ${trackedTotal} tracked items (${tracked.recipes.length} recipes, ${tracked.products.length} products)`
     );
 
     // Deletion order respects FK constraints:
-    // 1. Plans (permanent delete cascades to meal_entries)
+    // 1. Meal entries (references recipes)
     // 2. Recipes (safe now — no meal_entries reference them)
     // 3. Products (safe now — no recipe_ingredients reference them)
-    //
-    // We interleave tracked IDs and visible-item queries to handle
-    // import side-effects (recipes/products created by import but not tracked).
 
-    // Step 1: Delete all plans (tracked + visible)
-    if (tracked.plans.length > 0) {
-      console.log('Permanently deleting tracked plans...');
-      for (const id of tracked.plans) {
-        await permanentDeleteById(apiContext, '/api/v1/diet-plans', id, 'plan');
-      }
-    }
-    await permanentDeleteAll(apiContext, '/api/v1/diet-plans', 'plan', 'pageSize=100');
+    // Step 1: Delete all meal entries
+    console.log('Deleting all meal entries...');
+    await deleteAllMealEntries(apiContext);
 
     // Step 2: Delete all recipes (tracked + visible)
     if (tracked.recipes.length > 0) {

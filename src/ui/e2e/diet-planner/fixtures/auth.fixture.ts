@@ -39,30 +39,12 @@ export const test = base.extend({
           ) {
             const body = await response.json();
             if (body?.id) trackCreatedId('recipes', body.id);
-          } else if (url.includes('/api/v1/diet-plans/import')) {
-            const body = await response.json();
-            // ImportResultDto contains dietPlanId
-            if (body?.dietPlanId) trackCreatedId('plans', body.dietPlanId);
-            if (body?.id) trackCreatedId('plans', body.id);
-          } else if (
-            url.includes('/api/v1/diet-plans') &&
-            !url.includes('/import') &&
-            !url.includes('/validate')
-          ) {
-            const body = await response.json();
-            if (body?.id) trackCreatedId('plans', body.id);
           }
         }
 
         // Track DELETE responses — the entity is now soft-deleted and invisible to queries,
         // but we still need its ID for permanent deletion in cleanup
         if (method === 'DELETE') {
-          const planId = extractIdFromUrl(url, 'diet-plans');
-          if (planId) {
-            trackCreatedId('plans', planId);
-            return;
-          }
-
           const recipeId = extractIdFromUrl(url, 'recipes');
           if (recipeId) {
             trackCreatedId('recipes', recipeId);

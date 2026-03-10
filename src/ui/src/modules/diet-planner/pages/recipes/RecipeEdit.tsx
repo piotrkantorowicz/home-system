@@ -24,7 +24,7 @@ export default function RecipeEdit() {
           unit: ing.unit,
         })),
       });
-      navigate(`/recipes/${id}`);
+      navigate(`/diet-planner/recipes/${id}`);
     } catch (error) {
       console.error('Failed to update recipe:', error);
     }

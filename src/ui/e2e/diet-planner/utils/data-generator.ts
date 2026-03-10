@@ -1,8 +1,7 @@
 import { format, addDays, startOfWeek } from 'date-fns';
 
-export const generateWeeklyPlan = (planName: string, startFromDate: Date) => {
+export const generateWeeklyPlan = (startFromDate: Date) => {
   const startDate = startOfWeek(startFromDate, { weekStartsOn: 1 }); // Monday
-  const endDate = addDays(startDate, 6);
 
   const formatDate = (d: Date) => format(d, 'yyyy-MM-dd');
 
@@ -97,9 +96,6 @@ export const generateWeeklyPlan = (planName: string, startFromDate: Date) => {
   }
 
   return {
-    planName,
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate),
     products,
     recipes,
     schedule,

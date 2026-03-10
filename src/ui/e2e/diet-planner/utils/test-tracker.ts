@@ -4,19 +4,18 @@ import path from 'path';
 const TRACKER_PATH = path.resolve('playwright/.test-data.json');
 
 interface TrackedData {
-  plans: string[];
   recipes: string[];
   products: string[];
 }
 
 function readTracker(): TrackedData {
   if (!fs.existsSync(TRACKER_PATH)) {
-    return { plans: [], recipes: [], products: [] };
+    return { recipes: [], products: [] };
   }
   try {
     return JSON.parse(fs.readFileSync(TRACKER_PATH, 'utf-8'));
   } catch {
-    return { plans: [], recipes: [], products: [] };
+    return { recipes: [], products: [] };
   }
 }
 
@@ -26,7 +25,7 @@ function writeTracker(data: TrackedData) {
   fs.writeFileSync(TRACKER_PATH, JSON.stringify(data, null, 2));
 }
 
-export function trackCreatedId(type: 'plans' | 'recipes' | 'products', id: string) {
+export function trackCreatedId(type: 'recipes' | 'products', id: string) {
   const data = readTracker();
   if (!data[type].includes(id)) {
     data[type].push(id);
