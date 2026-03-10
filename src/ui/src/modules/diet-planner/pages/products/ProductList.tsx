@@ -151,9 +151,7 @@ export default function ProductList() {
                     <TableCell>{product.proteinPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.carbsPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.fatPer100g.toFixed(1)}g</TableCell>
-                    <TableCell>
-                      {product.fiberPer100g != null ? `${Number(product.fiberPer100g).toFixed(1)}g` : '—'}
-                    </TableCell>
+                    <TableCell>{Number(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
                     </TableCell>
