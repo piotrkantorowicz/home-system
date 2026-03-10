@@ -23,7 +23,7 @@ export default function ProductEdit() {
         densityGramsPerMl: data.densityGramsPerMl || null,
         gramPerPiece: data.gramPerPiece || null,
       });
-      navigate(`/products/${id}`);
+      navigate(`/diet-planner/products/${id}`);
     } catch (error) {
       console.error('Failed to update product:', error);
     }
