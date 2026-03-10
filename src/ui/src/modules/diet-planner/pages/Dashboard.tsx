@@ -4,14 +4,24 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shar
 import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
-import { useDietPlans } from '@modules/diet-planner/api/hooks/useDietPlans';
+import { useMeals } from '@modules/diet-planner/api/hooks/useMeals';
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
+
+function getTodayRange() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const dateStr = `${y}-${m}-${d}`;
+  return { from: dateStr, to: dateStr };
+}
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { data: productsData, isLoading: productsLoading } = useProducts({ pageSize: 1 });
   const { data: recipesData, isLoading: recipesLoading } = useRecipes({ pageSize: 1 });
-  const { data: dietPlansData, isLoading: dietPlansLoading } = useDietPlans({ pageSize: 1 });
+  const todayRange = getTodayRange();
+  const { data: todayMeals, isLoading: mealsLoading } = useMeals(todayRange);
   const { data: goalsData } = useGoals();
 
   const hasGoals =
@@ -57,7 +67,7 @@ export default function Dashboard() {
 
   const productCount = productsData?.totalCount ?? 0;
   const recipeCount = recipesData?.totalCount ?? 0;
-  const dietPlanCount = dietPlansData?.totalCount ?? 0;
+  const todayMealCount = todayMeals?.length ?? 0;
 
   const statCards = [
     {
@@ -87,15 +97,15 @@ export default function Dashboard() {
       iconColor: 'text-blue-600 dark:text-blue-400',
     },
     {
-      to: '/diet-planner/diet-plans',
-      testId: 'diet-plan-card',
+      to: '/diet-planner/calendar',
+      testId: 'calendar-card',
       icon: CalendarDays,
-      title: t('common.diet_plans'),
-      desc: t('dashboard.diet_plans_desc'),
-      count: dietPlanCount,
-      loading: dietPlansLoading,
-      countTestId: 'diet-plan-count',
-      label: t('dashboard.active_plans'),
+      title: t('common.calendar'),
+      desc: t('dashboard.calendar_desc'),
+      count: todayMealCount,
+      loading: mealsLoading,
+      countTestId: 'calendar-count',
+      label: t('dashboard.meals_today'),
       color: 'from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
     },

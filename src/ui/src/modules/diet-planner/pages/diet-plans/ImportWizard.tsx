@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FileJson, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, XCircle } from 'lucide-react';
-import { useValidateImport, useExecuteImport } from '@modules/diet-planner/api/hooks/useDietPlans';
+import { useValidateImport, useExecuteImport } from '@modules/diet-planner/api/hooks/useMeals';
 import {
   Button,
   Card,
@@ -87,7 +87,7 @@ export default function ImportWizard() {
       await importMutation.mutateAsync(importData);
       setStep(4);
       setTimeout(() => {
-        navigate('/diet-planner/diet-plans');
+        navigate('/diet-planner/calendar');
       }, 2000);
     } catch (error) {
       console.error('Import failed:', error);
@@ -219,24 +219,7 @@ export default function ImportWizard() {
             <CardTitle>{t('import_wizard.step2.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-muted/20 rounded-xl">
-              <div>
-                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
-                  {t('import_wizard.step2.plan_name')}
-                </span>
-                <span className="font-medium text-sm truncate block" title={importData.planName}>
-                  {importData.planName}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
-                  {t('import_wizard.step2.date_range')}
-                </span>
-                <span className="font-medium text-sm block">
-                  {importData.startDate} <span className="text-muted-foreground">→</span>{' '}
-                  {importData.endDate}
-                </span>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 bg-muted/20 rounded-xl">
               <div>
                 <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
                   {t('import_wizard.step2.products')}
@@ -251,6 +234,14 @@ export default function ImportWizard() {
                 </span>
                 <span className="font-medium text-sm block">
                   {importData.recipes?.length || 0} items
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
+                  {t('import_wizard.step2.schedule_days')}
+                </span>
+                <span className="font-medium text-sm block">
+                  {importData.schedule?.length || 0} days
                 </span>
               </div>
             </div>
@@ -499,11 +490,6 @@ export default function ImportWizard() {
                   </div>
                 ))}
               </div>
-              {validationResult.plan?.dateRange && (
-                <p className="text-sm text-muted-foreground text-center">
-                  Date range: <span className="font-medium">{validationResult.plan.dateRange}</span>
-                </p>
-              )}
             </div>
 
             <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/10 p-4">

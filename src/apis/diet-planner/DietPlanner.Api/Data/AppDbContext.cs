@@ -12,7 +12,6 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
-    public DbSet<DietPlan> DietPlans => Set<DietPlan>();
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -149,38 +148,6 @@ public class AppDbContext : DbContext
             entity.HasIndex(ri => ri.ProductId).HasDatabaseName("idx_recipe_ingredients_product");
         });
 
-        // DietPlan configuration
-        modelBuilder.Entity<DietPlan>(entity =>
-        {
-            entity.ToTable("diet_plans");
-
-            entity.HasKey(dp => dp.Id);
-            entity.Property(dp => dp.Id).HasColumnName("id");
-
-            entity.Property(dp => dp.UserId)
-                .IsRequired()
-                .HasMaxLength(255)
-                .HasColumnName("user_id");
-
-            entity.Property(dp => dp.Name)
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnName("name");
-
-            entity.Property(dp => dp.StartDate).HasColumnName("start_date");
-            entity.Property(dp => dp.EndDate).HasColumnName("end_date");
-            entity.Property(dp => dp.CreatedAt).HasColumnName("created_at");
-            entity.Property(dp => dp.DeletedAt).HasColumnName("deleted_at");
-
-            // Global soft-delete filter
-            entity.HasQueryFilter(dp => dp.DeletedAt == null);
-
-            // Indexes
-            entity.HasIndex(dp => dp.UserId).HasDatabaseName("idx_diet_plans_user");
-            entity.HasIndex(dp => new { dp.StartDate, dp.EndDate })
-                .HasDatabaseName("idx_diet_plans_dates");
-        });
-
         // MealEntry configuration
         modelBuilder.Entity<MealEntry>(entity =>
         {
@@ -189,7 +156,10 @@ public class AppDbContext : DbContext
             entity.HasKey(me => me.Id);
             entity.Property(me => me.Id).HasColumnName("id");
 
-            entity.Property(me => me.DietPlanId).HasColumnName("diet_plan_id");
+            entity.Property(me => me.UserId)
+                .IsRequired()
+                .HasMaxLength(255)
+                .HasColumnName("user_id");
             entity.Property(me => me.Date).HasColumnName("date");
             entity.Property(me => me.MealType)
                 .IsRequired()
@@ -206,19 +176,14 @@ public class AppDbContext : DbContext
             entity.Property(me => me.CreatedAt).HasColumnName("created_at");
 
             // Relationships
-            entity.HasOne(me => me.DietPlan)
-                .WithMany(dp => dp.MealEntries)
-                .HasForeignKey(me => me.DietPlanId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             entity.HasOne(me => me.Recipe)
                 .WithMany(r => r.MealEntries)
                 .HasForeignKey(me => me.RecipeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Indexes
-            entity.HasIndex(me => new { me.DietPlanId, me.Date })
-                .HasDatabaseName("idx_meal_entries_date");
+            entity.HasIndex(me => new { me.UserId, me.Date })
+                .HasDatabaseName("idx_meal_entries_user_date");
             entity.HasIndex(me => me.RecipeId)
                 .HasDatabaseName("idx_meal_entries_recipe");
         });

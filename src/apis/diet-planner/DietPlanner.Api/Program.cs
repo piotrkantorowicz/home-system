@@ -209,11 +209,8 @@ builder.Services.AddScoped<DietPlanner.Api.Features.Products.IProductService,
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<INutritionCalculator, NutritionCalculator>();
 
-builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IDietPlanService,
-    DietPlanner.Api.Features.DietPlans.DietPlanService>();
-
-builder.Services.AddScoped<DietPlanner.Api.Features.DietPlans.IMealEntryService,
-    DietPlanner.Api.Features.DietPlans.MealEntryService>();
+builder.Services.AddScoped<DietPlanner.Api.Features.Meals.IMealService,
+    DietPlanner.Api.Features.Meals.MealService>();
 
 builder.Services.AddScoped<DietPlanner.Api.Features.Goals.IGoalService,
     DietPlanner.Api.Features.Goals.GoalService>();
@@ -293,7 +290,7 @@ app.MapGet("/api/v1/info", () => Results.Ok(new
 
 DietPlanner.Api.Features.Products.ProductEndpoints.MapProductEndpoints(app);
 DietPlanner.Api.Features.Recipes.RecipeEndpoints.MapRecipeEndpoints(app);
-DietPlanner.Api.Features.DietPlans.DietPlanEndpoints.MapDietPlanEndpoints(app);
+DietPlanner.Api.Features.Meals.MealEndpoints.MapMealEndpoints(app);
 DietPlanner.Api.Features.Goals.GoalEndpoints.MapGoalEndpoints(app);
 
 // ==============================================

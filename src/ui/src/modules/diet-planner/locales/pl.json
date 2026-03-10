@@ -4,10 +4,10 @@
     "subtitle": "Witaj w DietPlanner",
     "products_desc": "Zarządzaj produktami i składnikami",
     "recipes_desc": "Przeglądaj i twórz przepisy",
-    "diet_plans_desc": "Planuj posiłki i śledź wartości odżywcze",
+    "calendar_desc": "Planuj i śledź swoje posiłki",
     "total_products": "Łącznie produktów",
     "total_recipes": "Łącznie przepisów",
-    "active_plans": "Aktywne plany",
+    "meals_today": "Posiłki dziś",
     "goals_title": "Dzienne Cele",
     "goals_subtitle": "Twoje dzienne cele żywieniowe",
     "goals_edit": "Edytuj Cele",
@@ -97,24 +97,10 @@
       "deleting": "Usuwanie..."
     }
   },
-  "diet_plans": {
-    "title": "Plany Dietetyczne",
-    "subtitle": "Zarządzaj swoimi planami posiłków i śledź wartości odżywcze",
-    "new_plan": "Nowy Plan",
-    "import_plan": "Importuj Plan Diety",
-    "no_plans_yet": "Brak planów dietetycznych",
-    "start_importing": "Zacznij od utworzenia lub zaimportowania swojego pierwszego planu diety",
-    "import_first_plan": "Zaimportuj Swój Pierwszy Plan",
-    "total_days": "Łącznie Dni",
-    "total_meals": "Łącznie Posiłków",
-    "created": "Utworzono {{date}}",
-    "view_calendar": "Zobacz Kalendarz",
-    "delete_dialog": {
-      "title": "Usuń Plan Diety",
-      "description": "Czy na pewno chcesz usunąć \"{{name}}\"? Spowoduje to usunięcie wszystkich powiązanych wpisów posiłków. Tej operacji nie można cofnąć.",
-      "confirm": "Usuń",
-      "deleting": "Usuwanie..."
-    }
+  "calendar": {
+    "title": "Kalendarz",
+    "subtitle": "Planuj i śledź swoje posiłki tydzień po tygodniu",
+    "today": "Dziś"
   },
   "import_wizard": {
     "title": "Import Planu Diety",
@@ -160,7 +146,7 @@
     },
     "step4": {
       "success_title": "Import Zakończony Sukcesem!",
-      "success_message": "Twój plan diety został pomyślnie zaimportowany. Przekierowywanie do planów diety..."
+      "success_message": "Twoje posiłki zostały pomyślnie zaimportowane. Przekierowywanie do kalendarza..."
     }
   },
   "product_detail": {

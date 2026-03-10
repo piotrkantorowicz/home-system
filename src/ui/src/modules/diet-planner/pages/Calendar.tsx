@@ -1,24 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-  Plus,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
-import {
-  useDietPlan,
-  useMeals,
-  useCreateMeal,
-  useUpdateMeal,
-  useDeleteMeal,
-} from '@modules/diet-planner/api/hooks/useDietPlans';
+import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useMeals, useCreateMeal, useUpdateMeal, useDeleteMeal } from '../api/hooks/useMeals';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
-import { Badge } from '@shared/components/ui/Badge';
 import {
   Dialog,
   DialogContent,
@@ -26,12 +11,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@shared/components/ui/Dialog';
-import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
+import { MealForm } from '../components/diet-plans/MealForm';
 import { cn } from '@shared/lib/utils';
 
-function parseLocalDate(dateStr: string) {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
+function getWeekStart(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+  d.setDate(diff);
+  return d;
 }
 
 function formatLocalDate(date: Date) {
@@ -51,13 +40,9 @@ type Meal = {
   notes?: string;
 };
 
-export default function DietPlanDetail() {
+export default function Calendar() {
   const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
-  const { data: plan, isLoading: planLoading } = useDietPlan(id!);
-  const [weekStartOverride, setWeekStartOverride] = useState<Date | null>(null);
-  const selectedWeekStart =
-    weekStartOverride ?? (plan ? parseLocalDate(plan.startDate) : new Date());
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
@@ -65,19 +50,21 @@ export default function DietPlanDetail() {
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [deletingMeal, setDeletingMeal] = useState<Meal | null>(null);
 
-  const createMeal = useCreateMeal(id!);
-  const updateMeal = useUpdateMeal(id!);
-  const deleteMeal = useDeleteMeal(id!);
+  const createMeal = useCreateMeal();
+  const updateMeal = useUpdateMeal();
+  const deleteMeal = useDeleteMeal();
 
   const weekRange = useMemo(() => {
-    const start = new Date(selectedWeekStart);
-    start.setHours(0, 0, 0, 0);
+    const start = new Date(weekStart);
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
-    return { start: formatLocalDate(start), end: formatLocalDate(end) };
-  }, [selectedWeekStart]);
+    return { from: formatLocalDate(start), to: formatLocalDate(end) };
+  }, [weekStart]);
 
-  const { data: meals, isLoading: mealsLoading } = useMeals(id!, weekRange.start, weekRange.end);
+  const { data: meals, isLoading: mealsLoading } = useMeals({
+    from: weekRange.from,
+    to: weekRange.to,
+  });
 
   const mealsByDay = useMemo(() => {
     if (!meals) return {};
@@ -94,14 +81,14 @@ export default function DietPlanDetail() {
 
   const weekDays = useMemo(() => {
     const days = [];
-    const start = new Date(selectedWeekStart);
+    const start = new Date(weekStart);
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(date.getDate() + i);
       days.push(date);
     }
     return days;
-  }, [selectedWeekStart]);
+  }, [weekStart]);
 
   const openCreateForm = (date: string, mealType: string) => {
     setEditingMeal(null);
@@ -123,9 +110,9 @@ export default function DietPlanDetail() {
     notes: string;
   }) => {
     if (editingMeal) {
-      await updateMeal.mutateAsync({ mealId: editingMeal.id, data });
+      await updateMeal.mutateAsync({ id: editingMeal.id, data });
     } else {
-      await createMeal.mutateAsync(data);
+      await createMeal.mutateAsync(data as never);
     }
     setMealFormOpen(false);
     setEditingMeal(null);
@@ -137,50 +124,29 @@ export default function DietPlanDetail() {
     setDeletingMeal(null);
   };
 
-  if (planLoading) {
-    return (
-      <div className="p-8 lg:p-10">
-        <div className="text-lg text-muted-foreground">{t('diet_plan_detail.loading')}</div>
-      </div>
-    );
-  }
-
-  if (!plan) {
-    return (
-      <div className="p-8 lg:p-10">
-        <div className="text-lg text-destructive">{t('diet_plan_detail.not_found')}</div>
-      </div>
-    );
-  }
-
   const isSubmitting = createMeal.isPending || updateMeal.isPending;
+
+  const goToPrevWeek = () => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() - 7);
+    setWeekStart(d);
+  };
+
+  const goToNextWeek = () => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + 7);
+    setWeekStart(d);
+  };
+
+  const goToToday = () => {
+    setWeekStart(getWeekStart(new Date()));
+  };
 
   return (
     <div className="p-8 lg:p-10 animate-fade-in-up">
-      <Link to="/diet-planner/diet-plans">
-        <Button variant="ghost" size="sm" className="mb-4 -ml-2">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('diet_plan_detail.back')}
-        </Button>
-      </Link>
-
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight mb-3">{plan.name}</h1>
-        <div className="flex items-center gap-4 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            <span>
-              {new Date(plan.startDate).toLocaleDateString()} -{' '}
-              {new Date(plan.endDate).toLocaleDateString()}
-            </span>
-          </div>
-          <Badge>
-            {plan.totalDays} {t('diet_plan_detail.days')}
-          </Badge>
-          <Badge variant="secondary">
-            {plan.totalMeals} {t('diet_plan_detail.meals')}
-          </Badge>
-        </div>
+        <h1 className="text-4xl font-bold tracking-tight mb-3">{t('calendar.title')}</h1>
+        <p className="text-lg text-muted-foreground">{t('calendar.subtitle')}</p>
       </div>
 
       {/* Week Navigator */}
@@ -193,26 +159,13 @@ export default function DietPlanDetail() {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              const d = new Date(selectedWeekStart);
-              d.setDate(d.getDate() - 7);
-              setWeekStartOverride(d);
-            }}
-          >
+          <Button variant="outline" size="sm" onClick={goToToday}>
+            {t('calendar.today')}
+          </Button>
+          <Button variant="outline" size="icon" onClick={goToPrevWeek}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              const d = new Date(selectedWeekStart);
-              d.setDate(d.getDate() + 7);
-              setWeekStartOverride(d);
-            }}
-          >
+          <Button variant="outline" size="icon" onClick={goToNextWeek}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
