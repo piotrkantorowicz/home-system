@@ -8,7 +8,7 @@ import prettierConfig from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules', 'build', '.eslintcache']),
+  globalIgnores(['dist', 'node_modules', 'build', '.eslintcache', '**/api/generated/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
