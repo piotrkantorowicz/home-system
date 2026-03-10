@@ -4,1131 +4,1992 @@
  */
 
 export interface paths {
-  '/health': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HealthCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['HealthCheck'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/info': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ApiInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['ApiInfo'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/products': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all products with optional search and filtering
+         * @description Returns paginated list of products. Use 'search' to filter by name, 'onlyMine' to see only your products.
+         */
+        get: operations["ListProducts"];
+        put?: never;
+        /**
+         * Create a new product
+         * @description Creates a new product. Product names must be unique across all users.
+         */
+        post: operations["CreateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List all products with optional search and filtering
-     * @description Returns paginated list of products. Use 'search' to filter by name, 'onlyMine' to see only your products.
-     */
-    get: operations['ListProducts'];
-    put?: never;
-    /**
-     * Create a new product
-     * @description Creates a new product. Product names must be unique across all users.
-     */
-    post: operations['CreateProduct'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/products/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a product by ID */
+        get: operations["GetProduct"];
+        /**
+         * Update a product
+         * @description Updates a product. You can only update products you created.
+         */
+        put: operations["UpdateProduct"];
+        post?: never;
+        /**
+         * Delete a product (soft delete by default)
+         * @description Deletes a product. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete products you created.
+         */
+        delete: operations["DeleteProduct"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get a product by ID */
-    get: operations['GetProduct'];
-    /**
-     * Update a product
-     * @description Updates a product. You can only update products you created.
-     */
-    put: operations['UpdateProduct'];
-    post?: never;
-    /**
-     * Delete a product (soft delete by default)
-     * @description Deletes a product. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete products you created.
-     */
-    delete: operations['DeleteProduct'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/recipes': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all recipes with optional search and filtering
+         * @description Returns paginated list of recipes with ingredients and nutrition information.
+         */
+        get: operations["ListRecipes"];
+        put?: never;
+        /**
+         * Create a new recipe
+         * @description Creates a new recipe with ingredients. All products must exist before creating the recipe.
+         */
+        post: operations["CreateRecipe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List all recipes with optional search and filtering
-     * @description Returns paginated list of recipes with ingredients and nutrition information.
-     */
-    get: operations['ListRecipes'];
-    put?: never;
-    /**
-     * Create a new recipe
-     * @description Creates a new recipe with ingredients. All products must exist before creating the recipe.
-     */
-    post: operations['CreateRecipe'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/recipes/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/recipes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a recipe by ID
+         * @description Returns recipe details including ingredients and calculated nutrition information.
+         */
+        get: operations["GetRecipe"];
+        /**
+         * Update a recipe
+         * @description Updates a recipe and its ingredients. You can only update recipes you created.
+         */
+        put: operations["UpdateRecipe"];
+        post?: never;
+        /**
+         * Delete a recipe (soft delete by default)
+         * @description Deletes a recipe. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete recipes you created.
+         */
+        delete: operations["DeleteRecipe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a recipe by ID
-     * @description Returns recipe details including ingredients and calculated nutrition information.
-     */
-    get: operations['GetRecipe'];
-    /**
-     * Update a recipe
-     * @description Updates a recipe and its ingredients. You can only update recipes you created.
-     */
-    put: operations['UpdateRecipe'];
-    post?: never;
-    /**
-     * Delete a recipe (soft delete by default)
-     * @description Deletes a recipe. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete recipes you created.
-     */
-    delete: operations['DeleteRecipe'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/diet-plans/validate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/diet-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List user's diet plans
+         * @description Returns paginated list of diet plans for the current user.
+         */
+        get: operations["ListDietPlans"];
+        put?: never;
+        /**
+         * Create a new diet plan
+         * @description Creates an empty diet plan with a name and date range. Meals can be added manually afterwards.
+         */
+        post: operations["CreateDietPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Validate import JSON (dry run)
-     * @description Validates the import JSON structure and checks for conflicts without executing the import. Returns detailed validation results.
-     */
-    post: operations['ValidateImport'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/diet-plans/import': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/diet-plans/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate import JSON (dry run)
+         * @description Validates the import JSON structure and checks for conflicts without executing the import. Returns detailed validation results.
+         */
+        post: operations["ValidateImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Import diet plan from JSON
-     * @description Validates and imports a complete diet plan from JSON. Creates/updates products, recipes, and meal schedule.
-     */
-    post: operations['ExecuteImport'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/diet-plans': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/diet-plans/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import diet plan from JSON
+         * @description Validates and imports a complete diet plan from JSON. Creates/updates products, recipes, and meal schedule.
+         */
+        post: operations["ExecuteImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List user's diet plans
-     * @description Returns paginated list of diet plans for the current user.
-     */
-    get: operations['ListDietPlans'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/diet-plans/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/diet-plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get diet plan details
+         * @description Returns diet plan details with basic information.
+         */
+        get: operations["GetDietPlan"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete diet plan
+         * @description Deletes a diet plan and all associated meal entries. You can only delete plans you created. The 'permanent' flag is accepted for consistency but diet plans are always physically deleted.
+         */
+        delete: operations["DeleteDietPlan"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get diet plan details
-     * @description Returns diet plan details with basic information.
-     */
-    get: operations['GetDietPlan'];
-    put?: never;
-    post?: never;
-    /**
-     * Delete diet plan
-     * @description Deletes a diet plan and all associated meal entries. You can only delete plans you created. The 'permanent' flag is accepted for consistency but diet plans are always physically deleted.
-     */
-    delete: operations['DeleteDietPlan'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/diet-plans/{id}/meals': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/diet-plans/{id}/meals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get meals for a date range
+         * @description Returns all meals for a diet plan within the specified date range.
+         */
+        get: operations["GetMeals"];
+        put?: never;
+        /** Add a meal entry to a diet plan */
+        post: operations["CreateMealEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get meals for a date range
-     * @description Returns all meals for a diet plan within the specified date range.
-     */
-    get: operations['GetMeals'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/api/v1/diet-plans/{id}/meals/{mealId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a meal entry */
+        put: operations["UpdateMealEntry"];
+        post?: never;
+        /** Delete a meal entry */
+        delete: operations["DeleteMealEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current user's nutrition goals
+         * @description Returns the authenticated user's daily nutrition goals. Returns empty defaults if no goals have been set yet.
+         */
+        get: operations["GetGoals"];
+        /**
+         * Update user's nutrition goals
+         * @description Updates existing daily nutrition goals for the authenticated user. Fails if no goals exist — use POST to create first.
+         */
+        put: operations["UpdateGoals"];
+        /**
+         * Create user's nutrition goals
+         * @description Creates daily nutrition goals for the authenticated user. Fails if goals already exist — use PUT to update.
+         */
+        post: operations["CreateGoals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    CreateProductRequest: {
-      name: string;
-      /** Format: double */
-      caloriesPer100g: null | number | string;
-      /** Format: double */
-      proteinPer100g: null | number | string;
-      /** Format: double */
-      carbsPer100g: null | number | string;
-      /** Format: double */
-      fatPer100g: null | number | string;
-      /** Format: double */
-      fiberPer100g?: null | number | string;
-      /** @default g */
-      defaultUnit: string;
-      /** Format: double */
-      densityGramsPerMl?: null | number | string;
-      /** Format: double */
-      gramPerPiece?: null | number | string;
+    schemas: {
+        CreateDietPlanRequest: {
+            /** @description Diet plan name */
+            name: string;
+            /**
+             * Format: date
+             * @description Plan start date (inclusive, YYYY-MM-DD)
+             */
+            startDate: string;
+            /**
+             * Format: date
+             * @description Plan end date (inclusive, YYYY-MM-DD)
+             */
+            endDate: string;
+        };
+        CreateGoalRequest: {
+            /**
+             * Format: int32
+             * @description Daily calorie intake target (kcal)
+             */
+            dailyCalorieTarget: null | number | string;
+            /**
+             * Format: double
+             * @description Daily protein target (grams)
+             */
+            proteinGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily carbohydrate target (grams)
+             */
+            carbsGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fat target (grams)
+             */
+            fatGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fiber target (grams)
+             */
+            fiberGrams: null | number | string;
+        };
+        CreateMealEntryRequest: {
+            /**
+             * Format: date
+             * @description Date of the meal (YYYY-MM-DD)
+             */
+            date: string;
+            /** @description Meal type: breakfast, lunch, dinner, snack */
+            mealType: string;
+            /**
+             * Format: uuid
+             * @description Recipe identifier
+             */
+            recipeId: string;
+            /**
+             * Format: double
+             * @description Number of servings
+             * @default 1
+             */
+            servings: number | string;
+            /** @description Optional notes */
+            notes?: null | string;
+            /**
+             * Format: time
+             * @description Optional time of the meal
+             */
+            mealTime?: null | string;
+            /**
+             * Format: int32
+             * @description Display order within the meal type slot
+             */
+            sequenceOrder?: null | number | string;
+        };
+        CreateProductRequest: {
+            /** @description Product name (must be unique, max 200 chars) */
+            name: string;
+            /**
+             * Format: double
+             * @description Calories per 100g (0-9000)
+             */
+            caloriesPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Protein per 100g in grams (0-100)
+             */
+            proteinPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Carbohydrates per 100g in grams (0-100)
+             */
+            carbsPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fat per 100g in grams (0-100)
+             */
+            fatPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fiber per 100g in grams (0-100)
+             */
+            fiberPer100g: null | number | string;
+            /**
+             * @description Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece
+             * @default g
+             */
+            defaultUnit: string;
+            /**
+             * Format: double
+             * @description Density in g/ml (required for accurate volume unit conversion)
+             */
+            densityGramsPerMl?: null | number | string;
+            /**
+             * Format: double
+             * @description Weight of one piece in grams (required when unit is 'piece')
+             */
+            gramPerPiece?: null | number | string;
+        };
+        CreateRecipeIngredientRequest: {
+            /** @description Name of an existing product */
+            productName: string;
+            /**
+             * Format: double
+             * @description Amount of the product
+             */
+            amount: number | string;
+            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
+            unit: string;
+        };
+        CreateRecipeRequest: {
+            /** @description Recipe name (max 200 chars) */
+            name: string;
+            /** @description Short description of the recipe */
+            description: null | string;
+            /** @description Step-by-step cooking instructions */
+            instructions: null | string;
+            /**
+             * Format: int32
+             * @description Number of servings this recipe yields (1-100)
+             */
+            servings: number | string;
+            /**
+             * Format: int32
+             * @description Estimated preparation time in minutes
+             */
+            prepTimeMinutes: null | number | string;
+            /** @description List of ingredients with product references */
+            ingredients: components["schemas"]["CreateRecipeIngredientRequest"][];
+        };
+        DietPlanDetailDto: {
+            /**
+             * Format: uuid
+             * @description Unique diet plan identifier
+             */
+            id?: string;
+            /** @description Diet plan name */
+            name: string;
+            /**
+             * Format: date
+             * @description Plan start date (inclusive)
+             */
+            startDate?: string;
+            /**
+             * Format: date
+             * @description Plan end date (inclusive)
+             */
+            endDate?: string;
+            /**
+             * Format: int32
+             * @description Total number of days covered by the plan
+             */
+            totalDays?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of meal entries in this plan
+             */
+            totalMeals?: number | string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt?: string;
+        };
+        DietPlanSummaryDto: {
+            /**
+             * Format: uuid
+             * @description Unique diet plan identifier
+             */
+            id?: string;
+            /** @description Diet plan name */
+            name: string;
+            /**
+             * Format: date
+             * @description Plan start date (inclusive)
+             */
+            startDate?: string;
+            /**
+             * Format: date
+             * @description Plan end date (inclusive)
+             */
+            endDate?: string;
+            /**
+             * Format: int32
+             * @description Total number of days covered by the plan
+             */
+            totalDays?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of meal entries in this plan
+             */
+            totalMeals?: number | string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt?: string;
+        };
+        GoalResponse: {
+            /**
+             * Format: uuid
+             * @description Unique goal record identifier
+             */
+            id?: string;
+            /**
+             * Format: int32
+             * @description Daily calorie intake target (kcal)
+             */
+            dailyCalorieTarget?: null | number | string;
+            /**
+             * Format: double
+             * @description Daily protein target (grams)
+             */
+            proteinGrams?: null | number | string;
+            /**
+             * Format: double
+             * @description Daily carbohydrate target (grams)
+             */
+            carbsGrams?: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fat target (grams)
+             */
+            fatGrams?: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fiber target (grams)
+             */
+            fiberGrams?: null | number | string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp (UTC)
+             */
+            updatedAt?: null | string;
+        };
+        HttpValidationProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number | string;
+            detail?: null | string;
+            instance?: null | string;
+            errors?: {
+                [key: string]: string[];
+            };
+        };
+        ImportDto: {
+            /** @description Name for the diet plan (max 200 chars) */
+            planName: string;
+            /**
+             * Format: date
+             * @description Plan start date (YYYY-MM-DD)
+             */
+            startDate: string;
+            /**
+             * Format: date
+             * @description Plan end date (YYYY-MM-DD, must be >= startDate)
+             */
+            endDate: string;
+            /** @description Products to create or update during import */
+            products?: components["schemas"]["ImportProductDto"][];
+            /** @description Recipes to create or update during import */
+            recipes?: components["schemas"]["ImportRecipeDto"][];
+            /** @description Daily meal schedule entries (one per day within the date range) */
+            schedule?: components["schemas"]["ImportScheduleDto"][];
+        };
+        ImportIngredientDto: {
+            /** @description Product name (must match a product in the products array or exist in the database) */
+            product: string;
+            /**
+             * Format: double
+             * @description Amount of the product
+             */
+            amount?: number | string;
+            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
+            unit: string;
+        };
+        ImportMealDto: {
+            /** @description Meal type: breakfast, lunch, dinner, snack */
+            type: string;
+            /** @description Recipe name (must match a recipe in the recipes array or exist in the database) */
+            recipe: string;
+            /**
+             * Format: double
+             * @description Number of servings (default: 1)
+             */
+            servings?: number | string;
+            /** @description Optional notes for this meal */
+            notes?: null | string;
+        };
+        ImportPlanDto: {
+            /**
+             * Format: int32
+             * @description Number of new products to be created
+             */
+            productsToCreate?: number | string;
+            /**
+             * Format: int32
+             * @description Number of existing products to be updated
+             */
+            productsToUpdate?: number | string;
+            /**
+             * Format: int32
+             * @description Number of existing products to be reused as-is
+             */
+            productsToReuse?: number | string;
+            /**
+             * Format: int32
+             * @description Number of new recipes to be created
+             */
+            recipesToCreate?: number | string;
+            /**
+             * Format: int32
+             * @description Number of existing recipes to be updated
+             */
+            recipesToUpdate?: number | string;
+            /**
+             * Format: int32
+             * @description Number of existing recipes to be reused as-is
+             */
+            recipesToReuse?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of meal entries to be created
+             */
+            mealEntriesToCreate?: number | string;
+            /** @description Date range of the plan (e.g. '2025-06-01 to 2025-06-30') */
+            dateRange?: string;
+            /**
+             * Format: int32
+             * @description Estimated import duration in seconds
+             */
+            estimatedDurationSeconds?: number | string;
+        };
+        ImportProductDto: {
+            /** @description Product name (must be unique) */
+            name: string;
+            /**
+             * Format: double
+             * @description Calories per 100g (0-9000)
+             */
+            caloriesPer100g?: null | number | string;
+            /**
+             * Format: double
+             * @description Protein per 100g in grams (0-100)
+             */
+            proteinPer100g?: null | number | string;
+            /**
+             * Format: double
+             * @description Carbohydrates per 100g in grams (0-100)
+             */
+            carbsPer100g?: null | number | string;
+            /**
+             * Format: double
+             * @description Fat per 100g in grams (0-100)
+             */
+            fatPer100g?: null | number | string;
+            /**
+             * Format: double
+             * @description Fiber per 100g in grams (0-100)
+             */
+            fiberPer100g?: null | number | string;
+            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
+            unit?: string;
+            /**
+             * Format: double
+             * @description Density in g/ml (required for volume unit conversion, defaults to water 1.0)
+             */
+            densityGramsPerMl?: null | number | string;
+            /**
+             * Format: double
+             * @description Weight of one piece in grams (required when unit is 'piece')
+             */
+            gramPerPiece?: null | number | string;
+        };
+        ImportRecipeDto: {
+            /** @description Recipe name */
+            name: string;
+            /** @description Short description of the recipe */
+            description?: null | string;
+            /** @description Step-by-step cooking instructions */
+            instructions?: null | string;
+            /**
+             * Format: int32
+             * @description Number of servings (default: 1)
+             */
+            servings?: number | string;
+            /**
+             * Format: int32
+             * @description Preparation time in minutes
+             */
+            prepTimeMinutes?: null | number | string;
+            /** @description List of ingredients referencing products by name */
+            ingredients?: components["schemas"]["ImportIngredientDto"][];
+        };
+        ImportResultDto: {
+            /**
+             * Format: uuid
+             * @description ID of the created diet plan
+             */
+            dietPlanId?: string;
+            /** @description Success message */
+            message: string;
+            /** @description Statistics about what was created/updated during import */
+            stats?: components["schemas"]["ImportStatsDto"];
+        };
+        ImportScheduleDto: {
+            /**
+             * Format: date
+             * @description Date for this schedule entry (must be within startDate-endDate range)
+             */
+            date: string;
+            /** @description List of meals for this day */
+            meals?: components["schemas"]["ImportMealDto"][];
+        };
+        ImportStatsDto: {
+            /**
+             * Format: int32
+             * @description Number of products created
+             */
+            productsCreated?: number | string;
+            /**
+             * Format: int32
+             * @description Number of products updated
+             */
+            productsUpdated?: number | string;
+            /**
+             * Format: int32
+             * @description Number of products reused
+             */
+            productsReused?: number | string;
+            /**
+             * Format: int32
+             * @description Number of recipes created
+             */
+            recipesCreated?: number | string;
+            /**
+             * Format: int32
+             * @description Number of recipes updated
+             */
+            recipesUpdated?: number | string;
+            /**
+             * Format: int32
+             * @description Number of recipes reused
+             */
+            recipesReused?: number | string;
+            /**
+             * Format: int32
+             * @description Number of meal entries created
+             */
+            mealEntriesCreated?: number | string;
+            /**
+             * Format: double
+             * @description Import duration in seconds
+             */
+            durationSeconds?: number | string;
+        };
+        MealEntryDto: {
+            /**
+             * Format: uuid
+             * @description Unique meal entry identifier
+             */
+            id?: string;
+            /**
+             * Format: date
+             * @description Date of the meal (YYYY-MM-DD)
+             */
+            date?: string;
+            /** @description Meal type: breakfast, lunch, dinner, snack */
+            mealType: string;
+            /** @description Name of the recipe used for this meal */
+            recipeName: string;
+            /**
+             * Format: uuid
+             * @description Recipe identifier
+             */
+            recipeId?: string;
+            /**
+             * Format: double
+             * @description Number of servings
+             */
+            servings?: number | string;
+            /** @description Optional notes for this meal */
+            notes?: null | string;
+            /**
+             * Format: time
+             * @description Optional time of the meal
+             */
+            mealTime?: null | string;
+            /**
+             * Format: int32
+             * @description Display order within the meal type slot
+             */
+            sequenceOrder?: null | number | string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt?: string;
+        };
+        NutritionInfo: {
+            /**
+             * Format: double
+             * @description Total calories (kcal)
+             */
+            calories: number | string;
+            /**
+             * Format: double
+             * @description Total protein (grams)
+             */
+            protein: number | string;
+            /**
+             * Format: double
+             * @description Total carbohydrates (grams)
+             */
+            carbs: number | string;
+            /**
+             * Format: double
+             * @description Total fat (grams)
+             */
+            fat: number | string;
+            /**
+             * Format: double
+             * @description Total fiber (grams)
+             */
+            fiber: number | string;
+        };
+        PagedResultOfDietPlanSummaryDto: {
+            /** @description List of items for the current page */
+            items?: components["schemas"]["DietPlanSummaryDto"][];
+            /**
+             * Format: int32
+             * @description Total number of items across all pages
+             */
+            totalCount?: number | string;
+            /**
+             * Format: int32
+             * @description Current page number (1-based)
+             */
+            page?: number | string;
+            /**
+             * Format: int32
+             * @description Number of items per page
+             */
+            pageSize?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of pages
+             */
+            totalPages?: number | string;
+            /** @description Whether a previous page exists */
+            hasPreviousPage?: boolean;
+            /** @description Whether a next page exists */
+            hasNextPage?: boolean;
+        };
+        PagedResultOfProductResponse: {
+            /** @description List of items for the current page */
+            items?: components["schemas"]["ProductResponse"][];
+            /**
+             * Format: int32
+             * @description Total number of items across all pages
+             */
+            totalCount?: number | string;
+            /**
+             * Format: int32
+             * @description Current page number (1-based)
+             */
+            page?: number | string;
+            /**
+             * Format: int32
+             * @description Number of items per page
+             */
+            pageSize?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of pages
+             */
+            totalPages?: number | string;
+            /** @description Whether a previous page exists */
+            hasPreviousPage?: boolean;
+            /** @description Whether a next page exists */
+            hasNextPage?: boolean;
+        };
+        PagedResultOfRecipeResponse: {
+            /** @description List of items for the current page */
+            items?: components["schemas"]["RecipeResponse"][];
+            /**
+             * Format: int32
+             * @description Total number of items across all pages
+             */
+            totalCount?: number | string;
+            /**
+             * Format: int32
+             * @description Current page number (1-based)
+             */
+            page?: number | string;
+            /**
+             * Format: int32
+             * @description Number of items per page
+             */
+            pageSize?: number | string;
+            /**
+             * Format: int32
+             * @description Total number of pages
+             */
+            totalPages?: number | string;
+            /** @description Whether a previous page exists */
+            hasPreviousPage?: boolean;
+            /** @description Whether a next page exists */
+            hasNextPage?: boolean;
+        };
+        ProductResponse: {
+            /**
+             * Format: uuid
+             * @description Unique product identifier
+             */
+            id: string;
+            /** @description Product name */
+            name: string;
+            /**
+             * Format: double
+             * @description Calories per 100g
+             */
+            caloriesPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Protein per 100g in grams
+             */
+            proteinPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Carbohydrates per 100g in grams
+             */
+            carbsPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fat per 100g in grams
+             */
+            fatPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fiber per 100g in grams
+             */
+            fiberPer100g: null | number | string;
+            /** @description Default measurement unit */
+            defaultUnit: string;
+            /**
+             * Format: double
+             * @description Density in g/ml for volume conversions
+             */
+            densityGramsPerMl: null | number | string;
+            /**
+             * Format: double
+             * @description Weight of one piece in grams
+             */
+            gramPerPiece: null | number | string;
+            /** @description User ID of the product creator */
+            createdByUserId: string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp (UTC)
+             */
+            updatedAt: null | string;
+            /** @description Whether the current user owns this product */
+            isOwner: boolean;
+        };
+        RecipeIngredientResponse: {
+            /**
+             * Format: uuid
+             * @description Ingredient record ID
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Referenced product ID
+             */
+            productId: string;
+            /** @description Product name */
+            productName: string;
+            /**
+             * Format: double
+             * @description Amount of the product
+             */
+            amount: number | string;
+            /** @description Measurement unit */
+            unit: string;
+        };
+        RecipeResponse: {
+            /**
+             * Format: uuid
+             * @description Unique recipe identifier
+             */
+            id: string;
+            /** @description Recipe name */
+            name: string;
+            /** @description Short description */
+            description: null | string;
+            /** @description Cooking instructions */
+            instructions: null | string;
+            /**
+             * Format: int32
+             * @description Number of servings
+             */
+            servings: number | string;
+            /**
+             * Format: int32
+             * @description Preparation time in minutes
+             */
+            prepTimeMinutes: null | number | string;
+            /** @description User ID of the recipe creator */
+            createdByUserId: string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (UTC)
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp (UTC)
+             */
+            updatedAt: null | string;
+            /** @description Whether the current user owns this recipe */
+            isOwner: boolean;
+            /** @description List of ingredients with product details */
+            ingredients: components["schemas"]["RecipeIngredientResponse"][];
+            /** @description Total nutrition for the entire recipe */
+            totalNutrition: components["schemas"]["NutritionInfo"];
+            /** @description Nutrition per single serving */
+            nutritionPerServing: components["schemas"]["NutritionInfo"];
+        };
+        UpdateGoalRequest: {
+            /**
+             * Format: int32
+             * @description Daily calorie intake target (kcal)
+             */
+            dailyCalorieTarget: null | number | string;
+            /**
+             * Format: double
+             * @description Daily protein target (grams)
+             */
+            proteinGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily carbohydrate target (grams)
+             */
+            carbsGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fat target (grams)
+             */
+            fatGrams: null | number | string;
+            /**
+             * Format: double
+             * @description Daily fiber target (grams)
+             */
+            fiberGrams: null | number | string;
+        };
+        UpdateMealEntryRequest: {
+            /**
+             * Format: date
+             * @description Date of the meal (YYYY-MM-DD)
+             */
+            date: string;
+            /** @description Meal type: breakfast, lunch, dinner, snack */
+            mealType: string;
+            /**
+             * Format: uuid
+             * @description Recipe identifier
+             */
+            recipeId: string;
+            /**
+             * Format: double
+             * @description Number of servings
+             * @default 1
+             */
+            servings: number | string;
+            /** @description Optional notes */
+            notes?: null | string;
+            /**
+             * Format: time
+             * @description Optional time of the meal
+             */
+            mealTime?: null | string;
+            /**
+             * Format: int32
+             * @description Display order within the meal type slot
+             */
+            sequenceOrder?: null | number | string;
+        };
+        UpdateProductRequest: {
+            /** @description Product name (must be unique, max 200 chars) */
+            name: string;
+            /**
+             * Format: double
+             * @description Calories per 100g (0-9000)
+             */
+            caloriesPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Protein per 100g in grams (0-100)
+             */
+            proteinPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Carbohydrates per 100g in grams (0-100)
+             */
+            carbsPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fat per 100g in grams (0-100)
+             */
+            fatPer100g: null | number | string;
+            /**
+             * Format: double
+             * @description Fiber per 100g in grams (0-100)
+             */
+            fiberPer100g: null | number | string;
+            /**
+             * @description Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece
+             * @default g
+             */
+            defaultUnit: string;
+            /**
+             * Format: double
+             * @description Density in g/ml (required for accurate volume unit conversion)
+             */
+            densityGramsPerMl?: null | number | string;
+            /**
+             * Format: double
+             * @description Weight of one piece in grams (required when unit is 'piece')
+             */
+            gramPerPiece?: null | number | string;
+        };
+        UpdateRecipeRequest: {
+            /** @description Recipe name (max 200 chars) */
+            name: string;
+            /** @description Short description of the recipe */
+            description: null | string;
+            /** @description Step-by-step cooking instructions */
+            instructions: null | string;
+            /**
+             * Format: int32
+             * @description Number of servings this recipe yields (1-100)
+             */
+            servings: number | string;
+            /**
+             * Format: int32
+             * @description Estimated preparation time in minutes
+             */
+            prepTimeMinutes: null | number | string;
+            /** @description List of ingredients (replaces all existing ingredients) */
+            ingredients: components["schemas"]["CreateRecipeIngredientRequest"][];
+        };
+        ValidationIssueDto: {
+            /** @description Severity level: error, warning, info */
+            severity: string;
+            /** @description Issue category: schema, validation, conflict, referential, performance */
+            category: string;
+            /** @description JSON path to the problematic field, e.g. 'products[0].name' */
+            path?: null | string;
+            /** @description Name of the affected item, e.g. 'Chicken Breast' */
+            item?: null | string;
+            /** @description Human-readable description of the issue */
+            message: string;
+            /** @description Suggested resolution for the issue */
+            resolution?: null | string;
+            /** @description Details about an existing conflicting item (if applicable) */
+            existingItem?: unknown;
+        };
+        ValidationResultDto: {
+            /** @description Whether the import JSON passed all validation checks */
+            valid?: boolean;
+            /** @description Whether the import can proceed (no blocking errors) */
+            canProceed?: boolean;
+            /** @description Summary counts of errors, warnings, and info messages */
+            summary?: components["schemas"]["ValidationSummaryDto"];
+            /** @description Detailed list of validation issues */
+            issues?: components["schemas"]["ValidationIssueDto"][];
+            plan?: null | components["schemas"]["ImportPlanDto"];
+        };
+        ValidationSummaryDto: {
+            /**
+             * Format: int32
+             * @description Number of blocking errors
+             */
+            errors?: number | string;
+            /**
+             * Format: int32
+             * @description Number of non-blocking warnings
+             */
+            warnings?: number | string;
+            /**
+             * Format: int32
+             * @description Number of informational messages
+             */
+            info?: number | string;
+        };
     };
-    CreateRecipeIngredientRequest: {
-      productName: string;
-      /** Format: double */
-      amount: number | string;
-      unit: string;
-    };
-    CreateRecipeRequest: {
-      name: string;
-      description: null | string;
-      instructions: null | string;
-      /** Format: int32 */
-      servings: number | string;
-      /** Format: int32 */
-      prepTimeMinutes: null | number | string;
-      ingredients: components['schemas']['CreateRecipeIngredientRequest'][];
-    };
-    DietPlanDetailDto: {
-      /** Format: uuid */
-      id?: string;
-      name: string;
-      /** Format: date */
-      startDate?: string;
-      /** Format: date */
-      endDate?: string;
-      /** Format: int32 */
-      totalDays?: number | string;
-      /** Format: int32 */
-      totalMeals?: number | string;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    DietPlanSummaryDto: {
-      /** Format: uuid */
-      id?: string;
-      name: string;
-      /** Format: date */
-      startDate?: string;
-      /** Format: date */
-      endDate?: string;
-      /** Format: int32 */
-      totalDays?: number | string;
-      /** Format: int32 */
-      totalMeals?: number | string;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    HttpValidationProblemDetails: {
-      type?: null | string;
-      title?: null | string;
-      /** Format: int32 */
-      status?: null | number | string;
-      detail?: null | string;
-      instance?: null | string;
-      errors?: {
-        [key: string]: string[];
-      };
-    };
-    ImportDto: {
-      planName: string;
-      /** Format: date */
-      startDate: string;
-      /** Format: date */
-      endDate: string;
-      products?: components['schemas']['ImportProductDto'][];
-      recipes?: components['schemas']['ImportRecipeDto'][];
-      schedule?: components['schemas']['ImportScheduleDto'][];
-    };
-    ImportIngredientDto: {
-      product: string;
-      /** Format: double */
-      amount?: number | string;
-      unit: string;
-    };
-    ImportMealDto: {
-      type: string;
-      recipe: string;
-      /** Format: double */
-      servings?: number | string;
-      notes?: null | string;
-    };
-    ImportPlanDto: {
-      /** Format: int32 */
-      productsToCreate?: number | string;
-      /** Format: int32 */
-      productsToUpdate?: number | string;
-      /** Format: int32 */
-      productsToReuse?: number | string;
-      /** Format: int32 */
-      recipesToCreate?: number | string;
-      /** Format: int32 */
-      recipesToUpdate?: number | string;
-      /** Format: int32 */
-      recipesToReuse?: number | string;
-      /** Format: int32 */
-      mealEntriesToCreate?: number | string;
-      dateRange?: string;
-      /** Format: int32 */
-      estimatedDurationSeconds?: number | string;
-    };
-    ImportProductDto: {
-      name: string;
-      /** Format: double */
-      caloriesPer100g?: null | number | string;
-      /** Format: double */
-      proteinPer100g?: null | number | string;
-      /** Format: double */
-      carbsPer100g?: null | number | string;
-      /** Format: double */
-      fatPer100g?: null | number | string;
-      unit?: string;
-      /** Format: double */
-      densityGramsPerMl?: null | number | string;
-      /** Format: double */
-      gramPerPiece?: null | number | string;
-    };
-    ImportRecipeDto: {
-      name: string;
-      description?: null | string;
-      instructions?: null | string;
-      /** Format: int32 */
-      servings?: number | string;
-      /** Format: int32 */
-      prepTimeMinutes?: null | number | string;
-      ingredients?: components['schemas']['ImportIngredientDto'][];
-    };
-    ImportResultDto: {
-      /** Format: uuid */
-      dietPlanId?: string;
-      message: string;
-      stats?: components['schemas']['ImportStatsDto'];
-    };
-    ImportScheduleDto: {
-      /** Format: date */
-      date: string;
-      meals?: components['schemas']['ImportMealDto'][];
-    };
-    ImportStatsDto: {
-      /** Format: int32 */
-      productsCreated?: number | string;
-      /** Format: int32 */
-      productsUpdated?: number | string;
-      /** Format: int32 */
-      productsReused?: number | string;
-      /** Format: int32 */
-      recipesCreated?: number | string;
-      /** Format: int32 */
-      recipesUpdated?: number | string;
-      /** Format: int32 */
-      recipesReused?: number | string;
-      /** Format: int32 */
-      mealEntriesCreated?: number | string;
-      /** Format: double */
-      durationSeconds?: number | string;
-    };
-    MealEntryDto: {
-      /** Format: uuid */
-      id?: string;
-      /** Format: date */
-      date?: string;
-      mealType: string;
-      recipeName: string;
-      /** Format: uuid */
-      recipeId?: string;
-      /** Format: double */
-      servings?: number | string;
-      notes?: null | string;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    NutritionInfo: {
-      /** Format: double */
-      calories: number | string;
-      /** Format: double */
-      protein: number | string;
-      /** Format: double */
-      carbs: number | string;
-      /** Format: double */
-      fat: number | string;
-      /** Format: double */
-      fiber: number | string;
-    };
-    PagedResultOfDietPlanSummaryDto: {
-      items?: components['schemas']['DietPlanSummaryDto'][];
-      /** Format: int32 */
-      totalCount?: number | string;
-      /** Format: int32 */
-      page?: number | string;
-      /** Format: int32 */
-      pageSize?: number | string;
-      /** Format: int32 */
-      totalPages?: number | string;
-      hasPreviousPage?: boolean;
-      hasNextPage?: boolean;
-    };
-    PagedResultOfProductResponse: {
-      items?: components['schemas']['ProductResponse'][];
-      /** Format: int32 */
-      totalCount?: number | string;
-      /** Format: int32 */
-      page?: number | string;
-      /** Format: int32 */
-      pageSize?: number | string;
-      /** Format: int32 */
-      totalPages?: number | string;
-      hasPreviousPage?: boolean;
-      hasNextPage?: boolean;
-    };
-    PagedResultOfRecipeResponse: {
-      items?: components['schemas']['RecipeResponse'][];
-      /** Format: int32 */
-      totalCount?: number | string;
-      /** Format: int32 */
-      page?: number | string;
-      /** Format: int32 */
-      pageSize?: number | string;
-      /** Format: int32 */
-      totalPages?: number | string;
-      hasPreviousPage?: boolean;
-      hasNextPage?: boolean;
-    };
-    ProductResponse: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-      /** Format: double */
-      caloriesPer100g: null | number | string;
-      /** Format: double */
-      proteinPer100g: null | number | string;
-      /** Format: double */
-      carbsPer100g: null | number | string;
-      /** Format: double */
-      fatPer100g: null | number | string;
-      /** Format: double */
-      fiberPer100g?: null | number | string;
-      defaultUnit: string;
-      /** Format: double */
-      densityGramsPerMl: null | number | string;
-      /** Format: double */
-      gramPerPiece: null | number | string;
-      createdByUserId: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: null | string;
-      isOwner: boolean;
-    };
-    RecipeIngredientResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      productId: string;
-      productName: string;
-      /** Format: double */
-      amount: number | string;
-      unit: string;
-    };
-    RecipeResponse: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-      description: null | string;
-      instructions: null | string;
-      /** Format: int32 */
-      servings: number | string;
-      /** Format: int32 */
-      prepTimeMinutes: null | number | string;
-      createdByUserId: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: null | string;
-      isOwner: boolean;
-      ingredients: components['schemas']['RecipeIngredientResponse'][];
-      totalNutrition: components['schemas']['NutritionInfo'];
-      nutritionPerServing: components['schemas']['NutritionInfo'];
-    };
-    UpdateProductRequest: {
-      name: string;
-      /** Format: double */
-      caloriesPer100g: null | number | string;
-      /** Format: double */
-      proteinPer100g: null | number | string;
-      /** Format: double */
-      carbsPer100g: null | number | string;
-      /** Format: double */
-      fatPer100g: null | number | string;
-      /** Format: double */
-      fiberPer100g?: null | number | string;
-      /** @default g */
-      defaultUnit: string;
-      /** Format: double */
-      densityGramsPerMl?: null | number | string;
-      /** Format: double */
-      gramPerPiece?: null | number | string;
-    };
-    UpdateRecipeRequest: {
-      name: string;
-      description: null | string;
-      instructions: null | string;
-      /** Format: int32 */
-      servings: number | string;
-      /** Format: int32 */
-      prepTimeMinutes: null | number | string;
-      ingredients: components['schemas']['CreateRecipeIngredientRequest'][];
-    };
-    ValidationIssueDto: {
-      severity: string;
-      category: string;
-      path?: null | string;
-      item?: null | string;
-      message: string;
-      resolution?: null | string;
-      existingItem?: unknown;
-    };
-    ValidationResultDto: {
-      valid?: boolean;
-      canProceed?: boolean;
-      summary?: components['schemas']['ValidationSummaryDto'];
-      issues?: components['schemas']['ValidationIssueDto'][];
-      plan?: null | components['schemas']['ImportPlanDto'];
-    };
-    ValidationSummaryDto: {
-      /** Format: int32 */
-      errors?: number | string;
-      /** Format: int32 */
-      warnings?: number | string;
-      /** Format: int32 */
-      info?: number | string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  HealthCheck: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    HealthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    ApiInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-  };
-  ApiInfo: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    ListProducts: {
+        parameters: {
+            query: {
+                search?: string;
+                onlyMine: boolean;
+                page?: number | string;
+                pageSize?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfProductResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    CreateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+        };
     };
-  };
-  ListProducts: {
-    parameters: {
-      query: {
-        search?: string;
-        onlyMine: boolean;
-        page?: number | string;
-        pageSize?: number | string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    GetProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    UpdateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['PagedResultOfProductResponse'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductRequest"];
+            };
         };
-      };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-  };
-  CreateProduct: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    DeleteProduct: {
+        parameters: {
+            query?: {
+                permanent?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CreateProductRequest'];
-      };
+    ListRecipes: {
+        parameters: {
+            query: {
+                search?: string;
+                onlyMine: boolean;
+                page?: number | string;
+                pageSize?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfRecipeResponse"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    CreateRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['ProductResponse'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecipeRequest"];
+            };
         };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
         };
-        content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
-        };
-      };
     };
-  };
-  GetProduct: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
+    GetRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    UpdateRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['ProductResponse'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecipeRequest"];
+            };
         };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-        content?: never;
-      };
     };
-  };
-  UpdateProduct: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
+    DeleteRecipe: {
+        parameters: {
+            query?: {
+                permanent?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateProductRequest'];
-      };
+    ListDietPlans: {
+        parameters: {
+            query?: {
+                page?: number | string;
+                pageSize?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResultOfDietPlanSummaryDto"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    CreateDietPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['ProductResponse'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDietPlanRequest"];
+            };
         };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DietPlanDetailDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-        content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
     };
-  };
-  DeleteProduct: {
-    parameters: {
-      query?: {
-        permanent?: boolean;
-      };
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
+    ValidateImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationResultDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationResultDto"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
+    ExecuteImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDto"];
+            };
         };
-        content?: never;
-      };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResultDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-  };
-  ListRecipes: {
-    parameters: {
-      query: {
-        search?: string;
-        onlyMine: boolean;
-        page?: number | string;
-        pageSize?: number | string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    GetDietPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DietPlanDetailDto"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    DeleteDietPlan: {
+        parameters: {
+            query?: {
+                permanent?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['PagedResultOfRecipeResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-      };
     };
-  };
-  CreateRecipe: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    GetMeals: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealEntryDto"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CreateRecipeRequest'];
-      };
+    CreateMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMealEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealEntryDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    UpdateMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                mealId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['RecipeResponse'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMealEntryRequest"];
+            };
         };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealEntryDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-        content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
-        };
-      };
     };
-  };
-  GetRecipe: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
+    DeleteMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                mealId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    GetGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['RecipeResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalResponse"];
+                };
+            };
         };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
     };
-  };
-  UpdateRecipe: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
+    UpdateGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateRecipeRequest'];
-      };
+    CreateGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RecipeResponse'];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  DeleteRecipe: {
-    parameters: {
-      query?: {
-        permanent?: boolean;
-      };
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ValidateImport: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ImportDto'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ValidationResultDto'];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ValidationResultDto'];
-        };
-      };
-    };
-  };
-  ExecuteImport: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ImportDto'];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ImportResultDto'];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ListDietPlans: {
-    parameters: {
-      query?: {
-        page?: number | string;
-        pageSize?: number | string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PagedResultOfDietPlanSummaryDto'];
-        };
-      };
-    };
-  };
-  GetDietPlan: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DietPlanDetailDto'];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  DeleteDietPlan: {
-    parameters: {
-      query?: {
-        permanent?: boolean;
-      };
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  GetMeals: {
-    parameters: {
-      query?: {
-        from?: string;
-        to?: string;
-      };
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['MealEntryDto'][];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
 }
