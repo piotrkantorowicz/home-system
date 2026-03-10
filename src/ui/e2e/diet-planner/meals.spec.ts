@@ -60,9 +60,7 @@ test.describe('Meal management CRUD', () => {
     const dayCol = dietPlansPage.getDayColumn(targetDay).first();
     const mealCard = dayCol.locator('div.group').filter({ hasText: recipeName }).first();
     await mealCard.hover();
-    const editBtn = mealCard
-      .locator('button')
-      .filter({ has: page.locator('svg.lucide-pencil') });
+    const editBtn = mealCard.locator('button').filter({ has: page.locator('svg.lucide-pencil') });
     await editBtn.click();
     await expect(dietPlansPage.mealFormDialog).toBeVisible({ timeout: 5000 });
 

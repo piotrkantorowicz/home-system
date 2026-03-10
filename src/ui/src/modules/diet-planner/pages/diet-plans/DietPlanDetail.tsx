@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -55,7 +55,9 @@ export default function DietPlanDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data: plan, isLoading: planLoading } = useDietPlan(id!);
-  const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(new Date());
+  const [weekStartOverride, setWeekStartOverride] = useState<Date | null>(null);
+  const selectedWeekStart =
+    weekStartOverride ?? (plan ? parseLocalDate(plan.startDate) : new Date());
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
@@ -66,12 +68,6 @@ export default function DietPlanDetail() {
   const createMeal = useCreateMeal(id!);
   const updateMeal = useUpdateMeal(id!);
   const deleteMeal = useDeleteMeal(id!);
-
-  useEffect(() => {
-    if (plan) {
-      setSelectedWeekStart(parseLocalDate(plan.startDate));
-    }
-  }, [plan]);
 
   const weekRange = useMemo(() => {
     const start = new Date(selectedWeekStart);
@@ -203,7 +199,7 @@ export default function DietPlanDetail() {
             onClick={() => {
               const d = new Date(selectedWeekStart);
               d.setDate(d.getDate() - 7);
-              setSelectedWeekStart(d);
+              setWeekStartOverride(d);
             }}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -214,7 +210,7 @@ export default function DietPlanDetail() {
             onClick={() => {
               const d = new Date(selectedWeekStart);
               d.setDate(d.getDate() + 7);
-              setSelectedWeekStart(d);
+              setWeekStartOverride(d);
             }}
           >
             <ChevronRight className="h-4 w-4" />

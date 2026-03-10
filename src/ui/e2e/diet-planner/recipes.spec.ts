@@ -10,7 +10,7 @@ test.describe('Recipes CRUD', () => {
   const ingredientName = `Recipe Ingredient ${timestamp}`;
   const recipeName = `CRUD Recipe ${timestamp}`;
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser: _browser }) => {
     // Setup: Create a product to use as an ingredient
     // We use a separate context or the first test to set this up,
     // but for simplicity in parallel execution, we'll create it inside the test or use a shared one.
