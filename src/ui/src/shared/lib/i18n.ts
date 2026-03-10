@@ -13,7 +13,7 @@ const STORAGE_KEY = 'home-system-lang';
  */
 function deepMerge(
   target: Record<string, unknown>,
-  source: Record<string, unknown>,
+  source: Record<string, unknown>
 ): Record<string, unknown> {
   for (const key of Object.keys(source)) {
     const tVal = target[key];
@@ -29,7 +29,7 @@ function deepMerge(
     ) {
       target[key] = deepMerge(
         { ...(tVal as Record<string, unknown>) },
-        sVal as Record<string, unknown>,
+        sVal as Record<string, unknown>
       );
     } else {
       target[key] = sVal;

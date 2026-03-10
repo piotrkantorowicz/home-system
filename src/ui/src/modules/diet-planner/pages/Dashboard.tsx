@@ -162,9 +162,7 @@ export default function Dashboard() {
                   <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">
-                    {t('dashboard.goals_title')}
-                  </CardTitle>
+                  <CardTitle className="text-lg">{t('dashboard.goals_title')}</CardTitle>
                   <CardDescription>{t('dashboard.goals_subtitle')}</CardDescription>
                 </div>
               </div>
