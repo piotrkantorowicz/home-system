@@ -8,6 +8,14 @@
     "total_products": "Total products",
     "total_recipes": "Total recipes",
     "active_plans": "Active plans",
+    "goals_title": "Daily Goals",
+    "goals_subtitle": "Your daily nutrition targets",
+    "goals_edit": "Edit Goals",
+    "goal_calories": "Calories",
+    "goal_protein": "Protein",
+    "goal_carbs": "Carbs",
+    "goal_fat": "Fat",
+    "goal_fiber": "Fiber",
     "getting_started": {
       "title": "Getting Started",
       "subtitle": "Follow these steps to set up your diet planning",
@@ -18,6 +26,27 @@
       "step3_title": "Import or Plan Meals",
       "step3_desc": "Import a complete diet plan or manually schedule your meals"
     }
+  },
+  "goals": {
+    "nav": "Goals",
+    "title": "Nutrition Goals",
+    "subtitle": "Set your daily nutrition targets to track your progress",
+    "calories_header": "Daily Calories",
+    "calories_desc": "Set your daily calorie intake target",
+    "calories_label": "Daily Calorie Target (kcal)",
+    "calories_placeholder": "e.g., 2000",
+    "macros_header": "Macronutrients",
+    "macros_desc": "Set your daily macronutrient targets in grams",
+    "protein_label": "Protein (g)",
+    "protein_placeholder": "e.g., 150",
+    "carbs_label": "Carbohydrates (g)",
+    "carbs_placeholder": "e.g., 250",
+    "fat_label": "Fat (g)",
+    "fat_placeholder": "e.g., 70",
+    "fiber_label": "Fiber (g)",
+    "fiber_placeholder": "e.g., 30",
+    "save_btn": "Save Goals",
+    "save_success": "Goals saved successfully!"
   },
   "products": {
     "title": "Products",

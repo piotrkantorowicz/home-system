@@ -6,30 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DietPlanner.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class DropUserGoals : Migration
+    public partial class RestoreUserGoals : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql("DROP TABLE IF EXISTS user_goals;");
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "user_goals",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    carbs_grams = table.Column<decimal>(type: "numeric", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    user_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     daily_calorie_target = table.Column<int>(type: "integer", nullable: true),
+                    protein_grams = table.Column<decimal>(type: "numeric", nullable: true),
+                    carbs_grams = table.Column<decimal>(type: "numeric", nullable: true),
                     fat_grams = table.Column<decimal>(type: "numeric", nullable: true),
                     fiber_grams = table.Column<decimal>(type: "numeric", nullable: true),
-                    protein_grams = table.Column<decimal>(type: "numeric", nullable: true),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    user_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false)
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -41,6 +35,13 @@ namespace DietPlanner.Api.Migrations
                 table: "user_goals",
                 column: "user_id",
                 unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "user_goals");
         }
     }
 }

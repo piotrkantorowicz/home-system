@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<DietPlan> DietPlans => Set<DietPlan>();
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();
+    public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -220,6 +221,32 @@ public class AppDbContext : DbContext
                 .HasDatabaseName("idx_meal_entries_date");
             entity.HasIndex(me => me.RecipeId)
                 .HasDatabaseName("idx_meal_entries_recipe");
+        });
+
+        // UserGoal configuration
+        modelBuilder.Entity<UserGoal>(entity =>
+        {
+            entity.ToTable("user_goals");
+
+            entity.HasKey(ug => ug.Id);
+            entity.Property(ug => ug.Id).HasColumnName("id");
+
+            entity.Property(ug => ug.UserId)
+                .IsRequired()
+                .HasMaxLength(255)
+                .HasColumnName("user_id");
+
+            entity.HasIndex(ug => ug.UserId)
+                .IsUnique()
+                .HasDatabaseName("idx_user_goals_user");
+
+            entity.Property(ug => ug.DailyCalorieTarget).HasColumnName("daily_calorie_target");
+            entity.Property(ug => ug.ProteinGrams).HasColumnName("protein_grams");
+            entity.Property(ug => ug.CarbsGrams).HasColumnName("carbs_grams");
+            entity.Property(ug => ug.FatGrams).HasColumnName("fat_grams");
+            entity.Property(ug => ug.FiberGrams).HasColumnName("fiber_grams");
+            entity.Property(ug => ug.CreatedAt).HasColumnName("created_at");
+            entity.Property(ug => ug.UpdatedAt).HasColumnName("updated_at");
         });
 
     }
