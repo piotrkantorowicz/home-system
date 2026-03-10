@@ -24,7 +24,8 @@ const goalSchema = z.object({
   fiberGrams: z.coerce.number().min(0).max(200).nullable().optional(),
 });
 
-type GoalFormData = z.infer<typeof goalSchema>;
+type GoalFormInput = z.input<typeof goalSchema>;
+type GoalFormData = z.output<typeof goalSchema>;
 
 const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -42,7 +43,7 @@ export default function Goals() {
     handleSubmit,
     reset,
     formState: { errors, isDirty },
-  } = useForm<GoalFormData>({
+  } = useForm<GoalFormInput, unknown, GoalFormData>({
     resolver: zodResolver(goalSchema),
     defaultValues: {
       dailyCalorieTarget: null,
