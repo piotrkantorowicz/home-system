@@ -29,19 +29,19 @@ public class DailyNutritionDto
     [Description("Number of meals planned for this day")]
     public int MealCount { get; set; }
 
-    [Description("Calorie goal status: met, partial, missed, exceeded, no_goal")]
+    [Description("Calorie goal status: on_track, slightly_off, off, far_off, no_goal")]
     public string CaloriesStatus { get; set; } = "no_goal";
 
-    [Description("Protein goal status: met, partial, missed, exceeded, no_goal")]
+    [Description("Protein goal status: on_track, slightly_off, off, far_off, no_goal")]
     public string ProteinStatus { get; set; } = "no_goal";
 
-    [Description("Carbs goal status: met, partial, missed, exceeded, no_goal")]
+    [Description("Carbs goal status: on_track, slightly_off, off, far_off, no_goal")]
     public string CarbsStatus { get; set; } = "no_goal";
 
-    [Description("Fat goal status: met, partial, missed, exceeded, no_goal")]
+    [Description("Fat goal status: on_track, slightly_off, off, far_off, no_goal")]
     public string FatStatus { get; set; } = "no_goal";
 
-    [Description("Fiber goal status: met, partial, missed, exceeded, no_goal")]
+    [Description("Fiber goal status: on_track, slightly_off, off, far_off, no_goal")]
     public string FiberStatus { get; set; } = "no_goal";
 }
 

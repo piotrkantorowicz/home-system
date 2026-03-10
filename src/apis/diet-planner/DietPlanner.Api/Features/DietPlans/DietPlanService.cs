@@ -1,6 +1,5 @@
 using DietPlanner.Api.Common.Exceptions;
 using DietPlanner.Api.Common.Models;
-using DietPlanner.Api.Common.Utils;
 using DietPlanner.Api.Data;
 using DietPlanner.Api.Domain;
 using DietPlanner.Api.Features.Goals;
@@ -243,21 +242,7 @@ public class DietPlanService : IDietPlanService
                 totalProtein += nutrition.Protein;
                 totalCarbs += nutrition.Carbs;
                 totalFat += nutrition.Fat;
-
-                // Calculate fiber separately (not included in NutritionInfo)
-                if (meal.Recipe.Ingredients != null)
-                {
-                    decimal recipeTotalFiber = 0;
-                    foreach (var ingredient in meal.Recipe.Ingredients)
-                    {
-                        if (ingredient.Product?.FiberPer100g == null) continue;
-                        var grams = UnitConverter.ConvertToGrams(
-                            ingredient.Amount, ingredient.Unit, ingredient.Product);
-                        recipeTotalFiber += ingredient.Product.FiberPer100g.Value * (grams / 100m);
-                    }
-                    var recipeServings = Math.Max(meal.Recipe.Servings, 1);
-                    totalFiber += Math.Round(recipeTotalFiber / recipeServings * meal.Servings, 1);
-                }
+                totalFiber += nutrition.Fiber;
             }
 
             days.Add(new DailyNutritionDto
@@ -292,10 +277,10 @@ public class DietPlanService : IDietPlanService
 
         return ratio switch
         {
-            >= 0.9m and <= 1.1m => "met",
-            >= 0.7m and < 0.9m => "partial",
-            > 1.1m => "exceeded",
-            _ => "missed",
+            >= 0.9m and <= 1.1m => "on_track",
+            (>= 0.75m and < 0.9m) or (> 1.1m and <= 1.25m) => "slightly_off",
+            (>= 0.65m and < 0.75m) or (> 1.25m and <= 1.35m) => "off",
+            _ => "far_off",
         };
     }
 

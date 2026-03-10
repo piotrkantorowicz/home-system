@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, X, AlertTriangle, TrendingUp, Minus } from 'lucide-react';
+import { Check, X, AlertTriangle, Minus } from 'lucide-react';
 import { cn } from '@shared/lib/utils';
 import type {
   DailyNutrition,
@@ -13,21 +13,25 @@ interface DayNutritionSummaryProps {
 }
 
 const STATUS_CONFIG = {
-  met: {
+  on_track: {
     color: 'bg-emerald-500',
     icon: Check,
     textColor: 'text-emerald-600 dark:text-emerald-400',
   },
-  partial: {
+  slightly_off: {
+    color: 'bg-orange-400',
+    icon: AlertTriangle,
+    textColor: 'text-orange-600 dark:text-orange-400',
+  },
+  off: {
     color: 'bg-amber-500',
     icon: AlertTriangle,
     textColor: 'text-amber-600 dark:text-amber-400',
   },
-  missed: { color: 'bg-red-500', icon: X, textColor: 'text-red-600 dark:text-red-400' },
-  exceeded: {
-    color: 'bg-blue-500',
-    icon: TrendingUp,
-    textColor: 'text-blue-600 dark:text-blue-400',
+  far_off: {
+    color: 'bg-red-500',
+    icon: X,
+    textColor: 'text-red-600 dark:text-red-400',
   },
   no_goal: {
     color: 'bg-muted-foreground/30',
@@ -52,10 +56,10 @@ function getOverallStatus(nutrition: DailyNutrition): StatusKey {
   ].filter((s) => s !== 'no_goal');
 
   if (statuses.length === 0) return 'no_goal';
-  if (statuses.every((s) => s === 'met')) return 'met';
-  if (statuses.some((s) => s === 'missed')) return 'missed';
-  if (statuses.some((s) => s === 'partial')) return 'partial';
-  return 'exceeded';
+  if (statuses.every((s) => s === 'on_track')) return 'on_track';
+  if (statuses.some((s) => s === 'far_off')) return 'far_off';
+  if (statuses.some((s) => s === 'off')) return 'off';
+  return 'slightly_off';
 }
 
 export function DayNutritionSummary({ nutrition, goals }: DayNutritionSummaryProps) {
@@ -137,8 +141,8 @@ export function DayNutritionSummary({ nutrition, goals }: DayNutritionSummaryPro
 
       {/* Hover details popover */}
       {showDetails && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 z-50">
-          <div className="bg-popover border rounded-lg shadow-lg p-3 text-xs">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64">
+          <div className="bg-white dark:bg-zinc-900 border border-border rounded-lg shadow-xl p-3 text-xs">
             <h4 className="font-semibold mb-2">{t('nutrition.title')}</h4>
             <div className="space-y-1.5">
               {macros.map((macro) => {
