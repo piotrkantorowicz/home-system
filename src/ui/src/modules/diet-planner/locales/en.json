@@ -65,6 +65,7 @@
       "protein": "Protein",
       "carbs": "Carbs",
       "fat": "Fat",
+      "fiber": "Fiber",
       "unit": "Unit",
       "owner": "Owner"
     },
@@ -169,6 +170,7 @@
     "nutrition_facts": "Nutrition Facts (per 100g)",
     "carbohydrates": "Carbohydrates",
     "fat": "Fat",
+    "fiber": "Fiber",
     "conversions": "Conversions",
     "macro_distribution": "Macro Distribution",
     "total_macros": "Total Macros",
@@ -192,6 +194,7 @@
     "total_protein": "Total Protein",
     "total_carbs": "Total Carbs",
     "total_fat": "Total Fat",
+    "total_fiber": "Total Fiber",
     "table": {
       "product": "Product",
       "amount": "Amount",
@@ -265,6 +268,7 @@
     "protein_label": "Protein (g) *",
     "carbs_label": "Carbs (g) *",
     "fat_label": "Fat (g) *",
+    "fiber_label": "Fiber (g)",
     "macro_warning": "Warning: Total macros ({{total}}g) exceed 100g. Please verify your values.",
     "macro_summary": "Macro Summary",
     "conversions_header": "Optional Conversions",

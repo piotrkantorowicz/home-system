@@ -109,6 +109,7 @@ public class ImportExecutor : IImportExecutor
                 existing.ProteinPer100g = importProduct.ProteinPer100g;
                 existing.CarbsPer100g = importProduct.CarbsPer100g;
                 existing.FatPer100g = importProduct.FatPer100g;
+                existing.FiberPer100g = importProduct.FiberPer100g;
                 existing.DefaultUnit = importProduct.Unit;
                 existing.DensityGramsPerMl = importProduct.DensityGramsPerMl;
                 existing.GramPerPiece = importProduct.GramPerPiece;
@@ -133,6 +134,7 @@ public class ImportExecutor : IImportExecutor
                     ProteinPer100g = importProduct.ProteinPer100g,
                     CarbsPer100g = importProduct.CarbsPer100g,
                     FatPer100g = importProduct.FatPer100g,
+                    FiberPer100g = importProduct.FiberPer100g,
                     DefaultUnit = importProduct.Unit,
                     DensityGramsPerMl = importProduct.DensityGramsPerMl,
                     GramPerPiece = importProduct.GramPerPiece,

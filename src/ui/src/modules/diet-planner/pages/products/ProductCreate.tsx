@@ -16,6 +16,7 @@ export default function ProductCreate() {
         proteinPer100g: data.proteinPer100g,
         carbsPer100g: data.carbsPer100g,
         fatPer100g: data.fatPer100g,
+        fiberPer100g: data.fiberPer100g ?? null,
         defaultUnit: data.defaultUnit,
         densityGramsPerMl: data.densityGramsPerMl || null,
         gramPerPiece: data.gramPerPiece || null,

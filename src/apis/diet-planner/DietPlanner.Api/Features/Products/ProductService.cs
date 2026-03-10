@@ -104,6 +104,7 @@ public class ProductService : IProductService
             ProteinPer100g = request.ProteinPer100g,
             CarbsPer100g = request.CarbsPer100g,
             FatPer100g = request.FatPer100g,
+            FiberPer100g = request.FiberPer100g,
             DefaultUnit = request.DefaultUnit,
             DensityGramsPerMl = request.DensityGramsPerMl,
             GramPerPiece = request.GramPerPiece,
@@ -149,6 +150,7 @@ public class ProductService : IProductService
         product.ProteinPer100g = request.ProteinPer100g;
         product.CarbsPer100g = request.CarbsPer100g;
         product.FatPer100g = request.FatPer100g;
+        product.FiberPer100g = request.FiberPer100g;
         product.DefaultUnit = request.DefaultUnit;
         product.DensityGramsPerMl = request.DensityGramsPerMl;
         product.GramPerPiece = request.GramPerPiece;

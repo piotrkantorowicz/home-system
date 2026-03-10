@@ -9,6 +9,7 @@ type Product = {
   proteinPer100g: number;
   carbsPer100g: number;
   fatPer100g: number;
+  fiberPer100g?: number | null;
   defaultUnit: string;
   densityGramsPerMl?: number | null;
   gramPerPiece?: number | null;

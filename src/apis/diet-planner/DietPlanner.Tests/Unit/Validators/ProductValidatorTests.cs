@@ -8,7 +8,7 @@ public class CreateProductValidatorTests
     private readonly CreateProductValidator _sut = new();
 
     private static CreateProductRequest ValidRequest() =>
-        new("Chicken Breast", 165, 31, 0, 3.6m, "g", null, null);
+        new("Chicken Breast", 165, 31, 0, 3.6m, null, "g", null, null);
 
     [Fact]
     public void ValidRequest_PassesValidation()
@@ -84,7 +84,7 @@ public class UpdateProductValidatorTests
     [Fact]
     public void ValidRequest_PassesValidation()
     {
-        var request = new UpdateProductRequest("Eggs", 155, 13, 1.1m, 11m, "piece", null, 60);
+        var request = new UpdateProductRequest("Eggs", 155, 13, 1.1m, 11m, null, "piece", null, 60);
         var result = _sut.TestValidate(request);
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -92,7 +92,7 @@ public class UpdateProductValidatorTests
     [Fact]
     public void Name_Empty_HasError()
     {
-        var request = new UpdateProductRequest("", 100, null, null, null);
+        var request = new UpdateProductRequest("", 100, null, null, null, null);
         var result = _sut.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Name);
     }

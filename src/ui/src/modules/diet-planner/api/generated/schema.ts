@@ -255,6 +255,8 @@ export interface components {
       carbsPer100g: null | number | string;
       /** Format: double */
       fatPer100g: null | number | string;
+      /** Format: double */
+      fiberPer100g?: null | number | string;
       /** @default g */
       defaultUnit: string;
       /** Format: double */
@@ -440,6 +442,8 @@ export interface components {
       carbs: number | string;
       /** Format: double */
       fat: number | string;
+      /** Format: double */
+      fiber: number | string;
     };
     PagedResultOfDietPlanSummaryDto: {
       items?: components['schemas']['DietPlanSummaryDto'][];
@@ -492,6 +496,8 @@ export interface components {
       carbsPer100g: null | number | string;
       /** Format: double */
       fatPer100g: null | number | string;
+      /** Format: double */
+      fiberPer100g?: null | number | string;
       defaultUnit: string;
       /** Format: double */
       densityGramsPerMl: null | number | string;
@@ -544,6 +550,8 @@ export interface components {
       carbsPer100g: null | number | string;
       /** Format: double */
       fatPer100g: null | number | string;
+      /** Format: double */
+      fiberPer100g?: null | number | string;
       /** @default g */
       defaultUnit: string;
       /** Format: double */

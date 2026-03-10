@@ -137,6 +137,7 @@ export default function ProductList() {
                   <TableHead>{t('products.table.protein')}</TableHead>
                   <TableHead>{t('products.table.carbs')}</TableHead>
                   <TableHead>{t('products.table.fat')}</TableHead>
+                  <TableHead>{t('products.table.fiber')}</TableHead>
                   <TableHead>{t('products.table.unit')}</TableHead>
                   <TableHead>{t('products.table.owner')}</TableHead>
                   <TableHead className="text-right">{t('common.actions')}</TableHead>
@@ -150,6 +151,7 @@ export default function ProductList() {
                     <TableCell>{product.proteinPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.carbsPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.fatPer100g.toFixed(1)}g</TableCell>
+                    <TableCell>{Number(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
                     </TableCell>

@@ -158,6 +158,12 @@ export default function RecipeDetail() {
                       </span>
                     </div>
                   )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
+                    <span className="font-medium">
+                      {Number(recipe.nutritionPerServing.fiber ?? 0).toFixed(1)}g
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -213,6 +219,14 @@ export default function RecipeDetail() {
                         </span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('recipe_detail.total_fiber')}
+                      </span>
+                      <span className="font-medium">
+                        {Number(recipe.totalNutrition.fiber ?? 0).toFixed(1)}g
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -228,6 +242,7 @@ export default function RecipeDetail() {
             protein={Number(recipe.nutritionPerServing.protein)}
             carbs={Number(recipe.nutritionPerServing.carbs)}
             fat={Number(recipe.nutritionPerServing.fat)}
+            fiber={Number(recipe.nutritionPerServing.fiber ?? 0)}
             t={t}
             title={t('recipe_detail.macro_distribution')}
             className="mb-6"
