@@ -102,6 +102,15 @@
     "subtitle": "Planuj i śledź swoje posiłki tydzień po tygodniu",
     "today": "Dziś"
   },
+  "nutrition_summary": {
+    "title": "Tygodniowe Podsumowanie Żywienia",
+    "no_goals": "Brak celów — przejdź do Celów, aby ustawić dzienne wartości",
+    "calories": "Kalorie",
+    "protein": "Białko",
+    "carbs": "Węglowodany",
+    "fat": "Tłuszcz",
+    "fiber": "Błonnik"
+  },
   "import_wizard": {
     "title": "Import Planu Diety",
     "subtitle": "Zaimportuj kompletny plan diety z JSON z produktami, przepisami i posiłkami",

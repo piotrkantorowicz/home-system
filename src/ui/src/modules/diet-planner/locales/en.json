@@ -102,6 +102,15 @@
     "subtitle": "Plan and track your meals week by week",
     "today": "Today"
   },
+  "nutrition_summary": {
+    "title": "Weekly Nutrition Summary",
+    "no_goals": "No goals set — visit Goals to set your daily targets",
+    "calories": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "fiber": "Fiber"
+  },
   "import_wizard": {
     "title": "Import Diet Plan",
     "subtitle": "Import a complete diet plan from JSON with products, recipes, and meals",
