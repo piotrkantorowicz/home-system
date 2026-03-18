@@ -15,6 +15,7 @@
     "previous": "Poprzednia",
     "next": "Następna",
     "showing_range": "Wyświetlono {{start}} do {{end}} z {{total}} elementów",
+    "rows_per_page": "Wierszy na stronę",
     "dashboard": "Panel Główny",
     "products": "Produkty",
     "recipes": "Przepisy",

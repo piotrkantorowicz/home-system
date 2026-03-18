@@ -15,6 +15,7 @@
     "previous": "Previous",
     "next": "Next",
     "showing_range": "Showing {{start}} to {{end}} of {{total}} items",
+    "rows_per_page": "Rows per page",
     "dashboard": "Dashboard",
     "products": "Products",
     "recipes": "Recipes",

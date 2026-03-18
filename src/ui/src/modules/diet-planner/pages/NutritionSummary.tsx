@@ -12,6 +12,7 @@ import {
   CardTitle,
   Input,
   Label,
+  Pagination,
   Table,
   TableBody,
   TableCell,
@@ -46,6 +47,8 @@ export default function NutritionSummary() {
   const [draftFrom, setDraftFrom] = useState(defaultRange.from);
   const [draftTo, setDraftTo] = useState(defaultRange.to);
   const [appliedRange, setAppliedRange] = useState(defaultRange);
+  const [tablePage, setTablePage] = useState(1);
+  const [tablePageSize, setTablePageSize] = useState(25);
 
   const { data: nutritionSummary, isLoading } = useNutritionSummary({
     from: appliedRange.from,
@@ -80,9 +83,15 @@ export default function NutritionSummary() {
     fiber: totals.fiber / dayCount,
   };
 
+  const pagedDays = useMemo(() => {
+    const start = (tablePage - 1) * tablePageSize;
+    return days.slice(start, start + tablePageSize);
+  }, [days, tablePage, tablePageSize]);
+
   const handleApply = () => {
     if (draftFrom && draftTo && draftFrom <= draftTo) {
       setAppliedRange({ from: draftFrom, to: draftTo });
+      setTablePage(1);
     }
   };
 
@@ -299,7 +308,7 @@ export default function NutritionSummary() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {days.map((day) => (
+                  {pagedDays.map((day) => (
                     <TableRow key={day.date}>
                       <TableCell className="font-medium">{day.date}</TableCell>
                       <TableCell className="text-right tabular-nums">
@@ -322,6 +331,15 @@ export default function NutritionSummary() {
                 </TableBody>
               </Table>
             </CardContent>
+            <div className="px-6 pb-4">
+              <Pagination
+                page={tablePage}
+                pageSize={tablePageSize}
+                totalCount={days.length}
+                onPageChange={setTablePage}
+                onPageSizeChange={setTablePageSize}
+              />
+            </div>
           </Card>
         </>
       )}
