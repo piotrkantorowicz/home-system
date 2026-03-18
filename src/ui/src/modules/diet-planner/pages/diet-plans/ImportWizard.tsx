@@ -131,15 +131,11 @@ export default function ImportWizard() {
     schedule: [
       {
         date: '2026-03-18',
-        meals: [
-          { type: 'lunch', recipe: 'Grilled Chicken with Rice', servings: 1 },
-        ],
+        meals: [{ type: 'lunch', recipe: 'Grilled Chicken with Rice', servings: 1 }],
       },
       {
         date: '2026-03-19',
-        meals: [
-          { type: 'dinner', recipe: 'Grilled Chicken with Rice', servings: 1 },
-        ],
+        meals: [{ type: 'dinner', recipe: 'Grilled Chicken with Rice', servings: 1 }],
       },
     ],
   };
