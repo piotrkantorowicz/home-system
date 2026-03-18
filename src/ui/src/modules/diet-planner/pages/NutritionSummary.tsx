@@ -1,0 +1,330 @@
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { BarChart2 } from 'lucide-react';
+import { useNutritionSummary } from '@modules/diet-planner/api/hooks/useMeals';
+import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
+import { MacroProgressBar } from '../components/MacroProgressBar';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@shared/components/ui';
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getDefaultRange() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+  const weekStart = new Date(today);
+  weekStart.setDate(diff);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  return { from: formatLocalDate(weekStart), to: formatLocalDate(weekEnd) };
+}
+
+export default function NutritionSummary() {
+  const { t } = useTranslation();
+  const defaultRange = getDefaultRange();
+
+  const [draftFrom, setDraftFrom] = useState(defaultRange.from);
+  const [draftTo, setDraftTo] = useState(defaultRange.to);
+  const [appliedRange, setAppliedRange] = useState(defaultRange);
+
+  const { data: nutritionSummary, isLoading } = useNutritionSummary({
+    from: appliedRange.from,
+    to: appliedRange.to,
+  });
+  const { data: goals } = useGoals();
+
+  const days = useMemo(() => nutritionSummary ?? [], [nutritionSummary]);
+
+  const totals = useMemo(
+    () =>
+      days.reduce(
+        (acc, day) => ({
+          calories: acc.calories + day.calories,
+          protein: acc.protein + day.protein,
+          carbs: acc.carbs + day.carbs,
+          fat: acc.fat + day.fat,
+          fiber: acc.fiber + day.fiber,
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+      ),
+    [days]
+  );
+
+  const dayCount = days.length || 1;
+
+  const averages = {
+    calories: totals.calories / dayCount,
+    protein: totals.protein / dayCount,
+    carbs: totals.carbs / dayCount,
+    fat: totals.fat / dayCount,
+    fiber: totals.fiber / dayCount,
+  };
+
+  const handleApply = () => {
+    if (draftFrom && draftTo && draftFrom <= draftTo) {
+      setAppliedRange({ from: draftFrom, to: draftTo });
+    }
+  };
+
+  const rangeInDays = useMemo(() => {
+    const from = new Date(appliedRange.from);
+    const to = new Date(appliedRange.to);
+    return Math.round((to.getTime() - from.getTime()) / 86400000) + 1;
+  }, [appliedRange]);
+
+  return (
+    <div className="p-8 lg:p-10 max-w-5xl mx-auto animate-fade-in-up">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="rounded-xl bg-violet-500/10 p-2.5">
+            <BarChart2 className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('nutrition_page.title')}</h1>
+        </div>
+        <p className="text-muted-foreground">{t('nutrition_page.subtitle')}</p>
+      </div>
+
+      {/* Date Range Picker */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <Label htmlFor="from-date">{t('nutrition_page.from')}</Label>
+              <Input
+                id="from-date"
+                type="date"
+                value={draftFrom}
+                onChange={(e) => setDraftFrom(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <div>
+              <Label htmlFor="to-date">{t('nutrition_page.to')}</Label>
+              <Input
+                id="to-date"
+                type="date"
+                value={draftTo}
+                onChange={(e) => setDraftTo(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <Button onClick={handleApply} disabled={!draftFrom || !draftTo || draftFrom > draftTo}>
+              {t('nutrition_page.apply')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          {t('common.loading')}
+        </div>
+      ) : days.length === 0 ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          {t('nutrition_page.no_data')}
+        </div>
+      ) : (
+        <>
+          {/* Totals + Goal Progress */}
+          <div className="grid gap-6 md:grid-cols-2 mb-6">
+            {/* Totals */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  {t('nutrition_page.totals', { days: days.length })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  {
+                    label: t('nutrition_summary.calories'),
+                    value: Math.round(totals.calories),
+                    unit: 'kcal',
+                  },
+                  {
+                    label: t('nutrition_summary.protein'),
+                    value: totals.protein.toFixed(1),
+                    unit: 'g',
+                  },
+                  {
+                    label: t('nutrition_summary.carbs'),
+                    value: totals.carbs.toFixed(1),
+                    unit: 'g',
+                  },
+                  { label: t('nutrition_summary.fat'), value: totals.fat.toFixed(1), unit: 'g' },
+                  {
+                    label: t('nutrition_summary.fiber'),
+                    value: totals.fiber.toFixed(1),
+                    unit: 'g',
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-medium tabular-nums">
+                      {item.value} {item.unit}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Daily Average */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">{t('nutrition_page.daily_avg')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  {
+                    label: t('nutrition_summary.calories'),
+                    value: Math.round(averages.calories),
+                    unit: 'kcal',
+                  },
+                  {
+                    label: t('nutrition_summary.protein'),
+                    value: averages.protein.toFixed(1),
+                    unit: 'g',
+                  },
+                  {
+                    label: t('nutrition_summary.carbs'),
+                    value: averages.carbs.toFixed(1),
+                    unit: 'g',
+                  },
+                  { label: t('nutrition_summary.fat'), value: averages.fat.toFixed(1), unit: 'g' },
+                  {
+                    label: t('nutrition_summary.fiber'),
+                    value: averages.fiber.toFixed(1),
+                    unit: 'g',
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-medium tabular-nums">
+                      {item.value} {item.unit}
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Goal vs Actual (range total vs goal * days in range) */}
+          {goals && (
+            <Card className="mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  {t('nutrition_page.vs_goal', { days: rangeInDays })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <MacroProgressBar
+                  label={t('nutrition_summary.calories')}
+                  actual={totals.calories}
+                  goal={
+                    goals.dailyCalorieTarget !== null
+                      ? goals.dailyCalorieTarget * rangeInDays
+                      : null
+                  }
+                  unit="kcal"
+                  gradient="from-rose-500 to-orange-500"
+                />
+                <MacroProgressBar
+                  label={t('nutrition_summary.protein')}
+                  actual={totals.protein}
+                  goal={goals.proteinGrams !== null ? goals.proteinGrams * rangeInDays : null}
+                  gradient="from-blue-500 to-indigo-500"
+                />
+                <MacroProgressBar
+                  label={t('nutrition_summary.carbs')}
+                  actual={totals.carbs}
+                  goal={goals.carbsGrams !== null ? goals.carbsGrams * rangeInDays : null}
+                  gradient="from-emerald-500 to-teal-500"
+                />
+                <MacroProgressBar
+                  label={t('nutrition_summary.fat')}
+                  actual={totals.fat}
+                  goal={goals.fatGrams !== null ? goals.fatGrams * rangeInDays : null}
+                  gradient="from-amber-500 to-orange-500"
+                />
+                <MacroProgressBar
+                  label={t('nutrition_summary.fiber')}
+                  actual={totals.fiber}
+                  goal={goals.fiberGrams !== null ? goals.fiberGrams * rangeInDays : null}
+                  gradient="from-violet-500 to-purple-500"
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Daily Breakdown Table */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{t('nutrition_page.daily_breakdown')}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead>{t('nutrition_page.date')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('nutrition_summary.calories')} (kcal)
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('nutrition_summary.protein')} (g)
+                    </TableHead>
+                    <TableHead className="text-right">{t('nutrition_summary.carbs')} (g)</TableHead>
+                    <TableHead className="text-right">{t('nutrition_summary.fat')} (g)</TableHead>
+                    <TableHead className="text-right">{t('nutrition_summary.fiber')} (g)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {days.map((day) => (
+                    <TableRow key={day.date}>
+                      <TableCell className="font-medium">{day.date}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {Math.round(day.calories)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {day.protein.toFixed(1)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {day.carbs.toFixed(1)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {day.fat.toFixed(1)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {day.fiber.toFixed(1)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}

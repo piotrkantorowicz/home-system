@@ -21,6 +21,7 @@
     "calendar": "Calendar",
     "goals": "Goals",
     "import_plan": "Import Plan",
+    "nutrition": "Nutrition",
     "logout": "Logout",
     "welcome_back": "Welcome back, {{name}}!",
     "modules": "Modules",

@@ -111,6 +111,19 @@
     "fat": "Tłuszcz",
     "fiber": "Błonnik"
   },
+  "nutrition_page": {
+    "title": "Podsumowanie Żywienia",
+    "subtitle": "Śledź spożycie składników odżywczych w dowolnym zakresie dat",
+    "from": "Od",
+    "to": "Do",
+    "apply": "Zastosuj",
+    "no_data": "Brak danych posiłków dla wybranego zakresu",
+    "totals": "Sumy ({{days}} dni)",
+    "daily_avg": "Średnia Dzienna",
+    "vs_goal": "Realizacja Celu (cel na {{days}} dni)",
+    "daily_breakdown": "Podział Dzienny",
+    "date": "Data"
+  },
   "import_wizard": {
     "title": "Import Planu Diety",
     "subtitle": "Zaimportuj kompletny plan diety z JSON z produktami, przepisami i posiłkami",
