@@ -18,7 +18,7 @@ test.describe('Products', () => {
     });
 
     // Verify redirect and count increase
-    await expect(page).toHaveURL('/products');
+    await expect(page).toHaveURL('/diet-planner/products');
     const newCount = await productsPage.getProductCount();
     expect(newCount).toBeGreaterThanOrEqual(initialCount);
   });

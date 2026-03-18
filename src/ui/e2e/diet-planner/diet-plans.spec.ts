@@ -5,46 +5,36 @@ import { generateWeeklyPlan } from './utils/data-generator';
 
 test.describe.configure({ mode: 'serial', timeout: 120000 });
 
-test.describe('Diet Plans CRUD', () => {
-  const planName = `CRUD Plan ${Date.now()}`;
-  const planData = generateWeeklyPlan(planName, new Date());
+test.describe('Calendar', () => {
+  const planData = generateWeeklyPlan(new Date());
 
-  test('can import (create) a diet plan', async ({ page }) => {
+  test('can import meals and see them on calendar', async ({ page }) => {
     const importPage = new ImportPage(page);
     await importPage.goto();
     await importPage.runImportWizard(planData);
 
-    await page.waitForURL('/diet-planner/diet-plans');
-    await expect(page.getByText(planName)).toBeVisible();
+    // Should redirect to calendar
+    await page.waitForURL(/\/diet-planner\/calendar/);
   });
 
-  test('can view diet plan details with all 7 days', async ({ page }) => {
-    const dietPlansPage = new DietPlansPage(page);
-    await dietPlansPage.goto();
-
-    await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
-    await dietPlansPage.openPlan(planName);
-
-    // Verify week header is visible
-    await expect(page.getByText(/week of/i)).toBeVisible();
+  test('shows current week with 7 days', async ({ page }) => {
+    const calendarPage = new DietPlansPage(page);
+    await calendarPage.goto();
 
     // All 7 day columns should be rendered
-    await dietPlansPage.expectAllDaysRendered();
+    await calendarPage.expectAllDaysRendered();
 
-    // Verify meals exist across the week (not just Monday)
-    // Data generator: Mon/Wed/Fri/Sun = breakfast (Morning Bowl), Tue/Thu/Sat = lunch (Chicken Rice)
-    // i % 2 === 0 → Mon(0), Wed(2), Fri(4), Sun(6) get breakfast
-    // i % 2 === 1 → Tue(1), Thu(3), Sat(5) get lunch
-    await dietPlansPage.expectMealInDay('Mon', planData.targetRecipe);
-    await dietPlansPage.expectMealInDay('Sat', planData.recipeNames[1]);
+    // Week header is visible
+    await expect(page.getByText(/week of/i)).toBeVisible();
   });
 
-  test('can delete a diet plan', async ({ page }) => {
-    const dietPlansPage = new DietPlansPage(page);
-    await dietPlansPage.goto();
+  test('imported meals are visible on calendar', async ({ page }) => {
+    const calendarPage = new DietPlansPage(page);
+    await calendarPage.goto();
 
-    await expect(page.getByText(planName)).toBeVisible({ timeout: 10000 });
-    await dietPlansPage.deletePlan(planName);
-    await expect(page.getByText(planName)).not.toBeVisible();
+    // Data generator: Mon (i=0) gets Morning Bowl (breakfast)
+    // Tue (i=1) gets Chicken Rice (lunch)
+    await calendarPage.expectMealInDay('Mon', planData.targetRecipe);
+    await calendarPage.expectMealInDay('Tue', planData.recipeNames[1]);
   });
 });

@@ -16,7 +16,7 @@ export class ProductsPage {
   }
 
   async goto() {
-    await this.page.goto('/products');
+    await this.page.goto('/diet-planner/products');
   }
 
   async createProduct(data: {
@@ -27,7 +27,7 @@ export class ProductsPage {
     fat: number;
   }) {
     await this.createButton.click();
-    await this.page.waitForURL('/products/new');
+    await this.page.waitForURL('/diet-planner/products/new');
 
     await this.page.fill('input[name="name"]', data.name);
     await this.page.fill('input[name="caloriesPer100g"]', data.calories.toString());

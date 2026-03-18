@@ -137,95 +137,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/diet-plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List user's diet plans
-         * @description Returns paginated list of diet plans for the current user.
-         */
-        get: operations["ListDietPlans"];
-        put?: never;
-        /**
-         * Create a new diet plan
-         * @description Creates an empty diet plan with a name and date range. Meals can be added manually afterwards.
-         */
-        post: operations["CreateDietPlan"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/diet-plans/validate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate import JSON (dry run)
-         * @description Validates the import JSON structure and checks for conflicts without executing the import. Returns detailed validation results.
-         */
-        post: operations["ValidateImport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/diet-plans/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import diet plan from JSON
-         * @description Validates and imports a complete diet plan from JSON. Creates/updates products, recipes, and meal schedule.
-         */
-        post: operations["ExecuteImport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/diet-plans/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get diet plan details
-         * @description Returns diet plan details with basic information.
-         */
-        get: operations["GetDietPlan"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete diet plan
-         * @description Deletes a diet plan and all associated meal entries. You can only delete plans you created. The 'permanent' flag is accepted for consistency but diet plans are always physically deleted.
-         */
-        delete: operations["DeleteDietPlan"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/diet-plans/{id}/meals": {
+    "/api/v1/meals": {
         parameters: {
             query?: never;
             header?: never;
@@ -234,11 +146,11 @@ export interface paths {
         };
         /**
          * Get meals for a date range
-         * @description Returns all meals for a diet plan within the specified date range.
+         * @description Returns all meal entries for the current user within the specified date range.
          */
         get: operations["GetMeals"];
         put?: never;
-        /** Add a meal entry to a diet plan */
+        /** Add a meal entry */
         post: operations["CreateMealEntry"];
         delete?: never;
         options?: never;
@@ -246,7 +158,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/diet-plans/{id}/meals/{mealId}": {
+    "/api/v1/meals/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -259,6 +171,46 @@ export interface paths {
         post?: never;
         /** Delete a meal entry */
         delete: operations["DeleteMealEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meals/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate import JSON (dry run)
+         * @description Validates the import JSON structure and checks for conflicts without executing the import.
+         */
+        post: operations["ValidateImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meals/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import meals from JSON
+         * @description Validates and imports meal entries from JSON. Creates/updates products, recipes, and meal schedule.
+         */
+        post: operations["ExecuteImport"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -296,20 +248,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CreateDietPlanRequest: {
-            /** @description Diet plan name */
-            name: string;
-            /**
-             * Format: date
-             * @description Plan start date (inclusive, YYYY-MM-DD)
-             */
-            startDate: string;
-            /**
-             * Format: date
-             * @description Plan end date (inclusive, YYYY-MM-DD)
-             */
-            endDate: string;
-        };
         CreateGoalRequest: {
             /**
              * Format: int32
@@ -444,74 +382,6 @@ export interface components {
             /** @description List of ingredients with product references */
             ingredients: components["schemas"]["CreateRecipeIngredientRequest"][];
         };
-        DietPlanDetailDto: {
-            /**
-             * Format: uuid
-             * @description Unique diet plan identifier
-             */
-            id?: string;
-            /** @description Diet plan name */
-            name: string;
-            /**
-             * Format: date
-             * @description Plan start date (inclusive)
-             */
-            startDate?: string;
-            /**
-             * Format: date
-             * @description Plan end date (inclusive)
-             */
-            endDate?: string;
-            /**
-             * Format: int32
-             * @description Total number of days covered by the plan
-             */
-            totalDays?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of meal entries in this plan
-             */
-            totalMeals?: number | string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
-            createdAt?: string;
-        };
-        DietPlanSummaryDto: {
-            /**
-             * Format: uuid
-             * @description Unique diet plan identifier
-             */
-            id?: string;
-            /** @description Diet plan name */
-            name: string;
-            /**
-             * Format: date
-             * @description Plan start date (inclusive)
-             */
-            startDate?: string;
-            /**
-             * Format: date
-             * @description Plan end date (inclusive)
-             */
-            endDate?: string;
-            /**
-             * Format: int32
-             * @description Total number of days covered by the plan
-             */
-            totalDays?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of meal entries in this plan
-             */
-            totalMeals?: number | string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
-            createdAt?: string;
-        };
         GoalResponse: {
             /**
              * Format: uuid
@@ -566,23 +436,11 @@ export interface components {
             };
         };
         ImportDto: {
-            /** @description Name for the diet plan (max 200 chars) */
-            planName: string;
-            /**
-             * Format: date
-             * @description Plan start date (YYYY-MM-DD)
-             */
-            startDate: string;
-            /**
-             * Format: date
-             * @description Plan end date (YYYY-MM-DD, must be >= startDate)
-             */
-            endDate: string;
             /** @description Products to create or update during import */
             products?: components["schemas"]["ImportProductDto"][];
             /** @description Recipes to create or update during import */
             recipes?: components["schemas"]["ImportRecipeDto"][];
-            /** @description Daily meal schedule entries (one per day within the date range) */
+            /** @description Daily meal schedule entries */
             schedule?: components["schemas"]["ImportScheduleDto"][];
         };
         ImportIngredientDto: {
@@ -645,8 +503,6 @@ export interface components {
              * @description Total number of meal entries to be created
              */
             mealEntriesToCreate?: number | string;
-            /** @description Date range of the plan (e.g. '2025-06-01 to 2025-06-30') */
-            dateRange?: string;
             /**
              * Format: int32
              * @description Estimated import duration in seconds
@@ -715,11 +571,6 @@ export interface components {
             ingredients?: components["schemas"]["ImportIngredientDto"][];
         };
         ImportResultDto: {
-            /**
-             * Format: uuid
-             * @description ID of the created diet plan
-             */
-            dietPlanId?: string;
             /** @description Success message */
             message: string;
             /** @description Statistics about what was created/updated during import */
@@ -728,7 +579,7 @@ export interface components {
         ImportScheduleDto: {
             /**
              * Format: date
-             * @description Date for this schedule entry (must be within startDate-endDate range)
+             * @description Date for this schedule entry (YYYY-MM-DD)
              */
             date: string;
             /** @description List of meals for this day */
@@ -845,34 +696,6 @@ export interface components {
              * @description Total fiber (grams)
              */
             fiber: number | string;
-        };
-        PagedResultOfDietPlanSummaryDto: {
-            /** @description List of items for the current page */
-            items?: components["schemas"]["DietPlanSummaryDto"][];
-            /**
-             * Format: int32
-             * @description Total number of items across all pages
-             */
-            totalCount?: number | string;
-            /**
-             * Format: int32
-             * @description Current page number (1-based)
-             */
-            page?: number | string;
-            /**
-             * Format: int32
-             * @description Number of items per page
-             */
-            pageSize?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of pages
-             */
-            totalPages?: number | string;
-            /** @description Whether a previous page exists */
-            hasPreviousPage?: boolean;
-            /** @description Whether a next page exists */
-            hasNextPage?: boolean;
         };
         PagedResultOfProductResponse: {
             /** @description List of items for the current page */
@@ -1582,182 +1405,6 @@ export interface operations {
             };
         };
     };
-    ListDietPlans: {
-        parameters: {
-            query?: {
-                page?: number | string;
-                pageSize?: number | string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PagedResultOfDietPlanSummaryDto"];
-                };
-            };
-        };
-    };
-    CreateDietPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDietPlanRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DietPlanDetailDto"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ValidateImport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationResultDto"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationResultDto"];
-                };
-            };
-        };
-    };
-    ExecuteImport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportDto"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportResultDto"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GetDietPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DietPlanDetailDto"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeleteDietPlan: {
-        parameters: {
-            query?: {
-                permanent?: boolean;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     GetMeals: {
         parameters: {
             query?: {
@@ -1765,9 +1412,7 @@ export interface operations {
                 to?: string;
             };
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -1781,22 +1426,13 @@ export interface operations {
                     "application/json": components["schemas"]["MealEntryDto"][];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
     CreateMealEntry: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -1836,7 +1472,6 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
-                mealId: string;
             };
             cookie?: never;
         };
@@ -1877,7 +1512,6 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
-                mealId: string;
             };
             cookie?: never;
         };
@@ -1892,6 +1526,61 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ValidateImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationResultDto"];
+                };
+            };
+        };
+    };
+    ExecuteImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDto"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResultDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -13,8 +13,7 @@ const RecipeList = lazy(() => import('./pages/recipes/RecipeList'));
 const RecipeCreate = lazy(() => import('./pages/recipes/RecipeCreate'));
 const RecipeEdit = lazy(() => import('./pages/recipes/RecipeEdit'));
 const RecipeDetail = lazy(() => import('./pages/recipes/RecipeDetail'));
-const DietPlanList = lazy(() => import('./pages/diet-plans/DietPlanList'));
-const DietPlanDetail = lazy(() => import('./pages/diet-plans/DietPlanDetail'));
+const Calendar = lazy(() => import('./pages/Calendar'));
 const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
 const Goals = lazy(() => import('./pages/Goals'));
 
@@ -48,10 +47,10 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'common.recipes',
     },
     {
-      name: 'Diet Plans',
-      href: '/diet-planner/diet-plans',
+      name: 'Calendar',
+      href: '/diet-planner/calendar',
       icon: CalendarDays,
-      translationKey: 'common.diet_plans',
+      translationKey: 'common.calendar',
     },
     {
       name: 'Goals',
@@ -61,7 +60,7 @@ export const dietPlannerModule: AppModule = {
     },
     {
       name: 'Import Plan',
-      href: '/diet-planner/diet-plans/import',
+      href: '/diet-planner/import',
       icon: Upload,
       translationKey: 'common.import_plan',
     },
@@ -77,8 +76,7 @@ export const dietPlannerModule: AppModule = {
     { path: 'recipes/:id', Component: RecipeDetail },
     { path: 'recipes/:id/edit', Component: RecipeEdit },
     { path: 'goals', Component: Goals },
-    { path: 'diet-plans', Component: DietPlanList },
-    { path: 'diet-plans/import', Component: ImportWizard },
-    { path: 'diet-plans/:id', Component: DietPlanDetail },
+    { path: 'calendar', Component: Calendar },
+    { path: 'import', Component: ImportWizard },
   ],
 };

@@ -26,14 +26,12 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
     public async Task DisposeAsync()
     {
-        // Delete MealEntries via DietPlans (cascade), so remove plans first
-        var dietPlans = await _db.DietPlans
-            .IgnoreQueryFilters()
-            .Where(dp => dp.UserId == UserId)
-            .Include(dp => dp.MealEntries)
+        // Delete MealEntries for this user
+        var mealEntries = await _db.MealEntries
+            .Where(me => me.UserId == UserId)
             .ToListAsync();
 
-        _db.DietPlans.RemoveRange(dietPlans);
+        _db.MealEntries.RemoveRange(mealEntries);
         await _db.SaveChangesAsync();
 
         // Delete RecipeIngredients for recipes owned by this user
@@ -63,11 +61,11 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
     }
 
     // ---------------------------------------------------------------------------
-    // Test 1 – Happy path: creates plan with recipes and products
+    // Test 1 – Happy path: creates meal entries with recipes and products
     // ---------------------------------------------------------------------------
 
     [Fact]
-    public async Task ExecuteAsync_HappyPath_CreatesPlanWithRecipesAndProducts()
+    public async Task ExecuteAsync_HappyPath_CreatesMealEntriesWithRecipesAndProducts()
     {
         // Arrange
         var suffix = Guid.NewGuid().ToString("N")[..8];
@@ -78,14 +76,9 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         // Assert – result
         result.Should().NotBeNull();
-        result.DietPlanId.Should().NotBeEmpty();
-        result.Message.Should().Contain(import.PlanName);
-
-        // Assert – DietPlan in DB
-        var plan = await _db.DietPlans.FindAsync(result.DietPlanId);
-        plan.Should().NotBeNull();
-        plan!.Name.Should().Be(import.PlanName);
-        plan.UserId.Should().Be(UserId);
+        result.Stats.ProductsCreated.Should().Be(2);
+        result.Stats.RecipesCreated.Should().Be(1);
+        result.Stats.MealEntriesCreated.Should().Be(1);
 
         // Assert – Products in DB (2 products expected)
         var products = await _db.Products
@@ -101,7 +94,7 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         // Assert – MealEntry in DB
         var mealEntries = await _db.MealEntries
-            .Where(me => me.DietPlanId == result.DietPlanId)
+            .Where(me => me.UserId == UserId)
             .ToListAsync();
         mealEntries.Should().HaveCount(1);
     }
@@ -136,9 +129,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         // Build import that references the same product by name
         var import = new ImportDto
         {
-            PlanName = $"Test Plan {suffix}",
-            StartDate = new DateOnly(2026, 1, 1),
-            EndDate = new DateOnly(2026, 1, 7),
             Products =
             [
                 new ImportProductDto { Name = productName, CaloriesPer100g = 165, ProteinPer100g = 31, CarbsPer100g = 0, FatPer100g = 3.6m, Unit = "g" }
@@ -184,7 +174,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var import = BuildImport(suffix);
 
-        var plansBefore = await _db.DietPlans.CountAsync();
         var productsBefore = await _db.Products.CountAsync();
         var recipesBefore = await _db.Recipes.CountAsync();
         var mealEntriesBefore = await _db.MealEntries.CountAsync();
@@ -193,12 +182,10 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         var result = await _sut.ExecuteAsync(import, UserId);
 
         // Assert – all entities appear in the DB after the call completes
-        var plansAfter = await _db.DietPlans.CountAsync();
         var productsAfter = await _db.Products.CountAsync();
         var recipesAfter = await _db.Recipes.CountAsync();
         var mealEntriesAfter = await _db.MealEntries.CountAsync();
 
-        plansAfter.Should().Be(plansBefore + 1, "one DietPlan should have been created");
         productsAfter.Should().Be(productsBefore + 1, "one Product should have been created");
         recipesAfter.Should().Be(recipesBefore + 1, "one Recipe should have been created");
         mealEntriesAfter.Should().Be(mealEntriesBefore + 1, "one MealEntry should have been created");
@@ -231,9 +218,8 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
             .IgnoreQueryFilters()
             .CountAsync(r => r.CreatedByUserId == UserId && r.Name.EndsWith(suffix));
 
-        // Act – second import with the same product/recipe names (different plan name)
+        // Act – second import with the same product/recipe names
         var importSecond = BuildImport(suffix);
-        importSecond.PlanName = $"Test Plan {suffix} Second";
 
         await _sut.ExecuteAsync(importSecond, UserId);
         _db.ChangeTracker.Clear();
@@ -255,11 +241,11 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
     }
 
     // ---------------------------------------------------------------------------
-    // Test 5 – MealEntry is correctly linked to the recipe and diet plan
+    // Test 5 – MealEntry is correctly linked to the recipe and user
     // ---------------------------------------------------------------------------
 
     [Fact]
-    public async Task ExecuteAsync_CreatesCorrectMealEntries_LinkedToRecipeAndPlan()
+    public async Task ExecuteAsync_CreatesCorrectMealEntries_LinkedToRecipeAndUser()
     {
         // Arrange
         var suffix = Guid.NewGuid().ToString("N")[..8];
@@ -268,9 +254,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         var import = new ImportDto
         {
-            PlanName = $"Test Plan {suffix}",
-            StartDate = new DateOnly(2026, 1, 1),
-            EndDate = new DateOnly(2026, 1, 7),
             Products =
             [
                 new ImportProductDto
@@ -312,7 +295,7 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         // Assert – MealEntries in DB
         var mealEntries = await _db.MealEntries
             .Include(me => me.Recipe)
-            .Where(me => me.DietPlanId == result.DietPlanId)
+            .Where(me => me.UserId == UserId)
             .ToListAsync();
 
         mealEntries.Should().HaveCount(2, "two meals were scheduled");
@@ -326,7 +309,7 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         var dinner = mealEntries.Single(me => me.MealType == "dinner");
         dinner.Date.Should().Be(new DateOnly(2026, 1, 1));
         dinner.Servings.Should().Be(2);
-        dinner.DietPlanId.Should().Be(result.DietPlanId);
+        dinner.UserId.Should().Be(UserId);
 
         // Verify the recipe has the ingredient linking back to the product
         var recipe = await _db.Recipes
@@ -337,6 +320,8 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         recipe.Ingredients.Should().HaveCount(1);
         recipe.Ingredients.First().Product.Name.Should().Be(productName);
         recipe.Ingredients.First().Amount.Should().Be(200);
+
+        result.Stats.MealEntriesCreated.Should().Be(2);
     }
 
     // ---------------------------------------------------------------------------
@@ -435,7 +420,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         // 31 days, 3 meals/day, rotating through recipes
         var startDate = new DateOnly(2026, 3, 1);
-        var endDate   = new DateOnly(2026, 3, 31);
         var recipeNames = recipes.Select(r => r.Name).ToList();
 
         var schedule = new List<ImportScheduleDto>();
@@ -456,9 +440,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         var import = new ImportDto
         {
-            PlanName  = $"Full March 2026 Plan {suffix}",
-            StartDate = startDate,
-            EndDate   = endDate,
             Products  = products,
             Recipes   = recipes,
             Schedule  = schedule,
@@ -469,7 +450,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         // Assert – top-level result
         result.Should().NotBeNull();
-        result.DietPlanId.Should().NotBeEmpty();
 
         // Assert – stats
         result.Stats.ProductsCreated.Should().Be(10);
@@ -490,7 +470,7 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         dbRecipes.SelectMany(r => r.Ingredients).Should().NotBeEmpty();
 
         var dbMealEntries = await _db.MealEntries
-            .Where(me => me.DietPlanId == result.DietPlanId)
+            .Where(me => me.UserId == UserId)
             .ToListAsync();
         dbMealEntries.Should().HaveCount(93);
 
@@ -502,11 +482,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
         // Assert – all 3 meal types appear across the plan
         dbMealEntries.Select(me => me.MealType).Distinct()
             .Should().BeEquivalentTo(["breakfast", "lunch", "dinner"]);
-
-        // Assert – DietPlan date range
-        var plan = await _db.DietPlans.FindAsync(result.DietPlanId);
-        plan!.StartDate.Should().Be(startDate);
-        plan.EndDate.Should().Be(endDate);
     }
 
     // ---------------------------------------------------------------------------
@@ -533,9 +508,6 @@ public class ImportExecutorIntegrationTests(DatabaseFixture fixture) : IAsyncLif
 
         return new ImportDto
         {
-            PlanName = $"Test Plan {suffix}",
-            StartDate = new DateOnly(2026, 1, 1),
-            EndDate = new DateOnly(2026, 1, 7),
             Products = products,
             Recipes =
             [

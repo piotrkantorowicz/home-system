@@ -4,10 +4,10 @@
     "subtitle": "Welcome to DietPlanner",
     "products_desc": "Manage your food products and ingredients",
     "recipes_desc": "Browse and create recipes",
-    "diet_plans_desc": "Plan your meals and track nutrition",
+    "calendar_desc": "Schedule and track your meals",
     "total_products": "Total products",
     "total_recipes": "Total recipes",
-    "active_plans": "Active plans",
+    "meals_today": "Meals today",
     "goals_title": "Daily Goals",
     "goals_subtitle": "Your daily nutrition targets",
     "goals_edit": "Edit Goals",
@@ -97,24 +97,10 @@
       "deleting": "Deleting..."
     }
   },
-  "diet_plans": {
-    "title": "Diet Plans",
-    "subtitle": "Manage your meal plans and track your nutrition",
-    "new_plan": "New Plan",
-    "import_plan": "Import Diet Plan",
-    "no_plans_yet": "No diet plans yet",
-    "start_importing": "Get started by creating or importing your first diet plan",
-    "import_first_plan": "Import Your First Plan",
-    "total_days": "Total Days",
-    "total_meals": "Total Meals",
-    "created": "Created {{date}}",
-    "view_calendar": "View Calendar",
-    "delete_dialog": {
-      "title": "Delete Diet Plan",
-      "description": "Are you sure you want to delete \"{{name}}\"? This will delete all associated meal entries. This action cannot be undone.",
-      "confirm": "Delete",
-      "deleting": "Deleting..."
-    }
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Plan and track your meals week by week",
+    "today": "Today"
   },
   "import_wizard": {
     "title": "Import Diet Plan",
@@ -160,7 +146,7 @@
     },
     "step4": {
       "success_title": "Import Successful!",
-      "success_message": "Your diet plan has been imported successfully. Redirecting to diet plans..."
+      "success_message": "Your meals have been imported successfully. Redirecting to calendar..."
     }
   },
   "product_detail": {

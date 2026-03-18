@@ -22,7 +22,7 @@ export class ImportPage {
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/diet-plans/import');
+    await this.page.goto('/diet-planner/import');
   }
 
   async loadSample() {
@@ -57,7 +57,7 @@ export class ImportPage {
     // Step 2: Validate — intercept response to detect rate limit
     await this.clickAndHandleRateLimit(
       this.validateButton,
-      '/diet-plans/validate',
+      '/meals/validate',
       this.page.getByText('Step 3: Review & Confirm'),
       this.page.getByRole('button', { name: /re-validate/i })
     );
@@ -65,12 +65,12 @@ export class ImportPage {
     // Step 3: Import — intercept response to detect rate limit
     await this.clickAndHandleRateLimit(
       this.importButton,
-      '/diet-plans/import',
+      '/meals/import',
       null, // no locator to wait for — we wait for URL redirect
       this.importButton
     );
 
-    await this.page.waitForURL('/diet-planner/diet-plans', { timeout: 15000 });
+    await this.page.waitForURL('/diet-planner/calendar', { timeout: 15000 });
   }
 
   private async clickAndHandleRateLimit(

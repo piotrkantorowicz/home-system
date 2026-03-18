@@ -1,7 +1,4 @@
 export const sampleImportData = {
-  planName: 'E2E Test Plan',
-  startDate: '2025-01-20',
-  endDate: '2025-01-26',
   products: [
     {
       name: `E2E Test Product ${Date.now()}`,
@@ -28,7 +25,7 @@ export const sampleImportData = {
   ],
   schedule: [
     {
-      date: '2025-01-20',
+      date: new Date().toISOString().slice(0, 10),
       meals: [
         {
           type: 'lunch',

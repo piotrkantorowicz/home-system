@@ -7,22 +7,13 @@ namespace DietPlanner.Api.Features.DietPlans.Import;
 /// </summary>
 public class ImportDto
 {
-    [Description("Name for the diet plan (max 200 chars)")]
-    public required string PlanName { get; set; }
-
-    [Description("Plan start date (YYYY-MM-DD)")]
-    public required DateOnly StartDate { get; set; }
-
-    [Description("Plan end date (YYYY-MM-DD, must be >= startDate)")]
-    public required DateOnly EndDate { get; set; }
-
     [Description("Products to create or update during import")]
     public List<ImportProductDto> Products { get; set; } = new();
 
     [Description("Recipes to create or update during import")]
     public List<ImportRecipeDto> Recipes { get; set; } = new();
 
-    [Description("Daily meal schedule entries (one per day within the date range)")]
+    [Description("Daily meal schedule entries")]
     public List<ImportScheduleDto> Schedule { get; set; } = new();
 }
 
@@ -103,7 +94,7 @@ public class ImportIngredientDto
 /// </summary>
 public class ImportScheduleDto
 {
-    [Description("Date for this schedule entry (must be within startDate-endDate range)")]
+    [Description("Date for this schedule entry (YYYY-MM-DD)")]
     public required DateOnly Date { get; set; }
 
     [Description("List of meals for this day")]
@@ -217,9 +208,6 @@ public class ImportPlanDto
     [Description("Total number of meal entries to be created")]
     public int MealEntriesToCreate { get; set; }
 
-    [Description("Date range of the plan (e.g. '2025-06-01 to 2025-06-30')")]
-    public string DateRange { get; set; } = string.Empty;
-
     [Description("Estimated import duration in seconds")]
     public int EstimatedDurationSeconds { get; set; }
 }
@@ -229,9 +217,6 @@ public class ImportPlanDto
 /// </summary>
 public class ImportResultDto
 {
-    [Description("ID of the created diet plan")]
-    public Guid DietPlanId { get; set; }
-
     [Description("Success message")]
     public required string Message { get; set; }
 

@@ -22,10 +22,7 @@ public class ImportValidator : IImportValidator
         {
             Valid = true,
             CanProceed = true,
-            Plan = new ImportPlanDto
-            {
-                DateRange = $"{import.StartDate:yyyy-MM-dd} to {import.EndDate:yyyy-MM-dd}"
-            }
+            Plan = new ImportPlanDto()
         };
 
         var issues = new List<ValidationIssueDto>();
@@ -56,41 +53,6 @@ public class ImportValidator : IImportValidator
 
     private void ValidateSchema(ImportDto import, List<ValidationIssueDto> issues)
     {
-        if (string.IsNullOrWhiteSpace(import.PlanName))
-        {
-            issues.Add(new ValidationIssueDto
-            {
-                Severity = "error",
-                Category = "schema",
-                Path = "planName",
-                Message = "Plan name is required",
-                Resolution = "Provide a name for your diet plan"
-            });
-        }
-        else if (import.PlanName.Length > 200)
-        {
-            issues.Add(new ValidationIssueDto
-            {
-                Severity = "error",
-                Category = "schema",
-                Path = "planName",
-                Message = "Plan name cannot exceed 200 characters",
-                Resolution = "Shorten the plan name"
-            });
-        }
-
-        if (import.EndDate < import.StartDate)
-        {
-            issues.Add(new ValidationIssueDto
-            {
-                Severity = "error",
-                Category = "schema",
-                Path = "endDate",
-                Message = "End date must be on or after start date",
-                Resolution = "Adjust the date range"
-            });
-        }
-
         if (import.Schedule == null || !import.Schedule.Any())
         {
             issues.Add(new ValidationIssueDto
@@ -390,18 +352,6 @@ public class ImportValidator : IImportValidator
             var scheduleEntry = import.Schedule[i];
             var path = $"schedule[{i}]";
 
-            if (scheduleEntry.Date < import.StartDate || scheduleEntry.Date > import.EndDate)
-            {
-                issues.Add(new ValidationIssueDto
-                {
-                    Severity = "error",
-                    Category = "validation",
-                    Path = $"{path}.date",
-                    Message = $"Schedule date {scheduleEntry.Date} is outside plan range ({import.StartDate} to {import.EndDate})",
-                    Resolution = "Ensure all schedule dates fall within the plan date range"
-                });
-            }
-
             if (!scheduleEntry.Meals.Any())
             {
                 issues.Add(new ValidationIssueDto
@@ -492,20 +442,7 @@ public class ImportValidator : IImportValidator
             });
         }
 
-        var dayCount = (import.EndDate.ToDateTime(TimeOnly.MinValue) - import.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1;
         var mealCount = import.Schedule.Sum(s => s.Meals.Count);
-
-        if (dayCount > 365)
-        {
-            issues.Add(new ValidationIssueDto
-            {
-                Severity = "warning",
-                Category = "performance",
-                Path = "schedule",
-                Message = $"Large import detected: {dayCount} days",
-                Resolution = "This may take longer to process"
-            });
-        }
 
         if (mealCount > 1000)
         {

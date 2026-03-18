@@ -2,59 +2,23 @@ import { Page, Locator, expect } from '@playwright/test';
 
 export class DietPlansPage {
   readonly page: Page;
-  readonly importButton: Locator;
   readonly mealFormDialog: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.importButton = page.getByRole('link', { name: /import diet plan/i });
     this.mealFormDialog = page.getByRole('dialog');
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/diet-plans');
-  }
-
-  async openPlan(name: string) {
-    // Find the "View Calendar" link (has a lucide-eye icon) within the card for this plan.
-    // Avoids depending on translated label text; also avoids matching the Import link.
-    const detailLink = this.page
-      .locator('div')
-      .filter({ hasText: name })
-      .locator('a')
-      .filter({ has: this.page.locator('svg.lucide-eye') })
-      .first();
-    await detailLink.click();
-
-    // Wait for URL to change to the detail page (translation-independent)
-    await this.page.waitForURL(/\/diet-planner\/diet-plans\/[0-9a-f-]+$/, { timeout: 10000 });
-
-    // Wait for the 7-column weekly grid to be rendered (structural, not text-dependent)
-    await expect(this.getWeekDayColumns()).toHaveCount(7, { timeout: 10000 });
-  }
-
-  async deletePlan(name: string) {
-    const card = this.page
-      .locator('div')
-      .filter({ hasText: name })
-      .locator('button')
-      .filter({ has: this.page.locator('svg.lucide-trash-2') })
-      .first();
-    await card.click();
-
-    // Wait for the confirmation dialog, click the destructive button, then wait for it to close
-    const dialog = this.page.getByRole('dialog');
-    await expect(dialog).toBeVisible({ timeout: 5000 });
-    await dialog.locator('button.bg-destructive, button[class*="destructive"]').click();
-    await expect(dialog).not.toBeVisible({ timeout: 10000 });
+    await this.page.goto('/diet-planner/calendar');
   }
 
   /**
-   * Get all weekday column cards on the detail page.
+   * Get all weekday column cards on the calendar page.
    * Returns an array of 7 locators (Mon-Sun).
    */
   getWeekDayColumns() {
-    // The detail page renders a 7-column grid of Cards
+    // The calendar page renders a 7-column grid of Cards
     return this.page.locator('.lg\\:grid-cols-7 > div');
   }
 

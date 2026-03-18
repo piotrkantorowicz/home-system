@@ -11,7 +11,6 @@ test.describe('Diet Plan Import', () => {
     await importPage.loadSample();
 
     const jsonContent = await importPage.jsonInput.inputValue();
-    expect(jsonContent).toContain('planName');
     expect(jsonContent).toContain('products');
     expect(jsonContent).toContain('recipes');
   });
@@ -33,9 +32,6 @@ test.describe('Diet Plan Import', () => {
 
     // Use custom data with unique names to avoid conflicts
     const uniqueImportData = {
-      planName: `E2E Full Test ${timestamp}`,
-      startDate: '2025-01-13',
-      endDate: '2025-01-19',
       products: [
         {
           name: `E2E Product ${timestamp}`,
@@ -58,7 +54,7 @@ test.describe('Diet Plan Import', () => {
       ],
       schedule: [
         {
-          date: '2025-01-13',
+          date: new Date().toISOString().slice(0, 10),
           meals: [{ type: 'lunch', recipe: `E2E Recipe ${timestamp}`, servings: 1 }],
         },
       ],
@@ -67,8 +63,8 @@ test.describe('Diet Plan Import', () => {
     await importPage.goto();
     await importPage.runImportWizard(uniqueImportData);
 
-    // Should redirect to diet plans
-    await page.waitForURL('/diet-plans');
+    // Should redirect to calendar
+    await page.waitForURL(/\/diet-planner\/calendar/);
   });
 
   test('validates before import', async ({ page }) => {
@@ -79,9 +75,6 @@ test.describe('Diet Plan Import', () => {
 
     // Use custom data with unique names to avoid conflicts
     const uniqueImportData = {
-      planName: `E2E Test Plan ${timestamp}`,
-      startDate: '2025-01-13',
-      endDate: '2025-01-19',
       products: [
         {
           name: `E2E Test Chicken ${timestamp}`,
@@ -104,7 +97,7 @@ test.describe('Diet Plan Import', () => {
       ],
       schedule: [
         {
-          date: '2025-01-13',
+          date: new Date().toISOString().slice(0, 10),
           meals: [{ type: 'lunch', recipe: `E2E Grilled Chicken ${timestamp}`, servings: 1 }],
         },
       ],

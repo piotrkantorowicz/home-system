@@ -1,7 +1,7 @@
 using DietPlanner.Api.Domain.Constants;
 using FluentValidation;
 
-namespace DietPlanner.Api.Features.DietPlans;
+namespace DietPlanner.Api.Features.Meals;
 
 public abstract class BaseMealEntryValidator<T> : AbstractValidator<T>
     where T : IMealEntryRequest
@@ -25,21 +25,3 @@ public abstract class BaseMealEntryValidator<T> : AbstractValidator<T>
 public class CreateMealEntryValidator : BaseMealEntryValidator<CreateMealEntryRequest> { }
 
 public class UpdateMealEntryValidator : BaseMealEntryValidator<UpdateMealEntryRequest> { }
-
-public class CreateDietPlanValidator : AbstractValidator<CreateDietPlanRequest>
-{
-    public CreateDietPlanValidator()
-    {
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Plan name is required")
-            .MaximumLength(200).WithMessage("Plan name cannot exceed 200 characters");
-
-        RuleFor(x => x.StartDate)
-            .NotEmpty().WithMessage("Start date is required");
-
-        RuleFor(x => x.EndDate)
-            .NotEmpty().WithMessage("End date is required")
-            .GreaterThanOrEqualTo(x => x.StartDate)
-            .WithMessage("End date must be on or after start date");
-    }
-}

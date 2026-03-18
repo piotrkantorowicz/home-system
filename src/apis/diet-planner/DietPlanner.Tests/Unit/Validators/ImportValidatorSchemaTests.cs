@@ -5,16 +5,12 @@ namespace DietPlanner.Tests.Unit.Validators;
 
 /// <summary>
 /// Tests the synchronous schema/business-rule validation logic in ImportValidator
-/// without requiring a database. These test ValidateSchema and ValidateBusinessRules
-/// which are called internally by ValidateAsync.
+/// without requiring a database.
 /// </summary>
 public class ImportValidatorSchemaTests
 {
     private static ImportDto ValidImport() => new()
     {
-        PlanName = "Test Plan",
-        StartDate = new DateOnly(2026, 1, 1),
-        EndDate = new DateOnly(2026, 1, 7),
         Products =
         [
             new ImportProductDto
@@ -50,14 +46,10 @@ public class ImportValidatorSchemaTests
     public void ValidImport_HasNoSchemaErrors()
     {
         var import = ValidImport();
-        var issues = new List<ValidationIssueDto>();
 
-        // Access via reflection to test private method, or test the full flow
-        // For unit test, we use a mock DB approach via the public ValidateAsync
-        // Here we verify that the model structure is valid
-        import.PlanName.Should().NotBeNullOrWhiteSpace();
-        (import.EndDate >= import.StartDate).Should().BeTrue();
         import.Schedule.Should().NotBeEmpty();
+        import.Products.Should().NotBeEmpty();
+        import.Recipes.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -120,34 +112,12 @@ public class ImportValidatorSchemaTests
     }
 
     [Fact]
-    public void EndDateBeforeStartDate_IsAnError()
+    public void ScheduleDate_IsAValidDate()
     {
         var import = ValidImport();
-        var isInvalid = import.EndDate < import.StartDate;
-        isInvalid.Should().BeFalse(); // valid import should not have this
+        var scheduleDate = import.Schedule[0].Date;
 
-        // Verify detection logic
-        var badImport = new ImportDto
-        {
-            PlanName = import.PlanName,
-            StartDate = new DateOnly(2026, 1, 7),
-            EndDate = new DateOnly(2026, 1, 1),
-            Products = import.Products,
-            Recipes = import.Recipes,
-            Schedule = import.Schedule
-        };
-
-        (badImport.EndDate < badImport.StartDate).Should().BeTrue();
-    }
-
-    [Fact]
-    public void ScheduleDateOutsidePlanRange_IsDetected()
-    {
-        var import = ValidImport();
-        var original = import.Schedule[0];
-        var outOfRange = new ImportScheduleDto { Date = new DateOnly(2027, 1, 1), Meals = original.Meals };
-
-        var isOutOfRange = outOfRange.Date < import.StartDate || outOfRange.Date > import.EndDate;
-        isOutOfRange.Should().BeTrue();
+        scheduleDate.Should().NotBe(default(DateOnly));
+        scheduleDate.Year.Should().BeGreaterThan(2000);
     }
 }

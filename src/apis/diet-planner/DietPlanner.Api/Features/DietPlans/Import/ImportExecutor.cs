@@ -1,6 +1,7 @@
 using DietPlanner.Api.Common.Exceptions;
 using DietPlanner.Api.Data;
 using DietPlanner.Api.Domain;
+using DietPlanner.Api.Features.Meals;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -33,14 +34,13 @@ public class ImportExecutor : IImportExecutor
 
             try
             {
-                _logger.LogInformation("Starting import execution for user {UserId}: {PlanName}", userId, import.PlanName);
+                _logger.LogInformation("Starting import execution for user {UserId}", userId);
 
-                // Steps 1-4 stage all changes without intermediate saves.
+                // Steps 1-3 stage all changes without intermediate saves.
                 // EF Core generates GUIDs client-side on Add(), so IDs are available for relationships immediately.
                 var productMap = await ProcessProductsAsync(import.Products, userId, stats);
                 var recipeMap = await ProcessRecipesAsync(import.Recipes, userId, productMap, stats);
-                var dietPlan = CreateDietPlan(import, userId);
-                await CreateMealEntriesAsync(import.Schedule, dietPlan.Id, recipeMap, stats);
+                await CreateMealEntriesAsync(import.Schedule, userId, recipeMap, stats);
 
                 // Single save for the entire import
                 await _db.SaveChangesAsync();
@@ -55,8 +55,7 @@ public class ImportExecutor : IImportExecutor
 
                 return new ImportResultDto
                 {
-                    DietPlanId = dietPlan.Id,
-                    Message = $"Diet plan '{import.PlanName}' imported successfully",
+                    Message = "Meals imported successfully",
                     Stats = stats
                 };
             }
@@ -282,26 +281,9 @@ public class ImportExecutor : IImportExecutor
         return null;
     }
 
-    private DietPlan CreateDietPlan(ImportDto import, string userId)
-    {
-        var dietPlan = new DietPlan
-        {
-            UserId = userId,
-            Name = import.PlanName,
-            StartDate = import.StartDate,
-            EndDate = import.EndDate,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _db.DietPlans.Add(dietPlan); // dietPlan.Id is assigned by EF Core here
-        _logger.LogInformation("Staged diet plan: {PlanName}", import.PlanName);
-
-        return dietPlan;
-    }
-
     private async Task CreateMealEntriesAsync(
         List<ImportScheduleDto> schedule,
-        Guid dietPlanId,
+        string userId,
         Dictionary<string, Guid> recipeMap,
         ImportStatsDto stats)
     {
@@ -337,7 +319,7 @@ public class ImportExecutor : IImportExecutor
 
                 mealEntries.Add(new MealEntry
                 {
-                    DietPlanId = dietPlanId,
+                    UserId = userId,
                     Date = scheduleEntry.Date,
                     MealType = meal.Type.ToLowerInvariant(),
                     RecipeId = recipeId,
