@@ -95,9 +95,6 @@ export default function ImportWizard() {
   };
 
   const sampleJson = {
-    planName: 'Week 1 - Clean Eating',
-    startDate: '2025-01-13',
-    endDate: '2025-01-19',
     products: [
       {
         name: 'Chicken Breast',
@@ -105,23 +102,44 @@ export default function ImportWizard() {
         proteinPer100g: 31,
         carbsPer100g: 0,
         fatPer100g: 3.6,
+        fiberPer100g: 0,
+        unit: 'g',
+      },
+      {
+        name: 'Brown Rice',
+        caloriesPer100g: 362,
+        proteinPer100g: 7.5,
+        carbsPer100g: 76,
+        fatPer100g: 2.7,
+        fiberPer100g: 3.5,
         unit: 'g',
       },
     ],
     recipes: [
       {
-        name: 'Grilled Chicken',
+        name: 'Grilled Chicken with Rice',
         description: 'Simple and healthy',
         servings: 2,
         prepTimeMinutes: 30,
-        ingredients: [{ product: 'Chicken Breast', amount: 300, unit: 'g' }],
-        instructions: '1. Grill chicken...',
+        ingredients: [
+          { product: 'Chicken Breast', amount: 300, unit: 'g' },
+          { product: 'Brown Rice', amount: 150, unit: 'g' },
+        ],
+        instructions: '1. Grill chicken. 2. Cook rice.',
       },
     ],
     schedule: [
       {
-        date: '2025-01-13',
-        meals: [{ type: 'lunch', recipe: 'Grilled Chicken', servings: 1 }],
+        date: '2026-03-18',
+        meals: [
+          { type: 'lunch', recipe: 'Grilled Chicken with Rice', servings: 1 },
+        ],
+      },
+      {
+        date: '2026-03-19',
+        meals: [
+          { type: 'dinner', recipe: 'Grilled Chicken with Rice', servings: 1 },
+        ],
       },
     ],
   };
