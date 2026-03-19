@@ -61,7 +61,9 @@ test.describe('Nutrition Summary — page structure', () => {
     await nutritionPage.setDateRange(from, to);
     // Even with no data the select should not render — so this test only applies
     // after we have data; covered in the serial suite below
-    await expect(nutritionPage.pageSizeSelect).toBeVisible({ timeout: 5000 }).catch(() => {});
+    await expect(nutritionPage.pageSizeSelect)
+      .toBeVisible({ timeout: 5000 })
+      .catch(() => {});
   });
 });
 
@@ -71,8 +73,6 @@ test.describe('Nutrition Summary — with meal data', () => {
   test.describe.configure({ mode: 'serial', timeout: 180000 });
 
   const planData = generateWeeklyPlan(new Date());
-  const { from: weekFrom, to: weekTo } = currentWeekRange();
-
   test('setup: import weekly meal plan', async ({ page }) => {
     const importPage = new ImportPage(page);
     await importPage.goto();
