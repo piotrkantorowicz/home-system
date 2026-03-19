@@ -1,6 +1,7 @@
 using DietPlanner.Api.Common.Exceptions;
 using DietPlanner.Api.Data;
 using DietPlanner.Api.Domain;
+using DietPlanner.Api.Features.Recipes;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietPlanner.Api.Features.Meals;
@@ -8,6 +9,7 @@ namespace DietPlanner.Api.Features.Meals;
 public interface IMealService
 {
     Task<List<MealEntryDto>> GetAsync(string userId, DateOnly? from, DateOnly? to);
+    Task<List<DailyNutritionDto>> GetNutritionSummaryAsync(string userId, DateOnly? from, DateOnly? to);
     Task<MealEntryDto> CreateAsync(string userId, CreateMealEntryRequest request);
     Task<MealEntryDto> UpdateAsync(Guid id, string userId, UpdateMealEntryRequest request);
     Task DeleteAsync(Guid id, string userId);
@@ -17,11 +19,13 @@ public class MealService : IMealService
 {
     private readonly AppDbContext _db;
     private readonly ILogger<MealService> _logger;
+    private readonly INutritionCalculator _nutritionCalculator;
 
-    public MealService(AppDbContext db, ILogger<MealService> logger)
+    public MealService(AppDbContext db, ILogger<MealService> logger, INutritionCalculator nutritionCalculator)
     {
         _db = db;
         _logger = logger;
+        _nutritionCalculator = nutritionCalculator;
     }
 
     public async Task<List<MealEntryDto>> GetAsync(string userId, DateOnly? from, DateOnly? to)
@@ -43,6 +47,54 @@ public class MealService : IMealService
             .ToListAsync();
 
         return entries.Select(MealEntryDto.FromEntity).ToList();
+    }
+
+    public async Task<List<DailyNutritionDto>> GetNutritionSummaryAsync(string userId, DateOnly? from, DateOnly? to)
+    {
+        var query = _db.MealEntries
+            .Include(me => me.Recipe)
+                .ThenInclude(r => r.Ingredients)
+                    .ThenInclude(i => i.Product)
+            .Where(me => me.UserId == userId);
+
+        if (from.HasValue)
+            query = query.Where(me => me.Date >= from.Value);
+
+        if (to.HasValue)
+            query = query.Where(me => me.Date <= to.Value);
+
+        var entries = await query.ToListAsync();
+
+        var result = entries
+            .GroupBy(me => me.Date)
+            .Select(g =>
+            {
+                decimal calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
+
+                foreach (var entry in g)
+                {
+                    var nutrition = _nutritionCalculator.CalculateNutritionForServings(entry.Recipe, entry.Servings);
+                    calories += nutrition.Calories;
+                    protein += nutrition.Protein;
+                    carbs += nutrition.Carbs;
+                    fat += nutrition.Fat;
+                    fiber += nutrition.Fiber;
+                }
+
+                return new DailyNutritionDto
+                {
+                    Date = g.Key,
+                    Calories = Math.Round(calories, 1),
+                    Protein = Math.Round(protein, 1),
+                    Carbs = Math.Round(carbs, 1),
+                    Fat = Math.Round(fat, 1),
+                    Fiber = Math.Round(fiber, 1),
+                };
+            })
+            .OrderBy(d => d.Date)
+            .ToList();
+
+        return result;
     }
 
     public async Task<MealEntryDto> CreateAsync(string userId, CreateMealEntryRequest request)

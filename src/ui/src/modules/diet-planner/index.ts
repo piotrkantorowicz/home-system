@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Home, Package, BookOpen, CalendarDays, Upload, Target } from 'lucide-react';
+import { Home, Package, BookOpen, CalendarDays, Upload, Target, BarChart2 } from 'lucide-react';
 import type { AppModule } from '@shared/lib/module-registry';
 import en from './locales/en.json';
 import pl from './locales/pl.json';
@@ -16,6 +16,7 @@ const RecipeDetail = lazy(() => import('./pages/recipes/RecipeDetail'));
 const Calendar = lazy(() => import('./pages/Calendar'));
 const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
 const Goals = lazy(() => import('./pages/Goals'));
+const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -59,6 +60,12 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'common.goals',
     },
     {
+      name: 'Nutrition',
+      href: '/diet-planner/nutrition',
+      icon: BarChart2,
+      translationKey: 'common.nutrition',
+    },
+    {
       name: 'Import Plan',
       href: '/diet-planner/import',
       icon: Upload,
@@ -78,5 +85,6 @@ export const dietPlannerModule: AppModule = {
     { path: 'goals', Component: Goals },
     { path: 'calendar', Component: Calendar },
     { path: 'import', Component: ImportWizard },
+    { path: 'nutrition', Component: NutritionSummary },
   ],
 };

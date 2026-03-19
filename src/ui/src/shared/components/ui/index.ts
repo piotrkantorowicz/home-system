@@ -27,3 +27,4 @@ export {
 } from './Dialog';
 export { ThemeToggle } from './ThemeToggle';
 export { LanguageSwitcher } from './LanguageSwitcher';
+export { Pagination } from './Pagination';

@@ -31,6 +31,24 @@ public static class MealEndpoints
         .WithDescription("Returns all meal entries for the current user within the specified date range.")
         .Produces<List<MealEntryDto>>(StatusCodes.Status200OK);
 
+        // GET /api/v1/meals/nutrition-summary?from=YYYY-MM-DD&to=YYYY-MM-DD
+        group.MapGet("/nutrition-summary", async (
+            HttpContext context,
+            [FromServices] IMealService service,
+            [FromQuery] DateOnly? from,
+            [FromQuery] DateOnly? to) =>
+        {
+            var userId = context.User.GetUserId();
+            var summary = await service.GetNutritionSummaryAsync(userId, from, to);
+
+            return Results.Ok(summary);
+        })
+        .RequireRateLimiting("api")
+        .WithName("GetNutritionSummary")
+        .WithSummary("Get daily nutrition summary for a date range")
+        .WithDescription("Returns aggregated daily nutrition totals from all meal entries for the current user.")
+        .Produces<List<DailyNutritionDto>>(StatusCodes.Status200OK);
+
         // POST /api/v1/meals
         group.MapPost("/", async (
             HttpContext context,

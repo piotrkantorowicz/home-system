@@ -2,6 +2,15 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { api } from '../client';
 import type { components } from '../generated/schema';
 
+export type DailyNutrition = {
+  date: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+};
+
 type MealEntry = components['schemas']['MealEntryDto'];
 type CreateMealEntryRequest = components['schemas']['CreateMealEntryRequest'];
 type UpdateMealEntryRequest = components['schemas']['UpdateMealEntryRequest'];
@@ -80,6 +89,21 @@ export function useDeleteMeal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meals'] });
     },
+  });
+}
+
+export function useNutritionSummary(params: { from: string; to: string }) {
+  return useQuery({
+    queryKey: ['nutrition-summary', params],
+    queryFn: async (): Promise<DailyNutrition[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (api as any).GET('/api/v1/meals/nutrition-summary', {
+        params: { query: params },
+      });
+      if (response.error) throw new Error('Failed to fetch nutrition summary');
+      return response.data as DailyNutrition[];
+    },
+    placeholderData: keepPreviousData,
   });
 }
 

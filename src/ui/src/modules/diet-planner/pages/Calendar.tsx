@@ -2,7 +2,14 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useMeals, useCreateMeal, useUpdateMeal, useDeleteMeal } from '../api/hooks/useMeals';
+import {
+  useMeals,
+  useCreateMeal,
+  useUpdateMeal,
+  useDeleteMeal,
+  useNutritionSummary,
+} from '../api/hooks/useMeals';
+import { useGoals } from '../api/hooks/useGoals';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
 import {
   Dialog,
@@ -12,6 +19,7 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { MealForm } from '../components/diet-plans/MealForm';
+import { MacroProgressBar } from '../components/MacroProgressBar';
 import { cn } from '@shared/lib/utils';
 
 function getWeekStart(date: Date) {
@@ -60,6 +68,26 @@ export default function Calendar() {
     end.setDate(end.getDate() + 6);
     return { from: formatLocalDate(start), to: formatLocalDate(end) };
   }, [weekStart]);
+
+  const { data: nutritionSummary } = useNutritionSummary({
+    from: weekRange.from,
+    to: weekRange.to,
+  });
+  const { data: goals } = useGoals();
+
+  const weeklyTotals = useMemo(() => {
+    if (!nutritionSummary) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+    return nutritionSummary.reduce(
+      (acc, day) => ({
+        calories: acc.calories + day.calories,
+        protein: acc.protein + day.protein,
+        carbs: acc.carbs + day.carbs,
+        fat: acc.fat + day.fat,
+        fiber: acc.fiber + day.fiber,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+    );
+  }, [nutritionSummary]);
 
   const { data: meals, isLoading: mealsLoading } = useMeals({
     from: weekRange.from,
@@ -267,6 +295,52 @@ export default function Calendar() {
           })}
         </div>
       )}
+
+      {/* Weekly Nutrition Summary */}
+      <Card className="mt-6 animate-fade-in-up">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {goals === undefined ? (
+            <p className="text-sm text-muted-foreground">{t('nutrition_summary.no_goals')}</p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <MacroProgressBar
+                label={t('nutrition_summary.calories')}
+                actual={weeklyTotals.calories}
+                goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
+                unit="kcal"
+                gradient="from-rose-500 to-orange-500"
+              />
+              <MacroProgressBar
+                label={t('nutrition_summary.protein')}
+                actual={weeklyTotals.protein}
+                goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
+                gradient="from-blue-500 to-indigo-500"
+              />
+              <MacroProgressBar
+                label={t('nutrition_summary.carbs')}
+                actual={weeklyTotals.carbs}
+                goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
+                gradient="from-emerald-500 to-teal-500"
+              />
+              <MacroProgressBar
+                label={t('nutrition_summary.fat')}
+                actual={weeklyTotals.fat}
+                goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
+                gradient="from-amber-500 to-orange-500"
+              />
+              <MacroProgressBar
+                label={t('nutrition_summary.fiber')}
+                actual={weeklyTotals.fiber}
+                goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
+                gradient="from-violet-500 to-purple-500"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <MealForm
         key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}

@@ -21,6 +21,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  Pagination,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -36,6 +37,7 @@ export default function RecipeList() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [onlyMine, setOnlyMine] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -44,7 +46,7 @@ export default function RecipeList() {
     search: debouncedSearch,
     onlyMine,
     page,
-    pageSize: 50,
+    pageSize,
   });
 
   const deleteMutation = useDeleteRecipe();
@@ -316,32 +318,17 @@ export default function RecipeList() {
             </div>
           )}
 
-          {data && Number(data.totalPages) > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {t('common.showing_range', {
-                  start: (page - 1) * 50 + 1,
-                  end: Math.min(page * 50, Number(data.totalCount)),
-                  total: Number(data.totalCount),
-                })}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  {t('common.previous')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= Number(data.totalPages)}
-                >
-                  {t('common.next')}
-                </Button>
-              </div>
-            </div>
+          {data && (
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={Number(data.totalCount)}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
           )}
         </>
       )}

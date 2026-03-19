@@ -55,6 +55,30 @@ public interface IMealEntryRequest
 }
 
 /// <summary>
+/// Daily nutrition totals aggregated from all meal entries for a given day.
+/// </summary>
+public class DailyNutritionDto
+{
+    [Description("Date (YYYY-MM-DD)")]
+    public DateOnly Date { get; set; }
+
+    [Description("Total calories for the day")]
+    public decimal Calories { get; set; }
+
+    [Description("Total protein in grams")]
+    public decimal Protein { get; set; }
+
+    [Description("Total carbohydrates in grams")]
+    public decimal Carbs { get; set; }
+
+    [Description("Total fat in grams")]
+    public decimal Fat { get; set; }
+
+    [Description("Total fiber in grams")]
+    public decimal Fiber { get; set; }
+}
+
+/// <summary>
 /// Meal entry with recipe details.
 /// </summary>
 public class MealEntryDto
