@@ -38,7 +38,7 @@ test.describe('Nutrition Summary — page structure', () => {
     await nutritionPage.goto();
 
     await nutritionPage.setDateRange('2020-01-01', '2020-01-07');
-    await nutritionPage.applyRange();
+    await nutritionPage.applyRange('2020-01-01', '2020-01-07');
 
     await nutritionPage.expectEmptyState();
   });
@@ -97,16 +97,23 @@ test.describe('Nutrition Summary — with meal data', () => {
   });
 
   test('goal progress panel is visible when goals are configured', async ({ page }) => {
-    // Navigate to goals page and confirm goals exist (they may already be set)
+    // Navigate to goals page and wait for goals to finish loading
     await page.goto('/diet-planner/goals');
-    await expect(page.locator('input[id="dailyCalorieTarget"]')).toBeVisible();
+    const calorieInput = page.locator('input[id="dailyCalorieTarget"]');
+    await expect(calorieInput).toBeVisible();
+    await page.waitForLoadState('networkidle');
 
-    // Fill in goals if empty
-    await page.locator('input[id="dailyCalorieTarget"]').fill('2000');
+    // Use a timestamp-based calorie value to guarantee the form is dirty
+    // regardless of what goals are already stored
+    const uniqueCalories = String(2000 + (Date.now() % 100));
+    await calorieInput.fill(uniqueCalories);
     await page.locator('input[id="proteinGrams"]').fill('150');
     await page.locator('input[id="carbsGrams"]').fill('220');
     await page.locator('input[id="fatGrams"]').fill('70');
-    await page.click('button[type="submit"]');
+
+    const submitBtn = page.locator('button[type="submit"]');
+    await expect(submitBtn).toBeEnabled({ timeout: 5000 });
+    await submitBtn.click();
 
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
@@ -119,17 +126,15 @@ test.describe('Nutrition Summary — with meal data', () => {
     await nutritionPage.goto();
 
     await nutritionPage.setDateRange('2020-01-01', '2020-01-07');
-    await nutritionPage.applyRange();
+    await nutritionPage.applyRange('2020-01-01', '2020-01-07');
 
     await nutritionPage.expectEmptyState();
   });
 
-  test('re-applying current week range shows data again', async ({ page }) => {
+  test('current week range shows data on load', async ({ page }) => {
+    // goto() already defaults to the current week and waits for the API response.
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
-
-    await nutritionPage.setDateRange(weekFrom, weekTo);
-    await nutritionPage.applyRange();
 
     const rowCount = await nutritionPage.getTableRowCount();
     expect(rowCount).toBeGreaterThan(0);
