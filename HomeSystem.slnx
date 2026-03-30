@@ -12,7 +12,7 @@
     <Project Path="src/Modules/DietPlanner/DietPlanner.Api/DietPlanner.Api.csproj" />
   </Folder>
   <Folder Name="/Host/">
-    <Project Path="src/Api/Api.csproj" />
+    <Project Path="src/HomeSystem.Api/HomeSystem.Api.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
