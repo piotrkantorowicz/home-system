@@ -15,8 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Modules\DietPlanner\DietPlanner.Api\DietPlanner.Api.csproj" />
-    <ProjectReference Include="..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\DietPlanner\DietPlanner.Api\DietPlanner.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\DietPlanner\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

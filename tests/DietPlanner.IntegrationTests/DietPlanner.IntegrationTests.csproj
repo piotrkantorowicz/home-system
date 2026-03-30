@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\HomeSystem.Api\HomeSystem.Api.csproj" />
+    <ProjectReference Include="..\..\src\Apis\HomeSystem.REST\HomeSystem.REST.csproj" />
     <ProjectReference Include="..\..\src\Modules\DietPlanner\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
   </ItemGroup>
 
