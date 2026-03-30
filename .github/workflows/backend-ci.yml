@@ -4,14 +4,24 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/apis/**'
+      - 'src/Api/**'
+      - 'src/Modules/**'
+      - 'src/Shared/**'
+      - 'tests/**'
       - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'HomeSystem.slnx'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'src/apis/**'
+      - 'src/Api/**'
+      - 'src/Modules/**'
+      - 'src/Shared/**'
+      - 'tests/**'
       - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'HomeSystem.slnx'
       - '.github/workflows/backend-ci.yml'
 
 jobs:
@@ -28,23 +38,21 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/apis/diet-planner/DietPlanner.slnx
+        run: dotnet restore HomeSystem.slnx
 
       - name: Build
-        run: dotnet build src/apis/diet-planner/DietPlanner.slnx --no-restore --configuration Release
+        run: dotnet build HomeSystem.slnx --no-restore --configuration Release
 
       - name: Run unit tests
         run: |
-          dotnet test src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj \
+          dotnet test tests/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj \
             --no-build \
             --configuration Release \
-            --filter "FullyQualifiedName!~Integration" \
             --logger "console;verbosity=minimal"
 
       - name: Run integration tests
         run: |
-          dotnet test src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj \
+          dotnet test tests/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj \
             --no-build \
             --configuration Release \
-            --filter "FullyQualifiedName~Integration" \
             --logger "console;verbosity=minimal"

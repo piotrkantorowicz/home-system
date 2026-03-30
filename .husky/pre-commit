@@ -1,1 +1,12 @@
 cd src/ui && npx lint-staged
+
+BACKEND_CHANGED=$(git diff --cached --name-only | grep -E '^(src/(Api|Modules|Shared)|tests/DietPlanner\.UnitTests)/' | head -1)
+
+if [ -n "$BACKEND_CHANGED" ]; then
+  echo "🔨 Backend changes detected — building and running unit tests..."
+  dotnet build HomeSystem.slnx --configuration Debug --verbosity minimal || exit 1
+  dotnet test tests/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj \
+    --no-build \
+    --configuration Debug \
+    --logger "console;verbosity=minimal" || exit 1
+fi
