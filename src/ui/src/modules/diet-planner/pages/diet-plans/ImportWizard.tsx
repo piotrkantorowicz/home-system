@@ -1,7 +1,3 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { FileJson, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, XCircle } from 'lucide-react';
 import { useValidateImport, useExecuteImport } from '@modules/diet-planner/api/hooks/useMeals';
 import {
   Button,
@@ -19,6 +15,11 @@ import {
   TableCell,
 } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
+import { FileJson, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
 import type { components } from '../../api/generated/schema';
 
 type ImportDto = components['schemas']['ImportDto'];
@@ -42,7 +43,7 @@ export default function ImportWizard() {
 
   const handleJsonParse = () => {
     try {
-      const parsed = JSON.parse(jsonInput);
+      const parsed = JSON.parse(jsonInput) as ImportDto;
       setImportData(parsed);
       setStep(2);
     } catch {
@@ -55,7 +56,7 @@ export default function ImportWizard() {
 
     try {
       const result = await validateMutation.mutateAsync(importData);
-      const validationData = { ...(result as ValidationResultDto), isApiError: false };
+      const validationData = { ...result, isApiError: false };
       setValidationResult(validationData);
 
       if (validationData.canProceed) {
@@ -77,7 +78,9 @@ export default function ImportWizard() {
 
   const hasDetailedIssues = (issues: ValidationIssueDto[] | undefined): boolean => {
     if (!issues || issues.length === 0) return false;
-    return issues.some((issue) => issue.category || issue.path || issue.item);
+    return issues.some(
+      (issue) => Boolean(issue.category) || issue.path !== null || issue.item !== null,
+    );
   };
 
   const handleImport = async () => {
@@ -87,7 +90,7 @@ export default function ImportWizard() {
       await importMutation.mutateAsync(importData);
       setStep(4);
       setTimeout(() => {
-        navigate('/diet-planner/calendar');
+        void navigate('/diet-planner/calendar');
       }, 2000);
     } catch (error) {
       console.error('Import failed:', error);
@@ -141,9 +144,9 @@ export default function ImportWizard() {
   };
 
   return (
-    <div className="p-8 lg:p-10 max-w-4xl mx-auto animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight mb-2">{t('import_wizard.title')}</h1>
+        <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('import_wizard.title')}</h1>
         <p className="text-muted-foreground text-[0.95rem]">{t('import_wizard.subtitle')}</p>
       </div>
 
@@ -161,7 +164,7 @@ export default function ImportWizard() {
                 'flex h-10 w-10 items-center justify-center rounded-xl border-2 text-sm font-bold transition-all duration-300',
                 step >= s.num
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-muted bg-background text-muted-foreground'
+                  : 'border-muted bg-background text-muted-foreground',
               )}
             >
               {step > s.num ? <CheckCircle2 className="h-5 w-5" /> : s.num}
@@ -169,12 +172,12 @@ export default function ImportWizard() {
             <span
               className={cn(
                 'ml-2 text-sm font-medium transition-colors',
-                step >= s.num ? 'text-foreground' : 'text-muted-foreground'
+                step >= s.num ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
               {s.label}
             </span>
-            {idx < 3 && <ArrowRight className="mx-4 h-4 w-4 text-muted-foreground/40" />}
+            {idx < 3 && <ArrowRight className="text-muted-foreground/40 mx-4 h-4 w-4" />}
           </div>
         ))}
       </div>
@@ -184,7 +187,7 @@ export default function ImportWizard() {
         <Card className="animate-scale-in">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileJson className="h-5 w-5 text-primary" />
+              <FileJson className="text-primary h-5 w-5" />
               {t('import_wizard.step1.title')}
             </CardTitle>
           </CardHeader>
@@ -194,7 +197,9 @@ export default function ImportWizard() {
               <Textarea
                 id="json-input"
                 value={jsonInput}
-                onChange={(e) => setJsonInput(e.target.value)}
+                onChange={(e) => {
+                  setJsonInput(e.target.value);
+                }}
                 placeholder={t('import_wizard.step1.placeholder')}
                 rows={12}
                 className="font-mono text-sm"
@@ -208,17 +213,19 @@ export default function ImportWizard() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setJsonInput(JSON.stringify(sampleJson, null, 2))}
+                onClick={() => {
+                  setJsonInput(JSON.stringify(sampleJson, null, 2));
+                }}
               >
                 {t('import_wizard.step1.load_sample')}
               </Button>
             </div>
 
-            <div className="rounded-xl border border-muted bg-muted/30 p-5">
-              <p className="text-sm font-semibold mb-2">
+            <div className="border-muted bg-muted/30 rounded-xl border p-5">
+              <p className="mb-2 text-sm font-semibold">
                 {t('import_wizard.step1.expected_format')}
               </p>
-              <pre className="text-xs overflow-auto max-h-32 text-muted-foreground">
+              <pre className="text-muted-foreground max-h-32 overflow-auto text-xs">
                 {JSON.stringify(sampleJson, null, 2)}
               </pre>
             </div>
@@ -233,50 +240,50 @@ export default function ImportWizard() {
             <CardTitle>{t('import_wizard.step2.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5 bg-muted/20 rounded-xl">
+            <div className="bg-muted/20 grid grid-cols-2 gap-4 rounded-xl p-5 md:grid-cols-3">
               <div>
-                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
+                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
                   {t('import_wizard.step2.products')}
                 </span>
-                <span className="font-medium text-sm block">
-                  {importData.products?.length || 0} items
+                <span className="block text-sm font-medium">
+                  {importData.products?.length ?? 0} items
                 </span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
+                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
                   {t('import_wizard.step2.recipes')}
                 </span>
-                <span className="font-medium text-sm block">
-                  {importData.recipes?.length || 0} items
+                <span className="block text-sm font-medium">
+                  {importData.recipes?.length ?? 0} items
                 </span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block uppercase tracking-wider mb-1">
+                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
                   {t('import_wizard.step2.schedule_days')}
                 </span>
-                <span className="font-medium text-sm block">
-                  {importData.schedule?.length || 0} days
+                <span className="block text-sm font-medium">
+                  {importData.schedule?.length ?? 0} days
                 </span>
               </div>
             </div>
 
             {validationResult && !validationResult.canProceed && (
-              <div className="space-y-4 animate-fade-in-up">
+              <div className="animate-fade-in-up space-y-4">
                 {validationResult.isApiError ? (
-                  <div className="rounded-xl border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/20 p-6">
+                  <div className="rounded-xl border border-red-300 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/20">
                     <div className="flex items-start gap-4">
-                      <div className="rounded-xl bg-red-100 dark:bg-red-900/50 p-3">
+                      <div className="rounded-xl bg-red-100 p-3 dark:bg-red-900/50">
                         <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
+                        <h3 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
                           Something went wrong
                         </h3>
-                        <p className="text-red-600 dark:text-red-300 text-sm mb-3">
-                          {validationResult.issues?.[0]?.message ||
+                        <p className="mb-3 text-sm text-red-600 dark:text-red-300">
+                          {validationResult.issues?.[0]?.message ??
                             'An unexpected error occurred while validating your import data.'}
                         </p>
-                        <p className="text-red-500 dark:text-red-400 text-xs">
+                        <p className="text-xs text-red-500 dark:text-red-400">
                           Please check your data and try again. If the problem persists, contact
                           support.
                         </p>
@@ -285,7 +292,7 @@ export default function ImportWizard() {
                   </div>
                 ) : (
                   <>
-                    <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/10 p-4">
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/10">
                       <div className="flex items-center gap-2">
                         <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                         <h3 className="font-semibold text-red-700 dark:text-red-400">
@@ -303,7 +310,7 @@ export default function ImportWizard() {
                     {validationResult.issues &&
                       validationResult.issues.length > 0 &&
                       hasDetailedIssues(validationResult.issues) && (
-                        <div className="rounded-xl border overflow-hidden">
+                        <div className="overflow-hidden rounded-xl border">
                           <Table>
                             <TableHeader>
                               <TableRow className="bg-muted/30">
@@ -333,10 +340,10 @@ export default function ImportWizard() {
                                       <TableCell>
                                         <span
                                           className={cn(
-                                            'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium',
+                                            'inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium',
                                             isError
                                               ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
-                                              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400'
+                                              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400',
                                           )}
                                         >
                                           {issue.severity}
@@ -348,14 +355,14 @@ export default function ImportWizard() {
                                             {issue.category || '-'}
                                           </span>
                                           {issue.path && (
-                                            <span className="text-xs text-muted-foreground font-mono">
+                                            <span className="text-muted-foreground font-mono text-xs">
                                               {issue.path}
                                             </span>
                                           )}
                                         </div>
                                       </TableCell>
                                       <TableCell className="font-medium">
-                                        {issue.item || '-'}
+                                        {issue.item ?? '-'}
                                       </TableCell>
                                       <TableCell>
                                         <div className="space-y-1">
@@ -370,7 +377,7 @@ export default function ImportWizard() {
                                       </TableCell>
                                       <TableCell>
                                         {existingItem ? (
-                                          <div className="text-xs space-y-0.5">
+                                          <div className="space-y-0.5 text-xs">
                                             {Object.entries(existingItem)
                                               .filter(([key]) => key !== 'id')
                                               .map(([key, val]) => (
@@ -391,7 +398,7 @@ export default function ImportWizard() {
                                       </TableCell>
                                     </TableRow>
                                   );
-                                }
+                                },
                               )}
                             </TableBody>
                           </Table>
@@ -402,12 +409,22 @@ export default function ImportWizard() {
               </div>
             )}
 
-            <div className="flex gap-4 pt-4 border-t">
-              <Button onClick={() => setStep(1)} variant="outline">
+            <div className="flex gap-4 border-t pt-4">
+              <Button
+                onClick={() => {
+                  setStep(1);
+                }}
+                variant="outline"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('common.previous')}
               </Button>
-              <Button onClick={handleValidate} disabled={validateMutation.isPending}>
+              <Button
+                onClick={() => {
+                  void handleValidate();
+                }}
+                disabled={validateMutation.isPending}
+              >
                 {validateMutation.isPending
                   ? t('import_wizard.step2.validating')
                   : validationResult && !validationResult.canProceed
@@ -428,14 +445,14 @@ export default function ImportWizard() {
           </CardHeader>
           <CardContent className="space-y-5">
             {validationResult.valid ? (
-              <div className="rounded-xl border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/10 p-4">
+              <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/10">
                 <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
                   <CheckCircle2 className="h-5 w-5" />
                   <span className="font-medium">{t('import_wizard.step3.success')}</span>
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/10 p-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/10">
                 <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                   <AlertCircle className="h-5 w-5" />
                   <span className="font-medium">
@@ -449,7 +466,7 @@ export default function ImportWizard() {
                   )}
                 </div>
                 {validationResult.issues && validationResult.issues.length > 0 && (
-                  <ul className="mt-2 text-sm space-y-1 pl-7">
+                  <ul className="mt-2 space-y-1 pl-7 text-sm">
                     {validationResult.issues.map((issue, idx) => (
                       <li key={idx} className="text-amber-600 dark:text-amber-300">
                         • {issue.item ? `${issue.item}: ` : ''}
@@ -463,55 +480,55 @@ export default function ImportWizard() {
 
             <div className="space-y-3">
               <h4 className="font-semibold">{t('import_wizard.step3.what_imported')}</h4>
-              <div className="rounded-xl border p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 gap-4 rounded-xl border p-5 sm:grid-cols-3 md:grid-cols-5">
                 {[
                   {
-                    val: validationResult.plan?.productsToCreate || 0,
+                    val: validationResult.plan?.productsToCreate ?? 0,
                     label: t('import_wizard.step3.new_products'),
                     primary: true,
                   },
                   {
-                    val: validationResult.plan?.productsToReuse || 0,
+                    val: validationResult.plan?.productsToReuse ?? 0,
                     label: 'Products Reuse',
                     primary: false,
                   },
                   {
-                    val: validationResult.plan?.recipesToCreate || 0,
+                    val: validationResult.plan?.recipesToCreate ?? 0,
                     label: t('import_wizard.step3.new_recipes'),
                     primary: true,
                   },
                   {
-                    val: validationResult.plan?.recipesToReuse || 0,
+                    val: validationResult.plan?.recipesToReuse ?? 0,
                     label: 'Recipes Reuse',
                     primary: false,
                   },
                   {
-                    val: validationResult.plan?.mealEntriesToCreate || 0,
+                    val: validationResult.plan?.mealEntriesToCreate ?? 0,
                     label: t('import_wizard.step3.meal_entries'),
                     primary: true,
                   },
                 ].map((item, idx) => (
-                  <div key={idx} className="text-center p-3 bg-muted/30 rounded-xl">
+                  <div key={idx} className="bg-muted/30 rounded-xl p-3 text-center">
                     <span
                       className={cn(
                         'block text-2xl font-bold',
-                        item.primary ? 'text-primary' : 'text-muted-foreground'
+                        item.primary ? 'text-primary' : 'text-muted-foreground',
                       )}
                     >
                       {item.val}
                     </span>
-                    <span className="text-xs text-muted-foreground">{item.label}</span>
+                    <span className="text-muted-foreground text-xs">{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/10 p-4">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/10">
               <div className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
-                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                 <div className="text-sm">
-                  <p className="font-medium mb-1">{t('import_wizard.step3.warning_title')}</p>
-                  <ul className="list-disc list-inside space-y-1">
+                  <p className="mb-1 font-medium">{t('import_wizard.step3.warning_title')}</p>
+                  <ul className="list-inside list-disc space-y-1">
                     {Number(validationResult.plan?.productsToCreate ?? 0) > 0 && (
                       <li>
                         {t('import_wizard.step3.warning_products', {
@@ -533,11 +550,21 @@ export default function ImportWizard() {
             </div>
 
             <div className="flex gap-4 pt-2">
-              <Button onClick={() => setStep(2)} variant="outline">
+              <Button
+                onClick={() => {
+                  setStep(2);
+                }}
+                variant="outline"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('common.previous')}
               </Button>
-              <Button onClick={handleImport} disabled={importMutation.isPending}>
+              <Button
+                onClick={() => {
+                  void handleImport();
+                }}
+                disabled={importMutation.isPending}
+              >
                 {importMutation.isPending
                   ? t('import_wizard.step3.importing')
                   : t('import_wizard.step3.confirm')}
@@ -551,9 +578,9 @@ export default function ImportWizard() {
       {step === 4 && (
         <Card className="animate-scale-in">
           <CardContent className="py-16">
-            <div className="text-center space-y-5">
+            <div className="space-y-5 text-center">
               <div className="flex justify-center">
-                <div className="rounded-2xl bg-green-500/10 p-4 animate-float">
+                <div className="animate-float rounded-2xl bg-green-500/10 p-4">
                   <CheckCircle2 className="h-14 w-14 text-green-500" />
                 </div>
               </div>

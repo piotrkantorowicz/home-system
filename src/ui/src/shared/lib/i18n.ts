@@ -1,9 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import type { AppModule } from './module-registry';
 
 import sharedEn from '../locales/en.json';
 import sharedPl from '../locales/pl.json';
+
+import type { AppModule } from './module-registry';
 
 const STORAGE_KEY = 'home-system-lang';
 
@@ -13,7 +14,7 @@ const STORAGE_KEY = 'home-system-lang';
  */
 function deepMerge(
   target: Record<string, unknown>,
-  source: Record<string, unknown>
+  source: Record<string, unknown>,
 ): Record<string, unknown> {
   for (const key of Object.keys(source)) {
     const tVal = target[key];
@@ -29,7 +30,7 @@ function deepMerge(
     ) {
       target[key] = deepMerge(
         { ...(tVal as Record<string, unknown>) },
-        sVal as Record<string, unknown>
+        sVal as Record<string, unknown>,
       );
     } else {
       target[key] = sVal;
@@ -57,7 +58,7 @@ export function initI18n(modules: readonly AppModule[]) {
     }
   }
 
-  i18n.use(initReactI18next).init({
+  void i18n.use(initReactI18next).init({
     lng: defaultLang,
     initImmediate: false,
     resources: {

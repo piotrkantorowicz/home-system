@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
-import type { ReactNode } from 'react';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
+
 import { userManager } from './userManager';
+
+import type { ReactNode } from 'react';
 
 interface AuthProviderProps {
   children: ReactNode;

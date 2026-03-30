@@ -1,18 +1,18 @@
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
-import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
+import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
+import { useMeals } from '@modules/diet-planner/api/hooks/useMeals';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
-import { useMeals } from '@modules/diet-planner/api/hooks/useMeals';
-import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
+import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 function getTodayRange() {
   const today = new Date();
   const y = today.getFullYear();
   const m = String(today.getMonth() + 1).padStart(2, '0');
   const d = String(today.getDate()).padStart(2, '0');
-  const dateStr = `${y}-${m}-${d}`;
+  const dateStr = `${String(y)}-${m}-${d}`;
   return { from: dateStr, to: dateStr };
 }
 
@@ -112,38 +112,38 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-8 lg:p-10 animate-fade-in-up">
+    <div className="animate-fade-in-up p-8 lg:p-10">
       {/* Hero */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight mb-3">{t('dashboard.title')}</h1>
-        <p className="text-lg text-muted-foreground">{t('dashboard.subtitle')}</p>
+        <h1 className="mb-3 text-4xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+        <p className="text-muted-foreground text-lg">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-5 md:grid-cols-3 stagger-children mb-10">
+      <div className="stagger-children mb-10 grid gap-5 md:grid-cols-3">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
             <Link key={card.to} to={card.to} data-testid={card.testId} className="group">
-              <Card className="relative overflow-hidden border-transparent hover:border-primary/30 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <Card className="hover:border-primary/30 relative cursor-pointer overflow-hidden border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-60 group-hover:opacity-100 transition-opacity duration-300`}
+                  className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-60 transition-opacity duration-300 group-hover:opacity-100`}
                 />
                 <CardHeader className="relative">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-background/80 p-2.5 shadow-sm">
+                      <div className="bg-background/80 rounded-xl p-2.5 shadow-sm">
                         <Icon className={`h-5 w-5 ${card.iconColor}`} />
                       </div>
                       <CardTitle className="text-lg">{card.title}</CardTitle>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                    <ArrowRight className="text-muted-foreground h-4 w-4 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                   </div>
                   <CardDescription>{card.desc}</CardDescription>
                 </CardHeader>
                 <CardContent className="relative">
                   {card.loading ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
                   ) : (
                     <>
                       <p
@@ -152,7 +152,7 @@ export default function Dashboard() {
                       >
                         {card.count}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+                      <p className="text-muted-foreground mt-1 text-sm">{card.label}</p>
                     </>
                   )}
                 </CardContent>
@@ -164,7 +164,7 @@ export default function Dashboard() {
 
       {/* Goal Progress */}
       {goalsData && hasGoals && (
-        <Card className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <Card className="animate-fade-in-up mb-10" style={{ animationDelay: '100ms' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export default function Dashboard() {
               </div>
               <Link
                 to="/diet-planner/goals"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary text-sm transition-colors"
               >
                 {t('dashboard.goals_edit')}
               </Link>
@@ -195,7 +195,7 @@ export default function Dashboard() {
                       {item.unit}
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={`h-full rounded-full ${item.color}`}
                       style={{ width: '100%' }}
@@ -233,12 +233,12 @@ export default function Dashboard() {
             },
           ].map((step) => (
             <div key={step.num} className="flex items-start gap-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary text-sm font-bold">
+              <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold">
                 {step.num}
               </div>
               <div>
-                <h4 className="font-semibold text-[0.95rem]">{step.title}</h4>
-                <p className="text-[0.9rem] text-muted-foreground mt-0.5">{step.desc}</p>
+                <h4 className="text-[0.95rem] font-semibold">{step.title}</h4>
+                <p className="text-muted-foreground mt-0.5 text-[0.9rem]">{step.desc}</p>
               </div>
             </div>
           ))}

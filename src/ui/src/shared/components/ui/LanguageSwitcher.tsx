@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+
 import { Button } from './Button';
 
 export function LanguageSwitcher() {
@@ -6,7 +7,7 @@ export function LanguageSwitcher() {
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'pl' : 'en';
-    i18n.changeLanguage(newLang);
+    void i18n.changeLanguage(newLang);
   };
 
   return (

@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
 import { cn } from '@shared/lib/utils';
+import { forwardRef } from 'react';
 
 export const Table = forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
@@ -10,7 +10,7 @@ export const Table = forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTable
         {...props}
       />
     </div>
-  )
+  ),
 );
 Table.displayName = 'Table';
 
@@ -36,7 +36,7 @@ export const TableFooter = forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn('border-t bg-muted/50 font-medium [&>tr]:last:border-b-0', className)}
+    className={cn('bg-muted/50 border-t font-medium [&>tr]:last:border-b-0', className)}
     {...props}
   />
 ));
@@ -47,12 +47,12 @@ export const TableRow = forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTM
     <tr
       ref={ref}
       className={cn(
-        'border-b transition-colors duration-150 hover:bg-accent/50 data-[state=selected]:bg-accent',
-        className
+        'hover:bg-accent/50 data-[state=selected]:bg-accent border-b transition-colors duration-150',
+        className,
       )}
       {...props}
     />
-  )
+  ),
 );
 TableRow.displayName = 'TableRow';
 
@@ -63,8 +63,8 @@ export const TableHead = forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0',
-      className
+      'text-muted-foreground h-12 px-4 text-left align-middle text-xs font-semibold tracking-wider uppercase [&:has([role=checkbox])]:pr-0',
+      className,
     )}
     {...props}
   />
@@ -87,6 +87,6 @@ export const TableCaption = forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={cn('mt-4 text-sm text-muted-foreground', className)} {...props} />
+  <caption ref={ref} className={cn('text-muted-foreground mt-4 text-sm', className)} {...props} />
 ));
 TableCaption.displayName = 'TableCaption';

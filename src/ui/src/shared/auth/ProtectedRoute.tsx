@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import type { ReactNode } from 'react';
 import { useAuth } from 'react-oidc-context';
+
+import type { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -19,17 +20,17 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
           sessionStorage.setItem('returnUrl', pathname);
         }
       }
-      auth.signinRedirect();
+      void auth.signinRedirect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isLoading, auth.isAuthenticated]);
 
   if (auth.isLoading) {
     return (
-      fallback || (
+      fallback ?? (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite] mb-4" />
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
             <p className="text-muted-foreground">Loading...</p>
           </div>
         </div>
@@ -41,7 +42,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
     return (
       <div className="flex min-h-screen items-center justify-center p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-2">Authentication Error</h1>
+          <h1 className="text-destructive mb-2 text-2xl font-bold">Authentication Error</h1>
           <p className="text-muted-foreground">{auth.error.message}</p>
         </div>
       </div>
@@ -49,7 +50,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   }
 
   if (!auth.isAuthenticated) {
-    return fallback || <div>Redirecting to login...</div>;
+    return fallback ?? <div>Redirecting to login...</div>;
   }
 
   return <>{children}</>;

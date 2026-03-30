@@ -1,8 +1,10 @@
-import { lazy } from 'react';
 import { Home, Package, BookOpen, CalendarDays, Upload, Target, BarChart2 } from 'lucide-react';
-import type { AppModule } from '@shared/lib/module-registry';
+import { lazy } from 'react';
+
 import en from './locales/en.json';
 import pl from './locales/pl.json';
+
+import type { AppModule } from '@shared/lib/module-registry';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProductList = lazy(() => import('./pages/products/ProductList'));

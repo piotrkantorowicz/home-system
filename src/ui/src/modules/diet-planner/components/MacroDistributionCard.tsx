@@ -1,5 +1,6 @@
-import type { TFunction } from 'i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
+
+import type { TFunction } from 'i18next';
 
 interface MacroDistributionCardProps {
   protein: number;
@@ -46,7 +47,7 @@ export function MacroDistributionCard({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{title || t('product_detail.macro_distribution')}</CardTitle>
+        <CardTitle>{title ?? t('product_detail.macro_distribution')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -55,16 +56,16 @@ export function MacroDistributionCard({
             const percent = pct(val);
             return (
               <div key={macro.key}>
-                <div className="flex justify-between text-[0.9rem] mb-2">
+                <div className="mb-2 flex justify-between text-[0.9rem]">
                   <span className="font-medium">{t(macro.labelKey)}</span>
                   <span className="text-muted-foreground">
                     {val.toFixed(1)}g<span className="ml-1.5 text-xs">({percent.toFixed(0)}%)</span>
                   </span>
                 </div>
-                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                <div className="bg-muted h-2.5 overflow-hidden rounded-full">
                   <div
-                    className={`h-full bg-gradient-to-r ${macro.gradient} rounded-full animate-bar-fill`}
-                    style={{ width: `${percent}%` }}
+                    className={`h-full bg-gradient-to-r ${macro.gradient} animate-bar-fill rounded-full`}
+                    style={{ width: `${String(percent)}%` }}
                   />
                 </div>
               </div>

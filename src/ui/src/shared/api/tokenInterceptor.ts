@@ -14,13 +14,13 @@ let renewPromise: Promise<string | null> | null = null;
  */
 export async function tryRenewToken(): Promise<string | null> {
   if (isRenewing && renewPromise) {
-    if (DEBUG) console.log('[auth] renewal already in progress, waiting...');
+    if (DEBUG) console.warn('[auth] renewal already in progress, waiting...');
     return renewPromise;
   }
 
   const user = await userManager.getUser();
   if (DEBUG) {
-    console.log('[auth] attempting token renewal', {
+    console.warn('[auth] attempting token renewal', {
       hasRefreshToken: !!user?.refresh_token,
       expired: user?.expired,
       expiresAt: user?.expires_at
@@ -34,7 +34,7 @@ export async function tryRenewToken(): Promise<string | null> {
     .signinSilent()
     .then((renewedUser) => {
       if (DEBUG) {
-        console.log('[auth] renewal succeeded', {
+        console.warn('[auth] renewal succeeded', {
           hasNewRefreshToken: !!renewedUser?.refresh_token,
           expiresAt: renewedUser?.expires_at
             ? new Date(renewedUser.expires_at * 1000).toLocaleTimeString()
@@ -43,8 +43,9 @@ export async function tryRenewToken(): Promise<string | null> {
       }
       return renewedUser?.access_token ?? null;
     })
-    .catch((err) => {
-      console.warn('[auth] renewal failed:', err.message || err);
+    .catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn('[auth] renewal failed:', msg);
       return null;
     })
     .finally(() => {
@@ -76,7 +77,7 @@ export async function getValidToken(): Promise<string | null> {
 
   if (DEBUG) {
     const ttl = user?.expires_at ? user.expires_at - Math.floor(Date.now() / 1000) : -1;
-    console.log('[auth] token expiring soon or missing, proactive renewal', {
+    console.warn('[auth] token expiring soon or missing, proactive renewal', {
       ttlSeconds: ttl,
       hasUser: !!user,
       hasRefreshToken: !!user?.refresh_token,

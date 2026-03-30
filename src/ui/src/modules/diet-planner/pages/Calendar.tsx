@@ -1,15 +1,3 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
-import {
-  useMeals,
-  useCreateMeal,
-  useUpdateMeal,
-  useDeleteMeal,
-  useNutritionSummary,
-} from '../api/hooks/useMeals';
-import { useGoals } from '../api/hooks/useGoals';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
 import {
   Dialog,
@@ -18,9 +6,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@shared/components/ui/Dialog';
-import { MealForm } from '../components/diet-plans/MealForm';
-import { MacroProgressBar } from '../components/MacroProgressBar';
 import { cn } from '@shared/lib/utils';
+import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+
+import { useGoals } from '../api/hooks/useGoals';
+import {
+  useMeals,
+  useCreateMeal,
+  useUpdateMeal,
+  useDeleteMeal,
+  useNutritionSummary,
+} from '../api/hooks/useMeals';
+import { MacroProgressBar } from '../components/MacroProgressBar';
+import { MealForm } from '../components/diet-plans/MealForm';
 
 function getWeekStart(date: Date) {
   const d = new Date(date);
@@ -35,10 +36,10 @@ function formatLocalDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return `${String(year)}-${month}-${day}`;
 }
 
-type Meal = {
+interface Meal {
   id: string;
   date: string;
   mealType: string;
@@ -46,7 +47,7 @@ type Meal = {
   recipeName: string;
   servings: number | string;
   notes?: string;
-};
+}
 
 export default function Calendar() {
   const { t } = useTranslation();
@@ -85,7 +86,7 @@ export default function Calendar() {
         fat: acc.fat + day.fat,
         fiber: acc.fiber + day.fiber,
       }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
     );
   }, [nutritionSummary]);
 
@@ -98,10 +99,10 @@ export default function Calendar() {
     if (!meals) return {};
     const grouped: Record<string, Record<string, Meal[]>> = {};
     (meals as Meal[]).forEach((meal) => {
-      const date = meal.date || '';
+      const date = meal.date;
       const mealType = meal.mealType || 'other';
-      if (!grouped[date]) grouped[date] = {};
-      if (!grouped[date][mealType]) grouped[date][mealType] = [];
+      grouped[date] ??= {};
+      grouped[date][mealType] ??= [];
       grouped[date][mealType].push(meal);
     });
     return grouped;
@@ -171,10 +172,10 @@ export default function Calendar() {
   };
 
   return (
-    <div className="p-8 lg:p-10 animate-fade-in-up">
+    <div className="animate-fade-in-up p-8 lg:p-10">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight mb-3">{t('calendar.title')}</h1>
-        <p className="text-lg text-muted-foreground">{t('calendar.subtitle')}</p>
+        <h1 className="mb-3 text-4xl font-bold tracking-tight">{t('calendar.title')}</h1>
+        <p className="text-muted-foreground text-lg">{t('calendar.subtitle')}</p>
       </div>
 
       {/* Week Navigator */}
@@ -182,7 +183,8 @@ export default function Calendar() {
         <div>
           <h2 className="text-xl font-semibold">
             {t('diet_plan_detail.week_of', {
-              date: weekDays[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+              date:
+                weekDays[0]?.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) ?? '',
             })}
           </h2>
         </div>
@@ -201,13 +203,13 @@ export default function Calendar() {
 
       {mealsLoading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="text-lg text-muted-foreground">{t('common.loading')}</div>
+          <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-7 stagger-children">
+        <div className="stagger-children grid gap-4 lg:grid-cols-7">
           {weekDays.map((date) => {
             const dateStr = formatLocalDate(date);
-            const dayMeals = mealsByDay[dateStr] || {};
+            const dayMeals = mealsByDay[dateStr] ?? {};
             const isToday = dateStr === formatLocalDate(new Date());
 
             return (
@@ -215,13 +217,13 @@ export default function Calendar() {
                 key={dateStr}
                 className={cn(
                   'min-h-[400px] transition-all duration-200',
-                  isToday && 'border-primary/50 shadow-md shadow-primary/10'
+                  isToday && 'border-primary/50 shadow-primary/10 shadow-md',
                 )}
               >
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm">
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                      <span className="text-muted-foreground text-xs tracking-wider uppercase">
                         {date.toLocaleDateString('en-US', { weekday: 'short' })}
                       </span>
                       <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
@@ -233,14 +235,16 @@ export default function Calendar() {
                 <CardContent className="space-y-3">
                   {['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
                     <div key={mealType}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
                           {t(`diet_plan_detail.meal_types.${mealType}`)}
                         </h4>
                         <button
                           type="button"
-                          onClick={() => openCreateForm(dateStr, mealType)}
-                          className="h-4 w-4 rounded text-muted-foreground/50 hover:text-primary transition-colors"
+                          onClick={() => {
+                            openCreateForm(dateStr, mealType);
+                          }}
+                          className="text-muted-foreground/50 hover:text-primary h-4 w-4 rounded transition-colors"
                           title={t('meal_form.add_title')}
                         >
                           <Plus className="h-3 w-3" />
@@ -249,27 +253,31 @@ export default function Calendar() {
                       {dayMeals[mealType]?.map((meal) => (
                         <div
                           key={meal.id}
-                          className="group rounded-lg border bg-muted/30 p-2 text-xs mb-1.5 hover:bg-muted/50 transition-colors"
+                          className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
                         >
                           <div className="flex items-start justify-between gap-1">
                             <Link
                               to={`/diet-planner/recipes/${meal.recipeId}`}
-                              className="font-medium hover:underline flex-1 min-w-0 truncate"
+                              className="min-w-0 flex-1 truncate font-medium hover:underline"
                             >
                               {meal.recipeName}
                             </Link>
-                            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                               <button
                                 type="button"
-                                onClick={() => openEditForm(meal)}
-                                className="p-0.5 rounded text-muted-foreground hover:text-primary transition-colors"
+                                onClick={() => {
+                                  openEditForm(meal);
+                                }}
+                                className="text-muted-foreground hover:text-primary rounded p-0.5 transition-colors"
                               >
                                 <Pencil className="h-3 w-3" />
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setDeletingMeal(meal)}
-                                className="p-0.5 rounded text-muted-foreground hover:text-destructive transition-colors"
+                                onClick={() => {
+                                  setDeletingMeal(meal);
+                                }}
+                                className="text-muted-foreground hover:text-destructive rounded p-0.5 transition-colors"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
@@ -282,8 +290,8 @@ export default function Calendar() {
                             <p className="text-muted-foreground/70 mt-0.5 truncate">{meal.notes}</p>
                           )}
                         </div>
-                      )) || (
-                        <div className="rounded-lg border border-dashed p-2 text-xs text-muted-foreground/60 text-center">
+                      )) ?? (
+                        <div className="text-muted-foreground/60 rounded-lg border border-dashed p-2 text-center text-xs">
                           {t('diet_plan_detail.no_meal')}
                         </div>
                       )}
@@ -297,13 +305,13 @@ export default function Calendar() {
       )}
 
       {/* Weekly Nutrition Summary */}
-      <Card className="mt-6 animate-fade-in-up">
+      <Card className="animate-fade-in-up mt-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           {goals === undefined ? (
-            <p className="text-sm text-muted-foreground">{t('nutrition_summary.no_goals')}</p>
+            <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_goals')}</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <MacroProgressBar
@@ -349,7 +357,9 @@ export default function Calendar() {
           setMealFormOpen(false);
           setEditingMeal(null);
         }}
-        onSubmit={handleFormSubmit}
+        onSubmit={(data) => {
+          void handleFormSubmit(data);
+        }}
         initialDate={editingMeal ? undefined : mealFormDate}
         initialMealType={editingMeal ? undefined : mealFormType}
         initialValues={
@@ -369,23 +379,36 @@ export default function Calendar() {
       />
 
       {/* Delete confirmation dialog */}
-      <Dialog open={!!deletingMeal} onOpenChange={(v) => !v && setDeletingMeal(null)}>
+      <Dialog
+        open={!!deletingMeal}
+        onOpenChange={(v) => {
+          if (!v) setDeletingMeal(null);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
           </p>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeletingMeal(null)}
+              onClick={() => {
+                setDeletingMeal(null);
+              }}
               disabled={deleteMeal.isPending}
             >
               {t('common.cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteMeal.isPending}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                void handleDelete();
+              }}
+              disabled={deleteMeal.isPending}
+            >
               {deleteMeal.isPending ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>

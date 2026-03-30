@@ -1,8 +1,5 @@
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Edit, Trash2, Clock, Users } from 'lucide-react';
-import { useState } from 'react';
 import { useRecipe, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
   Card,
@@ -23,28 +20,32 @@ import {
   TableRow,
 } from '@shared/components/ui';
 import { Badge } from '@shared/components/ui/Badge';
+import { ArrowLeft, Edit, Trash2, Clock, Users } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+
 import { MacroDistributionCard } from '../../components/MacroDistributionCard';
-import { unitLabel } from '@modules/diet-planner/unitLabel';
 
 export default function RecipeDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: recipe, isLoading, error } = useRecipe(id!);
+  const { data: recipe, isLoading, error } = useRecipe(id ?? '');
   const deleteMutation = useDeleteRecipe();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleDelete = async () => {
     if (id) {
       await deleteMutation.mutateAsync({ id });
-      navigate('/diet-planner/recipes');
+      void navigate('/diet-planner/recipes');
     }
   };
 
   if (isLoading) {
     return (
       <div className="p-8 lg:p-10">
-        <div className="text-lg text-muted-foreground">{t('recipe_detail.loading')}</div>
+        <div className="text-muted-foreground text-lg">{t('recipe_detail.loading')}</div>
       </div>
     );
   }
@@ -52,13 +53,13 @@ export default function RecipeDetail() {
   if (error || !recipe) {
     return (
       <div className="p-8 lg:p-10">
-        <div className="text-lg text-destructive">{t('recipe_detail.not_found')}</div>
+        <div className="text-destructive text-lg">{t('recipe_detail.not_found')}</div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 lg:p-10 max-w-6xl mx-auto animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-6xl p-8 lg:p-10">
       <Link to="/diet-planner/recipes">
         <Button variant="ghost" size="sm" className="mb-4 -ml-2">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -68,8 +69,8 @@ export default function RecipeDetail() {
 
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight mb-3">{recipe.name}</h1>
-          <div className="flex items-center gap-4 text-muted-foreground">
+          <h1 className="mb-3 text-4xl font-bold tracking-tight">{recipe.name}</h1>
+          <div className="text-muted-foreground flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span>{t('recipes.servings', { count: Number(recipe.servings) })}</span>
@@ -89,19 +90,24 @@ export default function RecipeDetail() {
             )}
           </div>
           {recipe.description && (
-            <p className="mt-4 text-muted-foreground text-[0.95rem]">{recipe.description}</p>
+            <p className="text-muted-foreground mt-4 text-[0.95rem]">{recipe.description}</p>
           )}
         </div>
 
         {recipe.isOwner && (
           <div className="flex gap-2">
-            <Link to={`/diet-planner/recipes/${id}/edit`}>
+            <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
               <Button>
                 <Edit className="mr-2 h-4 w-4" />
                 {t('common.edit')}
               </Button>
             </Link>
-            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setDeleteDialogOpen(true);
+              }}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               {t('common.delete')}
             </Button>
@@ -109,145 +115,109 @@ export default function RecipeDetail() {
         )}
       </div>
 
-      {recipe.nutritionPerServing.calories != null && (
-        <div className="grid gap-6 md:grid-cols-2 mb-6 stagger-children">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('recipe_detail.nutrition_per_serving')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border-b pb-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-lg">
-                      {t('recipe_detail.table.calories')}
-                    </span>
-                    <span className="text-3xl font-bold tracking-tight">
-                      {Number(recipe.nutritionPerServing.calories).toFixed(0)}{' '}
-                      <span className="text-lg text-muted-foreground font-normal">kcal</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {recipe.nutritionPerServing.protein != null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('recipe_detail.table.protein')}
-                      </span>
-                      <span className="font-medium">
-                        {Number(recipe.nutritionPerServing.protein).toFixed(1)}g
-                      </span>
-                    </div>
-                  )}
-                  {recipe.nutritionPerServing.carbs != null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('product_detail.carbohydrates')}
-                      </span>
-                      <span className="font-medium">
-                        {Number(recipe.nutritionPerServing.carbs).toFixed(1)}g
-                      </span>
-                    </div>
-                  )}
-                  {recipe.nutritionPerServing.fat != null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('product_detail.fat')}</span>
-                      <span className="font-medium">
-                        {Number(recipe.nutritionPerServing.fat).toFixed(1)}g
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
-                    <span className="font-medium">
-                      {Number(recipe.nutritionPerServing.fiber ?? 0).toFixed(1)}g
-                    </span>
-                  </div>
+      <div className="stagger-children mb-6 grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('recipe_detail.nutrition_per_serving')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="border-b pb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold">{t('recipe_detail.table.calories')}</span>
+                  <span className="text-3xl font-bold tracking-tight">
+                    {Number(recipe.nutritionPerServing.calories).toFixed(0)}{' '}
+                    <span className="text-muted-foreground text-lg font-normal">kcal</span>
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {recipe.totalNutrition.calories != null && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('recipe_detail.total_nutrition')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="border-b pb-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-lg">
-                        {t('recipe_detail.total_calories')}
-                      </span>
-                      <span className="text-3xl font-bold tracking-tight">
-                        {Number(recipe.totalNutrition.calories).toFixed(0)}{' '}
-                        <span className="text-lg text-muted-foreground font-normal">kcal</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {recipe.totalNutrition.protein != null && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('recipe_detail.total_protein')}
-                        </span>
-                        <span className="font-medium">
-                          {Number(recipe.totalNutrition.protein).toFixed(1)}g
-                        </span>
-                      </div>
-                    )}
-                    {recipe.totalNutrition.carbs != null && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('recipe_detail.total_carbs')}
-                        </span>
-                        <span className="font-medium">
-                          {Number(recipe.totalNutrition.carbs).toFixed(1)}g
-                        </span>
-                      </div>
-                    )}
-                    {recipe.totalNutrition.fat != null && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('recipe_detail.total_fat')}
-                        </span>
-                        <span className="font-medium">
-                          {Number(recipe.totalNutrition.fat).toFixed(1)}g
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('recipe_detail.total_fiber')}
-                      </span>
-                      <span className="font-medium">
-                        {Number(recipe.totalNutrition.fiber ?? 0).toFixed(1)}g
-                      </span>
-                    </div>
-                  </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('recipe_detail.table.protein')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.nutritionPerServing.protein).toFixed(1)}g
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('product_detail.carbohydrates')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.nutritionPerServing.carbs).toFixed(1)}g
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('product_detail.fat')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.nutritionPerServing.fat).toFixed(1)}g
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.nutritionPerServing.fiber).toFixed(1)}g
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {recipe.nutritionPerServing.protein != null &&
-        recipe.nutritionPerServing.carbs != null &&
-        recipe.nutritionPerServing.fat != null && (
-          <MacroDistributionCard
-            protein={Number(recipe.nutritionPerServing.protein)}
-            carbs={Number(recipe.nutritionPerServing.carbs)}
-            fat={Number(recipe.nutritionPerServing.fat)}
-            fiber={Number(recipe.nutritionPerServing.fiber ?? 0)}
-            t={t}
-            title={t('recipe_detail.macro_distribution')}
-            className="mb-6"
-          />
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('recipe_detail.total_nutrition')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="border-b pb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold">{t('recipe_detail.total_calories')}</span>
+                  <span className="text-3xl font-bold tracking-tight">
+                    {Number(recipe.totalNutrition.calories).toFixed(0)}{' '}
+                    <span className="text-muted-foreground text-lg font-normal">kcal</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('recipe_detail.total_protein')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.totalNutrition.protein).toFixed(1)}g
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('recipe_detail.total_carbs')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.totalNutrition.carbs).toFixed(1)}g
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('recipe_detail.total_fat')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.totalNutrition.fat).toFixed(1)}g
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('recipe_detail.total_fiber')}</span>
+                  <span className="font-medium">
+                    {Number(recipe.totalNutrition.fiber).toFixed(1)}g
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <MacroDistributionCard
+        protein={Number(recipe.nutritionPerServing.protein)}
+        carbs={Number(recipe.nutritionPerServing.carbs)}
+        fat={Number(recipe.nutritionPerServing.fat)}
+        fiber={Number(recipe.nutritionPerServing.fiber)}
+        t={t}
+        title={t('recipe_detail.macro_distribution')}
+        className="mb-6"
+      />
 
       <Card className="mb-6">
         <CardHeader>
@@ -256,7 +226,7 @@ export default function RecipeDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border overflow-hidden">
+          <div className="overflow-hidden rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
@@ -288,7 +258,7 @@ export default function RecipeDetail() {
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-[0.9rem] leading-relaxed">
+              <pre className="font-sans text-[0.9rem] leading-relaxed whitespace-pre-wrap">
                 {recipe.instructions}
               </pre>
             </div>
@@ -305,12 +275,19 @@ export default function RecipeDetail() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+              }}
+            >
               {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => {
+                void handleDelete();
+              }}
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending

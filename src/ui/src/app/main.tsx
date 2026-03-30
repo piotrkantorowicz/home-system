@@ -1,14 +1,15 @@
+import { dietPlannerModule } from '@modules/diet-planner';
+import { queryClient } from '@shared/api/queryClient';
+import { AuthProvider } from '@shared/auth/AuthProvider';
+import { AppErrorBoundary } from '@shared/components/ErrorBoundary';
+import { ThemeProvider } from '@shared/context/ThemeContext';
+import { initI18n } from '@shared/lib/i18n';
+import { registerModule, getModules } from '@shared/lib/module-registry';
+import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@shared/auth/AuthProvider';
-import { ThemeProvider } from '@shared/context/ThemeContext';
-import { ErrorBoundary } from '@shared/components/ErrorBoundary';
-import { queryClient } from '@shared/api/queryClient';
-import { registerModule, getModules } from '@shared/lib/module-registry';
-import { initI18n } from '@shared/lib/i18n';
-import { dietPlannerModule } from '@modules/diet-planner';
+
 import { createRouter } from './router';
 import '../index.css';
 
@@ -21,9 +22,12 @@ initI18n(getModules());
 // 3. Build router with registered module routes
 const router = createRouter();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Root element #root not found in document');
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <ErrorBoundary>
+    <AppErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
@@ -31,6 +35,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
-    </ErrorBoundary>
-  </React.StrictMode>
+    </AppErrorBoundary>
+  </React.StrictMode>,
 );

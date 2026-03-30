@@ -1,8 +1,5 @@
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useGoals, useCreateGoals, useUpdateGoals } from '@modules/diet-planner/api/hooks/useGoals';
 import {
   Card,
   CardHeader,
@@ -14,7 +11,10 @@ import {
   Label,
 } from '@shared/components/ui';
 import { Target, Loader2, Save } from 'lucide-react';
-import { useGoals, useCreateGoals, useUpdateGoals } from '@modules/diet-planner/api/hooks/useGoals';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 const goalSchema = z.object({
   dailyCalorieTarget: z.coerce.number().min(0).max(20000).nullable().optional(),
@@ -35,7 +35,7 @@ export default function Goals() {
   const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
 
-  const goalsExist = goals != null && goals.id !== EMPTY_GUID;
+  const goalsExist = goals !== undefined && goals.id !== EMPTY_GUID;
   const saveMutation = goalsExist ? updateMutation : createMutation;
 
   const {
@@ -78,17 +78,17 @@ export default function Goals() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-8 lg:p-10 max-w-4xl mx-auto animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
       {/* Hero */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="mb-3 flex items-center gap-3">
           <div className="rounded-xl bg-orange-500/10 p-2.5">
             <Target className="h-6 w-6 text-orange-600 dark:text-orange-400" />
           </div>
@@ -97,7 +97,12 @@ export default function Goals() {
         <p className="text-muted-foreground">{t('goals.subtitle')}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          void handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-6"
+      >
         {/* Calories */}
         <Card>
           <CardHeader>
@@ -115,7 +120,7 @@ export default function Goals() {
                 {...register('dailyCalorieTarget')}
               />
               {errors.dailyCalorieTarget && (
-                <p className="text-sm text-destructive mt-1">{errors.dailyCalorieTarget.message}</p>
+                <p className="text-destructive mt-1 text-sm">{errors.dailyCalorieTarget.message}</p>
               )}
             </div>
           </CardContent>
@@ -139,7 +144,7 @@ export default function Goals() {
                   {...register('proteinGrams')}
                 />
                 {errors.proteinGrams && (
-                  <p className="text-sm text-destructive mt-1">{errors.proteinGrams.message}</p>
+                  <p className="text-destructive mt-1 text-sm">{errors.proteinGrams.message}</p>
                 )}
               </div>
               <div>
@@ -152,7 +157,7 @@ export default function Goals() {
                   {...register('carbsGrams')}
                 />
                 {errors.carbsGrams && (
-                  <p className="text-sm text-destructive mt-1">{errors.carbsGrams.message}</p>
+                  <p className="text-destructive mt-1 text-sm">{errors.carbsGrams.message}</p>
                 )}
               </div>
               <div>
@@ -165,7 +170,7 @@ export default function Goals() {
                   {...register('fatGrams')}
                 />
                 {errors.fatGrams && (
-                  <p className="text-sm text-destructive mt-1">{errors.fatGrams.message}</p>
+                  <p className="text-destructive mt-1 text-sm">{errors.fatGrams.message}</p>
                 )}
               </div>
               <div>
@@ -178,7 +183,7 @@ export default function Goals() {
                   {...register('fiberGrams')}
                 />
                 {errors.fiberGrams && (
-                  <p className="text-sm text-destructive mt-1">{errors.fiberGrams.message}</p>
+                  <p className="text-destructive mt-1 text-sm">{errors.fiberGrams.message}</p>
                 )}
               </div>
             </div>
@@ -190,12 +195,12 @@ export default function Goals() {
           <Button type="submit" disabled={saveMutation.isPending || !isDirty}>
             {saveMutation.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t('common.saving')}
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 {t('goals.save_btn')}
               </>
             )}
@@ -203,7 +208,7 @@ export default function Goals() {
         </div>
 
         {saveMutation.isSuccess && (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 text-right">
+          <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
             {t('goals.save_success')}
           </p>
         )}

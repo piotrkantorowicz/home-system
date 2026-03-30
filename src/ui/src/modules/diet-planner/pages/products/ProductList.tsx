@@ -1,8 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useProducts, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
   Input,
@@ -21,7 +18,10 @@ import {
   DialogTitle,
 } from '@shared/components/ui';
 import { Badge } from '@shared/components/ui/Badge';
-import { unitLabel } from '@modules/diet-planner/unitLabel';
+import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 export default function ProductList() {
   const { t } = useTranslation();
@@ -43,7 +43,12 @@ export default function ProductList() {
   const deleteMutation = useDeleteProduct();
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(searchTimerRef.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(searchTimerRef.current);
+    },
+    [],
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -68,10 +73,10 @@ export default function ProductList() {
   };
 
   return (
-    <div className="p-8 lg:p-10 animate-fade-in-up">
+    <div className="animate-fade-in-up p-8 lg:p-10">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2">{t('products.title')}</h1>
+          <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('products.title')}</h1>
           <p className="text-muted-foreground text-[0.95rem]">{t('products.subtitle')}</p>
         </div>
         <Link to="/diet-planner/products/new">
@@ -83,12 +88,14 @@ export default function ProductList() {
       </div>
 
       <div className="mb-6 flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder={t('products.search_placeholder')}
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => {
+              handleSearchChange(e.target.value);
+            }}
             className="pl-10"
           />
         </div>
@@ -104,7 +111,7 @@ export default function ProductList() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive animate-scale-in">
+        <div className="border-destructive/30 bg-destructive/5 text-destructive animate-scale-in mb-4 rounded-xl border p-4">
           {t('common.error')}: {error.message}
         </div>
       )}
@@ -114,8 +121,8 @@ export default function ProductList() {
           <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
         </div>
       ) : data?.items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
-          <p className="text-xl font-semibold mb-2">{t('products.no_products_found')}</p>
+        <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
+          <p className="mb-2 text-xl font-semibold">{t('products.no_products_found')}</p>
           <p className="text-muted-foreground mb-6">
             {debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
           </p>
@@ -130,7 +137,7 @@ export default function ProductList() {
         </div>
       ) : (
         <>
-          <div className="rounded-xl border overflow-hidden">
+          <div className="overflow-hidden rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
@@ -153,7 +160,7 @@ export default function ProductList() {
                     <TableCell>{product.proteinPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.carbsPer100g.toFixed(1)}g</TableCell>
                     <TableCell>{product.fatPer100g.toFixed(1)}g</TableCell>
-                    <TableCell>{Number(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
+                    <TableCell>{(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
                     </TableCell>
@@ -187,7 +194,9 @@ export default function ProductList() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => openDeleteDialog(product.id)}
+                              onClick={() => {
+                                openDeleteDialog(product.id);
+                              }}
                               className="hover:text-destructive"
                               aria-label={t('common.delete')}
                             >
@@ -225,12 +234,19 @@ export default function ProductList() {
             <DialogDescription>{t('products.delete_dialog.description')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+              }}
+            >
               {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => {
+                void handleDelete();
+              }}
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending

@@ -1,15 +1,17 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+
 import { api } from '../client';
+
 import type { components } from '../generated/schema';
 
-export type DailyNutrition = {
+export interface DailyNutrition {
   date: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   fiber: number;
-};
+}
 
 type MealEntry = components['schemas']['MealEntryDto'];
 type CreateMealEntryRequest = components['schemas']['CreateMealEntryRequest'];
@@ -27,11 +29,13 @@ export function useMeals(params: MealsQueryParams = {}) {
     queryKey: ['meals', { from, to }],
     queryFn: async (): Promise<MealEntry[]> => {
       const response = await api.GET('/api/v1/meals', {
-        params: { query: { from, to } },
+        params: {
+          query: { ...(from !== undefined ? { from } : {}), ...(to !== undefined ? { to } : {}) },
+        },
       });
 
-      if (response.error) throw new Error('Failed to fetch meals');
-      return response.data as MealEntry[];
+      if (!response.data) throw new Error('Failed to fetch meals');
+      return response.data;
     },
     placeholderData: keepPreviousData,
   });
@@ -43,11 +47,11 @@ export function useCreateMeal() {
   return useMutation({
     mutationFn: async (data: CreateMealEntryRequest): Promise<MealEntry> => {
       const response = await api.POST('/api/v1/meals', { body: data });
-      if (response.error) throw new Error('Failed to create meal entry');
-      return response.data as MealEntry;
+      if (!response.data) throw new Error('Failed to create meal entry');
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: ['meals'] });
     },
   });
 }
@@ -67,11 +71,11 @@ export function useUpdateMeal() {
         params: { path: { id } },
         body: data,
       });
-      if (response.error) throw new Error('Failed to update meal entry');
-      return response.data as MealEntry;
+      if (!response.data) throw new Error('Failed to update meal entry');
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: ['meals'] });
     },
   });
 }
@@ -84,10 +88,10 @@ export function useDeleteMeal() {
       const response = await api.DELETE('/api/v1/meals/{id}', {
         params: { path: { id } },
       });
-      if (response.error) throw new Error('Failed to delete meal entry');
+      if (!response.response.ok) throw new Error('Failed to delete meal entry');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: ['meals'] });
     },
   });
 }
@@ -96,12 +100,13 @@ export function useNutritionSummary(params: { from: string; to: string }) {
   return useQuery({
     queryKey: ['nutrition-summary', params],
     queryFn: async (): Promise<DailyNutrition[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (api as any).GET('/api/v1/meals/nutrition-summary', {
+      // REASON: /api/v1/meals/nutrition-summary is not yet in the generated openapi schema — regenerate schema to remove this cast
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const response = (await (api as any).GET('/api/v1/meals/nutrition-summary', {
         params: { query: params },
-      });
+      })) as { data?: DailyNutrition[]; error?: unknown };
       if (response.error) throw new Error('Failed to fetch nutrition summary');
-      return response.data as DailyNutrition[];
+      return response.data ?? [];
     },
     placeholderData: keepPreviousData,
   });
@@ -132,13 +137,13 @@ export function useExecuteImport() {
         body: importData,
       });
 
-      if (response.error) throw new Error('Import failed');
+      if (!response.data) throw new Error('Import failed');
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 }

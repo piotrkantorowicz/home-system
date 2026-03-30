@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+
 import { api } from '../client';
+
 import type { components } from '../generated/schema';
 
-type Product = {
+interface Product {
   id: string;
   name: string;
   caloriesPer100g: number;
@@ -15,15 +17,15 @@ type Product = {
   gramPerPiece?: number | null;
   isOwner: boolean;
   createdAt: string;
-};
+}
 
-type ProductsResponse = {
+interface ProductsResponse {
   items: Product[];
   page: number;
   pageSize: number;
   totalCount: number;
   totalPages: number;
-};
+}
 
 interface ProductsQueryParams {
   search?: string;
@@ -44,7 +46,7 @@ export function useProducts(params: ProductsQueryParams = {}) {
         },
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to fetch products');
       }
 
@@ -64,7 +66,7 @@ export function useProduct(id: string) {
         },
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to fetch product');
       }
 
@@ -83,14 +85,14 @@ export function useCreateProduct() {
         body: productData,
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to create product');
       }
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -107,15 +109,15 @@ export function useUpdateProduct(id: string) {
         body: productData,
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to update product');
       }
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['products', id] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products', id] });
     },
   });
 }
@@ -132,14 +134,10 @@ export function useDeleteProduct() {
         },
       });
 
-      if (response.error) {
-        throw new Error('Failed to delete product');
-      }
-
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }

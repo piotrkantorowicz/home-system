@@ -1,9 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { BarChart2 } from 'lucide-react';
-import { useNutritionSummary } from '@modules/diet-planner/api/hooks/useMeals';
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
-import { MacroProgressBar } from '../components/MacroProgressBar';
+import { useNutritionSummary } from '@modules/diet-planner/api/hooks/useMeals';
 import {
   Button,
   Card,
@@ -20,12 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from '@shared/components/ui';
+import { BarChart2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { MacroProgressBar } from '../components/MacroProgressBar';
 
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return `${String(year)}-${month}-${day}`;
 }
 
 function getDefaultRange() {
@@ -68,9 +69,9 @@ export default function NutritionSummary() {
           fat: acc.fat + day.fat,
           fiber: acc.fiber + day.fiber,
         }),
-        { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+        { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
       ),
-    [days]
+    [days],
   );
 
   const dayCount = days.length || 1;
@@ -102,10 +103,10 @@ export default function NutritionSummary() {
   }, [appliedRange]);
 
   return (
-    <div className="p-8 lg:p-10 max-w-5xl mx-auto animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-5xl p-8 lg:p-10">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="mb-3 flex items-center gap-3">
           <div className="rounded-xl bg-violet-500/10 p-2.5">
             <BarChart2 className="h-6 w-6 text-violet-600 dark:text-violet-400" />
           </div>
@@ -124,7 +125,9 @@ export default function NutritionSummary() {
                 id="from-date"
                 type="date"
                 value={draftFrom}
-                onChange={(e) => setDraftFrom(e.target.value)}
+                onChange={(e) => {
+                  setDraftFrom(e.target.value);
+                }}
                 className="w-40"
               />
             </div>
@@ -134,7 +137,9 @@ export default function NutritionSummary() {
                 id="to-date"
                 type="date"
                 value={draftTo}
-                onChange={(e) => setDraftTo(e.target.value)}
+                onChange={(e) => {
+                  setDraftTo(e.target.value);
+                }}
                 className="w-40"
               />
             </div>
@@ -146,17 +151,17 @@ export default function NutritionSummary() {
       </Card>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-center py-16">
           {t('common.loading')}
         </div>
       ) : days.length === 0 ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-center py-16">
           {t('nutrition_page.no_data')}
         </div>
       ) : (
         <>
           {/* Totals + Goal Progress */}
-          <div className="grid gap-6 md:grid-cols-2 mb-6">
+          <div className="mb-6 grid gap-6 md:grid-cols-2">
             {/* Totals */}
             <Card>
               <CardHeader className="pb-3">

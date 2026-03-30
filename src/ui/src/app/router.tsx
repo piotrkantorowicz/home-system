@@ -1,12 +1,14 @@
+import { AuthCallback } from '@shared/auth/AuthCallback';
+import { ProtectedRoute } from '@shared/auth/ProtectedRoute';
+import { SilentRenew } from '@shared/auth/SilentRenew';
+import { AppShell } from '@shared/components/layout/AppShell';
+import { getModules } from '@shared/lib/module-registry';
 import { Suspense } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
-import type { RouteObject } from 'react-router-dom';
-import { AppShell } from '@shared/components/layout/AppShell';
-import { ProtectedRoute } from '@shared/auth/ProtectedRoute';
-import { AuthCallback } from '@shared/auth/AuthCallback';
-import { SilentRenew } from '@shared/auth/SilentRenew';
-import { getModules } from '@shared/lib/module-registry';
+
 import SystemDashboard from './SystemDashboard';
+
+import type { RouteObject } from 'react-router-dom';
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -35,7 +37,7 @@ function buildModuleRoutes(): RouteObject[] {
       ) : (
         route.element
       ),
-      Component: undefined,
+      Component: null,
     })),
   }));
 }

@@ -1,8 +1,10 @@
-import type { UserManagerSettings } from 'oidc-client-ts';
 import { WebStorageStateStore } from 'oidc-client-ts';
 
+import type { UserManagerSettings } from 'oidc-client-ts';
+
 function requireEnv(name: string, fallback?: string): string {
-  const value = import.meta.env[name] || fallback;
+  const raw: unknown = import.meta.env[name];
+  const value = (typeof raw === 'string' ? raw : undefined) ?? fallback;
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -11,15 +13,15 @@ function requireEnv(name: string, fallback?: string): string {
 
 const AUTHENTIK_DOMAIN = requireEnv(
   'VITE_AUTHENTIK_DOMAIN',
-  import.meta.env.DEV ? 'http://localhost:9000' : undefined
+  import.meta.env.DEV ? 'http://localhost:9000' : undefined,
 );
 const CLIENT_ID = requireEnv(
   'VITE_OIDC_CLIENT_ID',
-  import.meta.env.DEV ? 'I476Ik4ahckZS00sx9zmad8ennJdhDr7Fb1LpoMH' : undefined
+  import.meta.env.DEV ? 'I476Ik4ahckZS00sx9zmad8ennJdhDr7Fb1LpoMH' : undefined,
 );
 const REDIRECT_URI = requireEnv(
   'VITE_REDIRECT_URI',
-  import.meta.env.DEV ? 'http://localhost:5173' : undefined
+  import.meta.env.DEV ? 'http://localhost:5173' : undefined,
 );
 
 export const oidcConfig: UserManagerSettings = {
@@ -54,5 +56,5 @@ export const oidcConfig: UserManagerSettings = {
 // API configuration
 export const API_BASE_URL = requireEnv(
   'VITE_API_BASE_URL',
-  import.meta.env.DEV ? 'http://localhost:5000' : undefined
+  import.meta.env.DEV ? 'http://localhost:5000' : undefined,
 );

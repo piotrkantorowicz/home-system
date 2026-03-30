@@ -1,9 +1,5 @@
-import { useForm, useFieldArray } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import {
   Button,
   Input,
@@ -14,7 +10,11 @@ import {
   CardTitle,
   Textarea,
 } from '@shared/components/ui';
-import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
+import { Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 const ingredientSchema = z.object({
   productName: z.string().min(1, 'Product is required'),
@@ -47,7 +47,7 @@ export function RecipeForm({
   submitLabel,
 }: RecipeFormProps) {
   const { t } = useTranslation();
-  const [productSearch, setProductSearch] = useState<{ [key: number]: string }>({});
+  const [productSearch, setProductSearch] = useState<Record<number, string>>({});
 
   const {
     register,
@@ -72,14 +72,19 @@ export function RecipeForm({
   const watchedServings = watch('servings') || 1;
 
   const { data: productResults } = useProducts({
-    search: Object.values(productSearch).find((s) => s) || '',
+    search: Object.values(productSearch).find((s) => s) ?? '',
     onlyMine: false,
     page: 1,
     pageSize: 10,
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 stagger-children">
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(onSubmit)(e);
+      }}
+      className="stagger-children space-y-6"
+    >
       <Card>
         <CardHeader>
           <CardTitle>{t('recipe_form.basic_info')}</CardTitle>
@@ -93,7 +98,7 @@ export function RecipeForm({
               placeholder={t('recipe_form.name_placeholder')}
             />
             {errors.name && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.name.message}</p>
             )}
           </div>
 
@@ -106,7 +111,7 @@ export function RecipeForm({
               rows={3}
             />
             {errors.description && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.description.message}</p>
             )}
           </div>
 
@@ -120,7 +125,7 @@ export function RecipeForm({
                 placeholder="1"
               />
               {errors.servings && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.servings.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.servings.message}</p>
               )}
             </div>
 
@@ -130,12 +135,12 @@ export function RecipeForm({
                 id="prepTimeMinutes"
                 type="number"
                 {...register('prepTimeMinutes', {
-                  setValueAs: (v) => (v === '' || isNaN(v) ? undefined : Number(v)),
+                  setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
                 })}
                 placeholder="30"
               />
               {errors.prepTimeMinutes && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.prepTimeMinutes.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.prepTimeMinutes.message}</p>
               )}
             </div>
           </div>
@@ -150,7 +155,9 @@ export function RecipeForm({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => append({ productName: '', amount: 0, unit: 'g' })}
+              onClick={() => {
+                append({ productName: '', amount: 0, unit: 'g' });
+              }}
             >
               <Plus className="mr-2 h-4 w-4" />
               {t('recipe_form.add_ingredient')}
@@ -158,94 +165,110 @@ export function RecipeForm({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex gap-3 items-start">
-              <div className="flex-1 grid grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor={`ingredients.${index}.productName`}>
-                    {t('recipe_form.product_label')}
-                  </Label>
-                  <Input
-                    {...register(`ingredients.${index}.productName`)}
-                    placeholder={t('recipe_form.product_placeholder')}
-                    list={`products-${index}`}
-                    onChange={(e) => {
-                      setProductSearch((prev) => ({ ...prev, [index]: e.target.value }));
+          {fields.map((field, index) => {
+            const idx = index;
+            const idxStr = String(index);
+            return (
+              <div key={field.id} className="flex items-start gap-3">
+                <div className="grid flex-1 grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor={`ingredients.${idxStr}.productName`}>
+                      {t('recipe_form.product_label')}
+                    </Label>
+                    <Input
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
+                      {...register(`ingredients.${idx}.productName`)}
+                      placeholder={t('recipe_form.product_placeholder')}
+                      list={`products-${idxStr}`}
+                      onChange={(e) => {
+                        setProductSearch((prev) => ({ ...prev, [index]: e.target.value }));
+                      }}
+                    />
+                    <datalist id={`products-${idxStr}`}>
+                      {productResults?.items.map((product) => (
+                        <option key={product.id} value={product.name} />
+                      ))}
+                    </datalist>
+                    {errors.ingredients?.[index]?.productName && (
+                      <p className="text-destructive mt-1.5 text-sm">
+                        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
+                        {errors.ingredients[index]?.productName.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`ingredients.${idxStr}.amount`}>
+                      {t('recipe_form.amount_label')}
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
+                      {...register(`ingredients.${idx}.amount`, { valueAsNumber: true })}
+                      placeholder="100"
+                    />
+                    {errors.ingredients?.[index]?.amount && (
+                      <p className="text-destructive mt-1.5 text-sm">
+                        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
+                        {errors.ingredients[index]?.amount.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`ingredients.${idxStr}.unit`}>
+                      {t('recipe_form.unit_label')}
+                    </Label>
+                    <select
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
+                      {...register(`ingredients.${idx}.unit`)}
+                      className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full rounded-lg border px-4 py-2.5 text-[0.9rem] transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <option value="g">{t('product_form.units.g')}</option>
+                      <option value="ml">{t('product_form.units.ml')}</option>
+                      <option value="piece">{t('product_form.units.piece')}</option>
+                    </select>
+                    {errors.ingredients?.[index]?.unit && (
+                      <p className="text-destructive mt-1.5 text-sm">
+                        {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
+                        {errors.ingredients[index]?.unit.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      remove(index);
                     }}
-                  />
-                  <datalist id={`products-${index}`}>
-                    {productResults?.items.map((product) => (
-                      <option key={product.id} value={product.name} />
-                    ))}
-                  </datalist>
-                  {errors.ingredients?.[index]?.productName && (
-                    <p className="mt-1.5 text-sm text-destructive">
-                      {errors.ingredients[index]?.productName?.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor={`ingredients.${index}.amount`}>
-                    {t('recipe_form.amount_label')}
-                  </Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    {...register(`ingredients.${index}.amount`, { valueAsNumber: true })}
-                    placeholder="100"
-                  />
-                  {errors.ingredients?.[index]?.amount && (
-                    <p className="mt-1.5 text-sm text-destructive">
-                      {errors.ingredients[index]?.amount?.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor={`ingredients.${index}.unit`}>{t('recipe_form.unit_label')}</Label>
-                  <select
-                    {...register(`ingredients.${index}.unit`)}
-                    className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-[0.9rem] ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="hover:text-destructive mt-8"
                   >
-                    <option value="g">{t('product_form.units.g')}</option>
-                    <option value="ml">{t('product_form.units.ml')}</option>
-                    <option value="piece">{t('product_form.units.piece')}</option>
-                  </select>
-                  {errors.ingredients?.[index]?.unit && (
-                    <p className="mt-1.5 text-sm text-destructive">
-                      {errors.ingredients[index]?.unit?.message}
-                    </p>
-                  )}
-                </div>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-
-              {fields.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => remove(index)}
-                  className="mt-8 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
+            );
+          })}
 
           {errors.ingredients && typeof errors.ingredients.message === 'string' && (
-            <p className="text-sm text-destructive">{errors.ingredients.message}</p>
+            <p className="text-destructive text-sm">{errors.ingredients.message}</p>
           )}
 
           {fields.length === 0 && (
-            <div className="text-center py-10 text-muted-foreground">
+            <div className="text-muted-foreground py-10 text-center">
               <p className="mb-3">{t('recipe_form.no_ingredients')}</p>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ productName: '', amount: 0, unit: 'g' })}
+                onClick={() => {
+                  append({ productName: '', amount: 0, unit: 'g' });
+                }}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {t('recipe_form.add_first_ingredient')}
@@ -268,7 +291,7 @@ export function RecipeForm({
             rows={6}
           />
           {errors.instructions && (
-            <p className="mt-1.5 text-sm text-destructive">{errors.instructions.message}</p>
+            <p className="text-destructive mt-1.5 text-sm">{errors.instructions.message}</p>
           )}
         </CardContent>
       </Card>
@@ -300,11 +323,17 @@ export function RecipeForm({
       </Card>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={() => window.history.back()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            window.history.back();
+          }}
+        >
           {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? t('product_form.saving') : submitLabel || t('common.save')}
+          {isSubmitting ? t('product_form.saving') : (submitLabel ?? t('common.save'))}
         </Button>
       </div>
     </form>

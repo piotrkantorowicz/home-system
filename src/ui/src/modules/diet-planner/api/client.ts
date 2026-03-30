@@ -1,9 +1,11 @@
-import createClient from 'openapi-fetch';
-import type { paths } from './generated/schema';
 import { getValidToken, tryRenewToken, redirectToLogin } from '@shared/api/tokenInterceptor';
+import createClient from 'openapi-fetch';
 
-const baseUrl =
-  import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '');
+import type { paths } from './generated/schema';
+
+const baseUrl: string =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env.DEV ? 'http://localhost:5000' : '');
 
 const DEBUG = import.meta.env.DEV;
 
@@ -30,11 +32,12 @@ baseClient.use({
       const newToken = await tryRenewToken();
 
       if (newToken) {
-        if (DEBUG) console.log('[auth] renewal after 401 succeeded, retrying request');
+        if (DEBUG) console.warn('[auth] renewal after 401 succeeded, retrying request');
+        const canHaveBody = request.method !== 'GET' && request.method !== 'HEAD';
         const retryRequest = new Request(request.url, {
           method: request.method,
           headers: new Headers(request.headers),
-          body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
+          ...(canHaveBody ? { body: request.body } : {}),
           credentials: request.credentials,
         });
         retryRequest.headers.set('Authorization', `Bearer ${newToken}`);

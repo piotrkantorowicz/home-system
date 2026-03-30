@@ -1,4 +1,5 @@
 import { UserManager } from 'oidc-client-ts';
+
 import { oidcConfig } from './authConfig';
 
 // Shared UserManager instance used by both React (AuthProvider) and the API client.
