@@ -49,12 +49,11 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             .HasDatabaseName("idx_recipes_active")
             .HasFilter("deleted_at IS NULL");
 
-        // Private backing field for ingredients collection
-        builder.HasMany<RecipeIngredient>("_ingredients")
+        builder.HasMany(r => r.Ingredients)
             .WithOne()
             .HasForeignKey("RecipeId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation("_ingredients").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(r => r.Ingredients).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
