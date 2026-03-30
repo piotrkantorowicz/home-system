@@ -35,8 +35,9 @@ public sealed class ProductEndpointsTests
     public async Task GET_ProductById_WhenNotFound_Returns404()
     {
         var response = await _client.GetAsync($"/api/v1/products/{Guid.NewGuid()}");
+        var body = await response.Content.ReadAsStringAsync();
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound, body);
     }
 
     [Fact]

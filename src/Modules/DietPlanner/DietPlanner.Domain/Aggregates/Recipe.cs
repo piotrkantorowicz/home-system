@@ -7,8 +7,6 @@ using DietPlanner.Domain.ValueObjects;
 
 public sealed class Recipe : AggregateRoot<RecipeId>
 {
-    public const string IngredientsField = nameof(_ingredients);
-
     private readonly List<RecipeIngredient> _ingredients = [];
 
     private Recipe() { }

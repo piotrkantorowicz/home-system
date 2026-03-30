@@ -15,15 +15,17 @@ public sealed class MealEndpointsTests
     public async Task GET_Meals_ReturnsOk()
     {
         var response = await _client.GetAsync("/api/v1/meals");
+        var body = await response.Content.ReadAsStringAsync();
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
 
     [Fact]
     public async Task GET_NutritionSummary_ReturnsOk()
     {
         var response = await _client.GetAsync("/api/v1/meals/nutrition-summary");
+        var body = await response.Content.ReadAsStringAsync();
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
 }

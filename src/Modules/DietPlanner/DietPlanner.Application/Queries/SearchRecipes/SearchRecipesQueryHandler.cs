@@ -31,7 +31,7 @@ internal sealed class SearchRecipesQueryHandler
             .OrderBy(r => r.Name)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Include(Recipe.IngredientsField)
+            .Include(r => r.Ingredients)
             .Select(r => new RecipeDto(
                 r.Id.Value,
                 r.Name,

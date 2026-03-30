@@ -18,7 +18,7 @@ internal sealed class GetRecipeByIdQueryHandler
         GetRecipeByIdQuery query, CancellationToken ct = default)
         => await _dbContext.Recipes
             .AsNoTracking()
-            .Include(Recipe.IngredientsField)
+            .Include(r => r.Ingredients)
             .Where(r => r.Id.Value == query.Id)
             .Select(r => new RecipeDto(
                 r.Id.Value,

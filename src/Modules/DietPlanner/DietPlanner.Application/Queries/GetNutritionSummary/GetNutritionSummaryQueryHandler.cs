@@ -22,7 +22,7 @@ internal sealed class GetNutritionSummaryQueryHandler
             .Where(me => me.UserId == query.UserId
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
-            .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters().Include(Recipe.IngredientsField),
+            .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters().Include(r => r.Ingredients),
                 me => me.RecipeId.Value,
                 r => r.Id.Value,
                 (me, r) => new
