@@ -19,7 +19,7 @@ Sensitive values go in `appsettings.Development.json` (gitignored). Copy and fil
   },
   "Authentication": {
     "Authentik": {
-      "Authority": "http://localhost:9000/application/o/diet-planner-ui",
+      "Authority": "http://localhost:9000/application/o/home-system",
       "Audience": "<OIDC_CLIENT_ID>",
       "ClientId": "<OIDC_CLIENT_ID>",
       "ClientSecret": "<OIDC_CLIENT_SECRET>"

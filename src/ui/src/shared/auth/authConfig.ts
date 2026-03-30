@@ -25,7 +25,7 @@ const REDIRECT_URI = requireEnv(
 );
 
 export const oidcConfig: UserManagerSettings = {
-  authority: `${AUTHENTIK_DOMAIN}/application/o/diet-planner-ui/`,
+  authority: `${AUTHENTIK_DOMAIN}/application/o/home-system/`,
   client_id: CLIENT_ID,
   redirect_uri: `${REDIRECT_URI}/callback`,
   post_logout_redirect_uri: REDIRECT_URI,

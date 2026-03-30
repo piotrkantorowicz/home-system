@@ -75,5 +75,5 @@ Copy the generated client ID and secret into `appsettings.Development.json` and 
 | Service | URL |
 |---|---|
 | Authentik admin | http://localhost:9000/if/admin/ |
-| Authentik OIDC config | http://localhost:9000/application/o/diet-planner-ui/.well-known/openid-configuration |
+| Authentik OIDC config | http://localhost:9000/application/o/home-system/.well-known/openid-configuration |
 | Diet Planner DB | localhost:5432 |
