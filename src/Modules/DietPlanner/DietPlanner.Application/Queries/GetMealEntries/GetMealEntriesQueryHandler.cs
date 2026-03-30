@@ -20,21 +20,22 @@ internal sealed class GetMealEntriesQueryHandler
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters(),
-                me => me.RecipeId.Value,
-                r => r.Id.Value,
-                (me, r) => new MealEntryDto(
-                    me.Id.Value,
-                    me.Date,
-                    me.MealType,
-                    me.RecipeId.Value,
-                    r.Name,
-                    me.Servings,
-                    me.Notes,
-                    me.MealTime,
-                    me.SequenceOrder,
-                    me.CreatedAt))
-            .OrderBy(x => x.Date)
-            .ThenBy(x => x.MealType)
-            .ThenBy(x => x.SequenceOrder)
+                me => me.RecipeId,
+                r => r.Id,
+                (me, r) => new { me, RecipeName = r.Name })
+            .OrderBy(x => x.me.Date)
+            .ThenBy(x => x.me.MealType)
+            .ThenBy(x => x.me.SequenceOrder)
+            .Select(x => new MealEntryDto(
+                x.me.Id.Value,
+                x.me.Date,
+                x.me.MealType,
+                x.me.RecipeId.Value,
+                x.RecipeName,
+                x.me.Servings,
+                x.me.Notes,
+                x.me.MealTime,
+                x.me.SequenceOrder,
+                x.me.CreatedAt))
             .ToListAsync(ct);
 }

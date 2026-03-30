@@ -1,8 +1,8 @@
 namespace DietPlanner.Application.Queries.GetRecipeById;
 
 using DietPlanner.Application.Persistence;
-using DietPlanner.Domain.Aggregates;
 using DietPlanner.Application.Queries.SearchRecipes;
+using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.CQRS;
 
@@ -19,7 +19,7 @@ internal sealed class GetRecipeByIdQueryHandler
         => await _dbContext.Recipes
             .AsNoTracking()
             .Include(r => r.Ingredients)
-            .Where(r => r.Id.Value == query.Id)
+            .Where(r => r.Id == RecipeId.From(query.Id))
             .Select(r => new RecipeDto(
                 r.Id.Value,
                 r.Name,

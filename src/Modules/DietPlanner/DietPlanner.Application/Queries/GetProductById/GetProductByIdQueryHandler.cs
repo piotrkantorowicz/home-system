@@ -2,6 +2,7 @@ namespace DietPlanner.Application.Queries.GetProductById;
 
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Queries.SearchProducts;
+using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.CQRS;
 
@@ -17,7 +18,7 @@ internal sealed class GetProductByIdQueryHandler
         GetProductByIdQuery query, CancellationToken ct = default)
         => await _dbContext.Products
             .AsNoTracking()
-            .Where(p => p.Id.Value == query.Id)
+            .Where(p => p.Id == ProductId.From(query.Id))
             .Select(p => new ProductDto(
                 p.Id.Value,
                 p.Name,

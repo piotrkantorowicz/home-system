@@ -1,7 +1,6 @@
 namespace DietPlanner.Application.Queries.GetNutritionSummary;
 
 using DietPlanner.Application.Persistence;
-using DietPlanner.Domain.Aggregates;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.CQRS;
 
@@ -23,8 +22,8 @@ internal sealed class GetNutritionSummaryQueryHandler
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters().Include(r => r.Ingredients),
-                me => me.RecipeId.Value,
-                r => r.Id.Value,
+                me => me.RecipeId,
+                r => r.Id,
                 (me, r) => new
                 {
                     me.Date,
@@ -39,17 +38,17 @@ internal sealed class GetNutritionSummaryQueryHandler
 
         // Load product nutrition for all referenced products
         var productIds = mealData
-            .SelectMany(x => x.Ingredients.Select(i => i.ProductId.Value))
+            .SelectMany(x => x.Ingredients.Select(i => i.ProductId))
             .Distinct()
             .ToList();
 
         var products = await _dbContext.Products
             .AsNoTracking()
             .IgnoreQueryFilters()
-            .Where(p => productIds.Contains(p.Id.Value))
+            .Where(p => productIds.Contains(p.Id))
             .Select(p => new
             {
-                Id = p.Id.Value,
+                Id = p.Id,
                 p.Nutrition.Calories,
                 p.Nutrition.Protein,
                 p.Nutrition.Carbs,
@@ -72,7 +71,7 @@ internal sealed class GetNutritionSummaryQueryHandler
 
                     foreach (var ing in entry.Ingredients)
                     {
-                        if (!products.TryGetValue(ing.ProductId.Value, out var product))
+                        if (!products.TryGetValue(ing.ProductId, out var product))
                             continue;
 
                         var amountFactor = ing.Amount / 100m * servingMultiplier;
