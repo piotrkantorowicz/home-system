@@ -1,4 +1,31 @@
-version: "3.8"
+x-authentik-env: &authentik-env
+  AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+  AUTHENTIK_REDIS__HOST: authentik-redis
+  AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS_PASSWORD}
+  AUTHENTIK_POSTGRESQL__HOST: authentik-db
+  AUTHENTIK_POSTGRESQL__USER: authentik
+  AUTHENTIK_POSTGRESQL__NAME: authentik
+  AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+  AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+  AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL}
+  AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN}
+
+x-authentik-volumes: &authentik-volumes
+  - authentik_media:/media
+  - authentik_templates:/templates
+  - ./authentik/blueprints:/blueprints/custom
+
+x-authentik-depends: &authentik-depends
+  authentik-db:
+    condition: service_healthy
+  authentik-redis:
+    condition: service_healthy
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   # ============================================
@@ -19,6 +46,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    logging: *default-logging
     networks:
       - home-system-shared
 
@@ -33,14 +62,16 @@ services:
       redis-server
       --save 60 1
       --loglevel warning
-      --requirepass ${AUTHENTIK_REDIS_PASSWORD:-changeme}
+      --requirepass ${AUTHENTIK_REDIS_PASSWORD}
     volumes:
       - authentik_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${AUTHENTIK_REDIS_PASSWORD:-changeme}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${AUTHENTIK_REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    logging: *default-logging
     networks:
       - home-system-shared
 
@@ -55,26 +86,10 @@ services:
     ports:
       - "9000:9000"   # HTTP
       - "9443:9443"   # HTTPS
-    environment:
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
-      AUTHENTIK_REDIS__HOST: authentik-redis
-      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS_PASSWORD:-changeme}
-      AUTHENTIK_POSTGRESQL__HOST: authentik-db
-      AUTHENTIK_POSTGRESQL__USER: authentik
-      AUTHENTIK_POSTGRESQL__NAME: authentik
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
-      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
-      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@home-system.local}
-      AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-}
-    volumes:
-      - authentik_media:/media
-      - authentik_templates:/templates
-      - ./authentik/blueprints:/blueprints/custom
-    depends_on:
-      authentik-db:
-        condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
+    environment: *authentik-env
+    volumes: *authentik-volumes
+    depends_on: *authentik-depends
+    logging: *default-logging
     networks:
       - home-system-shared
 
@@ -86,37 +101,16 @@ services:
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
-    environment:
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
-      AUTHENTIK_REDIS__HOST: authentik-redis
-      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS_PASSWORD:-changeme}
-      AUTHENTIK_POSTGRESQL__HOST: authentik-db
-      AUTHENTIK_POSTGRESQL__USER: authentik
-      AUTHENTIK_POSTGRESQL__NAME: authentik
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
-      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
-      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@home-system.local}
-      AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-}
-    volumes:
-      - authentik_media:/media
-      - authentik_templates:/templates
-      - ./authentik/blueprints:/blueprints/custom
-    depends_on:
-      authentik-db:
-        condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
+    environment: *authentik-env
+    volumes: *authentik-volumes
+    depends_on: *authentik-depends
+    logging: *default-logging
     networks:
       - home-system-shared
 
-# ============================================
-# Module-specific services
-# Use profiles to start only what you need:
-#   docker compose --profile diet-planner up
-# ============================================
-
   # ============================================
   # PostgreSQL for Diet Planner API
+  # Use: docker compose --profile diet-planner up
   # ============================================
   dietplanner-db:
     image: postgres:16-alpine
@@ -136,6 +130,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    logging: *default-logging
     networks:
       - home-system-shared
 
