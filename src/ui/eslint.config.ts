@@ -1,8 +1,10 @@
 import js from '@eslint/js';
+import type { ESLint } from 'eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
+// REASON: eslint-plugin-jsx-a11y has no TypeScript declarations -- eslint-disable-next-line @typescript-eslint/no-require-imports
+const jsxA11y: { configs: { recommended: { rules: Record<string, unknown> } } } = require('eslint-plugin-jsx-a11y') as { configs: { recommended: { rules: Record<string, unknown> } } }; // eslint-disable-line @typescript-eslint/no-require-imports
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
@@ -30,17 +32,14 @@ export default defineConfig([
   // React
   {
     plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-      // REASON: eslint-plugin-jsx-a11y has insufficient TypeScript typings
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      'jsx-a11y': jsxA11y,
+      // REASON: eslint-plugin-react-hooks configs.flat type conflicts with ESLint.Plugin interface
+      'react-hooks': reactHooks as unknown as ESLint.Plugin,
+      'react-refresh': reactRefresh as unknown as ESLint.Plugin,
+      'jsx-a11y': jsxA11y as unknown as ESLint.Plugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // REASON: eslint-plugin-jsx-a11y has insufficient TypeScript typings
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      ...(jsxA11y.configs.recommended.rules as Record<string, unknown>),
+      ...jsxA11y.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'react-hooks/exhaustive-deps': 'error',
     },
