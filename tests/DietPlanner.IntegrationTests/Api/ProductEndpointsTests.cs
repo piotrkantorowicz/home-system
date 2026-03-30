@@ -6,7 +6,7 @@ using DietPlanner.Api;
 using DietPlanner.IntegrationTests.Infrastructure;
 
 [Collection(DatabaseCollection.Name)]
-public sealed class ProductEndpointsTests : IClassFixture<DietPlannerWebApplicationFactory>
+public sealed class ProductEndpointsTests
 {
     private readonly HttpClient _client;
 

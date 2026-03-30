@@ -1,4 +1,6 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+
+import type { Page, Locator} from '@playwright/test';
 
 export class RecipesPage {
   readonly page: Page;
@@ -25,7 +27,7 @@ export class RecipesPage {
   async createRecipe(data: {
     name: string;
     servings: number;
-    ingredients: Array<{ name: string; amount: number; unit: string }>;
+    ingredients: { name: string; amount: number; unit: string }[];
     prepTime?: number;
     instructions?: string;
   }) {

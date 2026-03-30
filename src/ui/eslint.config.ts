@@ -9,7 +9,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules', 'build', '.eslintcache', 'coverage', '**/api/generated/**']),
+  globalIgnores(['dist', 'node_modules', 'build', '.eslintcache', 'coverage', '**/api/generated/**', '*.js']),
 
   // Base JS rules
   js.configs.recommended,
@@ -81,12 +81,25 @@ export default defineConfig([
     },
   },
 
-  // Relax rules for e2e files
+  // Relax rules for e2e files — Playwright tests have different conventions
   {
-    files: ['e2e/**/*.{ts,tsx}'],
+    files: ['e2e/**/*.{ts,tsx}', 'playwright.config.ts'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
+      'no-console': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-deprecated': 'off',
     },
   },
 

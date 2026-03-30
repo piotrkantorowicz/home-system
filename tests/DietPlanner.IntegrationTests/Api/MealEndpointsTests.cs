@@ -4,7 +4,7 @@ using System.Net;
 using DietPlanner.IntegrationTests.Infrastructure;
 
 [Collection(DatabaseCollection.Name)]
-public sealed class MealEndpointsTests : IClassFixture<DietPlannerWebApplicationFactory>
+public sealed class MealEndpointsTests
 {
     private readonly HttpClient _client;
 

@@ -20,8 +20,10 @@ internal sealed class RecipeIngredientConfiguration : IEntityTypeConfiguration<R
             .HasConversion(id => id.Value, value => ProductId.From(value))
             .HasColumnName("product_id");
 
-        // Shadow property for the FK to Recipe — named to match DB column
-        builder.Property<Guid>("RecipeId").HasColumnName("recipe_id");
+        // Shadow property for the FK to Recipe — typed as RecipeId to match the principal key type
+        builder.Property<RecipeId>("RecipeId")
+            .HasConversion(id => id.Value, value => RecipeId.From(value))
+            .HasColumnName("recipe_id");
 
         builder.HasOne<Domain.Aggregates.Product>()
             .WithMany()

@@ -6,7 +6,7 @@ setup('authenticate', async ({ page }) => {
   console.log('Starting authentication setup...');
 
   // Enable more detailed logging
-  page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
+  page.on('console', (msg) => { console.log('PAGE LOG:', msg.text()); });
 
   await page.goto('/');
 
@@ -45,7 +45,7 @@ setup('authenticate', async ({ page }) => {
   if (passwordValue !== 'Password321!') {
     console.log('Password not set correctly, trying again with type...');
     await passwordInput.clear();
-    await passwordInput.type('Password321!', { delay: 50 });
+    await passwordInput.pressSequentially('Password321!', { delay: 50 });
   }
 
   console.log('Password filled successfully.');
