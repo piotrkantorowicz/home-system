@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+
 import { api } from '../client';
+
 import type { components } from '../generated/schema';
 
 interface RecipesQueryParams {
@@ -21,7 +23,7 @@ export function useRecipes(params: RecipesQueryParams = {}) {
         },
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to fetch recipes');
       }
 
@@ -41,7 +43,7 @@ export function useRecipe(id: string) {
         },
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to fetch recipe');
       }
 
@@ -60,14 +62,14 @@ export function useCreateRecipe() {
         body: recipeData,
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to create recipe');
       }
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 }
@@ -84,15 +86,15 @@ export function useUpdateRecipe(id: string) {
         body: recipeData,
       });
 
-      if (response.error) {
+      if (!response.data) {
         throw new Error('Failed to update recipe');
       }
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['recipes', id] });
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipes', id] });
     },
   });
 }
@@ -109,14 +111,10 @@ export function useDeleteRecipe() {
         },
       });
 
-      if (response.error) {
-        throw new Error('Failed to delete recipe');
-      }
-
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 }

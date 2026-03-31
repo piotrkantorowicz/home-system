@@ -1,6 +1,21 @@
 <Solution>
-  <Folder Name="/apis/diet-planner/">
-    <Project Path="src/apis/diet-planner/DietPlanner.Api/DietPlanner.Api.csproj" />
-    <Project Path="src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj" />
+  <Folder Name="/Shared/">
+    <Project Path="src/Shared/Shared.Abstractions/Shared.Abstractions.csproj" />
+    <Project Path="src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/DietPlanner/">
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Domain/DietPlanner.Domain.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Application/DietPlanner.Application.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Contracts/DietPlanner.Contracts.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Infrastructure/DietPlanner.Infrastructure.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Api/DietPlanner.Api.csproj" />
+  </Folder>
+  <Folder Name="/Host/">
+    <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
   </Folder>
 </Solution>

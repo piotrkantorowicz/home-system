@@ -1,30 +1,31 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { RecipeForm, type RecipeFormData } from '../../components/recipes/RecipeForm';
 import { useRecipe, useUpdateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { RecipeForm, type RecipeFormData } from '../../components/recipes/RecipeForm';
 
 export default function RecipeEdit() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: recipe, isLoading } = useRecipe(id!);
-  const updateMutation = useUpdateRecipe(id!);
+  const { data: recipe, isLoading } = useRecipe(id ?? '');
+  const updateMutation = useUpdateRecipe(id ?? '');
 
   const handleSubmit = async (data: RecipeFormData) => {
     try {
       await updateMutation.mutateAsync({
         name: data.name,
-        description: data.description || null,
-        instructions: data.instructions || null,
+        description: data.description ?? null,
+        instructions: data.instructions ?? null,
         servings: data.servings,
-        prepTimeMinutes: data.prepTimeMinutes || null,
+        prepTimeMinutes: data.prepTimeMinutes ?? null,
         ingredients: data.ingredients.map((ing) => ({
           productName: ing.productName,
           amount: ing.amount,
           unit: ing.unit,
         })),
       });
-      navigate(`/diet-planner/recipes/${id}`);
+      void navigate(`/diet-planner/recipes/${id ?? ''}`);
     } catch (error) {
       console.error('Failed to update recipe:', error);
     }
@@ -33,7 +34,7 @@ export default function RecipeEdit() {
   if (isLoading) {
     return (
       <div className="p-8 lg:p-10">
-        <div className="text-lg text-muted-foreground">{t('common.loading')}</div>
+        <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
       </div>
     );
   }
@@ -41,15 +42,15 @@ export default function RecipeEdit() {
   if (!recipe) {
     return (
       <div className="p-8 lg:p-10">
-        <div className="text-lg text-destructive">{t('recipe_detail.not_found')}</div>
+        <div className="text-destructive text-lg">{t('recipe_detail.not_found')}</div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 lg:p-10 max-w-4xl mx-auto animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight mb-2">{t('recipe_form.edit_title')}</h1>
+        <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipe_form.edit_title')}</h1>
         <p className="text-muted-foreground text-[0.95rem]">
           {t('recipe_form.update_subtitle', { name: recipe.name })}
         </p>
@@ -58,8 +59,8 @@ export default function RecipeEdit() {
       <RecipeForm
         defaultValues={{
           name: recipe.name,
-          description: recipe.description || '',
-          instructions: recipe.instructions || '',
+          description: recipe.description ?? '',
+          instructions: recipe.instructions ?? '',
           servings: Number(recipe.servings),
           prepTimeMinutes: recipe.prepTimeMinutes ? Number(recipe.prepTimeMinutes) : undefined,
           ingredients: recipe.ingredients.map((ing) => ({

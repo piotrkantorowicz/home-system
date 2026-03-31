@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+
 import { userManager } from './userManager';
 
 export function SilentRenew() {
@@ -6,7 +7,7 @@ export function SilentRenew() {
     // Complete the silent renewal callback using the shared UserManager.
     // This ensures the renewed token is stored in the same instance
     // that AuthProvider and the API client use.
-    userManager.signinSilentCallback().catch((error) => {
+    userManager.signinSilentCallback().catch((error: unknown) => {
       console.error('Silent renew callback error:', error);
     });
   }, []);

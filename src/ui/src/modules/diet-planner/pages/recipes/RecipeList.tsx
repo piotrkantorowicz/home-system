@@ -1,17 +1,3 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  Grid,
-  List as ListIcon,
-  Clock,
-  Users,
-} from 'lucide-react';
 import { useRecipes, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
 import {
   Button,
@@ -30,6 +16,20 @@ import {
   DialogTitle,
 } from '@shared/components/ui';
 import { Badge } from '@shared/components/ui/Badge';
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Grid,
+  List as ListIcon,
+  Clock,
+  Users,
+} from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 export default function RecipeList() {
   const { t } = useTranslation();
@@ -52,7 +52,12 @@ export default function RecipeList() {
   const deleteMutation = useDeleteRecipe();
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(searchTimerRef.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(searchTimerRef.current);
+    },
+    [],
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -77,10 +82,10 @@ export default function RecipeList() {
   };
 
   return (
-    <div className="p-8 lg:p-10 animate-fade-in-up">
+    <div className="animate-fade-in-up p-8 lg:p-10">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2">{t('recipes.title')}</h1>
+          <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipes.title')}</h1>
           <p className="text-muted-foreground text-[0.95rem]">{t('recipes.subtitle')}</p>
         </div>
         <Link to="/diet-planner/recipes/new">
@@ -92,12 +97,14 @@ export default function RecipeList() {
       </div>
 
       <div className="mb-6 flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative max-w-sm flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder={t('recipes.search_placeholder')}
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => {
+              handleSearchChange(e.target.value);
+            }}
             className="pl-10"
           />
         </div>
@@ -110,18 +117,22 @@ export default function RecipeList() {
         >
           {onlyMine ? t('recipes.show_my_recipes') : t('recipes.show_only_mine')}
         </Button>
-        <div className="flex gap-1 border rounded-lg p-1">
+        <div className="flex gap-1 rounded-lg border p-1">
           <Button
             variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
             size="icon"
-            onClick={() => setViewMode('grid')}
+            onClick={() => {
+              setViewMode('grid');
+            }}
           >
             <Grid className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === 'list' ? 'secondary' : 'ghost'}
             size="icon"
-            onClick={() => setViewMode('list')}
+            onClick={() => {
+              setViewMode('list');
+            }}
           >
             <ListIcon className="h-4 w-4" />
           </Button>
@@ -129,7 +140,7 @@ export default function RecipeList() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive animate-scale-in">
+        <div className="border-destructive/30 bg-destructive/5 text-destructive animate-scale-in mb-4 rounded-xl border p-4">
           {t('common.error')}: {error.message}
         </div>
       )}
@@ -139,8 +150,8 @@ export default function RecipeList() {
           <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
         </div>
       ) : data?.items?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
-          <p className="text-xl font-semibold mb-2">{t('recipes.no_recipes_found')}</p>
+        <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
+          <p className="mb-2 text-xl font-semibold">{t('recipes.no_recipes_found')}</p>
           <p className="text-muted-foreground mb-6">
             {debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
           </p>
@@ -156,11 +167,11 @@ export default function RecipeList() {
       ) : (
         <>
           {viewMode === 'grid' ? (
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+            <div className="stagger-children grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {data?.items?.map((recipe) => (
                 <Card
                   key={recipe.id}
-                  className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                  className="group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -181,7 +192,7 @@ export default function RecipeList() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1.5">
                           <Users className="h-4 w-4" />
                           <span>{t('recipes.servings', { count: Number(recipe.servings) })}</span>
@@ -197,29 +208,25 @@ export default function RecipeList() {
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-lg bg-muted/40 p-2.5">
-                          <p className="text-xs text-muted-foreground">
+                        <div className="bg-muted/40 rounded-lg p-2.5">
+                          <p className="text-muted-foreground text-xs">
                             {t('recipes.per_serving')}
                           </p>
-                          <p className="font-semibold text-sm mt-0.5">
-                            {recipe.nutritionPerServing.calories != null
-                              ? `${Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal`
-                              : 'N/A'}
+                          <p className="mt-0.5 text-sm font-semibold">
+                            {`${Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal`}
                           </p>
                         </div>
-                        <div className="rounded-lg bg-muted/40 p-2.5">
-                          <p className="text-xs text-muted-foreground">
+                        <div className="bg-muted/40 rounded-lg p-2.5">
+                          <p className="text-muted-foreground text-xs">
                             {t('products.table.protein')}
                           </p>
-                          <p className="font-semibold text-sm mt-0.5">
-                            {recipe.nutritionPerServing.protein != null
-                              ? `${Number(recipe.nutritionPerServing.protein).toFixed(1)}g`
-                              : 'N/A'}
+                          <p className="mt-0.5 text-sm font-semibold">
+                            {`${Number(recipe.nutritionPerServing.protein).toFixed(1)}g`}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-3 border-t">
+                      <div className="flex gap-2 border-t pt-3">
                         <Link to={`/diet-planner/recipes/${recipe.id}`} className="flex-1">
                           <Button variant="outline" size="sm" className="w-full">
                             <Eye className="mr-2 h-4 w-4" />
@@ -236,9 +243,11 @@ export default function RecipeList() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openDeleteDialog(recipe.id, recipe.name)}
+                              onClick={() => {
+                                openDeleteDialog(recipe.id, recipe.name);
+                              }}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="text-destructive h-4 w-4" />
                             </Button>
                           </>
                         )}
@@ -249,13 +258,13 @@ export default function RecipeList() {
               ))}
             </div>
           ) : (
-            <div className="space-y-3 stagger-children">
+            <div className="stagger-children space-y-3">
               {data?.items?.map((recipe) => (
-                <Card key={recipe.id} className="hover:shadow-md transition-all duration-200">
+                <Card key={recipe.id} className="transition-all duration-200 hover:shadow-md">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1.5">
+                        <div className="mb-1.5 flex items-center gap-3">
                           <h3 className="text-lg font-semibold">{recipe.name}</h3>
                           {recipe.isOwner ? (
                             <Badge variant="default">{t('common.you')}</Badge>
@@ -263,28 +272,20 @@ export default function RecipeList() {
                             <Badge variant="outline">{t('common.shared')}</Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-5 text-sm text-muted-foreground">
+                        <div className="text-muted-foreground flex items-center gap-5 text-sm">
                           <span>{t('recipes.servings', { count: Number(recipe.servings) })}</span>
                           {recipe.prepTimeMinutes && (
                             <span>
                               {recipe.prepTimeMinutes} {t('recipes.prep_time')}
                             </span>
                           )}
-                          {recipe.nutritionPerServing.calories != null && (
-                            <span>
-                              {Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal/
-                              {t('recipes.per_serving').toLowerCase()}
-                            </span>
-                          )}
-                          {recipe.nutritionPerServing.protein != null && (
-                            <span>P: {Number(recipe.nutritionPerServing.protein).toFixed(1)}g</span>
-                          )}
-                          {recipe.nutritionPerServing.carbs != null && (
-                            <span>C: {Number(recipe.nutritionPerServing.carbs).toFixed(1)}g</span>
-                          )}
-                          {recipe.nutritionPerServing.fat != null && (
-                            <span>F: {Number(recipe.nutritionPerServing.fat).toFixed(1)}g</span>
-                          )}
+                          <span>
+                            {Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal/
+                            {t('recipes.per_serving').toLowerCase()}
+                          </span>
+                          <span>P: {Number(recipe.nutritionPerServing.protein).toFixed(1)}g</span>
+                          <span>C: {Number(recipe.nutritionPerServing.carbs).toFixed(1)}g</span>
+                          <span>F: {Number(recipe.nutritionPerServing.fat).toFixed(1)}g</span>
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -303,7 +304,9 @@ export default function RecipeList() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => openDeleteDialog(recipe.id, recipe.name)}
+                              onClick={() => {
+                                openDeleteDialog(recipe.id, recipe.name);
+                              }}
                               className="hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -342,12 +345,19 @@ export default function RecipeList() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+              }}
+            >
               {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => {
+                void handleDelete();
+              }}
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending

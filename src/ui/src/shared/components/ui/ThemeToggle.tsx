@@ -1,25 +1,26 @@
-import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@shared/context/ThemeContext';
+import { Sun, Moon, Monitor } from 'lucide-react';
+
 import { Button } from './Button';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   const cycleTheme = () => {
-    const themes: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system'];
+    const themes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
     const currentIndex = themes.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
+    setTheme(themes[nextIndex] ?? 'system');
   };
 
   const getIcon = () => {
     switch (theme) {
       case 'light':
-        return <Sun className="h-[18px] w-[18px] transition-transform duration-300 rotate-0" />;
+        return <Sun className="h-[18px] w-[18px] rotate-0 transition-transform duration-300" />;
       case 'dark':
-        return <Moon className="h-[18px] w-[18px] transition-transform duration-300 rotate-0" />;
+        return <Moon className="h-[18px] w-[18px] rotate-0 transition-transform duration-300" />;
       case 'system':
-        return <Monitor className="h-[18px] w-[18px] transition-transform duration-300 rotate-0" />;
+        return <Monitor className="h-[18px] w-[18px] rotate-0 transition-transform duration-300" />;
     }
   };
 
@@ -44,7 +45,7 @@ export function ThemeToggle() {
       className="gap-2"
     >
       {getIcon()}
-      <span className="hidden sm:inline text-sm">{getLabel()}</span>
+      <span className="hidden text-sm sm:inline">{getLabel()}</span>
     </Button>
   );
 }

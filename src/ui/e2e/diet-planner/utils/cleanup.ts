@@ -1,7 +1,12 @@
-import { request, APIRequestContext } from '@playwright/test';
+
 import fs from 'fs';
 import path from 'path';
+
+import { request } from '@playwright/test';
+
 import { getTrackedIds, clearTracker } from './test-tracker';
+
+import type { APIRequestContext } from '@playwright/test';
 
 /**
  * Permanently delete a single item by ID.

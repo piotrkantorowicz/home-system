@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
+import { Button } from '@shared/components/ui/Button';
 import {
   Dialog,
   DialogContent,
@@ -7,10 +7,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@shared/components/ui/Dialog';
-import { Button } from '@shared/components/ui/Button';
 import { Input } from '@shared/components/ui/Input';
 import { Label } from '@shared/components/ui/Label';
-import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 
@@ -27,17 +27,19 @@ interface MealFormProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: Omit<MealFormData, 'recipeName'>) => void;
-  initialDate?: string;
-  initialMealType?: string;
-  initialValues?: {
-    recipeId: string;
-    recipeName: string;
-    servings: number;
-    notes: string;
-    mealType: string;
-    date: string;
-  };
-  isSubmitting?: boolean;
+  initialDate?: string | undefined;
+  initialMealType?: string | undefined;
+  initialValues?:
+    | {
+        recipeId: string;
+        recipeName: string;
+        servings: number;
+        notes: string;
+        mealType: string;
+        date: string;
+      }
+    | undefined;
+  isSubmitting?: boolean | undefined;
   mode: 'create' | 'edit';
 }
 
@@ -73,7 +75,7 @@ export function MealForm({
     setShowRecipeList(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!form.recipeId || !form.date || !form.mealType) return;
     onSubmit({
@@ -88,7 +90,12 @@ export function MealForm({
   const isValid = !!form.recipeId && !!form.date && !!form.mealType && form.servings > 0;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -104,7 +111,9 @@ export function MealForm({
                 id="meal-date"
                 type="date"
                 value={form.date}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, date: e.target.value }));
+                }}
                 required
               />
             </div>
@@ -114,13 +123,10 @@ export function MealForm({
               <select
                 id="meal-type"
                 value={form.mealType}
-                onChange={(e) => setForm((f) => ({ ...f, mealType: e.target.value }))}
-                className="flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1"
-                style={{
-                  backgroundColor: 'hsl(var(--color-background))',
-                  borderColor: 'hsl(var(--color-input))',
-                  color: 'hsl(var(--color-foreground))',
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, mealType: e.target.value }));
                 }}
+                className="border-input bg-background text-foreground flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
               >
                 {MEAL_TYPES.map((mt) => (
                   <option key={mt} value={mt}>
@@ -131,7 +137,7 @@ export function MealForm({
             </div>
           </div>
 
-          <div className="space-y-1.5 relative">
+          <div className="relative space-y-1.5">
             <Label htmlFor="recipe-search">{t('meal_form.recipe_label')}</Label>
             <Input
               id="recipe-search"
@@ -142,23 +148,21 @@ export function MealForm({
                 setForm((f) => ({ ...f, recipeId: '', recipeName: '' }));
                 setShowRecipeList(true);
               }}
-              onFocus={() => setShowRecipeList(true)}
+              onFocus={() => {
+                setShowRecipeList(true);
+              }}
               autoComplete="off"
             />
             {showRecipeList && recipeSearch && recipes.length > 0 && (
-              <div
-                className="absolute z-10 w-full mt-1 rounded-md border shadow-lg overflow-hidden"
-                style={{
-                  backgroundColor: 'hsl(var(--color-card))',
-                  borderColor: 'hsl(var(--color-border))',
-                }}
-              >
+              <div className="border-border bg-card absolute z-10 mt-1 w-full overflow-hidden rounded-md border shadow-lg">
                 {recipes.map((r) => (
                   <button
                     key={r.id}
                     type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 transition-colors"
-                    onMouseDown={() => handleRecipeSelect(r.id, r.name)}
+                    className="hover:bg-accent/50 w-full px-3 py-2 text-left text-sm transition-colors"
+                    onMouseDown={() => {
+                      handleRecipeSelect(r.id, r.name);
+                    }}
                   >
                     {r.name}
                   </button>
@@ -176,9 +180,9 @@ export function MealForm({
               max="50"
               step="0.5"
               value={form.servings}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, servings: parseFloat(e.target.value) || 1 }))
-              }
+              onChange={(e) => {
+                setForm((f) => ({ ...f, servings: parseFloat(e.target.value) || 1 }));
+              }}
             />
           </div>
 
@@ -188,7 +192,9 @@ export function MealForm({
               id="notes"
               placeholder={t('meal_form.notes_placeholder')}
               value={form.notes}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, notes: e.target.value }));
+              }}
             />
           </div>
 

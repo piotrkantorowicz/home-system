@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+
 import type { ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -54,7 +55,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
 
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

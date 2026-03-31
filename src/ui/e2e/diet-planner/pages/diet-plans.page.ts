@@ -1,4 +1,6 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+
+import type { Page, Locator} from '@playwright/test';
 
 export class DietPlansPage {
   readonly page: Page;
@@ -81,7 +83,7 @@ export class DietPlansPage {
     const addButton = sectionRow.locator('button[title]');
     // Use JS .click() to bypass layout-based pointer-event interception.
     // The untranslated key text overflows in narrow columns and visually covers the button.
-    await addButton.evaluate((el) => (el as HTMLButtonElement).click());
+    await addButton.evaluate((el) => { (el as HTMLButtonElement).click(); });
     await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
   }
 

@@ -1,7 +1,4 @@
-import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import {
   Button,
   Input,
@@ -11,6 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@shared/components/ui';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -56,13 +56,18 @@ export function ProductForm({
   const protein = watch('proteinPer100g') || 0;
   const carbs = watch('carbsPer100g') || 0;
   const fat = watch('fatPer100g') || 0;
-  const fiber = watch('fiberPer100g') || 0;
+  const fiber = watch('fiberPer100g') ?? 0;
 
-  const totalMacros = Number(protein) + Number(carbs) + Number(fat);
+  const totalMacros = protein + carbs + fat;
   const isMacroWarning = totalMacros > 100;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 stagger-children">
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(onSubmit)(e);
+      }}
+      className="stagger-children space-y-6"
+    >
       <Card>
         <CardHeader>
           <CardTitle>{t('product_form.basic_info')}</CardTitle>
@@ -76,7 +81,7 @@ export function ProductForm({
               placeholder={t('product_form.name_placeholder')}
             />
             {errors.name && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.name.message}</p>
             )}
           </div>
 
@@ -85,14 +90,14 @@ export function ProductForm({
             <select
               id="defaultUnit"
               {...register('defaultUnit')}
-              className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-[0.9rem] ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full rounded-lg border px-4 py-2.5 text-[0.9rem] transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none"
             >
               <option value="g">{t('product_form.units.g')}</option>
               <option value="ml">{t('product_form.units.ml')}</option>
               <option value="piece">{t('product_form.units.piece')}</option>
             </select>
             {errors.defaultUnit && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.defaultUnit.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.defaultUnit.message}</p>
             )}
           </div>
         </CardContent>
@@ -114,7 +119,7 @@ export function ProductForm({
                 placeholder="0"
               />
               {errors.caloriesPer100g && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.caloriesPer100g.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.caloriesPer100g.message}</p>
               )}
             </div>
 
@@ -128,7 +133,7 @@ export function ProductForm({
                 placeholder="0"
               />
               {errors.proteinPer100g && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.proteinPer100g.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.proteinPer100g.message}</p>
               )}
             </div>
 
@@ -142,7 +147,7 @@ export function ProductForm({
                 placeholder="0"
               />
               {errors.carbsPer100g && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.carbsPer100g.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.carbsPer100g.message}</p>
               )}
             </div>
 
@@ -156,7 +161,7 @@ export function ProductForm({
                 placeholder="0"
               />
               {errors.fatPer100g && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.fatPer100g.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.fatPer100g.message}</p>
               )}
             </div>
 
@@ -167,50 +172,50 @@ export function ProductForm({
                 type="number"
                 step="0.1"
                 {...register('fiberPer100g', {
-                  setValueAs: (v) => (v === '' || isNaN(v) ? undefined : Number(v)),
+                  setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
                 })}
                 placeholder="0"
               />
               {errors.fiberPer100g && (
-                <p className="mt-1.5 text-sm text-destructive">{errors.fiberPer100g.message}</p>
+                <p className="text-destructive mt-1.5 text-sm">{errors.fiberPer100g.message}</p>
               )}
             </div>
           </div>
 
           {isMacroWarning && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-              <p className="text-sm text-destructive">
+            <div className="border-destructive/30 bg-destructive/5 rounded-xl border p-4">
+              <p className="text-destructive text-sm">
                 {t('product_form.macro_warning', { total: totalMacros.toFixed(1) })}
               </p>
             </div>
           )}
 
-          <div className="rounded-xl bg-muted/50 p-5">
-            <p className="text-sm font-semibold mb-3">{t('product_form.macro_summary')}</p>
+          <div className="bg-muted/50 rounded-xl p-5">
+            <p className="mb-3 text-sm font-semibold">{t('product_form.macro_summary')}</p>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                <p className="text-muted-foreground text-xs tracking-wider uppercase">
                   {t('products.table.protein')}
                 </p>
-                <p className="text-lg font-semibold mt-0.5">{Number(protein).toFixed(1)}g</p>
+                <p className="mt-0.5 text-lg font-semibold">{protein.toFixed(1)}g</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                <p className="text-muted-foreground text-xs tracking-wider uppercase">
                   {t('products.table.carbs')}
                 </p>
-                <p className="text-lg font-semibold mt-0.5">{Number(carbs).toFixed(1)}g</p>
+                <p className="mt-0.5 text-lg font-semibold">{carbs.toFixed(1)}g</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                <p className="text-muted-foreground text-xs tracking-wider uppercase">
                   {t('products.table.fat')}
                 </p>
-                <p className="text-lg font-semibold mt-0.5">{Number(fat).toFixed(1)}g</p>
+                <p className="mt-0.5 text-lg font-semibold">{fat.toFixed(1)}g</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                <p className="text-muted-foreground text-xs tracking-wider uppercase">
                   {t('products.table.fiber')}
                 </p>
-                <p className="text-lg font-semibold mt-0.5">{Number(fiber).toFixed(1)}g</p>
+                <p className="mt-0.5 text-lg font-semibold">{fiber.toFixed(1)}g</p>
               </div>
             </div>
           </div>
@@ -229,13 +234,13 @@ export function ProductForm({
               type="number"
               step="0.01"
               {...register('densityGramsPerMl', {
-                setValueAs: (v) => (v === '' || isNaN(v) ? undefined : Number(v)),
+                setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
               })}
               placeholder={t('product_form.density_placeholder')}
             />
-            <p className="mt-1.5 text-xs text-muted-foreground">{t('product_form.density_help')}</p>
+            <p className="text-muted-foreground mt-1.5 text-xs">{t('product_form.density_help')}</p>
             {errors.densityGramsPerMl && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.densityGramsPerMl.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.densityGramsPerMl.message}</p>
             )}
           </div>
 
@@ -246,24 +251,30 @@ export function ProductForm({
               type="number"
               step="0.1"
               {...register('gramPerPiece', {
-                setValueAs: (v) => (v === '' || isNaN(v) ? undefined : Number(v)),
+                setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
               })}
               placeholder={t('product_form.piece_placeholder')}
             />
-            <p className="mt-1.5 text-xs text-muted-foreground">{t('product_form.piece_help')}</p>
+            <p className="text-muted-foreground mt-1.5 text-xs">{t('product_form.piece_help')}</p>
             {errors.gramPerPiece && (
-              <p className="mt-1.5 text-sm text-destructive">{errors.gramPerPiece.message}</p>
+              <p className="text-destructive mt-1.5 text-sm">{errors.gramPerPiece.message}</p>
             )}
           </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={() => window.history.back()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            window.history.back();
+          }}
+        >
           {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? t('product_form.saving') : submitLabel || t('common.save')}
+          {isSubmitting ? t('product_form.saving') : (submitLabel ?? t('common.save'))}
         </Button>
       </div>
     </form>

@@ -1,7 +1,8 @@
 import { format, startOfWeek } from 'date-fns';
+
 import { test, expect } from './fixtures/auth.fixture';
-import { NutritionPage } from './pages/nutrition.page';
 import { ImportPage } from './pages/import.page';
+import { NutritionPage } from './pages/nutrition.page';
 import { generateWeeklyPlan } from './utils/data-generator';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+
 import { Button } from './Button';
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -28,14 +29,14 @@ export function Pagination({
   return (
     <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">{t('common.rows_per_page')}</span>
+        <span className="text-muted-foreground text-sm">{t('common.rows_per_page')}</span>
         <select
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange(Number(e.target.value));
             onPageChange(1);
           }}
-          className="h-8 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="border-input bg-background focus:ring-ring h-8 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
         >
           {pageSizeOptions.map((opt) => (
             <option key={opt} value={opt}>
@@ -47,7 +48,7 @@ export function Pagination({
 
       <div className="flex items-center gap-4">
         {totalCount > 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('common.showing_range', { start, end, total: totalCount })}
           </p>
         )}
@@ -55,7 +56,9 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onPageChange(Math.max(1, page - 1))}
+            onClick={() => {
+              onPageChange(Math.max(1, page - 1));
+            }}
             disabled={page <= 1}
           >
             {t('common.previous')}
@@ -63,7 +66,9 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onPageChange(page + 1)}
+            onClick={() => {
+              onPageChange(page + 1);
+            }}
             disabled={page >= totalPages}
           >
             {t('common.next')}

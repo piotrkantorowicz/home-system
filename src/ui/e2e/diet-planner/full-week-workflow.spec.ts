@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures/auth.fixture';
-import { ImportPage } from './pages/import.page';
 import { DashboardPage } from './pages/dashboard.page';
 import { DietPlansPage } from './pages/diet-plans.page';
+import { ImportPage } from './pages/import.page';
 import { ProductsPage } from './pages/products.page';
 import { generateWeeklyPlan } from './utils/data-generator';
 

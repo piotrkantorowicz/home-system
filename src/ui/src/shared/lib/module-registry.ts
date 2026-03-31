@@ -1,6 +1,6 @@
-import type { RouteObject } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentType } from 'react';
+import type { RouteObject } from 'react-router-dom';
 
 export interface NavItem {
   name: string;

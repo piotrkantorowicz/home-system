@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="DietPlanner.Api/DietPlanner.Api.csproj" />
-  <Project Path="DietPlanner.Tests/DietPlanner.Tests.csproj" />
-</Solution>

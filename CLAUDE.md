@@ -2,202 +2,178 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Claude Code Rules
+> **Entry point for Claude Code.** This file is the root rules document.
+> All referenced files below are authoritative — read the relevant one before generating or editing code.
 
-- Never add `Co-Authored-By: Claude` trailers to commit messages.
+---
 
 ## Repository Structure
 
-Mono-repo with two independent stacks:
-- `src/apis/diet-planner/` — .NET 10 Web API
-- `src/ui/` — React 19 + Vite + TypeScript SPA
-- `infrastructure/` — Docker Compose (Authentik, Redis, PostgreSQL per module)
+```
+src/
+  Apis/
+    HomeSystem.REST/          # Host project — wires modules, no business logic
+  Modules/
+    DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api
+                              # + DietPlanner.UnitTests / DietPlanner.IntegrationTests (co-located)
+  Shared/
+    Shared.Abstractions/      # Interfaces only (ICommand, IQuery, IDomainEvent, AggregateRoot…)
+    Shared.Infrastructure/    # Cross-cutting implementations (CQRS dispatchers, middleware, EF interceptors)
+  ui/                         # React 19 + TypeScript SPA (Vite, TanStack Router/Query, Tailwind v4)
+infrastructure/
+  docker-compose.yml          # Authentik (OIDC), Redis, PostgreSQL per module (profiles)
+  authentik/blueprints/       # Declarative Authentik config applied on first run
+```
 
-Two solution files: `HomeSystem.slnx` (root), `src/apis/diet-planner/DietPlanner.slnx` (standalone).
+**Key architectural decisions:**
+- No MediatR, AutoMapper, or MassTransit — custom CQRS dispatcher stack, raw RabbitMQ, explicit mapping.
+- Each module owns its own `DbContext` and migrations. No shared database context across modules.
+- Queries bypass repositories — they hit `DbContext` directly with `AsNoTracking()` + `Select()`.
+- Cross-module communication only via integration events (RabbitMQ outbox/inbox) or Contracts interfaces.
+- Frontend API types are generated from the OpenAPI spec: `npm run generate:api:diet-planner`.
+
+---
 
 ## Commands
 
+### Backend
+
+```bash
+# Build entire solution
+dotnet build HomeSystem.slnx
+
+# Run the API (auto-migrates DB in Development)
+ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Apis/HomeSystem.REST
+
+# Run all unit tests
+dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj
+
+# Run all integration tests (requires Docker for Testcontainers)
+dotnet test src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj
+
+# Run a single test by name filter
+dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj --filter "FullyQualifiedName~AddEntry_WhenAmountExceedsLimit"
+
+# Add a new EF Core migration
+dotnet ef migrations add <Name> \
+  --project src/Modules/DietPlanner/DietPlanner.Infrastructure \
+  --startup-project src/Apis/HomeSystem.REST
+```
+
 ### Infrastructure
-```bash
-cd infrastructure
-cp .env.example .env          # then fill in secrets
 
-docker compose up -d                              # Authentik + Redis (always)
-docker compose --profile diet-planner up -d       # + PostgreSQL for diet-planner
-docker compose down
+```bash
+# Start core services (Authentik + Redis + Postgres for Authentik)
+cd infrastructure && docker compose up -d
+
+# Start with Diet Planner database
+cd infrastructure && docker compose --profile diet-planner up -d
+
+# Stop all containers
+cd infrastructure && docker compose down
 ```
 
-### Backend (from `src/apis/diet-planner/DietPlanner.Api/`)
-```bash
-dotnet run                    # API on http://localhost:5000
-dotnet build
-dotnet test                   # all tests
-dotnet test --filter "FullyQualifiedName~ClassName.MethodName"   # single test
-dotnet test src/apis/diet-planner/DietPlanner.Tests/DietPlanner.Tests.csproj
-```
+### Frontend
 
-### Frontend (from `src/ui/`)
 ```bash
-npm run dev                   # Vite dev server on http://localhost:5173
-npm run build                 # tsc -b && vite build
-npm run type-check            # tsc --noEmit
-npm run lint                  # eslint .
-npm run lint:fix
-npm run format                # prettier --write "src/**/*.{ts,tsx,css,json}"
-npm run format:check
+cd src/ui
 
-# Regenerate OpenAPI client (API must be running)
+npm run dev           # dev server
+npm run build         # type-check + Vite build
+npm run lint          # ESLint
+npm run type-check    # tsc --noEmit
+npm run test          # Vitest (watch)
+npm run test:coverage # Vitest (single run + coverage)
+npm run test:e2e      # Playwright
+
+# Run a single Vitest test file
+npx vitest run src/modules/diet-planner/components/ProductCard.test.tsx
+
+# Regenerate API types from running backend
 npm run generate:api:diet-planner
 ```
 
-### E2E Tests (from `src/ui/`)
-```bash
-npm run test:e2e              # playwright test
-npm run test:e2e:ui           # with UI mode
-npm run test:e2e:debug
-npx playwright test e2e/diet-planner/products.spec.ts   # single file
-npx playwright test -g "test name"                       # single test
-```
+---
 
-## Key Ports
+## Git Commit Policy
 
-| Service | Port |
+Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributions are tracked via the GitHub issue (piotrkantorowicz/home-system#24) and are not attributed in commit metadata.
+
+---
+
+## Quick Reference
+
+| I'm working on… | Read this |
 |---|---|
-| Vite dev server | 5173 |
-| .NET API | 5000 |
-| Authentik | 9000 |
-| PostgreSQL (diet-planner) | 5432 |
+| C# naming, nullability, style | `.claude/rules/backend-coding-standards.md` |
+| Module / folder structure | `.claude/rules/backend-module-structure.md` |
+| Aggregates, Entities, Value Objects | `.claude/rules/backend-ddd-patterns.md` |
+| Commands, Queries, Mapping | `.claude/rules/backend-cqrs-patterns.md` |
+| EF Core, DbContext, Migrations | `.claude/rules/backend-ef-core-patterns.md` |
+| Cross-module integration, RabbitMQ | `.claude/rules/backend-integration-patterns.md` |
+| API endpoints, request/response | `.claude/rules/backend-api-patterns.md` |
+| Backend unit & integration tests | `.claude/rules/backend-testing-standards.md` |
+| React + TypeScript coding standards | `.claude/rules/frontend-react-typescript.md` |
+| Frontend architecture & file structure | `.claude/rules/frontend-architecture.md` |
+| Tailwind CSS v4 styling | `.claude/rules/frontend-styling.md` |
+| Vitest + Testing Library | `.claude/rules/frontend-testing.md` |
+| Playwright E2E testing | `.claude/rules/frontend-playwright.md` |
+| Frontend performance | `.claude/rules/frontend-performance.md` |
+| ESLint + Prettier + Husky | `.claude/rules/frontend-tooling.md` |
+| Git workflow, branching, commits | `.claude/rules/git-workflow.md` |
+| CQRS dispatcher full source | `.claude/skills/backend-cqrs.md` |
+| RabbitMQ messaging full source | `.claude/skills/backend-messaging.md` |
 
-API docs (Scalar): http://localhost:5000/swagger
-OpenAPI schema: http://localhost:5000/openapi/v1.json
+---
 
-## Backend Architecture
+## Slash Commands
 
-### Pattern: Feature Folders + Minimal APIs
+| Command | What it does |
+|---|---|
+| `/scaffold-module` | Scaffold a new backend module (DDD or CRUD) |
+| `/scaffold-aggregate` | Add a new aggregate root to an existing DDD module |
+| `/scaffold-endpoint` | Add a new API endpoint with command or query |
+| `/scaffold-feature` | Scaffold a new frontend feature module |
+| `/scaffold-component` | Create a new shared UI component with tests |
+| `/review-arch` | Review file(s) for architecture rule violations |
 
-Each feature lives in `Features/<Feature>/` with four files:
-- `<Feature>Endpoints.cs` — route definitions (extension method `Map*Endpoints`)
-- `<Feature>Service.cs` — business logic behind an interface `I<Feature>Service`
-- `<Feature>Dtos.cs` — request/response records; response DTOs have `static FromEntity()` factory
-- `<Feature>Validator.cs` — FluentValidation validators registered in DI
+---
 
-Endpoints are registered in `Program.cs` via `app.Map*Endpoints()`.
+## Non-negotiable Rules (Always Apply)
 
-### Adding a New Endpoint
+1. **No MediatR. No AutoMapper. No MassTransit.** Use the custom dispatcher stack and raw RabbitMQ with explicit mapping.
+2. **No cross-module domain imports.** Modules communicate through Contracts and integration events only.
+3. **No public setters on aggregates or entities.** All mutations go through named methods.
+4. **No returning domain objects from Application layer.** Always map to DTOs.
+5. **Every async method propagates CancellationToken.** Parameter name: `ct`.
+6. **One type per file. File name = type name. Namespace = folder path.**
+7. **Queries bypass the repository.** Use `DbContext` with `AsNoTracking()` + `Select()`.
+8. **All new classes are `sealed` by default** unless inheritance is explicitly needed.
+9. **Dispatchers only in endpoints.** Never inject `ICommandHandler<,>` or `IQueryHandler<,>` directly.
+10. **TypeScript `strict: true` always.** No `any` without a `// REASON:` comment.
+11. **Named exports only** in frontend (exception: lazy-loaded page components).
+12. **Conventional Commits** for all commit messages. Enforced by Husky + commitlint.
+13. **Trunk-based workflow.** All branches merge to `main` via PR. No `develop` branch.
 
-```csharp
-public static class MealEndpoints
-{
-    public static void MapMealEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/api/v1/diet-plans/{id}/meals")
-            .WithTags("Meals")
-            .RequireAuthorization();
+---
 
-        group.MapPost("/", async (Guid id, [FromBody] CreateMealRequest req,
-            HttpContext context, [FromServices] IMealService svc) =>
-        {
-            var userId = context.User.GetUserId();
-            var result = await svc.CreateAsync(id, userId, req);
-            return Results.Created($"/api/v1/diet-plans/{id}/meals/{result.Id}", result);
-        })
-        .RequireRateLimiting("api")
-        .WithName("CreateMeal")
-        .Produces<MealEntryDto>(StatusCodes.Status201Created);
-    }
-}
-```
+## Imported Rules
 
-### Key Infrastructure
-- **Auth**: JWT via Authentik OIDC. User ID extracted via `context.User.GetUserId()` (extension in `Common/Extensions/`).
-- **Errors**: Custom exceptions `NotFoundException`, `ForbiddenException`, `ValidationException` caught by `ErrorHandlingMiddleware`.
-- **Soft deletes**: `DeletedAt` column with EF global query filters (`.IgnoreQueryFilters()` when needed).
-- **Rate limiting**: `"api"` policy (100 req/min) or `"import"` policy (25 req/min) per user.
-- **Migrations**: Applied automatically on startup in development.
-- **Pagination**: `PagedResult<T>` from `Common/Models/`.
-
-### Configuration
-Sensitive values go in `appsettings.Development.json` (gitignored). Base `appsettings.json` has placeholders.
-
-## Frontend Architecture
-
-### Module System
-
-New features are added as modules registered in `src/app/main.tsx` via `registerModule()`. Each module is defined in `src/modules/<module>/index.ts` and exports an `AppModule`:
-
-```typescript
-export const myModule: AppModule = {
-  name: 'my-module',
-  basePath: '/my-module',
-  icon: SomeIcon,
-  localeNamespaces: ['my-module'],
-  i18nResources: { en: { 'my-module': en }, pl: { 'my-module': pl } },
-  navItems: [...],
-  routes: [
-    { index: true, Component: Dashboard },
-    { path: 'items', Component: ItemList },
-    { path: 'items/:id', Component: ItemDetail },
-  ],
-};
-```
-
-Routes are lazy-loaded via `React.lazy()` in the router automatically.
-
-### API Client
-
-The typed API client is in `api/client.ts` per module, built on `openapi-fetch` with the generated schema from `api/generated/schema.ts`. JWT tokens are injected and auto-renewed via the shared interceptor in `src/shared/api/tokenInterceptor.ts`.
-
-Regenerate the schema after backend changes: `npm run generate:api:diet-planner`.
-
-### Hook Pattern (TanStack Query v5)
-
-```typescript
-// useItems.ts
-export function useItems(params: ItemsQueryParams) {
-  return useQuery({
-    queryKey: ['items', params],
-    queryFn: async () => {
-      const response = await api.GET('/api/v1/items', { params: { query: params } });
-      if (response.error) throw new Error('Failed to fetch items');
-      return response.data;
-    },
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useCreateItem() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body) => {
-      const response = await api.POST('/api/v1/items', { body });
-      if (response.error) throw new Error('Failed to create item');
-      return response.data;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
-  });
-}
-```
-
-### Path Aliases
-- `@/*` → `src/*`
-- `@shared/*` → `src/shared/*`
-- `@modules/*` → `src/modules/*`
-
-### Shared UI Components
-Reusable components live in `src/shared/components/ui/` (Button, Card, Dialog, Input, Table, Badge, etc). Module-specific components go in `src/modules/<module>/components/`.
-
-### i18n
-Shared translation keys in `src/shared/locales/{en,pl}.json`. Module keys in `src/modules/<module>/locales/`. Module namespaces are merged at init — access module keys with `t('common.key')` or `t('diet-planner:key')`.
-
-## Testing
-
-### Backend
-- **Unit tests**: `DietPlanner.Tests/Unit/` — pure logic, no DB
-- **Integration tests**: `DietPlanner.Tests/Integration/` — use Testcontainers (spins up real PostgreSQL)
-- **Builders**: `DietPlanner.Tests/Builders/` — test data builders for entities
-- `DatabaseFixture` + `CustomWebApplicationFactory` handle test DB lifecycle
-
-### Frontend E2E
-- Auth state is set up once in `e2e/shared/auth.setup.ts`
-- Page objects in `e2e/diet-planner/pages/`
-- Global teardown cleans test data via `e2e/shared/global-teardown.ts`
+@.claude/rules/backend-coding-standards.md
+@.claude/rules/backend-module-structure.md
+@.claude/rules/backend-ddd-patterns.md
+@.claude/rules/backend-cqrs-patterns.md
+@.claude/rules/backend-ef-core-patterns.md
+@.claude/rules/backend-integration-patterns.md
+@.claude/rules/backend-api-patterns.md
+@.claude/rules/backend-testing-standards.md
+@.claude/rules/frontend-react-typescript.md
+@.claude/rules/frontend-architecture.md
+@.claude/rules/frontend-styling.md
+@.claude/rules/frontend-testing.md
+@.claude/rules/frontend-playwright.md
+@.claude/rules/frontend-performance.md
+@.claude/rules/frontend-tooling.md
+@.claude/rules/git-workflow.md
+@.claude/skills/backend-cqrs.md
+@.claude/skills/backend-messaging.md

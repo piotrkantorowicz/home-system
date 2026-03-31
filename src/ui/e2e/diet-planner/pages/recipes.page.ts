@@ -1,4 +1,6 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+
+import type { Page, Locator} from '@playwright/test';
 
 export class RecipesPage {
   readonly page: Page;
@@ -25,7 +27,7 @@ export class RecipesPage {
   async createRecipe(data: {
     name: string;
     servings: number;
-    ingredients: Array<{ name: string; amount: number; unit: string }>;
+    ingredients: { name: string; amount: number; unit: string }[];
     prepTime?: number;
     instructions?: string;
   }) {
@@ -49,8 +51,6 @@ export class RecipesPage {
         await this.page.getByRole('button', { name: /add ingredient/i }).click();
       }
 
-      const _row = this.page.locator(`div.grid`).nth(index + 1); // +1 to skip basic info grid if any, relying on structure
-      // Better approach: use name attributes which are stable
       await this.page.fill(`input[name="ingredients.${index}.productName"]`, ingredient.name);
       // Wait for autocomplete if needed, or just fill
       // Assuming test data uses exact names that match seeded/created products

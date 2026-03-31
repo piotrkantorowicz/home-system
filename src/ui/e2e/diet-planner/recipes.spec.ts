@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures/auth.fixture';
-import { RecipesPage } from './pages/recipes.page';
 import { ProductsPage } from './pages/products.page';
+import { RecipesPage } from './pages/recipes.page';
 
 // Tests share state (recipe created in first test, used in subsequent ones)
 test.describe.configure({ mode: 'serial' });

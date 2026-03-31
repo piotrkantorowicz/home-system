@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { api } from '../client';
 
-export type Goal = {
+export interface Goal {
   id: string;
   dailyCalorieTarget: number | null;
   proteinGrams: number | null;
@@ -10,28 +11,38 @@ export type Goal = {
   fiberGrams: number | null;
   createdAt: string;
   updatedAt: string | null;
-};
+}
 
-export type GoalData = {
+export interface GoalData {
   dailyCalorieTarget: number | null;
   proteinGrams: number | null;
   carbsGrams: number | null;
   fatGrams: number | null;
   fiberGrams: number | null;
-};
+}
+
+interface GoalApiResponse {
+  data?: Goal;
+  error?: unknown;
+}
 
 export function useGoals() {
   return useQuery({
     queryKey: ['goals'],
     queryFn: async (): Promise<Goal> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (api as any).GET('/api/v1/goals');
+      // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const response = (await (api as any).GET('/api/v1/goals')) as GoalApiResponse;
 
       if (response.error) {
         throw new Error('Failed to fetch goals');
       }
 
-      return response.data as Goal;
+      if (!response.data) {
+        throw new Error('Failed to fetch goals');
+      }
+
+      return response.data;
     },
   });
 }
@@ -41,19 +52,24 @@ export function useCreateGoals() {
 
   return useMutation({
     mutationFn: async (data: GoalData) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (api as any).POST('/api/v1/goals', {
+      // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const response = (await (api as any).POST('/api/v1/goals', {
         body: data,
-      });
+      })) as GoalApiResponse;
 
       if (response.error) {
         throw new Error('Failed to create goals');
       }
 
-      return response.data as Goal;
+      if (!response.data) {
+        throw new Error('Failed to create goals');
+      }
+
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      void queryClient.invalidateQueries({ queryKey: ['goals'] });
     },
   });
 }
@@ -63,19 +79,24 @@ export function useUpdateGoals() {
 
   return useMutation({
     mutationFn: async (data: GoalData) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (api as any).PUT('/api/v1/goals', {
+      // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const response = (await (api as any).PUT('/api/v1/goals', {
         body: data,
-      });
+      })) as GoalApiResponse;
 
       if (response.error) {
         throw new Error('Failed to update goals');
       }
 
-      return response.data as Goal;
+      if (!response.data) {
+        throw new Error('Failed to update goals');
+      }
+
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      void queryClient.invalidateQueries({ queryKey: ['goals'] });
     },
   });
 }

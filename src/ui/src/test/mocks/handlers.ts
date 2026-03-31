@@ -1,0 +1,109 @@
+import { http, HttpResponse } from 'msw';
+
+const BASE = 'http://localhost:5000';
+
+export const productHandlers = [
+  http.get(`${BASE}/api/v1/products`, () => {
+    return HttpResponse.json({
+      items: [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          name: 'Chicken Breast',
+          caloriesPer100g: 165,
+          proteinPer100g: 31,
+          carbsPer100g: 0,
+          fatPer100g: 3.6,
+          fiberPer100g: null,
+          defaultUnit: 'g',
+          densityGramsPerMl: null,
+          gramPerPiece: null,
+          isOwner: true,
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ],
+      page: 1,
+      pageSize: 50,
+      totalCount: 1,
+      totalPages: 1,
+    });
+  }),
+
+  http.get(`${BASE}/api/v1/products/:id`, ({ params }) => {
+    if (params.id === '11111111-1111-1111-1111-111111111111') {
+      return HttpResponse.json({
+        id: '11111111-1111-1111-1111-111111111111',
+        name: 'Chicken Breast',
+        caloriesPer100g: 165,
+        proteinPer100g: 31,
+        carbsPer100g: 0,
+        fatPer100g: 3.6,
+        fiberPer100g: null,
+        defaultUnit: 'g',
+        densityGramsPerMl: null,
+        gramPerPiece: null,
+        isOwner: true,
+        createdAt: '2024-01-01T00:00:00Z',
+      });
+    }
+    return HttpResponse.json({ title: 'Not found' }, { status: 404 });
+  }),
+
+  http.post(`${BASE}/api/v1/products`, () => {
+    return HttpResponse.json('22222222-2222-2222-2222-222222222222', { status: 201 });
+  }),
+
+  http.delete(`${BASE}/api/v1/products/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
+export const mealHandlers = [
+  http.get(`${BASE}/api/v1/meals`, () => {
+    return HttpResponse.json([
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        userId: 'user-1',
+        date: '2024-01-15',
+        mealType: 'breakfast',
+        recipeId: '44444444-4444-4444-4444-444444444444',
+        recipeName: 'Oatmeal',
+        servings: 1,
+        notes: null,
+        mealTime: null,
+        sequenceOrder: null,
+        createdAt: '2024-01-15T07:00:00Z',
+      },
+    ]);
+  }),
+
+  http.get(`${BASE}/api/v1/meals/nutrition-summary`, () => {
+    return HttpResponse.json([
+      {
+        date: '2024-01-15',
+        calories: 450,
+        protein: 20,
+        carbs: 60,
+        fat: 10,
+        fiber: 5,
+      },
+    ]);
+  }),
+];
+
+export const goalHandlers = [
+  http.get(`${BASE}/api/v1/goals`, () => {
+    return HttpResponse.json({
+      id: '55555555-5555-5555-5555-555555555555',
+      userId: 'user-1',
+      dailyCalorieTarget: 2000,
+      proteinGrams: 150,
+      carbsGrams: 250,
+      fatGrams: 70,
+      fiberGrams: 30,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: null,
+    });
+  }),
+];
+
+export const handlers = [...productHandlers, ...mealHandlers, ...goalHandlers];
