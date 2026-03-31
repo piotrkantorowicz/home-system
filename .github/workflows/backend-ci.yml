@@ -7,7 +7,6 @@ on:
       - 'src/Apis/HomeSystem.REST/**'
       - 'src/Modules/**'
       - 'src/Shared/**'
-      - 'tests/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'HomeSystem.slnx'
@@ -18,7 +17,6 @@ on:
       - 'src/Apis/HomeSystem.REST/**'
       - 'src/Modules/**'
       - 'src/Shared/**'
-      - 'tests/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'HomeSystem.slnx'
@@ -45,14 +43,14 @@ jobs:
 
       - name: Run unit tests
         run: |
-          dotnet test tests/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj \
+          dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj \
             --no-build \
             --configuration Release \
             --logger "console;verbosity=minimal"
 
       - name: Run integration tests
         run: |
-          dotnet test tests/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj \
+          dotnet test src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj \
             --no-build \
             --configuration Release \
             --logger "console;verbosity=minimal"

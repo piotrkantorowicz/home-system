@@ -20,8 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Modules\DietPlanner\DietPlanner.Application\DietPlanner.Application.csproj" />
-    <ProjectReference Include="..\..\src\Modules\DietPlanner\DietPlanner.Domain\DietPlanner.Domain.csproj" />
+    <ProjectReference Include="..\DietPlanner.Application\DietPlanner.Application.csproj" />
+    <ProjectReference Include="..\DietPlanner.Domain\DietPlanner.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Abstractions\Shared.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

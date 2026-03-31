@@ -1,7 +1,97 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 > **Entry point for Claude Code.** This file is the root rules document.
 > All referenced files below are authoritative — read the relevant one before generating or editing code.
+
+---
+
+## Repository Structure
+
+```
+src/
+  Apis/
+    HomeSystem.REST/          # Host project — wires modules, no business logic
+  Modules/
+    DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api
+                              # + DietPlanner.UnitTests / DietPlanner.IntegrationTests (co-located)
+  Shared/
+    Shared.Abstractions/      # Interfaces only (ICommand, IQuery, IDomainEvent, AggregateRoot…)
+    Shared.Infrastructure/    # Cross-cutting implementations (CQRS dispatchers, middleware, EF interceptors)
+  ui/                         # React 19 + TypeScript SPA (Vite, TanStack Router/Query, Tailwind v4)
+infrastructure/
+  docker-compose.yml          # Authentik (OIDC), Redis, PostgreSQL per module (profiles)
+  authentik/blueprints/       # Declarative Authentik config applied on first run
+```
+
+**Key architectural decisions:**
+- No MediatR, AutoMapper, or MassTransit — custom CQRS dispatcher stack, raw RabbitMQ, explicit mapping.
+- Each module owns its own `DbContext` and migrations. No shared database context across modules.
+- Queries bypass repositories — they hit `DbContext` directly with `AsNoTracking()` + `Select()`.
+- Cross-module communication only via integration events (RabbitMQ outbox/inbox) or Contracts interfaces.
+- Frontend API types are generated from the OpenAPI spec: `npm run generate:api:diet-planner`.
+
+---
+
+## Commands
+
+### Backend
+
+```bash
+# Build entire solution
+dotnet build HomeSystem.slnx
+
+# Run the API (auto-migrates DB in Development)
+ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Apis/HomeSystem.REST
+
+# Run all unit tests
+dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj
+
+# Run all integration tests (requires Docker for Testcontainers)
+dotnet test src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj
+
+# Run a single test by name filter
+dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj --filter "FullyQualifiedName~AddEntry_WhenAmountExceedsLimit"
+
+# Add a new EF Core migration
+dotnet ef migrations add <Name> \
+  --project src/Modules/DietPlanner/DietPlanner.Infrastructure \
+  --startup-project src/Apis/HomeSystem.REST
+```
+
+### Infrastructure
+
+```bash
+# Start core services (Authentik + Redis + Postgres for Authentik)
+cd infrastructure && docker compose up -d
+
+# Start with Diet Planner database
+cd infrastructure && docker compose --profile diet-planner up -d
+
+# Stop all containers
+cd infrastructure && docker compose down
+```
+
+### Frontend
+
+```bash
+cd src/ui
+
+npm run dev           # dev server
+npm run build         # type-check + Vite build
+npm run lint          # ESLint
+npm run type-check    # tsc --noEmit
+npm run test          # Vitest (watch)
+npm run test:coverage # Vitest (single run + coverage)
+npm run test:e2e      # Playwright
+
+# Run a single Vitest test file
+npx vitest run src/modules/diet-planner/components/ProductCard.test.tsx
+
+# Regenerate API types from running backend
+npm run generate:api:diet-planner
+```
 
 ---
 

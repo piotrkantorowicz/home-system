@@ -15,7 +15,7 @@
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
-    <Project Path="tests/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
   </Folder>
 </Solution>
