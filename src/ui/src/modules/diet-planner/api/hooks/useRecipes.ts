@@ -19,7 +19,7 @@ export function useRecipes(params: RecipesQueryParams = {}) {
     queryFn: async () => {
       const response = await api.GET('/api/v1/recipes', {
         params: {
-          query: { search, onlyMine, page, pageSize },
+          query: { Search: search, OnlyMine: onlyMine, Page: page, PageSize: pageSize },
         },
       });
 
@@ -62,8 +62,9 @@ export function useCreateRecipe() {
         body: recipeData,
       });
 
-      if (!response.data) {
-        throw new Error('Failed to create recipe');
+      if (response.error) {
+        const detail = (response.error as { detail?: string }).detail ?? '';
+        throw new Error(`Failed to create recipe${detail ? `: ${detail}` : ''}`);
       }
 
       return response.data;
@@ -86,7 +87,7 @@ export function useUpdateRecipe(id: string) {
         body: recipeData,
       });
 
-      if (!response.data) {
+      if (response.error) {
         throw new Error('Failed to update recipe');
       }
 
@@ -103,11 +104,10 @@ export function useDeleteRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
+    mutationFn: async ({ id }: { id: string }) => {
       const response = await api.DELETE('/api/v1/recipes/{id}', {
         params: {
           path: { id },
-          query: { permanent },
         },
       });
 

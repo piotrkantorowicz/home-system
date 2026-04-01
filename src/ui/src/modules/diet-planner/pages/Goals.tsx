@@ -35,7 +35,7 @@ export default function Goals() {
   const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
 
-  const goalsExist = goals !== undefined && goals.id !== EMPTY_GUID;
+  const goalsExist = goals !== null && goals !== undefined && goals.id !== EMPTY_GUID;
   const saveMutation = goalsExist ? updateMutation : createMutation;
 
   const {

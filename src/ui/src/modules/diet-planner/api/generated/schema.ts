@@ -20,22 +20,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/info": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ApiInfo"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -44,14 +28,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List all products with optional search and filtering
-         * @description Returns paginated list of products. Use 'search' to filter by name, 'onlyMine' to see only your products.
+         * List products with optional search and pagination
+         * @description Returns a paginated list of products visible to the caller. Use `onlyMine=true` to restrict results to products created by the current user.
          */
         get: operations["ListProducts"];
         put?: never;
         /**
          * Create a new product
-         * @description Creates a new product. Product names must be unique across all users.
+         * @description Creates a new product in the catalogue owned by the current user. All nutritional values are optional and stored as per-100g figures.
          */
         post: operations["CreateProduct"];
         delete?: never;
@@ -67,17 +51,20 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a product by ID */
+        /**
+         * Get a product by ID
+         * @description Returns full product details including nutritional values and ownership flag. Returns 404 if the product does not exist or is not visible to the caller.
+         */
         get: operations["GetProduct"];
         /**
          * Update a product
-         * @description Updates a product. You can only update products you created.
+         * @description Updates all fields of an existing product. Only the product owner may update it.
          */
         put: operations["UpdateProduct"];
         post?: never;
         /**
-         * Delete a product (soft delete by default)
-         * @description Deletes a product. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete products you created.
+         * Delete a product
+         * @description Permanently removes a product from the catalogue. Only the product owner may delete it.
          */
         delete: operations["DeleteProduct"];
         options?: never;
@@ -93,14 +80,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List all recipes with optional search and filtering
-         * @description Returns paginated list of recipes with ingredients and nutrition information.
+         * List recipes with optional search and pagination
+         * @description Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.
          */
         get: operations["ListRecipes"];
         put?: never;
         /**
          * Create a new recipe
-         * @description Creates a new recipe with ingredients. All products must exist before creating the recipe.
+         * @description Creates a new recipe owned by the current user. Each ingredient references an existing product by ID. `servings` defines the default portion count used when logging this recipe as a meal entry.
          */
         post: operations["CreateRecipe"];
         delete?: never;
@@ -118,18 +105,18 @@ export interface paths {
         };
         /**
          * Get a recipe by ID
-         * @description Returns recipe details including ingredients and calculated nutrition information.
+         * @description Returns full recipe details including the ingredient list with per-ingredient amounts and units. Returns 404 if the recipe does not exist or is not visible to the caller.
          */
         get: operations["GetRecipe"];
         /**
          * Update a recipe
-         * @description Updates a recipe and its ingredients. You can only update recipes you created.
+         * @description Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.
          */
         put: operations["UpdateRecipe"];
         post?: never;
         /**
-         * Delete a recipe (soft delete by default)
-         * @description Deletes a recipe. Default is soft delete. Use 'permanent=true' for hard delete (dev/test environments only). You can only delete recipes you created.
+         * Delete a recipe
+         * @description Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.
          */
         delete: operations["DeleteRecipe"];
         options?: never;
@@ -145,13 +132,36 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get meals for a date range
-         * @description Returns all meal entries for the current user within the specified date range.
+         * Get meal entries for a date range
+         * @description Returns all meal entries logged by the current user within the specified date range. Omit `from`/`to` to return all entries.
          */
         get: operations["GetMeals"];
         put?: never;
-        /** Add a meal entry */
+        /**
+         * Add a meal entry
+         * @description Records a recipe serving in the current user's meal log. `mealType` identifies the meal slot (e.g. Breakfast, Lunch, Dinner, Snack). `servings` is a multiplier applied to the recipe's nutritional values.
+         */
         post: operations["CreateMealEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meals/nutrition-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get daily nutrition summary for a date range
+         * @description Aggregates meal entries by day and returns total calories, protein, carbohydrates, fat, and fibre for each day in the range.
+         */
+        get: operations["GetNutritionSummary"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -166,10 +176,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update a meal entry */
+        /**
+         * Update a meal entry
+         * @description Updates the date, meal type, servings, and notes of an existing meal entry. Only the owner of the entry may update it.
+         */
         put: operations["UpdateMealEntry"];
         post?: never;
-        /** Delete a meal entry */
+        /**
+         * Delete a meal entry
+         * @description Permanently removes a meal entry from the log. Only the entry owner may delete it.
+         */
         delete: operations["DeleteMealEntry"];
         options?: never;
         head?: never;
@@ -224,18 +240,18 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get current user's nutrition goals
-         * @description Returns the authenticated user's daily nutrition goals. Returns empty defaults if no goals have been set yet.
+         * Get the current user's nutrition goals
+         * @description Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.
          */
         get: operations["GetGoals"];
         /**
-         * Update user's nutrition goals
-         * @description Updates existing daily nutrition goals for the authenticated user. Fails if no goals exist — use POST to create first.
+         * Update nutrition goals for the current user
+         * @description Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.
          */
         put: operations["UpdateGoals"];
         /**
-         * Create user's nutrition goals
-         * @description Creates daily nutrition goals for the authenticated user. Fails if goals already exist — use PUT to update.
+         * Create nutrition goals for the current user
+         * @description Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.
          */
         post: operations["CreateGoals"];
         delete?: never;
@@ -248,181 +264,98 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CreateGoalRequest: {
-            /**
-             * Format: int32
-             * @description Daily calorie intake target (kcal)
-             */
-            dailyCalorieTarget: null | number | string;
-            /**
-             * Format: double
-             * @description Daily protein target (grams)
-             */
-            proteinGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily carbohydrate target (grams)
-             */
-            carbsGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fat target (grams)
-             */
-            fatGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fiber target (grams)
-             */
-            fiberGrams: null | number | string;
-        };
         CreateMealEntryRequest: {
-            /**
-             * Format: date
-             * @description Date of the meal (YYYY-MM-DD)
-             */
+            /** Format: date */
             date: string;
-            /** @description Meal type: breakfast, lunch, dinner, snack */
             mealType: string;
-            /**
-             * Format: uuid
-             * @description Recipe identifier
-             */
+            /** Format: uuid */
             recipeId: string;
-            /**
-             * Format: double
-             * @description Number of servings
-             * @default 1
-             */
+            /** Format: double */
             servings: number | string;
-            /** @description Optional notes */
-            notes?: null | string;
-            /**
-             * Format: time
-             * @description Optional time of the meal
-             */
-            mealTime?: null | string;
-            /**
-             * Format: int32
-             * @description Display order within the meal type slot
-             */
-            sequenceOrder?: null | number | string;
+            notes: null | string;
+            /** Format: time */
+            mealTime: null | string;
+            /** Format: int32 */
+            sequenceOrder: null | number | string;
         };
         CreateProductRequest: {
-            /** @description Product name (must be unique, max 200 chars) */
             name: string;
-            /**
-             * Format: double
-             * @description Calories per 100g (0-9000)
-             */
-            caloriesPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Protein per 100g in grams (0-100)
-             */
-            proteinPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Carbohydrates per 100g in grams (0-100)
-             */
-            carbsPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fat per 100g in grams (0-100)
-             */
-            fatPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fiber per 100g in grams (0-100)
-             */
-            fiberPer100g: null | number | string;
-            /**
-             * @description Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece
-             * @default g
-             */
+            /** Format: double */
+            calories: null | number | string;
+            /** Format: double */
+            protein: null | number | string;
+            /** Format: double */
+            carbs: null | number | string;
+            /** Format: double */
+            fat: null | number | string;
+            /** Format: double */
+            fiber: null | number | string;
             defaultUnit: string;
-            /**
-             * Format: double
-             * @description Density in g/ml (required for accurate volume unit conversion)
-             */
-            densityGramsPerMl?: null | number | string;
-            /**
-             * Format: double
-             * @description Weight of one piece in grams (required when unit is 'piece')
-             */
-            gramPerPiece?: null | number | string;
-        };
-        CreateRecipeIngredientRequest: {
-            /** @description Name of an existing product */
-            productName: string;
-            /**
-             * Format: double
-             * @description Amount of the product
-             */
-            amount: number | string;
-            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
-            unit: string;
+            /** Format: double */
+            densityGramsPerMl: null | number | string;
+            /** Format: double */
+            gramPerPiece: null | number | string;
         };
         CreateRecipeRequest: {
-            /** @description Recipe name (max 200 chars) */
             name: string;
-            /** @description Short description of the recipe */
             description: null | string;
-            /** @description Step-by-step cooking instructions */
             instructions: null | string;
-            /**
-             * Format: int32
-             * @description Number of servings this recipe yields (1-100)
-             */
+            /** Format: int32 */
             servings: number | string;
-            /**
-             * Format: int32
-             * @description Estimated preparation time in minutes
-             */
+            /** Format: int32 */
             prepTimeMinutes: null | number | string;
-            /** @description List of ingredients with product references */
-            ingredients: components["schemas"]["CreateRecipeIngredientRequest"][];
+            ingredients: components["schemas"]["RecipeIngredientRequest"][];
         };
-        GoalResponse: {
-            /**
-             * Format: uuid
-             * @description Unique goal record identifier
-             */
-            id?: string;
-            /**
-             * Format: int32
-             * @description Daily calorie intake target (kcal)
-             */
-            dailyCalorieTarget?: null | number | string;
-            /**
-             * Format: double
-             * @description Daily protein target (grams)
-             */
-            proteinGrams?: null | number | string;
-            /**
-             * Format: double
-             * @description Daily carbohydrate target (grams)
-             */
-            carbsGrams?: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fat target (grams)
-             */
-            fatGrams?: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fiber target (grams)
-             */
-            fiberGrams?: null | number | string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description Last update timestamp (UTC)
-             */
-            updatedAt?: null | string;
+        DailyNutritionDto: {
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            calories: number | string;
+            /** Format: double */
+            protein: number | string;
+            /** Format: double */
+            carbs: number | string;
+            /** Format: double */
+            fat: number | string;
+            /** Format: double */
+            fiber: number | string;
+        };
+        GoalDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            /** Format: int32 */
+            dailyCalorieTarget: null | number | string;
+            /** Format: double */
+            proteinGrams: null | number | string;
+            /** Format: double */
+            carbsGrams: null | number | string;
+            /** Format: double */
+            fatGrams: null | number | string;
+            /** Format: double */
+            fiberGrams: null | number | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        GoalRequest: {
+            /** Format: int32 */
+            dailyCalorieTarget: null | number | string;
+            /** Format: double */
+            proteinGrams: null | number | string;
+            /** Format: double */
+            carbsGrams: null | number | string;
+            /** Format: double */
+            fatGrams: null | number | string;
+            /** Format: double */
+            fiberGrams: null | number | string;
+        };
+        HealthResponse: {
+            status: string;
+            /** Format: date-time */
+            timestamp: string;
+            version: string;
         };
         HttpValidationProblemDetails: {
             type?: null | string;
@@ -436,613 +369,275 @@ export interface components {
             };
         };
         ImportDto: {
-            /** @description Products to create or update during import */
-            products?: components["schemas"]["ImportProductDto"][];
-            /** @description Recipes to create or update during import */
-            recipes?: components["schemas"]["ImportRecipeDto"][];
-            /** @description Daily meal schedule entries */
-            schedule?: components["schemas"]["ImportScheduleDto"][];
+            products: null | components["schemas"]["ImportProductDto"][];
+            recipes: null | components["schemas"]["ImportRecipeDto"][];
+            schedule: null | components["schemas"]["ImportScheduleDto"][];
         };
         ImportIngredientDto: {
-            /** @description Product name (must match a product in the products array or exist in the database) */
             product: string;
-            /**
-             * Format: double
-             * @description Amount of the product
-             */
-            amount?: number | string;
-            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
+            /** Format: double */
+            amount: null | number | string;
             unit: string;
         };
         ImportMealDto: {
-            /** @description Meal type: breakfast, lunch, dinner, snack */
             type: string;
-            /** @description Recipe name (must match a recipe in the recipes array or exist in the database) */
             recipe: string;
-            /**
-             * Format: double
-             * @description Number of servings (default: 1)
-             */
-            servings?: number | string;
-            /** @description Optional notes for this meal */
-            notes?: null | string;
+            /** Format: double */
+            servings: null | number | string;
+            notes: null | string;
         };
         ImportPlanDto: {
-            /**
-             * Format: int32
-             * @description Number of new products to be created
-             */
-            productsToCreate?: number | string;
-            /**
-             * Format: int32
-             * @description Number of existing products to be updated
-             */
-            productsToUpdate?: number | string;
-            /**
-             * Format: int32
-             * @description Number of existing products to be reused as-is
-             */
-            productsToReuse?: number | string;
-            /**
-             * Format: int32
-             * @description Number of new recipes to be created
-             */
-            recipesToCreate?: number | string;
-            /**
-             * Format: int32
-             * @description Number of existing recipes to be updated
-             */
-            recipesToUpdate?: number | string;
-            /**
-             * Format: int32
-             * @description Number of existing recipes to be reused as-is
-             */
-            recipesToReuse?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of meal entries to be created
-             */
-            mealEntriesToCreate?: number | string;
-            /**
-             * Format: int32
-             * @description Estimated import duration in seconds
-             */
-            estimatedDurationSeconds?: number | string;
+            /** Format: int32 */
+            productsToCreate: number | string;
+            /** Format: int32 */
+            productsToReuse: number | string;
+            /** Format: int32 */
+            recipesToCreate: number | string;
+            /** Format: int32 */
+            recipesToReuse: number | string;
+            /** Format: int32 */
+            mealEntriesToCreate: number | string;
         };
         ImportProductDto: {
-            /** @description Product name (must be unique) */
             name: string;
-            /**
-             * Format: double
-             * @description Calories per 100g (0-9000)
-             */
-            caloriesPer100g?: null | number | string;
-            /**
-             * Format: double
-             * @description Protein per 100g in grams (0-100)
-             */
-            proteinPer100g?: null | number | string;
-            /**
-             * Format: double
-             * @description Carbohydrates per 100g in grams (0-100)
-             */
-            carbsPer100g?: null | number | string;
-            /**
-             * Format: double
-             * @description Fat per 100g in grams (0-100)
-             */
-            fatPer100g?: null | number | string;
-            /**
-             * Format: double
-             * @description Fiber per 100g in grams (0-100)
-             */
-            fiberPer100g?: null | number | string;
-            /** @description Measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece */
-            unit?: string;
-            /**
-             * Format: double
-             * @description Density in g/ml (required for volume unit conversion, defaults to water 1.0)
-             */
-            densityGramsPerMl?: null | number | string;
-            /**
-             * Format: double
-             * @description Weight of one piece in grams (required when unit is 'piece')
-             */
-            gramPerPiece?: null | number | string;
+            /** Format: double */
+            caloriesPer100g: null | number | string;
+            /** Format: double */
+            proteinPer100g: null | number | string;
+            /** Format: double */
+            carbsPer100g: null | number | string;
+            /** Format: double */
+            fatPer100g: null | number | string;
+            /** Format: double */
+            fiberPer100g: null | number | string;
+            unit: null | string;
+            /** Format: double */
+            densityGramsPerMl: null | number | string;
+            /** Format: double */
+            gramPerPiece: null | number | string;
         };
         ImportRecipeDto: {
-            /** @description Recipe name */
             name: string;
-            /** @description Short description of the recipe */
-            description?: null | string;
-            /** @description Step-by-step cooking instructions */
-            instructions?: null | string;
-            /**
-             * Format: int32
-             * @description Number of servings (default: 1)
-             */
-            servings?: number | string;
-            /**
-             * Format: int32
-             * @description Preparation time in minutes
-             */
-            prepTimeMinutes?: null | number | string;
-            /** @description List of ingredients referencing products by name */
-            ingredients?: components["schemas"]["ImportIngredientDto"][];
+            description: null | string;
+            instructions: null | string;
+            /** Format: int32 */
+            servings: null | number | string;
+            /** Format: int32 */
+            prepTimeMinutes: null | number | string;
+            ingredients: null | components["schemas"]["ImportIngredientDto"][];
         };
         ImportResultDto: {
-            /** @description Success message */
             message: string;
-            /** @description Statistics about what was created/updated during import */
-            stats?: components["schemas"]["ImportStatsDto"];
+            stats: components["schemas"]["ImportStatsDto"];
         };
         ImportScheduleDto: {
-            /**
-             * Format: date
-             * @description Date for this schedule entry (YYYY-MM-DD)
-             */
             date: string;
-            /** @description List of meals for this day */
-            meals?: components["schemas"]["ImportMealDto"][];
+            meals: null | components["schemas"]["ImportMealDto"][];
         };
         ImportStatsDto: {
-            /**
-             * Format: int32
-             * @description Number of products created
-             */
-            productsCreated?: number | string;
-            /**
-             * Format: int32
-             * @description Number of products updated
-             */
-            productsUpdated?: number | string;
-            /**
-             * Format: int32
-             * @description Number of products reused
-             */
-            productsReused?: number | string;
-            /**
-             * Format: int32
-             * @description Number of recipes created
-             */
-            recipesCreated?: number | string;
-            /**
-             * Format: int32
-             * @description Number of recipes updated
-             */
-            recipesUpdated?: number | string;
-            /**
-             * Format: int32
-             * @description Number of recipes reused
-             */
-            recipesReused?: number | string;
-            /**
-             * Format: int32
-             * @description Number of meal entries created
-             */
-            mealEntriesCreated?: number | string;
-            /**
-             * Format: double
-             * @description Import duration in seconds
-             */
-            durationSeconds?: number | string;
+            /** Format: int32 */
+            productsCreated: number | string;
+            /** Format: int32 */
+            productsReused: number | string;
+            /** Format: int32 */
+            recipesCreated: number | string;
+            /** Format: int32 */
+            recipesReused: number | string;
+            /** Format: int32 */
+            mealEntriesCreated: number | string;
         };
         MealEntryDto: {
-            /**
-             * Format: uuid
-             * @description Unique meal entry identifier
-             */
-            id?: string;
-            /**
-             * Format: date
-             * @description Date of the meal (YYYY-MM-DD)
-             */
-            date?: string;
-            /** @description Meal type: breakfast, lunch, dinner, snack */
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            date: string;
             mealType: string;
-            /** @description Name of the recipe used for this meal */
+            /** Format: uuid */
+            recipeId: string;
             recipeName: string;
-            /**
-             * Format: uuid
-             * @description Recipe identifier
-             */
-            recipeId?: string;
-            /**
-             * Format: double
-             * @description Number of servings
-             */
-            servings?: number | string;
-            /** @description Optional notes for this meal */
-            notes?: null | string;
-            /**
-             * Format: time
-             * @description Optional time of the meal
-             */
-            mealTime?: null | string;
-            /**
-             * Format: int32
-             * @description Display order within the meal type slot
-             */
-            sequenceOrder?: null | number | string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
-            createdAt?: string;
+            /** Format: double */
+            servings: number | string;
+            notes: null | string;
+            /** Format: time */
+            mealTime: null | string;
+            /** Format: int32 */
+            sequenceOrder: null | number | string;
+            /** Format: date-time */
+            createdAt: string;
         };
-        NutritionInfo: {
-            /**
-             * Format: double
-             * @description Total calories (kcal)
-             */
+        NutritionDto: {
+            /** Format: double */
             calories: number | string;
-            /**
-             * Format: double
-             * @description Total protein (grams)
-             */
+            /** Format: double */
             protein: number | string;
-            /**
-             * Format: double
-             * @description Total carbohydrates (grams)
-             */
+            /** Format: double */
             carbs: number | string;
-            /**
-             * Format: double
-             * @description Total fat (grams)
-             */
+            /** Format: double */
             fat: number | string;
-            /**
-             * Format: double
-             * @description Total fiber (grams)
-             */
+            /** Format: double */
             fiber: number | string;
         };
-        PagedResultOfProductResponse: {
-            /** @description List of items for the current page */
-            items?: components["schemas"]["ProductResponse"][];
-            /**
-             * Format: int32
-             * @description Total number of items across all pages
-             */
-            totalCount?: number | string;
-            /**
-             * Format: int32
-             * @description Current page number (1-based)
-             */
-            page?: number | string;
-            /**
-             * Format: int32
-             * @description Number of items per page
-             */
-            pageSize?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of pages
-             */
+        PagedListOfProductDto: {
+            items: components["schemas"]["ProductDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
             totalPages?: number | string;
-            /** @description Whether a previous page exists */
-            hasPreviousPage?: boolean;
-            /** @description Whether a next page exists */
             hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
         };
-        PagedResultOfRecipeResponse: {
-            /** @description List of items for the current page */
-            items?: components["schemas"]["RecipeResponse"][];
-            /**
-             * Format: int32
-             * @description Total number of items across all pages
-             */
-            totalCount?: number | string;
-            /**
-             * Format: int32
-             * @description Current page number (1-based)
-             */
-            page?: number | string;
-            /**
-             * Format: int32
-             * @description Number of items per page
-             */
-            pageSize?: number | string;
-            /**
-             * Format: int32
-             * @description Total number of pages
-             */
+        PagedListOfRecipeDto: {
+            items: components["schemas"]["RecipeDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
             totalPages?: number | string;
-            /** @description Whether a previous page exists */
-            hasPreviousPage?: boolean;
-            /** @description Whether a next page exists */
             hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
         };
-        ProductResponse: {
-            /**
-             * Format: uuid
-             * @description Unique product identifier
-             */
+        ProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number | string;
+            detail?: null | string;
+            instance?: null | string;
+        };
+        ProductDto: {
+            /** Format: uuid */
             id: string;
-            /** @description Product name */
             name: string;
-            /**
-             * Format: double
-             * @description Calories per 100g
-             */
-            caloriesPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Protein per 100g in grams
-             */
-            proteinPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Carbohydrates per 100g in grams
-             */
-            carbsPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fat per 100g in grams
-             */
-            fatPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fiber per 100g in grams
-             */
-            fiberPer100g: null | number | string;
-            /** @description Default measurement unit */
+            /** Format: double */
+            calories: null | number | string;
+            /** Format: double */
+            protein: null | number | string;
+            /** Format: double */
+            carbs: null | number | string;
+            /** Format: double */
+            fat: null | number | string;
+            /** Format: double */
+            fiber: null | number | string;
             defaultUnit: string;
-            /**
-             * Format: double
-             * @description Density in g/ml for volume conversions
-             */
+            /** Format: double */
             densityGramsPerMl: null | number | string;
-            /**
-             * Format: double
-             * @description Weight of one piece in grams
-             */
+            /** Format: double */
             gramPerPiece: null | number | string;
-            /** @description User ID of the product creator */
             createdByUserId: string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
+            /** Format: date-time */
             createdAt: string;
-            /**
-             * Format: date-time
-             * @description Last update timestamp (UTC)
-             */
+            /** Format: date-time */
             updatedAt: null | string;
-            /** @description Whether the current user owns this product */
             isOwner: boolean;
         };
-        RecipeIngredientResponse: {
-            /**
-             * Format: uuid
-             * @description Ingredient record ID
-             */
+        RecipeDto: {
+            /** Format: uuid */
             id: string;
-            /**
-             * Format: uuid
-             * @description Referenced product ID
-             */
+            name: string;
+            description: null | string;
+            instructions: null | string;
+            /** Format: int32 */
+            servings: number | string;
+            /** Format: int32 */
+            prepTimeMinutes: null | number | string;
+            createdByUserId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+            isOwner: boolean;
+            ingredients: components["schemas"]["RecipeIngredientDto"][];
+            nutritionPerServing?: null | components["schemas"]["NutritionDto"];
+            totalNutrition?: null | components["schemas"]["NutritionDto"];
+        };
+        RecipeIngredientDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
             productId: string;
-            /** @description Product name */
             productName: string;
-            /**
-             * Format: double
-             * @description Amount of the product
-             */
+            /** Format: double */
             amount: number | string;
-            /** @description Measurement unit */
             unit: string;
         };
-        RecipeResponse: {
-            /**
-             * Format: uuid
-             * @description Unique recipe identifier
-             */
-            id: string;
-            /** @description Recipe name */
-            name: string;
-            /** @description Short description */
-            description: null | string;
-            /** @description Cooking instructions */
-            instructions: null | string;
-            /**
-             * Format: int32
-             * @description Number of servings
-             */
-            servings: number | string;
-            /**
-             * Format: int32
-             * @description Preparation time in minutes
-             */
-            prepTimeMinutes: null | number | string;
-            /** @description User ID of the recipe creator */
-            createdByUserId: string;
-            /**
-             * Format: date-time
-             * @description Creation timestamp (UTC)
-             */
-            createdAt: string;
-            /**
-             * Format: date-time
-             * @description Last update timestamp (UTC)
-             */
-            updatedAt: null | string;
-            /** @description Whether the current user owns this recipe */
-            isOwner: boolean;
-            /** @description List of ingredients with product details */
-            ingredients: components["schemas"]["RecipeIngredientResponse"][];
-            /** @description Total nutrition for the entire recipe */
-            totalNutrition: components["schemas"]["NutritionInfo"];
-            /** @description Nutrition per single serving */
-            nutritionPerServing: components["schemas"]["NutritionInfo"];
-        };
-        UpdateGoalRequest: {
-            /**
-             * Format: int32
-             * @description Daily calorie intake target (kcal)
-             */
-            dailyCalorieTarget: null | number | string;
-            /**
-             * Format: double
-             * @description Daily protein target (grams)
-             */
-            proteinGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily carbohydrate target (grams)
-             */
-            carbsGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fat target (grams)
-             */
-            fatGrams: null | number | string;
-            /**
-             * Format: double
-             * @description Daily fiber target (grams)
-             */
-            fiberGrams: null | number | string;
+        RecipeIngredientRequest: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: double */
+            amount: number | string;
+            unit: string;
         };
         UpdateMealEntryRequest: {
-            /**
-             * Format: date
-             * @description Date of the meal (YYYY-MM-DD)
-             */
+            /** Format: date */
             date: string;
-            /** @description Meal type: breakfast, lunch, dinner, snack */
             mealType: string;
-            /**
-             * Format: uuid
-             * @description Recipe identifier
-             */
+            /** Format: uuid */
             recipeId: string;
-            /**
-             * Format: double
-             * @description Number of servings
-             * @default 1
-             */
+            /** Format: double */
             servings: number | string;
-            /** @description Optional notes */
-            notes?: null | string;
-            /**
-             * Format: time
-             * @description Optional time of the meal
-             */
-            mealTime?: null | string;
-            /**
-             * Format: int32
-             * @description Display order within the meal type slot
-             */
-            sequenceOrder?: null | number | string;
+            notes: null | string;
+            /** Format: time */
+            mealTime: null | string;
+            /** Format: int32 */
+            sequenceOrder: null | number | string;
         };
         UpdateProductRequest: {
-            /** @description Product name (must be unique, max 200 chars) */
             name: string;
-            /**
-             * Format: double
-             * @description Calories per 100g (0-9000)
-             */
-            caloriesPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Protein per 100g in grams (0-100)
-             */
-            proteinPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Carbohydrates per 100g in grams (0-100)
-             */
-            carbsPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fat per 100g in grams (0-100)
-             */
-            fatPer100g: null | number | string;
-            /**
-             * Format: double
-             * @description Fiber per 100g in grams (0-100)
-             */
-            fiberPer100g: null | number | string;
-            /**
-             * @description Default measurement unit: g, kg, oz, lb, ml, l, cup, tbsp, tsp, piece
-             * @default g
-             */
+            /** Format: double */
+            calories: null | number | string;
+            /** Format: double */
+            protein: null | number | string;
+            /** Format: double */
+            carbs: null | number | string;
+            /** Format: double */
+            fat: null | number | string;
+            /** Format: double */
+            fiber: null | number | string;
             defaultUnit: string;
-            /**
-             * Format: double
-             * @description Density in g/ml (required for accurate volume unit conversion)
-             */
-            densityGramsPerMl?: null | number | string;
-            /**
-             * Format: double
-             * @description Weight of one piece in grams (required when unit is 'piece')
-             */
-            gramPerPiece?: null | number | string;
+            /** Format: double */
+            densityGramsPerMl: null | number | string;
+            /** Format: double */
+            gramPerPiece: null | number | string;
         };
         UpdateRecipeRequest: {
-            /** @description Recipe name (max 200 chars) */
             name: string;
-            /** @description Short description of the recipe */
             description: null | string;
-            /** @description Step-by-step cooking instructions */
             instructions: null | string;
-            /**
-             * Format: int32
-             * @description Number of servings this recipe yields (1-100)
-             */
+            /** Format: int32 */
             servings: number | string;
-            /**
-             * Format: int32
-             * @description Estimated preparation time in minutes
-             */
+            /** Format: int32 */
             prepTimeMinutes: null | number | string;
-            /** @description List of ingredients (replaces all existing ingredients) */
-            ingredients: components["schemas"]["CreateRecipeIngredientRequest"][];
+            ingredients: components["schemas"]["RecipeIngredientRequest"][];
         };
         ValidationIssueDto: {
-            /** @description Severity level: error, warning, info */
             severity: string;
-            /** @description Issue category: schema, validation, conflict, referential, performance */
             category: string;
-            /** @description JSON path to the problematic field, e.g. 'products[0].name' */
-            path?: null | string;
-            /** @description Name of the affected item, e.g. 'Chicken Breast' */
-            item?: null | string;
-            /** @description Human-readable description of the issue */
+            path: null | string;
+            item: null | string;
             message: string;
-            /** @description Suggested resolution for the issue */
-            resolution?: null | string;
-            /** @description Details about an existing conflicting item (if applicable) */
-            existingItem?: unknown;
+            resolution: null | string;
         };
         ValidationResultDto: {
-            /** @description Whether the import JSON passed all validation checks */
-            valid?: boolean;
-            /** @description Whether the import can proceed (no blocking errors) */
-            canProceed?: boolean;
-            /** @description Summary counts of errors, warnings, and info messages */
-            summary?: components["schemas"]["ValidationSummaryDto"];
-            /** @description Detailed list of validation issues */
-            issues?: components["schemas"]["ValidationIssueDto"][];
-            plan?: null | components["schemas"]["ImportPlanDto"];
+            valid: boolean;
+            canProceed: boolean;
+            summary: components["schemas"]["ValidationSummaryDto"];
+            issues: components["schemas"]["ValidationIssueDto"][];
+            plan: null | components["schemas"]["ImportPlanDto"];
         };
         ValidationSummaryDto: {
-            /**
-             * Format: int32
-             * @description Number of blocking errors
-             */
-            errors?: number | string;
-            /**
-             * Format: int32
-             * @description Number of non-blocking warnings
-             */
-            warnings?: number | string;
-            /**
-             * Format: int32
-             * @description Number of informational messages
-             */
-            info?: number | string;
+            /** Format: int32 */
+            errors: number | string;
+            /** Format: int32 */
+            warnings: number | string;
+            /** Format: int32 */
+            info: number | string;
         };
     };
     responses: never;
@@ -1067,35 +662,19 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    ApiInfo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
-                content?: never;
             };
         };
     };
     ListProducts: {
         parameters: {
-            query: {
-                search?: string;
-                onlyMine: boolean;
-                page?: number | string;
-                pageSize?: number | string;
+            query?: {
+                Search?: string;
+                OnlyMine?: boolean;
+                Page?: number | string;
+                PageSize?: number | string;
             };
             header?: never;
             path?: never;
@@ -1109,8 +688,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedResultOfProductResponse"];
+                    "application/json": components["schemas"]["PagedListOfProductDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1133,7 +719,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProductResponse"];
+                    "application/json": string;
                 };
             };
             /** @description Bad Request */
@@ -1143,6 +729,22 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };
@@ -1164,8 +766,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProductResponse"];
+                    "application/json": components["schemas"]["ProductDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not Found */
             404: {
@@ -1191,14 +800,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ProductResponse"];
-                };
+                content?: never;
             };
             /** @description Bad Request */
             400: {
@@ -1208,6 +815,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not Found */
             404: {
@@ -1220,9 +834,7 @@ export interface operations {
     };
     DeleteProduct: {
         parameters: {
-            query?: {
-                permanent?: boolean;
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -1233,6 +845,13 @@ export interface operations {
         responses: {
             /** @description No Content */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1249,11 +868,11 @@ export interface operations {
     };
     ListRecipes: {
         parameters: {
-            query: {
-                search?: string;
-                onlyMine: boolean;
-                page?: number | string;
-                pageSize?: number | string;
+            query?: {
+                Search?: string;
+                OnlyMine?: boolean;
+                Page?: number | string;
+                PageSize?: number | string;
             };
             header?: never;
             path?: never;
@@ -1267,8 +886,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedResultOfRecipeResponse"];
+                    "application/json": components["schemas"]["PagedListOfRecipeDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1291,7 +917,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RecipeResponse"];
+                    "application/json": string;
                 };
             };
             /** @description Bad Request */
@@ -1301,6 +927,22 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };
@@ -1322,8 +964,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RecipeResponse"];
+                    "application/json": components["schemas"]["RecipeDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not Found */
             404: {
@@ -1349,14 +998,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["RecipeResponse"];
-                };
+                content?: never;
             };
             /** @description Bad Request */
             400: {
@@ -1366,6 +1013,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not Found */
             404: {
@@ -1378,9 +1032,7 @@ export interface operations {
     };
     DeleteRecipe: {
         parameters: {
-            query?: {
-                permanent?: boolean;
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -1391,6 +1043,13 @@ export interface operations {
         responses: {
             /** @description No Content */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1408,8 +1067,8 @@ export interface operations {
     GetMeals: {
         parameters: {
             query?: {
-                from?: string;
-                to?: string;
+                From?: string;
+                To?: string;
             };
             header?: never;
             path?: never;
@@ -1425,6 +1084,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MealEntryDto"][];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1447,7 +1113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MealEntryDto"];
+                    "application/json": string;
                 };
             };
             /** @description Bad Request */
@@ -1455,10 +1121,49 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
                 content?: never;
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetNutritionSummary: {
+        parameters: {
+            query?: {
+                From?: string;
+                To?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyNutritionDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1481,17 +1186,24 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MealEntryDto"];
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1519,6 +1231,13 @@ export interface operations {
         responses: {
             /** @description No Content */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1555,6 +1274,22 @@ export interface operations {
                     "application/json": components["schemas"]["ValidationResultDto"];
                 };
             };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     ExecuteImport: {
@@ -1584,6 +1319,15 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
                 content?: never;
             };
         };
@@ -1603,8 +1347,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GoalResponse"];
+                    "application/json": components["schemas"]["GoalDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1617,18 +1368,16 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateGoalRequest"];
+                "application/json": components["schemas"]["GoalRequest"];
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["GoalResponse"];
-                };
+                content?: never;
             };
             /** @description Bad Request */
             400: {
@@ -1638,6 +1387,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not Found */
             404: {
@@ -1657,7 +1413,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateGoalRequest"];
+                "application/json": components["schemas"]["GoalRequest"];
             };
         };
         responses: {
@@ -1667,7 +1423,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GoalResponse"];
+                    "application/json": string;
                 };
             };
             /** @description Bad Request */
@@ -1678,6 +1434,13 @@ export interface operations {
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

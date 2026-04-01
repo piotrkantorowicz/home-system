@@ -15,26 +15,31 @@ public static class GoalEndpoints
     {
         var group = app.MapGroup("/api/v1/goals")
             .WithTags("Goals")
-            .RequireAuthorization()
-            .RequireRateLimiting("api");
+            .RequireAuthorization();
 
         group.MapGet("/", GetGoal)
             .WithName("GetGoals")
             .WithSummary("Get the current user's nutrition goals")
-            .Produces<GoalDto>();
+            .WithDescription("Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.")
+            .Produces<GoalDto>()
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", CreateGoal)
             .WithName("CreateGoals")
             .WithSummary("Create nutrition goals for the current user")
+            .WithDescription("Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.")
             .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/", UpdateGoal)
             .WithName("UpdateGoals")
             .WithSummary("Update nutrition goals for the current user")
+            .WithDescription("Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return app;
     }

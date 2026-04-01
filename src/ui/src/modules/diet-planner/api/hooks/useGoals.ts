@@ -29,7 +29,7 @@ interface GoalApiResponse {
 export function useGoals() {
   return useQuery({
     queryKey: ['goals'],
-    queryFn: async (): Promise<Goal> => {
+    queryFn: async (): Promise<Goal | null> => {
       // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const response = (await (api as any).GET('/api/v1/goals')) as GoalApiResponse;
@@ -38,11 +38,8 @@ export function useGoals() {
         throw new Error('Failed to fetch goals');
       }
 
-      if (!response.data) {
-        throw new Error('Failed to fetch goals');
-      }
-
-      return response.data;
+      // Server returns null body when no goals have been set yet — that is a valid success state
+      return response.data ?? null;
     },
   });
 }

@@ -7,16 +7,37 @@ import type { components } from '../generated/schema';
 interface Product {
   id: string;
   name: string;
-  caloriesPer100g: number;
-  proteinPer100g: number;
-  carbsPer100g: number;
-  fatPer100g: number;
+  caloriesPer100g: number | null;
+  proteinPer100g: number | null;
+  carbsPer100g: number | null;
+  fatPer100g: number | null;
   fiberPer100g?: number | null;
   defaultUnit: string;
   densityGramsPerMl?: number | null;
   gramPerPiece?: number | null;
   isOwner: boolean;
   createdAt: string;
+}
+
+type ApiProduct = components['schemas']['ProductDto'];
+
+function mapProduct(p: ApiProduct): Product {
+  const toNum = (v: null | number | string | undefined): number | null =>
+    v === null || v === undefined ? null : Number(v);
+  return {
+    id: p.id,
+    name: p.name,
+    caloriesPer100g: toNum(p.calories),
+    proteinPer100g: toNum(p.protein),
+    carbsPer100g: toNum(p.carbs),
+    fatPer100g: toNum(p.fat),
+    fiberPer100g: toNum(p.fiber),
+    defaultUnit: p.defaultUnit,
+    densityGramsPerMl: toNum(p.densityGramsPerMl),
+    gramPerPiece: toNum(p.gramPerPiece),
+    isOwner: p.isOwner,
+    createdAt: p.createdAt,
+  };
 }
 
 interface ProductsResponse {
@@ -42,7 +63,7 @@ export function useProducts(params: ProductsQueryParams = {}) {
     queryFn: async (): Promise<ProductsResponse> => {
       const response = await api.GET('/api/v1/products', {
         params: {
-          query: { search, onlyMine, page, pageSize },
+          query: { Search: search, OnlyMine: onlyMine, Page: page, PageSize: pageSize },
         },
       });
 
@@ -50,7 +71,14 @@ export function useProducts(params: ProductsQueryParams = {}) {
         throw new Error('Failed to fetch products');
       }
 
-      return response.data as ProductsResponse;
+      const raw = response.data as {
+        items: ApiProduct[];
+        page: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+      };
+      return { ...raw, items: raw.items.map(mapProduct) };
     },
     placeholderData: keepPreviousData,
   });
@@ -70,7 +98,7 @@ export function useProduct(id: string) {
         throw new Error('Failed to fetch product');
       }
 
-      return response.data as Product;
+      return mapProduct(response.data);
     },
     enabled: !!id,
   });
@@ -85,7 +113,7 @@ export function useCreateProduct() {
         body: productData,
       });
 
-      if (!response.data) {
+      if (response.error) {
         throw new Error('Failed to create product');
       }
 
@@ -109,7 +137,7 @@ export function useUpdateProduct(id: string) {
         body: productData,
       });
 
-      if (!response.data) {
+      if (response.error) {
         throw new Error('Failed to update product');
       }
 
@@ -126,11 +154,10 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
+    mutationFn: async ({ id }: { id: string }) => {
       const response = await api.DELETE('/api/v1/products/{id}', {
         params: {
           path: { id },
-          query: { permanent },
         },
       });
 

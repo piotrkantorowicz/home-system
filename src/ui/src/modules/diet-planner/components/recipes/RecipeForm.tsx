@@ -17,7 +17,8 @@ import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 const ingredientSchema = z.object({
-  productName: z.string().min(1, 'Product is required'),
+  productId: z.string(),
+  productName: z.string(),
   amount: z.number().positive('Amount must be greater than 0'),
   unit: z.string().min(1, 'Unit is required'),
 });
@@ -28,7 +29,13 @@ const recipeSchema = z.object({
   instructions: z.string().optional(),
   servings: z.number().int().min(1, 'Servings must be at least 1'),
   prepTimeMinutes: z.number().int().min(0).optional(),
-  ingredients: z.array(ingredientSchema).min(1, 'At least one ingredient is required'),
+  ingredients: z
+    .array(ingredientSchema)
+    .min(1, 'At least one ingredient is required')
+    .refine(
+      (items) => items.every((item) => item.productId.length > 0 || item.productName.length > 0),
+      { message: 'Each ingredient must have a product selected' },
+    ),
 });
 
 export type RecipeFormData = z.infer<typeof recipeSchema>;
@@ -59,7 +66,7 @@ export function RecipeForm({
     resolver: zodResolver(recipeSchema),
     defaultValues: {
       servings: 1,
-      ingredients: [{ productName: '', amount: 0, unit: 'g' }],
+      ingredients: [{ productId: '', productName: '', amount: 0, unit: 'g' }],
       ...defaultValues,
     },
   });
@@ -81,7 +88,9 @@ export function RecipeForm({
   return (
     <form
       onSubmit={(e) => {
-        void handleSubmit(onSubmit)(e);
+        // REASON: zod .refine on ingredients changes the inferred output type, but runtime data shape is identical
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        void handleSubmit(onSubmit as any)(e);
       }}
       className="stagger-children space-y-6"
     >
@@ -135,7 +144,7 @@ export function RecipeForm({
                 id="prepTimeMinutes"
                 type="number"
                 {...register('prepTimeMinutes', {
-                  setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
+                  setValueAs: (v: string) => (v === '' ? undefined : Number(v)),
                 })}
                 placeholder="30"
               />
@@ -156,7 +165,7 @@ export function RecipeForm({
               variant="outline"
               size="sm"
               onClick={() => {
-                append({ productName: '', amount: 0, unit: 'g' });
+                append({ productId: '', productName: '', amount: 0, unit: 'g' });
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -168,6 +177,10 @@ export function RecipeForm({
           {fields.map((field, index) => {
             const idx = index;
             const idxStr = String(index);
+            const { onChange: onProductNameChange, ...productNameProps } = register(
+              // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
+              `ingredients.${idx}.productName`,
+            );
             return (
               <div key={field.id} className="flex items-start gap-3">
                 <div className="grid flex-1 grid-cols-3 gap-3">
@@ -176,11 +189,11 @@ export function RecipeForm({
                       {t('recipe_form.product_label')}
                     </Label>
                     <Input
-                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
-                      {...register(`ingredients.${idx}.productName`)}
+                      {...productNameProps}
                       placeholder={t('recipe_form.product_placeholder')}
                       list={`products-${idxStr}`}
                       onChange={(e) => {
+                        void onProductNameChange(e);
                         setProductSearch((prev) => ({ ...prev, [index]: e.target.value }));
                       }}
                     />
@@ -204,7 +217,7 @@ export function RecipeForm({
                     <Input
                       type="number"
                       step="0.1"
-                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
                       {...register(`ingredients.${idx}.amount`, { valueAsNumber: true })}
                       placeholder="100"
                     />
@@ -221,7 +234,7 @@ export function RecipeForm({
                       {t('recipe_form.unit_label')}
                     </Label>
                     <select
-                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
                       {...register(`ingredients.${idx}.unit`)}
                       className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full rounded-lg border px-4 py-2.5 text-[0.9rem] transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none"
                     >
@@ -267,7 +280,7 @@ export function RecipeForm({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  append({ productName: '', amount: 0, unit: 'g' });
+                  append({ productId: '', productName: '', amount: 0, unit: 'g' });
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />

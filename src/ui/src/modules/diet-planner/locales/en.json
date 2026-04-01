@@ -196,7 +196,7 @@
     "nutrition_per_serving": "Nutrition Per Serving",
     "total_nutrition": "Total Recipe Nutrition",
     "macro_distribution": "Macro Distribution (Per Serving)",
-    "ingredients": "Ingredients ({{count}})",
+    "ingredients": "Ingredients",
     "instructions": "Instructions",
     "total_calories": "Total Calories",
     "total_protein": "Total Protein",

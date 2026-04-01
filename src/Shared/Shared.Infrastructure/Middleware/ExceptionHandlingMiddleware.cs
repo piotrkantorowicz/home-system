@@ -50,6 +50,11 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
                 Detail = ex.Message
             });
         }
+        catch (OperationCanceledException)
+        {
+            // Client disconnected or request timed out — not an application error
+            context.Response.StatusCode = 499; // Client Closed Request (nginx convention)
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");

@@ -196,7 +196,7 @@
     "nutrition_per_serving": "Wartości Odżywcze na Porcję",
     "total_nutrition": "Całkowite Wartości Odżywcze Przepisu",
     "macro_distribution": "Rozkład Makroskładników (Na Porcję)",
-    "ingredients": "Składniki ({{count}})",
+    "ingredients": "Składniki",
     "instructions": "Instrukcje",
     "total_calories": "Całkowite Kalorie",
     "total_protein": "Całkowite Białko",

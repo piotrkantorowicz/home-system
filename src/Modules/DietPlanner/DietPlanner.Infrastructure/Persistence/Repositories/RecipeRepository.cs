@@ -14,12 +14,12 @@ internal sealed class RecipeRepository : IRecipeRepository
 
     public async Task<Recipe?> GetByIdAsync(RecipeId id, CancellationToken ct = default)
         => await _dbContext.Recipes
-            .Include("_ingredients")
+            .Include(r => r.Ingredients)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<Recipe?> GetByNameAsync(string name, string userId, CancellationToken ct = default)
         => await _dbContext.Recipes
-            .Include("_ingredients")
+            .Include(r => r.Ingredients)
             .FirstOrDefaultAsync(x => x.Name == name && x.CreatedByUserId == userId, ct);
 
     public async Task AddAsync(Recipe recipe, CancellationToken ct = default)

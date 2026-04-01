@@ -100,7 +100,7 @@ export default function Calendar() {
     const grouped: Record<string, Record<string, Meal[]>> = {};
     (meals as Meal[]).forEach((meal) => {
       const date = meal.date;
-      const mealType = meal.mealType || 'other';
+      const mealType = (meal.mealType || 'other').toLowerCase();
       grouped[date] ??= {};
       grouped[date][mealType] ??= [];
       grouped[date][mealType].push(meal);
@@ -138,10 +138,11 @@ export default function Calendar() {
     servings: number;
     notes: string;
   }) => {
+    const payload = { ...data, mealTime: null, sequenceOrder: null };
     if (editingMeal) {
-      await updateMeal.mutateAsync({ id: editingMeal.id, data });
+      await updateMeal.mutateAsync({ id: editingMeal.id, data: payload });
     } else {
-      await createMeal.mutateAsync(data as never);
+      await createMeal.mutateAsync(payload);
     }
     setMealFormOpen(false);
     setEditingMeal(null);
@@ -310,7 +311,7 @@ export default function Calendar() {
           <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {goals === undefined ? (
+          {goals === undefined || goals === null ? (
             <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_goals')}</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

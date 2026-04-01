@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
 using DietPlanner.Application.Persistence;
-using DietPlanner.Domain.Aggregates;
+using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.CQRS;
 using Shared.Abstractions.Pagination;
@@ -27,28 +27,42 @@ internal sealed class SearchRecipesQueryHandler
 
         var totalCount = await q.CountAsync(ct);
 
-        var items = await q
+        var recipes = await q
             .OrderBy(r => r.Name)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Include(r => r.Ingredients)
-            .Select(r => new RecipeDto(
-                r.Id.Value,
-                r.Name,
-                r.Description,
-                r.Instructions,
-                r.Servings,
-                r.PrepTimeMinutes,
-                r.CreatedByUserId,
-                r.CreatedAt,
-                r.UpdatedAt,
-                r.CreatedByUserId == query.UserId,
-                r.Ingredients.Select(i => new RecipeIngredientDto(
-                    i.Id.Value,
-                    i.ProductId.Value,
-                    i.Amount,
-                    i.Unit)).ToList()))
             .ToListAsync(ct);
+
+        // Batch-resolve product names in a single query
+        var allProductIds = recipes
+            .SelectMany(r => r.Ingredients.Select(i => i.ProductId))
+            .Distinct()
+            .ToList();
+
+        var productNames = await _dbContext.Products
+            .AsNoTracking()
+            .Where(p => allProductIds.Contains(p.Id))
+            .Select(p => new { p.Id, p.Name })
+            .ToDictionaryAsync(p => p.Id, p => p.Name, ct);
+
+        var items = recipes.Select(r => new RecipeDto(
+            r.Id.Value,
+            r.Name,
+            r.Description,
+            r.Instructions,
+            r.Servings,
+            r.PrepTimeMinutes,
+            r.CreatedByUserId,
+            r.CreatedAt,
+            r.UpdatedAt,
+            r.CreatedByUserId == query.UserId,
+            r.Ingredients.Select(i => new RecipeIngredientDto(
+                i.Id.Value,
+                i.ProductId.Value,
+                productNames.GetValueOrDefault(i.ProductId, "Unknown"),
+                i.Amount,
+                i.Unit)).ToList())).ToList();
 
         return new PagedList<RecipeDto>(items, totalCount, query.Page, query.PageSize);
     }

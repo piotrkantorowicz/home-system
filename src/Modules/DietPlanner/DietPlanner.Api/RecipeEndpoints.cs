@@ -19,39 +19,48 @@ public static class RecipeEndpoints
     {
         var group = app.MapGroup("/api/v1/recipes")
             .WithTags("Recipes")
-            .RequireAuthorization()
-            .RequireRateLimiting("api");
+            .RequireAuthorization();
 
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")
             .WithSummary("List recipes with optional search and pagination")
-            .Produces<PagedList<RecipeDto>>();
+            .WithDescription("Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.")
+            .Produces<PagedList<RecipeDto>>()
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetRecipe)
             .WithName("GetRecipe")
             .WithSummary("Get a recipe by ID")
+            .WithDescription("Returns full recipe details including the ingredient list with per-ingredient amounts and units. Returns 404 if the recipe does not exist or is not visible to the caller.")
             .Produces<RecipeDto>()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", CreateRecipe)
             .WithName("CreateRecipe")
             .WithSummary("Create a new recipe")
+            .WithDescription("Creates a new recipe owned by the current user. Each ingredient references an existing product by ID. `servings` defines the default portion count used when logging this recipe as a meal entry.")
             .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/{id:guid}", UpdateRecipe)
             .WithName("UpdateRecipe")
             .WithSummary("Update a recipe")
+            .WithDescription("Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapDelete("/{id:guid}", DeleteRecipe)
             .WithName("DeleteRecipe")
             .WithSummary("Delete a recipe")
+            .WithDescription("Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return app;
     }
@@ -94,7 +103,7 @@ public static class RecipeEndpoints
             new CreateRecipeCommand(
                 request.Name, request.Description, request.Instructions,
                 request.Servings, request.PrepTimeMinutes, ingredients, userId), ct);
-        return TypedResults.Created($"/api/v1/recipes/{id}");
+        return TypedResults.Created($"/api/v1/recipes/{id}", id);
     }
 
     private static async Task<IResult> UpdateRecipe(

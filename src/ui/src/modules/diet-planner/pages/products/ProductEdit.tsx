@@ -15,11 +15,11 @@ export default function ProductEdit() {
     try {
       await updateMutation.mutateAsync({
         name: data.name,
-        caloriesPer100g: data.caloriesPer100g,
-        proteinPer100g: data.proteinPer100g,
-        carbsPer100g: data.carbsPer100g,
-        fatPer100g: data.fatPer100g,
-        fiberPer100g: data.fiberPer100g ?? null,
+        calories: data.caloriesPer100g,
+        protein: data.proteinPer100g,
+        carbs: data.carbsPer100g,
+        fat: data.fatPer100g,
+        fiber: data.fiberPer100g ?? null,
         defaultUnit: data.defaultUnit,
         densityGramsPerMl: data.densityGramsPerMl ?? null,
         gramPerPiece: data.gramPerPiece ?? null,
@@ -58,10 +58,10 @@ export default function ProductEdit() {
       <ProductForm
         defaultValues={{
           name: product.name,
-          caloriesPer100g: product.caloriesPer100g,
-          proteinPer100g: product.proteinPer100g,
-          carbsPer100g: product.carbsPer100g,
-          fatPer100g: product.fatPer100g,
+          caloriesPer100g: product.caloriesPer100g ?? 0,
+          proteinPer100g: product.proteinPer100g ?? 0,
+          carbsPer100g: product.carbsPer100g ?? 0,
+          fatPer100g: product.fatPer100g ?? 0,
           fiberPer100g: product.fiberPer100g ?? undefined,
           defaultUnit: product.defaultUnit,
           densityGramsPerMl: product.densityGramsPerMl ?? undefined,

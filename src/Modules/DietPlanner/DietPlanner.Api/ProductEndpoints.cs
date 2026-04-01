@@ -19,39 +19,48 @@ public static class ProductEndpoints
     {
         var group = app.MapGroup("/api/v1/products")
             .WithTags("Products")
-            .RequireAuthorization()
-            .RequireRateLimiting("api");
+            .RequireAuthorization();
 
         group.MapGet("/", ListProducts)
             .WithName("ListProducts")
             .WithSummary("List products with optional search and pagination")
-            .Produces<PagedList<ProductDto>>();
+            .WithDescription("Returns a paginated list of products visible to the caller. Use `onlyMine=true` to restrict results to products created by the current user.")
+            .Produces<PagedList<ProductDto>>()
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetProduct)
             .WithName("GetProduct")
             .WithSummary("Get a product by ID")
+            .WithDescription("Returns full product details including nutritional values and ownership flag. Returns 404 if the product does not exist or is not visible to the caller.")
             .Produces<ProductDto>()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", CreateProduct)
             .WithName("CreateProduct")
             .WithSummary("Create a new product")
+            .WithDescription("Creates a new product in the catalogue owned by the current user. All nutritional values are optional and stored as per-100g figures.")
             .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPut("/{id:guid}", UpdateProduct)
             .WithName("UpdateProduct")
             .WithSummary("Update a product")
+            .WithDescription("Updates all fields of an existing product. Only the product owner may update it.")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapDelete("/{id:guid}", DeleteProduct)
             .WithName("DeleteProduct")
             .WithSummary("Delete a product")
+            .WithDescription("Permanently removes a product from the catalogue. Only the product owner may delete it.")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return app;
     }
@@ -92,7 +101,7 @@ public static class ProductEndpoints
                 request.Name, request.Calories, request.Protein, request.Carbs,
                 request.Fat, request.Fiber, request.DefaultUnit,
                 request.DensityGramsPerMl, request.GramPerPiece, userId), ct);
-        return TypedResults.Created($"/api/v1/products/{id}");
+        return TypedResults.Created($"/api/v1/products/{id}", id);
     }
 
     private static async Task<IResult> UpdateProduct(
