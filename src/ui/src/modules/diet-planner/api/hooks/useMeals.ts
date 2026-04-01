@@ -30,7 +30,10 @@ export function useMeals(params: MealsQueryParams = {}) {
     queryFn: async (): Promise<MealEntry[]> => {
       const response = await api.GET('/api/v1/meals', {
         params: {
-          query: { ...(from !== undefined ? { From: from } : {}), ...(to !== undefined ? { To: to } : {}) },
+          query: {
+            ...(from !== undefined ? { From: from } : {}),
+            ...(to !== undefined ? { To: to } : {}),
+          },
         },
       });
 

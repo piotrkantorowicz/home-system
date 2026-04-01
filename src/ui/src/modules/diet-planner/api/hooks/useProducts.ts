@@ -71,7 +71,13 @@ export function useProducts(params: ProductsQueryParams = {}) {
         throw new Error('Failed to fetch products');
       }
 
-      const raw = response.data as { items: ApiProduct[]; page: number; pageSize: number; totalCount: number; totalPages: number };
+      const raw = response.data as {
+        items: ApiProduct[];
+        page: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+      };
       return { ...raw, items: raw.items.map(mapProduct) };
     },
     placeholderData: keepPreviousData,

@@ -33,8 +33,7 @@ const recipeSchema = z.object({
     .array(ingredientSchema)
     .min(1, 'At least one ingredient is required')
     .refine(
-      (items) =>
-        items.every((item) => item.productId.length > 0 || item.productName.length > 0),
+      (items) => items.every((item) => item.productId.length > 0 || item.productName.length > 0),
       { message: 'Each ingredient must have a product selected' },
     ),
 });
@@ -178,8 +177,10 @@ export function RecipeForm({
           {fields.map((field, index) => {
             const idx = index;
             const idxStr = String(index);
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- react-hook-form path requires number index
-            const { onChange: onProductNameChange, ...productNameProps } = register(`ingredients.${idx}.productName`);
+            const { onChange: onProductNameChange, ...productNameProps } = register(
+              // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
+              `ingredients.${idx}.productName`,
+            );
             return (
               <div key={field.id} className="flex items-start gap-3">
                 <div className="grid flex-1 grid-cols-3 gap-3">

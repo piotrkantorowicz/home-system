@@ -71,7 +71,16 @@ export default function ImportWizard() {
         valid: false,
         canProceed: false,
         summary: { errors: 1, warnings: 0, info: 0 },
-        issues: [{ severity: 'error', category: 'api', path: null, item: null, message: errorMessage, resolution: null }],
+        issues: [
+          {
+            severity: 'error',
+            category: 'api',
+            path: null,
+            item: null,
+            message: errorMessage,
+            resolution: null,
+          },
+        ],
         plan: null,
         isApiError: true,
       });
@@ -307,9 +316,9 @@ export default function ImportWizard() {
                           Validation Failed
                         </h3>
                         <span className="ml-auto text-sm font-medium text-red-600 dark:text-red-400">
-                            {validationResult.summary.errors} Error
-                            {Number(validationResult.summary.errors) !== 1 ? 's' : ''}
-                          </span>
+                          {validationResult.summary.errors} Error
+                          {Number(validationResult.summary.errors) !== 1 ? 's' : ''}
+                        </span>
                       </div>
                     </div>
 
@@ -443,9 +452,9 @@ export default function ImportWizard() {
                     {t('import_wizard.step3.warnings_exist', 'Validation passed with warnings')}
                   </span>
                   <span className="ml-auto text-sm">
-                      {validationResult.summary.warnings} Warning
-                      {Number(validationResult.summary.warnings) !== 1 ? 's' : ''}
-                    </span>
+                    {validationResult.summary.warnings} Warning
+                    {Number(validationResult.summary.warnings) !== 1 ? 's' : ''}
+                  </span>
                 </div>
                 {validationResult.issues.length > 0 && (
                   <ul className="mt-2 space-y-1 pl-7 text-sm">

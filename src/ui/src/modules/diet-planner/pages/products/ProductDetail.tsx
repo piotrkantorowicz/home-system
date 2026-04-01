@@ -137,9 +137,11 @@ export default function ProductDetail() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{t('product_detail.total_macros')}</span>
                   <span className="font-medium">
-                    {((product.proteinPer100g ?? 0) + (product.carbsPer100g ?? 0) + (product.fatPer100g ?? 0)).toFixed(
-                      1,
-                    )}
+                    {(
+                      (product.proteinPer100g ?? 0) +
+                      (product.carbsPer100g ?? 0) +
+                      (product.fatPer100g ?? 0)
+                    ).toFixed(1)}
                     g
                   </span>
                 </div>

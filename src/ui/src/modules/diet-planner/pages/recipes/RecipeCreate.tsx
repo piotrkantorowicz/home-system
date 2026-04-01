@@ -24,9 +24,8 @@ export default function RecipeCreate() {
           const response = await api.GET('/api/v1/products', {
             params: { query: { Search: ing.productName, PageSize: 10 } },
           });
-          const items = (
-            response.data as { items: { id: string; name: string }[] } | undefined
-          )?.items ?? [];
+          const items =
+            (response.data as { items: { id: string; name: string }[] } | undefined)?.items ?? [];
           const product = items.find((p) => p.name === ing.productName);
           if (!product) throw new Error(`Product "${ing.productName}" not found`);
           return { productId: product.id, amount: ing.amount, unit: ing.unit };

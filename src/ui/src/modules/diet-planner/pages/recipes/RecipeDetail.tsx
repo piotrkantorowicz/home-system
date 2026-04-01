@@ -25,7 +25,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 
-
 export default function RecipeDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -118,9 +117,7 @@ export default function RecipeDetail() {
         {/* ── Ingredients (primary) ─────────────────────────────────── */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>
-              {t('recipe_detail.ingredients')}
-            </CardTitle>
+            <CardTitle>{t('recipe_detail.ingredients')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-hidden rounded-xl border">
@@ -152,7 +149,9 @@ export default function RecipeDetail() {
         {recipe.nutritionPerServing && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t('recipe_detail.nutrition_per_serving')}</CardTitle>
+              <CardTitle className="text-base">
+                {t('recipe_detail.nutrition_per_serving')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-4 border-b pb-3">
@@ -200,9 +199,7 @@ export default function RecipeDetail() {
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none">
-              <p className="text-[0.95rem] leading-7 whitespace-pre-wrap">
-                {recipe.instructions}
-              </p>
+              <p className="text-[0.95rem] leading-7 whitespace-pre-wrap">{recipe.instructions}</p>
             </div>
           </CardContent>
         </Card>
