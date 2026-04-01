@@ -1,7 +1,6 @@
 namespace DietPlanner.Application.Persistence;
 
 using DietPlanner.Domain.Aggregates;
-using DietPlanner.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 public interface IDietPlannerReadDbContext
@@ -11,4 +10,5 @@ public interface IDietPlannerReadDbContext
     DbSet<MealEntry> MealEntries { get; }
     DbSet<UserGoal> UserGoals { get; }
     DbSet<MealScheduleConfig> MealScheduleConfigs { get; }
+    DbSet<UserProfile> UserProfiles { get; }
 }
