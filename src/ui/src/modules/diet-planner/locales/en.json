@@ -290,6 +290,17 @@
     "update_btn": "Update Product",
     "saving": "Saving..."
   },
+  "meal_schedule": {
+    "nav": "Meal Schedule",
+    "title": "Meal Schedule",
+    "subtitle": "Configure your daily meal slots",
+    "slot_name": "Slot Name",
+    "slot_time": "Default Time",
+    "add_slot": "Add Slot",
+    "remove_slot": "Remove slot",
+    "save_btn": "Save Schedule",
+    "save_success": "Meal schedule saved successfully!"
+  },
   "recipe_form": {
     "edit_title": "Edit Recipe",
     "create_title": "Create New Recipe",
