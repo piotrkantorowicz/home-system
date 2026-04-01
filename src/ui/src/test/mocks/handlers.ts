@@ -166,10 +166,32 @@ export const profileHandlers = [
   }),
 ];
 
+export const notificationPreferencesHandlers = [
+  http.get(`${BASE}/api/v1/notification-preferences`, () => {
+    return HttpResponse.json({
+      id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      userId: 'user-1',
+      mealReminderEnabled: true,
+      mealReminderLeadTimeMinutes: 15,
+      waterReminderEnabled: true,
+      waterReminderIntervalMinutes: 60,
+      weeklySummaryEnabled: true,
+      goalMilestoneAlertsEnabled: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: null,
+    });
+  }),
+
+  http.put(`${BASE}/api/v1/notification-preferences`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const handlers = [
   ...productHandlers,
   ...mealHandlers,
   ...goalHandlers,
   ...mealScheduleHandlers,
   ...profileHandlers,
+  ...notificationPreferencesHandlers,
 ];
