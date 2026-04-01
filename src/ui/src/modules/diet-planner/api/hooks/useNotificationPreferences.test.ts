@@ -1,7 +1,10 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
-import { useNotificationPreferences, useUpdateNotificationPreferences } from './useNotificationPreferences';
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from './useNotificationPreferences';
 
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
@@ -53,9 +56,7 @@ describe('useNotificationPreferences', () => {
 
   it('returns preferences on success', async () => {
     server.use(
-      http.get(`${BASE}/api/v1/notification-preferences`, () =>
-        HttpResponse.json(mockPreferences),
-      ),
+      http.get(`${BASE}/api/v1/notification-preferences`, () => HttpResponse.json(mockPreferences)),
     );
 
     const { result } = renderHook(() => useNotificationPreferences(), {
