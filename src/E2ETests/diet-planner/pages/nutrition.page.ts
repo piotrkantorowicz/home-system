@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import type { Page, Locator} from '@playwright/test';
+import type { Page, Locator } from '@playwright/test';
 
 export class NutritionPage {
   readonly page: Page;
@@ -14,11 +14,11 @@ export class NutritionPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.fromInput = page.locator('input#from-date');
-    this.toInput = page.locator('input#to-date');
+    this.fromInput = page.getByLabel(/from/i);
+    this.toInput = page.getByLabel(/to/i);
     this.applyButton = page.getByRole('button', { name: /apply/i });
-    this.tableRows = page.locator('table tbody tr');
-    this.pageSizeSelect = page.locator('select');
+    this.tableRows = page.getByRole('table').getByRole('row').filter({ hasNot: page.locator('th') });
+    this.pageSizeSelect = page.getByRole('combobox').or(page.locator('select')).first();
     this.previousButton = page.getByRole('button', { name: /previous/i });
     this.nextButton = page.getByRole('button', { name: /next/i });
   }
@@ -26,7 +26,7 @@ export class NutritionPage {
   async goto() {
     const responsePromise = this.page.waitForResponse(
       (resp) => resp.url().includes('/nutrition-summary') && resp.request().method() === 'GET',
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
     await this.page.goto('/diet-planner/nutrition');
     await responsePromise;
@@ -39,8 +39,7 @@ export class NutritionPage {
 
   async applyRange(expectedFrom?: string, expectedTo?: string) {
     const urlFilter = (resp: { url: () => string; request: () => { method: () => string } }) => {
-      if (!resp.url().includes('/nutrition-summary') || resp.request().method() !== 'GET')
-        return false;
+      if (!resp.url().includes('/nutrition-summary') || resp.request().method() !== 'GET') return false;
       if (expectedFrom && !resp.url().includes(`from=${expectedFrom}`)) return false;
       if (expectedTo && !resp.url().includes(`to=${expectedTo}`)) return false;
       return true;
@@ -51,11 +50,13 @@ export class NutritionPage {
   }
 
   async getTableRowCount(): Promise<number> {
-    await this.tableRows
-      .first()
-      .waitFor({ state: 'attached', timeout: 8000 })
-      .catch(() => {});
-    return await this.tableRows.count();
+    try {
+      await this.tableRows.first().waitFor({ state: 'attached', timeout: 8000 });
+    } catch {
+      // No rows visible — return 0
+      return 0;
+    }
+    return this.tableRows.count();
   }
 
   async getPageSize(): Promise<number> {

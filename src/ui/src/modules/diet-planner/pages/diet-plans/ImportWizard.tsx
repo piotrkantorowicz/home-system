@@ -36,6 +36,7 @@ export default function ImportWizard() {
   const [jsonInput, setJsonInput] = useState('');
   const [importData, setImportData] = useState<ImportDto | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationState | null>(null);
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const validateMutation = useValidateImport();
@@ -44,10 +45,11 @@ export default function ImportWizard() {
   const handleJsonParse = () => {
     try {
       const parsed = JSON.parse(jsonInput) as ImportDto;
+      setJsonError(null);
       setImportData(parsed);
       setStep(2);
     } catch {
-      alert(t('import_wizard.step1.invalid_json'));
+      setJsonError(t('import_wizard.step1.invalid_json'));
     }
   };
 
@@ -69,7 +71,7 @@ export default function ImportWizard() {
         valid: false,
         canProceed: false,
         summary: { errors: 1, warnings: 0, info: 0 },
-        issues: [{ severity: 'error', category: 'api', message: errorMessage }],
+        issues: [{ severity: 'error', category: 'api', path: null, item: null, message: errorMessage, resolution: null }],
         plan: null,
         isApiError: true,
       });
@@ -206,6 +208,12 @@ export default function ImportWizard() {
               />
             </div>
 
+            {jsonError && (
+              <p role="alert" className="text-destructive text-sm">
+                {jsonError}
+              </p>
+            )}
+
             <div className="flex gap-4">
               <Button onClick={handleJsonParse} disabled={!jsonInput.trim()}>
                 {t('import_wizard.step1.continue')}
@@ -280,7 +288,7 @@ export default function ImportWizard() {
                           Something went wrong
                         </h3>
                         <p className="mb-3 text-sm text-red-600 dark:text-red-300">
-                          {validationResult.issues?.[0]?.message ??
+                          {validationResult.issues[0]?.message ??
                             'An unexpected error occurred while validating your import data.'}
                         </p>
                         <p className="text-xs text-red-500 dark:text-red-400">
@@ -298,17 +306,14 @@ export default function ImportWizard() {
                         <h3 className="font-semibold text-red-700 dark:text-red-400">
                           Validation Failed
                         </h3>
-                        {validationResult.summary && (
-                          <span className="ml-auto text-sm font-medium text-red-600 dark:text-red-400">
+                        <span className="ml-auto text-sm font-medium text-red-600 dark:text-red-400">
                             {validationResult.summary.errors} Error
                             {Number(validationResult.summary.errors) !== 1 ? 's' : ''}
                           </span>
-                        )}
                       </div>
                     </div>
 
-                    {validationResult.issues &&
-                      validationResult.issues.length > 0 &&
+                    {validationResult.issues.length > 0 &&
                       hasDetailedIssues(validationResult.issues) && (
                         <div className="overflow-hidden rounded-xl border">
                           <Table>
@@ -325,9 +330,6 @@ export default function ImportWizard() {
                               {validationResult.issues.map(
                                 (issue: ValidationIssueDto, idx: number) => {
                                   const isError = issue.severity === 'error';
-                                  const existingItem = issue.existingItem as
-                                    | Record<string, unknown>
-                                    | undefined;
                                   return (
                                     <TableRow
                                       key={idx}
@@ -376,25 +378,7 @@ export default function ImportWizard() {
                                         </div>
                                       </TableCell>
                                       <TableCell>
-                                        {existingItem ? (
-                                          <div className="space-y-0.5 text-xs">
-                                            {Object.entries(existingItem)
-                                              .filter(([key]) => key !== 'id')
-                                              .map(([key, val]) => (
-                                                <div
-                                                  key={key}
-                                                  className="flex justify-between gap-2"
-                                                >
-                                                  <span className="text-muted-foreground">
-                                                    {key.replace(/([A-Z])/g, ' $1').trim()}:
-                                                  </span>
-                                                  <span className="font-mono">{String(val)}</span>
-                                                </div>
-                                              ))}
-                                          </div>
-                                        ) : (
-                                          <span className="text-muted-foreground">-</span>
-                                        )}
+                                        <span className="text-muted-foreground">-</span>
                                       </TableCell>
                                     </TableRow>
                                   );
@@ -458,14 +442,12 @@ export default function ImportWizard() {
                   <span className="font-medium">
                     {t('import_wizard.step3.warnings_exist', 'Validation passed with warnings')}
                   </span>
-                  {validationResult.summary && (
-                    <span className="ml-auto text-sm">
+                  <span className="ml-auto text-sm">
                       {validationResult.summary.warnings} Warning
                       {Number(validationResult.summary.warnings) !== 1 ? 's' : ''}
                     </span>
-                  )}
                 </div>
-                {validationResult.issues && validationResult.issues.length > 0 && (
+                {validationResult.issues.length > 0 && (
                   <ul className="mt-2 space-y-1 pl-7 text-sm">
                     {validationResult.issues.map((issue, idx) => (
                       <li key={idx} className="text-amber-600 dark:text-amber-300">

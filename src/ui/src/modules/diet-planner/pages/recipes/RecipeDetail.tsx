@@ -25,7 +25,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 
-import { MacroDistributionCard } from '../../components/MacroDistributionCard';
 
 export default function RecipeDetail() {
   const { t } = useTranslation();
@@ -60,12 +59,12 @@ export default function RecipeDetail() {
 
   return (
     <div className="animate-fade-in-up mx-auto max-w-6xl p-8 lg:p-10">
-      <Link to="/diet-planner/recipes">
-        <Button variant="ghost" size="sm" className="mb-4 -ml-2">
+      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+        <Link to="/diet-planner/recipes">
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t('recipe_detail.back')}
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <div className="mb-8 flex items-start justify-between">
         <div>
@@ -96,12 +95,12 @@ export default function RecipeDetail() {
 
         {recipe.isOwner && (
           <div className="flex gap-2">
-            <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
-              <Button>
+            <Button asChild>
+              <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
                 {t('common.edit')}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button
               variant="destructive"
               onClick={() => {
@@ -115,24 +114,54 @@ export default function RecipeDetail() {
         )}
       </div>
 
-      <div className="stagger-children mb-6 grid gap-6 md:grid-cols-2">
-        <Card>
+      <div className="stagger-children mb-6 grid gap-6 lg:grid-cols-3">
+        {/* ── Ingredients (primary) ─────────────────────────────────── */}
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{t('recipe_detail.nutrition_per_serving')}</CardTitle>
+            <CardTitle>
+              {t('recipe_detail.ingredients')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="border-b pb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">{t('recipe_detail.table.calories')}</span>
-                  <span className="text-3xl font-bold tracking-tight">
-                    {Number(recipe.nutritionPerServing.calories).toFixed(0)}{' '}
-                    <span className="text-muted-foreground text-lg font-normal">kcal</span>
-                  </span>
-                </div>
-              </div>
+            <div className="overflow-hidden rounded-xl border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead>{t('recipe_detail.table.product')}</TableHead>
+                    <TableHead>{t('recipe_detail.table.amount')}</TableHead>
+                    <TableHead>{t('recipe_detail.table.unit')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recipe.ingredients.map((ingredient) => (
+                    <TableRow key={ingredient.id}>
+                      <TableCell className="font-medium">{ingredient.productName}</TableCell>
+                      <TableCell>{Number(ingredient.amount).toFixed(1)}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{unitLabel(ingredient.unit, t)}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="space-y-3">
+        {/* ── Nutrition per serving (compact sidebar) ──────────────── */}
+        {recipe.nutritionPerServing && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t('recipe_detail.nutrition_per_serving')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 border-b pb-3">
+                <span className="text-3xl font-bold tracking-tight">
+                  {Number(recipe.nutritionPerServing.calories).toFixed(0)}
+                </span>
+                <span className="text-muted-foreground ml-1 text-sm">kcal</span>
+              </div>
+              <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('recipe_detail.table.protein')}</span>
                   <span className="font-medium">
@@ -158,109 +187,22 @@ export default function RecipeDetail() {
                   </span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('recipe_detail.total_nutrition')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-b pb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">{t('recipe_detail.total_calories')}</span>
-                  <span className="text-3xl font-bold tracking-tight">
-                    {Number(recipe.totalNutrition.calories).toFixed(0)}{' '}
-                    <span className="text-muted-foreground text-lg font-normal">kcal</span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('recipe_detail.total_protein')}</span>
-                  <span className="font-medium">
-                    {Number(recipe.totalNutrition.protein).toFixed(1)}g
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('recipe_detail.total_carbs')}</span>
-                  <span className="font-medium">
-                    {Number(recipe.totalNutrition.carbs).toFixed(1)}g
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('recipe_detail.total_fat')}</span>
-                  <span className="font-medium">
-                    {Number(recipe.totalNutrition.fat).toFixed(1)}g
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('recipe_detail.total_fiber')}</span>
-                  <span className="font-medium">
-                    {Number(recipe.totalNutrition.fiber).toFixed(1)}g
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <MacroDistributionCard
-        protein={Number(recipe.nutritionPerServing.protein)}
-        carbs={Number(recipe.nutritionPerServing.carbs)}
-        fat={Number(recipe.nutritionPerServing.fat)}
-        fiber={Number(recipe.nutritionPerServing.fiber)}
-        t={t}
-        title={t('recipe_detail.macro_distribution')}
-        className="mb-6"
-      />
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>
-            {t('recipe_detail.ingredients', { count: recipe.ingredients.length })}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-hidden rounded-xl border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30">
-                  <TableHead>{t('recipe_detail.table.product')}</TableHead>
-                  <TableHead>{t('recipe_detail.table.amount')}</TableHead>
-                  <TableHead>{t('recipe_detail.table.unit')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recipe.ingredients.map((ingredient) => (
-                  <TableRow key={ingredient.id}>
-                    <TableCell className="font-medium">{ingredient.productName}</TableCell>
-                    <TableCell>{Number(ingredient.amount).toFixed(1)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{unitLabel(ingredient.unit, t)}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* ── Instructions (primary) ──────────────────────────────────── */}
       {recipe.instructions && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>{t('recipe_detail.instructions')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none">
-              <pre className="font-sans text-[0.9rem] leading-relaxed whitespace-pre-wrap">
+              <p className="text-[0.95rem] leading-7 whitespace-pre-wrap">
                 {recipe.instructions}
-              </pre>
+              </p>
             </div>
           </CardContent>
         </Card>

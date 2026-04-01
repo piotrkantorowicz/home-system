@@ -1,37 +1,29 @@
-import { test, expect } from './fixtures/auth.fixture';
+import { test, expect } from './fixtures';
 import { DashboardPage } from './pages/dashboard.page';
 
 test.describe('Dashboard', () => {
-  test('displays statistics cards', async ({ page }) => {
+  test('all three stat cards are visible on load', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    // Cards should be visible
     await expect(dashboard.productCard).toBeVisible();
     await expect(dashboard.recipeCard).toBeVisible();
     await expect(dashboard.calendarCard).toBeVisible();
   });
 
-  test('shows counts from API', async ({ page }) => {
+  test('stat cards show numeric counts after data loads', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    // Wait for loading to complete
-    await expect(dashboard.productCount).toBeVisible();
-    await expect(dashboard.recipeCount).toBeVisible();
-    await expect(dashboard.calendarCount).toBeVisible();
+    await dashboard.expectStatsLoaded();
 
-    // Counts should be numbers (not loading spinners)
-    const productCount = await dashboard.getProductCount();
-    const recipeCount = await dashboard.getRecipeCount();
-    const calendarCount = await dashboard.getCalendarCount();
-
-    expect(typeof productCount).toBe('number');
-    expect(typeof recipeCount).toBe('number');
-    expect(typeof calendarCount).toBe('number');
+    // Verify each stat card contains a numeric value (web-first assertions)
+    await expect(dashboard.productCount).toHaveText(/\d+/);
+    await expect(dashboard.recipeCount).toHaveText(/\d+/);
+    await expect(dashboard.calendarCount).toHaveText(/\d+/);
   });
 
-  test('cards link to correct pages', async ({ page }) => {
+  test('each stat card links to its respective page', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 

@@ -30,7 +30,7 @@ export function useMeals(params: MealsQueryParams = {}) {
     queryFn: async (): Promise<MealEntry[]> => {
       const response = await api.GET('/api/v1/meals', {
         params: {
-          query: { ...(from !== undefined ? { from } : {}), ...(to !== undefined ? { to } : {}) },
+          query: { ...(from !== undefined ? { From: from } : {}), ...(to !== undefined ? { To: to } : {}) },
         },
       });
 
@@ -47,8 +47,8 @@ export function useCreateMeal() {
   return useMutation({
     mutationFn: async (data: CreateMealEntryRequest): Promise<MealEntry> => {
       const response = await api.POST('/api/v1/meals', { body: data });
-      if (!response.data) throw new Error('Failed to create meal entry');
-      return response.data;
+      if (response.error) throw new Error('Failed to create meal entry');
+      return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['meals'] });
@@ -71,8 +71,8 @@ export function useUpdateMeal() {
         params: { path: { id } },
         body: data,
       });
-      if (!response.data) throw new Error('Failed to update meal entry');
-      return response.data;
+      if (response.error) throw new Error('Failed to update meal entry');
+      return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['meals'] });
@@ -119,8 +119,12 @@ export function useValidateImport() {
         body: importData,
       });
 
-      if (!response.data) {
+      if (response.error) {
         throw new Error('Validation API call failed');
+      }
+
+      if (!response.data) {
+        throw new Error('Validation returned no data');
       }
 
       return response.data;
@@ -137,7 +141,8 @@ export function useExecuteImport() {
         body: importData,
       });
 
-      if (!response.data) throw new Error('Import failed');
+      if (response.error) throw new Error('Import failed');
+      if (!response.data) throw new Error('Import returned no data');
       return response.data;
     },
     onSuccess: () => {

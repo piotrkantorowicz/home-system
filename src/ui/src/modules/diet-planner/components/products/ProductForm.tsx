@@ -56,7 +56,7 @@ export function ProductForm({
   const protein = watch('proteinPer100g') || 0;
   const carbs = watch('carbsPer100g') || 0;
   const fat = watch('fatPer100g') || 0;
-  const fiber = watch('fiberPer100g') ?? 0;
+  const fiber = Number(watch('fiberPer100g')) || 0;
 
   const totalMacros = protein + carbs + fat;
   const isMacroWarning = totalMacros > 100;
@@ -172,7 +172,7 @@ export function ProductForm({
                 type="number"
                 step="0.1"
                 {...register('fiberPer100g', {
-                  setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
+                  setValueAs: (v: string) => (v === '' ? undefined : Number(v)),
                 })}
                 placeholder="0"
               />
@@ -234,7 +234,7 @@ export function ProductForm({
               type="number"
               step="0.01"
               {...register('densityGramsPerMl', {
-                setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
+                setValueAs: (v: string) => (v === '' ? undefined : Number(v)),
               })}
               placeholder={t('product_form.density_placeholder')}
             />
@@ -251,7 +251,7 @@ export function ProductForm({
               type="number"
               step="0.1"
               {...register('gramPerPiece', {
-                setValueAs: (v) => (v === '' || isNaN(v as number) ? undefined : (v as number)),
+                setValueAs: (v: string) => (v === '' ? undefined : Number(v)),
               })}
               placeholder={t('product_form.piece_placeholder')}
             />

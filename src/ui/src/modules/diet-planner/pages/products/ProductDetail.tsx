@@ -55,12 +55,12 @@ export default function ProductDetail() {
   return (
     <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
       <div className="mb-8">
-        <Link to="/diet-planner/products">
-          <Button variant="ghost" size="sm" className="mb-4 -ml-2">
+        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+          <Link to="/diet-planner/products">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('product_detail.back')}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <div className="flex items-start justify-between">
           <div>
@@ -77,12 +77,12 @@ export default function ProductDetail() {
 
           {product.isOwner && (
             <div className="flex gap-2">
-              <Link to={`/diet-planner/products/${id ?? ''}/edit`}>
-                <Button>
+              <Button asChild>
+                <Link to={`/diet-planner/products/${id ?? ''}/edit`}>
                   <Edit className="mr-2 h-4 w-4" />
                   {t('common.edit')}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <Button
                 variant="destructive"
                 onClick={() => {
@@ -108,7 +108,7 @@ export default function ProductDetail() {
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold">{t('products.table.calories')}</span>
                   <span className="text-3xl font-bold tracking-tight">
-                    {product.caloriesPer100g.toFixed(1)}{' '}
+                    {(product.caloriesPer100g ?? 0).toFixed(1)}{' '}
                     <span className="text-muted-foreground text-lg font-normal">kcal</span>
                   </span>
                 </div>
@@ -117,15 +117,15 @@ export default function ProductDetail() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('products.table.protein')}</span>
-                  <span className="font-medium">{product.proteinPer100g.toFixed(1)}g</span>
+                  <span className="font-medium">{(product.proteinPer100g ?? 0).toFixed(1)}g</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('product_detail.carbohydrates')}</span>
-                  <span className="font-medium">{product.carbsPer100g.toFixed(1)}g</span>
+                  <span className="font-medium">{(product.carbsPer100g ?? 0).toFixed(1)}g</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('product_detail.fat')}</span>
-                  <span className="font-medium">{product.fatPer100g.toFixed(1)}g</span>
+                  <span className="font-medium">{(product.fatPer100g ?? 0).toFixed(1)}g</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
@@ -137,7 +137,7 @@ export default function ProductDetail() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{t('product_detail.total_macros')}</span>
                   <span className="font-medium">
-                    {(product.proteinPer100g + product.carbsPer100g + product.fatPer100g).toFixed(
+                    {((product.proteinPer100g ?? 0) + (product.carbsPer100g ?? 0) + (product.fatPer100g ?? 0)).toFixed(
                       1,
                     )}
                     g
@@ -188,9 +188,9 @@ export default function ProductDetail() {
       </div>
 
       <MacroDistributionCard
-        protein={product.proteinPer100g}
-        carbs={product.carbsPer100g}
-        fat={product.fatPer100g}
+        protein={product.proteinPer100g ?? 0}
+        carbs={product.carbsPer100g ?? 0}
+        fat={product.fatPer100g ?? 0}
         fiber={product.fiberPer100g ?? 0}
         t={t}
         className="mt-6"

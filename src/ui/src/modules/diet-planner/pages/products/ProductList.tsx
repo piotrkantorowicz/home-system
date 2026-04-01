@@ -79,12 +79,12 @@ export default function ProductList() {
           <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('products.title')}</h1>
           <p className="text-muted-foreground text-[0.95rem]">{t('products.subtitle')}</p>
         </div>
-        <Link to="/diet-planner/products/new">
-          <Button>
+        <Button asChild>
+          <Link to="/diet-planner/products/new">
             <Plus className="mr-2 h-4 w-4" />
             {t('products.add_product')}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <div className="mb-6 flex items-center gap-4">
@@ -120,98 +120,8 @@ export default function ProductList() {
         <div className="flex items-center justify-center py-16">
           <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
         </div>
-      ) : data?.items.length === 0 ? (
-        <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
-          <p className="mb-2 text-xl font-semibold">{t('products.no_products_found')}</p>
-          <p className="text-muted-foreground mb-6">
-            {debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
-          </p>
-          {!debouncedSearch && (
-            <Link to="/diet-planner/products/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('products.add_first_product')}
-              </Button>
-            </Link>
-          )}
-        </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-xl border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30">
-                  <TableHead>{t('products.table.name')}</TableHead>
-                  <TableHead>{t('products.table.calories')}</TableHead>
-                  <TableHead>{t('products.table.protein')}</TableHead>
-                  <TableHead>{t('products.table.carbs')}</TableHead>
-                  <TableHead>{t('products.table.fat')}</TableHead>
-                  <TableHead>{t('products.table.fiber')}</TableHead>
-                  <TableHead>{t('products.table.unit')}</TableHead>
-                  <TableHead>{t('products.table.owner')}</TableHead>
-                  <TableHead className="text-right">{t('common.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data?.items.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.caloriesPer100g.toFixed(1)} kcal</TableCell>
-                    <TableCell>{product.proteinPer100g.toFixed(1)}g</TableCell>
-                    <TableCell>{product.carbsPer100g.toFixed(1)}g</TableCell>
-                    <TableCell>{product.fatPer100g.toFixed(1)}g</TableCell>
-                    <TableCell>{(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {product.isOwner ? (
-                        <Badge variant="default">{t('common.you')}</Badge>
-                      ) : (
-                        <Badge variant="outline">{t('common.shared')}</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Link
-                          to={`/diet-planner/products/${product.id}`}
-                          aria-label={t('common.view')}
-                        >
-                          <Button variant="ghost" size="icon" className="hover:text-primary">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        {product.isOwner && (
-                          <>
-                            <Link
-                              to={`/diet-planner/products/${product.id}/edit`}
-                              aria-label={t('common.edit')}
-                            >
-                              <Button variant="ghost" size="icon" className="hover:text-primary">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                openDeleteDialog(product.id);
-                              }}
-                              className="hover:text-destructive"
-                              aria-label={t('common.delete')}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
           {data && (
             <Pagination
               page={page}
@@ -223,6 +133,97 @@ export default function ProductList() {
                 setPage(1);
               }}
             />
+          )}
+          {data?.items.length === 0 ? (
+            <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
+              <p className="mb-2 text-xl font-semibold">{t('products.no_products_found')}</p>
+              <p className="text-muted-foreground mb-6">
+                {debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
+              </p>
+              {!debouncedSearch && (
+                <Button asChild>
+                  <Link to="/diet-planner/products/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('products.add_first_product')}
+                  </Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead>{t('products.table.name')}</TableHead>
+                    <TableHead>{t('products.table.calories')}</TableHead>
+                    <TableHead>{t('products.table.protein')}</TableHead>
+                    <TableHead>{t('products.table.carbs')}</TableHead>
+                    <TableHead>{t('products.table.fat')}</TableHead>
+                    <TableHead>{t('products.table.fiber')}</TableHead>
+                    <TableHead>{t('products.table.unit')}</TableHead>
+                    <TableHead>{t('products.table.owner')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data?.items.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{(product.caloriesPer100g ?? 0).toFixed(1)} kcal</TableCell>
+                      <TableCell>{(product.proteinPer100g ?? 0).toFixed(1)}g</TableCell>
+                      <TableCell>{(product.carbsPer100g ?? 0).toFixed(1)}g</TableCell>
+                      <TableCell>{(product.fatPer100g ?? 0).toFixed(1)}g</TableCell>
+                      <TableCell>{(product.fiberPer100g ?? 0).toFixed(1)}g</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {product.isOwner ? (
+                          <Badge variant="default">{t('common.you')}</Badge>
+                        ) : (
+                          <Badge variant="outline">{t('common.shared')}</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Link
+                            to={`/diet-planner/products/${product.id}`}
+                            aria-label={t('common.view')}
+                          >
+                            <Button variant="ghost" size="icon" className="hover:text-primary">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          {product.isOwner && (
+                            <>
+                              <Link
+                                to={`/diet-planner/products/${product.id}/edit`}
+                                aria-label={t('common.edit')}
+                              >
+                                <Button variant="ghost" size="icon" className="hover:text-primary">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  openDeleteDialog(product.id);
+                                }}
+                                className="hover:text-destructive"
+                                aria-label={t('common.delete')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </>
       )}

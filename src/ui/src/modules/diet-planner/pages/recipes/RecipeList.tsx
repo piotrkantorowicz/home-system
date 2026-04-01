@@ -88,12 +88,12 @@ export default function RecipeList() {
           <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipes.title')}</h1>
           <p className="text-muted-foreground text-[0.95rem]">{t('recipes.subtitle')}</p>
         </div>
-        <Link to="/diet-planner/recipes/new">
-          <Button>
+        <Button asChild>
+          <Link to="/diet-planner/recipes/new">
             <Plus className="mr-2 h-4 w-4" />
             {t('recipes.create_recipe')}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <div className="mb-6 flex items-center gap-4">
@@ -149,26 +149,40 @@ export default function RecipeList() {
         <div className="flex items-center justify-center py-16">
           <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
         </div>
-      ) : data?.items?.length === 0 ? (
-        <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
-          <p className="mb-2 text-xl font-semibold">{t('recipes.no_recipes_found')}</p>
-          <p className="text-muted-foreground mb-6">
-            {debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
-          </p>
-          {!debouncedSearch && (
-            <Link to="/diet-planner/recipes/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('recipes.create_first_recipe')}
-              </Button>
-            </Link>
-          )}
-        </div>
       ) : (
         <>
-          {viewMode === 'grid' ? (
+          {data && (
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={Number(data.totalCount)}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
+          )}
+          {data?.items.length === 0 ? (
+            <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
+              <p className="mb-2 text-xl font-semibold">{t('recipes.no_recipes_found')}</p>
+              <p className="text-muted-foreground mb-6">
+                {debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
+              </p>
+              {!debouncedSearch && (
+                <Button asChild>
+                  <Link to="/diet-planner/recipes/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('recipes.create_first_recipe')}
+                  </Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+            {viewMode === 'grid' ? (
             <div className="stagger-children grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {data?.items?.map((recipe) => (
+              {data?.items.map((recipe) => (
                 <Card
                   key={recipe.id}
                   className="group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
@@ -213,7 +227,7 @@ export default function RecipeList() {
                             {t('recipes.per_serving')}
                           </p>
                           <p className="mt-0.5 text-sm font-semibold">
-                            {`${Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal`}
+                            {`${Number(recipe.nutritionPerServing?.calories ?? 0).toFixed(0)} kcal`}
                           </p>
                         </div>
                         <div className="bg-muted/40 rounded-lg p-2.5">
@@ -221,28 +235,29 @@ export default function RecipeList() {
                             {t('products.table.protein')}
                           </p>
                           <p className="mt-0.5 text-sm font-semibold">
-                            {`${Number(recipe.nutritionPerServing.protein).toFixed(1)}g`}
+                            {`${Number(recipe.nutritionPerServing?.protein ?? 0).toFixed(1)}g`}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex gap-2 border-t pt-3">
-                        <Link to={`/diet-planner/recipes/${recipe.id}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full">
+                        <Button asChild variant="outline" size="sm" className="flex-1 w-full">
+                          <Link to={`/diet-planner/recipes/${recipe.id}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             {t('recipes.view')}
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         {recipe.isOwner && (
                           <>
-                            <Link to={`/diet-planner/recipes/${recipe.id}/edit`} aria-label="Edit">
-                              <Button variant="outline" size="sm">
+                            <Button asChild variant="outline" size="sm" aria-label="Edit">
+                              <Link to={`/diet-planner/recipes/${recipe.id}/edit`}>
                                 <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
+                              aria-label="Delete"
                               onClick={() => {
                                 openDeleteDialog(recipe.id, recipe.name);
                               }}
@@ -259,7 +274,7 @@ export default function RecipeList() {
             </div>
           ) : (
             <div className="stagger-children space-y-3">
-              {data?.items?.map((recipe) => (
+              {data?.items.map((recipe) => (
                 <Card key={recipe.id} className="transition-all duration-200 hover:shadow-md">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
@@ -280,30 +295,31 @@ export default function RecipeList() {
                             </span>
                           )}
                           <span>
-                            {Number(recipe.nutritionPerServing.calories).toFixed(0)} kcal/
+                            {Number(recipe.nutritionPerServing?.calories ?? 0).toFixed(0)} kcal/
                             {t('recipes.per_serving').toLowerCase()}
                           </span>
-                          <span>P: {Number(recipe.nutritionPerServing.protein).toFixed(1)}g</span>
-                          <span>C: {Number(recipe.nutritionPerServing.carbs).toFixed(1)}g</span>
-                          <span>F: {Number(recipe.nutritionPerServing.fat).toFixed(1)}g</span>
+                          <span>P: {Number(recipe.nutritionPerServing?.protein ?? 0).toFixed(1)}g</span>
+                          <span>C: {Number(recipe.nutritionPerServing?.carbs ?? 0).toFixed(1)}g</span>
+                          <span>F: {Number(recipe.nutritionPerServing?.fat ?? 0).toFixed(1)}g</span>
                         </div>
                       </div>
                       <div className="flex gap-1">
-                        <Link to={`/diet-planner/recipes/${recipe.id}`}>
-                          <Button variant="ghost" size="icon" className="hover:text-primary">
+                        <Button asChild variant="ghost" size="icon" className="hover:text-primary" aria-label="View">
+                          <Link to={`/diet-planner/recipes/${recipe.id}`}>
                             <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         {recipe.isOwner && (
                           <>
-                            <Link to={`/diet-planner/recipes/${recipe.id}/edit`} aria-label="Edit">
-                              <Button variant="ghost" size="icon" className="hover:text-primary">
+                            <Button asChild variant="ghost" size="icon" className="hover:text-primary" aria-label="Edit">
+                              <Link to={`/diet-planner/recipes/${recipe.id}/edit`}>
                                 <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label="Delete"
                               onClick={() => {
                                 openDeleteDialog(recipe.id, recipe.name);
                               }}
@@ -320,18 +336,7 @@ export default function RecipeList() {
               ))}
             </div>
           )}
-
-          {data && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalCount={Number(data.totalCount)}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
+            </>
           )}
         </>
       )}

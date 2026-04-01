@@ -2,12 +2,10 @@ using DietPlanner.Api;
 using DietPlanner.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Shared.Infrastructure.Extensions;
 using Shared.Infrastructure.Middleware;
-using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,72 +54,16 @@ builder.Services.AddCors(options =>
 });
 
 // ==============================================
-// Rate Limiting
-// ==============================================
-builder.Services.AddRateLimiter(options =>
-{
-    var importLimit = builder.Configuration.GetValue("RateLimiting:ImportRequestsPerMinute", 25);
-    var apiLimit = builder.Configuration.GetValue("RateLimiting:ApiRequestsPerMinute", 100);
-
-    options.AddPolicy("import", context =>
-    {
-        var partitionKey = context.User.Identity?.Name
-            ?? context.Connection.RemoteIpAddress?.ToString()
-            ?? "anonymous";
-
-        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
-            new FixedWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                PermitLimit = importLimit,
-                QueueLimit = 0
-            });
-    });
-
-    options.AddPolicy("api", context =>
-    {
-        var partitionKey = context.User.Identity?.Name
-            ?? context.Connection.RemoteIpAddress?.ToString()
-            ?? "anonymous";
-
-        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ =>
-            new FixedWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                PermitLimit = apiLimit,
-                QueueLimit = 10
-            });
-    });
-
-    options.OnRejected = async (context, _) =>
-    {
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-
-        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
-            ? (double?)retryAfterValue.TotalSeconds
-            : null;
-
-        await context.HttpContext.Response.WriteAsJsonAsync(new
-        {
-            error = "Rate limit exceeded. Please try again later.",
-            retryAfter
-        });
-    };
-});
-
-// ==============================================
 // Request Size Limits
 // ==============================================
 builder.Services.Configure<FormOptions>(options =>
 {
-    var maxSizeMB = builder.Configuration.GetValue("RateLimiting:MaxImportSizeMB", 5);
-    options.MultipartBodyLengthLimit = maxSizeMB * 1024L * 1024L;
+    options.MultipartBodyLengthLimit = 5 * 1024L * 1024L;
 });
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    var maxSizeMB = builder.Configuration.GetValue("RateLimiting:MaxImportSizeMB", 5);
-    options.Limits.MaxRequestBodySize = maxSizeMB * 1024L * 1024L;
+    options.Limits.MaxRequestBodySize = 5 * 1024L * 1024L;
     options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
 });
 
@@ -139,6 +81,15 @@ builder.Services.AddOpenApi(options =>
             Description = "API for diet planning. Manage products, recipes, meal entries, and nutrition goals."
         };
 
+        document.Tags = new HashSet<Microsoft.OpenApi.OpenApiTag>
+        {
+            new() { Name = "Products", Description = "Nutritional product catalogue — create, search, update, and delete food products." },
+            new() { Name = "Recipes", Description = "Recipes composed from products — create, search, update, and delete recipes with their ingredient lists." },
+            new() { Name = "Meals", Description = "Daily meal log — record recipe servings against specific dates and meal types, and query aggregated nutrition summaries." },
+            new() { Name = "Goals", Description = "Per-user daily nutrition targets — create or update calorie, protein, carbohydrate, fat, and fibre goals." },
+            new() { Name = "Health", Description = "Service health check endpoint." }
+        };
+
         document.Components ??= new Microsoft.OpenApi.OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme>();
         document.Components.SecuritySchemes["Bearer"] = new Microsoft.OpenApi.OpenApiSecurityScheme
@@ -146,7 +97,7 @@ builder.Services.AddOpenApi(options =>
             Type = Microsoft.OpenApi.SecuritySchemeType.Http,
             Scheme = "bearer",
             BearerFormat = "JWT",
-            Description = "Enter your JWT token from Authentik"
+            Description = "JWT Bearer token issued by Authentik. Pass the token value — the 'Bearer ' prefix is added automatically."
         };
 
         document.Security ??= [];
@@ -195,7 +146,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors("AllowFrontend");
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

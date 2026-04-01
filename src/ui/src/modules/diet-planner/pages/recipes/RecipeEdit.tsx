@@ -20,7 +20,7 @@ export default function RecipeEdit() {
         servings: data.servings,
         prepTimeMinutes: data.prepTimeMinutes ?? null,
         ingredients: data.ingredients.map((ing) => ({
-          productName: ing.productName,
+          productId: ing.productId,
           amount: ing.amount,
           unit: ing.unit,
         })),
@@ -64,7 +64,8 @@ export default function RecipeEdit() {
           servings: Number(recipe.servings),
           prepTimeMinutes: recipe.prepTimeMinutes ? Number(recipe.prepTimeMinutes) : undefined,
           ingredients: recipe.ingredients.map((ing) => ({
-            productName: ing.productName,
+            productId: ing.productId,
+            productName: '',
             amount: Number(ing.amount),
             unit: ing.unit,
           })),

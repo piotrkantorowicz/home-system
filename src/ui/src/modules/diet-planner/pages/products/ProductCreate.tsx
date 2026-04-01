@@ -13,11 +13,11 @@ export default function ProductCreate() {
     try {
       await createMutation.mutateAsync({
         name: data.name,
-        caloriesPer100g: data.caloriesPer100g,
-        proteinPer100g: data.proteinPer100g,
-        carbsPer100g: data.carbsPer100g,
-        fatPer100g: data.fatPer100g,
-        fiberPer100g: data.fiberPer100g ?? null,
+        calories: data.caloriesPer100g,
+        protein: data.proteinPer100g,
+        carbs: data.carbsPer100g,
+        fat: data.fatPer100g,
+        fiber: data.fiberPer100g ?? null,
         defaultUnit: data.defaultUnit,
         densityGramsPerMl: data.densityGramsPerMl ?? null,
         gramPerPiece: data.gramPerPiece ?? null,

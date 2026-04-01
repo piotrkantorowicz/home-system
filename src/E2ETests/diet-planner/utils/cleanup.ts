@@ -9,8 +9,7 @@ import { getTrackedIds, clearTracker } from './test-tracker';
 import type { APIRequestContext } from '@playwright/test';
 
 /**
- * Permanently delete a single item by ID.
- * Uses ?permanent=true to bypass soft-delete.
+ * Delete a single item by ID.
  */
 async function permanentDeleteById(
   apiContext: APIRequestContext,
@@ -18,7 +17,7 @@ async function permanentDeleteById(
   id: string,
   label: string
 ) {
-  const res = await apiContext.delete(`${endpoint}/${id}?permanent=true`);
+  const res = await apiContext.delete(`${endpoint}/${id}`);
   if (res.ok()) {
     console.log(`  Permanently deleted ${label}: ${id}`);
   } else if (res.status() === 404) {
@@ -57,30 +56,28 @@ async function permanentDeleteAll(
 
 /**
  * Delete all meal entries by listing them and deleting each one.
+ * The meals endpoint returns a flat array (not a paginated wrapper).
  */
 async function deleteAllMealEntries(apiContext: APIRequestContext) {
-  let page = 1;
+  // Fetch with a wide date range covering past + future to capture all entries
+  const from = '2000-01-01';
+  const to = '2100-12-31';
+  const res = await apiContext.get(`/api/v1/meals?from=${from}&to=${to}`);
+  if (!res.ok()) return;
 
-  while (true) {
-    const res = await apiContext.get(`/api/v1/meals?pageSize=100&page=${page}`);
-    if (!res.ok()) break;
-    const data = await res.json();
-    const items = data.items || [];
-    if (items.length === 0) break;
+  // The response is a flat array, but handle both shapes for safety
+  const data = await res.json();
+  const items: Array<{ id: string }> = Array.isArray(data) ? data : (data.items ?? []);
 
-    for (const item of items) {
-      const delRes = await apiContext.delete(`/api/v1/meals/${item.id}`);
-      if (delRes.ok()) {
-        console.log(`  Deleted meal entry: ${item.id}`);
-      } else if (delRes.status() === 404) {
-        console.log(`  Meal entry ${item.id} already gone (404)`);
-      } else {
-        console.warn(`  Failed to delete meal entry ${item.id}: ${delRes.status()}`);
-      }
+  for (const item of items) {
+    const delRes = await apiContext.delete(`/api/v1/meals/${item.id}`);
+    if (delRes.ok()) {
+      console.log(`  Deleted meal entry: ${item.id}`);
+    } else if (delRes.status() === 404) {
+      console.log(`  Meal entry ${item.id} already gone (404)`);
+    } else {
+      console.warn(`  Failed to delete meal entry ${item.id}: ${delRes.status()}`);
     }
-
-    if (items.length < 100) break;
-    page++;
   }
 }
 
@@ -94,8 +91,13 @@ export async function cleanupTestData() {
 
   try {
     const authState = JSON.parse(fs.readFileSync(authStatePath, 'utf-8'));
-    const origin = authState.origins.find((o: any) => o.origin.includes('localhost'));
-    const storageItem = origin?.localStorage.find((i: any) => i.name.startsWith('oidc.user:'));
+    const origin = authState.origins.find(
+      (o: { origin: string; localStorage: { name: string; value: string }[] }) =>
+        o.origin.includes('localhost'),
+    );
+    const storageItem = origin?.localStorage.find(
+      (i: { name: string; value: string }) => i.name.startsWith('oidc.user:'),
+    );
 
     if (!storageItem) {
       console.warn('No OIDC user found in storage, skipping cleanup');
