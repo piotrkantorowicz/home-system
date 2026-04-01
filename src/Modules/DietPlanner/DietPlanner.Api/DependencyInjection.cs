@@ -22,6 +22,7 @@ public static class DietPlannerModule
         app.MapRecipeEndpoints();
         app.MapMealEndpoints();
         app.MapGoalEndpoints();
+        app.MapMealScheduleEndpoints();
         return app;
     }
 }

@@ -10,4 +10,5 @@ public interface IDietPlannerReadDbContext
     DbSet<Recipe> Recipes { get; }
     DbSet<MealEntry> MealEntries { get; }
     DbSet<UserGoal> UserGoals { get; }
+    DbSet<MealScheduleConfig> MealScheduleConfigs { get; }
 }
