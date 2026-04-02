@@ -63,7 +63,7 @@ describe('useMealSchedule', () => {
 
     expect(result.current.data).toEqual(mockSchedule);
     expect(result.current.data?.slots).toHaveLength(2);
-    expect(result.current.data?.slots[0].name).toBe('Breakfast');
+    expect(result.current.data?.slots.at(0)?.name).toBe('Breakfast');
   });
 
   it('exposes error when GET API fails', async () => {

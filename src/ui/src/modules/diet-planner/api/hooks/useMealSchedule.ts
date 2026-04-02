@@ -2,43 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 
-export interface MealSlotDto {
-  id: string;
-  name: string;
-  defaultTime: string;
-  sortOrder: number;
-}
+import type { components } from '../generated/schema';
 
-export interface MealScheduleConfigDto {
-  id: string;
-  userId: string;
-  slots: MealSlotDto[];
-  createdAt: string;
-  updatedAt: string | null;
-}
-
-export interface MealSlotRequest {
-  name: string;
-  defaultTime: string;
-}
-
-export interface UpdateMealScheduleRequest {
-  slots: MealSlotRequest[];
-}
-
-interface MealScheduleApiResponse {
-  data?: MealScheduleConfigDto;
-  error?: unknown;
-}
+export type MealSlotDto = components['schemas']['MealSlotDto'];
+export type MealScheduleConfigDto = components['schemas']['MealScheduleConfigDto'];
+export type MealSlotRequest = components['schemas']['MealSlotRequest'];
+export type UpdateMealScheduleRequest = components['schemas']['UpdateMealScheduleRequest'];
 
 export function useMealSchedule() {
   return useQuery({
     queryKey: ['meal-schedule'],
     queryFn: async (): Promise<MealScheduleConfigDto | null> => {
-      // REASON: /api/v1/meal-schedule is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).GET('/api/v1/meal-schedule')) as MealScheduleApiResponse;
+      const response = await api.GET('/api/v1/meal-schedule');
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- openapi-typescript types 401 content as never; error is set at runtime for non-200 responses
       if (response.error) {
         throw new Error('Failed to fetch meal schedule');
       }
@@ -53,17 +30,13 @@ export function useUpdateMealSchedule() {
 
   return useMutation({
     mutationFn: async (data: UpdateMealScheduleRequest) => {
-      // REASON: /api/v1/meal-schedule is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).PUT('/api/v1/meal-schedule', {
-        body: data,
-      })) as MealScheduleApiResponse;
+      const response = await api.PUT('/api/v1/meal-schedule', { body: data });
 
       if (response.error) {
         throw new Error('Failed to update meal schedule');
       }
 
-      return response.data ?? null;
+      return null;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['meal-schedule'] });
