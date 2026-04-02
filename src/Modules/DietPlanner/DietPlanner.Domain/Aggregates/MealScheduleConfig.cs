@@ -16,7 +16,9 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
         string userId,
         IReadOnlyList<(string Name, TimeOnly DefaultTime)> slots)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new DietPlannerDomainException("User ID is required.");
+
         ValidateSlotCount(slots.Count);
 
         var config = new MealScheduleConfig

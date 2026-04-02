@@ -1,5 +1,6 @@
 namespace DietPlanner.Domain.Entities;
 
+using DietPlanner.Domain.Exceptions;
 using Shared.Abstractions.Domain;
 using DietPlanner.Domain.ValueObjects;
 
@@ -9,7 +10,9 @@ public sealed class MealSlot : Entity<MealSlotId>
 
     internal static MealSlot Create(MealSlotId id, string name, TimeOnly defaultTime, int sortOrder)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DietPlannerDomainException("Slot name is required.");
+
         return new MealSlot { Id = id, Name = name, DefaultTime = defaultTime, SortOrder = sortOrder };
     }
 
@@ -19,7 +22,9 @@ public sealed class MealSlot : Entity<MealSlotId>
 
     internal void Update(string name, TimeOnly defaultTime, int sortOrder)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DietPlannerDomainException("Slot name is required.");
+
         Name = name;
         DefaultTime = defaultTime;
         SortOrder = sortOrder;

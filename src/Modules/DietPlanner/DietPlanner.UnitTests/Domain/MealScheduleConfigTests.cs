@@ -62,19 +62,19 @@ public sealed class MealScheduleConfigTests
     }
 
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithNullUserId_ThrowsDomainException()
     {
         var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), null!, DefaultSlots);
 
-        act.ShouldThrow<ArgumentException>();
+        act.ShouldThrow<DietPlannerDomainException>();
     }
 
     [Fact]
-    public void Create_WithWhitespaceUserId_ThrowsArgumentException()
+    public void Create_WithWhitespaceUserId_ThrowsDomainException()
     {
         var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), "   ", DefaultSlots);
 
-        act.ShouldThrow<ArgumentException>();
+        act.ShouldThrow<DietPlannerDomainException>();
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class MealScheduleConfigTests
         config.UpdateSlots(DefaultSlots);
 
         config.UpdatedAt.ShouldNotBeNull();
-        config.UpdatedAt!.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-5), DateTime.UtcNow.AddSeconds(1));
+        config.UpdatedAt.Value.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-5), DateTime.UtcNow.AddSeconds(1));
     }
 
     [Fact]
