@@ -187,6 +187,53 @@ export const notificationPreferencesHandlers = [
   }),
 ];
 
+export const hydrationHandlers = [
+  http.get(`${BASE}/api/v1/hydration/config`, () => {
+    return HttpResponse.json({
+      id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      userId: 'user-1',
+      dailyWaterTargetMl: 2500,
+      glassSizeMl: 250,
+      trackWaterIntake: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    });
+  }),
+
+  http.put(`${BASE}/api/v1/hydration/config`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(`${BASE}/api/v1/hydration/intake`, () => {
+    return HttpResponse.json({
+      date: '2024-01-15',
+      totalMl: 500,
+      entries: [
+        {
+          id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          amountMl: 250,
+          timestamp: '2024-01-15T08:00:00Z',
+          note: null,
+        },
+        {
+          id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+          amountMl: 250,
+          timestamp: '2024-01-15T10:00:00Z',
+          note: 'Morning',
+        },
+      ],
+    });
+  }),
+
+  http.post(`${BASE}/api/v1/hydration/intake`, () => {
+    return HttpResponse.json('dddddddd-dddd-dddd-dddd-dddddddddddd', { status: 201 });
+  }),
+
+  http.delete(`${BASE}/api/v1/hydration/intake/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const handlers = [
   ...productHandlers,
   ...mealHandlers,
@@ -194,4 +241,5 @@ export const handlers = [
   ...mealScheduleHandlers,
   ...profileHandlers,
   ...notificationPreferencesHandlers,
+  ...hydrationHandlers,
 ];

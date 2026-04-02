@@ -152,9 +152,9 @@ describe('useLogWaterIntake', () => {
     const { result } = renderHook(() => useLogWaterIntake(), { wrapper: createWrapper() });
 
     await waitFor(async () => {
-      await expect(
-        result.current.mutateAsync({ date: '2024-01-15', amountMl: 0 }),
-      ).rejects.toThrow('Failed to log water intake');
+      await expect(result.current.mutateAsync({ date: '2024-01-15', amountMl: 0 })).rejects.toThrow(
+        'Failed to log water intake',
+      );
     });
   });
 });
