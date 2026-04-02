@@ -1,8 +1,8 @@
-namespace DietPlanner.Application.Commands.CreateOrUpdateProfile;
+namespace DietPlanner.Application.Commands.CreateProfile;
 
 using Shared.Abstractions.CQRS;
 
-public sealed record CreateOrUpdateProfileCommand(
+public sealed record CreateProfileCommand(
     string UserId,
     DateOnly? DateOfBirth,
     string? Gender,

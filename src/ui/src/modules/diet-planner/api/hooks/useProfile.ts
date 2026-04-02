@@ -2,51 +2,45 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 
-interface ProfileDto {
-  id: string;
-  userId: string;
-  dateOfBirth: string | null;
-  gender: string | null;
-  heightCm: number | null;
-  currentWeightKg: number | null;
-  targetWeightKg: number | null;
-  activityLevel: string | null;
-  createdAt: string;
-  updatedAt: string | null;
-}
+import type { components } from '../generated/schema';
 
-interface ProfileRequest {
-  dateOfBirth?: string | null;
-  gender?: string | null;
-  heightCm?: number | null;
-  currentWeightKg?: number | null;
-  targetWeightKg?: number | null;
-  activityLevel?: string | null;
-}
-
-interface ProfileApiResponse {
-  data?: ProfileDto;
-  error?: unknown;
-}
-
-interface ProfileUpdateApiResponse {
-  data?: string;
-  error?: unknown;
-}
+export type UserProfileDto = components['schemas']['UserProfileDto'];
+export type ProfileRequest = components['schemas']['ProfileRequest'];
 
 export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
-    queryFn: async (): Promise<ProfileDto | null> => {
-      // REASON: /api/v1/profile is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).GET('/api/v1/profile')) as ProfileApiResponse;
+    queryFn: async (): Promise<UserProfileDto | null> => {
+      const response = await api.GET('/api/v1/profile');
 
-      if (response.error) {
+      if (response.response.status === 404) {
+        return null;
+      }
+
+      if (!response.response.ok) {
         throw new Error('Failed to fetch profile');
       }
 
       return response.data ?? null;
+    },
+  });
+}
+
+export function useCreateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: ProfileRequest) => {
+      const response = await api.POST('/api/v1/profile', { body: data });
+
+      if (!response.response.ok) {
+        throw new Error('Failed to create profile');
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 }
@@ -56,17 +50,11 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (data: ProfileRequest) => {
-      // REASON: /api/v1/profile is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).PUT('/api/v1/profile', {
-        body: data,
-      })) as ProfileUpdateApiResponse;
+      const response = await api.PUT('/api/v1/profile', { body: data });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to update profile');
       }
-
-      return response.data;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['profile'] });

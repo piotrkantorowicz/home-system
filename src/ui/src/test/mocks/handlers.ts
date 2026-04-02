@@ -141,9 +141,35 @@ export const mealScheduleHandlers = [
   }),
 ];
 
+export const profileHandlers = [
+  http.get(`${BASE}/api/v1/profile`, () => {
+    return HttpResponse.json({
+      id: '66666666-6666-6666-6666-666666666666',
+      userId: 'user-1',
+      dateOfBirth: '1990-05-15',
+      gender: 'Male',
+      heightCm: 180,
+      currentWeightKg: 80,
+      targetWeightKg: 75,
+      activityLevel: 'ModeratelyActive',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: null,
+    });
+  }),
+
+  http.post(`${BASE}/api/v1/profile`, () => {
+    return HttpResponse.json('66666666-6666-6666-6666-666666666666', { status: 201 });
+  }),
+
+  http.put(`${BASE}/api/v1/profile`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const handlers = [
   ...productHandlers,
   ...mealHandlers,
   ...goalHandlers,
   ...mealScheduleHandlers,
+  ...profileHandlers,
 ];

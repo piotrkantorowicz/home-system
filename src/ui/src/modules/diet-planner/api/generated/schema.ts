@@ -232,6 +232,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's nutrition goals
+         * @description Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.
+         */
+        get: operations["GetGoals"];
+        /**
+         * Update nutrition goals for the current user
+         * @description Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.
+         */
+        put: operations["UpdateGoals"];
+        /**
+         * Create nutrition goals for the current user
+         * @description Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.
+         */
+        post: operations["CreateGoals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meal-schedule": {
         parameters: {
             query?: never;
@@ -256,7 +284,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/goals": {
+    "/api/v1/profile": {
         parameters: {
             query?: never;
             header?: never;
@@ -264,20 +292,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get the current user's nutrition goals
-         * @description Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.
+         * Get the current user's biometrics profile
+         * @description Returns the biometrics profile for the current user, or 404 if none exists.
          */
-        get: operations["GetGoals"];
+        get: operations["GetProfile"];
         /**
-         * Update nutrition goals for the current user
-         * @description Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.
+         * Update the current user's biometrics profile
+         * @description Replaces all biometric fields on the existing profile. Pass null to clear a field.
          */
-        put: operations["UpdateGoals"];
+        put: operations["UpdateProfile"];
         /**
-         * Create nutrition goals for the current user
-         * @description Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.
+         * Create a biometrics profile for the current user
+         * @description Creates a new biometrics profile. All biometric fields are optional.
          */
-        post: operations["CreateGoals"];
+        post: operations["CreateProfile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -343,33 +371,6 @@ export interface components {
             fat: number | string;
             /** Format: double */
             fiber: number | string;
-        };
-        MealSlotDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** Format: time */
-            defaultTime: string;
-            /** Format: int32 */
-            sortOrder: number;
-        };
-        MealScheduleConfigDto: {
-            /** Format: uuid */
-            id: string;
-            userId: string;
-            slots: components["schemas"]["MealSlotDto"][];
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: null | string;
-        };
-        MealSlotRequest: {
-            name: string;
-            /** Format: time */
-            defaultTime: string;
-        };
-        UpdateMealScheduleRequest: {
-            slots: components["schemas"]["MealSlotRequest"][];
         };
         GoalDto: {
             /** Format: uuid */
@@ -516,6 +517,28 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        MealScheduleConfigDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            slots: components["schemas"]["MealSlotDto"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        MealSlotDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            defaultTime: string;
+            /** Format: int32 */
+            sortOrder: number | string;
+        };
+        MealSlotRequest: {
+            name: string;
+            defaultTime: string;
+        };
         NutritionDto: {
             /** Format: double */
             calories: number | string;
@@ -588,6 +611,18 @@ export interface components {
             updatedAt: null | string;
             isOwner: boolean;
         };
+        ProfileRequest: {
+            /** Format: date */
+            dateOfBirth: null | string;
+            gender: null | string;
+            /** Format: double */
+            heightCm: null | number | string;
+            /** Format: double */
+            currentWeightKg: null | number | string;
+            /** Format: double */
+            targetWeightKg: null | number | string;
+            activityLevel: null | string;
+        };
         RecipeDto: {
             /** Format: uuid */
             id: string;
@@ -639,6 +674,9 @@ export interface components {
             /** Format: int32 */
             sequenceOrder: null | number | string;
         };
+        UpdateMealScheduleRequest: {
+            slots: components["schemas"]["MealSlotRequest"][];
+        };
         UpdateProductRequest: {
             name: string;
             /** Format: double */
@@ -666,6 +704,25 @@ export interface components {
             /** Format: int32 */
             prepTimeMinutes: null | number | string;
             ingredients: components["schemas"]["RecipeIngredientRequest"][];
+        };
+        UserProfileDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            /** Format: date */
+            dateOfBirth: null | string;
+            gender: null | string;
+            /** Format: double */
+            heightCm: null | number | string;
+            /** Format: double */
+            currentWeightKg: null | number | string;
+            /** Format: double */
+            targetWeightKg: null | number | string;
+            activityLevel: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
         };
         ValidationIssueDto: {
             severity: string;
@@ -1510,7 +1567,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MealScheduleConfigDto"] | null;
+                    "application/json": components["schemas"]["MealScheduleConfigDto"];
                 };
             };
             /** @description Unauthorized */
@@ -1541,6 +1598,125 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UpdateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CreateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
             };
             /** @description Bad Request */
             400: {

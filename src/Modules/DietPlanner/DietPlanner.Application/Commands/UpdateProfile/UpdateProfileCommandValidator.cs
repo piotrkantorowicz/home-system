@@ -1,11 +1,11 @@
-namespace DietPlanner.Application.Commands.CreateOrUpdateProfile;
+namespace DietPlanner.Application.Commands.UpdateProfile;
 
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.CQRS;
 
-internal sealed class CreateOrUpdateProfileCommandValidator : ICommandValidator<CreateOrUpdateProfileCommand>
+internal sealed class UpdateProfileCommandValidator : ICommandValidator<UpdateProfileCommand>
 {
-    public IEnumerable<ValidationError> Validate(CreateOrUpdateProfileCommand command)
+    public IEnumerable<ValidationError> Validate(UpdateProfileCommand command)
     {
         if (string.IsNullOrWhiteSpace(command.UserId))
             yield return new ValidationError(nameof(command.UserId), "UserId is required.");

@@ -1,7 +1,8 @@
 namespace DietPlanner.Api;
 
 using System.Security.Claims;
-using DietPlanner.Application.Commands.CreateOrUpdateProfile;
+using DietPlanner.Application.Commands.CreateProfile;
+using DietPlanner.Application.Commands.UpdateProfile;
 using DietPlanner.Application.Queries.GetProfile;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -24,12 +25,21 @@ public static class ProfileEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
-        group.MapPut("/", CreateOrUpdateProfile)
-            .WithName("CreateOrUpdateProfile")
-            .WithSummary("Create or update the current user's biometrics profile")
-            .WithDescription("Creates a new profile if none exists, or updates the existing one. All biometric fields are optional.")
-            .Produces<Guid>()
+        group.MapPost("/", CreateProfile)
+            .WithName("CreateProfile")
+            .WithSummary("Create a biometrics profile for the current user")
+            .WithDescription("Creates a new biometrics profile. All biometric fields are optional.")
+            .Produces<Guid>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPut("/", UpdateProfile)
+            .WithName("UpdateProfile")
+            .WithSummary("Update the current user's biometrics profile")
+            .WithDescription("Replaces all biometric fields on the existing profile. Pass null to clear a field.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
         return app;
@@ -46,18 +56,32 @@ public static class ProfileEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> CreateOrUpdateProfile(
+    private static async Task<IResult> CreateProfile(
         ProfileRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
         var userId = GetUserId(user);
-        Guid id = await dispatcher.SendAsync<CreateOrUpdateProfileCommand, Guid>(
-            new CreateOrUpdateProfileCommand(
+        Guid id = await dispatcher.SendAsync<CreateProfileCommand, Guid>(
+            new CreateProfileCommand(
                 userId, request.DateOfBirth, request.Gender, request.HeightCm,
                 request.CurrentWeightKg, request.TargetWeightKg, request.ActivityLevel), ct);
-        return TypedResults.Ok(id);
+        return TypedResults.Created($"/api/v1/profile/{id}");
+    }
+
+    private static async Task<IResult> UpdateProfile(
+        ProfileRequest request,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        await dispatcher.SendAsync(
+            new UpdateProfileCommand(
+                userId, request.DateOfBirth, request.Gender, request.HeightCm,
+                request.CurrentWeightKg, request.TargetWeightKg, request.ActivityLevel), ct);
+        return TypedResults.NoContent();
     }
 
     private static string GetUserId(ClaimsPrincipal user)

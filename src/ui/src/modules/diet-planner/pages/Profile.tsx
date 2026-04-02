@@ -1,5 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useProfile, useUpdateProfile } from '@modules/diet-planner/api/hooks/useProfile';
+import {
+  useProfile,
+  useCreateProfile,
+  useUpdateProfile,
+} from '@modules/diet-planner/api/hooks/useProfile';
 import {
   Card,
   CardHeader,
@@ -34,7 +38,9 @@ type ProfileFormData = z.output<typeof profileSchema>;
 export default function Profile() {
   const { t } = useTranslation('diet-planner');
   const { data: profile, isLoading } = useProfile();
+  const createMutation = useCreateProfile();
   const updateMutation = useUpdateProfile();
+  const saveMutation = profile ? updateMutation : createMutation;
 
   const {
     register,
@@ -67,7 +73,7 @@ export default function Profile() {
   }, [profile, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    await updateMutation.mutateAsync({
+    await saveMutation.mutateAsync({
       dateOfBirth: data.dateOfBirth ?? null,
       gender: data.gender ?? null,
       heightCm: data.heightCm ?? null,
@@ -220,8 +226,8 @@ export default function Profile() {
 
         {/* Submit */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={updateMutation.isPending || !isDirty}>
-            {updateMutation.isPending ? (
+          <Button type="submit" disabled={saveMutation.isPending || !isDirty}>
+            {saveMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t('common.saving')}
@@ -235,7 +241,7 @@ export default function Profile() {
           </Button>
         </div>
 
-        {updateMutation.isSuccess && (
+        {saveMutation.isSuccess && (
           <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
             {t('profile.save_success')}
           </p>
