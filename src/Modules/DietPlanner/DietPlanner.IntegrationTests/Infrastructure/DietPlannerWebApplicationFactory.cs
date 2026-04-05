@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-public sealed class DietPlannerWebApplicationFactory(string connectionString)
+public sealed class DietPlannerWebApplicationFactory(string connectionString, string? userId = null)
     : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -21,6 +21,10 @@ public sealed class DietPlannerWebApplicationFactory(string connectionString)
             services.RemoveAll<DbContextOptions<DietPlannerDbContext>>();
             services.AddDbContext<DietPlannerDbContext>(options =>
                 options.UseNpgsql(connectionString));
+
+            // Optionally override the test user identity (e.g. for isolation tests)
+            if (userId is not null)
+                services.AddSingleton(new TestUserIdOverride(userId));
 
             // Replace JWT auth with test stub
             services.AddAuthentication(TestAuthHandler.SchemeName)

@@ -290,6 +290,17 @@
     "update_btn": "Aktualizuj Produkt",
     "saving": "Zapisywanie..."
   },
+  "meal_schedule": {
+    "nav": "Harmonogram Posiłków",
+    "title": "Harmonogram Posiłków",
+    "subtitle": "Skonfiguruj swoje dzienne sloty posiłków",
+    "slot_name": "Nazwa Slotu",
+    "slot_time": "Domyślna Godzina",
+    "add_slot": "Dodaj Slot",
+    "remove_slot": "Usuń slot",
+    "save_btn": "Zapisz Harmonogram",
+    "save_success": "Harmonogram posiłków zapisany pomyślnie!"
+  },
   "recipe_form": {
     "edit_title": "Edytuj Przepis",
     "create_title": "Utwórz Nowy Przepis",

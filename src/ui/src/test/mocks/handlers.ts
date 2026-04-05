@@ -106,4 +106,44 @@ export const goalHandlers = [
   }),
 ];
 
-export const handlers = [...productHandlers, ...mealHandlers, ...goalHandlers];
+export const mealScheduleHandlers = [
+  http.get(`${BASE}/api/v1/meal-schedule`, () => {
+    return HttpResponse.json({
+      id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+      userId: 'user-1',
+      slots: [
+        {
+          id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+          name: 'Breakfast',
+          defaultTime: '07:00',
+          sortOrder: 0,
+        },
+        {
+          id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+          name: 'Lunch',
+          defaultTime: '12:00',
+          sortOrder: 1,
+        },
+        {
+          id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+          name: 'Dinner',
+          defaultTime: '18:00',
+          sortOrder: 2,
+        },
+      ],
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: null,
+    });
+  }),
+
+  http.put(`${BASE}/api/v1/meal-schedule`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
+export const handlers = [
+  ...productHandlers,
+  ...mealHandlers,
+  ...goalHandlers,
+  ...mealScheduleHandlers,
+];

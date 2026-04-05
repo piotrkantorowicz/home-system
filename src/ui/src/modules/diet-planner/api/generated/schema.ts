@@ -232,6 +232,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meal-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's meal schedule configuration
+         * @description Returns the configured meal slots for the current user. Returns `null` body when no schedule has been set yet.
+         */
+        get: operations["GetMealSchedule"];
+        /**
+         * Create or update meal schedule configuration
+         * @description Sets the meal slots for the current user. Replaces all existing slots.
+         */
+        put: operations["UpdateMealSchedule"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/goals": {
         parameters: {
             query?: never;
@@ -319,6 +343,33 @@ export interface components {
             fat: number | string;
             /** Format: double */
             fiber: number | string;
+        };
+        MealSlotDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: time */
+            defaultTime: string;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        MealScheduleConfigDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            slots: components["schemas"]["MealSlotDto"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        MealSlotRequest: {
+            name: string;
+            /** Format: time */
+            defaultTime: string;
+        };
+        UpdateMealScheduleRequest: {
+            slots: components["schemas"]["MealSlotRequest"][];
         };
         GoalDto: {
             /** Format: uuid */
@@ -1425,6 +1476,71 @@ export interface operations {
                 content: {
                     "application/json": string;
                 };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetMealSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealScheduleConfigDto"] | null;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UpdateMealSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMealScheduleRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bad Request */
             400: {
