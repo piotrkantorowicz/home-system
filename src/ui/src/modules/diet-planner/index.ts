@@ -8,6 +8,7 @@ import {
   BarChart2,
   Clock,
   User,
+  Bell,
 } from 'lucide-react';
 import { lazy } from 'react';
 
@@ -31,6 +32,7 @@ const Goals = lazy(() => import('./pages/Goals'));
 const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 const MealSchedule = lazy(() => import('./pages/MealSchedule'));
 const Profile = lazy(() => import('./pages/Profile'));
+const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -97,6 +99,12 @@ export const dietPlannerModule: AppModule = {
       icon: User,
       translationKey: 'common.profile',
     },
+    {
+      name: 'Notification Preferences',
+      href: '/diet-planner/notification-preferences',
+      icon: Bell,
+      translationKey: 'notifications.nav',
+    },
   ],
   routes: [
     { index: true, Component: Dashboard },
@@ -114,5 +122,6 @@ export const dietPlannerModule: AppModule = {
     { path: 'nutrition', Component: NutritionSummary },
     { path: 'meal-schedule', Component: MealSchedule },
     { path: 'profile', Component: Profile },
+    { path: 'notification-preferences', Component: NotificationPreferences },
   ],
 };

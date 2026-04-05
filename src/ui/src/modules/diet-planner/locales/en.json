@@ -269,6 +269,27 @@
     "save_btn": "Save Profile",
     "save_success": "Profile saved successfully!"
   },
+  "notifications": {
+    "nav": "Notification Preferences",
+    "title": "Notification Preferences",
+    "subtitle": "Configure when and how you receive reminders and alerts",
+    "meal_reminders_header": "Meal Reminders",
+    "meal_reminders_desc": "Get notified before your scheduled meals",
+    "meal_reminder_enabled_label": "Enable meal reminders",
+    "meal_lead_time_label": "Lead time (minutes)",
+    "meal_lead_time_help": "Get notified this many minutes before each scheduled meal",
+    "water_reminders_header": "Water Reminders",
+    "water_reminders_desc": "Stay hydrated with periodic water intake reminders",
+    "water_reminder_enabled_label": "Enable water reminders",
+    "water_interval_label": "Reminder interval (minutes)",
+    "water_interval_help": "Get reminded to drink water every this many minutes",
+    "other_header": "Other Notifications",
+    "other_desc": "Additional alerts to keep you on track",
+    "weekly_summary_label": "Weekly nutrition summary",
+    "goal_milestone_label": "Goal milestone alerts",
+    "save_btn": "Save Preferences",
+    "save_success": "Preferences saved successfully!"
+  },
   "common": {
     "cancel": "Cancel",
     "delete": "Delete",

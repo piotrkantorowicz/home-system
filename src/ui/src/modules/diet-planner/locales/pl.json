@@ -269,6 +269,27 @@
     "save_btn": "Zapisz Profil",
     "save_success": "Profil zapisany pomyślnie!"
   },
+  "notifications": {
+    "nav": "Preferencje Powiadomień",
+    "title": "Preferencje Powiadomień",
+    "subtitle": "Skonfiguruj kiedy i jak otrzymujesz przypomnienia i alerty",
+    "meal_reminders_header": "Przypomnienia o Posiłkach",
+    "meal_reminders_desc": "Otrzymuj powiadomienia przed zaplanowanymi posiłkami",
+    "meal_reminder_enabled_label": "Włącz przypomnienia o posiłkach",
+    "meal_lead_time_label": "Czas wyprzedzenia (minuty)",
+    "meal_lead_time_help": "Otrzymaj powiadomienie tyle minut przed każdym zaplanowanym posiłkiem",
+    "water_reminders_header": "Przypomnienia o Wodzie",
+    "water_reminders_desc": "Pozostań nawodniony dzięki regularnym przypomnieniom o piciu wody",
+    "water_reminder_enabled_label": "Włącz przypomnienia o wodzie",
+    "water_interval_label": "Interwał przypomnień (minuty)",
+    "water_interval_help": "Otrzymuj przypomnienie o piciu wody co tyle minut",
+    "other_header": "Inne Powiadomienia",
+    "other_desc": "Dodatkowe alerty pomagające utrzymać motywację",
+    "weekly_summary_label": "Cotygodniowe podsumowanie żywienia",
+    "goal_milestone_label": "Alerty o osiąganiu celów",
+    "save_btn": "Zapisz Preferencje",
+    "save_success": "Preferencje zapisane pomyślnie!"
+  },
   "common": {
     "cancel": "Anuluj",
     "delete": "Usuń",
