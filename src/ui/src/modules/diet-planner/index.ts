@@ -7,6 +7,7 @@ import {
   Target,
   BarChart2,
   Clock,
+  User,
 } from 'lucide-react';
 import { lazy } from 'react';
 
@@ -29,6 +30,7 @@ const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
 const Goals = lazy(() => import('./pages/Goals'));
 const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 const MealSchedule = lazy(() => import('./pages/MealSchedule'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -89,6 +91,12 @@ export const dietPlannerModule: AppModule = {
       icon: Upload,
       translationKey: 'common.import_plan',
     },
+    {
+      name: 'Profile',
+      href: '/diet-planner/profile',
+      icon: User,
+      translationKey: 'common.profile',
+    },
   ],
   routes: [
     { index: true, Component: Dashboard },
@@ -105,5 +113,6 @@ export const dietPlannerModule: AppModule = {
     { path: 'import', Component: ImportWizard },
     { path: 'nutrition', Component: NutritionSummary },
     { path: 'meal-schedule', Component: MealSchedule },
+    { path: 'profile', Component: Profile },
   ],
 };

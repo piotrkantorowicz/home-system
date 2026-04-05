@@ -15,6 +15,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     public DbSet<MealScheduleConfig> MealScheduleConfigs => Set<MealScheduleConfig>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
