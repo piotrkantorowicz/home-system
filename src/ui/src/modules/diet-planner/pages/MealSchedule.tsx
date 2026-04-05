@@ -68,7 +68,7 @@ export default function MealSchedule() {
       reset({
         slots: schedule.slots
           .slice()
-          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
           .map((slot) => ({ name: slot.name, defaultTime: slot.defaultTime })),
       });
     }
