@@ -29,6 +29,8 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IMealScheduleConfigRepository, MealScheduleConfigRepository>();
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<INotificationPreferencesRepository, NotificationPreferencesRepository>();
+        services.AddScoped<IHydrationConfigRepository, HydrationConfigRepository>();
+        services.AddScoped<IWaterIntakeRepository, WaterIntakeRepository>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();

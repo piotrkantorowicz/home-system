@@ -9,6 +9,7 @@ import {
   Clock,
   User,
   Bell,
+  Droplets,
 } from 'lucide-react';
 import { lazy } from 'react';
 
@@ -33,6 +34,7 @@ const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 const MealSchedule = lazy(() => import('./pages/MealSchedule'));
 const Profile = lazy(() => import('./pages/Profile'));
 const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
+const Hydration = lazy(() => import('./pages/Hydration'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -88,6 +90,12 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'meal_schedule.nav',
     },
     {
+      name: 'Hydration',
+      href: '/diet-planner/hydration',
+      icon: Droplets,
+      translationKey: 'common.hydration',
+    },
+    {
       name: 'Import Plan',
       href: '/diet-planner/import',
       icon: Upload,
@@ -123,5 +131,6 @@ export const dietPlannerModule: AppModule = {
     { path: 'meal-schedule', Component: MealSchedule },
     { path: 'profile', Component: Profile },
     { path: 'notification-preferences', Component: NotificationPreferences },
+    { path: 'hydration', Component: Hydration },
   ],
 };

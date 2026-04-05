@@ -25,6 +25,7 @@ public static class DietPlannerModule
         app.MapMealScheduleEndpoints();
         app.MapProfileEndpoints();
         app.MapNotificationPreferencesEndpoints();
+        app.MapHydrationEndpoints();
         return app;
     }
 }
