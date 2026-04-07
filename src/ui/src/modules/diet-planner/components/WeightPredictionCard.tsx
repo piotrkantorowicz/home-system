@@ -19,7 +19,7 @@ function WeightTrendIcon({ weeklyChange }: { weeklyChange: number }) {
   if (weeklyChange > 0.01) {
     return <TrendingUp className="h-5 w-5 text-orange-500" aria-hidden />;
   }
-  return <Minus className="text-muted-foreground h-5 w-5" aria-hidden />;
+  return <Minus className="h-5 w-5 text-muted-foreground" aria-hidden />;
 }
 
 function BmiCategory(bmi: number): string {
@@ -62,15 +62,15 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
   const { data: prediction, isLoading } = useWeightPrediction(debouncedCalories);
 
-  const weeklyChange = Number(prediction?.weeklyWeightChange ?? 0);
+  const weeklyChange = prediction?.weeklyWeightChange ?? 0;
   const weeklyChangeAbs = Math.abs(weeklyChange);
   const isLoss = weeklyChange < -0.01;
   const isGain = weeklyChange > 0.01;
 
-  const currentBmiCategory = prediction ? BmiCategory(Number(prediction.currentBmi)) : null;
+  const currentBmiCategory = prediction ? BmiCategory(prediction.currentBmi) : null;
   const targetBmiCategory =
     prediction?.targetBmi !== undefined && prediction.targetBmi !== null
-      ? BmiCategory(Number(prediction.targetBmi))
+      ? BmiCategory(prediction.targetBmi)
       : null;
 
   return (
@@ -99,9 +99,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             }}
             className="mt-1"
           />
-          <p className="text-muted-foreground mt-1 text-xs">
-            {t('prediction.calorie_target_help')}
-          </p>
+          <p className="text-muted-foreground mt-1 text-xs">{t('prediction.calorie_target_help')}</p>
         </div>
 
         {!hasProfile && (
@@ -127,42 +125,42 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* BMR */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 {t('prediction.bmr_label')}
               </p>
-              <p className="mt-1 text-2xl font-bold">{Number(prediction.bmr).toFixed(0)}</p>
+              <p className="mt-1 text-2xl font-bold">{prediction.bmr.toFixed(0)}</p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
 
             {/* TDEE */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 {t('prediction.tdee_label')}
               </p>
-              <p className="mt-1 text-2xl font-bold">{Number(prediction.tdee).toFixed(0)}</p>
+              <p className="mt-1 text-2xl font-bold">{prediction.tdee.toFixed(0)}</p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
 
             {/* Daily deficit / surplus */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                {Number(prediction.dailyDeficit) >= 0
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                {prediction.dailyDeficit >= 0
                   ? t('prediction.daily_surplus_label')
                   : t('prediction.daily_deficit_label')}
               </p>
               <p
                 className={`mt-1 text-2xl font-bold ${
-                  Number(prediction.dailyDeficit) < 0 ? 'text-emerald-500' : 'text-orange-500'
+                  prediction.dailyDeficit < 0 ? 'text-emerald-500' : 'text-orange-500'
                 }`}
               >
-                {Math.abs(Number(prediction.dailyDeficit)).toFixed(0)}
+                {Math.abs(prediction.dailyDeficit).toFixed(0)}
               </p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
 
             {/* Weekly weight change */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 {t('prediction.weekly_change_label')}
               </p>
               <div className="mt-1 flex items-center gap-1.5">
@@ -180,13 +178,13 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
             {/* Current BMI */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 {t('prediction.current_bmi_label')}
               </p>
               <p
                 className={`mt-1 text-2xl font-bold ${currentBmiCategory !== null ? (BMI_COLORS[currentBmiCategory] ?? '') : ''}`}
               >
-                {Number(prediction.currentBmi).toFixed(1)}
+                {prediction.currentBmi.toFixed(1)}
               </p>
               {currentBmiCategory !== null && (
                 <p className="text-muted-foreground text-xs">
@@ -198,13 +196,13 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             {/* Target BMI */}
             {prediction.targetBmi !== null && (
               <div className="rounded-lg border p-3">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   {t('prediction.target_bmi_label')}
                 </p>
                 <p
                   className={`mt-1 text-2xl font-bold ${targetBmiCategory !== null ? (BMI_COLORS[targetBmiCategory] ?? '') : ''}`}
                 >
-                  {Number(prediction.targetBmi).toFixed(1)}
+                  {prediction.targetBmi.toFixed(1)}
                 </p>
                 {targetBmiCategory !== null && (
                   <p className="text-muted-foreground text-xs">
@@ -217,7 +215,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             {/* Estimated goal date */}
             {prediction.estimatedGoalDate !== null && (
               <div className="rounded-lg border p-3 sm:col-span-2 lg:col-span-3">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   {t('prediction.goal_date_label')}
                 </p>
                 <p className="mt-1 text-xl font-bold">
