@@ -36,7 +36,7 @@ type ProfileFormInput = z.input<typeof profileSchema>;
 type ProfileFormData = z.output<typeof profileSchema>;
 
 export default function Profile() {
-  const { t } = useTranslation('diet-planner');
+  const { t } = useTranslation();
   const { data: profile, isLoading } = useProfile();
   const createMutation = useCreateProfile();
   const updateMutation = useUpdateProfile();

@@ -323,7 +323,17 @@
     "delete": "Usuń",
     "deleting": "Usuwanie...",
     "saving": "Zapisywanie...",
-    "loading": "Ładowanie..."
+    "loading": "Ładowanie...",
+    "diet_planner": "Planista Diety",
+    "dashboard": "Pulpit",
+    "products": "Produkty",
+    "recipes": "Przepisy",
+    "calendar": "Kalendarz",
+    "goals": "Cele",
+    "nutrition": "Żywienie",
+    "hydration": "Nawodnienie",
+    "import_plan": "Importuj Plan",
+    "profile": "Profil"
   },
   "diet_plan_form": {
     "title": "Utwórz Nowy Plan Diety",

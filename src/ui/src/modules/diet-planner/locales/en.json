@@ -323,7 +323,17 @@
     "delete": "Delete",
     "deleting": "Deleting...",
     "saving": "Saving...",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "diet_planner": "Diet Planner",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "recipes": "Recipes",
+    "calendar": "Calendar",
+    "goals": "Goals",
+    "nutrition": "Nutrition",
+    "hydration": "Hydration",
+    "import_plan": "Import Plan",
+    "profile": "Profile"
   },
   "diet_plan_form": {
     "title": "Create New Diet Plan",
