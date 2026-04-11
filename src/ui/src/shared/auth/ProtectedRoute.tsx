@@ -22,8 +22,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
       }
       void auth.signinRedirect();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoading, auth.isAuthenticated]);
+  }, [auth]);
 
   if (auth.isLoading) {
     return (
