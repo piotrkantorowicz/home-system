@@ -11,7 +11,7 @@ export class MealSchedulePage {
   constructor(page: Page) {
     this.page = page;
     this.addSlotButton = page.getByRole('button', { name: /add slot/i });
-    this.saveButton = page.getByRole('button', { name: /save meal schedule/i });
+    this.saveButton = page.getByRole('button', { name: /save schedule/i });
     this.successMessage = page.getByText(/saved successfully/i);
   }
 

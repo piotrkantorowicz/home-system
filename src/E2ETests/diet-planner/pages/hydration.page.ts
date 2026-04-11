@@ -13,7 +13,7 @@ export class HydrationPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.progressBar = page.getByRole('progressbar');
+    this.progressBar = page.locator('div:has(> [role="progressbar"])');
     this.dailyTargetInput = page.getByLabel(/daily.*target/i);
     this.glassSizeInput = page.getByLabel(/glass size/i);
     this.saveSettingsButton = page.getByRole('button', { name: /save settings/i });

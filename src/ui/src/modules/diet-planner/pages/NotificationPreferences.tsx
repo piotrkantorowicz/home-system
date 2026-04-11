@@ -101,6 +101,7 @@ export default function NotificationPreferences() {
         onSubmit={(e) => {
           void handleSubmit(onSubmit)(e);
         }}
+        noValidate
         className="space-y-6"
       >
         {/* Meal Reminders */}

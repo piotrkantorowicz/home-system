@@ -62,15 +62,15 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
   const { data: prediction, isLoading } = useWeightPrediction(debouncedCalories);
 
-  const weeklyChange = Number(prediction?.weeklyWeightChange ?? 0);
+  const weeklyChange = prediction?.weeklyWeightChange ?? 0;
   const weeklyChangeAbs = Math.abs(weeklyChange);
   const isLoss = weeklyChange < -0.01;
   const isGain = weeklyChange > 0.01;
 
-  const currentBmiCategory = prediction ? BmiCategory(Number(prediction.currentBmi)) : null;
+  const currentBmiCategory = prediction ? BmiCategory(prediction.currentBmi) : null;
   const targetBmiCategory =
     prediction?.targetBmi !== undefined && prediction.targetBmi !== null
-      ? BmiCategory(Number(prediction.targetBmi))
+      ? BmiCategory(prediction.targetBmi)
       : null;
 
   return (
@@ -130,7 +130,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.bmr_label')}
               </p>
-              <p className="mt-1 text-2xl font-bold">{Number(prediction.bmr).toFixed(0)}</p>
+              <p className="mt-1 text-2xl font-bold">{prediction.bmr.toFixed(0)}</p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
 
@@ -139,23 +139,23 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.tdee_label')}
               </p>
-              <p className="mt-1 text-2xl font-bold">{Number(prediction.tdee).toFixed(0)}</p>
+              <p className="mt-1 text-2xl font-bold">{prediction.tdee.toFixed(0)}</p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
 
             {/* Daily deficit / surplus */}
             <div className="rounded-lg border p-3">
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                {Number(prediction.dailyDeficit) >= 0
+                {prediction.dailyDeficit >= 0
                   ? t('prediction.daily_surplus_label')
                   : t('prediction.daily_deficit_label')}
               </p>
               <p
                 className={`mt-1 text-2xl font-bold ${
-                  Number(prediction.dailyDeficit) < 0 ? 'text-emerald-500' : 'text-orange-500'
+                  prediction.dailyDeficit < 0 ? 'text-emerald-500' : 'text-orange-500'
                 }`}
               >
-                {Math.abs(Number(prediction.dailyDeficit)).toFixed(0)}
+                {Math.abs(prediction.dailyDeficit).toFixed(0)}
               </p>
               <p className="text-muted-foreground text-xs">{t('prediction.kcal_day')}</p>
             </div>
@@ -186,7 +186,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
               <p
                 className={`mt-1 text-2xl font-bold ${currentBmiCategory !== null ? (BMI_COLORS[currentBmiCategory] ?? '') : ''}`}
               >
-                {Number(prediction.currentBmi).toFixed(1)}
+                {prediction.currentBmi.toFixed(1)}
               </p>
               {currentBmiCategory !== null && (
                 <p className="text-muted-foreground text-xs">
@@ -204,7 +204,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
                 <p
                   className={`mt-1 text-2xl font-bold ${targetBmiCategory !== null ? (BMI_COLORS[targetBmiCategory] ?? '') : ''}`}
                 >
-                  {Number(prediction.targetBmi).toFixed(1)}
+                  {prediction.targetBmi.toFixed(1)}
                 </p>
                 {targetBmiCategory !== null && (
                   <p className="text-muted-foreground text-xs">

@@ -17,7 +17,7 @@ test.describe('Notification Preferences', () => {
     // All four setting groups should be visible
     await expect(page.getByText(/meal reminder/i).first()).toBeVisible();
     await expect(page.getByText(/water reminder/i).first()).toBeVisible();
-    await expect(page.getByText(/weekly summary/i).first()).toBeVisible();
+    await expect(page.getByText(/weekly nutrition summary/i).first()).toBeVisible();
     await expect(page.getByText(/goal milestone/i).first()).toBeVisible();
   });
 
@@ -35,7 +35,8 @@ test.describe('Notification Preferences', () => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
 
-    await prefsPage.toggleWeeklySummary(false);
+    // Click directly to guarantee a change regardless of current backend state
+    await prefsPage.weeklySummaryCheckbox.click();
 
     await prefsPage.expectSaveButtonEnabled();
   });
@@ -44,8 +45,9 @@ test.describe('Notification Preferences', () => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
 
-    await prefsPage.toggleWeeklySummary(false);
-    await prefsPage.toggleGoalMilestone(false);
+    // Click directly to guarantee dirty state regardless of current backend state
+    await prefsPage.weeklySummaryCheckbox.click();
+    await prefsPage.goalMilestoneCheckbox.click();
 
     await prefsPage.save();
 
@@ -98,9 +100,8 @@ test.describe('Notification Preferences', () => {
     // Trigger validation by attempting to submit
     await prefsPage.saveButton.click();
 
-    await expect(page.getByRole('paragraph').filter({ hasText: /max|must be/i }).first()).toBeVisible({
-      timeout: 3000,
-    });
+    // Error paragraph rendered by react-hook-form with class text-destructive
+    await expect(page.locator('p.text-destructive').first()).toBeVisible({ timeout: 3000 });
   });
 
   test('form shows validation error for water interval out of range', async ({ page }) => {
@@ -116,22 +117,25 @@ test.describe('Notification Preferences', () => {
 
     await prefsPage.saveButton.click();
 
-    await expect(page.getByRole('paragraph').filter({ hasText: /max|must be/i }).first()).toBeVisible({
-      timeout: 3000,
-    });
+    await expect(page.locator('p.text-destructive').first()).toBeVisible({ timeout: 3000 });
   });
 
   test('settings persist after saving and reloading page', async ({ page }) => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
 
-    // Set specific values
+    // Ensure meal reminder is on so lead time is editable
     const isChecked = await prefsPage.mealReminderCheckbox.isChecked();
     if (!isChecked) {
-      await prefsPage.toggleMealReminder(true);
+      await prefsPage.mealReminderCheckbox.click();
     }
-    await prefsPage.setMealLeadTime(30);
-    await prefsPage.toggleWeeklySummary(false);
+
+    // Use a distinctive lead time value
+    await prefsPage.setMealLeadTime(25);
+
+    // Always click weekly summary to guarantee dirty state regardless of current backend value
+    await prefsPage.weeklySummaryCheckbox.click();
+    const expectedWeeklySummary = await prefsPage.weeklySummaryCheckbox.isChecked();
 
     await prefsPage.save();
     await expect(prefsPage.successMessage).toBeVisible({ timeout: 5000 });
@@ -139,8 +143,8 @@ test.describe('Notification Preferences', () => {
     // Reload and verify values are restored
     await prefsPage.goto();
 
-    await expect(prefsPage.mealLeadTimeInput).toHaveValue('30');
+    await expect(prefsPage.mealLeadTimeInput).toHaveValue('25');
     const weeklySummaryChecked = await prefsPage.weeklySummaryCheckbox.isChecked();
-    expect(weeklySummaryChecked).toBe(false);
+    expect(weeklySummaryChecked).toBe(expectedWeeklySummary);
   });
 });

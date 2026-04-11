@@ -52,7 +52,12 @@ test.describe('Hydration', () => {
     const hydrationPage = new HydrationPage(page);
     await hydrationPage.goto();
 
-    await hydrationPage.updateSettings({ dailyTargetMl: 3000, glassSizeMl: 300 });
+    // Alternate values to guarantee the form is always dirty regardless of prior run state
+    const currentTarget = await hydrationPage.dailyTargetInput.inputValue();
+    const newTarget = currentTarget === '3000' ? 2500 : 3000;
+    const currentGlass = await hydrationPage.glassSizeInput.inputValue();
+    const newGlass = currentGlass === '300' ? 250 : 300;
+    await hydrationPage.updateSettings({ dailyTargetMl: newTarget, glassSizeMl: newGlass });
 
     // After save the form resets to saved values — field still visible
     await expect(hydrationPage.dailyTargetInput).toBeVisible();
