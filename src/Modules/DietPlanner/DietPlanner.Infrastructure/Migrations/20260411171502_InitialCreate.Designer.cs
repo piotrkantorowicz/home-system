@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DietPlanner.Infrastructure.Migrations
 {
     [DbContext(typeof(DietPlannerDbContext))]
-    [Migration("20260405050316_AddUserProfile")]
-    partial class AddUserProfile
+    [Migration("20260411171502_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,47 @@ namespace DietPlanner.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DietPlanner.Domain.Aggregates.HydrationConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DailyWaterTargetMl")
+                        .HasColumnType("integer")
+                        .HasColumnName("daily_water_target_ml");
+
+                    b.Property<int>("GlassSizeMl")
+                        .HasColumnType("integer")
+                        .HasColumnName("glass_size_ml");
+
+                    b.Property<bool>("TrackWaterIntake")
+                        .HasColumnType("boolean")
+                        .HasColumnName("track_water_intake");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_hydration_configs_user");
+
+                    b.ToTable("hydration_configs", (string)null);
+                });
 
             modelBuilder.Entity("DietPlanner.Domain.Aggregates.MealEntry", b =>
                 {
@@ -112,6 +153,59 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasDatabaseName("idx_meal_schedule_configs_user");
 
                     b.ToTable("meal_schedule_configs", (string)null);
+                });
+
+            modelBuilder.Entity("DietPlanner.Domain.Aggregates.NotificationPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("GoalMilestoneAlertsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("goal_milestone_alerts_enabled");
+
+                    b.Property<bool>("MealReminderEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("meal_reminder_enabled");
+
+                    b.Property<int>("MealReminderLeadTimeMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("meal_reminder_lead_time_minutes");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("WaterReminderEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("water_reminder_enabled");
+
+                    b.Property<int>("WaterReminderIntervalMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("water_reminder_interval_minutes");
+
+                    b.Property<bool>("WeeklySummaryEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("weekly_summary_enabled");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("idx_notification_preferences_user");
+
+                    b.ToTable("notification_preferences", (string)null);
                 });
 
             modelBuilder.Entity("DietPlanner.Domain.Aggregates.Product", b =>
@@ -345,6 +439,43 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasDatabaseName("idx_user_profiles_user");
 
                     b.ToTable("user_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("DietPlanner.Domain.Aggregates.WaterIntake", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AmountMl")
+                        .HasColumnType("integer")
+                        .HasColumnName("amount_ml");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date")
+                        .HasDatabaseName("idx_water_intakes_user_date");
+
+                    b.ToTable("water_intakes", (string)null);
                 });
 
             modelBuilder.Entity("DietPlanner.Domain.Entities.MealSlot", b =>
