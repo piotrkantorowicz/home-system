@@ -4,6 +4,7 @@ using System.Security.Claims;
 using DietPlanner.Application.Commands.CreateProfile;
 using DietPlanner.Application.Commands.UpdateProfile;
 using DietPlanner.Application.Queries.GetProfile;
+using DietPlanner.Application.Queries.GetWeightPrediction;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -22,6 +23,15 @@ public static class ProfileEndpoints
             .WithSummary("Get the current user's biometrics profile")
             .WithDescription("Returns the biometrics profile for the current user, or 404 if none exists.")
             .Produces<UserProfileDto>()
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/prediction", GetWeightPrediction)
+            .WithName("GetWeightPrediction")
+            .WithSummary("Get weight loss/gain prediction for a given calorie target")
+            .WithDescription(
+                "Calculates BMR, TDEE, weekly weight change and estimated goal date based on the user's biometrics profile and the supplied daily calorie target. Returns 404 if the profile does not exist or is missing required biometric fields.")
+            .Produces<WeightPredictionDto>()
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
@@ -53,6 +63,18 @@ public static class ProfileEndpoints
         var userId = GetUserId(user);
         UserProfileDto? result = await dispatcher.SendAsync<GetProfileQuery, UserProfileDto?>(
             new GetProfileQuery(userId), ct);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> GetWeightPrediction(
+        decimal dailyCalorieTarget,
+        ClaimsPrincipal user,
+        IQueryDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        WeightPredictionDto? result = await dispatcher.SendAsync<GetWeightPredictionQuery, WeightPredictionDto?>(
+            new GetWeightPredictionQuery(userId, dailyCalorieTarget), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 

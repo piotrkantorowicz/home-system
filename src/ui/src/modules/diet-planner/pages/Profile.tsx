@@ -4,6 +4,7 @@ import {
   useCreateProfile,
   useUpdateProfile,
 } from '@modules/diet-planner/api/hooks/useProfile';
+import { WeightPredictionCard } from '@modules/diet-planner/components/WeightPredictionCard';
 import {
   Card,
   CardHeader,
@@ -247,6 +248,11 @@ export default function Profile() {
           </p>
         )}
       </form>
+
+      {/* Weight Prediction */}
+      <div className="mt-8">
+        <WeightPredictionCard hasProfile={!!profile} />
+      </div>
     </div>
   );
 }

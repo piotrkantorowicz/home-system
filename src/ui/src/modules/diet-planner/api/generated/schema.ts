@@ -312,6 +312,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profile/prediction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get weight loss/gain prediction for a given calorie target
+         * @description Calculates BMR, TDEE, weekly weight change and estimated goal date based on the user's biometrics profile and the supplied daily calorie target. Returns 404 if the profile does not exist or is missing required biometric fields.
+         */
+        get: operations["GetWeightPrediction"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's notification preferences
+         * @description Returns notification preference settings for the current user. Returns 404 when no preferences have been configured yet.
+         */
+        get: operations["GetNotificationPreferences"];
+        /**
+         * Update the current user's notification preferences
+         * @description Creates or updates notification preference settings for the current user.
+         */
+        put: operations["UpdateNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hydration/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's hydration configuration
+         * @description Returns hydration settings including daily water target and glass size. Returns `null` body when no config has been set yet.
+         */
+        get: operations["GetHydrationConfig"];
+        /**
+         * Create or update hydration configuration
+         * @description Sets daily water target, glass size, and tracking preference for the current user.
+         */
+        put: operations["UpdateHydrationConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hydration/intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get water intake entries for a specific date
+         * @description Returns all water intake entries for the current user on the specified date, along with the total amount.
+         */
+        get: operations["GetWaterIntake"];
+        put?: never;
+        /**
+         * Log a water intake entry
+         * @description Records a new water intake entry for the current user.
+         */
+        post: operations["LogWaterIntake"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hydration/intake/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a water intake entry
+         * @description Removes a water intake entry belonging to the current user.
+         */
+        delete: operations["DeleteWaterIntake"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -420,6 +532,20 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        HydrationConfigDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            /** Format: int32 */
+            dailyWaterTargetMl: number | string;
+            /** Format: int32 */
+            glassSizeMl: number | string;
+            trackWaterIntake: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ImportDto: {
             products: null | components["schemas"]["ImportProductDto"][];
             recipes: null | components["schemas"]["ImportRecipeDto"][];
@@ -498,6 +624,13 @@ export interface components {
             /** Format: int32 */
             mealEntriesCreated: number | string;
         };
+        LogWaterIntakeRequest: {
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            amountMl: number | string;
+            note: null | string;
+        };
         MealEntryDto: {
             /** Format: uuid */
             id: string;
@@ -538,6 +671,33 @@ export interface components {
         MealSlotRequest: {
             name: string;
             defaultTime: string;
+        };
+        NotificationPreferencesDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            mealReminderEnabled: boolean;
+            /** Format: int32 */
+            mealReminderLeadTimeMinutes: number | string;
+            waterReminderEnabled: boolean;
+            /** Format: int32 */
+            waterReminderIntervalMinutes: number | string;
+            weeklySummaryEnabled: boolean;
+            goalMilestoneAlertsEnabled: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        NotificationPreferencesRequest: {
+            mealReminderEnabled: boolean;
+            /** Format: int32 */
+            mealReminderLeadTimeMinutes: number | string;
+            waterReminderEnabled: boolean;
+            /** Format: int32 */
+            waterReminderIntervalMinutes: number | string;
+            weeklySummaryEnabled: boolean;
+            goalMilestoneAlertsEnabled: boolean;
         };
         NutritionDto: {
             /** Format: double */
@@ -660,6 +820,13 @@ export interface components {
             amount: number | string;
             unit: string;
         };
+        UpdateHydrationConfigRequest: {
+            /** Format: int32 */
+            dailyWaterTargetMl: number | string;
+            /** Format: int32 */
+            glassSizeMl: number | string;
+            trackWaterIntake: boolean;
+        };
         UpdateMealEntryRequest: {
             /** Format: date */
             date: string;
@@ -746,6 +913,38 @@ export interface components {
             warnings: number | string;
             /** Format: int32 */
             info: number | string;
+        };
+        WaterIntakeEntryDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            amountMl: number | string;
+            /** Format: date-time */
+            timestamp: string;
+            note: null | string;
+        };
+        WaterIntakeListDto: {
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            totalMl: number | string;
+            entries: components["schemas"]["WaterIntakeEntryDto"][];
+        };
+        WeightPredictionDto: {
+            /** Format: double */
+            bmr: number | string;
+            /** Format: double */
+            tdee: number | string;
+            /** Format: double */
+            dailyDeficit: number | string;
+            /** Format: double */
+            weeklyWeightChange: number | string;
+            /** Format: date */
+            estimatedGoalDate: null | string;
+            /** Format: double */
+            currentBmi: number | string;
+            /** Format: double */
+            targetBmi: null | number | string;
         };
     };
     responses: never;
@@ -1729,6 +1928,282 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetWeightPrediction: {
+        parameters: {
+            query: {
+                dailyCalorieTarget: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeightPredictionDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferencesDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UpdateNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPreferencesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetHydrationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HydrationConfigDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UpdateHydrationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHydrationConfigRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetWaterIntake: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterIntakeListDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LogWaterIntake: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogWaterIntakeRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DeleteWaterIntake: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
