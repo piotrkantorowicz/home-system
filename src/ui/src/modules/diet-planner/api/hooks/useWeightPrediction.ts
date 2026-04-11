@@ -2,22 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 
-export interface WeightPredictionDto {
-  bmr: number;
-  tdee: number;
-  dailyDeficit: number;
-  weeklyWeightChange: number;
-  estimatedGoalDate: string | null;
-  currentBmi: number;
-  targetBmi: number | null;
-}
+import type { components } from '../generated/schema';
 
-interface WeightPredictionApiResponse {
-  data?: WeightPredictionDto;
-  // REASON: /api/v1/profile/prediction is not yet in the generated openapi schema
-  error?: unknown;
-  response: Response;
-}
+export type WeightPredictionDto = components['schemas']['WeightPredictionDto'];
 
 export function useWeightPrediction(dailyCalorieTarget: number | null) {
   return useQuery({
@@ -28,11 +15,9 @@ export function useWeightPrediction(dailyCalorieTarget: number | null) {
         return null;
       }
 
-      // REASON: /api/v1/profile/prediction is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).GET('/api/v1/profile/prediction', {
+      const response = await api.GET('/api/v1/profile/prediction', {
         params: { query: { dailyCalorieTarget } },
-      })) as WeightPredictionApiResponse;
+      });
 
       if (response.response.status === 404) {
         return null;
