@@ -97,9 +97,12 @@ test.describe('Nutrition Summary — with meal data', () => {
     await page.goto('/diet-planner/goals');
     await page.waitForLoadState('networkidle');
 
-    const uniqueCalories = String(2000 + (Date.now() % 100));
-    await page.locator('#dailyCalorieTarget').fill(uniqueCalories);
-    await page.locator('#proteinGrams').fill('150');
+    // Alternate protein to guarantee the form is always dirty regardless of prior run state
+    const currentProtein = await page.locator('#proteinGrams').inputValue();
+    const newProtein = currentProtein === '150' ? '140' : '150';
+
+    await page.locator('#dailyCalorieTarget').fill('2000');
+    await page.locator('#proteinGrams').fill(newProtein);
     await page.locator('#carbsGrams').fill('220');
     await page.locator('#fatGrams').fill('70');
 
@@ -109,7 +112,7 @@ test.describe('Nutrition Summary — with meal data', () => {
       await fiberField.fill('30');
     }
 
-    const submitBtn = page.getByRole('button', { name: /save|submit/i });
+    const submitBtn = page.getByRole('button', { name: /save goals/i });
     await expect(submitBtn).toBeEnabled({ timeout: 8000 });
     await submitBtn.click();
 
