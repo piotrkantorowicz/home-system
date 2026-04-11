@@ -2,7 +2,10 @@
 # .NET
 # ============================================
 bin/
+bin\/
 bin\*/
+# Windows-style build output dirs (literal backslash in name on macOS/Linux)
+**/bin\\*/
 obj/
 *.user
 *.suo
@@ -68,6 +71,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+coverage/
 
 # Logs
 npm-debug.log*
