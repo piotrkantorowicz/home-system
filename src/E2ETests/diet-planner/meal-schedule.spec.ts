@@ -90,8 +90,9 @@ test.describe('Meal Schedule', () => {
     const schedulePage = new MealSchedulePage(page);
     await schedulePage.goto();
 
-    // Make a change to enable save
-    await schedulePage.slotNameInput(0).fill('Morning Meal');
+    // Toggle between two names so the form is always dirty regardless of prior run state
+    const currentName = await schedulePage.slotNameInput(0).inputValue();
+    await schedulePage.slotNameInput(0).fill(currentName === 'Morning Meal' ? 'Breakfast' : 'Morning Meal');
     await schedulePage.save();
 
     await expect(schedulePage.successMessage).toBeVisible({ timeout: 10_000 });
