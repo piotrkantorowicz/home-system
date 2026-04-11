@@ -2,6 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 
+import type { components } from '../generated/schema';
+
+type RawWeightPrediction = components['schemas']['WeightPredictionDto'];
+
 export interface WeightPredictionDto {
   bmr: number;
   tdee: number;
@@ -12,11 +16,16 @@ export interface WeightPredictionDto {
   targetBmi: number | null;
 }
 
-interface WeightPredictionApiResponse {
-  data?: WeightPredictionDto;
-  // REASON: /api/v1/profile/prediction is not yet in the generated openapi schema
-  error?: unknown;
-  response: Response;
+function normalize(raw: RawWeightPrediction): WeightPredictionDto {
+  return {
+    bmr: Number(raw.bmr),
+    tdee: Number(raw.tdee),
+    dailyDeficit: Number(raw.dailyDeficit),
+    weeklyWeightChange: Number(raw.weeklyWeightChange),
+    estimatedGoalDate: raw.estimatedGoalDate,
+    currentBmi: Number(raw.currentBmi),
+    targetBmi: raw.targetBmi !== null ? Number(raw.targetBmi) : null,
+  };
 }
 
 export function useWeightPrediction(dailyCalorieTarget: number | null) {
@@ -28,21 +37,19 @@ export function useWeightPrediction(dailyCalorieTarget: number | null) {
         return null;
       }
 
-      // REASON: /api/v1/profile/prediction is not yet in the generated openapi schema — regenerate schema to remove this cast
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const response = (await (api as any).GET('/api/v1/profile/prediction', {
+      const { data, response } = await api.GET('/api/v1/profile/prediction', {
         params: { query: { dailyCalorieTarget } },
-      })) as WeightPredictionApiResponse;
+      });
 
-      if (response.response.status === 404) {
+      if (response.status === 404) {
         return null;
       }
 
-      if (!response.response.ok) {
+      if (!response.ok) {
         throw new Error('Failed to fetch weight prediction');
       }
 
-      return response.data ?? null;
+      return data ? normalize(data) : null;
     },
   });
 }
