@@ -19,7 +19,7 @@ function WeightTrendIcon({ weeklyChange }: { weeklyChange: number }) {
   if (weeklyChange > 0.01) {
     return <TrendingUp className="h-5 w-5 text-orange-500" aria-hidden />;
   }
-  return <Minus className="h-5 w-5 text-muted-foreground" aria-hidden />;
+  return <Minus className="text-muted-foreground h-5 w-5" aria-hidden />;
 }
 
 function BmiCategory(bmi: number): string {
@@ -99,7 +99,9 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             }}
             className="mt-1"
           />
-          <p className="text-muted-foreground mt-1 text-xs">{t('prediction.calorie_target_help')}</p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            {t('prediction.calorie_target_help')}
+          </p>
         </div>
 
         {!hasProfile && (
@@ -125,7 +127,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* BMR */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.bmr_label')}
               </p>
               <p className="mt-1 text-2xl font-bold">{Number(prediction.bmr).toFixed(0)}</p>
@@ -134,7 +136,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
             {/* TDEE */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.tdee_label')}
               </p>
               <p className="mt-1 text-2xl font-bold">{Number(prediction.tdee).toFixed(0)}</p>
@@ -143,7 +145,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
             {/* Daily deficit / surplus */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {Number(prediction.dailyDeficit) >= 0
                   ? t('prediction.daily_surplus_label')
                   : t('prediction.daily_deficit_label')}
@@ -160,7 +162,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
             {/* Weekly weight change */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.weekly_change_label')}
               </p>
               <div className="mt-1 flex items-center gap-1.5">
@@ -178,7 +180,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
 
             {/* Current BMI */}
             <div className="rounded-lg border p-3">
-              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('prediction.current_bmi_label')}
               </p>
               <p
@@ -196,7 +198,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             {/* Target BMI */}
             {prediction.targetBmi !== null && (
               <div className="rounded-lg border p-3">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                   {t('prediction.target_bmi_label')}
                 </p>
                 <p
@@ -215,7 +217,7 @@ export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) 
             {/* Estimated goal date */}
             {prediction.estimatedGoalDate !== null && (
               <div className="rounded-lg border p-3 sm:col-span-2 lg:col-span-3">
-                <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                   {t('prediction.goal_date_label')}
                 </p>
                 <p className="mt-1 text-xl font-bold">
