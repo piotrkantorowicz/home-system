@@ -14,41 +14,50 @@ export class WeightPredictionPage {
   readonly noProfileMessage: Locator;
   readonly enterCaloriesMessage: Locator;
   readonly incompleteProfileMessage: Locator;
-  readonly loadingSpinner: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.calorieTargetInput = page.getByLabel(/daily calorie target/i);
-    // Stat cards — located by their uppercase label text
+
+    // Stat card values — locate the label <p>, navigate up to the container div,
+    // then find the numeric value <p> within it.
+    // Using xpath=.. is required because Playwright has no built-in parent-locator API.
     this.bmrValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /^BMR$/i })
+      .getByText('BMR', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-2xl');
+
     this.tdeeValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /^TDEE$/i })
+      .getByText('TDEE', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-2xl');
+
+    // Weekly change value lives inside a nested flex div (alongside the trend icon)
     this.weeklyChangeValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /weekly change/i })
+      .getByText('Weekly Change', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-2xl');
+
     this.currentBmiValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /current bmi/i })
+      .getByText('Current BMI', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-2xl');
+
     this.targetBmiValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /target bmi/i })
+      .getByText('Target BMI', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-2xl');
+
+    // Goal date uses text-xl, not text-2xl
     this.goalDateValue = page
-      .locator('.rounded-lg.border')
-      .filter({ hasText: /estimated goal date/i })
+      .getByText('Estimated Goal Date', { exact: true })
+      .locator('xpath=..')
       .locator('p.text-xl');
-    // State messages
-    this.noProfileMessage = page.getByText(/complete your profile/i);
-    this.enterCaloriesMessage = page.getByText(/enter your daily calorie target/i);
-    this.incompleteProfileMessage = page.getByText(/profile is incomplete/i);
-    this.loadingSpinner = page.locator('[class*="animate-spin"]');
+
+    // State messages — matched against actual i18n strings (en.json)
+    this.noProfileMessage = page.getByText(/set up your biometrics profile/i);
+    this.enterCaloriesMessage = page.getByText(/enter a daily calorie target/i);
+    this.incompleteProfileMessage = page.getByText(/complete your profile/i);
   }
 
   /** Navigate to the Profile page where the prediction card lives. */
@@ -57,14 +66,17 @@ export class WeightPredictionPage {
     await this.page.waitForLoadState('networkidle');
   }
 
-  /** Type a calorie value into the input and wait for the query result. */
+  /**
+   * Type a calorie value into the input and wait for the prediction API response.
+   * waitForResponse must be registered BEFORE fill() to avoid missing the response.
+   */
   async enterCalories(calories: number) {
-    await this.calorieTargetInput.fill(String(calories));
-    // Wait for the loading state to resolve
-    await this.page.waitForResponse(
+    const responsePromise = this.page.waitForResponse(
       (r) => r.url().includes('/api/v1/profile/prediction') && r.status() < 500,
       { timeout: 10_000 },
     );
+    await this.calorieTargetInput.fill(String(calories));
+    await responsePromise;
   }
 
   /** Assert that all main prediction stat cards are visible. */

@@ -40,10 +40,10 @@ public sealed class WeightPredictionService
     /// <summary>
     /// Weekly weight change in kg.
     /// Positive = gain, Negative = loss.
-    /// Formula: (TDEE - calorieTarget) * 7 / 7700
+    /// Formula: (calorieTarget - TDEE) * 7 / 7700
     /// </summary>
     public decimal CalculateWeeklyWeightChange(decimal tdee, decimal dailyCalorieTarget)
-        => Math.Round((tdee - dailyCalorieTarget) * 7m / 7700m, 3);
+        => Math.Round((dailyCalorieTarget - tdee) * 7m / 7700m, 3);
 
     /// <summary>
     /// BMI = weight (kg) / height (m)^2

@@ -154,10 +154,6 @@ test.describe('Weight prediction', () => {
     const weeklyTextLow = await predictionPage.weeklyChangeValue.textContent();
 
     await predictionPage.enterCalories(2500);
-    await predictionPage.page.waitForResponse(
-      (r) => r.url().includes('/api/v1/profile/prediction') && r.status() < 500,
-      { timeout: 10_000 },
-    );
     const weeklyTextHigh = await predictionPage.weeklyChangeValue.textContent();
 
     // Different calorie targets should produce different weekly change values
@@ -175,7 +171,7 @@ test.describe('Weight prediction', () => {
     const predictionPage = new WeightPredictionPage(page);
     await predictionPage.goto();
 
-    await predictionPage.calorieTargetInput.fill('2000');
+    await predictionPage.enterCalories(2000);
 
     await expect(predictionPage.incompleteProfileMessage).toBeVisible();
   });
