@@ -94,11 +94,16 @@ export function DatePicker({
           <Calendar
             mode="single"
             captionLayout="dropdown"
+            hideNavigation
             startMonth={new Date(DEFAULT_START_YEAR, 0)}
             endMonth={new Date(DEFAULT_END_YEAR, 11)}
             selected={selected}
             onSelect={handleSelect}
             disabled={disabledMatchers.length > 0 ? disabledMatchers : disabled}
+            classNames={{
+              month_caption: 'flex items-center justify-center gap-1 py-1',
+              caption_label: 'hidden',
+            }}
           />
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
