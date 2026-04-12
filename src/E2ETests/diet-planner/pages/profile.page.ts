@@ -62,8 +62,12 @@ export class ProfilePage {
       }
     }
 
-    // Click the day — use first() to avoid ambiguity with outside-month days
-    await popover.getByRole('button', { name: new RegExp(`^${String(day)}$`) }).first().click();
+    // Click the day by text content — aria-label is the full date string in react-day-picker v9
+    await popover
+      .locator('button')
+      .filter({ hasText: new RegExp(`^\\s*${String(day)}\\s*$`) })
+      .first()
+      .click();
 
     // Wait for the popover to close
     await popover.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
