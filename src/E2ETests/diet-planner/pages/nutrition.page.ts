@@ -14,8 +14,8 @@ export class NutritionPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.fromInput = page.getByLabel(/from/i);
-    this.toInput = page.getByLabel(/to/i);
+    this.fromInput = page.getByTestId('from-date-picker');
+    this.toInput = page.getByTestId('to-date-picker');
     this.applyButton = page.getByRole('button', { name: /apply/i });
     this.tableRows = page.getByRole('table').getByRole('row').filter({ hasNot: page.locator('th') });
     this.pageSizeSelect = page.getByRole('combobox').or(page.locator('select')).first();
@@ -32,9 +32,58 @@ export class NutritionPage {
     await responsePromise;
   }
 
+  /** Returns the ISO date string (YYYY-MM-DD) currently shown in the from picker. */
+  async getFromValue(): Promise<string> {
+    return (await this.fromInput.getAttribute('data-value')) ?? '';
+  }
+
+  /** Returns the ISO date string (YYYY-MM-DD) currently shown in the to picker. */
+  async getToValue(): Promise<string> {
+    return (await this.toInput.getAttribute('data-value')) ?? '';
+  }
+
+  /**
+   * Open the DatePicker identified by testId and navigate to the given ISO date
+   * using the month/year dropdowns, then click the day button.
+   */
+  private async selectDate(testId: string, dateStr: string) {
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // 1-based
+    const day = parseInt(dayStr, 10);
+
+    await this.page.getByTestId(testId).click();
+
+    // The calendar popover is rendered in a Radix portal
+    const popover = this.page.locator('[data-radix-popper-content-wrapper]').last();
+    await popover.waitFor({ state: 'visible', timeout: 5000 });
+
+    const selects = popover.locator('select');
+
+    // Identify month vs year select: year options are 4-digit numbers
+    const selectCount = await selects.count();
+    for (let i = 0; i < selectCount; i++) {
+      const sel = selects.nth(i);
+      const firstValue = await sel.locator('option').first().getAttribute('value');
+      if (firstValue && firstValue.length === 4) {
+        // Year select
+        await sel.selectOption(String(year));
+      } else {
+        // Month select — react-day-picker uses 0-based month index values
+        await sel.selectOption(String(month - 1));
+      }
+    }
+
+    // Click the day — use first() to avoid ambiguity with outside-month days
+    await popover.getByRole('button', { name: new RegExp(`^${String(day)}$`) }).first().click();
+
+    // Wait for the popover to close
+    await popover.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
+  }
+
   async setDateRange(from: string, to: string) {
-    await this.fromInput.fill(from);
-    await this.toInput.fill(to);
+    await this.selectDate('from-date-picker', from);
+    await this.selectDate('to-date-picker', to);
   }
 
   async applyRange(expectedFrom?: string, expectedTo?: string) {
@@ -53,7 +102,6 @@ export class NutritionPage {
     try {
       await this.tableRows.first().waitFor({ state: 'attached', timeout: 8000 });
     } catch {
-      // No rows visible — return 0
       return 0;
     }
     return this.tableRows.count();

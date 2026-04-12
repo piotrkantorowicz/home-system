@@ -122,6 +122,7 @@ export default function NutritionSummary() {
             <div>
               <Label>{t('nutrition_page.from')}</Label>
               <DatePicker
+                testId="from-date-picker"
                 value={draftFrom}
                 onChange={(v) => {
                   setDraftFrom(v ?? '');
@@ -132,6 +133,7 @@ export default function NutritionSummary() {
             <div>
               <Label>{t('nutrition_page.to')}</Label>
               <DatePicker
+                testId="to-date-picker"
                 value={draftTo}
                 onChange={(v) => {
                   setDraftTo(v ?? '');

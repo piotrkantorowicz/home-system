@@ -27,8 +27,8 @@ test.describe('Nutrition Summary — page structure', () => {
     await expect(nutritionPage.applyButton).toBeVisible();
 
     const { from, to } = currentWeekRange();
-    await expect(nutritionPage.fromInput).toHaveValue(from);
-    await expect(nutritionPage.toInput).toHaveValue(to);
+    await expect(nutritionPage.fromInput).toHaveAttribute('data-value', from);
+    await expect(nutritionPage.toInput).toHaveAttribute('data-value', to);
   });
 
   test('selecting a past range with no meals shows the empty state', async ({ page }) => {

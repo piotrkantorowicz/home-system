@@ -21,6 +21,8 @@ export interface DatePickerProps {
   minDate?: Date;
   /** Disable days after this date. */
   maxDate?: Date;
+  /** Applied as data-testid on the trigger button for E2E tests. */
+  testId?: string;
 }
 
 function parseDate(value: string | null | undefined): Date | undefined {
@@ -37,6 +39,7 @@ export function DatePicker({
   disabled,
   minDate,
   maxDate,
+  testId,
 }: DatePickerProps) {
   const selected = parseDate(value);
 
@@ -55,6 +58,8 @@ export function DatePicker({
         <button
           type="button"
           disabled={disabled}
+          data-testid={testId}
+          data-value={value ?? ''}
           className={cn(
             'flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
             'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
