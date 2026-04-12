@@ -47,12 +47,20 @@ export class NutritionPage {
    * using the month/year dropdowns, then click the day button.
    */
   private async selectDate(testId: string, dateStr: string) {
+    const trigger = this.page.getByTestId(testId);
+
+    // Skip if already set — re-clicking in mode="single" would deselect.
+    const currentValue = await trigger.getAttribute('data-value');
+    if (currentValue === dateStr) {
+      return;
+    }
+
     const [yearStr, monthStr, dayStr] = dateStr.split('-');
     const year = parseInt(yearStr, 10);
     const month = parseInt(monthStr, 10); // 1-based
     const day = parseInt(dayStr, 10);
 
-    await this.page.getByTestId(testId).click();
+    await trigger.click();
 
     // The calendar popover is rendered in a Radix portal
     const popover = this.page.locator('[data-radix-popper-content-wrapper]').last();
@@ -66,7 +74,6 @@ export class NutritionPage {
       const sel = selects.nth(i);
       const firstValue = await sel.locator('option').first().getAttribute('value');
       if (firstValue && firstValue.length === 4) {
-        // Year select
         await sel.selectOption(String(year));
       } else {
         // Month select — react-day-picker uses 0-based month index values
@@ -74,15 +81,32 @@ export class NutritionPage {
       }
     }
 
-    // Click the day by text content — aria-label is the full date string in react-day-picker v9
-    await popover
+    // Verify dropdown selections took effect (React re-render completed)
+    for (let i = 0; i < selectCount; i++) {
+      const sel = selects.nth(i);
+      const firstValue = await sel.locator('option').first().getAttribute('value');
+      if (firstValue && firstValue.length === 4) {
+        await expect(sel).toHaveValue(String(year));
+      } else {
+        await expect(sel).toHaveValue(String(month - 1));
+      }
+    }
+
+    // Click the day button. Use a JS click (evaluate) instead of Playwright's
+    // native click because Radix Portal event handling can prevent Playwright's
+    // CDP-dispatched pointer events from reaching React's synthetic event system.
+    const dayButton = popover
       .locator('button')
       .filter({ hasText: new RegExp(`^\\s*${String(day)}\\s*$`) })
-      .first()
-      .click();
+      .first();
+    await dayButton.evaluate((node) => (node as HTMLButtonElement).click());
 
-    // Wait for the popover to close
+    // Close the popover explicitly so it doesn't interfere with subsequent interactions
+    await this.page.keyboard.press('Escape');
     await popover.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
+
+    // Verify the trigger reflects the selected date
+    await expect(trigger).toHaveAttribute('data-value', dateStr, { timeout: 5000 });
   }
 
   async setDateRange(from: string, to: string) {

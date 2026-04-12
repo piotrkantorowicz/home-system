@@ -128,6 +128,7 @@ export default function Profile() {
                   control={control}
                   render={({ field }) => (
                     <DatePicker
+                      testId="date-of-birth-picker"
                       value={field.value}
                       onChange={field.onChange}
                       placeholder={t('profile.date_of_birth_placeholder', 'Pick a date')}

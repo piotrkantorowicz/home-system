@@ -61,15 +61,22 @@ export class RecipesPage {
 
     await this.page.getByRole('button', { name: /save|create/i }).click();
     await this.page.waitForURL(/\/diet-planner\/recipes$/);
+    await this.page.waitForLoadState('networkidle');
   }
 
   // ── Search ──────────────────────────────────────────────────────────────────
 
   async searchFor(query: string) {
-    await this.searchInput.fill(query);
-    await this.page.waitForResponse(
+    // Register the response listener BEFORE filling to avoid missing
+    // a fast response that arrives between fill() and waitForResponse().
+    const responsePromise = this.page.waitForResponse(
       (resp) => resp.url().includes('/api/v1/recipes') && resp.request().method() === 'GET',
+      { timeout: 10_000 },
     );
+    await this.searchInput.fill(query);
+    // If the search term is the same as the current value, no API call may
+    // be made. Fall back to networkidle to ensure the UI is settled.
+    await responsePromise.catch(() => this.page.waitForLoadState('networkidle'));
   }
 
   // ── Read ─────────────────────────────────────────────────────────────────────
