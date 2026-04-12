@@ -74,6 +74,7 @@ export class ProductsPage {
   }
 
   async expectProductVisible(name: string) {
+    await this.searchFor(name);
     await expect(this.rowFor(name)).toBeVisible({ timeout: 10000 });
   }
 

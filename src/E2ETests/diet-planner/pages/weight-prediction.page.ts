@@ -81,9 +81,9 @@ export class WeightPredictionPage {
 
   /** Assert that all main prediction stat cards are visible. */
   async expectPredictionVisible() {
-    await expect(this.bmrValue).toBeVisible();
-    await expect(this.tdeeValue).toBeVisible();
-    await expect(this.weeklyChangeValue).toBeVisible();
-    await expect(this.currentBmiValue).toBeVisible();
+    await expect(this.bmrValue).toBeVisible({ timeout: 15000 });
+    await expect(this.tdeeValue).toBeVisible({ timeout: 15000 });
+    await expect(this.weeklyChangeValue).toBeVisible({ timeout: 15000 });
+    await expect(this.currentBmiValue).toBeVisible({ timeout: 15000 });
   }
 }

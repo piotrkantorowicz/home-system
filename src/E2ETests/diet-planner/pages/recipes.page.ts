@@ -83,6 +83,7 @@ export class RecipesPage {
   }
 
   async expectRecipeVisible(name: string) {
+    await this.searchFor(name);
     await expect(this.page.getByText(name).first()).toBeVisible({ timeout: 10000 });
   }
 
@@ -93,6 +94,7 @@ export class RecipesPage {
   // ── Edit ─────────────────────────────────────────────────────────────────────
 
   async editRecipe(name: string) {
+    await this.searchFor(name);
     const card = this.recipeCardFor(name);
     const editLink = card.getByRole('link', { name: /edit/i }).first();
 
@@ -104,6 +106,7 @@ export class RecipesPage {
   // ── Delete ───────────────────────────────────────────────────────────────────
 
   async deleteRecipe(name: string) {
+    await this.searchFor(name);
     const card = this.recipeCardFor(name);
     await expect(card).toBeVisible({ timeout: 10000 });
 
