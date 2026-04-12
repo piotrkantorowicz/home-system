@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Input,
+  DatePicker,
   Label,
   Pagination,
   Table,
@@ -120,27 +120,23 @@ export default function NutritionSummary() {
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <Label htmlFor="from-date">{t('nutrition_page.from')}</Label>
-              <Input
-                id="from-date"
-                type="date"
+              <Label>{t('nutrition_page.from')}</Label>
+              <DatePicker
                 value={draftFrom}
-                onChange={(e) => {
-                  setDraftFrom(e.target.value);
+                onChange={(v) => {
+                  setDraftFrom(v ?? '');
                 }}
-                className="w-40"
+                className="w-44"
               />
             </div>
             <div>
-              <Label htmlFor="to-date">{t('nutrition_page.to')}</Label>
-              <Input
-                id="to-date"
-                type="date"
+              <Label>{t('nutrition_page.to')}</Label>
+              <DatePicker
                 value={draftTo}
-                onChange={(e) => {
-                  setDraftTo(e.target.value);
+                onChange={(v) => {
+                  setDraftTo(v ?? '');
                 }}
-                className="w-40"
+                className="w-44"
               />
             </div>
             <Button onClick={handleApply} disabled={!draftFrom || !draftTo || draftFrom > draftTo}>

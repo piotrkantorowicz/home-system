@@ -14,10 +14,11 @@ import {
   Button,
   Input,
   Label,
+  DatePicker,
 } from '@shared/components/ui';
 import { User, Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
@@ -47,6 +48,7 @@ export default function Profile() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormInput, unknown, ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -121,7 +123,18 @@ export default function Profile() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <Label htmlFor="dateOfBirth">{t('profile.date_of_birth')}</Label>
-                <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
+                <Controller
+                  name="dateOfBirth"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t('profile.date_of_birth_placeholder', 'Pick a date')}
+                      className="mt-1"
+                    />
+                  )}
+                />
                 {errors.dateOfBirth && (
                   <p className="text-destructive mt-1 text-sm">{errors.dateOfBirth.message}</p>
                 )}

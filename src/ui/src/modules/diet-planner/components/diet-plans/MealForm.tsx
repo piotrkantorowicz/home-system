@@ -1,5 +1,6 @@
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { Button } from '@shared/components/ui/Button';
+import { DatePicker } from '@shared/components/ui/DatePicker';
 import {
   Dialog,
   DialogContent,
@@ -106,15 +107,12 @@ export function MealForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="meal-date">{t('meal_form.date_label')}</Label>
-              <Input
-                id="meal-date"
-                type="date"
-                value={form.date}
-                onChange={(e) => {
-                  setForm((f) => ({ ...f, date: e.target.value }));
+              <Label>{t('meal_form.date_label')}</Label>
+              <DatePicker
+                value={form.date || null}
+                onChange={(v) => {
+                  setForm((f) => ({ ...f, date: v ?? '' }));
                 }}
-                required
               />
             </div>
 
