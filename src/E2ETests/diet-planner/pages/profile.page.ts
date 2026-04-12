@@ -15,7 +15,7 @@ export class ProfilePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.dateOfBirthInput = page.getByLabel(/date of birth/i);
+    this.dateOfBirthInput = page.getByTestId('date-of-birth-picker');
     this.genderSelect = page.getByLabel(/^gender$/i);
     this.heightInput = page.getByLabel(/height/i);
     this.currentWeightInput = page.getByLabel(/current weight/i);
@@ -30,6 +30,45 @@ export class ProfilePage {
     await this.page.waitForLoadState('networkidle');
   }
 
+  /**
+   * Open the DatePicker identified by testId and navigate to the given ISO date
+   * using the month/year dropdowns, then click the day button.
+   */
+  private async selectDate(testId: string, dateStr: string) {
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // 1-based
+    const day = parseInt(dayStr, 10);
+
+    await this.page.getByTestId(testId).click();
+
+    // The calendar popover is rendered in a Radix portal
+    const popover = this.page.locator('[data-radix-popper-content-wrapper]').last();
+    await popover.waitFor({ state: 'visible', timeout: 5000 });
+
+    const selects = popover.locator('select');
+
+    // Identify month vs year select: year options are 4-digit numbers
+    const selectCount = await selects.count();
+    for (let i = 0; i < selectCount; i++) {
+      const sel = selects.nth(i);
+      const firstValue = await sel.locator('option').first().getAttribute('value');
+      if (firstValue && firstValue.length === 4) {
+        // Year select
+        await sel.selectOption(String(year));
+      } else {
+        // Month select — react-day-picker uses 0-based month index values
+        await sel.selectOption(String(month - 1));
+      }
+    }
+
+    // Click the day — use first() to avoid ambiguity with outside-month days
+    await popover.getByRole('button', { name: new RegExp(`^${String(day)}$`) }).first().click();
+
+    // Wait for the popover to close
+    await popover.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
+  }
+
   async fillForm(data: {
     dateOfBirth?: string;
     gender?: 'Male' | 'Female' | 'Other';
@@ -39,7 +78,7 @@ export class ProfilePage {
     activityLevel?: 'Sedentary' | 'LightlyActive' | 'ModeratelyActive' | 'VeryActive' | 'ExtraActive';
   }) {
     if (data.dateOfBirth !== undefined) {
-      await this.dateOfBirthInput.fill(data.dateOfBirth);
+      await this.selectDate('date-of-birth-picker', data.dateOfBirth);
     }
     if (data.gender !== undefined) {
       await this.genderSelect.selectOption(data.gender);
