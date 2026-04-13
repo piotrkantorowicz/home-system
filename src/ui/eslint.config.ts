@@ -1,5 +1,7 @@
 import js from '@eslint/js';
+
 import type { ESLint } from 'eslint';
+
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';

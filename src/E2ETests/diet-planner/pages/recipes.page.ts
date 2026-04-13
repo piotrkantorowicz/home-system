@@ -61,15 +61,22 @@ export class RecipesPage {
 
     await this.page.getByRole('button', { name: /save|create/i }).click();
     await this.page.waitForURL(/\/diet-planner\/recipes$/);
+    await this.page.waitForLoadState('networkidle');
   }
 
   // ── Search ──────────────────────────────────────────────────────────────────
 
   async searchFor(query: string) {
-    await this.searchInput.fill(query);
-    await this.page.waitForResponse(
+    // Register the response listener BEFORE filling to avoid missing
+    // a fast response that arrives between fill() and waitForResponse().
+    const responsePromise = this.page.waitForResponse(
       (resp) => resp.url().includes('/api/v1/recipes') && resp.request().method() === 'GET',
+      { timeout: 10_000 },
     );
+    await this.searchInput.fill(query);
+    // If the search term is the same as the current value, no API call may
+    // be made. Fall back to networkidle to ensure the UI is settled.
+    await responsePromise.catch(() => this.page.waitForLoadState('networkidle'));
   }
 
   // ── Read ─────────────────────────────────────────────────────────────────────
@@ -83,6 +90,7 @@ export class RecipesPage {
   }
 
   async expectRecipeVisible(name: string) {
+    await this.searchFor(name);
     await expect(this.page.getByText(name).first()).toBeVisible({ timeout: 10000 });
   }
 
@@ -93,6 +101,7 @@ export class RecipesPage {
   // ── Edit ─────────────────────────────────────────────────────────────────────
 
   async editRecipe(name: string) {
+    await this.searchFor(name);
     const card = this.recipeCardFor(name);
     const editLink = card.getByRole('link', { name: /edit/i }).first();
 
@@ -104,6 +113,7 @@ export class RecipesPage {
   // ── Delete ───────────────────────────────────────────────────────────────────
 
   async deleteRecipe(name: string) {
+    await this.searchFor(name);
     const card = this.recipeCardFor(name);
     await expect(card).toBeVisible({ timeout: 10000 });
 

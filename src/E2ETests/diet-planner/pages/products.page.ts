@@ -74,6 +74,7 @@ export class ProductsPage {
   }
 
   async expectProductVisible(name: string) {
+    await this.searchFor(name);
     await expect(this.rowFor(name)).toBeVisible({ timeout: 10000 });
   }
 
@@ -84,6 +85,7 @@ export class ProductsPage {
   // ── Edit ────────────────────────────────────────────────────────────────────
 
   async editProduct(name: string, newData: { calories?: number }) {
+    await this.searchFor(name);
     const row = this.rowFor(name);
     await expect(row).toBeVisible({ timeout: 10000 });
     await row.getByRole('link', { name: /edit/i }).click();
@@ -101,6 +103,7 @@ export class ProductsPage {
   // ── Delete ──────────────────────────────────────────────────────────────────
 
   async deleteProduct(name: string) {
+    await this.searchFor(name);
     const row = this.rowFor(name);
     await expect(row).toBeVisible({ timeout: 10000 });
     await row.getByRole('button', { name: /delete/i }).click();

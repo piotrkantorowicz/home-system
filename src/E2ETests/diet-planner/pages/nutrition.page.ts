@@ -14,8 +14,8 @@ export class NutritionPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.fromInput = page.getByLabel(/from/i);
-    this.toInput = page.getByLabel(/to/i);
+    this.fromInput = page.getByTestId('from-date-picker');
+    this.toInput = page.getByTestId('to-date-picker');
     this.applyButton = page.getByRole('button', { name: /apply/i });
     this.tableRows = page.getByRole('table').getByRole('row').filter({ hasNot: page.locator('th') });
     this.pageSizeSelect = page.getByRole('combobox').or(page.locator('select')).first();
@@ -32,9 +32,86 @@ export class NutritionPage {
     await responsePromise;
   }
 
+  /** Returns the ISO date string (YYYY-MM-DD) currently shown in the from picker. */
+  async getFromValue(): Promise<string> {
+    return (await this.fromInput.getAttribute('data-value')) ?? '';
+  }
+
+  /** Returns the ISO date string (YYYY-MM-DD) currently shown in the to picker. */
+  async getToValue(): Promise<string> {
+    return (await this.toInput.getAttribute('data-value')) ?? '';
+  }
+
+  /**
+   * Open the DatePicker identified by testId and navigate to the given ISO date
+   * using the month/year dropdowns, then click the day button.
+   */
+  private async selectDate(testId: string, dateStr: string) {
+    const trigger = this.page.getByTestId(testId);
+
+    // Skip if already set — re-clicking in mode="single" would deselect.
+    const currentValue = await trigger.getAttribute('data-value');
+    if (currentValue === dateStr) {
+      return;
+    }
+
+    const [yearStr, monthStr, dayStr] = dateStr.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // 1-based
+    const day = parseInt(dayStr, 10);
+
+    await trigger.click();
+
+    // The calendar popover is rendered in a Radix portal
+    const popover = this.page.locator('[data-radix-popper-content-wrapper]').last();
+    await popover.waitFor({ state: 'visible', timeout: 5000 });
+
+    const selects = popover.locator('select');
+
+    // Identify month vs year select: year options are 4-digit numbers
+    const selectCount = await selects.count();
+    for (let i = 0; i < selectCount; i++) {
+      const sel = selects.nth(i);
+      const firstValue = await sel.locator('option').first().getAttribute('value');
+      if (firstValue && firstValue.length === 4) {
+        await sel.selectOption(String(year));
+      } else {
+        // Month select — react-day-picker uses 0-based month index values
+        await sel.selectOption(String(month - 1));
+      }
+    }
+
+    // Verify dropdown selections took effect (React re-render completed)
+    for (let i = 0; i < selectCount; i++) {
+      const sel = selects.nth(i);
+      const firstValue = await sel.locator('option').first().getAttribute('value');
+      if (firstValue && firstValue.length === 4) {
+        await expect(sel).toHaveValue(String(year));
+      } else {
+        await expect(sel).toHaveValue(String(month - 1));
+      }
+    }
+
+    // Click the day button. Use a JS click (evaluate) instead of Playwright's
+    // native click because Radix Portal event handling can prevent Playwright's
+    // CDP-dispatched pointer events from reaching React's synthetic event system.
+    const dayButton = popover
+      .locator('button')
+      .filter({ hasText: new RegExp(`^\\s*${String(day)}\\s*$`) })
+      .first();
+    await dayButton.evaluate((node) => (node as HTMLButtonElement).click());
+
+    // Close the popover explicitly so it doesn't interfere with subsequent interactions
+    await this.page.keyboard.press('Escape');
+    await popover.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => undefined);
+
+    // Verify the trigger reflects the selected date
+    await expect(trigger).toHaveAttribute('data-value', dateStr, { timeout: 5000 });
+  }
+
   async setDateRange(from: string, to: string) {
-    await this.fromInput.fill(from);
-    await this.toInput.fill(to);
+    await this.selectDate('from-date-picker', from);
+    await this.selectDate('to-date-picker', to);
   }
 
   async applyRange(expectedFrom?: string, expectedTo?: string) {
@@ -53,7 +130,6 @@ export class NutritionPage {
     try {
       await this.tableRows.first().waitFor({ state: 'attached', timeout: 8000 });
     } catch {
-      // No rows visible — return 0
       return 0;
     }
     return this.tableRows.count();
