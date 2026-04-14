@@ -13,6 +13,7 @@ import {
   Input,
   Label,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { Clock, Loader2, Save, Plus, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -42,6 +43,7 @@ type MealScheduleFormData = z.infer<typeof mealScheduleSchema>;
 
 export default function MealSchedule() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { data: schedule, isLoading } = useMealSchedule();
   const updateMutation = useUpdateMealSchedule();
 
@@ -75,7 +77,12 @@ export default function MealSchedule() {
   }, [schedule, reset]);
 
   const onSubmit = async (data: MealScheduleFormData) => {
-    await updateMutation.mutateAsync({ slots: data.slots });
+    try {
+      await updateMutation.mutateAsync({ slots: data.slots });
+      toast.success(t('meal_schedule.save_success'));
+    } catch {
+      toast.error(t('meal_schedule.save_error'));
+    }
   };
 
   if (isLoading) {
@@ -210,12 +217,6 @@ export default function MealSchedule() {
             )}
           </Button>
         </div>
-
-        {updateMutation.isSuccess && (
-          <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
-            {t('meal_schedule.save_success')}
-          </p>
-        )}
       </form>
     </div>
   );

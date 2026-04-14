@@ -10,6 +10,7 @@ import {
   Input,
   Label,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { Target, Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -31,6 +32,7 @@ const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
 export default function Goals() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { data: goals, isLoading } = useGoals();
   const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
@@ -67,13 +69,18 @@ export default function Goals() {
   }, [goals, goalsExist, reset]);
 
   const onSubmit = async (data: GoalFormData) => {
-    await saveMutation.mutateAsync({
-      dailyCalorieTarget: data.dailyCalorieTarget ?? null,
-      proteinGrams: data.proteinGrams ?? null,
-      carbsGrams: data.carbsGrams ?? null,
-      fatGrams: data.fatGrams ?? null,
-      fiberGrams: data.fiberGrams ?? null,
-    });
+    try {
+      await saveMutation.mutateAsync({
+        dailyCalorieTarget: data.dailyCalorieTarget ?? null,
+        proteinGrams: data.proteinGrams ?? null,
+        carbsGrams: data.carbsGrams ?? null,
+        fatGrams: data.fatGrams ?? null,
+        fiberGrams: data.fiberGrams ?? null,
+      });
+      toast.success(t('goals.save_success'));
+    } catch {
+      toast.error(t('goals.save_error'));
+    }
   };
 
   if (isLoading) {
@@ -206,12 +213,6 @@ export default function Goals() {
             )}
           </Button>
         </div>
-
-        {saveMutation.isSuccess && (
-          <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
-            {t('goals.save_success')}
-          </p>
-        )}
       </form>
     </div>
   );

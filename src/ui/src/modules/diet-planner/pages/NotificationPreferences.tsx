@@ -13,6 +13,7 @@ import {
   Input,
   Label,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { Bell, Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -42,6 +43,7 @@ const DEFAULT_VALUES: NotificationPreferencesFormInput = {
 
 export default function NotificationPreferences() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { data: preferences, isLoading } = useNotificationPreferences();
   const updateMutation = useUpdateNotificationPreferences();
 
@@ -73,7 +75,12 @@ export default function NotificationPreferences() {
   }, [preferences, reset]);
 
   const onSubmit = async (data: NotificationPreferencesFormData) => {
-    await updateMutation.mutateAsync(data);
+    try {
+      await updateMutation.mutateAsync(data);
+      toast.success(t('notifications.save_success'));
+    } catch {
+      toast.error(t('notifications.save_error'));
+    }
   };
 
   if (isLoading) {
@@ -238,12 +245,6 @@ export default function NotificationPreferences() {
             )}
           </Button>
         </div>
-
-        {updateMutation.isSuccess && (
-          <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
-            {t('notifications.save_success')}
-          </p>
-        )}
       </form>
     </div>
   );

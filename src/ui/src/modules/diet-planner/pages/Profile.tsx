@@ -16,6 +16,7 @@ import {
   Label,
   DatePicker,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { User, Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -39,6 +40,7 @@ type ProfileFormData = z.output<typeof profileSchema>;
 
 export default function Profile() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { data: profile, isLoading } = useProfile();
   const createMutation = useCreateProfile();
   const updateMutation = useUpdateProfile();
@@ -76,14 +78,19 @@ export default function Profile() {
   }, [profile, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    await saveMutation.mutateAsync({
-      dateOfBirth: data.dateOfBirth ?? null,
-      gender: data.gender ?? null,
-      heightCm: data.heightCm ?? null,
-      currentWeightKg: data.currentWeightKg ?? null,
-      targetWeightKg: data.targetWeightKg ?? null,
-      activityLevel: data.activityLevel ?? null,
-    });
+    try {
+      await saveMutation.mutateAsync({
+        dateOfBirth: data.dateOfBirth ?? null,
+        gender: data.gender ?? null,
+        heightCm: data.heightCm ?? null,
+        currentWeightKg: data.currentWeightKg ?? null,
+        targetWeightKg: data.targetWeightKg ?? null,
+        activityLevel: data.activityLevel ?? null,
+      });
+      toast.success(t('profile.save_success'));
+    } catch {
+      toast.error(t('profile.save_error'));
+    }
   };
 
   if (isLoading) {
@@ -255,12 +262,6 @@ export default function Profile() {
             )}
           </Button>
         </div>
-
-        {saveMutation.isSuccess && (
-          <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
-            {t('profile.save_success')}
-          </p>
-        )}
       </form>
 
       {/* Weight Prediction */}
