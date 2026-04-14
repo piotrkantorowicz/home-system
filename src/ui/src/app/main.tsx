@@ -3,6 +3,7 @@ import { queryClient } from '@shared/api/queryClient';
 import { AuthProvider } from '@shared/auth/AuthProvider';
 import { AppErrorBoundary } from '@shared/components/ErrorBoundary';
 import { ThemeProvider } from '@shared/context/ThemeContext';
+import { ToastProvider } from '@shared/context/ToastContext';
 import { initI18n } from '@shared/lib/i18n';
 import { registerModule, getModules } from '@shared/lib/module-registry';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -29,11 +30,13 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <AppErrorBoundary>
       <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RouterProvider router={router} />
-          </AuthProvider>
-        </QueryClientProvider>
+        <ToastProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <RouterProvider router={router} />
+            </AuthProvider>
+          </QueryClientProvider>
+        </ToastProvider>
       </ThemeProvider>
     </AppErrorBoundary>
   </React.StrictMode>,

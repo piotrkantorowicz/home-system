@@ -175,6 +175,26 @@ body {
   }
 }
 
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* ── Animation utilities ── */
 .animate-fade-in-up {
   animation: fade-in-up 0.5s ease-out both;
@@ -194,6 +214,10 @@ body {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-toast-slide-in {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Stagger children — apply .stagger-children to parent */
