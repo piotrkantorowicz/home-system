@@ -17,9 +17,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  EmptyState,
 } from '@shared/components/ui';
 import { Badge } from '@shared/components/ui/Badge';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Package } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -201,20 +202,17 @@ export default function ProductList() {
             />
           )}
           {data?.items.length === 0 ? (
-            <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
-              <p className="mb-2 text-xl font-semibold">{t('products.no_products_found')}</p>
-              <p className="text-muted-foreground mb-6">
-                {debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
-              </p>
-              {!debouncedSearch && (
-                <Button asChild>
-                  <Link to="/diet-planner/products/new">
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('products.add_first_product')}
-                  </Link>
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={Package}
+              title={t('products.no_products_found')}
+              description={debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
+              action={
+                !debouncedSearch
+                  ? { label: t('products.add_first_product'), href: '/diet-planner/products/new' }
+                  : undefined
+              }
+              className="animate-fade-in py-16"
+            />
           ) : (
             <div className="overflow-hidden rounded-xl border">
               <Table>
