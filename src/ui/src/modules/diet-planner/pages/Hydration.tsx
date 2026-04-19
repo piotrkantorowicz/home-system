@@ -61,6 +61,7 @@ export default function Hydration() {
 
   const [customAmount, setCustomAmount] = useState<string>('');
   const [customNote, setCustomNote] = useState<string>('');
+  const [pendingAmount, setPendingAmount] = useState<number | null>(null);
 
   const glassSizeMl = config?.glassSizeMl ?? DEFAULT_GLASS_SIZE_ML;
   const dailyTargetMl = config?.dailyWaterTargetMl ?? DEFAULT_DAILY_TARGET_ML;
@@ -91,11 +92,14 @@ export default function Hydration() {
   });
 
   const handleQuickAdd = async (amountMl: number) => {
+    setPendingAmount(amountMl);
     try {
       await logIntakeMutation.mutateAsync({ date: today, amountMl });
       toast.success(t('hydration.log_success', { amount: amountMl }));
     } catch {
       toast.error(t('hydration.log_error'));
+    } finally {
+      setPendingAmount(null);
     }
   };
 
@@ -103,6 +107,7 @@ export default function Hydration() {
     const amount = parseInt(customAmount, 10);
     if (isNaN(amount) || amount <= 0) return;
     const trimmedNote = customNote.trim();
+    setPendingAmount(amount);
     try {
       await logIntakeMutation.mutateAsync({
         date: today,
@@ -114,6 +119,8 @@ export default function Hydration() {
       setCustomNote('');
     } catch {
       toast.error(t('hydration.log_error'));
+    } finally {
+      setPendingAmount(null);
     }
   };
 
@@ -203,9 +210,13 @@ export default function Hydration() {
                 onClick={() => {
                   void handleQuickAdd(glassSizeMl);
                 }}
-                disabled={logIntakeMutation.isPending}
+                disabled={pendingAmount !== null}
               >
-                <Droplets className="mr-2 h-4 w-4" />
+                {pendingAmount === glassSizeMl ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Droplets className="mr-2 h-4 w-4" />
+                )}
                 {t('hydration.add_glass', { amount: glassSizeMl })}
               </Button>
               <Button
@@ -214,9 +225,14 @@ export default function Hydration() {
                 onClick={() => {
                   void handleQuickAdd(500);
                 }}
-                disabled={logIntakeMutation.isPending}
+                disabled={pendingAmount !== null}
               >
-                +500 ml
+                {pendingAmount === 500 ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                {t('hydration.add_500ml')}
               </Button>
               <Button
                 type="button"
@@ -224,9 +240,14 @@ export default function Hydration() {
                 onClick={() => {
                   void handleQuickAdd(250);
                 }}
-                disabled={logIntakeMutation.isPending}
+                disabled={pendingAmount !== null}
               >
-                +250 ml
+                {pendingAmount === 250 ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                {t('hydration.add_250ml')}
               </Button>
             </div>
 
@@ -262,7 +283,7 @@ export default function Hydration() {
                 onClick={() => {
                   void handleCustomAdd();
                 }}
-                disabled={logIntakeMutation.isPending || !customAmount}
+                disabled={pendingAmount !== null || !customAmount}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {t('hydration.add_btn')}
@@ -281,7 +302,7 @@ export default function Hydration() {
               <EmptyState
                 icon={Droplets}
                 title={t('hydration.no_entries')}
-                description="Start tracking your water intake today"
+                description={t('hydration.no_entries_desc')}
               />
             ) : (
               <ul className="space-y-2">
