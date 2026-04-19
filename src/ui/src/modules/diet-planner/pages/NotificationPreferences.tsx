@@ -202,7 +202,10 @@ export default function NotificationPreferences() {
               </Label>
             </div>
             <div className="flex items-center gap-3">
-              <Checkbox id="goalMilestoneAlertsEnabled" {...register('goalMilestoneAlertsEnabled')} />
+              <Checkbox
+                id="goalMilestoneAlertsEnabled"
+                {...register('goalMilestoneAlertsEnabled')}
+              />
               <Label htmlFor="goalMilestoneAlertsEnabled">
                 {t('notifications.goal_milestone_label')}
               </Label>
