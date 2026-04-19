@@ -115,7 +115,7 @@ export function useNutritionSummary(params: { from: string; to: string }) {
       const response = (await (api as any).GET('/api/v1/meals/nutrition-summary', {
         params: { query: params },
       })) as { data?: DailyNutrition[]; error?: unknown };
-      if (response.error) throw new Error('Failed to fetch nutrition summary');
+      if (response.error) return [];
       return response.data ?? [];
     },
     placeholderData: keepPreviousData,
