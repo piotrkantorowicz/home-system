@@ -276,7 +276,7 @@ export default function Calendar() {
                             >
                               {meal.recipeName}
                             </Link>
-                            <div className="[@media(hover:none)]:opacity-100 flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                            <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                               <button
                                 type="button"
                                 onClick={() => {
