@@ -33,3 +33,5 @@ export { DatePicker, type DatePickerProps } from './DatePicker';
 export { ToastContainer, type ToastContainerProps } from './Toast';
 export { Skeleton, type SkeletonProps } from './Skeleton';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
+export { Select, type SelectProps } from './Select';
+export { Checkbox, type CheckboxProps } from './Checkbox';
