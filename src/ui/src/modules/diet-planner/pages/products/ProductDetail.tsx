@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Skeleton,
 } from '@shared/components/ui';
 import { Badge } from '@shared/components/ui/Badge';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
@@ -38,8 +39,51 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-8 lg:p-10">
-        <div className="text-muted-foreground text-lg">{t('product_detail.loading')}</div>
+      <div className="mx-auto max-w-4xl p-8 lg:p-10">
+        <Skeleton className="mb-4 h-8 w-24" />
+        <div className="mb-8 flex items-start justify-between">
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-64" />
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-16 rounded-full" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-20 rounded-md" />
+            <Skeleton className="h-9 w-20 rounded-md" />
+          </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-36" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-28" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Skeleton className="mt-6 h-32 w-full rounded-xl" />
       </div>
     );
   }
