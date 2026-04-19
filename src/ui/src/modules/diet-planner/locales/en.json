@@ -46,7 +46,8 @@
     "fiber_label": "Fiber (g)",
     "fiber_placeholder": "e.g., 30",
     "save_btn": "Save Goals",
-    "save_success": "Goals saved successfully!"
+    "save_success": "Goals saved successfully!",
+    "save_error": "Failed to save goals. Please try again."
   },
   "products": {
     "title": "Products",
@@ -240,7 +241,13 @@
     "add_btn": "Add Meal",
     "save_btn": "Save Changes",
     "delete_title": "Delete Meal",
-    "delete_description": "Are you sure you want to remove \"{{name}}\" from this day? This action cannot be undone."
+    "delete_description": "Are you sure you want to remove \"{{name}}\" from this day? This action cannot be undone.",
+    "add_success": "Meal added successfully",
+    "edit_success": "Meal updated successfully",
+    "add_error": "Failed to add meal",
+    "edit_error": "Failed to update meal",
+    "delete_success": "Meal removed",
+    "delete_error": "Failed to delete meal"
   },
   "prediction": {
     "header": "Weight Prediction",
@@ -292,7 +299,8 @@
     "activity_very": "Very Active",
     "activity_extra": "Extra Active",
     "save_btn": "Save Profile",
-    "save_success": "Profile saved successfully!"
+    "save_success": "Profile saved successfully!",
+    "save_error": "Failed to save profile. Please try again."
   },
   "notifications": {
     "nav": "Notification Preferences",
@@ -313,7 +321,8 @@
     "weekly_summary_label": "Weekly nutrition summary",
     "goal_milestone_label": "Goal milestone alerts",
     "save_btn": "Save Preferences",
-    "save_success": "Preferences saved successfully!"
+    "save_success": "Preferences saved successfully!",
+    "save_error": "Failed to save preferences. Please try again."
   },
   "hydration": {
     "title": "Hydration Tracking",
@@ -341,7 +350,8 @@
     "glass_size_label": "Glass Size (ml)",
     "track_toggle_label": "Track water intake",
     "save_settings_btn": "Save Settings",
-    "settings_saved": "Settings saved successfully!"
+    "settings_saved": "Settings saved successfully!",
+    "settings_save_error": "Failed to save settings. Please try again."
   },
   "common": {
     "cancel": "Cancel",
@@ -410,7 +420,8 @@
     "add_slot": "Add Slot",
     "remove_slot": "Remove slot",
     "save_btn": "Save Schedule",
-    "save_success": "Meal schedule saved successfully!"
+    "save_success": "Meal schedule saved successfully!",
+    "save_error": "Failed to save meal schedule. Please try again."
   },
   "recipe_form": {
     "edit_title": "Edit Recipe",

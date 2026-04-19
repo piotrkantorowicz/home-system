@@ -16,6 +16,7 @@ import {
   Input,
   Label,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { Droplets, Loader2, Save, Trash2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -47,6 +48,7 @@ function formatTime(timestamp: string): string {
 
 export default function Hydration() {
   const { t } = useTranslation();
+  const toast = useToast();
   const today = formatDate(new Date());
 
   const { data: config, isLoading: configLoading } = useHydrationConfig();
@@ -108,8 +110,13 @@ export default function Hydration() {
   };
 
   const onSettingsSubmit = async (data: SettingsFormData) => {
-    await updateConfigMutation.mutateAsync(data);
-    resetSettings(data);
+    try {
+      await updateConfigMutation.mutateAsync(data);
+      resetSettings(data);
+      toast.success(t('hydration.settings_saved'));
+    } catch {
+      toast.error(t('hydration.settings_save_error'));
+    }
   };
 
   if (configLoading || intakeLoading) {
@@ -366,12 +373,6 @@ export default function Hydration() {
               )}
             </Button>
           </div>
-
-          {updateConfigMutation.isSuccess && (
-            <p className="text-right text-sm text-emerald-600 dark:text-emerald-400">
-              {t('hydration.settings_saved')}
-            </p>
-          )}
         </form>
       </div>
     </div>

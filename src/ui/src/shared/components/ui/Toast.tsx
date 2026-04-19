@@ -18,32 +18,32 @@ interface VariantConfig {
 const VARIANT_CONFIG: Record<ToastVariant, VariantConfig> = {
   success: {
     icon: CheckCircle2,
-    containerClass: 'border-green-200 bg-green-50 dark:border-green-800/60 dark:bg-green-950/90',
-    iconClass: 'text-green-600 dark:text-green-400',
+    containerClass: 'border-green-200/80 bg-white/95 dark:border-green-800/60 dark:bg-green-950/90',
+    iconClass: 'text-green-500 dark:text-green-400',
     progressClass: 'bg-green-500',
     role: 'status',
     ariaLive: 'polite',
   },
   error: {
     icon: XCircle,
-    containerClass: 'border-red-200 bg-red-50 dark:border-red-800/60 dark:bg-red-950/90',
-    iconClass: 'text-red-600 dark:text-red-400',
+    containerClass: 'border-red-200/80 bg-white/95 dark:border-red-800/60 dark:bg-red-950/90',
+    iconClass: 'text-red-500 dark:text-red-400',
     progressClass: 'bg-red-500',
     role: 'alert',
     ariaLive: 'assertive',
   },
   warning: {
     icon: AlertTriangle,
-    containerClass: 'border-amber-200 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/90',
-    iconClass: 'text-amber-600 dark:text-amber-400',
+    containerClass: 'border-amber-200/80 bg-white/95 dark:border-amber-800/60 dark:bg-amber-950/90',
+    iconClass: 'text-amber-500 dark:text-amber-400',
     progressClass: 'bg-amber-500',
     role: 'alert',
     ariaLive: 'assertive',
   },
   info: {
     icon: Info,
-    containerClass: 'border-blue-200 bg-blue-50 dark:border-blue-800/60 dark:bg-blue-950/90',
-    iconClass: 'text-blue-600 dark:text-blue-400',
+    containerClass: 'border-blue-200/80 bg-white/95 dark:border-blue-800/60 dark:bg-blue-950/90',
+    iconClass: 'text-blue-500 dark:text-blue-400',
     progressClass: 'bg-blue-500',
     role: 'status',
     ariaLive: 'polite',
@@ -98,13 +98,15 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
     >
       <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', config.iconClass)} aria-hidden />
 
-      <p className="text-foreground/90 flex-1 text-sm leading-snug font-medium">{toast.message}</p>
+      <p className="dark:text-foreground/90 flex-1 text-sm leading-snug font-medium text-slate-700">
+        {toast.message}
+      </p>
 
       <button
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss notification"
-        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -mt-1 -mr-1 rounded-md p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="dark:text-muted-foreground dark:hover:text-foreground focus-visible:ring-ring -mt-1 -mr-1 rounded-md p-1 text-slate-400 transition-colors hover:text-slate-600 focus-visible:ring-2 focus-visible:outline-none"
       >
         <X className="h-4 w-4" />
       </button>

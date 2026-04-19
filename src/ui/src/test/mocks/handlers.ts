@@ -104,6 +104,24 @@ export const goalHandlers = [
       updatedAt: null,
     });
   }),
+
+  http.put(`${BASE}/api/v1/goals`, () => {
+    return HttpResponse.json({
+      id: '55555555-5555-5555-5555-555555555555',
+      userId: 'user-1',
+      dailyCalorieTarget: 2200,
+      proteinGrams: 150,
+      carbsGrams: 250,
+      fatGrams: 70,
+      fiberGrams: 30,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    });
+  }),
+
+  http.post(`${BASE}/api/v1/goals`, () => {
+    return HttpResponse.json('55555555-5555-5555-5555-555555555555', { status: 201 });
+  }),
 ];
 
 export const mealScheduleHandlers = [

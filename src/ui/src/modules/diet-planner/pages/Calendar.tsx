@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { cn } from '@shared/lib/utils';
+import { useToast } from '@shared/context/ToastContext';
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,6 +52,7 @@ interface Meal {
 
 export default function Calendar() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
@@ -139,19 +141,30 @@ export default function Calendar() {
     notes: string;
   }) => {
     const payload = { ...data, mealTime: null, sequenceOrder: null };
-    if (editingMeal) {
-      await updateMeal.mutateAsync({ id: editingMeal.id, data: payload });
-    } else {
-      await createMeal.mutateAsync(payload);
+    try {
+      if (editingMeal) {
+        await updateMeal.mutateAsync({ id: editingMeal.id, data: payload });
+        toast.success(t('meal_form.edit_success'));
+      } else {
+        await createMeal.mutateAsync(payload);
+        toast.success(t('meal_form.add_success'));
+      }
+      setMealFormOpen(false);
+      setEditingMeal(null);
+    } catch {
+      toast.error(editingMeal ? t('meal_form.edit_error') : t('meal_form.add_error'));
     }
-    setMealFormOpen(false);
-    setEditingMeal(null);
   };
 
   const handleDelete = async () => {
     if (!deletingMeal) return;
-    await deleteMeal.mutateAsync(deletingMeal.id);
-    setDeletingMeal(null);
+    try {
+      await deleteMeal.mutateAsync(deletingMeal.id);
+      toast.success(t('meal_form.delete_success'));
+      setDeletingMeal(null);
+    } catch {
+      toast.error(t('meal_form.delete_error'));
+    }
   };
 
   const isSubmitting = createMeal.isPending || updateMeal.isPending;
