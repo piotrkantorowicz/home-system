@@ -214,7 +214,7 @@ export default function Dashboard() {
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={`h-full rounded-full ${item.color}`}
-                      style={{ width: `${item.percent}%` }}
+                      style={{ width: `${String(item.percent)}%` }}
                     />
                   </div>
                 </div>
