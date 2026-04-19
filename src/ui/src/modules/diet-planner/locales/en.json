@@ -140,6 +140,8 @@
       "placeholder": "Paste your JSON here...",
       "continue": "Continue",
       "load_sample": "Load Sample",
+      "copy_sample": "Copy Sample",
+      "copied": "Copied!",
       "expected_format": "Expected Format:",
       "invalid_json": "Invalid JSON format. Please check your input."
     },
@@ -151,14 +153,31 @@
       "recipes": "Recipes:",
       "schedule_days": "Schedule Days:",
       "validate": "Validate Data",
-      "validating": "Validating..."
+      "validating": "Validating...",
+      "revalidate": "Re-validate",
+      "api_error_title": "Something went wrong",
+      "api_error_hint": "Please check your data and try again. If the problem persists, contact support.",
+      "validation_failed": "Validation Failed",
+      "errors_count_one": "{{count}} Error",
+      "errors_count_other": "{{count}} Errors",
+      "tip": "Tip:",
+      "table": {
+        "severity": "Severity",
+        "type": "Type",
+        "item": "Item",
+        "message": "Message",
+        "existing_item": "Existing Item"
+      }
     },
     "step3": {
       "title": "Step 3: Review & Confirm",
       "success": "Validation Successful!",
+      "warnings_exist": "Validation passed with warnings",
       "what_imported": "What will be imported:",
       "new_products": "New Products:",
+      "products_reuse": "Products Reuse",
       "new_recipes": "New Recipes:",
+      "recipes_reuse": "Recipes Reuse",
       "meal_entries": "Meal Entries:",
       "warning_title": "Before you proceed:",
       "warning_products": "This will create {{count}} new products",

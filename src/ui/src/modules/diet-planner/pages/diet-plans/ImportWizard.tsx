@@ -16,7 +16,16 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
-import { FileJson, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, XCircle } from 'lucide-react';
+import {
+  FileJson,
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  XCircle,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +40,52 @@ interface ValidationState extends ValidationResultDto {
   isApiError?: boolean;
 }
 
+const sampleJson = {
+  products: [
+    {
+      name: 'Chicken Breast',
+      caloriesPer100g: 165,
+      proteinPer100g: 31,
+      carbsPer100g: 0,
+      fatPer100g: 3.6,
+      fiberPer100g: 0,
+      unit: 'g',
+    },
+    {
+      name: 'Brown Rice',
+      caloriesPer100g: 362,
+      proteinPer100g: 7.5,
+      carbsPer100g: 76,
+      fatPer100g: 2.7,
+      fiberPer100g: 3.5,
+      unit: 'g',
+    },
+  ],
+  recipes: [
+    {
+      name: 'Grilled Chicken with Rice',
+      description: 'Simple and healthy',
+      servings: 2,
+      prepTimeMinutes: 30,
+      ingredients: [
+        { product: 'Chicken Breast', amount: 300, unit: 'g' },
+        { product: 'Brown Rice', amount: 150, unit: 'g' },
+      ],
+      instructions: '1. Grill chicken. 2. Cook rice.',
+    },
+  ],
+  schedule: [
+    {
+      date: '2026-03-18',
+      meals: [{ type: 'lunch', recipe: 'Grilled Chicken with Rice', servings: 1 }],
+    },
+    {
+      date: '2026-03-19',
+      meals: [{ type: 'dinner', recipe: 'Grilled Chicken with Rice', servings: 1 }],
+    },
+  ],
+};
+
 export default function ImportWizard() {
   const { t } = useTranslation();
   const toast = useToast();
@@ -41,9 +96,19 @@ export default function ImportWizard() {
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
 
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const validateMutation = useValidateImport();
   const importMutation = useExecuteImport();
+
+  const handleCopySample = () => {
+    void navigator.clipboard.writeText(JSON.stringify(sampleJson, null, 2)).then(() => {
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    });
+  };
 
   const handleJsonParse = () => {
     try {
@@ -113,52 +178,6 @@ export default function ImportWizard() {
       toast.error(msg);
       console.error('Import failed:', error);
     }
-  };
-
-  const sampleJson = {
-    products: [
-      {
-        name: 'Chicken Breast',
-        caloriesPer100g: 165,
-        proteinPer100g: 31,
-        carbsPer100g: 0,
-        fatPer100g: 3.6,
-        fiberPer100g: 0,
-        unit: 'g',
-      },
-      {
-        name: 'Brown Rice',
-        caloriesPer100g: 362,
-        proteinPer100g: 7.5,
-        carbsPer100g: 76,
-        fatPer100g: 2.7,
-        fiberPer100g: 3.5,
-        unit: 'g',
-      },
-    ],
-    recipes: [
-      {
-        name: 'Grilled Chicken with Rice',
-        description: 'Simple and healthy',
-        servings: 2,
-        prepTimeMinutes: 30,
-        ingredients: [
-          { product: 'Chicken Breast', amount: 300, unit: 'g' },
-          { product: 'Brown Rice', amount: 150, unit: 'g' },
-        ],
-        instructions: '1. Grill chicken. 2. Cook rice.',
-      },
-    ],
-    schedule: [
-      {
-        date: '2026-03-18',
-        meals: [{ type: 'lunch', recipe: 'Grilled Chicken with Rice', servings: 1 }],
-      },
-      {
-        date: '2026-03-19',
-        meals: [{ type: 'dinner', recipe: 'Grilled Chicken with Rice', servings: 1 }],
-      },
-    ],
   };
 
   return (
@@ -243,6 +262,19 @@ export default function ImportWizard() {
               >
                 {t('import_wizard.step1.load_sample')}
               </Button>
+              <Button variant="outline" onClick={handleCopySample}>
+                {copied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    {t('import_wizard.step1.copied')}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    {t('import_wizard.step1.copy_sample')}
+                  </>
+                )}
+              </Button>
             </div>
 
             <div className="border-muted bg-muted/30 rounded-xl border p-5">
@@ -301,15 +333,14 @@ export default function ImportWizard() {
                       </div>
                       <div className="flex-1">
                         <h3 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
-                          Something went wrong
+                          {t('import_wizard.step2.api_error_title')}
                         </h3>
                         <p className="mb-3 text-sm text-red-600 dark:text-red-300">
                           {validationResult.issues[0]?.message ??
-                            'An unexpected error occurred while validating your import data.'}
+                            t('import_wizard.step2.api_error_title')}
                         </p>
                         <p className="text-xs text-red-500 dark:text-red-400">
-                          Please check your data and try again. If the problem persists, contact
-                          support.
+                          {t('import_wizard.step2.api_error_hint')}
                         </p>
                       </div>
                     </div>
@@ -320,11 +351,15 @@ export default function ImportWizard() {
                       <div className="flex items-center gap-2">
                         <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                         <h3 className="font-semibold text-red-700 dark:text-red-400">
-                          Validation Failed
+                          {t('import_wizard.step2.validation_failed')}
                         </h3>
                         <span className="ml-auto text-sm font-medium text-red-600 dark:text-red-400">
-                          {validationResult.summary.errors} Error
-                          {Number(validationResult.summary.errors) !== 1 ? 's' : ''}
+                          {t(
+                            Number(validationResult.summary.errors) === 1
+                              ? 'import_wizard.step2.errors_count_one'
+                              : 'import_wizard.step2.errors_count_other',
+                            { count: Number(validationResult.summary.errors) },
+                          )}
                         </span>
                       </div>
                     </div>
@@ -335,11 +370,19 @@ export default function ImportWizard() {
                           <Table>
                             <TableHeader>
                               <TableRow className="bg-muted/30">
-                                <TableHead className="w-[100px]">Severity</TableHead>
-                                <TableHead className="w-[100px]">Type</TableHead>
-                                <TableHead className="w-[120px]">Item</TableHead>
-                                <TableHead>Message</TableHead>
-                                <TableHead className="w-[200px]">Existing Item</TableHead>
+                                <TableHead className="w-[100px]">
+                                  {t('import_wizard.step2.table.severity')}
+                                </TableHead>
+                                <TableHead className="w-[100px]">
+                                  {t('import_wizard.step2.table.type')}
+                                </TableHead>
+                                <TableHead className="w-[120px]">
+                                  {t('import_wizard.step2.table.item')}
+                                </TableHead>
+                                <TableHead>{t('import_wizard.step2.table.message')}</TableHead>
+                                <TableHead className="w-[200px]">
+                                  {t('import_wizard.step2.table.existing_item')}
+                                </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -387,7 +430,9 @@ export default function ImportWizard() {
                                           <p className="text-sm">{issue.message}</p>
                                           {issue.resolution && (
                                             <p className="text-xs text-blue-600 dark:text-blue-400">
-                                              <span className="font-medium">Tip:</span>{' '}
+                                              <span className="font-medium">
+                                                {t('import_wizard.step2.tip')}
+                                              </span>{' '}
                                               {issue.resolution}
                                             </p>
                                           )}
@@ -428,7 +473,7 @@ export default function ImportWizard() {
                 {validateMutation.isPending
                   ? t('import_wizard.step2.validating')
                   : validationResult && !validationResult.canProceed
-                    ? t('import_wizard.step2.revalidate', 'Re-validate')
+                    ? t('import_wizard.step2.revalidate')
                     : t('import_wizard.step2.validate')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -455,12 +500,10 @@ export default function ImportWizard() {
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/10">
                 <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                   <AlertCircle className="h-5 w-5" />
-                  <span className="font-medium">
-                    {t('import_wizard.step3.warnings_exist', 'Validation passed with warnings')}
-                  </span>
+                  <span className="font-medium">{t('import_wizard.step3.warnings_exist')}</span>
                   <span className="ml-auto text-sm">
-                    {validationResult.summary.warnings} Warning
-                    {Number(validationResult.summary.warnings) !== 1 ? 's' : ''}
+                    {validationResult.summary.warnings}{' '}
+                    {Number(validationResult.summary.warnings) !== 1 ? 'Warnings' : 'Warning'}
                   </span>
                 </div>
                 {validationResult.issues.length > 0 && (
@@ -487,7 +530,7 @@ export default function ImportWizard() {
                   },
                   {
                     val: validationResult.plan?.productsToReuse ?? 0,
-                    label: 'Products Reuse',
+                    label: t('import_wizard.step3.products_reuse'),
                     primary: false,
                   },
                   {
@@ -497,7 +540,7 @@ export default function ImportWizard() {
                   },
                   {
                     val: validationResult.plan?.recipesToReuse ?? 0,
-                    label: 'Recipes Reuse',
+                    label: t('import_wizard.step3.recipes_reuse'),
                     primary: false,
                   },
                   {
