@@ -88,25 +88,40 @@ export default function Hydration() {
     }),
   });
 
-  const handleQuickAdd = (amountMl: number) => {
-    void logIntakeMutation.mutateAsync({ date: today, amountMl });
+  const handleQuickAdd = async (amountMl: number) => {
+    try {
+      await logIntakeMutation.mutateAsync({ date: today, amountMl });
+      toast.success(t('hydration.log_success', { amount: amountMl }));
+    } catch {
+      toast.error(t('hydration.log_error'));
+    }
   };
 
-  const handleCustomAdd = () => {
+  const handleCustomAdd = async () => {
     const amount = parseInt(customAmount, 10);
     if (isNaN(amount) || amount <= 0) return;
     const trimmedNote = customNote.trim();
-    void logIntakeMutation.mutateAsync({
-      date: today,
-      amountMl: amount,
-      ...(trimmedNote && { note: trimmedNote }),
-    });
-    setCustomAmount('');
-    setCustomNote('');
+    try {
+      await logIntakeMutation.mutateAsync({
+        date: today,
+        amountMl: amount,
+        ...(trimmedNote && { note: trimmedNote }),
+      });
+      toast.success(t('hydration.log_success', { amount }));
+      setCustomAmount('');
+      setCustomNote('');
+    } catch {
+      toast.error(t('hydration.log_error'));
+    }
   };
 
-  const handleDelete = (id: string) => {
-    void deleteIntakeMutation.mutateAsync({ id, date: today });
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteIntakeMutation.mutateAsync({ id, date: today });
+      toast.success(t('hydration.delete_success'));
+    } catch {
+      toast.error(t('hydration.delete_error'));
+    }
   };
 
   const onSettingsSubmit = async (data: SettingsFormData) => {
@@ -184,7 +199,7 @@ export default function Hydration() {
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  handleQuickAdd(glassSizeMl);
+                  void handleQuickAdd(glassSizeMl);
                 }}
                 disabled={logIntakeMutation.isPending}
               >
@@ -195,7 +210,7 @@ export default function Hydration() {
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  handleQuickAdd(500);
+                  void handleQuickAdd(500);
                 }}
                 disabled={logIntakeMutation.isPending}
               >
@@ -205,7 +220,7 @@ export default function Hydration() {
                 type="button"
                 variant="secondary"
                 onClick={() => {
-                  handleQuickAdd(250);
+                  void handleQuickAdd(250);
                 }}
                 disabled={logIntakeMutation.isPending}
               >
@@ -242,7 +257,9 @@ export default function Hydration() {
               </div>
               <Button
                 type="button"
-                onClick={handleCustomAdd}
+                onClick={() => {
+                  void handleCustomAdd();
+                }}
                 disabled={logIntakeMutation.isPending || !customAmount}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -284,7 +301,7 @@ export default function Hydration() {
                         type="button"
                         variant="ghost"
                         onClick={() => {
-                          handleDelete(entry.id);
+                          void handleDelete(entry.id);
                         }}
                         disabled={deleteIntakeMutation.isPending}
                         aria-label={t('hydration.delete_entry_aria')}
