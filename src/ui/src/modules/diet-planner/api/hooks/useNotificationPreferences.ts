@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 export interface NotificationPreferencesDto {
   id: string;
@@ -29,11 +30,9 @@ interface NotificationPreferencesApiResponse {
   error?: unknown;
 }
 
-const NOTIFICATION_PREFERENCES_QUERY_KEY = ['notification-preferences'] as const;
-
 export function useNotificationPreferences() {
   return useQuery({
-    queryKey: NOTIFICATION_PREFERENCES_QUERY_KEY,
+    queryKey: queryKeys.notificationPreferences.detail(),
     queryFn: async (): Promise<NotificationPreferencesDto | null> => {
       // REASON: /api/v1/notification-preferences is not yet in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -66,7 +65,7 @@ export function useUpdateNotificationPreferences() {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: NOTIFICATION_PREFERENCES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences.detail() });
     },
   });
 }
