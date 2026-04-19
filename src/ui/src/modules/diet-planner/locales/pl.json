@@ -118,6 +118,8 @@
     "to": "Do",
     "apply": "Zastosuj",
     "no_data": "Brak danych posiłków dla wybranego zakresu",
+    "no_data_desc": "Spróbuj dostosować zakres dat, aby znaleźć zalogowane posiłki",
+    "date_range_error": "Data 'Od' musi być wcześniejsza niż data 'Do'",
     "totals": "Sumy ({{days}} dni)",
     "daily_avg": "Średnia Dzienna",
     "vs_goal": "Realizacja Celu (cel na {{days}} dni)",
