@@ -170,7 +170,8 @@
     "step4": {
       "success_title": "Import Successful!",
       "success_message": "Your meals have been imported successfully. Redirecting to calendar..."
-    }
+    },
+    "import_error": "Import failed. Please try again."
   },
   "product_detail": {
     "back": "Back to Products",

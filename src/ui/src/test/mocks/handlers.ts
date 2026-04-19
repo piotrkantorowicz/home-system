@@ -61,6 +61,28 @@ export const productHandlers = [
   }),
 ];
 
+export const importHandlers = [
+  http.post(`${BASE}/api/v1/meals/validate`, () => {
+    return HttpResponse.json({
+      valid: true,
+      canProceed: true,
+      summary: { errors: 0, warnings: 0, info: 0 },
+      issues: [],
+      plan: {
+        productsToCreate: 2,
+        productsToReuse: 0,
+        recipesToCreate: 1,
+        recipesToReuse: 0,
+        mealEntriesToCreate: 2,
+      },
+    });
+  }),
+
+  http.post(`${BASE}/api/v1/meals/import`, () => {
+    return HttpResponse.json({ importedCount: 2 }, { status: 200 });
+  }),
+];
+
 export const mealHandlers = [
   http.get(`${BASE}/api/v1/meals`, () => {
     return HttpResponse.json([
@@ -291,6 +313,7 @@ export const recipeHandlers = [
 
 export const handlers = [
   ...productHandlers,
+  ...importHandlers,
   ...mealHandlers,
   ...goalHandlers,
   ...mealScheduleHandlers,
