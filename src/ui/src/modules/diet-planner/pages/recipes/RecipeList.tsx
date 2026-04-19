@@ -184,18 +184,6 @@ export default function RecipeList() {
         </div>
       ) : (
         <>
-          {data && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalCount={Number(data.totalCount)}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          )}
           {data?.items.length === 0 ? (
             <EmptyState
               icon={BookOpen}
@@ -391,6 +379,19 @@ export default function RecipeList() {
                 </div>
               )}
             </>
+          )}
+
+          {data && (
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={Number(data.totalCount)}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
           )}
         </>
       )}
