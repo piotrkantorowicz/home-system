@@ -15,6 +15,7 @@ import {
   Button,
   Input,
   Label,
+  Checkbox,
   EmptyState,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
@@ -368,12 +369,7 @@ export default function Hydration() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <input
-                    id="trackWaterIntake"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300"
-                    {...register('trackWaterIntake')}
-                  />
+                  <Checkbox id="trackWaterIntake" {...register('trackWaterIntake')} />
                   <Label htmlFor="trackWaterIntake">{t('hydration.track_toggle_label')}</Label>
                 </div>
               </div>

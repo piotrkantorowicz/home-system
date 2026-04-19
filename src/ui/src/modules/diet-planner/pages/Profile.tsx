@@ -15,6 +15,7 @@ import {
   Input,
   Label,
   DatePicker,
+  Select,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { User, Loader2, Save } from 'lucide-react';
@@ -149,16 +150,12 @@ export default function Profile() {
               </div>
               <div>
                 <Label htmlFor="gender">{t('profile.gender')}</Label>
-                <select
-                  id="gender"
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring mt-1 flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  {...register('gender')}
-                >
+                <Select id="gender" className="mt-1" {...register('gender')}>
                   <option value="">—</option>
                   <option value="Male">{t('profile.gender_male')}</option>
                   <option value="Female">{t('profile.gender_female')}</option>
                   <option value="Other">{t('profile.gender_other')}</option>
-                </select>
+                </Select>
                 {errors.gender && (
                   <p className="text-destructive mt-1 text-sm">{errors.gender.message}</p>
                 )}
@@ -227,18 +224,14 @@ export default function Profile() {
           <CardContent>
             <div className="max-w-xs">
               <Label htmlFor="activityLevel">{t('profile.activity_level')}</Label>
-              <select
-                id="activityLevel"
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring mt-1 flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                {...register('activityLevel')}
-              >
+              <Select id="activityLevel" className="mt-1" {...register('activityLevel')}>
                 <option value="">—</option>
                 <option value="Sedentary">{t('profile.activity_sedentary')}</option>
                 <option value="LightlyActive">{t('profile.activity_lightly')}</option>
                 <option value="ModeratelyActive">{t('profile.activity_moderately')}</option>
                 <option value="VeryActive">{t('profile.activity_very')}</option>
                 <option value="ExtraActive">{t('profile.activity_extra')}</option>
-              </select>
+              </Select>
               {errors.activityLevel && (
                 <p className="text-destructive mt-1 text-sm">{errors.activityLevel.message}</p>
               )}

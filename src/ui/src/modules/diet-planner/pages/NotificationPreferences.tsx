@@ -12,6 +12,7 @@ import {
   Button,
   Input,
   Label,
+  Checkbox,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Bell, Loader2, Save } from 'lucide-react';
@@ -119,12 +120,7 @@ export default function NotificationPreferences() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <input
-                id="mealReminderEnabled"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 accent-blue-600"
-                {...register('mealReminderEnabled')}
-              />
+              <Checkbox id="mealReminderEnabled" {...register('mealReminderEnabled')} />
               <Label htmlFor="mealReminderEnabled">
                 {t('notifications.meal_reminder_enabled_label')}
               </Label>
@@ -162,12 +158,7 @@ export default function NotificationPreferences() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <input
-                id="waterReminderEnabled"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 accent-blue-600"
-                {...register('waterReminderEnabled')}
-              />
+              <Checkbox id="waterReminderEnabled" {...register('waterReminderEnabled')} />
               <Label htmlFor="waterReminderEnabled">
                 {t('notifications.water_reminder_enabled_label')}
               </Label>
@@ -205,23 +196,13 @@ export default function NotificationPreferences() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <input
-                id="weeklySummaryEnabled"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 accent-blue-600"
-                {...register('weeklySummaryEnabled')}
-              />
+              <Checkbox id="weeklySummaryEnabled" {...register('weeklySummaryEnabled')} />
               <Label htmlFor="weeklySummaryEnabled">
                 {t('notifications.weekly_summary_label')}
               </Label>
             </div>
             <div className="flex items-center gap-3">
-              <input
-                id="goalMilestoneAlertsEnabled"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 accent-blue-600"
-                {...register('goalMilestoneAlertsEnabled')}
-              />
+              <Checkbox id="goalMilestoneAlertsEnabled" {...register('goalMilestoneAlertsEnabled')} />
               <Label htmlFor="goalMilestoneAlertsEnabled">
                 {t('notifications.goal_milestone_label')}
               </Label>
