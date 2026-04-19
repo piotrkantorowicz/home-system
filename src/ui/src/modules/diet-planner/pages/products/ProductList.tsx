@@ -205,7 +205,9 @@ export default function ProductList() {
             <EmptyState
               icon={Package}
               title={t('products.no_products_found')}
-              description={debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
+              description={
+                debouncedSearch ? t('products.adjust_search') : t('products.start_creating')
+              }
               action={
                 !debouncedSearch
                   ? { label: t('products.add_first_product'), href: '/diet-planner/products/new' }
