@@ -1,11 +1,16 @@
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
-import { useMeals } from '@modules/diet-planner/api/hooks/useMeals';
+import { useMeals, useNutritionSummary, type DailyNutrition } from '@modules/diet-planner/api/hooks/useMeals';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
 import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+
+function calcPercent(actual: number | undefined, target: number | null | undefined): number {
+  if (!target || !actual) return 0;
+  return Math.min(Math.round((actual / target) * 100), 100);
+}
 
 function getTodayRange() {
   const today = new Date();
@@ -23,6 +28,8 @@ export default function Dashboard() {
   const todayRange = getTodayRange();
   const { data: todayMeals, isLoading: mealsLoading } = useMeals(todayRange);
   const { data: goalsData } = useGoals();
+  const { data: nutritionData } = useNutritionSummary(todayRange);
+  const todayNutrition: DailyNutrition | undefined = nutritionData?.[0];
 
   const hasGoals =
     goalsData &&
@@ -38,30 +45,35 @@ export default function Dashboard() {
       value: goalsData?.dailyCalorieTarget ?? '\u2014',
       unit: ' kcal',
       color: 'bg-orange-500',
+      percent: calcPercent(todayNutrition?.calories, goalsData?.dailyCalorieTarget),
     },
     {
       label: t('dashboard.goal_protein'),
       value: goalsData?.proteinGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-blue-500',
+      percent: calcPercent(todayNutrition?.protein, goalsData?.proteinGrams),
     },
     {
       label: t('dashboard.goal_carbs'),
       value: goalsData?.carbsGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-emerald-500',
+      percent: calcPercent(todayNutrition?.carbs, goalsData?.carbsGrams),
     },
     {
       label: t('dashboard.goal_fat'),
       value: goalsData?.fatGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-amber-500',
+      percent: calcPercent(todayNutrition?.fat, goalsData?.fatGrams),
     },
     {
       label: t('dashboard.goal_fiber'),
       value: goalsData?.fiberGrams ?? '\u2014',
       unit: 'g',
       color: 'bg-purple-500',
+      percent: calcPercent(todayNutrition?.fiber, goalsData?.fiberGrams),
     },
   ];
 
@@ -198,7 +210,7 @@ export default function Dashboard() {
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={`h-full rounded-full ${item.color}`}
-                      style={{ width: '100%' }}
+                      style={{ width: `${item.percent}%` }}
                     />
                   </div>
                 </div>
