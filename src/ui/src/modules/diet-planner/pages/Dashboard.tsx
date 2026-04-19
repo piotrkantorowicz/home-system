@@ -1,5 +1,9 @@
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
-import { useMeals, useNutritionSummary, type DailyNutrition } from '@modules/diet-planner/api/hooks/useMeals';
+import {
+  useMeals,
+  useNutritionSummary,
+  type DailyNutrition,
+} from '@modules/diet-planner/api/hooks/useMeals';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
