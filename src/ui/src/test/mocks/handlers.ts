@@ -92,6 +92,18 @@ export const mealHandlers = [
       },
     ]);
   }),
+
+  http.post(`${BASE}/api/v1/meals`, () => {
+    return HttpResponse.json('33333333-3333-3333-3333-333333333334', { status: 201 });
+  }),
+
+  http.put(`${BASE}/api/v1/meals/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.delete(`${BASE}/api/v1/meals/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 export const goalHandlers = [
