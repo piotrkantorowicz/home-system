@@ -276,13 +276,13 @@ export default function Calendar() {
                             >
                               {meal.recipeName}
                             </Link>
-                            <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                            <div className="[@media(hover:none)]:opacity-100 flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                               <button
                                 type="button"
                                 onClick={() => {
                                   openEditForm(meal);
                                 }}
-                                className="text-muted-foreground hover:text-primary rounded p-0.5 transition-colors"
+                                className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                               >
                                 <Pencil className="h-3 w-3" />
                               </button>
@@ -291,7 +291,7 @@ export default function Calendar() {
                                 onClick={() => {
                                   setDeletingMeal(meal);
                                 }}
-                                className="text-muted-foreground hover:text-destructive rounded p-0.5 transition-colors"
+                                className="text-muted-foreground hover:text-destructive focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
