@@ -189,18 +189,6 @@ export default function ProductList() {
         </div>
       ) : (
         <>
-          {data && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalCount={data.totalCount}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          )}
           {data?.items.length === 0 ? (
             <EmptyState
               icon={Package}
@@ -292,6 +280,19 @@ export default function ProductList() {
             </div>
           )}
         </>
+      )}
+
+      {data && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={data.totalCount}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       )}
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
