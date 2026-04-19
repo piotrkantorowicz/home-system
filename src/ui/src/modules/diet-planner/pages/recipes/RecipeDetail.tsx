@@ -70,17 +70,29 @@ export default function RecipeDetail() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      <TableHead><Skeleton className="h-4 w-20" /></TableHead>
-                      <TableHead><Skeleton className="h-4 w-16" /></TableHead>
-                      <TableHead><Skeleton className="h-4 w-12" /></TableHead>
+                      <TableHead>
+                        <Skeleton className="h-4 w-20" />
+                      </TableHead>
+                      <TableHead>
+                        <Skeleton className="h-4 w-16" />
+                      </TableHead>
+                      <TableHead>
+                        <Skeleton className="h-4 w-12" />
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-14 rounded-full" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-12" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-14 rounded-full" />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
