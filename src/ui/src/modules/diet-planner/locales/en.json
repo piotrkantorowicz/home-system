@@ -119,6 +119,8 @@
     "to": "To",
     "apply": "Apply",
     "no_data": "No meal data for the selected range",
+    "no_data_desc": "Try adjusting the date range to find logged meals",
+    "date_range_error": "'From' date must be before 'To' date",
     "totals": "Totals ({{days}} days)",
     "daily_avg": "Daily Average",
     "vs_goal": "Goal Progress ({{days}}-day target)",

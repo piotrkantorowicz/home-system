@@ -146,6 +146,11 @@ export default function NutritionSummary() {
               {t('nutrition_page.apply')}
             </Button>
           </div>
+          {draftFrom && draftTo && draftFrom > draftTo && (
+            <p role="alert" className="text-destructive mt-2 text-sm">
+              {t('nutrition_page.date_range_error')}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -157,7 +162,7 @@ export default function NutritionSummary() {
         <EmptyState
           icon={CalendarX}
           title={t('nutrition_page.no_data')}
-          description="No meals logged in the selected date range"
+          description={t('nutrition_page.no_data_desc')}
         />
       ) : (
         <>
