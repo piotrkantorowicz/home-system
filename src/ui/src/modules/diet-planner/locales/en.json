@@ -351,7 +351,11 @@
     "track_toggle_label": "Track water intake",
     "save_settings_btn": "Save Settings",
     "settings_saved": "Settings saved successfully!",
-    "settings_save_error": "Failed to save settings. Please try again."
+    "settings_save_error": "Failed to save settings. Please try again.",
+    "log_success": "+{{amount}}ml logged",
+    "log_error": "Failed to log water intake. Please try again.",
+    "delete_success": "Entry removed",
+    "delete_error": "Failed to delete entry. Please try again."
   },
   "common": {
     "cancel": "Cancel",
