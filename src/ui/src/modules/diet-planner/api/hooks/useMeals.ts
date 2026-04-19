@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
 
@@ -26,7 +27,10 @@ export function useMeals(params: MealsQueryParams = {}) {
   const { from, to } = params;
 
   return useQuery({
-    queryKey: ['meals', { from, to }],
+    queryKey: queryKeys.meals.list({
+      ...(from !== undefined ? { from } : {}),
+      ...(to !== undefined ? { to } : {}),
+    }),
     queryFn: async (): Promise<MealEntry[]> => {
       const response = await api.GET('/api/v1/meals', {
         params: {
@@ -54,7 +58,8 @@ export function useCreateMeal() {
       return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
     },
   });
 }
@@ -78,7 +83,8 @@ export function useUpdateMeal() {
       return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
     },
   });
 }
@@ -94,14 +100,15 @@ export function useDeleteMeal() {
       if (!response.response.ok) throw new Error('Failed to delete meal entry');
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['meals'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
     },
   });
 }
 
 export function useNutritionSummary(params: { from: string; to: string }) {
   return useQuery({
-    queryKey: ['nutrition-summary', params],
+    queryKey: queryKeys.nutritionSummary.detail(params),
     queryFn: async (): Promise<DailyNutrition[]> => {
       // REASON: /api/v1/meals/nutrition-summary is not yet in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -149,9 +156,10 @@ export function useExecuteImport() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['meals'] });
-      void queryClient.invalidateQueries({ queryKey: ['products'] });
-      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all() });
     },
   });
 }
