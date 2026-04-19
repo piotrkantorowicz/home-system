@@ -1,17 +1,25 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
 import { getModules } from '@shared/lib/module-registry';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from 'react-oidc-context';
 import { Link } from 'react-router-dom';
 
 export default function SystemDashboard() {
   const { t } = useTranslation();
+  const auth = useAuth();
   const modules = getModules();
+
+  const displayName =
+    auth.user?.profile.name ??
+    auth.user?.profile.preferred_username ??
+    auth.user?.profile.email ??
+    'User';
 
   return (
     <div className="space-y-8 p-6 lg:p-8">
       <div>
         <h1 className="gradient-text text-3xl font-bold tracking-tight">
-          {t('common.welcome_back', { name: '' }).replace(', !', '')}
+          {t('common.welcome_back', { name: displayName })}
         </h1>
         <p className="text-muted-foreground mt-1">HomeSystem Dashboard</p>
       </div>
@@ -31,7 +39,7 @@ export default function SystemDashboard() {
                       <CardTitle className="text-lg capitalize">
                         {mod.name.replace(/-/g, ' ')}
                       </CardTitle>
-                      <CardDescription>{mod.basePath}</CardDescription>
+                      <CardDescription>{mod.description ?? mod.basePath}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
