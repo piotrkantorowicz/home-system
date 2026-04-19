@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  EmptyState,
   Input,
   Pagination,
   Skeleton,
@@ -27,6 +28,7 @@ import {
   List as ListIcon,
   Clock,
   Users,
+  BookOpen,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -195,20 +197,19 @@ export default function RecipeList() {
             />
           )}
           {data?.items.length === 0 ? (
-            <div className="animate-fade-in flex flex-col items-center justify-center py-16 text-center">
-              <p className="mb-2 text-xl font-semibold">{t('recipes.no_recipes_found')}</p>
-              <p className="text-muted-foreground mb-6">
-                {debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
-              </p>
-              {!debouncedSearch && (
-                <Button asChild>
-                  <Link to="/diet-planner/recipes/new">
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('recipes.create_first_recipe')}
-                  </Link>
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={BookOpen}
+              title={t('recipes.no_recipes_found')}
+              description={
+                debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')
+              }
+              action={
+                !debouncedSearch
+                  ? { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
+                  : undefined
+              }
+              className="animate-fade-in py-16"
+            />
           ) : (
             <>
               {viewMode === 'grid' ? (

@@ -15,6 +15,7 @@ import {
   Button,
   Input,
   Label,
+  EmptyState,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Droplets, Loader2, Save, Trash2, Plus } from 'lucide-react';
@@ -276,7 +277,11 @@ export default function Hydration() {
           </CardHeader>
           <CardContent>
             {entries.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t('hydration.no_entries')}</p>
+              <EmptyState
+                icon={Droplets}
+                title={t('hydration.no_entries')}
+                description="Start tracking your water intake today"
+              />
             ) : (
               <ul className="space-y-2">
                 {entries.map((entry) => (

@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
   DatePicker,
+  EmptyState,
   Label,
   Pagination,
   Table,
@@ -16,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@shared/components/ui';
-import { BarChart2 } from 'lucide-react';
+import { BarChart2, CalendarX } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -153,9 +154,11 @@ export default function NutritionSummary() {
           {t('common.loading')}
         </div>
       ) : days.length === 0 ? (
-        <div className="text-muted-foreground flex items-center justify-center py-16">
-          {t('nutrition_page.no_data')}
-        </div>
+        <EmptyState
+          icon={CalendarX}
+          title={t('nutrition_page.no_data')}
+          description="No meals logged in the selected date range"
+        />
       ) : (
         <>
           {/* Totals + Goal Progress */}
