@@ -31,3 +31,4 @@ export { Pagination } from './Pagination';
 export { Calendar, type CalendarProps } from './Calendar';
 export { DatePicker, type DatePickerProps } from './DatePicker';
 export { ToastContainer, type ToastContainerProps } from './Toast';
+export { Skeleton, type SkeletonProps } from './Skeleton';
