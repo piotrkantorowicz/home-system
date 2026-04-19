@@ -409,7 +409,11 @@
     "piece_help": "Average weight of one piece in grams",
     "create_btn": "Create Product",
     "update_btn": "Update Product",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "create_success": "Product created successfully",
+    "create_error": "Failed to create product. Check your inputs and try again.",
+    "update_success": "Product updated successfully",
+    "update_error": "Failed to update product. Check your inputs and try again."
   },
   "meal_schedule": {
     "nav": "Meal Schedule",
@@ -451,6 +455,10 @@
     "servings_summary": "Servings:",
     "prep_time_summary": "Prep Time:",
     "create_btn": "Create Recipe",
-    "update_btn": "Update Recipe"
+    "update_btn": "Update Recipe",
+    "create_success": "Recipe created successfully",
+    "create_error": "Failed to create recipe. Check your inputs and try again.",
+    "update_success": "Recipe updated successfully",
+    "update_error": "Failed to update recipe. Check your inputs and try again."
   }
 }

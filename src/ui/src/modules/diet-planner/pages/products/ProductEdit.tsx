@@ -1,4 +1,5 @@
 import { useProduct, useUpdateProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { useToast } from '@shared/context/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -8,6 +9,7 @@ export default function ProductEdit() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const { data: product, isLoading } = useProduct(id ?? '');
   const updateMutation = useUpdateProduct(id ?? '');
 
@@ -24,9 +26,10 @@ export default function ProductEdit() {
         densityGramsPerMl: data.densityGramsPerMl ?? null,
         gramPerPiece: data.gramPerPiece ?? null,
       });
+      toast.success(t('product_form.update_success'));
       void navigate(`/diet-planner/products/${id ?? ''}`);
-    } catch (error) {
-      console.error('Failed to update product:', error);
+    } catch {
+      toast.error(t('product_form.update_error'));
     }
   };
 
