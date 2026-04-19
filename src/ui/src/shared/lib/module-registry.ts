@@ -12,6 +12,7 @@ export interface NavItem {
 export interface AppModule {
   name: string;
   translationKey: string;
+  description?: string;
   basePath: string;
   icon: LucideIcon;
   routes: RouteObject[];

@@ -39,6 +39,7 @@ const Hydration = lazy(() => import('./pages/Hydration'));
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
   translationKey: 'common.diet_planner',
+  description: 'Track your diet, plan meals, and monitor nutrition',
   basePath: '/diet-planner',
   icon: CalendarDays,
   localeNamespaces: ['diet-planner'],
