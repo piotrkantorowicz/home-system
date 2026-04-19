@@ -14,6 +14,7 @@ import {
   TableRow,
   TableCell,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
 import { FileJson, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, XCircle } from 'lucide-react';
 import { useState } from 'react';
@@ -32,11 +33,13 @@ interface ValidationState extends ValidationResultDto {
 
 export default function ImportWizard() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [jsonInput, setJsonInput] = useState('');
   const [importData, setImportData] = useState<ImportDto | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationState | null>(null);
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const validateMutation = useValidateImport();
@@ -96,6 +99,7 @@ export default function ImportWizard() {
 
   const handleImport = async () => {
     if (!importData) return;
+    setImportError(null);
 
     try {
       await importMutation.mutateAsync(importData);
@@ -104,6 +108,9 @@ export default function ImportWizard() {
         void navigate('/diet-planner/calendar');
       }, 2000);
     } catch (error) {
+      const msg = t('import_wizard.import_error');
+      setImportError(msg);
+      toast.error(msg);
       console.error('Import failed:', error);
     }
   };
@@ -539,6 +546,15 @@ export default function ImportWizard() {
                 </div>
               </div>
             </div>
+
+            {importError && (
+              <p
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-400"
+              >
+                {importError}
+              </p>
+            )}
 
             <div className="flex gap-4 pt-2">
               <Button
