@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 export interface HydrationConfigDto {
   id: string;
@@ -69,7 +70,7 @@ export interface LogWaterIntakeData {
 
 export function useHydrationConfig() {
   return useQuery({
-    queryKey: ['hydration-config'],
+    queryKey: queryKeys.hydration.config(),
     queryFn: async (): Promise<HydrationConfigDto | null> => {
       // REASON: /api/v1/hydration/config is not in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -104,14 +105,14 @@ export function useUpdateHydrationConfig() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['hydration-config'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.hydration.config() });
     },
   });
 }
 
 export function useWaterIntake(date: string) {
   return useQuery({
-    queryKey: ['water-intake', date],
+    queryKey: queryKeys.hydration.intake(date),
     queryFn: async (): Promise<WaterIntakeListDto | null> => {
       // REASON: /api/v1/hydration/intake is not in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -146,7 +147,7 @@ export function useLogWaterIntake() {
       return response.data;
     },
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['water-intake', variables.date] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.hydration.intake(variables.date) });
     },
   });
 }
@@ -169,7 +170,7 @@ export function useDeleteWaterIntake() {
       return date;
     },
     onSuccess: (date) => {
-      void queryClient.invalidateQueries({ queryKey: ['water-intake', date] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.hydration.intake(date) });
     },
   });
 }
