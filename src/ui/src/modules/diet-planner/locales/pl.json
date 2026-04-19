@@ -139,6 +139,8 @@
       "placeholder": "Wklej swój JSON tutaj...",
       "continue": "Kontynuuj",
       "load_sample": "Załaduj Próbkę",
+      "copy_sample": "Kopiuj Próbkę",
+      "copied": "Skopiowano!",
       "expected_format": "Oczekiwany Format:",
       "invalid_json": "Nieprawidłowy format JSON. Sprawdź swoje dane wejściowe."
     },
@@ -150,14 +152,31 @@
       "recipes": "Przepisy:",
       "schedule_days": "Dni w Harmonogramie:",
       "validate": "Waliduj Dane",
-      "validating": "Walidacja..."
+      "validating": "Walidacja...",
+      "revalidate": "Waliduj ponownie",
+      "api_error_title": "Coś poszło nie tak",
+      "api_error_hint": "Sprawdź swoje dane i spróbuj ponownie. Jeśli problem nadal występuje, skontaktuj się z pomocą techniczną.",
+      "validation_failed": "Walidacja nie powiodła się",
+      "errors_count_one": "{{count}} błąd",
+      "errors_count_other": "{{count}} błędów",
+      "tip": "Wskazówka:",
+      "table": {
+        "severity": "Ważność",
+        "type": "Typ",
+        "item": "Element",
+        "message": "Komunikat",
+        "existing_item": "Istniejący Element"
+      }
     },
     "step3": {
       "title": "Krok 3: Przejrzyj i Potwierdź",
       "success": "Walidacja Zakończona Sukcesem!",
+      "warnings_exist": "Walidacja zakończona z ostrzeżeniami",
       "what_imported": "Co zostanie zaimportowane:",
       "new_products": "Nowe Produkty:",
+      "products_reuse": "Ponowne użycie produktów",
       "new_recipes": "Nowe Przepisy:",
+      "recipes_reuse": "Ponowne użycie przepisów",
       "meal_entries": "Wpisy Posiłków:",
       "warning_title": "Zanim przejdziesz dalej:",
       "warning_products": "To utworzy {{count}} nowych produktów",
