@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* Use .dark class (set by ThemeProvider) instead of OS prefers-color-scheme */
-@custom-variant dark (&:where(.dark, .dark *));
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-background: 220 16% 96%;
