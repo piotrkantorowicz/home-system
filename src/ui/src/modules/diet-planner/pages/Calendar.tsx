@@ -51,7 +51,7 @@ interface Meal {
 }
 
 export default function Calendar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const toast = useToast();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
 
@@ -198,7 +198,8 @@ export default function Calendar() {
           <h2 className="text-xl font-semibold">
             {t('diet_plan_detail.week_of', {
               date:
-                weekDays[0]?.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) ?? '',
+                weekDays[0]?.toLocaleDateString(i18n.language, { month: 'long', day: 'numeric' }) ??
+                '',
             })}
           </h2>
         </div>
@@ -238,7 +239,7 @@ export default function Calendar() {
                   <CardTitle className="text-sm">
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-xs tracking-wider uppercase">
-                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                        {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
                       </span>
                       <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
                         {date.getDate()}
