@@ -2,6 +2,7 @@ import { cn } from '@shared/lib/utils';
 import { ChevronDown } from 'lucide-react';
 import { forwardRef } from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
