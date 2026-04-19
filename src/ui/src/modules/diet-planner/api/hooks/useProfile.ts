@@ -41,7 +41,7 @@ export function useCreateProfile() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail() });
     },
   });
 }
@@ -58,7 +58,7 @@ export function useUpdateProfile() {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail() });
     },
   });
 }

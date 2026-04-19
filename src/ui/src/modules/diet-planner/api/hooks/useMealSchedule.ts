@@ -40,7 +40,7 @@ export function useUpdateMealSchedule() {
       return null;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['meal-schedule'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.mealSchedule.detail() });
     },
   });
 }
