@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 export interface Goal {
   id: string;
@@ -28,7 +29,7 @@ interface GoalApiResponse {
 
 export function useGoals() {
   return useQuery({
-    queryKey: ['goals'],
+    queryKey: queryKeys.goals.detail(),
     queryFn: async (): Promise<Goal | null> => {
       // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -66,7 +67,7 @@ export function useCreateGoals() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['goals'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
     },
   });
 }
@@ -90,7 +91,7 @@ export function useUpdateGoals() {
       return response.data ?? null;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['goals'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
     },
   });
 }

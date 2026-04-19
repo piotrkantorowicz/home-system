@@ -4,6 +4,7 @@ import { DatePicker } from '@shared/components/ui/DatePicker';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -102,6 +103,9 @@ export function MealForm({
           <DialogTitle>
             {mode === 'create' ? t('meal_form.add_title') : t('meal_form.edit_title')}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {mode === 'create' ? t('meal_form.add_title') : t('meal_form.edit_title')}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

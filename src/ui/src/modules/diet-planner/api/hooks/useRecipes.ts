@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
 
@@ -15,7 +16,7 @@ export function useRecipes(params: RecipesQueryParams = {}) {
   const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
 
   return useQuery({
-    queryKey: ['recipes', { search, onlyMine, page, pageSize }],
+    queryKey: queryKeys.recipes.list({ search, onlyMine, page, pageSize }),
     queryFn: async () => {
       const response = await api.GET('/api/v1/recipes', {
         params: {
@@ -35,7 +36,7 @@ export function useRecipes(params: RecipesQueryParams = {}) {
 
 export function useRecipe(id: string) {
   return useQuery({
-    queryKey: ['recipes', id],
+    queryKey: queryKeys.recipes.detail(id),
     queryFn: async () => {
       const response = await api.GET('/api/v1/recipes/{id}', {
         params: {
@@ -70,7 +71,7 @@ export function useCreateRecipe() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all() });
     },
   });
 }
@@ -94,8 +95,8 @@ export function useUpdateRecipe(id: string) {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
-      void queryClient.invalidateQueries({ queryKey: ['recipes', id] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.detail(id) });
     },
   });
 }
@@ -114,7 +115,7 @@ export function useDeleteRecipe() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all() });
     },
   });
 }

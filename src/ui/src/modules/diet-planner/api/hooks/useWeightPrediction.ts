@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
 
@@ -30,7 +31,7 @@ function normalize(raw: RawWeightPrediction): WeightPredictionDto {
 
 export function useWeightPrediction(dailyCalorieTarget: number | null) {
   return useQuery({
-    queryKey: ['weight-prediction', dailyCalorieTarget],
+    queryKey: queryKeys.weightPrediction.detail(dailyCalorieTarget),
     enabled: dailyCalorieTarget !== null && dailyCalorieTarget > 0,
     queryFn: async (): Promise<WeightPredictionDto | null> => {
       if (dailyCalorieTarget === null || dailyCalorieTarget <= 0) {

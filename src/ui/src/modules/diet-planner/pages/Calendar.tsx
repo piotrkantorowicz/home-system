@@ -2,6 +2,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@shared/compon
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -404,9 +405,9 @@ export default function Calendar() {
           <DialogHeader>
             <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
           </DialogHeader>
-          <p className="text-muted-foreground text-sm">
+          <DialogDescription>
             {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
-          </p>
+          </DialogDescription>
           <DialogFooter>
             <Button
               variant="outline"

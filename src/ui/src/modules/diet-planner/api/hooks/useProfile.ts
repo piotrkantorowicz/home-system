@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
 
@@ -9,7 +10,7 @@ export type ProfileRequest = components['schemas']['ProfileRequest'];
 
 export function useProfile() {
   return useQuery({
-    queryKey: ['profile'],
+    queryKey: queryKeys.profile.detail(),
     queryFn: async (): Promise<UserProfileDto | null> => {
       const response = await api.GET('/api/v1/profile');
 
@@ -40,7 +41,7 @@ export function useCreateProfile() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail() });
     },
   });
 }
@@ -57,7 +58,7 @@ export function useUpdateProfile() {
       }
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail() });
     },
   });
 }

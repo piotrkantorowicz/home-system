@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 import { api } from '../client';
+import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
 
@@ -59,7 +60,7 @@ export function useProducts(params: ProductsQueryParams = {}) {
   const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
 
   return useQuery({
-    queryKey: ['products', { search, onlyMine, page, pageSize }],
+    queryKey: queryKeys.products.list({ search, onlyMine, page, pageSize }),
     queryFn: async (): Promise<ProductsResponse> => {
       const response = await api.GET('/api/v1/products', {
         params: {
@@ -86,7 +87,7 @@ export function useProducts(params: ProductsQueryParams = {}) {
 
 export function useProduct(id: string) {
   return useQuery({
-    queryKey: ['products', id],
+    queryKey: queryKeys.products.detail(id),
     queryFn: async (): Promise<Product> => {
       const response = await api.GET('/api/v1/products/{id}', {
         params: {
@@ -120,7 +121,7 @@ export function useCreateProduct() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.all() });
     },
   });
 }
@@ -144,8 +145,8 @@ export function useUpdateProduct(id: string) {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['products'] });
-      void queryClient.invalidateQueries({ queryKey: ['products', id] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.detail(id) });
     },
   });
 }
@@ -164,7 +165,7 @@ export function useDeleteProduct() {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products.all() });
     },
   });
 }
