@@ -1,64 +1,64 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-background: 240 20% 97%;
-  --color-foreground: 240 24% 10%;
+  --color-background: 220 16% 96%;
+  --color-foreground: 224 71% 4%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 240 24% 10%;
+  --color-card-foreground: 224 71% 4%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 240 24% 10%;
-  --color-primary: 255 72% 58%;
+  --color-popover-foreground: 224 71% 4%;
+  --color-primary: 258 88% 52%;
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 250 30% 94%;
-  --color-secondary-foreground: 240 24% 10%;
-  --color-muted: 250 25% 93%;
-  --color-muted-foreground: 240 10% 44%;
-  --color-accent: 255 50% 94%;
-  --color-accent-foreground: 255 60% 48%;
-  --color-destructive: 0 72% 51%;
+  --color-secondary: 220 14% 90%;
+  --color-secondary-foreground: 224 71% 4%;
+  --color-muted: 220 14% 88%;
+  --color-muted-foreground: 220 9% 36%;
+  --color-accent: 258 100% 95%;
+  --color-accent-foreground: 258 88% 38%;
+  --color-destructive: 0 84% 44%;
   --color-destructive-foreground: 0 0% 100%;
-  --color-border: 250 20% 88%;
-  --color-input: 250 20% 85%;
-  --color-ring: 255 72% 58%;
-  --color-success: 152 60% 42%;
-  --color-warning: 38 92% 50%;
+  --color-border: 220 13% 82%;
+  --color-input: 220 13% 82%;
+  --color-ring: 258 88% 52%;
+  --color-success: 142 69% 34%;
+  --color-warning: 38 92% 42%;
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.375rem;
 }
 
-/* Light theme — warm parchment base, indigo-violet primary */
+/* Light theme — clean slate, deep violet primary, strong contrast */
 :root {
-  --color-background: 240 20% 97%;
-  --color-foreground: 240 24% 10%;
+  --color-background: 220 16% 96%;
+  --color-foreground: 224 71% 4%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 240 24% 10%;
+  --color-card-foreground: 224 71% 4%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 240 24% 10%;
-  --color-primary: 255 72% 58%;
+  --color-popover-foreground: 224 71% 4%;
+  --color-primary: 258 88% 52%;
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 250 30% 94%;
-  --color-secondary-foreground: 240 24% 10%;
-  --color-muted: 250 25% 93%;
-  --color-muted-foreground: 240 10% 44%;
-  --color-accent: 255 50% 94%;
-  --color-accent-foreground: 255 60% 48%;
-  --color-destructive: 0 72% 51%;
+  --color-secondary: 220 14% 90%;
+  --color-secondary-foreground: 224 71% 4%;
+  --color-muted: 220 14% 88%;
+  --color-muted-foreground: 220 9% 36%;
+  --color-accent: 258 100% 95%;
+  --color-accent-foreground: 258 88% 38%;
+  --color-destructive: 0 84% 44%;
   --color-destructive-foreground: 0 0% 100%;
-  --color-border: 250 20% 88%;
-  --color-input: 250 20% 85%;
-  --color-ring: 255 72% 58%;
-  --color-success: 152 60% 42%;
-  --color-warning: 38 92% 50%;
+  --color-border: 220 13% 82%;
+  --color-input: 220 13% 82%;
+  --color-ring: 258 88% 52%;
+  --color-success: 142 69% 34%;
+  --color-warning: 38 92% 42%;
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.375rem;
 
-  --gradient-primary: linear-gradient(135deg, hsl(255 72% 58%), hsl(280 68% 55%));
-  --gradient-accent: linear-gradient(135deg, hsl(255 72% 58%), hsl(200 80% 55%));
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px rgba(80, 60, 120, 0.08);
+  --gradient-primary: linear-gradient(135deg, hsl(258 88% 52%), hsl(280 80% 50%));
+  --gradient-accent: linear-gradient(135deg, hsl(258 88% 52%), hsl(200 80% 52%));
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(220, 215, 240, 0.6);
+  --glass-shadow: 0 8px 32px rgba(50, 40, 100, 0.1);
 }
 
 /* Dark theme — deep midnight, electric violet primary */

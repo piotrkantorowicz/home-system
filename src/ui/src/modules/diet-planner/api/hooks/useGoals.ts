@@ -86,11 +86,8 @@ export function useUpdateGoals() {
         throw new Error('Failed to update goals');
       }
 
-      if (!response.data) {
-        throw new Error('Failed to update goals');
-      }
-
-      return response.data;
+      // PUT returns 204 No Content — no body is a success
+      return response.data ?? null;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['goals'] });

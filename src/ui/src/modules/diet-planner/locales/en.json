@@ -241,7 +241,13 @@
     "add_btn": "Add Meal",
     "save_btn": "Save Changes",
     "delete_title": "Delete Meal",
-    "delete_description": "Are you sure you want to remove \"{{name}}\" from this day? This action cannot be undone."
+    "delete_description": "Are you sure you want to remove \"{{name}}\" from this day? This action cannot be undone.",
+    "add_success": "Meal added successfully",
+    "edit_success": "Meal updated successfully",
+    "add_error": "Failed to add meal",
+    "edit_error": "Failed to update meal",
+    "delete_success": "Meal removed",
+    "delete_error": "Failed to delete meal"
   },
   "prediction": {
     "header": "Weight Prediction",
