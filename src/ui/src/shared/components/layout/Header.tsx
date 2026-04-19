@@ -1,9 +1,13 @@
 import { Button, ThemeToggle, LanguageSwitcher } from '@shared/components/ui';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
 
-export function Header() {
+interface HeaderProps {
+  onOpenSidebar?: () => void;
+}
+
+export function Header({ onOpenSidebar }: HeaderProps) {
   const { t } = useTranslation();
   const auth = useAuth();
 
@@ -21,6 +25,13 @@ export function Header() {
   return (
     <header className="glass flex h-16 items-center justify-between border-b px-6">
       <div className="flex items-center gap-4">
+        <button
+          className="text-muted-foreground hover:text-foreground -ml-1 rounded-md p-1.5 transition-colors lg:hidden"
+          onClick={onOpenSidebar}
+          aria-label="Open navigation"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <h2 className="text-foreground/80 text-base font-medium">
           {t('common.welcome_back', { name: displayName })}
         </h2>

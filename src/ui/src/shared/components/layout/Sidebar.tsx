@@ -6,7 +6,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, type Location } from 'react-router-dom';
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const modules = getModules();
@@ -15,7 +19,7 @@ export function Sidebar() {
     <div className="glass flex h-full w-64 flex-col border-r">
       {/* Brand */}
       <div className="border-border/50 flex h-16 items-center border-b px-6">
-        <Link to="/" className="gradient-text text-xl font-bold tracking-tight">
+        <Link to="/" onClick={onClose} className="gradient-text text-xl font-bold tracking-tight">
           HomeSystem
         </Link>
       </div>
@@ -25,6 +29,7 @@ export function Sidebar() {
         {/* System-level home */}
         <Link
           to="/"
+          onClick={onClose}
           aria-current={location.pathname === '/' ? 'page' : undefined}
           className={cn(
             'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9rem] font-medium transition-all duration-200',
@@ -49,7 +54,13 @@ export function Sidebar() {
               {t('common.modules')}
             </p>
             {modules.map((mod) => (
-              <ModuleSection key={mod.name} mod={mod} location={location} t={t} />
+              <ModuleSection
+                key={mod.name}
+                mod={mod}
+                location={location}
+                t={t}
+                {...(onClose !== undefined && { onClose })}
+              />
             ))}
           </div>
         )}
@@ -67,9 +78,10 @@ interface ModuleSectionProps {
   mod: ReturnType<typeof getModules>[number];
   location: Location;
   t: TFunction;
+  onClose?: () => void;
 }
 
-function ModuleSection({ mod, location, t }: ModuleSectionProps) {
+function ModuleSection({ mod, location, t, onClose }: ModuleSectionProps) {
   const isModuleActive = location.pathname.startsWith(mod.basePath);
   const [isExpanded, setIsExpanded] = useState(isModuleActive);
 
@@ -113,6 +125,7 @@ function ModuleSection({ mod, location, t }: ModuleSectionProps) {
           {/* Module home link */}
           <Link
             to={mod.basePath}
+            onClick={onClose}
             aria-current={location.pathname === mod.basePath ? 'page' : undefined}
             className={cn(
               'flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.85rem] font-medium transition-all duration-200',
@@ -134,6 +147,7 @@ function ModuleSection({ mod, location, t }: ModuleSectionProps) {
               <Link
                 key={item.href}
                 to={item.href}
+                onClick={onClose}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.85rem] font-medium transition-all duration-200',
