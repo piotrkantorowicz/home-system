@@ -91,16 +91,20 @@ export async function cleanupTestData() {
 
   try {
     const authState = JSON.parse(fs.readFileSync(authStatePath, 'utf-8'));
-    const origin = authState.origins.find(
-      (o: { origin: string; localStorage: { name: string; value: string }[] }) =>
-        o.origin.includes('localhost'),
-    );
-    const storageItem = origin?.localStorage.find(
-      (i: { name: string; value: string }) => i.name.startsWith('oidc.user:'),
-    );
+
+    // Search all origins for the OIDC user entry — the app origin must come
+    // before Authentik in the match, so we scan every origin rather than
+    // stopping at the first localhost hit (which may be http://localhost:9000).
+    let storageItem: { name: string; value: string } | undefined;
+    for (const origin of authState.origins ?? []) {
+      storageItem = (origin.localStorage ?? []).find(
+        (i: { name: string; value: string }) => i.name.startsWith('oidc.user:'),
+      );
+      if (storageItem) break;
+    }
 
     if (!storageItem) {
-      console.warn('No OIDC user found in storage, skipping cleanup');
+      console.warn('No OIDC user found in any origin in storage, skipping cleanup');
       return;
     }
 
