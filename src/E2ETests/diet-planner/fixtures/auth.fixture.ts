@@ -237,19 +237,9 @@ export const test = base.extend({
           }
         }
 
-        if (method === 'DELETE') {
-          const recipeId = extractIdFromUrl(url, 'recipes');
-          if (recipeId) {
-            trackCreatedId('recipes', recipeId);
-            return;
-          }
-
-          const productId = extractIdFromUrl(url, 'products');
-          if (productId) {
-            trackCreatedId('products', productId);
-            return;
-          }
-        }
+        // Note: DELETE is intentionally not tracked — the item was either
+        // created in this session (already tracked) or pre-existed and
+        // should not be targeted by cleanup.
       } catch {
         // Ignore JSON parse errors for non-JSON responses
       }
