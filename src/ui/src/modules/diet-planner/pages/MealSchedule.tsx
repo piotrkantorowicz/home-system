@@ -3,16 +3,7 @@ import {
   useMealSchedule,
   useUpdateMealSchedule,
 } from '@modules/diet-planner/api/hooks/useMealSchedule';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  Button,
-  Input,
-  Label,
-} from '@shared/components/ui';
+import { Card, CardContent, Button, Input, Label } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Clock, Loader2, Save, Plus, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -113,11 +104,7 @@ export default function MealSchedule() {
         className="space-y-6"
       >
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t('meal_schedule.title')}</CardTitle>
-            <CardDescription>{t('meal_schedule.subtitle')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <div className="grid grid-cols-[1fr_1fr_auto] gap-3 text-sm font-medium">
               <span>{t('meal_schedule.slot_name')}</span>
               <span>{t('meal_schedule.slot_time')}</span>
