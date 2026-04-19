@@ -52,6 +52,10 @@ export const productHandlers = [
     return HttpResponse.json('22222222-2222-2222-2222-222222222222', { status: 201 });
   }),
 
+  http.put(`${BASE}/api/v1/products/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.delete(`${BASE}/api/v1/products/:id`, () => {
     return new HttpResponse(null, { status: 204 });
   }),
@@ -252,6 +256,39 @@ export const hydrationHandlers = [
   }),
 ];
 
+export const recipeHandlers = [
+  http.get(`${BASE}/api/v1/recipes/:id`, ({ params }) => {
+    if (params.id === '11111111-1111-1111-1111-111111111111') {
+      return HttpResponse.json({
+        id: '11111111-1111-1111-1111-111111111111',
+        name: 'Test Recipe',
+        description: 'A test recipe',
+        instructions: 'Mix everything',
+        servings: 2,
+        prepTimeMinutes: 15,
+        ingredients: [
+          {
+            productId: '11111111-1111-1111-1111-111111111111',
+            productName: 'Chicken Breast',
+            amount: 200,
+            unit: 'g',
+          },
+        ],
+        createdAt: '2024-01-01T00:00:00Z',
+      });
+    }
+    return HttpResponse.json({ title: 'Not found' }, { status: 404 });
+  }),
+
+  http.post(`${BASE}/api/v1/recipes`, () => {
+    return HttpResponse.json('33333333-3333-3333-3333-333333333333', { status: 201 });
+  }),
+
+  http.put(`${BASE}/api/v1/recipes/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const handlers = [
   ...productHandlers,
   ...mealHandlers,
@@ -260,4 +297,5 @@ export const handlers = [
   ...profileHandlers,
   ...notificationPreferencesHandlers,
   ...hydrationHandlers,
+  ...recipeHandlers,
 ];

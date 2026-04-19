@@ -1,4 +1,5 @@
 import { useCreateProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { useToast } from '@shared/context/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,6 +8,7 @@ import { ProductForm, type ProductFormData } from '../../components/products/Pro
 export default function ProductCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const toast = useToast();
   const createMutation = useCreateProduct();
 
   const handleSubmit = async (data: ProductFormData) => {
@@ -22,9 +24,10 @@ export default function ProductCreate() {
         densityGramsPerMl: data.densityGramsPerMl ?? null,
         gramPerPiece: data.gramPerPiece ?? null,
       });
+      toast.success(t('product_form.create_success'));
       void navigate('/diet-planner/products');
-    } catch (error) {
-      console.error('Failed to create product:', error);
+    } catch {
+      toast.error(t('product_form.create_error'));
     }
   };
 

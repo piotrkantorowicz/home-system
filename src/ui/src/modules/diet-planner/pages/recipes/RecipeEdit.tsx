@@ -1,4 +1,5 @@
 import { useRecipe, useUpdateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { useToast } from '@shared/context/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -8,6 +9,7 @@ export default function RecipeEdit() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const { data: recipe, isLoading } = useRecipe(id ?? '');
   const updateMutation = useUpdateRecipe(id ?? '');
 
@@ -25,9 +27,10 @@ export default function RecipeEdit() {
           unit: ing.unit,
         })),
       });
+      toast.success(t('recipe_form.update_success'));
       void navigate(`/diet-planner/recipes/${id ?? ''}`);
-    } catch (error) {
-      console.error('Failed to update recipe:', error);
+    } catch {
+      toast.error(t('recipe_form.update_error'));
     }
   };
 

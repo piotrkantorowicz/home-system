@@ -1,6 +1,6 @@
 import { api } from '@modules/diet-planner/api/client';
 import { useCreateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
-import { useState } from 'react';
+import { useToast } from '@shared/context/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,11 +9,10 @@ import { RecipeForm, type RecipeFormData } from '../../components/recipes/Recipe
 export default function RecipeCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const toast = useToast();
   const createMutation = useCreateRecipe();
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async (data: RecipeFormData) => {
-    setSubmitError(null);
     try {
       const ingredients = await Promise.all(
         data.ingredients.map(async (ing) => {
@@ -40,11 +39,10 @@ export default function RecipeCreate() {
         prepTimeMinutes: data.prepTimeMinutes ?? null,
         ingredients,
       });
+      toast.success(t('recipe_form.create_success'));
       void navigate('/diet-planner/recipes');
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error('Failed to create recipe:', error);
-      setSubmitError(msg);
+    } catch {
+      toast.error(t('recipe_form.create_error'));
     }
   };
 
@@ -54,12 +52,6 @@ export default function RecipeCreate() {
         <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipe_form.create_title')}</h1>
         <p className="text-muted-foreground text-[0.95rem]">{t('recipe_form.create_subtitle')}</p>
       </div>
-
-      {submitError && (
-        <p role="alert" className="text-destructive mb-4 text-sm">
-          {submitError}
-        </p>
-      )}
 
       <RecipeForm
         onSubmit={handleSubmit}
