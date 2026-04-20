@@ -1,4 +1,3 @@
-import { GoalsForm } from '../settings';
 import {
   Sheet,
   SheetContent,
@@ -7,6 +6,8 @@ import {
   SheetDescription,
 } from '@shared/components/ui';
 import { useTranslation } from 'react-i18next';
+
+import { GoalsForm } from '../settings';
 
 export interface GoalsSheetProps {
   open: boolean;
@@ -23,7 +24,11 @@ export function GoalsSheet({ open, onOpenChange }: GoalsSheetProps) {
           <SheetDescription>{t('sheets.goals.description')}</SheetDescription>
         </SheetHeader>
         <div className="mt-6 overflow-y-auto">
-          <GoalsForm onSuccess={() => onOpenChange(false)} />
+          <GoalsForm
+            onSuccess={() => {
+              onOpenChange(false);
+            }}
+          />
         </div>
       </SheetContent>
     </Sheet>

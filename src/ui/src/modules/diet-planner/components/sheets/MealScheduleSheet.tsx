@@ -1,4 +1,3 @@
-import { MealScheduleForm } from '../settings';
 import {
   Sheet,
   SheetContent,
@@ -7,6 +6,8 @@ import {
   SheetDescription,
 } from '@shared/components/ui';
 import { useTranslation } from 'react-i18next';
+
+import { MealScheduleForm } from '../settings';
 
 export interface MealScheduleSheetProps {
   open: boolean;
@@ -23,7 +24,11 @@ export function MealScheduleSheet({ open, onOpenChange }: MealScheduleSheetProps
           <SheetDescription>{t('sheets.meal_schedule.description')}</SheetDescription>
         </SheetHeader>
         <div className="mt-6 overflow-y-auto">
-          <MealScheduleForm onSuccess={() => onOpenChange(false)} />
+          <MealScheduleForm
+            onSuccess={() => {
+              onOpenChange(false);
+            }}
+          />
         </div>
       </SheetContent>
     </Sheet>

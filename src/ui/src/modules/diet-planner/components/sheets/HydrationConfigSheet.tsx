@@ -1,4 +1,3 @@
-import { HydrationConfigForm } from '../settings';
 import {
   Sheet,
   SheetContent,
@@ -7,6 +6,8 @@ import {
   SheetDescription,
 } from '@shared/components/ui';
 import { useTranslation } from 'react-i18next';
+
+import { HydrationConfigForm } from '../settings';
 
 export interface HydrationConfigSheetProps {
   open: boolean;
@@ -23,7 +24,11 @@ export function HydrationConfigSheet({ open, onOpenChange }: HydrationConfigShee
           <SheetDescription>{t('sheets.hydration.description')}</SheetDescription>
         </SheetHeader>
         <div className="mt-6 overflow-y-auto">
-          <HydrationConfigForm onSuccess={() => onOpenChange(false)} />
+          <HydrationConfigForm
+            onSuccess={() => {
+              onOpenChange(false);
+            }}
+          />
         </div>
       </SheetContent>
     </Sheet>

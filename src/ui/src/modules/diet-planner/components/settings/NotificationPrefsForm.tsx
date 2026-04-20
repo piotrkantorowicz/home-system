@@ -3,14 +3,7 @@ import {
   useNotificationPreferences,
   useUpdateNotificationPreferences,
 } from '@modules/diet-planner/api/hooks/useNotificationPreferences';
-import {
-  Card,
-  CardContent,
-  Button,
-  Label,
-  Checkbox,
-  Select,
-} from '@shared/components/ui';
+import { Card, CardContent, Button, Label, Checkbox, Select } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';

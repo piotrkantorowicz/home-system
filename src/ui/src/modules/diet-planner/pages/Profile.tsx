@@ -17,10 +17,10 @@ function isValidSection(s: string | null): s is SectionId {
 
 const SECTION_COMPONENTS: Record<SectionId, React.ComponentType<{ onSuccess?: () => void }>> = {
   'body-stats': BodyStatsForm,
-  'goals': GoalsForm,
+  goals: GoalsForm,
   'meal-schedule': MealScheduleForm,
-  'hydration': HydrationConfigForm,
-  'notifications': NotificationPrefsForm,
+  hydration: HydrationConfigForm,
+  notifications: NotificationPrefsForm,
 };
 
 export default function Profile() {
@@ -69,14 +69,16 @@ export default function Profile() {
         <nav className="hidden w-56 shrink-0 md:block">
           {sidebarGroups.map((group) => (
             <div key={group.label} className="mb-6">
-              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold uppercase tracking-wider">
+              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
                 {group.label}
               </p>
               <ul>
                 {group.items.map((item) => (
                   <li key={item.id}>
                     <button
-                      onClick={() => navigate(item.id)}
+                      onClick={() => {
+                        navigate(item.id);
+                      }}
                       className={cn(
                         'w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
                         activeSection === item.id
@@ -100,12 +102,14 @@ export default function Profile() {
             {allItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => navigate(item.id)}
+                onClick={() => {
+                  navigate(item.id);
+                }}
                 className={cn(
                   'shrink-0 border-b-2 px-4 py-2 text-sm font-medium transition-colors',
                   activeSection === item.id
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                    : 'text-muted-foreground hover:text-foreground border-transparent',
                 )}
               >
                 {item.label}

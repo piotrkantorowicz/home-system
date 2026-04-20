@@ -106,9 +106,7 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
                 {...register('dailyWaterTargetMl')}
               />
               {errors.dailyWaterTargetMl && (
-                <p className="text-destructive mt-1 text-sm">
-                  {errors.dailyWaterTargetMl.message}
-                </p>
+                <p className="text-destructive mt-1 text-sm">{errors.dailyWaterTargetMl.message}</p>
               )}
             </div>
             <div>

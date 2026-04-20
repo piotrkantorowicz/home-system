@@ -1,8 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { cn } from '@shared/lib/utils';
 import { X } from 'lucide-react';
 import * as React from 'react';
-
-import { cn } from '@shared/lib/utils';
 
 const Sheet = DialogPrimitive.Root;
 
@@ -18,11 +17,7 @@ const SheetTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn('text-lg font-semibold', className)}
-    {...props}
-  />
+  <DialogPrimitive.Title ref={ref} className={cn('text-lg font-semibold', className)} {...props} />
 ));
 SheetTitle.displayName = DialogPrimitive.Title.displayName;
 
@@ -41,7 +36,7 @@ SheetDescription.displayName = DialogPrimitive.Description.displayName;
 export interface SheetContentProps extends React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content
 > {
-  onClose: () => void;
+  onClose?: () => void;
   side?: 'left' | 'right';
 }
 
@@ -84,6 +79,8 @@ SheetContent.displayName = 'SheetContent';
 
 export type SheetHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 export type SheetTitleProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>;
-export type SheetDescriptionProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>;
+export type SheetDescriptionProps = React.ComponentPropsWithoutRef<
+  typeof DialogPrimitive.Description
+>;
 
 export { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription };
