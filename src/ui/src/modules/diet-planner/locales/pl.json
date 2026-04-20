@@ -103,7 +103,10 @@
   "calendar": {
     "title": "Kalendarz",
     "subtitle": "Planuj i śledź swoje posiłki tydzień po tygodniu",
-    "today": "Dziś"
+    "today": "Dziś",
+    "tab_calendar": "Kalendarz",
+    "tab_nutrition": "Odżywianie",
+    "tab_import": "Import"
   },
   "nutrition_summary": {
     "title": "Tygodniowe Podsumowanie Żywienia",
@@ -372,7 +375,9 @@
     "glass_size_label": "Rozmiar Szklanki (ml)",
     "track_toggle_label": "Śledź spożycie wody",
     "save_settings_btn": "Zapisz Ustawienia",
-    "settings_saved": "Ustawienia zapisane pomyślnie!"
+    "settings_saved": "Ustawienia zapisane pomyślnie!",
+    "quick_title": "Nawodnienie dzisiaj",
+    "glasses_count": "{{current}} / {{target}} szklanek"
   },
   "common": {
     "cancel": "Anuluj",
