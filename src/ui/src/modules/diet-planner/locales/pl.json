@@ -16,6 +16,9 @@
     "goal_carbs": "Węglowodany",
     "goal_fat": "Tłuszcz",
     "goal_fiber": "Błonnik",
+    "goals_cta_title": "Nie ustawiono jeszcze celów żywieniowych",
+    "goals_cta_description": "Śledź kalorie, białko i makroskładniki ustawiając dzienne cele.",
+    "goals_cta_button": "Ustaw cele",
     "getting_started": {
       "title": "Pierwsze kroki",
       "subtitle": "Wykonaj te kroki, aby skonfigurować planowanie diety",

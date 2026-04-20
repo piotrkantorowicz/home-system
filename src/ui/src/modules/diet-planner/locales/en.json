@@ -16,6 +16,9 @@
     "goal_carbs": "Carbs",
     "goal_fat": "Fat",
     "goal_fiber": "Fiber",
+    "goals_cta_title": "You haven't set up your nutrition goals yet",
+    "goals_cta_description": "Track calories, protein, and macros by setting daily targets.",
+    "goals_cta_button": "Set up goals",
     "getting_started": {
       "title": "Getting Started",
       "subtitle": "Follow these steps to set up your diet planning",
