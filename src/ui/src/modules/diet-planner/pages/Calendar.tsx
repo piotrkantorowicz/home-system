@@ -10,7 +10,7 @@ import {
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Target, ArrowRight } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { lazy, Suspense, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -22,8 +22,13 @@ import {
   useDeleteMeal,
   useNutritionSummary,
 } from '../api/hooks/useMeals';
+import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
+import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
 import { MealForm } from '../components/diet-plans/MealForm';
+
+const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
+const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
 
 function getWeekStart(date: Date) {
   const d = new Date(date);
@@ -54,6 +59,7 @@ interface Meal {
 export default function Calendar() {
   const { t, i18n } = useTranslation();
   const toast = useToast();
+  const [activeTab, setActiveTab] = useState<CalendarTab>('calendar');
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
@@ -193,271 +199,309 @@ export default function Calendar() {
         <p className="text-muted-foreground text-lg">{t('calendar.subtitle')}</p>
       </div>
 
-      {/* Week Navigator */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">
-            {t('diet_plan_detail.week_of', {
-              date:
-                weekDays[0]?.toLocaleDateString(i18n.language, { month: 'long', day: 'numeric' }) ??
-                '',
-            })}
-          </h2>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={goToToday}>
-            {t('calendar.today')}
-          </Button>
-          <Button variant="outline" size="icon" onClick={goToPrevWeek}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={goToNextWeek}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      {/* Tab Bar */}
+      <CalendarTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {mealsLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
-        </div>
-      ) : (
-        <div className="stagger-children grid gap-4 lg:grid-cols-7">
-          {weekDays.map((date) => {
-            const dateStr = formatLocalDate(date);
-            const dayMeals = mealsByDay[dateStr] ?? {};
-            const isToday = dateStr === formatLocalDate(new Date());
+      {activeTab === 'calendar' && (
+        <>
+          {/* Week Navigator */}
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">
+                {t('diet_plan_detail.week_of', {
+                  date:
+                    weekDays[0]?.toLocaleDateString(i18n.language, {
+                      month: 'long',
+                      day: 'numeric',
+                    }) ?? '',
+                })}
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                {t('calendar.today')}
+              </Button>
+              <Button variant="outline" size="icon" onClick={goToPrevWeek}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={goToNextWeek}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-            return (
-              <Card
-                key={dateStr}
-                className={cn(
-                  'min-h-[400px] transition-all duration-200',
-                  isToday && 'border-primary/50 shadow-primary/10 shadow-md',
-                )}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-muted-foreground text-xs tracking-wider uppercase">
-                        {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
-                      </span>
-                      <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
-                        {date.getDate()}
-                      </span>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
-                    <div key={mealType}>
-                      <div className="mb-1.5 flex items-center justify-between">
-                        <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-                          {t(`diet_plan_detail.meal_types.${mealType}`)}
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            openCreateForm(dateStr, mealType);
-                          }}
-                          className="text-muted-foreground/50 hover:text-primary h-4 w-4 rounded transition-colors"
-                          title={t('meal_form.add_title')}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      </div>
-                      {dayMeals[mealType]?.map((meal) => (
-                        <div
-                          key={meal.id}
-                          className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-1">
-                            <Link
-                              to={`/diet-planner/recipes/${meal.recipeId}`}
-                              className="min-w-0 flex-1 truncate font-medium hover:underline"
+          {mealsLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
+            </div>
+          ) : (
+            <div className="stagger-children grid gap-4 lg:grid-cols-7">
+              {weekDays.map((date) => {
+                const dateStr = formatLocalDate(date);
+                const dayMeals = mealsByDay[dateStr] ?? {};
+                const isToday = dateStr === formatLocalDate(new Date());
+
+                return (
+                  <Card
+                    key={dateStr}
+                    className={cn(
+                      'min-h-[400px] transition-all duration-200',
+                      isToday && 'border-primary/50 shadow-primary/10 shadow-md',
+                    )}
+                  >
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-muted-foreground text-xs tracking-wider uppercase">
+                            {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
+                          </span>
+                          <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
+                            {date.getDate()}
+                          </span>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
+                        <div key={mealType}>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                              {t(`diet_plan_detail.meal_types.${mealType}`)}
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                openCreateForm(dateStr, mealType);
+                              }}
+                              className="text-muted-foreground/50 hover:text-primary h-4 w-4 rounded transition-colors"
+                              title={t('meal_form.add_title')}
                             >
-                              {meal.recipeName}
-                            </Link>
-                            <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  openEditForm(meal);
-                                }}
-                                className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setDeletingMeal(meal);
-                                }}
-                                className="text-muted-foreground hover:text-destructive focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
+                              <Plus className="h-3 w-3" />
+                            </button>
                           </div>
-                          <p className="text-muted-foreground mt-0.5">
-                            {t('recipes.servings', { count: Number(meal.servings) || 1 })}
-                          </p>
-                          {meal.notes && (
-                            <p className="text-muted-foreground/70 mt-0.5 truncate">{meal.notes}</p>
+                          {dayMeals[mealType]?.map((meal) => (
+                            <div
+                              key={meal.id}
+                              className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
+                            >
+                              <div className="flex items-start justify-between gap-1">
+                                <Link
+                                  to={`/diet-planner/recipes/${meal.recipeId}`}
+                                  className="min-w-0 flex-1 truncate font-medium hover:underline"
+                                >
+                                  {meal.recipeName}
+                                </Link>
+                                <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      openEditForm(meal);
+                                    }}
+                                    className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDeletingMeal(meal);
+                                    }}
+                                    className="text-muted-foreground hover:text-destructive focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-muted-foreground mt-0.5">
+                                {t('recipes.servings', { count: Number(meal.servings) || 1 })}
+                              </p>
+                              {meal.notes && (
+                                <p className="text-muted-foreground/70 mt-0.5 truncate">
+                                  {meal.notes}
+                                </p>
+                              )}
+                            </div>
+                          )) ?? (
+                            <div className="text-muted-foreground/60 rounded-lg border border-dashed p-2 text-center text-xs">
+                              {t('diet_plan_detail.no_meal')}
+                            </div>
                           )}
                         </div>
-                      )) ?? (
-                        <div className="text-muted-foreground/60 rounded-lg border border-dashed p-2 text-center text-xs">
-                          {t('diet_plan_detail.no_meal')}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Weekly Nutrition Summary */}
-      <Card className="animate-fade-in-up mt-6">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
-            {goals !== undefined && goals !== null && (
-              <Link
-                to="/diet-planner/goals"
-                className="text-muted-foreground hover:text-primary text-sm transition-colors"
-              >
-                {t('nutrition_summary.goals_edit')}
-              </Link>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {goals === undefined || goals === null ? (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
-              <div className="rounded-xl bg-orange-500/10 p-2.5">
-                <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <p className="text-muted-foreground text-sm">
-                {t('nutrition_summary.goals_cta_title')}
-              </p>
-              <Link
-                to="/diet-planner/goals"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-              >
-                {t('nutrition_summary.goals_cta_button')}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          ) : weeklyTotals.calories === 0 &&
-            weeklyTotals.protein === 0 &&
-            weeklyTotals.carbs === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <MacroProgressBar
-                label={t('nutrition_summary.calories')}
-                actual={weeklyTotals.calories}
-                goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
-                unit="kcal"
-                gradient="from-rose-500 to-orange-500"
-              />
-              <MacroProgressBar
-                label={t('nutrition_summary.protein')}
-                actual={weeklyTotals.protein}
-                goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
-                gradient="from-blue-500 to-indigo-500"
-              />
-              <MacroProgressBar
-                label={t('nutrition_summary.carbs')}
-                actual={weeklyTotals.carbs}
-                goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
-                gradient="from-emerald-500 to-teal-500"
-              />
-              <MacroProgressBar
-                label={t('nutrition_summary.fat')}
-                actual={weeklyTotals.fat}
-                goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
-                gradient="from-amber-500 to-orange-500"
-              />
-              <MacroProgressBar
-                label={t('nutrition_summary.fiber')}
-                actual={weeklyTotals.fiber}
-                goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
-                gradient="from-violet-500 to-purple-500"
-              />
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      <MealForm
-        key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}
-        open={mealFormOpen}
-        onClose={() => {
-          setMealFormOpen(false);
-          setEditingMeal(null);
-        }}
-        onSubmit={(data) => {
-          void handleFormSubmit(data);
-        }}
-        initialDate={editingMeal ? undefined : mealFormDate}
-        initialMealType={editingMeal ? undefined : mealFormType}
-        initialValues={
-          editingMeal
-            ? {
-                date: editingMeal.date,
-                mealType: editingMeal.mealType,
-                recipeId: editingMeal.recipeId,
-                recipeName: editingMeal.recipeName,
-                servings: Number(editingMeal.servings),
-                notes: editingMeal.notes ?? '',
-              }
-            : undefined
-        }
-        isSubmitting={isSubmitting}
-        mode={editingMeal ? 'edit' : 'create'}
-      />
+          {/* Weekly Nutrition Summary */}
+          <Card className="animate-fade-in-up mt-6">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
+                {goals !== undefined && goals !== null && (
+                  <Link
+                    to="/diet-planner/goals"
+                    className="text-muted-foreground hover:text-primary text-sm transition-colors"
+                  >
+                    {t('nutrition_summary.goals_edit')}
+                  </Link>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {goals === undefined || goals === null ? (
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
+                  <div className="rounded-xl bg-orange-500/10 p-2.5">
+                    <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    {t('nutrition_summary.goals_cta_title')}
+                  </p>
+                  <Link
+                    to="/diet-planner/goals"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                  >
+                    {t('nutrition_summary.goals_cta_button')}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              ) : weeklyTotals.calories === 0 &&
+                weeklyTotals.protein === 0 &&
+                weeklyTotals.carbs === 0 ? (
+                <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                  <MacroProgressBar
+                    label={t('nutrition_summary.calories')}
+                    actual={weeklyTotals.calories}
+                    goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
+                    unit="kcal"
+                    gradient="from-rose-500 to-orange-500"
+                  />
+                  <MacroProgressBar
+                    label={t('nutrition_summary.protein')}
+                    actual={weeklyTotals.protein}
+                    goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
+                    gradient="from-blue-500 to-indigo-500"
+                  />
+                  <MacroProgressBar
+                    label={t('nutrition_summary.carbs')}
+                    actual={weeklyTotals.carbs}
+                    goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
+                    gradient="from-emerald-500 to-teal-500"
+                  />
+                  <MacroProgressBar
+                    label={t('nutrition_summary.fat')}
+                    actual={weeklyTotals.fat}
+                    goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
+                    gradient="from-amber-500 to-orange-500"
+                  />
+                  <MacroProgressBar
+                    label={t('nutrition_summary.fiber')}
+                    actual={weeklyTotals.fiber}
+                    goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
+                    gradient="from-violet-500 to-purple-500"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={!!deletingMeal}
-        onOpenChange={(v) => {
-          if (!v) setDeletingMeal(null);
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
-          </DialogDescription>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeletingMeal(null);
-              }}
-              disabled={deleteMeal.isPending}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                void handleDelete();
-              }}
-              disabled={deleteMeal.isPending}
-            >
-              {deleteMeal.isPending ? t('common.deleting') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Hydration Quick Add */}
+          <HydrationQuickAdd />
+
+          <MealForm
+            key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}
+            open={mealFormOpen}
+            onClose={() => {
+              setMealFormOpen(false);
+              setEditingMeal(null);
+            }}
+            onSubmit={(data) => {
+              void handleFormSubmit(data);
+            }}
+            initialDate={editingMeal ? undefined : mealFormDate}
+            initialMealType={editingMeal ? undefined : mealFormType}
+            initialValues={
+              editingMeal
+                ? {
+                    date: editingMeal.date,
+                    mealType: editingMeal.mealType,
+                    recipeId: editingMeal.recipeId,
+                    recipeName: editingMeal.recipeName,
+                    servings: Number(editingMeal.servings),
+                    notes: editingMeal.notes ?? '',
+                  }
+                : undefined
+            }
+            isSubmitting={isSubmitting}
+            mode={editingMeal ? 'edit' : 'create'}
+          />
+
+          {/* Delete confirmation dialog */}
+          <Dialog
+            open={!!deletingMeal}
+            onOpenChange={(v) => {
+              if (!v) setDeletingMeal(null);
+            }}
+          >
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
+              </DialogDescription>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeletingMeal(null);
+                  }}
+                  disabled={deleteMeal.isPending}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    void handleDelete();
+                  }}
+                  disabled={deleteMeal.isPending}
+                >
+                  {deleteMeal.isPending ? t('common.deleting') : t('common.delete')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+
+      {activeTab === 'nutrition' && (
+        <Suspense
+          fallback={
+            <div className="text-muted-foreground flex items-center justify-center py-16">
+              {t('common.loading')}
+            </div>
+          }
+        >
+          <NutritionSummaryPage />
+        </Suspense>
+      )}
+
+      {activeTab === 'import' && (
+        <Suspense
+          fallback={
+            <div className="text-muted-foreground flex items-center justify-center py-16">
+              {t('common.loading')}
+            </div>
+          }
+        >
+          <ImportWizardPage />
+        </Suspense>
+      )}
     </div>
   );
 }

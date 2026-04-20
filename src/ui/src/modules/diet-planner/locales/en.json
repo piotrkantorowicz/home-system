@@ -104,7 +104,10 @@
   "calendar": {
     "title": "Calendar",
     "subtitle": "Plan and track your meals week by week",
-    "today": "Today"
+    "today": "Today",
+    "tab_calendar": "Calendar",
+    "tab_nutrition": "Nutrition",
+    "tab_import": "Import"
   },
   "nutrition_summary": {
     "title": "Weekly Nutrition Summary",
@@ -387,7 +390,9 @@
     "log_success": "+{{amount}}ml logged",
     "log_error": "Failed to log water intake. Please try again.",
     "delete_success": "Entry removed",
-    "delete_error": "Failed to delete entry. Please try again."
+    "delete_error": "Failed to delete entry. Please try again.",
+    "quick_title": "Hydration Today",
+    "glasses_count": "{{current}} / {{target}} glasses"
   },
   "common": {
     "cancel": "Cancel",
