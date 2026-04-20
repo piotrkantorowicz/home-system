@@ -6,8 +6,9 @@ import {
 } from '@modules/diet-planner/api/hooks/useHydration';
 import { Card, CardContent } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { Droplets, Minus, Plus, Loader2 } from 'lucide-react';
+import { Droplets, Minus, Plus, Loader2, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 const DEFAULT_DAILY_TARGET_ML = 2500;
 const DEFAULT_GLASS_SIZE_ML = 250;
@@ -105,6 +106,14 @@ export function HydrationQuickAdd() {
               <Plus className="h-4 w-4" />
             )}
           </button>
+
+          <Link
+            to="/diet-planner/hydration"
+            className="text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            aria-label={t('hydration.settings_header')}
+          >
+            <Settings className="h-4 w-4" />
+          </Link>
         </div>
       </CardContent>
     </Card>

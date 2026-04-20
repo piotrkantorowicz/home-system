@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('react-i18next', () => ({
@@ -39,21 +40,33 @@ import { HydrationQuickAdd } from './HydrationQuickAdd';
 
 describe('HydrationQuickAdd', () => {
   it('renders current glass count and target', () => {
-    render(<HydrationQuickAdd />);
+    render(
+      <MemoryRouter>
+        <HydrationQuickAdd />
+      </MemoryRouter>,
+    );
     // 750ml / 250ml = 3 glasses, target = 2000/250 = 8
     expect(screen.getByText('3 / 8 glasses')).toBeInTheDocument();
   });
 
   it('calls logIntake when + button is clicked', async () => {
     const user = userEvent.setup();
-    render(<HydrationQuickAdd />);
+    render(
+      <MemoryRouter>
+        <HydrationQuickAdd />
+      </MemoryRouter>,
+    );
     const addButton = screen.getByRole('button', { name: /hydration.add_btn/i });
     await user.click(addButton);
     expect(mockLogIntake).toHaveBeenCalledWith(expect.objectContaining({ amountMl: 250 }));
   });
 
   it('renders the widget title', () => {
-    render(<HydrationQuickAdd />);
+    render(
+      <MemoryRouter>
+        <HydrationQuickAdd />
+      </MemoryRouter>,
+    );
     expect(screen.getByText('hydration.quick_title')).toBeInTheDocument();
   });
 });
