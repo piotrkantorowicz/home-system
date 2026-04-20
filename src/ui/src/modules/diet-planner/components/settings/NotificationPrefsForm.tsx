@@ -153,8 +153,10 @@ export function NotificationPrefsForm({ onSuccess }: NotificationPrefsFormProps)
                   >
                     {MEAL_LEAD_TIME_OPTIONS.map((minutes) => (
                       <option key={minutes} value={minutes}>
-                        {/* TODO(Task 14): replace with t('notifications.minutes_before', { count: minutes }) */}
-                        {`${String(minutes)} min before`}
+                        {t('notifications.minutes_before', {
+                          count: minutes,
+                          defaultValue: '{{count}} min before',
+                        })}
                       </option>
                     ))}
                   </Select>
@@ -189,8 +191,10 @@ export function NotificationPrefsForm({ onSuccess }: NotificationPrefsFormProps)
                   >
                     {WATER_INTERVAL_OPTIONS.map((minutes) => (
                       <option key={minutes} value={minutes}>
-                        {/* TODO(Task 14): replace with t('notifications.every_minutes', { count: minutes }) */}
-                        {`Every ${String(minutes)} min`}
+                        {t('notifications.every_minutes', {
+                          count: minutes,
+                          defaultValue: 'every {{count}} min',
+                        })}
                       </option>
                     ))}
                   </Select>
