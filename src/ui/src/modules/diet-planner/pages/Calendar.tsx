@@ -24,11 +24,11 @@ import {
 } from '../api/hooks/useMeals';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
+import { MacroProgressBar } from '../components/MacroProgressBar';
+import { MealForm } from '../components/diet-plans/MealForm';
 
 const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
 const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
-import { MacroProgressBar } from '../components/MacroProgressBar';
-import { MealForm } from '../components/diet-plans/MealForm';
 
 function getWeekStart(date: Date) {
   const d = new Date(date);
