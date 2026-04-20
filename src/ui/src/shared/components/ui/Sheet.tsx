@@ -1,42 +1,42 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { cn } from '@shared/lib/utils';
 import { X } from 'lucide-react';
 import * as React from 'react';
+
+import { cn } from '@shared/lib/utils';
 
 const Sheet = DialogPrimitive.Root;
 
 export const SheetTrigger = DialogPrimitive.Trigger;
 export type SheetTriggerProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>;
 
-export interface SheetHeaderProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function SheetHeader({ children, className }: SheetHeaderProps) {
-  return <div className={cn('flex flex-col space-y-1.5 p-6 pb-0', className)}>{children}</div>;
+function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('flex flex-col space-y-1.5 p-6 pb-0', className)} {...props} />;
 }
 SheetHeader.displayName = 'SheetHeader';
 
-export interface SheetTitleProps {
-  children: React.ReactNode;
-  className?: string;
-}
+const SheetTitle = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn('text-lg font-semibold', className)}
+    {...props}
+  />
+));
+SheetTitle.displayName = DialogPrimitive.Title.displayName;
 
-function SheetTitle({ children, className }: SheetTitleProps) {
-  return <h2 className={cn('text-lg font-semibold', className)}>{children}</h2>;
-}
-SheetTitle.displayName = 'SheetTitle';
-
-export interface SheetDescriptionProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-function SheetDescription({ children, className }: SheetDescriptionProps) {
-  return <p className={cn('text-muted-foreground text-sm', className)}>{children}</p>;
-}
-SheetDescription.displayName = 'SheetDescription';
+const SheetDescription = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn('text-muted-foreground text-sm', className)}
+    {...props}
+  />
+));
+SheetDescription.displayName = DialogPrimitive.Description.displayName;
 
 export interface SheetContentProps extends React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content
@@ -81,5 +81,9 @@ const SheetContent = React.forwardRef<
   </DialogPrimitive.Portal>
 ));
 SheetContent.displayName = 'SheetContent';
+
+export type SheetHeaderProps = React.HTMLAttributes<HTMLDivElement>;
+export type SheetTitleProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>;
+export type SheetDescriptionProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>;
 
 export { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription };
