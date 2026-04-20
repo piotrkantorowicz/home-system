@@ -5,9 +5,21 @@ import {
   type DailyNutrition,
 } from '@modules/diet-planner/api/hooks/useMeals';
 import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
+import { useProfile } from '@modules/diet-planner/api/hooks/useProfile';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
+import { WeightPredictionCard } from '@modules/diet-planner/components/WeightPredictionCard';
+import { GoalsSheet } from '@modules/diet-planner/components/sheets';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
-import { Package, BookOpen, CalendarDays, Loader2, ArrowRight, Target } from 'lucide-react';
+import {
+  Package,
+  BookOpen,
+  CalendarDays,
+  Loader2,
+  ArrowRight,
+  Target,
+  Settings,
+} from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -27,12 +39,14 @@ function getTodayRange() {
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const [goalsSheetOpen, setGoalsSheetOpen] = useState(false);
   const { data: productsData, isLoading: productsLoading } = useProducts({ pageSize: 1 });
   const { data: recipesData, isLoading: recipesLoading } = useRecipes({ pageSize: 1 });
   const todayRange = getTodayRange();
   const { data: todayMeals, isLoading: mealsLoading } = useMeals(todayRange);
   const { data: goalsData } = useGoals();
   const { data: nutritionData } = useNutritionSummary(todayRange);
+  const { data: profile } = useProfile();
   const todayNutrition: DailyNutrition | undefined = nutritionData?.[0];
 
   const hasGoals =
@@ -192,12 +206,16 @@ export default function Dashboard() {
                   <CardDescription>{t('dashboard.goals_subtitle')}</CardDescription>
                 </div>
               </div>
-              <Link
-                to="/diet-planner/goals"
-                className="text-muted-foreground hover:text-primary text-sm transition-colors"
+              <button
+                type="button"
+                onClick={() => {
+                  setGoalsSheetOpen(true);
+                }}
+                className="text-muted-foreground hover:text-primary rounded-lg p-1.5 transition-colors"
+                aria-label={t('dashboard.goals_edit')}
               >
-                {t('dashboard.goals_edit')}
-              </Link>
+                <Settings className="h-4 w-4" />
+              </button>
             </div>
           </CardHeader>
           <CardContent>
@@ -237,16 +255,24 @@ export default function Dashboard() {
                 {t('dashboard.goals_cta_description')}
               </p>
             </div>
-            <Link
-              to="/diet-planner/goals"
+            <button
+              type="button"
+              onClick={() => {
+                setGoalsSheetOpen(true);
+              }}
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
             >
               {t('dashboard.goals_cta_button')}
               <ArrowRight className="h-4 w-4" />
-            </Link>
+            </button>
           </CardContent>
         </Card>
       )}
+
+      {/* Weight Prediction */}
+      <div className="animate-fade-in-up mb-10" style={{ animationDelay: '150ms' }}>
+        <WeightPredictionCard hasProfile={!!profile} />
+      </div>
 
       {/* Getting Started */}
       <Card className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
@@ -284,6 +310,8 @@ export default function Dashboard() {
           ))}
         </CardContent>
       </Card>
+
+      <GoalsSheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen} />
     </div>
   );
 }
