@@ -156,7 +156,7 @@ export function MealForm({
               autoComplete="off"
             />
             {showRecipeList && recipeSearch && recipes.length > 0 && (
-              <div className="border-border bg-card absolute z-10 mt-1 w-full overflow-hidden rounded-md border shadow-lg">
+              <div className="border-border bg-background absolute z-10 mt-1 w-full overflow-hidden rounded-md border shadow-lg backdrop-blur-xl">
                 {recipes.map((r) => (
                   <button
                     key={r.id}
