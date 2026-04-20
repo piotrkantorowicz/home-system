@@ -1,16 +1,4 @@
-import {
-  Home,
-  Package,
-  BookOpen,
-  CalendarDays,
-  Upload,
-  Target,
-  BarChart2,
-  Clock,
-  User,
-  Bell,
-  Droplets,
-} from 'lucide-react';
+import { Home, Package, BookOpen, CalendarDays } from 'lucide-react';
 import { lazy } from 'react';
 
 import en from './locales/en.json';
@@ -71,48 +59,6 @@ export const dietPlannerModule: AppModule = {
       href: '/diet-planner/calendar',
       icon: CalendarDays,
       translationKey: 'common.calendar',
-    },
-    {
-      name: 'Goals',
-      href: '/diet-planner/goals',
-      icon: Target,
-      translationKey: 'common.goals',
-    },
-    {
-      name: 'Nutrition',
-      href: '/diet-planner/nutrition',
-      icon: BarChart2,
-      translationKey: 'common.nutrition',
-    },
-    {
-      name: 'Meal Schedule',
-      href: '/diet-planner/meal-schedule',
-      icon: Clock,
-      translationKey: 'meal_schedule.nav',
-    },
-    {
-      name: 'Hydration',
-      href: '/diet-planner/hydration',
-      icon: Droplets,
-      translationKey: 'common.hydration',
-    },
-    {
-      name: 'Import Plan',
-      href: '/diet-planner/import',
-      icon: Upload,
-      translationKey: 'common.import_plan',
-    },
-    {
-      name: 'Profile',
-      href: '/diet-planner/profile',
-      icon: User,
-      translationKey: 'common.profile',
-    },
-    {
-      name: 'Notification Preferences',
-      href: '/diet-planner/notification-preferences',
-      icon: Bell,
-      translationKey: 'notifications.nav',
     },
   ],
   routes: [
