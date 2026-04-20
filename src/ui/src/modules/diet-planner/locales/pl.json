@@ -49,7 +49,9 @@
     "fiber_label": "Błonnik (g)",
     "fiber_placeholder": "np. 30",
     "save_btn": "Zapisz Cele",
-    "save_success": "Cele zapisane pomyślnie!"
+    "save_success": "Cele zapisane pomyślnie!",
+    "nutrition_header": "Cele żywieniowe",
+    "nutrition_desc": "Ustaw dzienny cel kalorii i makroskładników"
   },
   "products": {
     "title": "Produkty",
@@ -302,6 +304,18 @@
     "nav": "Profil",
     "title": "Mój Profil",
     "subtitle": "Zarządzaj swoimi danymi biometrycznymi i poziomem aktywności",
+    "page_title": "Profil i Ustawienia",
+    "page_subtitle": "Zarządzaj swoimi danymi osobowymi i preferencjami",
+    "sidebar": {
+      "personal": "Osobiste",
+      "body_stats": "Dane ciała",
+      "diet_planner": "Planowanie diety",
+      "goals": "Cele",
+      "meal_schedule": "Plan posiłków",
+      "hydration": "Nawodnienie",
+      "notifications": "Powiadomienia",
+      "alerts": "Alerty"
+    },
     "personal_header": "Dane Osobowe",
     "personal_desc": "Twoje podstawowe dane osobowe",
     "measurements_header": "Pomiary Ciała",
@@ -325,6 +339,20 @@
     "save_btn": "Zapisz Profil",
     "save_success": "Profil zapisany pomyślnie!"
   },
+  "sheets": {
+    "goals": {
+      "title": "Cele żywieniowe",
+      "description": "Ustaw dzienny cel kalorii i makroskładników."
+    },
+    "meal_schedule": {
+      "title": "Plan posiłków",
+      "description": "Skonfiguruj harmonogram codziennych posiłków."
+    },
+    "hydration": {
+      "title": "Ustawienia nawodnienia",
+      "description": "Ustaw dzienny cel nawodnienia i rozmiar szklanki."
+    }
+  },
   "notifications": {
     "nav": "Preferencje Powiadomień",
     "title": "Preferencje Powiadomień",
@@ -344,7 +372,9 @@
     "weekly_summary_label": "Cotygodniowe podsumowanie żywienia",
     "goal_milestone_label": "Alerty o osiąganiu celów",
     "save_btn": "Zapisz Preferencje",
-    "save_success": "Preferencje zapisane pomyślnie!"
+    "save_success": "Preferencje zapisane pomyślnie!",
+    "minutes_before": "{{count}} min przed",
+    "every_minutes": "Co {{count}} min"
   },
   "hydration": {
     "title": "Śledzenie Nawodnienia",
@@ -394,7 +424,8 @@
     "nutrition": "Żywienie",
     "hydration": "Nawodnienie",
     "import_plan": "Importuj Plan",
-    "profile": "Profil"
+    "profile": "Profil",
+    "profile_settings": "Profil i Ustawienia"
   },
   "diet_plan_form": {
     "title": "Utwórz Nowy Plan Diety",

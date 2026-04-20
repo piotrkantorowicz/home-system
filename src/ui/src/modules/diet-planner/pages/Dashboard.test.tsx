@@ -23,6 +23,14 @@ vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
   useRecipes: () => ({ data: { totalCount: 0 }, isLoading: false }),
 }));
 
+vi.mock('@modules/diet-planner/api/hooks/useProfile', () => ({
+  useProfile: () => ({ data: null }),
+}));
+
+vi.mock('@modules/diet-planner/components/WeightPredictionCard', () => ({
+  WeightPredictionCard: () => null,
+}));
+
 describe('Dashboard goals CTA', () => {
   it('shows goals CTA when no goals are configured', async () => {
     const Dashboard = (await import('./Dashboard')).default;
@@ -32,7 +40,7 @@ describe('Dashboard goals CTA', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText('dashboard.goals_cta_title')).toBeInTheDocument();
-    const link = screen.getByText('dashboard.goals_cta_button').closest('a');
-    expect(link).toHaveAttribute('href', '/diet-planner/goals');
+    // CTA is now a button that opens a sheet, not a navigation link
+    expect(screen.getByText('dashboard.goals_cta_button')).toBeInTheDocument();
   });
 });

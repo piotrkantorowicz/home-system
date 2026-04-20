@@ -1,11 +1,10 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   useHydrationConfig,
-  useUpdateHydrationConfig,
   useWaterIntake,
   useLogWaterIntake,
   useDeleteWaterIntake,
 } from '@modules/diet-planner/api/hooks/useHydration';
+import { HydrationConfigSheet } from '@modules/diet-planner/components/sheets';
 import {
   Card,
   CardHeader,
@@ -15,27 +14,15 @@ import {
   Button,
   Input,
   Label,
-  Checkbox,
   EmptyState,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { Droplets, Loader2, Save, Trash2, Plus } from 'lucide-react';
+import { Droplets, Loader2, Trash2, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 
 const DEFAULT_DAILY_TARGET_ML = 2500;
 const DEFAULT_GLASS_SIZE_ML = 250;
-
-const settingsSchema = z.object({
-  dailyWaterTargetMl: z.coerce.number().min(100).max(10000),
-  glassSizeMl: z.coerce.number().min(10).max(2000),
-  trackWaterIntake: z.boolean(),
-});
-
-type SettingsFormInput = z.input<typeof settingsSchema>;
-type SettingsFormData = z.output<typeof settingsSchema>;
 
 function formatDate(date: Date): string {
   const year = String(date.getFullYear());
@@ -55,13 +42,13 @@ export default function Hydration() {
 
   const { data: config, isLoading: configLoading } = useHydrationConfig();
   const { data: intake, isLoading: intakeLoading } = useWaterIntake(today);
-  const updateConfigMutation = useUpdateHydrationConfig();
   const logIntakeMutation = useLogWaterIntake();
   const deleteIntakeMutation = useDeleteWaterIntake();
 
   const [customAmount, setCustomAmount] = useState<string>('');
   const [customNote, setCustomNote] = useState<string>('');
   const [pendingAmount, setPendingAmount] = useState<number | null>(null);
+  const [configSheetOpen, setConfigSheetOpen] = useState(false);
 
   const glassSizeMl = config?.glassSizeMl ?? DEFAULT_GLASS_SIZE_ML;
   const dailyTargetMl = config?.dailyWaterTargetMl ?? DEFAULT_DAILY_TARGET_ML;
@@ -69,27 +56,6 @@ export default function Hydration() {
   const entries = intake?.entries ?? [];
 
   const progressPercent = Math.min((totalMl / dailyTargetMl) * 100, 100);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isDirty },
-    reset: resetSettings,
-  } = useForm<SettingsFormInput, unknown, SettingsFormData>({
-    resolver: zodResolver(settingsSchema),
-    defaultValues: {
-      dailyWaterTargetMl: config?.dailyWaterTargetMl ?? DEFAULT_DAILY_TARGET_ML,
-      glassSizeMl: config?.glassSizeMl ?? DEFAULT_GLASS_SIZE_ML,
-      trackWaterIntake: config?.trackWaterIntake ?? true,
-    },
-    ...(config && {
-      values: {
-        dailyWaterTargetMl: config.dailyWaterTargetMl,
-        glassSizeMl: config.glassSizeMl,
-        trackWaterIntake: config.trackWaterIntake,
-      },
-    }),
-  });
 
   const handleQuickAdd = async (amountMl: number) => {
     setPendingAmount(amountMl);
@@ -133,16 +99,6 @@ export default function Hydration() {
     }
   };
 
-  const onSettingsSubmit = async (data: SettingsFormData) => {
-    try {
-      await updateConfigMutation.mutateAsync(data);
-      resetSettings(data);
-      toast.success(t('hydration.settings_saved'));
-    } catch {
-      toast.error(t('hydration.settings_save_error'));
-    }
-  };
-
   if (configLoading || intakeLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -160,6 +116,15 @@ export default function Hydration() {
             <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{t('hydration.title')}</h1>
+          <button
+            onClick={() => {
+              setConfigSheetOpen(true);
+            }}
+            className="text-muted-foreground hover:text-foreground ml-auto rounded-lg p-2 transition-colors"
+            aria-label={t('hydration.settings_section', { defaultValue: 'Hydration settings' })}
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
         <p className="text-muted-foreground">{t('hydration.subtitle')}</p>
       </div>
@@ -344,76 +309,7 @@ export default function Hydration() {
         </Card>
       </div>
 
-      {/* Hydration Settings */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">{t('hydration.settings_section')}</h2>
-
-        <form
-          onSubmit={(e) => {
-            void handleSubmit(onSettingsSubmit)(e);
-          }}
-          className="space-y-4"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('hydration.settings_header')}</CardTitle>
-              <CardDescription>{t('hydration.settings_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="dailyWaterTargetMl">{t('hydration.daily_target_label')}</Label>
-                  <Input
-                    id="dailyWaterTargetMl"
-                    type="number"
-                    step="50"
-                    placeholder="2500"
-                    {...register('dailyWaterTargetMl')}
-                  />
-                  {errors.dailyWaterTargetMl && (
-                    <p className="text-destructive mt-1 text-sm">
-                      {errors.dailyWaterTargetMl.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="glassSizeMl">{t('hydration.glass_size_label')}</Label>
-                  <Input
-                    id="glassSizeMl"
-                    type="number"
-                    step="10"
-                    placeholder="250"
-                    {...register('glassSizeMl')}
-                  />
-                  {errors.glassSizeMl && (
-                    <p className="text-destructive mt-1 text-sm">{errors.glassSizeMl.message}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Checkbox id="trackWaterIntake" {...register('trackWaterIntake')} />
-                  <Label htmlFor="trackWaterIntake">{t('hydration.track_toggle_label')}</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end">
-            <Button type="submit" disabled={updateConfigMutation.isPending || !isDirty}>
-              {updateConfigMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('common.saving')}
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  {t('hydration.save_settings_btn')}
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
+      <HydrationConfigSheet open={configSheetOpen} onOpenChange={setConfigSheetOpen} />
     </div>
   );
 }

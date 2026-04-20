@@ -50,7 +50,9 @@
     "fiber_placeholder": "e.g., 30",
     "save_btn": "Save Goals",
     "save_success": "Goals saved successfully!",
-    "save_error": "Failed to save goals. Please try again."
+    "save_error": "Failed to save goals. Please try again.",
+    "nutrition_header": "Nutrition Goals",
+    "nutrition_desc": "Set your daily calorie and macro targets"
   },
   "products": {
     "title": "Products",
@@ -310,6 +312,18 @@
     "nav": "Profile",
     "title": "My Profile",
     "subtitle": "Manage your biometric data and activity level",
+    "page_title": "Profile & Settings",
+    "page_subtitle": "Manage your personal information and preferences",
+    "sidebar": {
+      "personal": "Personal",
+      "body_stats": "Body Stats",
+      "diet_planner": "Diet Planner",
+      "goals": "Goals",
+      "meal_schedule": "Meal Schedule",
+      "hydration": "Hydration",
+      "notifications": "Notifications",
+      "alerts": "Alerts"
+    },
     "personal_header": "Personal Information",
     "personal_desc": "Your basic personal details",
     "measurements_header": "Body Measurements",
@@ -334,6 +348,20 @@
     "save_success": "Profile saved successfully!",
     "save_error": "Failed to save profile. Please try again."
   },
+  "sheets": {
+    "goals": {
+      "title": "Nutrition Goals",
+      "description": "Set your daily calorie and macro targets."
+    },
+    "meal_schedule": {
+      "title": "Meal Schedule",
+      "description": "Configure your daily meal timing."
+    },
+    "hydration": {
+      "title": "Hydration Settings",
+      "description": "Set your daily water target and glass size."
+    }
+  },
   "notifications": {
     "nav": "Notification Preferences",
     "title": "Notification Preferences",
@@ -354,7 +382,9 @@
     "goal_milestone_label": "Goal milestone alerts",
     "save_btn": "Save Preferences",
     "save_success": "Preferences saved successfully!",
-    "save_error": "Failed to save preferences. Please try again."
+    "save_error": "Failed to save preferences. Please try again.",
+    "minutes_before": "{{count}} min before",
+    "every_minutes": "Every {{count}} min"
   },
   "hydration": {
     "title": "Hydration Tracking",
@@ -406,10 +436,11 @@
     "recipes": "Recipes",
     "calendar": "Calendar",
     "goals": "Goals",
-    "nutrition": "Nutrition",
+    "nutrition": "Nutrition Summary",
     "hydration": "Hydration",
     "import_plan": "Import Plan",
-    "profile": "Profile"
+    "profile": "Profile",
+    "profile_settings": "Profile & Settings"
   },
   "diet_plan_form": {
     "title": "Create New Diet Plan",

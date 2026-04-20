@@ -1,4 +1,4 @@
-import { Home, Package, BookOpen, CalendarDays } from 'lucide-react';
+import { Home, Package, BookOpen, CalendarDays, Droplets, BarChart3, User } from 'lucide-react';
 import { lazy } from 'react';
 
 import en from './locales/en.json';
@@ -17,11 +17,8 @@ const RecipeEdit = lazy(() => import('./pages/recipes/RecipeEdit'));
 const RecipeDetail = lazy(() => import('./pages/recipes/RecipeDetail'));
 const Calendar = lazy(() => import('./pages/Calendar'));
 const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
-const Goals = lazy(() => import('./pages/Goals'));
 const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
-const MealSchedule = lazy(() => import('./pages/MealSchedule'));
 const Profile = lazy(() => import('./pages/Profile'));
-const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 const Hydration = lazy(() => import('./pages/Hydration'));
 
 export const dietPlannerModule: AppModule = {
@@ -43,6 +40,12 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'common.dashboard',
     },
     {
+      name: 'Calendar',
+      href: '/diet-planner/calendar',
+      icon: CalendarDays,
+      translationKey: 'common.calendar',
+    },
+    {
       name: 'Products',
       href: '/diet-planner/products',
       icon: Package,
@@ -55,10 +58,22 @@ export const dietPlannerModule: AppModule = {
       translationKey: 'common.recipes',
     },
     {
-      name: 'Calendar',
-      href: '/diet-planner/calendar',
-      icon: CalendarDays,
-      translationKey: 'common.calendar',
+      name: 'Hydration',
+      href: '/diet-planner/hydration',
+      icon: Droplets,
+      translationKey: 'common.hydration',
+    },
+    {
+      name: 'Nutrition Summary',
+      href: '/diet-planner/nutrition',
+      icon: BarChart3,
+      translationKey: 'common.nutrition_summary',
+    },
+    {
+      name: 'Profile & Settings',
+      href: '/diet-planner/profile',
+      icon: User,
+      translationKey: 'common.profile_settings',
     },
   ],
   routes: [
@@ -71,13 +86,10 @@ export const dietPlannerModule: AppModule = {
     { path: 'recipes/new', Component: RecipeCreate },
     { path: 'recipes/:id', Component: RecipeDetail },
     { path: 'recipes/:id/edit', Component: RecipeEdit },
-    { path: 'goals', Component: Goals },
     { path: 'calendar', Component: Calendar },
     { path: 'import', Component: ImportWizard },
     { path: 'nutrition', Component: NutritionSummary },
-    { path: 'meal-schedule', Component: MealSchedule },
     { path: 'profile', Component: Profile },
-    { path: 'notification-preferences', Component: NotificationPreferences },
     { path: 'hydration', Component: Hydration },
   ],
 };

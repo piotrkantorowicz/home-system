@@ -1,5 +1,5 @@
 import { cn } from '@shared/lib/utils';
-import { User, Target, Clock, Bell, LogOut } from 'lucide-react';
+import { User, Target, Bell, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -22,11 +22,10 @@ export interface UserProfileDropdownProps {
 }
 
 const settingsLinks = [
-  { to: '/diet-planner/profile', icon: User, translationKey: 'common.profile' },
-  { to: '/diet-planner/goals', icon: Target, translationKey: 'common.goals' },
-  { to: '/diet-planner/meal-schedule', icon: Clock, translationKey: 'meal_schedule.nav' },
+  { to: '/diet-planner/profile', icon: User, translationKey: 'common.profile_settings' },
+  { to: '/diet-planner/profile?section=goals', icon: Target, translationKey: 'common.goals' },
   {
-    to: '/diet-planner/notification-preferences',
+    to: '/diet-planner/profile?section=notifications',
     icon: Bell,
     translationKey: 'notifications.nav',
   },
