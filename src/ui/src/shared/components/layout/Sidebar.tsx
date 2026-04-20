@@ -87,12 +87,8 @@ function ModuleSection({ mod, location, t, onClose }: ModuleSectionProps) {
 
   const ModIcon = mod.icon;
 
-  // Filter out the module "dashboard" nav item — the module header itself acts as the entry
-  const childNavItems = mod.navItems.filter((item) => item.href !== mod.basePath);
-
   return (
     <div>
-      {/* Module header — clickable to expand/collapse */}
       <button
         onClick={() => {
           setIsExpanded(!isExpanded);
@@ -119,29 +115,13 @@ function ModuleSection({ mod, location, t, onClose }: ModuleSectionProps) {
         />
       </button>
 
-      {/* Child nav items */}
       {isExpanded && (
         <div className="border-border/30 mt-0.5 ml-4 space-y-0.5 border-l pl-3">
-          {/* Module home link */}
-          <Link
-            to={mod.basePath}
-            onClick={onClose}
-            aria-current={location.pathname === mod.basePath ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.85rem] font-medium transition-all duration-200',
-              location.pathname === mod.basePath
-                ? 'bg-primary/20 text-primary border-primary border-l-2 font-semibold shadow-sm'
-                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
-            )}
-          >
-            <Home className="h-4 w-4" />
-            {t('common.dashboard')}
-          </Link>
-
-          {childNavItems.map((item) => {
+          {mod.navItems.map((item) => {
             const isActive =
-              location.pathname === item.href ||
-              (location.pathname.startsWith(item.href) && item.href !== mod.basePath);
+              item.href === mod.basePath
+                ? location.pathname === item.href
+                : location.pathname === item.href || location.pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link
