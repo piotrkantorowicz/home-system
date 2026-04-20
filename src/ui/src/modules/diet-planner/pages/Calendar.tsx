@@ -7,9 +7,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@shared/components/ui/Dialog';
-import { cn } from '@shared/lib/utils';
 import { useToast } from '@shared/context/ToastContext';
-import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { cn } from '@shared/lib/utils';
+import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Target, ArrowRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -327,7 +327,25 @@ export default function Calendar() {
         </CardHeader>
         <CardContent>
           {goals === undefined || goals === null ? (
-            <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_goals')}</p>
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
+              <div className="rounded-xl bg-orange-500/10 p-2.5">
+                <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <p className="text-muted-foreground text-sm">
+                {t('nutrition_summary.goals_cta_title')}
+              </p>
+              <Link
+                to="/diet-planner/goals"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              >
+                {t('nutrition_summary.goals_cta_button')}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : weeklyTotals.calories === 0 &&
+            weeklyTotals.protein === 0 &&
+            weeklyTotals.carbs === 0 ? (
+            <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <MacroProgressBar

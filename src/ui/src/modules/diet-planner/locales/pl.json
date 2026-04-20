@@ -105,6 +105,9 @@
   "nutrition_summary": {
     "title": "Tygodniowe Podsumowanie Żywienia",
     "no_goals": "Brak celów — przejdź do Celów, aby ustawić dzienne wartości",
+    "goals_cta_title": "Ustaw cele żywieniowe, aby śledzić tygodniowe postępy",
+    "goals_cta_button": "Ustaw cele",
+    "no_meals": "Brak posiłków w tym tygodniu — dodaj posiłki do kalendarza, aby zobaczyć dane żywieniowe.",
     "calories": "Kalorie",
     "protein": "Białko",
     "carbs": "Węglowodany",

@@ -106,6 +106,9 @@
   "nutrition_summary": {
     "title": "Weekly Nutrition Summary",
     "no_goals": "No goals set — visit Goals to set your daily targets",
+    "goals_cta_title": "Set up your nutrition goals to track weekly progress",
+    "goals_cta_button": "Set up goals",
+    "no_meals": "No meals logged this week — add meals to your calendar to see nutrition data.",
     "calories": "Calories",
     "protein": "Protein",
     "carbs": "Carbs",
