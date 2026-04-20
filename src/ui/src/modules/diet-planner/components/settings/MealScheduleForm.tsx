@@ -14,7 +14,7 @@ import { z } from 'zod';
 const MAX_SLOTS = 8;
 const MIN_SLOTS = 1;
 
-const DEFAULT_SLOTS = [{ name: '', defaultTime: '12:00' }];
+const DEFAULT_SLOTS = [{ name: '', defaultTime: '' }];
 
 const mealSlotSchema = z.object({
   name: z.string().min(1, 'Name is required'),

@@ -48,8 +48,8 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
   } = useForm<HydrationConfigFormInput, unknown, HydrationConfigFormData>({
     resolver: zodResolver(hydrationConfigSchema),
     defaultValues: {
-      dailyWaterTargetMl: config?.dailyWaterTargetMl ?? DEFAULT_DAILY_TARGET_ML,
-      glassSizeMl: config?.glassSizeMl ?? DEFAULT_GLASS_SIZE_ML,
+      dailyWaterTargetMl: DEFAULT_DAILY_TARGET_ML,
+      glassSizeMl: DEFAULT_GLASS_SIZE_ML,
     },
     ...(config && {
       values: {
