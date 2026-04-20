@@ -323,7 +323,17 @@ export default function Calendar() {
       {/* Weekly Nutrition Summary */}
       <Card className="animate-fade-in-up mt-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
+            {goals !== undefined && goals !== null && (
+              <Link
+                to="/diet-planner/goals"
+                className="text-muted-foreground hover:text-primary text-sm transition-colors"
+              >
+                {t('nutrition_summary.goals_edit')}
+              </Link>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {goals === undefined || goals === null ? (
