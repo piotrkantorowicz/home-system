@@ -5,33 +5,8 @@ import * as React from 'react';
 
 const Sheet = DialogPrimitive.Root;
 
-export interface SheetTriggerProps {
-  children: React.ReactNode;
-  onOpenChange: (open: boolean) => void;
-  className?: string;
-}
-
-function SheetTrigger({ children, onOpenChange, className }: SheetTriggerProps) {
-  return (
-    <div
-      className={className}
-      onClick={() => {
-        onOpenChange(true);
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpenChange(true);
-        }
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-SheetTrigger.displayName = 'SheetTrigger';
+export const SheetTrigger = DialogPrimitive.Trigger;
+export type SheetTriggerProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>;
 
 export interface SheetHeaderProps {
   children: React.ReactNode;
@@ -107,4 +82,4 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = 'SheetContent';
 
-export { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription };
+export { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription };
