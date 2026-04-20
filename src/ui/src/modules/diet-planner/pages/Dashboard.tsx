@@ -178,8 +178,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Goal Progress */}
-      {goalsData && hasGoals && (
+      {/* Goal Progress / CTA */}
+      {goalsData && hasGoals ? (
         <Card className="animate-fade-in-up mb-10" style={{ animationDelay: '100ms' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -220,6 +220,30 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card
+          className="animate-fade-in-up mb-10 border-dashed"
+          style={{ animationDelay: '100ms' }}
+        >
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <div className="rounded-xl bg-orange-500/10 p-3">
+              <Target className="h-7 w-7 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">{t('dashboard.goals_cta_title')}</h3>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {t('dashboard.goals_cta_description')}
+              </p>
+            </div>
+            <Link
+              to="/diet-planner/goals"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+            >
+              {t('dashboard.goals_cta_button')}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </CardContent>
         </Card>
       )}
