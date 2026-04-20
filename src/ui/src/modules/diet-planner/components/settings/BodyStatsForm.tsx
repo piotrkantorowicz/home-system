@@ -45,7 +45,7 @@ export interface BodyStatsFormProps {
 export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
   const { t } = useTranslation();
   const toast = useToast();
-  const { data: profile } = useProfile();
+  const { data: profile, isLoading } = useProfile();
   const createMutation = useCreateProfile();
   const updateMutation = useUpdateProfile();
   const saveMutation = profile ? updateMutation : createMutation;
@@ -98,6 +98,14 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-10">
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <form
       onSubmit={(e) => {
@@ -114,7 +122,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-3">
             <div>
-              <Label htmlFor="dateOfBirth">{t('profile.date_of_birth')}</Label>
+              <Label>{t('profile.date_of_birth')}</Label>
               <Controller
                 name="dateOfBirth"
                 control={control}
