@@ -35,7 +35,19 @@ export { Skeleton, type SkeletonProps } from './Skeleton';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { Select, type SelectProps } from './Select';
 export { Checkbox, type CheckboxProps } from './Checkbox';
-export { Sheet, SheetContent, type SheetContentProps } from './Sheet';
+export {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  type SheetContentProps,
+  type SheetTriggerProps,
+  type SheetHeaderProps,
+  type SheetTitleProps,
+  type SheetDescriptionProps,
+} from './Sheet';
 export {
   DropdownMenu,
   DropdownMenuTrigger,

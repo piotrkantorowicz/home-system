@@ -5,16 +5,75 @@ import * as React from 'react';
 
 const Sheet = DialogPrimitive.Root;
 
+export interface SheetTriggerProps {
+  children: React.ReactNode;
+  onOpenChange: (open: boolean) => void;
+  className?: string;
+}
+
+function SheetTrigger({ children, onOpenChange, className }: SheetTriggerProps) {
+  return (
+    <div
+      className={className}
+      onClick={() => {
+        onOpenChange(true);
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenChange(true);
+        }
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+SheetTrigger.displayName = 'SheetTrigger';
+
+export interface SheetHeaderProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SheetHeader({ children, className }: SheetHeaderProps) {
+  return <div className={cn('flex flex-col space-y-1.5 p-6 pb-0', className)}>{children}</div>;
+}
+SheetHeader.displayName = 'SheetHeader';
+
+export interface SheetTitleProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SheetTitle({ children, className }: SheetTitleProps) {
+  return <h2 className={cn('text-lg font-semibold', className)}>{children}</h2>;
+}
+SheetTitle.displayName = 'SheetTitle';
+
+export interface SheetDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SheetDescription({ children, className }: SheetDescriptionProps) {
+  return <p className={cn('text-muted-foreground text-sm', className)}>{children}</p>;
+}
+SheetDescription.displayName = 'SheetDescription';
+
 export interface SheetContentProps extends React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content
 > {
   onClose: () => void;
+  side?: 'left' | 'right';
 }
 
 const SheetContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ className, children, onClose, ...props }, ref) => (
+>(({ className, children, onClose, side = 'left', ...props }, ref) => (
   <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay
       className={cn(
@@ -27,8 +86,9 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
-        'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left',
-        'fixed inset-y-0 left-0 z-50 h-full w-64 duration-300',
+        side === 'right'
+          ? 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 h-full w-full max-w-lg duration-300'
+          : 'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 h-full w-64 duration-300',
         className,
       )}
       {...props}
@@ -47,4 +107,4 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = 'SheetContent';
 
-export { Sheet, SheetContent };
+export { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription };
