@@ -24,6 +24,8 @@
     "import_plan": "Importuj Plan",
     "nutrition": "Żywienie",
     "logout": "Wyloguj",
+    "user_menu": "Menu użytkownika",
+    "profile": "Profil",
     "welcome_back": "Witaj ponownie, {{name}}!",
     "modules": "Moduły",
     "diet_planner": "Planer Diety",
