@@ -36,3 +36,13 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { Select, type SelectProps } from './Select';
 export { Checkbox, type CheckboxProps } from './Checkbox';
 export { Sheet, SheetContent, type SheetContentProps } from './Sheet';
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+} from './DropdownMenu';
+export { UserProfileDropdown, type UserProfileDropdownProps } from './UserProfileDropdown';
