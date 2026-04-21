@@ -100,7 +100,6 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
           </div>
 
           {fields.map((field, index) => {
-            const idx = index;
             const idxStr = String(index);
             const nameError = errors.slots?.[index]?.name;
             const timeError = errors.slots?.[index]?.defaultTime;
@@ -116,7 +115,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
                     type="text"
                     placeholder={t('meal_schedule.slot_name')}
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-                    {...register(`slots.${idx}.name`)}
+                    {...register(`slots.${index}.name`)}
                     aria-invalid={!!nameError}
                   />
                   {nameError && (
@@ -134,7 +133,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
                     id={`slot-${idxStr}-time`}
                     type="time"
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-                    {...register(`slots.${idx}.defaultTime`)}
+                    {...register(`slots.${index}.defaultTime`)}
                     aria-invalid={!!timeError}
                   />
                   {timeError && (
@@ -150,7 +149,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
                   size="icon"
                   disabled={fields.length <= MIN_SLOTS}
                   onClick={() => {
-                    remove(idx);
+                    remove(index);
                   }}
                   aria-label={t('meal_schedule.remove_slot')}
                 >

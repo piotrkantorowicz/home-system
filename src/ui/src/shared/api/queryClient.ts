@@ -15,10 +15,12 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
     mutations: {
+      // Per-mutation onError handlers render user-facing toasts via the
+      // useToast React context, which can't be called outside a component.
+      // The global hook is limited to logging so errors are captured even
+      // when a call site forgets its own onError.
       onError: (error) => {
-        // Global error handling
         console.error('Mutation error:', error);
-        // TODO: Add toast notification
       },
     },
   },
