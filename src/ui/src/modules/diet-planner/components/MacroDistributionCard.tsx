@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
+import { cn } from '@shared/lib/utils';
 
 import type { TFunction } from 'i18next';
 
@@ -64,7 +65,10 @@ export function MacroDistributionCard({
                 </div>
                 <div className="bg-muted h-2.5 overflow-hidden rounded-full">
                   <div
-                    className={`h-full bg-gradient-to-r ${macro.gradient} animate-bar-fill rounded-full`}
+                    className={cn(
+                      'animate-bar-fill h-full rounded-full bg-gradient-to-r',
+                      macro.gradient,
+                    )}
                     style={{ width: `${String(percent)}%` }}
                   />
                 </div>

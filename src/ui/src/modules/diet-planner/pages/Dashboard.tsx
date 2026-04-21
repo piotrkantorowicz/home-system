@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@shared/components/ui';
+import { cn } from '@shared/lib/utils';
 import {
   Package,
   BookOpen,
@@ -168,13 +169,16 @@ export default function Dashboard() {
             <Link key={card.to} to={card.to} data-testid={card.testId} className="group">
               <Card className="hover:border-primary/30 relative cursor-pointer overflow-hidden border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-60 transition-opacity duration-300 group-hover:opacity-100`}
+                  className={cn(
+                    'absolute inset-0 bg-gradient-to-br opacity-60 transition-opacity duration-300 group-hover:opacity-100',
+                    card.color,
+                  )}
                 />
                 <CardHeader className="relative">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="bg-background/80 rounded-xl p-2.5 shadow-sm">
-                        <Icon className={`h-5 w-5 ${card.iconColor}`} />
+                        <Icon className={cn('h-5 w-5', card.iconColor)} />
                       </div>
                       <CardTitle className="text-lg">{card.title}</CardTitle>
                     </div>
@@ -242,7 +246,7 @@ export default function Dashboard() {
                   </div>
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
-                      className={`h-full rounded-full ${item.color}`}
+                      className={cn('h-full rounded-full', item.color)}
                       style={{ width: `${String(item.percent)}%` }}
                     />
                   </div>

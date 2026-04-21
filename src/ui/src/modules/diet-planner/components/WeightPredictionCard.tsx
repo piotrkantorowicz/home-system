@@ -8,6 +8,7 @@ import {
   Input,
   Label,
 } from '@shared/components/ui';
+import { cn } from '@shared/lib/utils';
 import { Activity, Loader2, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -169,9 +170,10 @@ export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredict
                   : t('prediction.daily_deficit_label')}
               </p>
               <p
-                className={`mt-1 text-2xl font-bold ${
-                  prediction.dailyDeficit < 0 ? 'text-emerald-500' : 'text-orange-500'
-                }`}
+                className={cn(
+                  'mt-1 text-2xl font-bold',
+                  prediction.dailyDeficit < 0 ? 'text-emerald-500' : 'text-orange-500',
+                )}
               >
                 {Math.abs(prediction.dailyDeficit).toFixed(0)}
               </p>
@@ -202,7 +204,10 @@ export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredict
                 {t('prediction.current_bmi_label')}
               </p>
               <p
-                className={`mt-1 text-2xl font-bold ${currentBmiCategory !== null ? (BMI_COLORS[currentBmiCategory] ?? '') : ''}`}
+                className={cn(
+                  'mt-1 text-2xl font-bold',
+                  currentBmiCategory !== null && BMI_COLORS[currentBmiCategory],
+                )}
               >
                 {prediction.currentBmi.toFixed(1)}
               </p>
@@ -220,7 +225,10 @@ export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredict
                   {t('prediction.target_bmi_label')}
                 </p>
                 <p
-                  className={`mt-1 text-2xl font-bold ${targetBmiCategory !== null ? (BMI_COLORS[targetBmiCategory] ?? '') : ''}`}
+                  className={cn(
+                    'mt-1 text-2xl font-bold',
+                    targetBmiCategory !== null && BMI_COLORS[targetBmiCategory],
+                  )}
                 >
                   {prediction.targetBmi.toFixed(1)}
                 </p>
