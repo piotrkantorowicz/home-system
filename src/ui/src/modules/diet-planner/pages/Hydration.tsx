@@ -4,7 +4,7 @@ import {
   useLogWaterIntake,
   useDeleteWaterIntake,
 } from '@modules/diet-planner/api/hooks/useHydration';
-import { HydrationConfigSheet } from '@modules/diet-planner/components/sheets';
+import { HydrationConfigForm } from '@modules/diet-planner/components/settings';
 import {
   Card,
   CardHeader,
@@ -15,6 +15,11 @@ import {
   Input,
   Label,
   EmptyState,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Droplets, Loader2, Trash2, Plus, Settings } from 'lucide-react';
@@ -309,7 +314,21 @@ export default function Hydration() {
         </Card>
       </div>
 
-      <HydrationConfigSheet open={configSheetOpen} onOpenChange={setConfigSheetOpen} />
+      <Sheet open={configSheetOpen} onOpenChange={setConfigSheetOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>{t('sheets.hydration.title')}</SheetTitle>
+            <SheetDescription>{t('sheets.hydration.description')}</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 overflow-y-auto">
+            <HydrationConfigForm
+              onSuccess={() => {
+                setConfigSheetOpen(false);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -8,8 +8,19 @@ import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useProfile } from '@modules/diet-planner/api/hooks/useProfile';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { WeightPredictionCard } from '@modules/diet-planner/components/WeightPredictionCard';
-import { GoalsSheet } from '@modules/diet-planner/components/sheets';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui';
+import { GoalsForm } from '@modules/diet-planner/components/settings';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@shared/components/ui';
 import {
   Package,
   BookOpen,
@@ -274,7 +285,21 @@ export default function Dashboard() {
         <WeightPredictionCard hasProfile={!!profile} goalCalories={goalsData?.dailyCalorieTarget} />
       </div>
 
-      <GoalsSheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen} />
+      <Sheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>{t('sheets.goals.title')}</SheetTitle>
+            <SheetDescription>{t('sheets.goals.description')}</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 overflow-y-auto">
+            <GoalsForm
+              onSuccess={() => {
+                setGoalsSheetOpen(false);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
