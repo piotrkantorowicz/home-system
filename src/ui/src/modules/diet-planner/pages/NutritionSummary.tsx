@@ -58,11 +58,11 @@ export default function NutritionSummary() {
   });
   const { data: goals } = useGoals();
 
-  const days = useMemo(() => nutritionSummary ?? [], [nutritionSummary]);
+  const days = nutritionSummary ?? [];
 
   const totals = useMemo(
     () =>
-      days.reduce(
+      (nutritionSummary ?? []).reduce(
         (acc, day) => ({
           calories: acc.calories + day.calories,
           protein: acc.protein + day.protein,
@@ -72,7 +72,7 @@ export default function NutritionSummary() {
         }),
         { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
       ),
-    [days],
+    [nutritionSummary],
   );
 
   const dayCount = days.length || 1;
@@ -87,8 +87,8 @@ export default function NutritionSummary() {
 
   const pagedDays = useMemo(() => {
     const start = (tablePage - 1) * tablePageSize;
-    return days.slice(start, start + tablePageSize);
-  }, [days, tablePage, tablePageSize]);
+    return (nutritionSummary ?? []).slice(start, start + tablePageSize);
+  }, [nutritionSummary, tablePage, tablePageSize]);
 
   const handleApply = () => {
     if (draftFrom && draftTo && draftFrom <= draftTo) {
@@ -97,11 +97,10 @@ export default function NutritionSummary() {
     }
   };
 
-  const rangeInDays = useMemo(() => {
-    const from = new Date(appliedRange.from);
-    const to = new Date(appliedRange.to);
-    return Math.round((to.getTime() - from.getTime()) / 86400000) + 1;
-  }, [appliedRange]);
+  const rangeInDays =
+    Math.round(
+      (new Date(appliedRange.to).getTime() - new Date(appliedRange.from).getTime()) / 86400000,
+    ) + 1;
 
   return (
     <div className="animate-fade-in-up mx-auto max-w-5xl p-8 lg:p-10">

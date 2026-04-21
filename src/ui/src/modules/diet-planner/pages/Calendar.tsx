@@ -72,12 +72,13 @@ export default function Calendar() {
   const updateMeal = useUpdateMeal();
   const deleteMeal = useDeleteMeal();
 
-  const weekRange = useMemo(() => {
-    const start = new Date(weekStart);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    return { from: formatLocalDate(start), to: formatLocalDate(end) };
-  }, [weekStart]);
+  const weekStartDate = new Date(weekStart);
+  const weekEndDate = new Date(weekStartDate);
+  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  const weekRange = {
+    from: formatLocalDate(weekStartDate),
+    to: formatLocalDate(weekEndDate),
+  };
 
   const { data: nutritionSummary } = useNutritionSummary({
     from: weekRange.from,
@@ -117,16 +118,11 @@ export default function Calendar() {
     return grouped;
   }, [meals]);
 
-  const weekDays = useMemo(() => {
-    const days = [];
-    const start = new Date(weekStart);
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(start);
-      date.setDate(date.getDate() + i);
-      days.push(date);
-    }
-    return days;
-  }, [weekStart]);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStartDate);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
 
   const openCreateForm = (date: string, mealType: string) => {
     setEditingMeal(null);
