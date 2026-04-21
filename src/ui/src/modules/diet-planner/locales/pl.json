@@ -425,7 +425,8 @@
     "hydration": "Nawodnienie",
     "import_plan": "Importuj Plan",
     "profile": "Profil",
-    "profile_settings": "Profil i Ustawienia"
+    "profile_settings": "Profil i Ustawienia",
+    "settings": "Ustawienia"
   },
   "diet_plan_form": {
     "title": "Utwórz Nowy Plan Diety",
