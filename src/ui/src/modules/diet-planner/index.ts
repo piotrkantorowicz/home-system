@@ -1,4 +1,4 @@
-import { Home, Package, BookOpen, CalendarDays, Droplets, BarChart3, User } from 'lucide-react';
+import { Home, Package, BookOpen, CalendarDays } from 'lucide-react';
 import { lazy } from 'react';
 
 import en from './locales/en.json';
@@ -56,24 +56,6 @@ export const dietPlannerModule: AppModule = {
       href: '/diet-planner/recipes',
       icon: BookOpen,
       translationKey: 'common.recipes',
-    },
-    {
-      name: 'Hydration',
-      href: '/diet-planner/hydration',
-      icon: Droplets,
-      translationKey: 'common.hydration',
-    },
-    {
-      name: 'Nutrition Summary',
-      href: '/diet-planner/nutrition',
-      icon: BarChart3,
-      translationKey: 'common.nutrition_summary',
-    },
-    {
-      name: 'Profile & Settings',
-      href: '/diet-planner/profile',
-      icon: User,
-      translationKey: 'common.profile_settings',
     },
   ],
   routes: [

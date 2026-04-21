@@ -9,7 +9,7 @@ import {
   Label,
 } from '@shared/components/ui';
 import { Activity, Loader2, TrendingDown, TrendingUp, Minus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 function WeightTrendIcon({ weeklyChange }: { weeklyChange: number }) {
@@ -46,14 +46,32 @@ const BMI_LABELS: Record<string, string> = {
 export interface WeightPredictionCardProps {
   /** Whether the user's profile has enough data to calculate a prediction */
   hasProfile: boolean;
+  /** Pre-fill calorie input from the user's goals (still editable) */
+  goalCalories?: number | null | undefined;
 }
 
-export function WeightPredictionCard({ hasProfile }: WeightPredictionCardProps) {
+export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredictionCardProps) {
   const { t } = useTranslation();
-  const [calorieInput, setCalorieInput] = useState<string>('');
-  const [debouncedCalories, setDebouncedCalories] = useState<number | null>(null);
+  const [calorieInput, setCalorieInput] = useState<string>(
+    goalCalories !== null && goalCalories !== undefined ? String(goalCalories) : '',
+  );
+  const [debouncedCalories, setDebouncedCalories] = useState<number | null>(
+    goalCalories !== null && goalCalories !== undefined && goalCalories > 0 ? goalCalories : null,
+  );
 
-  // Simple debounce: only trigger query after the user stops typing
+  // Sync when goals load for the first time (only if the user hasn't typed anything yet)
+  useEffect(() => {
+    if (
+      goalCalories !== null &&
+      goalCalories !== undefined &&
+      goalCalories > 0 &&
+      calorieInput === ''
+    ) {
+      setCalorieInput(String(goalCalories));
+      setDebouncedCalories(goalCalories);
+    }
+  }, [goalCalories]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleCalorieChange = (value: string) => {
     setCalorieInput(value);
     const parsed = parseFloat(value);

@@ -1,5 +1,5 @@
 import { cn } from '@shared/lib/utils';
-import { User, Target, Bell, LogOut } from 'lucide-react';
+import { User, Bell, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -21,9 +21,11 @@ export interface UserProfileDropdownProps {
   onLogout: () => void;
 }
 
+const dietPlannerLinks = [
+  { to: '/diet-planner/profile', icon: User, translationKey: 'common.profile' },
+] as const;
+
 const settingsLinks = [
-  { to: '/diet-planner/profile', icon: User, translationKey: 'common.profile_settings' },
-  { to: '/diet-planner/profile?section=goals', icon: Target, translationKey: 'common.goals' },
   {
     to: '/diet-planner/profile?section=notifications',
     icon: Bell,
@@ -52,8 +54,8 @@ export function UserProfileDropdown({ displayName, email, onLogout }: UserProfil
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-64">
-        {/* User info (visible on mobile where the trigger hides name) */}
-        <DropdownMenuLabel className="sm:hidden">
+        {/* User info header */}
+        <DropdownMenuLabel>
           <div className="flex items-center gap-3 py-1">
             <div className="from-primary/20 to-accent/30 rounded-full bg-gradient-to-br p-2">
               <User className="text-primary h-4 w-4" />
@@ -64,10 +66,33 @@ export function UserProfileDropdown({ displayName, email, onLogout }: UserProfil
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="sm:hidden" />
+        <DropdownMenuSeparator />
 
-        {/* Settings links */}
+        {/* Diet Planner group */}
         <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-muted-foreground px-2 py-1 text-xs font-semibold">
+            {t('common.diet_planner')}
+          </DropdownMenuLabel>
+          {dietPlannerLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <DropdownMenuItem key={link.to} asChild>
+                <Link to={link.to} className={cn('flex items-center gap-2')}>
+                  <Icon className="h-4 w-4" />
+                  {t(link.translationKey)}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        {/* Settings group */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-muted-foreground px-2 py-1 text-xs font-semibold">
+            {t('common.settings')}
+          </DropdownMenuLabel>
           {settingsLinks.map((link) => {
             const Icon = link.icon;
             return (

@@ -440,7 +440,8 @@
     "hydration": "Hydration",
     "import_plan": "Import Plan",
     "profile": "Profile",
-    "profile_settings": "Profile & Settings"
+    "profile_settings": "Profile & Settings",
+    "settings": "Settings"
   },
   "diet_plan_form": {
     "title": "Create New Diet Plan",

@@ -9,7 +9,7 @@ import { useProfile } from '@modules/diet-planner/api/hooks/useProfile';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { WeightPredictionCard } from '@modules/diet-planner/components/WeightPredictionCard';
 import { GoalsSheet } from '@modules/diet-planner/components/sheets';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@shared/components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui';
 import {
   Package,
   BookOpen,
@@ -271,45 +271,8 @@ export default function Dashboard() {
 
       {/* Weight Prediction */}
       <div className="animate-fade-in-up mb-10" style={{ animationDelay: '150ms' }}>
-        <WeightPredictionCard hasProfile={!!profile} />
+        <WeightPredictionCard hasProfile={!!profile} goalCalories={goalsData?.dailyCalorieTarget} />
       </div>
-
-      {/* Getting Started */}
-      <Card className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-        <CardHeader>
-          <CardTitle className="text-xl">{t('dashboard.getting_started.title')}</CardTitle>
-          <CardDescription>{t('dashboard.getting_started.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {[
-            {
-              num: 1,
-              title: t('dashboard.getting_started.step1_title'),
-              desc: t('dashboard.getting_started.step1_desc'),
-            },
-            {
-              num: 2,
-              title: t('dashboard.getting_started.step2_title'),
-              desc: t('dashboard.getting_started.step2_desc'),
-            },
-            {
-              num: 3,
-              title: t('dashboard.getting_started.step3_title'),
-              desc: t('dashboard.getting_started.step3_desc'),
-            },
-          ].map((step) => (
-            <div key={step.num} className="flex items-start gap-4">
-              <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold">
-                {step.num}
-              </div>
-              <div>
-                <h4 className="text-[0.95rem] font-semibold">{step.title}</h4>
-                <p className="text-muted-foreground mt-0.5 text-[0.9rem]">{step.desc}</p>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
 
       <GoalsSheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen} />
     </div>
