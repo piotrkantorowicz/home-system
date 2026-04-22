@@ -32,7 +32,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm --prefix ../Ui run dev',
+    command: 'npm --prefix ../src/ui run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },

@@ -1,6 +1,6 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `src/E2ETests/` covers **82 tests across 13 specs**, plus one auth setup (83 entries in total). It runs serially against a real backend, real frontend, and real Authentik (no mocks except for one explicit `route.fulfill` 404 case in `weight-prediction.md`).
+The Playwright end-to-end suite at `e2e/` covers **82 tests across 13 specs**, plus one auth setup (83 entries in total). It runs serially against a real backend, real frontend, and real Authentik (no mocks except for one explicit `route.fulfill` 404 case in `weight-prediction.md`).
 
 This directory is the human-readable reference. Each spec has its own page below; this README is the hub for cross-cutting concerns and discovery.
 
@@ -31,13 +31,13 @@ This directory is the human-readable reference. Each spec has its own page below
 | Concern | Choice |
 |---|---|
 | Framework | `@playwright/test` (Chromium only) |
-| Test directory | `src/E2ETests/diet-planner/` |
+| Test directory | `e2e/diet-planner/` |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
 | Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh + entity-id tracking |
 | Auth | Real Authentik (`http://localhost:9000`) — credentials from `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` env vars (defaults: `E2eTestsUser` / `Password321!`) |
 | Auth state | `playwright/.auth/user.json` — saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
 | Workers | `1` — tests share backend state, must run serially |
-| Web server | Auto-starts Vite via `npm --prefix ../Ui run dev`; reuses an existing server on `:5173` |
+| Web server | Auto-starts Vite via `npm --prefix ../src/ui run dev`; reuses an existing server on `:5173` |
 | Cleanup | `shared/global-teardown.ts` deletes tracked products + recipes + all meals after the run |
 | Reporter | `html` (`playwright-report/`) + `list` |
 
@@ -94,7 +94,7 @@ cd src/ui && npm run dev
 ### Install + run
 
 ```bash
-cd src/E2ETests
+cd e2e
 npm install
 npm run install:browsers           # one-time: chromium with system deps
 
@@ -106,7 +106,7 @@ npm run test:debug                 # step-through debugger
 
 ### Environment variables
 
-Create `src/E2ETests/.env` (gitignored). The suite reads:
+Create `e2e/.env` (gitignored). The suite reads:
 
 ```env
 PLAYWRIGHT_BASE_URL=http://localhost:5173
