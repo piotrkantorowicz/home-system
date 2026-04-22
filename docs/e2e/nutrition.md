@@ -1,13 +1,13 @@
 # nutrition.spec.ts — Nutrition Summary
 
-Mixed structure — three structure tests run independently; nine data-dependent tests run serially under a separate describe (`mode: 'serial'`, timeout 180000).
+Mixed structure — three structure tests run independently; eight data-dependent tests run serially under a separate describe (`mode: 'serial'`, timeout 180000).
 
 **Purpose**: nutrition summary page — date range picker, totals, daily averages, goal progress panel, table pagination.
 
 **Setup**:
 
 - **Structure describe** (3 tests): no setup; assert UI affordances regardless of data.
-- **With-meal-data describe** (9 tests, serial): the first `setup:` test imports a weekly plan via the import wizard. Later tests assert aggregates against that data. The `goal progress panel` test additionally configures goals through `/diet-planner/profile?section=goals` (uses raw `page.locator('#dailyCalorieTarget')` etc., not a POM).
+- **With-meal-data describe** (8 tests, serial): the first `setup:` test imports a weekly plan via the import wizard. Later tests assert aggregates against that data. The `goal progress panel` test additionally configures goals through `/diet-planner/profile?section=goals` (uses raw `page.locator('#dailyCalorieTarget')` etc., not a POM).
 
 **POM**: `pages/nutrition.page.ts`:
 

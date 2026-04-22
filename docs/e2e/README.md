@@ -1,6 +1,6 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `src/E2ETests/` covers **83 tests across 13 specs**, plus one auth setup. It runs serially against a real backend, real frontend, and real Authentik (no mocks except for one explicit `route.fulfill` 404 case in `weight-prediction.md`).
+The Playwright end-to-end suite at `src/E2ETests/` covers **82 tests across 13 specs**, plus one auth setup (83 entries in total). It runs serially against a real backend, real frontend, and real Authentik (no mocks except for one explicit `route.fulfill` 404 case in `weight-prediction.md`).
 
 This directory is the human-readable reference. Each spec has its own page below; this README is the hub for cross-cutting concerns and discovery.
 
@@ -16,7 +16,7 @@ This directory is the human-readable reference. Each spec has its own page below
 | [pagination](pagination.md) | List pagination on Products and Recipes | 8 |
 | [products](products.md) | Products CRUD and search | 5 |
 | [recipes](recipes.md) | Recipes CRUD with ingredients | 4 |
-| [nutrition](nutrition.md) | Nutrition summary, totals, goal progress | 12 |
+| [nutrition](nutrition.md) | Nutrition summary, totals, goal progress | 11 |
 | [profile](profile.md) | Biometrics form on the profile hub | 6 |
 | [meal-schedule](meal-schedule.md) | Meal slots on the profile hub | 9 |
 | [hydration](hydration.md) | Hydration page + settings | 6 |
