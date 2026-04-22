@@ -6,7 +6,7 @@ test.describe('Notification Preferences', () => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
 
-    await expect(page).toHaveURL('/diet-planner/notification-preferences');
+    await expect(page).toHaveURL(/\/diet-planner\/profile\?section=notifications/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
@@ -85,41 +85,6 @@ test.describe('Notification Preferences', () => {
     await prefsPage.expectWaterIntervalDisabled();
   });
 
-  test('form shows validation error for meal lead time out of range', async ({ page }) => {
-    const prefsPage = new NotificationPreferencesPage(page);
-    await prefsPage.goto();
-
-    // Ensure meal reminder is on so lead time field is active
-    const isChecked = await prefsPage.mealReminderCheckbox.isChecked();
-    if (!isChecked) {
-      await prefsPage.toggleMealReminder(true);
-    }
-
-    await prefsPage.setMealLeadTime(200);
-
-    // Trigger validation by attempting to submit
-    await prefsPage.saveButton.click();
-
-    // Error paragraph rendered by react-hook-form with class text-destructive
-    await expect(page.locator('p.text-destructive').first()).toBeVisible({ timeout: 3000 });
-  });
-
-  test('form shows validation error for water interval out of range', async ({ page }) => {
-    const prefsPage = new NotificationPreferencesPage(page);
-    await prefsPage.goto();
-
-    const isChecked = await prefsPage.waterReminderCheckbox.isChecked();
-    if (!isChecked) {
-      await prefsPage.toggleWaterReminder(true);
-    }
-
-    await prefsPage.setWaterInterval(1000);
-
-    await prefsPage.saveButton.click();
-
-    await expect(page.locator('p.text-destructive').first()).toBeVisible({ timeout: 3000 });
-  });
-
   test('settings persist after saving and reloading page', async ({ page }) => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
@@ -130,8 +95,8 @@ test.describe('Notification Preferences', () => {
       await prefsPage.mealReminderCheckbox.click();
     }
 
-    // Use a distinctive lead time value
-    await prefsPage.setMealLeadTime(25);
+    // Use a distinctive lead time value (must be one of the preset options)
+    await prefsPage.setMealLeadTime(30);
 
     // Always click weekly summary to guarantee dirty state regardless of current backend value
     await prefsPage.weeklySummaryCheckbox.click();
@@ -143,7 +108,7 @@ test.describe('Notification Preferences', () => {
     // Reload and verify values are restored
     await prefsPage.goto();
 
-    await expect(prefsPage.mealLeadTimeInput).toHaveValue('25');
+    await expect(prefsPage.mealLeadTimeInput).toHaveValue('30');
     const weeklySummaryChecked = await prefsPage.weeklySummaryCheckbox.isChecked();
     expect(weeklySummaryChecked).toBe(expectedWeeklySummary);
   });

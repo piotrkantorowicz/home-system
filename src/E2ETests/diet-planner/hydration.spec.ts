@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
 import { HydrationPage } from './pages/hydration.page';
+import { HydrationSettingsPage } from './pages/hydration-settings.page';
 
 test.describe('Hydration', () => {
   test('hydration page loads and shows the heading', async ({ page }) => {
@@ -17,18 +18,18 @@ test.describe('Hydration', () => {
   });
 
   test('settings form shows daily target and glass size fields', async ({ page }) => {
-    const hydrationPage = new HydrationPage(page);
-    await hydrationPage.goto();
+    const settingsPage = new HydrationSettingsPage(page);
+    await settingsPage.goto();
 
-    await expect(hydrationPage.dailyTargetInput).toBeVisible();
-    await expect(hydrationPage.glassSizeInput).toBeVisible();
+    await expect(settingsPage.dailyTargetInput).toBeVisible();
+    await expect(settingsPage.glassSizeInput).toBeVisible();
   });
 
   test('save settings button is visible', async ({ page }) => {
-    const hydrationPage = new HydrationPage(page);
-    await hydrationPage.goto();
+    const settingsPage = new HydrationSettingsPage(page);
+    await settingsPage.goto();
 
-    await expect(hydrationPage.saveSettingsButton).toBeVisible();
+    await expect(settingsPage.saveSettingsButton).toBeVisible();
   });
 
   test('quick-add glass button is visible', async ({ page }) => {
@@ -39,17 +40,17 @@ test.describe('Hydration', () => {
   });
 
   test('can update hydration settings', async ({ page }) => {
-    const hydrationPage = new HydrationPage(page);
-    await hydrationPage.goto();
+    const settingsPage = new HydrationSettingsPage(page);
+    await settingsPage.goto();
 
     // Alternate values to guarantee the form is always dirty regardless of prior run state
-    const currentTarget = await hydrationPage.dailyTargetInput.inputValue();
+    const currentTarget = await settingsPage.dailyTargetInput.inputValue();
     const newTarget = currentTarget === '3000' ? 2500 : 3000;
-    const currentGlass = await hydrationPage.glassSizeInput.inputValue();
+    const currentGlass = await settingsPage.glassSizeInput.inputValue();
     const newGlass = currentGlass === '300' ? 250 : 300;
-    await hydrationPage.updateSettings({ dailyTargetMl: newTarget, glassSizeMl: newGlass });
+    await settingsPage.updateSettings({ dailyTargetMl: newTarget, glassSizeMl: newGlass });
 
     // After save the form resets to saved values — field still visible
-    await expect(hydrationPage.dailyTargetInput).toBeVisible();
+    await expect(settingsPage.dailyTargetInput).toBeVisible();
   });
 });

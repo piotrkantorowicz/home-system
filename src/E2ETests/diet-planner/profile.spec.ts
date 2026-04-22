@@ -6,7 +6,7 @@ test.describe('Profile', () => {
     const profilePage = new ProfilePage(page);
     await profilePage.goto();
 
-    await expect(page.getByRole('heading', { name: /my profile/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /profile.*settings|profile/i })).toBeVisible();
     await expect(profilePage.saveButton).toBeVisible();
     await expect(profilePage.heightInput).toBeVisible();
     await expect(profilePage.genderSelect).toBeVisible();
