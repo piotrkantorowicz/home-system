@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import { test as base, expect } from '@playwright/test';
 
-import { trackCreatedId } from '../utils/test-tracker';
+import type { Page } from '@playwright/test';
 
 // ── OIDC token refresh ────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ async function tryRefreshTokens(): Promise<OidcUser | null> {
 const USERNAME = process.env['TEST_USER_EMAIL'] ?? 'E2eTestsUser';
 const PASSWORD = process.env['TEST_USER_PASSWORD'] ?? 'Password321!';
 
-async function performLogin(page: import('@playwright/test').Page): Promise<void> {
+async function performLogin(page: Page): Promise<void> {
   await page.goto('/');
 
   const usernameInput = page
@@ -176,14 +176,6 @@ async function performLogin(page: import('@playwright/test').Page): Promise<void
   await page.context().storageState({ path: AUTH_FILE });
 }
 
-// ── Entity-tracking helper ────────────────────────────────────────────────────
-
-function extractIdFromUrl(url: string, entity: string): string | null {
-  const pattern = new RegExp(`/api/v1/${entity}/([a-f0-9-]{36})`);
-  const match = url.match(pattern);
-  return match ? match[1] : null;
-}
-
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
 export const test = base.extend({
@@ -209,41 +201,6 @@ export const test = base.extend({
       console.warn('[auth] Token refresh failed — falling back to full login');
       await performLogin(page);
     }
-
-    // Intercept API responses to track created and deleted entity IDs
-    page.on('response', async (response) => {
-      const url = response.url();
-      const method = response.request().method();
-      const status = response.status();
-
-      if (status < 200 || status >= 300) return;
-
-      try {
-        if (method === 'POST') {
-          if (
-            url.includes('/api/v1/products') &&
-            !url.includes('/import') &&
-            !url.includes('/validate')
-          ) {
-            const body = await response.json();
-            if (body?.id) trackCreatedId('products', body.id);
-          } else if (
-            url.includes('/api/v1/recipes') &&
-            !url.includes('/import') &&
-            !url.includes('/validate')
-          ) {
-            const body = await response.json();
-            if (body?.id) trackCreatedId('recipes', body.id);
-          }
-        }
-
-        // Note: DELETE is intentionally not tracked — the item was either
-        // created in this session (already tracked) or pre-existed and
-        // should not be targeted by cleanup.
-      } catch {
-        // Ignore JSON parse errors for non-JSON responses
-      }
-    });
 
     await use(page);
   },
