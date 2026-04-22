@@ -3,18 +3,21 @@ import { ProfilePage } from './pages/profile.page';
 import { WeightPredictionPage } from './pages/weight-prediction.page';
 
 test.describe('Weight prediction', () => {
-  test('prediction card is visible on the profile page', async ({ page }) => {
+  test('prediction card is visible on the dashboard', async ({ page }) => {
     const predictionPage = new WeightPredictionPage(page);
     await predictionPage.goto();
 
     await expect(predictionPage.calorieTargetInput).toBeVisible();
   });
 
-  test('shows prompt to enter calories before any input', async ({ page }) => {
+  test('shows prompt to enter calories when input is empty', async ({ page }) => {
     const predictionPage = new WeightPredictionPage(page);
     await predictionPage.goto();
 
-    // The card should prompt the user to enter a calorie target
+    // Clear the input — it may be prefilled from goals if goals are configured
+    await predictionPage.calorieTargetInput.fill('');
+
+    // With profile + empty input, the prompt should appear
     await expect(predictionPage.enterCaloriesMessage).toBeVisible();
   });
 
@@ -34,6 +37,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
     await predictionPage.enterCalories(2000);
 
     await predictionPage.expectPredictionVisible();
@@ -54,6 +58,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
     await predictionPage.enterCalories(2000);
 
     const bmrText = await predictionPage.bmrValue.textContent();
@@ -78,6 +83,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
     // 1500 kcal is well below TDEE for this profile — should show a deficit
     await predictionPage.enterCalories(1500);
 
@@ -103,6 +109,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
     // 3500 kcal is well above TDEE for this profile — should show a surplus
     await predictionPage.enterCalories(3500);
 
@@ -127,6 +134,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
     await predictionPage.enterCalories(1800);
 
     await expect(predictionPage.goalDateValue).toBeVisible();
@@ -149,6 +157,7 @@ test.describe('Weight prediction', () => {
     await profilePage.save();
 
     const predictionPage = new WeightPredictionPage(page);
+    await predictionPage.goto();
 
     await predictionPage.enterCalories(1500);
     const weeklyTextLow = await predictionPage.weeklyChangeValue.textContent();

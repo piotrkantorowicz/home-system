@@ -60,9 +60,9 @@ export class WeightPredictionPage {
     this.incompleteProfileMessage = page.getByText(/complete your profile/i);
   }
 
-  /** Navigate to the Profile page where the prediction card lives. */
+  /** Navigate to the Dashboard where the prediction card now lives. */
   async goto() {
-    await this.page.goto('/diet-planner/profile');
+    await this.page.goto('/diet-planner');
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -71,6 +71,14 @@ export class WeightPredictionPage {
    * waitForResponse must be registered BEFORE fill() to avoid missing the response.
    */
   async enterCalories(calories: number) {
+    // The card prefills from the user's goals (#116). When the requested
+    // value equals the prefilled value, React Query short-circuits with a
+    // cached response so no new HTTP call fires — short-circuit here too.
+    const currentValue = await this.calorieTargetInput.inputValue();
+    if (currentValue === String(calories)) {
+      return;
+    }
+
     const responsePromise = this.page.waitForResponse(
       (r) => r.url().includes('/api/v1/profile/prediction') && r.status() < 500,
       { timeout: 10_000 },
