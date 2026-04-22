@@ -33,19 +33,31 @@ This directory is the human-readable reference. Each spec has its own page below
 | Framework | `@playwright/test` (Chromium only) |
 | Test directory | `e2e/diet-planner/` |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
-| Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh |
-| Auth | Real Authentik (`http://localhost:9000`) — credentials from `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` env vars (defaults: `E2eTestsUser` / `Password321!`) |
-| Auth state | `playwright/.auth/user.json` — saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
-| Workers | `1` — tests share backend state, must run serially |
+| Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh and per-worker `storageState` resolution |
+| Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), shared password `Password321!`. Override per worker with `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` (or a shared `TEST_USER_PASSWORD`) |
+| Auth state | `playwright/.auth/user-${workerIndex}.json` — one file per worker, saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
+| Workers | `4` — each worker owns a distinct Authentik user so tests run in parallel without cross-worker data contention |
 | Web server | Auto-starts Vite via `npm --prefix ../src/ui run dev`; reuses an existing server on `:5173` |
-| Cleanup | `shared/global-teardown.ts` calls `DELETE /api/v1/test-support/purge-my-data` — a single hard-purge of all owned rows across every DietPlanner aggregate |
+| Cleanup | `shared/global-teardown.ts` calls `DELETE /api/v1/test-support/purge-my-data` once per worker (in parallel) — a single hard-purge of all owned rows across every DietPlanner aggregate |
 | Reporter | `html` (`playwright-report/`) + `list` |
 
 ---
 
 ## Auth fixture behaviour
 
-Every test starts by trying to refresh the stored OIDC tokens via the refresh-token grant. On success it injects fresh tokens into `localStorage` before navigation (~200 ms). On failure (token revoked / Authentik restart), it falls back to a full interactive login through the Authentik UI and rewrites `playwright/.auth/user.json` for subsequent tests.
+Each worker runs as a dedicated Authentik user. `shared/auth.setup.ts` logs in all four users sequentially at the start of the suite and writes one storage-state file per worker (`playwright/.auth/user-0.json` … `user-3.json`). The auth fixture picks the right file via `testInfo.workerIndex` and overrides the default `storageState` fixture accordingly.
+
+Before each test the fixture tries to refresh the stored OIDC tokens via the refresh-token grant. On success it injects fresh tokens into `localStorage` before navigation (~200 ms). On failure (token revoked / Authentik restart), it falls back to a full interactive login through the Authentik UI and rewrites the worker's auth file for subsequent tests.
+
+### Scaling the worker count
+
+To run more (or fewer) workers:
+
+1. Add matching `E2eWorker<n>` entries to `infrastructure/authentik/blueprints/home-system.yaml`, bounce Authentik (`docker compose down && docker compose up -d`).
+2. Bump the `WORKER_COUNT` constant in `e2e/shared/auth.setup.ts`.
+3. Set `workers: <n>` in `e2e/playwright.config.ts`.
+
+The auth fixture and teardown infer the count from the Playwright runtime, so no other code needs updating.
 
 ---
 

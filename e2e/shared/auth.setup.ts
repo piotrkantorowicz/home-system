@@ -1,11 +1,28 @@
 import { test as setup, expect } from '@playwright/test';
 
-const authFile = 'playwright/.auth/user.json';
+import { authStatePath } from './auth-paths';
 
-const USERNAME = process.env['TEST_USER_EMAIL'] ?? 'E2eTestsUser';
-const PASSWORD = process.env['TEST_USER_PASSWORD'] ?? 'Password321!';
+import type { Page } from '@playwright/test';
 
-setup('authenticate', async ({ page }) => {
+const WORKER_COUNT = 4;
+
+/**
+ * One Authentik user per Playwright worker. The blueprint in
+ * `infrastructure/authentik/blueprints/home-system.yaml` provisions `E2eWorker0`
+ * through `E2eWorker3` with a shared password. Override any username via the
+ * matching `TEST_USER_EMAIL_<n>` env var (same for password).
+ */
+function credentialsFor(workerIndex: number) {
+  const username =
+    process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
+  const password =
+    process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
+    process.env['TEST_USER_PASSWORD'] ??
+    'Password321!';
+  return { username, password };
+}
+
+async function loginOnce(page: Page, username: string, password: string) {
   await page.goto('/');
 
   // Stage 1 — username
@@ -15,7 +32,7 @@ setup('authenticate', async ({ page }) => {
     .getByPlaceholder(/email or username/i)
     .or(page.locator('input[name="uidField"]'));
   await usernameInput.waitFor({ state: 'visible', timeout: 10000 });
-  await usernameInput.fill(USERNAME);
+  await usernameInput.fill(username);
   await page
     .getByRole('button', { name: /log in|continue|sign in|submit/i })
     .or(page.locator('button[type="submit"]'))
@@ -30,7 +47,7 @@ setup('authenticate', async ({ page }) => {
     .first();
   await passwordInput.waitFor({ state: 'visible', timeout: 10000 });
   await passwordInput.click();
-  await passwordInput.fill(PASSWORD);
+  await passwordInput.fill(password);
   await page
     .getByRole('button', { name: /log in|continue|sign in|submit/i })
     .or(page.locator('button[type="submit"]'))
@@ -42,7 +59,9 @@ setup('authenticate', async ({ page }) => {
 
   if (page.url().includes(':9000')) {
     const appLink = page.getByText('Diet Planner', { exact: false }).first();
-    const consentButton = page.getByRole('button', { name: /accept|continue|authorize|allow/i }).first();
+    const consentButton = page
+      .getByRole('button', { name: /accept|continue|authorize|allow/i })
+      .first();
     const continueButton = page.getByRole('button', { name: /continue/i }).first();
 
     const appLinkVisible = await appLink.isVisible({ timeout: 2000 }).catch(() => false);
@@ -53,7 +72,9 @@ setup('authenticate', async ({ page }) => {
       if (consentVisible) {
         await consentButton.click();
       } else {
-        const continueVisible = await continueButton.isVisible({ timeout: 2000 }).catch(() => false);
+        const continueVisible = await continueButton
+          .isVisible({ timeout: 2000 })
+          .catch(() => false);
         if (continueVisible) {
           await continueButton.click();
         }
@@ -65,7 +86,23 @@ setup('authenticate', async ({ page }) => {
   await page.waitForURL('http://localhost:5173/**', { timeout: 30000 });
   await page.waitForLoadState('networkidle');
 
-  await expect(page.getByText('Dashboard', { exact: false }).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText('Dashboard', { exact: false }).first()).toBeVisible({
+    timeout: 10000,
+  });
+}
 
-  await page.context().storageState({ path: authFile });
-});
+for (let workerIndex = 0; workerIndex < WORKER_COUNT; workerIndex++) {
+  setup(`authenticate worker ${workerIndex}`, async ({ browser }) => {
+    const { username, password } = credentialsFor(workerIndex);
+
+    // Isolated browser context so each login starts from a clean slate and we
+    // can save storage state without interference from sibling setup tests.
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await loginOnce(page, username, password);
+
+    await context.storageState({ path: authStatePath(workerIndex) });
+    await context.close();
+  });
+}

@@ -5,7 +5,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1, // Serial execution — tests share backend state
+  // Each worker owns a dedicated Authentik user (E2eWorker0..3) so tests can
+  // run fully in parallel without touching each other's data.
+  workers: 4,
   reporter: [['html', { open: 'never' }], ['list']],
   globalTeardown: './shared/global-teardown.ts',
   timeout: 60000,
@@ -23,10 +25,9 @@ export default defineConfig({
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/user.json',
-      },
+      // storageState is resolved per-worker inside auth.fixture.ts using
+      // testInfo.workerIndex, so there is no global setting here.
+      use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
     },
   ],
