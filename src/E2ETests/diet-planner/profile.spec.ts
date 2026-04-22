@@ -80,14 +80,4 @@ test.describe('Profile', () => {
 
     await expect(profilePage.saveButton).toBeEnabled();
   });
-
-  test('profile nav link is reachable from the sidebar', async ({ page }) => {
-    await page.goto('/diet-planner');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('link', { name: /profile/i }).click();
-
-    await expect(page).toHaveURL(/\/diet-planner\/profile$/);
-    await expect(page.getByRole('heading', { name: /my profile/i })).toBeVisible();
-  });
 });

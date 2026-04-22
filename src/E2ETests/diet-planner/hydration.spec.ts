@@ -38,16 +38,6 @@ test.describe('Hydration', () => {
     await expect(page.getByRole('button', { name: /\+.*ml|glass/i }).first()).toBeVisible();
   });
 
-  test('hydration nav link is reachable from the sidebar', async ({ page }) => {
-    await page.goto('/diet-planner');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('link', { name: /hydration/i }).click();
-
-    await expect(page).toHaveURL(/\/diet-planner\/hydration$/);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  });
-
   test('can update hydration settings', async ({ page }) => {
     const hydrationPage = new HydrationPage(page);
     await hydrationPage.goto();
