@@ -8,12 +8,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-public sealed class DietPlannerWebApplicationFactory(string connectionString, string? userId = null)
+public sealed class DietPlannerWebApplicationFactory(
+    string connectionString,
+    string? userId = null,
+    IReadOnlyDictionary<string, string?>? settings = null)
     : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        if (settings is not null)
+        {
+            foreach (var (key, value) in settings)
+                builder.UseSetting(key, value);
+        }
 
         builder.ConfigureServices(services =>
         {

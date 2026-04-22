@@ -1,85 +1,7 @@
-
 import fs from 'fs';
 import path from 'path';
 
 import { request } from '@playwright/test';
-
-import { getTrackedIds, clearTracker } from './test-tracker';
-
-import type { APIRequestContext } from '@playwright/test';
-
-/**
- * Delete a single item by ID.
- */
-async function permanentDeleteById(
-  apiContext: APIRequestContext,
-  endpoint: string,
-  id: string,
-  label: string
-) {
-  const res = await apiContext.delete(`${endpoint}/${id}`);
-  if (res.ok()) {
-    console.log(`  Permanently deleted ${label}: ${id}`);
-  } else if (res.status() === 404) {
-    console.log(`  ${label} ${id} already gone (404)`);
-  } else {
-    console.warn(`  Failed to permanently delete ${label} ${id}: ${res.status()}`);
-  }
-}
-
-/**
- * Query all visible items from a paginated endpoint and permanently delete each one.
- */
-async function permanentDeleteAll(
-  apiContext: APIRequestContext,
-  endpoint: string,
-  label: string,
-  queryParams = 'onlyMine=true'
-) {
-  let page = 1;
-
-  while (true) {
-    const res = await apiContext.get(`${endpoint}?${queryParams}&pageSize=100&page=${page}`);
-    if (!res.ok()) break;
-    const data = await res.json();
-    const items = data.items || [];
-    if (items.length === 0) break;
-
-    for (const item of items) {
-      await permanentDeleteById(apiContext, endpoint, item.id, label);
-    }
-
-    if (items.length < 100) break;
-    page++;
-  }
-}
-
-/**
- * Delete all meal entries by listing them and deleting each one.
- * The meals endpoint returns a flat array (not a paginated wrapper).
- */
-async function deleteAllMealEntries(apiContext: APIRequestContext) {
-  // Fetch with a wide date range covering past + future to capture all entries
-  const from = '2000-01-01';
-  const to = '2100-12-31';
-  const res = await apiContext.get(`/api/v1/meals?from=${from}&to=${to}`);
-  if (!res.ok()) return;
-
-  // The response is a flat array, but handle both shapes for safety
-  const data = await res.json();
-  const items: Array<{ id: string }> = Array.isArray(data) ? data : (data.items ?? []);
-
-  for (const item of items) {
-    const delRes = await apiContext.delete(`/api/v1/meals/${item.id}`);
-    if (delRes.ok()) {
-      console.log(`  Deleted meal entry: ${item.id}`);
-    } else if (delRes.status() === 404) {
-      console.log(`  Meal entry ${item.id} already gone (404)`);
-    } else {
-      console.warn(`  Failed to delete meal entry ${item.id}: ${delRes.status()}`);
-    }
-  }
-}
 
 export async function cleanupTestData() {
   const authStatePath = path.resolve('playwright/.auth/user.json');
@@ -118,44 +40,21 @@ export async function cleanupTestData() {
       },
     });
 
-    console.log('Starting permanent cleanup of test data...');
+    console.log('Purging test data via test-support endpoint...');
 
-    // --- Phase 1: Permanently delete tracked IDs (includes soft-deleted items invisible to queries) ---
-    const tracked = getTrackedIds();
-    const trackedTotal = tracked.recipes.length + tracked.products.length;
-    console.log(
-      `Found ${trackedTotal} tracked items (${tracked.recipes.length} recipes, ${tracked.products.length} products)`
-    );
+    const res = await apiContext.delete('/api/v1/test-support/purge-my-data');
 
-    // Deletion order respects FK constraints:
-    // 1. Meal entries (references recipes)
-    // 2. Recipes (safe now — no meal_entries reference them)
-    // 3. Products (safe now — no recipe_ingredients reference them)
-
-    // Step 1: Delete all meal entries
-    console.log('Deleting all meal entries...');
-    await deleteAllMealEntries(apiContext);
-
-    // Step 2: Delete all recipes (tracked + visible)
-    if (tracked.recipes.length > 0) {
-      console.log('Permanently deleting tracked recipes...');
-      for (const id of tracked.recipes) {
-        await permanentDeleteById(apiContext, '/api/v1/recipes', id, 'recipe');
-      }
+    if (res.status() === 204) {
+      console.log('  Purge succeeded (204).');
+    } else if (res.status() === 404) {
+      console.warn(
+        '  Purge endpoint returned 404 — test-support must be enabled on the backend ' +
+          '(ASPNETCORE_ENVIRONMENT=Development or E2ETestSupport:Enabled=true).',
+      );
+    } else {
+      console.warn(`  Purge failed: HTTP ${res.status()}`);
     }
-    await permanentDeleteAll(apiContext, '/api/v1/recipes', 'recipe');
 
-    // Step 3: Delete all products (tracked + visible)
-    if (tracked.products.length > 0) {
-      console.log('Permanently deleting tracked products...');
-      for (const id of tracked.products) {
-        await permanentDeleteById(apiContext, '/api/v1/products', id, 'product');
-      }
-    }
-    await permanentDeleteAll(apiContext, '/api/v1/products', 'product');
-
-    console.log('Permanent cleanup complete.');
-    clearTracker();
     await apiContext.dispose();
   } catch (error) {
     console.error('Error during cleanup:', error);

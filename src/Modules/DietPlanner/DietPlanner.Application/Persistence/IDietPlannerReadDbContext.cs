@@ -2,6 +2,7 @@ namespace DietPlanner.Application.Persistence;
 
 using DietPlanner.Domain.Aggregates;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 public interface IDietPlannerReadDbContext
 {
@@ -14,4 +15,6 @@ public interface IDietPlannerReadDbContext
     DbSet<NotificationPreferences> NotificationPreferences { get; }
     DbSet<HydrationConfig> HydrationConfigs { get; }
     DbSet<WaterIntake> WaterIntakes { get; }
+
+    DatabaseFacade Database { get; }
 }

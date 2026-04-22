@@ -2,9 +2,11 @@ namespace DietPlanner.Api;
 
 using DietPlanner.Infrastructure;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 public static class DietPlannerModule
 {
@@ -26,6 +28,20 @@ public static class DietPlannerModule
         app.MapProfileEndpoints();
         app.MapNotificationPreferencesEndpoints();
         app.MapHydrationEndpoints();
+
+        if (IsTestSupportEnabled(app))
+            app.MapTestSupportEndpoints();
+
         return app;
+    }
+
+    private static bool IsTestSupportEnabled(IEndpointRouteBuilder app)
+    {
+        var services = app.ServiceProvider;
+        var env = services.GetRequiredService<IHostEnvironment>();
+        var config = services.GetRequiredService<IConfiguration>();
+
+        return env.IsDevelopment()
+            || config.GetValue<bool>("E2ETestSupport:Enabled");
     }
 }
