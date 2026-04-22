@@ -33,12 +33,12 @@ This directory is the human-readable reference. Each spec has its own page below
 | Framework | `@playwright/test` (Chromium only) |
 | Test directory | `e2e/diet-planner/` |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
-| Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh + entity-id tracking |
+| Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh |
 | Auth | Real Authentik (`http://localhost:9000`) — credentials from `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` env vars (defaults: `E2eTestsUser` / `Password321!`) |
 | Auth state | `playwright/.auth/user.json` — saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
 | Workers | `1` — tests share backend state, must run serially |
 | Web server | Auto-starts Vite via `npm --prefix ../src/ui run dev`; reuses an existing server on `:5173` |
-| Cleanup | `shared/global-teardown.ts` deletes tracked products + recipes + all meals after the run |
+| Cleanup | `shared/global-teardown.ts` calls `DELETE /api/v1/test-support/purge-my-data` — a single hard-purge of all owned rows across every DietPlanner aggregate |
 | Reporter | `html` (`playwright-report/`) + `list` |
 
 ---
@@ -47,7 +47,16 @@ This directory is the human-readable reference. Each spec has its own page below
 
 Every test starts by trying to refresh the stored OIDC tokens via the refresh-token grant. On success it injects fresh tokens into `localStorage` before navigation (~200 ms). On failure (token revoked / Authentik restart), it falls back to a full interactive login through the Authentik UI and rewrites `playwright/.auth/user.json` for subsequent tests.
 
-The fixture also subscribes to all responses and tracks IDs of POSTed products and recipes (URLs matching `/api/v1/products` and `/api/v1/recipes`) into `playwright/.test-data.json`. The global teardown reads this file and DELETEs each tracked entity through the API. Meals are not tracked individually — teardown deletes all meals for the test user unconditionally.
+---
+
+## Backend requirement: test-support endpoint must be enabled
+
+Cleanup relies on `DELETE /api/v1/test-support/purge-my-data`, which hard-deletes every DietPlanner row owned by the caller. The endpoint is only registered when **one of** the following is true:
+
+- `ASPNETCORE_ENVIRONMENT=Development` (the default for local runs).
+- `E2ETestSupport__Enabled=true` (environment variable) or the equivalent `"E2ETestSupport": { "Enabled": true }` in `appsettings.*.json`.
+
+Running the backend in `Production` or `Staging` without the override returns **404** on that route — both a safety guard and a signal to set the flag before a CI run. Teardown logs a warning when it hits 404 so misconfiguration is obvious in the test output.
 
 ---
 

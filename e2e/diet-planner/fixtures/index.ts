@@ -1,7 +1,2 @@
-import { mergeTests } from '@playwright/test';
-
-import { test as authTest } from './auth.fixture';
-import { test as dataTest } from './data.fixture';
-
-export const test = mergeTests(authTest, dataTest);
+export { test } from './auth.fixture';
 export { expect } from '@playwright/test';
