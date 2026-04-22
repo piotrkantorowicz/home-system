@@ -25,8 +25,19 @@ test.describe('Notification Preferences', () => {
     const prefsPage = new NotificationPreferencesPage(page);
     await prefsPage.goto();
 
-    // Wait for the form to load (either from 404 → defaults or from existing prefs)
-    await page.waitForTimeout(500);
+    // Wait for the prefs GET to complete before asserting. Either a 200 (with
+    // saved values that reset() back to clean) or a 404 (form keeps defaults,
+    // also clean) settles react-hook-form's isDirty to false. Without this
+    // wait, the assertion can fire mid-load while the form is still dirty.
+    await page
+      .waitForResponse(
+        (r) =>
+          r.url().includes('/api/v1/notification-preferences') &&
+          r.request().method() === 'GET' &&
+          r.status() < 500,
+        { timeout: 5000 },
+      )
+      .catch(() => undefined);
 
     await prefsPage.expectSaveButtonDisabled();
   });
