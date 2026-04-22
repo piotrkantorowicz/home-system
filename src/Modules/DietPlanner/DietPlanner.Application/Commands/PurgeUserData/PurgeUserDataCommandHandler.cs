@@ -15,42 +15,47 @@ internal sealed class PurgeUserDataCommandHandler : ICommandHandler<PurgeUserDat
     {
         var userId = command.UserId;
 
-        // Stale-sub resilience: rows created under a previous Authentik `sub` hash
-        // (e.g. after `docker compose down -v`) carry a different user_id but still
-        // reference this user's recipes/products. Scoping deletes solely by user_id
-        // would leave those orphans behind and make their FK constraints block the
-        // parent deletes. Each of the two junction tables below is broadened to also
-        // match rows pointing at soon-to-be-deleted roots, regardless of their own
-        // user_id.
+        // Raw SQL for predictability — EF's LINQ translation of composite subqueries
+        // across IgnoreQueryFilters didn't always emit the SQL we need, and this
+        // endpoint is dev-only test plumbing where schema coupling is acceptable.
         //
-        // FK-safe order: dependents first, roots last.
-        // Recipe→Ingredients and MealScheduleConfig→Slots cascade via EF configuration.
-        // IgnoreQueryFilters covers soft-deleted rows (Product.DeletedAt / Recipe.DeletedAt).
+        // Stale-sub resilience: `docker compose down -v` regenerates Authentik `sub`
+        // hashes, so prior-session rows carry a different user_id but may still point
+        // at the current user's recipes/products. Junction deletes are broadened to
+        // match orphans regardless of their own user_id.
+        //
+        // Order: children → junctions → roots. Soft-deleted rows are included because
+        // raw SQL bypasses EF query filters.
+        await _dbContext.Database.ExecuteSqlAsync(
+            $"""
+            DELETE FROM meal_entries
+            WHERE user_id = {userId}
+               OR recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = {userId})
+            """, ct);
 
-        await _dbContext.MealEntries.IgnoreQueryFilters()
-            .Where(x => x.UserId == userId
-                     || _dbContext.Recipes.IgnoreQueryFilters()
-                         .Any(r => r.CreatedByUserId == userId && r.Id == x.RecipeId))
-            .ExecuteDeleteAsync(ct);
+        await _dbContext.Database.ExecuteSqlAsync(
+            $"DELETE FROM water_intakes WHERE user_id = {userId}", ct);
 
-        await _dbContext.WaterIntakes.IgnoreQueryFilters()
-            .Where(x => x.UserId == userId)
-            .ExecuteDeleteAsync(ct);
+        // recipe_ingredients referencing the current user's products (regardless of
+        // who owns the containing recipe) — prevents FK violation on the product delete.
+        // Ingredients belonging to user-owned recipes cascade when the recipe is deleted.
+        await _dbContext.Database.ExecuteSqlAsync(
+            $"""
+            DELETE FROM recipe_ingredients
+            WHERE product_id IN (SELECT id FROM products WHERE created_by_user_id = {userId})
+            """, ct);
 
-        await _dbContext.Recipes.IgnoreQueryFilters()
-            .Where(r => r.CreatedByUserId == userId
-                     || r.Ingredients.Any(i => _dbContext.Products.IgnoreQueryFilters()
-                         .Any(p => p.CreatedByUserId == userId && p.Id == i.ProductId)))
-            .ExecuteDeleteAsync(ct);
+        await _dbContext.Database.ExecuteSqlAsync(
+            $"DELETE FROM recipes WHERE created_by_user_id = {userId}", ct);
 
-        await _dbContext.Products.IgnoreQueryFilters()
-            .Where(p => p.CreatedByUserId == userId)
-            .ExecuteDeleteAsync(ct);
+        await _dbContext.Database.ExecuteSqlAsync(
+            $"DELETE FROM products WHERE created_by_user_id = {userId}", ct);
 
-        await _dbContext.HydrationConfigs.IgnoreQueryFilters().Where(x => x.UserId == userId).ExecuteDeleteAsync(ct);
-        await _dbContext.UserGoals.IgnoreQueryFilters().Where(x => x.UserId == userId).ExecuteDeleteAsync(ct);
-        await _dbContext.MealScheduleConfigs.IgnoreQueryFilters().Where(x => x.UserId == userId).ExecuteDeleteAsync(ct);
-        await _dbContext.NotificationPreferences.IgnoreQueryFilters().Where(x => x.UserId == userId).ExecuteDeleteAsync(ct);
-        await _dbContext.UserProfiles.IgnoreQueryFilters().Where(x => x.UserId == userId).ExecuteDeleteAsync(ct);
+        // Singletons. meal_schedule_configs cascades to meal_slots via FK.
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM hydration_configs WHERE user_id = {userId}", ct);
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM user_goals WHERE user_id = {userId}", ct);
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM meal_schedule_configs WHERE user_id = {userId}", ct);
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM notification_preferences WHERE user_id = {userId}", ct);
+        await _dbContext.Database.ExecuteSqlAsync($"DELETE FROM user_profiles WHERE user_id = {userId}", ct);
     }
 }
