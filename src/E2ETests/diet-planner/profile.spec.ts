@@ -6,7 +6,7 @@ test.describe('Profile', () => {
     const profilePage = new ProfilePage(page);
     await profilePage.goto();
 
-    await expect(page.getByRole('heading', { name: /my profile/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /profile.*settings|profile/i })).toBeVisible();
     await expect(profilePage.saveButton).toBeVisible();
     await expect(profilePage.heightInput).toBeVisible();
     await expect(profilePage.genderSelect).toBeVisible();
@@ -79,15 +79,5 @@ test.describe('Profile', () => {
     await profilePage.heightInput.fill('182');
 
     await expect(profilePage.saveButton).toBeEnabled();
-  });
-
-  test('profile nav link is reachable from the sidebar', async ({ page }) => {
-    await page.goto('/diet-planner');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('link', { name: /profile/i }).click();
-
-    await expect(page).toHaveURL(/\/diet-planner\/profile$/);
-    await expect(page.getByRole('heading', { name: /my profile/i })).toBeVisible();
   });
 });

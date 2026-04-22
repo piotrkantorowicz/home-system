@@ -1,5 +1,7 @@
 import { expect } from '@playwright/test';
 
+import { gotoProfileSection } from './profile-hub.helper';
+
 import type { Page, Locator } from '@playwright/test';
 
 export class MealSchedulePage {
@@ -16,8 +18,7 @@ export class MealSchedulePage {
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/meal-schedule');
-    await this.page.waitForLoadState('networkidle');
+    await gotoProfileSection(this.page, 'meal-schedule');
   }
 
   slotNameInput(index: number): Locator {

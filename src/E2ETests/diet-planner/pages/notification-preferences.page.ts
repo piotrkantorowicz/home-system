@@ -1,5 +1,7 @@
 import { expect } from '@playwright/test';
 
+import { gotoProfileSection } from './profile-hub.helper';
+
 import type { Page, Locator } from '@playwright/test';
 
 export class NotificationPreferencesPage {
@@ -26,16 +28,15 @@ export class NotificationPreferencesPage {
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/notification-preferences');
-    await this.page.waitForLoadState('networkidle');
+    await gotoProfileSection(this.page, 'notifications');
   }
 
   async setMealLeadTime(minutes: number) {
-    await this.mealLeadTimeInput.fill(String(minutes));
+    await this.mealLeadTimeInput.selectOption(String(minutes));
   }
 
   async setWaterInterval(minutes: number) {
-    await this.waterIntervalInput.fill(String(minutes));
+    await this.waterIntervalInput.selectOption(String(minutes));
   }
 
   async toggleMealReminder(enable: boolean) {

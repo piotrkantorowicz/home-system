@@ -93,8 +93,8 @@ test.describe('Nutrition Summary — with meal data', () => {
   });
 
   test('goal progress panel appears when nutrition goals are configured', async ({ page }) => {
-    // Configure goals
-    await page.goto('/diet-planner/goals');
+    // Configure goals (now under the profile hub — #114)
+    await page.goto('/diet-planner/profile?section=goals');
     await page.waitForLoadState('networkidle');
 
     // Alternate protein to guarantee the form is always dirty regardless of prior run state

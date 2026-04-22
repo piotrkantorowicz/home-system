@@ -4,6 +4,9 @@ test.describe('Theme Toggle', () => {
   test('clicking the theme toggle cycles through light and dark modes', async ({ page }) => {
     await page.goto('/');
 
+    // Theme toggle now lives inside the user menu dropdown — open it once
+    await page.getByRole('button', { name: /user menu/i }).click();
+
     const themeToggle = page.getByTestId('theme-toggle');
     await expect(themeToggle).toBeVisible();
 
@@ -18,13 +21,18 @@ test.describe('Theme Toggle', () => {
 
   test('selected theme persists after a page reload', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: /user menu/i }).click();
 
     const themeToggle = page.getByTestId('theme-toggle');
 
     // Cycle until dark mode is active
-    while (!(await page.locator('html').getAttribute('class'))?.includes('dark')) {
+    for (let attempts = 0; attempts < 4; attempts++) {
+      const cls = await page.locator('html').getAttribute('class');
+      if (cls?.includes('dark')) break;
       await themeToggle.click();
     }
+
+    await expect(page.locator('html')).toHaveClass(/dark/);
 
     await page.reload();
 

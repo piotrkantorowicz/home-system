@@ -26,7 +26,7 @@ export class ProfilePage {
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/profile');
+    await this.page.goto('/diet-planner/profile?section=body-stats');
     await this.page.waitForLoadState('networkidle');
   }
 
