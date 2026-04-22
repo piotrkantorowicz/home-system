@@ -95,6 +95,109 @@ public sealed class TestSupportEndpointsTests
     }
 
     [Fact]
+    public async Task DELETE_PurgeMyData_WithFullFkChain_Succeeds()
+    {
+        var userId = $"purge-fk-{Guid.NewGuid():N}";
+        using var factory = new DietPlannerWebApplicationFactory(
+            _db.ConnectionString,
+            userId: userId,
+            settings: TestSupportEnabled);
+        var client = factory.CreateClient();
+
+        // Seed: product → recipe (ingredient references the product) → meal entry (references the recipe).
+        // This exercises the RecipeIngredient→Product (Restrict) and MealEntry→Recipe (Restrict) FKs.
+        var productResp = await client.PostAsJsonAsync(
+            "/api/v1/products",
+            new CreateProductRequest("FK Oats", 389m, 16.9m, 66.3m, 6.9m, 10.6m, "g", null, null));
+        productResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var productId = Guid.Parse((await productResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        var recipeResp = await client.PostAsJsonAsync(
+            "/api/v1/recipes",
+            new CreateRecipeRequest(
+                Name: "FK Oatmeal",
+                Description: null,
+                Instructions: null,
+                Servings: 1,
+                PrepTimeMinutes: 5,
+                Ingredients: [new RecipeIngredientRequest(productId, 80m, "g")]));
+        recipeResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var recipeId = Guid.Parse((await recipeResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        var mealResp = await client.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(
+                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                MealType: "breakfast",
+                RecipeId: recipeId,
+                Servings: 1m,
+                Notes: null,
+                MealTime: null,
+                SequenceOrder: 0));
+        mealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act — purge.
+        var purgeResp = await client.DeleteAsync("/api/v1/test-support/purge-my-data");
+        var body = await purgeResp.Content.ReadAsStringAsync();
+        purgeResp.StatusCode.ShouldBe(HttpStatusCode.NoContent, body);
+
+        // Assert — everything gone, including the ingredient rows that cascade from Recipe.
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
+        (await db.MealEntries.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
+        (await db.Recipes.AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
+        (await db.Products.AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DELETE_PurgeMyData_AlsoRemovesSoftDeletedRowsAndTheirDependencies()
+    {
+        // Regression: Product and Recipe have global soft-delete query filters
+        // (DeletedAt == null). A plain ExecuteDeleteAsync on the DbSet skips filtered
+        // rows, so a previously-soft-deleted recipe would leave its ingredients
+        // pointing at a product and block the product's hard-delete.
+        var userId = $"purge-softdel-{Guid.NewGuid():N}";
+        using var factory = new DietPlannerWebApplicationFactory(
+            _db.ConnectionString,
+            userId: userId,
+            settings: TestSupportEnabled);
+        var client = factory.CreateClient();
+
+        var productResp = await client.PostAsJsonAsync(
+            "/api/v1/products",
+            new CreateProductRequest("SoftDel Oats", 389m, 16.9m, 66.3m, 6.9m, 10.6m, "g", null, null));
+        productResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var productId = Guid.Parse((await productResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        var recipeResp = await client.PostAsJsonAsync(
+            "/api/v1/recipes",
+            new CreateRecipeRequest(
+                Name: "SoftDel Oatmeal",
+                Description: null,
+                Instructions: null,
+                Servings: 1,
+                PrepTimeMinutes: 5,
+                Ingredients: [new RecipeIngredientRequest(productId, 80m, "g")]));
+        recipeResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var recipeId = Guid.Parse((await recipeResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        // Soft-delete the recipe via the regular API (sets DeletedAt, ingredient row survives).
+        var softDeleteResp = await client.DeleteAsync($"/api/v1/recipes/{recipeId}");
+        softDeleteResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Act — purge.
+        var purgeResp = await client.DeleteAsync("/api/v1/test-support/purge-my-data");
+        var body = await purgeResp.Content.ReadAsStringAsync();
+        purgeResp.StatusCode.ShouldBe(HttpStatusCode.NoContent, body);
+
+        // Assert — product, recipe (even soft-deleted), and ingredients are all gone.
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
+        (await db.Products.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
+        (await db.Recipes.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task DELETE_PurgeMyData_WhenUserHasNoData_Returns204()
     {
         using var factory = new DietPlannerWebApplicationFactory(
