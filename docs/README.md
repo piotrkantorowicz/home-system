@@ -4,7 +4,7 @@ Documentation for the home-system project.
 
 ## Index
 
-- [E2E Tests](e2e/README.md) — catalogue of every scenario covered by the Playwright suite at `src/E2ETests/`. Hub doc plus one page per spec. Use this to find existing coverage before adding new specs, or to spot gaps.
+- [E2E Tests](e2e/README.md) — catalogue of every scenario covered by the Playwright suite at `e2e/`. Hub doc plus one page per spec. Use this to find existing coverage before adding new specs, or to spot gaps.
 
 ## Conventions
 

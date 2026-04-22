@@ -84,7 +84,6 @@ npm run lint          # ESLint
 npm run type-check    # tsc --noEmit
 npm run test          # Vitest (watch)
 npm run test:coverage # Vitest (single run + coverage)
-npm run test:e2e      # Playwright
 
 # Run a single Vitest test file
 npx vitest run src/modules/diet-planner/components/ProductCard.test.tsx
@@ -92,6 +91,22 @@ npx vitest run src/modules/diet-planner/components/ProductCard.test.tsx
 # Regenerate API types from running backend
 npm run generate:api:diet-planner
 ```
+
+### E2E (Playwright)
+
+```bash
+cd e2e
+
+npm install                  # one-time
+npm run install:browsers     # one-time: chromium with system deps
+
+npm test                     # full suite (~4 min)
+npm test diet-planner/profile  # one spec
+npm run test:ui              # interactive UI mode
+npm run test:debug           # step-through debugger
+```
+
+The suite auto-starts the Vite dev server via `npm --prefix ../src/ui run dev` (reuses one already running on `:5173`). Backend + Authentik must be up — see `docs/e2e/README.md` for full prerequisites.
 
 ---
 
