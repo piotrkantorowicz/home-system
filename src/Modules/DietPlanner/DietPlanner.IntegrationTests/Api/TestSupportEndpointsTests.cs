@@ -198,6 +198,75 @@ public sealed class TestSupportEndpointsTests
     }
 
     [Fact]
+    public async Task DELETE_PurgeMyData_AlsoRemovesOrphansFromPreviousSubHashes()
+    {
+        // Regression: after `docker compose down -v` Authentik reassigns sub hashes,
+        // leaving rows with stale user_ids that still reference the current user's
+        // recipes/products. Plain UserId == currentUserId matches skip those orphans
+        // and their FK constraints block the recipe/product delete.
+        var currentUserId = $"purge-stale-current-{Guid.NewGuid():N}";
+        var staleUserId = $"purge-stale-old-{Guid.NewGuid():N}";
+
+        using var currentFactory = new DietPlannerWebApplicationFactory(
+            _db.ConnectionString,
+            userId: currentUserId,
+            settings: TestSupportEnabled);
+        using var staleFactory = new DietPlannerWebApplicationFactory(
+            _db.ConnectionString,
+            userId: staleUserId,
+            settings: TestSupportEnabled);
+        var currentClient = currentFactory.CreateClient();
+        var staleClient = staleFactory.CreateClient();
+
+        // Current user: seed product + recipe (recipe ingredient references product).
+        var productResp = await currentClient.PostAsJsonAsync(
+            "/api/v1/products",
+            new CreateProductRequest("Stale Oats", 389m, 16.9m, 66.3m, 6.9m, 10.6m, "g", null, null));
+        productResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var productId = Guid.Parse((await productResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        var recipeResp = await currentClient.PostAsJsonAsync(
+            "/api/v1/recipes",
+            new CreateRecipeRequest(
+                Name: "Stale Oatmeal",
+                Description: null,
+                Instructions: null,
+                Servings: 1,
+                PrepTimeMinutes: 5,
+                Ingredients: [new RecipeIngredientRequest(productId, 80m, "g")]));
+        recipeResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var recipeId = Guid.Parse((await recipeResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        // "Stale" user (different sub): create a meal_entry that references the
+        // current user's recipe. Mimics an orphan left over from a previous session.
+        var staleMealResp = await staleClient.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(
+                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                MealType: "breakfast",
+                RecipeId: recipeId,
+                Servings: 1m,
+                Notes: null,
+                MealTime: null,
+                SequenceOrder: 0));
+        staleMealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act — current user purges. Without the stale-sub broadening, this would 500
+        // on FK_meal_entries_recipes_recipe_id.
+        var purgeResp = await currentClient.DeleteAsync("/api/v1/test-support/purge-my-data");
+        var body = await purgeResp.Content.ReadAsStringAsync();
+        purgeResp.StatusCode.ShouldBe(HttpStatusCode.NoContent, body);
+
+        // Assert — current user's roots are gone AND the orphan meal entry was
+        // removed (so it no longer blocks further runs).
+        await using var scope = currentFactory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
+        (await db.Recipes.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == currentUserId)).ShouldBeFalse();
+        (await db.Products.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == currentUserId)).ShouldBeFalse();
+        (await db.MealEntries.IgnoreQueryFilters().AnyAsync(x => x.UserId == staleUserId)).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task DELETE_PurgeMyData_WhenUserHasNoData_Returns204()
     {
         using var factory = new DietPlannerWebApplicationFactory(
