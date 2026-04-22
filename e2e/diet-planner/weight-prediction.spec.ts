@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
 import { ProfilePage, WeightPredictionPage } from './pages';
+import { seedProfile } from './utils/seed';
 
 test.describe('Weight prediction', () => {
   test('prediction card is visible on the dashboard', async ({ page }) => {
@@ -10,8 +11,14 @@ test.describe('Weight prediction', () => {
   });
 
   test('shows prompt to enter calories when input is empty', async ({ page }) => {
+    // Seed a complete profile via API so the "enter calories" branch is
+    // reachable — without a profile the card shows the "set up profile"
+    // message instead.
     const predictionPage = new WeightPredictionPage(page);
     await predictionPage.goto();
+    await seedProfile(page);
+    await page.reload();
+    await predictionPage.waitForPageReady();
 
     // Clear the input — it may be prefilled from goals if goals are configured
     await predictionPage.calorieTargetInput.fill('');

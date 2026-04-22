@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 
 import { MealSchedulePage } from './pages';
+import { seedMealSchedule } from './utils/seed';
 
 test.describe('Meal Schedule', () => {
   test('navigates to meal schedule page', async ({ page }) => {
@@ -88,6 +89,12 @@ test.describe('Meal Schedule', () => {
 
   test('saving shows success message', async ({ page }) => {
     const schedulePage = new MealSchedulePage(page);
+    await schedulePage.goto();
+
+    // Seed a known schedule so the first input has a deterministic starting
+    // value. Without a seeded config the UI falls back to hard-coded defaults
+    // that don't always hydrate before the inputValue() read below.
+    await seedMealSchedule(page);
     await schedulePage.goto();
 
     // Toggle between two names so the form is always dirty regardless of prior run state

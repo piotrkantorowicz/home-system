@@ -79,6 +79,7 @@ Running the backend in `Production` or `Staging` without the override returns **
 - **Locators** prefer `getByRole + name` over `getByText`, and `#id` selectors on form fields when the React component renders a stable id.
 - **Web-first assertions** (`expect(locator).toHaveX(...)`) — no manual polling, no `waitForTimeout`.
 - **Test naming** is sentence case ("user can save their biometrics profile"), not Method_State_Expected.
+- **Per-test seeding** — when a test needs a specific backend state (profile exists, notification preferences set, meal schedule configured), use the helpers in `e2e/diet-planner/utils/seed.ts` (`seedProfile`, `seedNotificationPreferences`, `seedMealSchedule`) rather than driving the UI. Each call hits the API directly with the current user's token and is idempotent. Tests must not rely on state leftover from earlier runs — the teardown purge wipes everything.
 
 ---
 
