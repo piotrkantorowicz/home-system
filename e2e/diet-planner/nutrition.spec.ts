@@ -1,8 +1,7 @@
 import { format, startOfWeek } from 'date-fns';
 
 import { test, expect } from './fixtures';
-import { ImportPage } from './pages/import.page';
-import { NutritionPage } from './pages/nutrition.page';
+import { ImportPage, NutritionPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
 
 function currentWeekRange() {

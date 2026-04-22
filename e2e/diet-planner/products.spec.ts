@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ProductsPage } from './pages/products.page';
+import { ProductsPage } from './pages';
 
 test.describe('Products', () => {
   test('user can create a product with nutrition values', async ({ page }) => {

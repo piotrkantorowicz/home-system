@@ -1,7 +1,7 @@
 import { format, addDays, startOfWeek } from 'date-fns';
 
 import { test, expect } from './fixtures';
-import { ImportPage } from './pages/import.page';
+import { ImportPage } from './pages';
 
 test.describe.configure({ mode: 'serial', timeout: 120000 });
 

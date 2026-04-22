@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 
-import { MealSchedulePage } from './pages/meal-schedule.page';
+import { MealSchedulePage } from './pages';
 
 test.describe('Meal Schedule', () => {
   test('navigates to meal schedule page', async ({ page }) => {

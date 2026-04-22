@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class NutritionPage {
-  readonly page: Page;
+export class NutritionPage extends BasePage {
   readonly fromInput: Locator;
   readonly toInput: Locator;
   readonly applyButton: Locator;
@@ -13,7 +14,7 @@ export class NutritionPage {
   readonly nextButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.fromInput = page.getByTestId('from-date-picker');
     this.toInput = page.getByTestId('to-date-picker');
     this.applyButton = page.getByRole('button', { name: /apply/i });

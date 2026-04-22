@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { NotificationPreferencesPage } from './pages/notification-preferences.page';
+import { NotificationPreferencesPage } from './pages';
 
 test.describe('Notification Preferences', () => {
   test('user can navigate to notification preferences page', async ({ page }) => {

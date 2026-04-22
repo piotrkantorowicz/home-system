@@ -1,6 +1,5 @@
 import { test, expect } from './fixtures';
-import { ProductsPage } from './pages/products.page';
-import { RecipesPage } from './pages/recipes.page';
+import { ProductsPage, RecipesPage } from './pages';
 
 // Serial because later tests depend on data created in earlier ones
 test.describe.configure({ mode: 'serial' });

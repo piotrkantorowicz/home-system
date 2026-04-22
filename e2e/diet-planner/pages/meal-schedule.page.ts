@@ -1,17 +1,17 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
 import { gotoProfileSection } from './profile-hub.helper';
 
 import type { Page, Locator } from '@playwright/test';
 
-export class MealSchedulePage {
-  readonly page: Page;
+export class MealSchedulePage extends BasePage {
   readonly addSlotButton: Locator;
   readonly saveButton: Locator;
   readonly successMessage: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.addSlotButton = page.getByRole('button', { name: /add slot/i });
     this.saveButton = page.getByRole('button', { name: /save schedule/i });
     this.successMessage = page.getByText(/saved successfully/i);

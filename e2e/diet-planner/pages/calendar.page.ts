@@ -1,19 +1,20 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class CalendarPage {
-  readonly page: Page;
+export class CalendarPage extends BasePage {
   readonly mealFormDialog: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.mealFormDialog = page.getByRole('dialog');
   }
 
   async goto() {
     await this.page.goto('/diet-planner/calendar');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   // ── Week display ────────────────────────────────────────────────────────────

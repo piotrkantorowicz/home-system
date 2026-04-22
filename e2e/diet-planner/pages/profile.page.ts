@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class ProfilePage {
-  readonly page: Page;
+export class ProfilePage extends BasePage {
   readonly dateOfBirthInput: Locator;
   readonly genderSelect: Locator;
   readonly heightInput: Locator;
@@ -14,7 +15,7 @@ export class ProfilePage {
   readonly successMessage: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.dateOfBirthInput = page.getByTestId('date-of-birth-picker');
     this.genderSelect = page.getByLabel(/^gender$/i);
     this.heightInput = page.getByLabel(/height/i);
@@ -27,7 +28,7 @@ export class ProfilePage {
 
   async goto() {
     await this.page.goto('/diet-planner/profile?section=body-stats');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   /**

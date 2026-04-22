@@ -1,19 +1,20 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class HydrationPage {
-  readonly page: Page;
+export class HydrationPage extends BasePage {
   readonly progressBar: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.progressBar = page.locator('div:has(> [role="progressbar"])');
   }
 
   async goto() {
     await this.page.goto('/diet-planner/hydration');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   async expectProgressBarVisible() {
