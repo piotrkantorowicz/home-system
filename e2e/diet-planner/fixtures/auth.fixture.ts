@@ -198,13 +198,13 @@ export const test = base.extend({
   // playwright.config.ts doesn't need to know about per-worker paths.
   storageState: [
     async ({}, use, testInfo) => {
-      await use(authStatePath(testInfo.workerIndex));
+      await use(authStatePath(testInfo.parallelIndex));
     },
     { scope: 'test' },
   ],
 
   page: async ({ page }, use, testInfo) => {
-    const authFile = authStatePath(testInfo.workerIndex);
+    const authFile = authStatePath(testInfo.parallelIndex);
 
     // Before each test, try to refresh the OIDC access token so the test
     // doesn't fail due to token expiry during a long suite run.
@@ -224,9 +224,9 @@ export const test = base.extend({
       );
     } else {
       console.warn(
-        `[auth][worker ${testInfo.workerIndex}] Token refresh failed — falling back to full login`,
+        `[auth][worker ${testInfo.parallelIndex}] Token refresh failed — falling back to full login`,
       );
-      await performLogin(page, authFile, testInfo.workerIndex);
+      await performLogin(page, authFile, testInfo.parallelIndex);
     }
 
     await use(page);
