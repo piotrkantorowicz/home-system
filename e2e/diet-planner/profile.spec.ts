@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ProfilePage } from './pages/profile.page';
+import { ProfilePage } from './pages';
 
 test.describe('Profile', () => {
   test('profile page loads and shows the form', async ({ page }) => {

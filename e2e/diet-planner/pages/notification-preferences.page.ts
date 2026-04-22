@@ -1,11 +1,11 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
 import { gotoProfileSection } from './profile-hub.helper';
 
 import type { Page, Locator } from '@playwright/test';
 
-export class NotificationPreferencesPage {
-  readonly page: Page;
+export class NotificationPreferencesPage extends BasePage {
   readonly mealReminderCheckbox: Locator;
   readonly mealLeadTimeInput: Locator;
   readonly waterReminderCheckbox: Locator;
@@ -16,7 +16,7 @@ export class NotificationPreferencesPage {
   readonly successMessage: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.mealReminderCheckbox = page.locator('#mealReminderEnabled');
     this.mealLeadTimeInput = page.locator('#mealReminderLeadTimeMinutes');
     this.waterReminderCheckbox = page.locator('#waterReminderEnabled');

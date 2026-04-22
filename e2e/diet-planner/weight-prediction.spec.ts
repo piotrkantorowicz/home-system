@@ -1,6 +1,5 @@
 import { test, expect } from './fixtures';
-import { ProfilePage } from './pages/profile.page';
-import { WeightPredictionPage } from './pages/weight-prediction.page';
+import { ProfilePage, WeightPredictionPage } from './pages';
 
 test.describe('Weight prediction', () => {
   test('prediction card is visible on the dashboard', async ({ page }) => {

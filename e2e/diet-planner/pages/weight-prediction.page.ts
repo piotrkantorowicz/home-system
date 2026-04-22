@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class WeightPredictionPage {
-  readonly page: Page;
+export class WeightPredictionPage extends BasePage {
   readonly calorieTargetInput: Locator;
   readonly bmrValue: Locator;
   readonly tdeeValue: Locator;
@@ -16,7 +17,7 @@ export class WeightPredictionPage {
   readonly incompleteProfileMessage: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.calorieTargetInput = page.getByLabel(/daily calorie target/i);
 
     // Stat card values — locate the label <p>, navigate up to the container div,
@@ -63,7 +64,7 @@ export class WeightPredictionPage {
   /** Navigate to the Dashboard where the prediction card now lives. */
   async goto() {
     await this.page.goto('/diet-planner');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   /**

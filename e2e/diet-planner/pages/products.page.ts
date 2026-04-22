@@ -1,21 +1,22 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class ProductsPage {
-  readonly page: Page;
+export class ProductsPage extends BasePage {
   readonly createButton: Locator;
   readonly searchInput: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.createButton = page.getByRole('link', { name: /add product/i });
     this.searchInput = page.getByPlaceholder(/search/i);
   }
 
   async goto() {
     await this.page.goto('/diet-planner/products');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   // ── Create ──────────────────────────────────────────────────────────────────

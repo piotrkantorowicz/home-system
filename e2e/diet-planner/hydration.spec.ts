@@ -1,6 +1,5 @@
 import { test, expect } from './fixtures';
-import { HydrationPage } from './pages/hydration.page';
-import { HydrationSettingsPage } from './pages/hydration-settings.page';
+import { HydrationPage, HydrationSettingsPage } from './pages';
 
 test.describe('Hydration', () => {
   test('hydration page loads and shows the heading', async ({ page }) => {

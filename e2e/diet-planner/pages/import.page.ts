@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class ImportPage {
-  readonly page: Page;
+export class ImportPage extends BasePage {
   readonly jsonInput: Locator;
   readonly continueButton: Locator;
   readonly validateButton: Locator;
@@ -11,7 +12,7 @@ export class ImportPage {
   readonly loadSampleButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.jsonInput = page.getByLabel(/json/i);
     this.continueButton = page.getByRole('button', { name: /continue/i });
     this.validateButton = page.getByRole('button', { name: /validate data|re-validate/i });
@@ -21,7 +22,7 @@ export class ImportPage {
 
   async goto() {
     await this.page.goto('/diet-planner/import');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   async loadSample() {

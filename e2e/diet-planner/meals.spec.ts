@@ -1,6 +1,5 @@
 import { test, expect } from './fixtures';
-import { CalendarPage } from './pages/calendar.page';
-import { ImportPage } from './pages/import.page';
+import { CalendarPage, ImportPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
 
 test.describe.configure({ mode: 'serial', timeout: 180000 });

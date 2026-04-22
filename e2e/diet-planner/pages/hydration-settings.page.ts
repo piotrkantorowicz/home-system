@@ -1,15 +1,15 @@
+import { BasePage } from './BasePage';
 import { gotoProfileSection } from './profile-hub.helper';
 
 import type { Page, Locator } from '@playwright/test';
 
-export class HydrationSettingsPage {
-  readonly page: Page;
+export class HydrationSettingsPage extends BasePage {
   readonly dailyTargetInput: Locator;
   readonly glassSizeInput: Locator;
   readonly saveSettingsButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.dailyTargetInput = page.getByLabel(/daily.*target/i);
     this.glassSizeInput = page.getByLabel(/glass size/i);
     this.saveSettingsButton = page.getByRole('button', { name: /save settings/i });

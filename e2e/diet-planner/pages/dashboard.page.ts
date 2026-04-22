@@ -1,9 +1,10 @@
 import { expect } from '@playwright/test';
 
+import { BasePage } from './BasePage';
+
 import type { Page, Locator } from '@playwright/test';
 
-export class DashboardPage {
-  readonly page: Page;
+export class DashboardPage extends BasePage {
   readonly productCount: Locator;
   readonly recipeCount: Locator;
   readonly calendarCount: Locator;
@@ -12,7 +13,7 @@ export class DashboardPage {
   readonly calendarCard: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     // The dashboard renders stat cards with data-testid attributes
     this.productCount = page.getByTestId('product-count');
     this.recipeCount = page.getByTestId('recipe-count');
@@ -24,7 +25,7 @@ export class DashboardPage {
 
   async goto() {
     await this.page.goto('/diet-planner');
-    await this.page.waitForLoadState('networkidle');
+    await this.waitForPageReady();
   }
 
   async expectStatsLoaded() {

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { DashboardPage } from './pages/dashboard.page';
+import { DashboardPage } from './pages';
 
 test.describe('Dashboard', () => {
   test('all three stat cards are visible on load', async ({ page }) => {
