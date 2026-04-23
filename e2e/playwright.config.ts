@@ -23,6 +23,13 @@ export default defineConfig({
   globalTeardown: './shared/global-teardown.ts',
   timeout: 60000,
 
+  // `expect(...).toBeVisible()` and friends use this timeout, distinct from
+  // actionTimeout. Default is 5s, which is too tight on CI when a page is
+  // waiting for 2+ API calls AND Vite's first-time lazy-chunk compile.
+  expect: {
+    timeout: isCi ? 15_000 : 5_000,
+  },
+
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
