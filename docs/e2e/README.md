@@ -34,7 +34,7 @@ This directory is the human-readable reference. Each spec has its own page below
 | Test directory | `e2e/diet-planner/` |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
 | Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh and per-worker `storageState` resolution |
-| Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), shared password `Password321!`. Override per worker with `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` (or a shared `TEST_USER_PASSWORD`) |
+| Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), password sourced from `TEST_USER_PASSWORD` in `e2e/.env` (must match `E2E_USER_PASSWORD` in `infrastructure/.env`). Per-worker overrides available via `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` |
 | Auth state | `playwright/.auth/user-${workerIndex}.json` — one file per worker, saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
 | Workers | `4` — each worker owns a distinct Authentik user so tests run in parallel without cross-worker data contention |
 | Web server | Auto-starts Vite via `npm --prefix ../src/ui run dev`; reuses an existing server on `:5173` |
@@ -128,14 +128,26 @@ npm run test:debug                 # step-through debugger
 
 ### Environment variables
 
-Create `e2e/.env` (gitignored). The suite reads:
+Two files are involved — both gitignored, both derived from their `.env.example` sibling. The same test-user password must appear in both so Authentik provisions the accounts with the value Playwright logs in with.
+
+**`infrastructure/.env`** (read by Docker Compose when bringing Authentik up):
+
+```env
+E2E_USER_PASSWORD=<shared password for E2eWorker0..E2eWorker3>
+```
+
+**`e2e/.env`** (auto-loaded by `playwright.config.ts` via `dotenv`):
 
 ```env
 PLAYWRIGHT_BASE_URL=http://localhost:5173
 API_BASE_URL=http://localhost:5000
-TEST_USER_EMAIL=E2eTestsUser
-TEST_USER_PASSWORD=Password321!
+TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
+# Optional per-worker overrides:
+# TEST_USER_EMAIL_<n>=E2eWorker<n>
+# TEST_USER_PASSWORD_<n>=<per-worker password>
 ```
+
+`TEST_USER_PASSWORD` (or every `TEST_USER_PASSWORD_<n>`) is **required** — the auth helpers throw a clear error rather than falling back to a committed default.
 
 ---
 

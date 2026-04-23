@@ -1,26 +1,10 @@
 import { test as setup, expect } from '@playwright/test';
 
-import { authStatePath } from './auth-paths';
+import { authStatePath, credentialsFor } from './auth-paths';
 
 import type { Page } from '@playwright/test';
 
 const WORKER_COUNT = 4;
-
-/**
- * One Authentik user per Playwright worker. The blueprint in
- * `infrastructure/authentik/blueprints/home-system.yaml` provisions `E2eWorker0`
- * through `E2eWorker3` with a shared password. Override any username via the
- * matching `TEST_USER_EMAIL_<n>` env var (same for password).
- */
-function credentialsFor(workerIndex: number) {
-  const username =
-    process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
-  const password =
-    process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
-    process.env['TEST_USER_PASSWORD'] ??
-    'Password321!';
-  return { username, password };
-}
 
 async function loginOnce(page: Page, username: string, password: string) {
   await page.goto('/');

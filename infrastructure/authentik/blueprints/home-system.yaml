@@ -42,8 +42,9 @@ entries:
 
   # ── E2E Test Users ───────────────────────────────────────────────────────────
   # Used exclusively by Playwright E2E tests. One user per Playwright worker so
-  # the suite can run in parallel with full per-user data isolation. Credentials
-  # match e2e/shared/auth.setup.ts.
+  # the suite can run in parallel with full per-user data isolation. Usernames
+  # match e2e/shared/auth.setup.ts; the shared password is read from the
+  # E2E_USER_PASSWORD environment variable (see infrastructure/.env.example).
   #
   # The single legacy `E2eTestsUser` is retired via `state: absent`. Keep the
   # entry for one release so Authentik removes the row cleanly on next startup,
@@ -61,7 +62,7 @@ entries:
       name: E2E Worker 0
       email: e2e-worker-0@test.local
       is_active: true
-      password: "Password321!"
+      password: !Env E2E_USER_PASSWORD
 
   - model: authentik_core.user
     state: present
@@ -71,7 +72,7 @@ entries:
       name: E2E Worker 1
       email: e2e-worker-1@test.local
       is_active: true
-      password: "Password321!"
+      password: !Env E2E_USER_PASSWORD
 
   - model: authentik_core.user
     state: present
@@ -81,7 +82,7 @@ entries:
       name: E2E Worker 2
       email: e2e-worker-2@test.local
       is_active: true
-      password: "Password321!"
+      password: !Env E2E_USER_PASSWORD
 
   - model: authentik_core.user
     state: present
@@ -91,7 +92,7 @@ entries:
       name: E2E Worker 3
       email: e2e-worker-3@test.local
       is_active: true
-      password: "Password321!"
+      password: !Env E2E_USER_PASSWORD
 
   # ── Application ──────────────────────────────────────────────────────────────
   - model: authentik_core.application
