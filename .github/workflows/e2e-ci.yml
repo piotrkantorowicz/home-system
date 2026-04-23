@@ -1,0 +1,175 @@
+name: E2E
+
+# Phase 1 — dry-run only. Manual dispatch + push to this feature branch so we
+# can measure cold-boot time and tune timeouts before gating PRs in phase 2.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ci/141-e2e-workflow
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright (chromium, 4 workers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Generate throwaway secrets for this run ─────────────────────────────
+      # Nothing is persisted — every boot starts from a clean Authentik DB with
+      # fresh passwords. The E2E_USER_PASSWORD is the one both sides must agree
+      # on (Authentik blueprint + Playwright auth fixture).
+      - name: Generate run secrets
+        id: secrets
+        run: |
+          {
+            echo "authentik_secret_key=$(openssl rand -base64 48)"
+            echo "authentik_db_password=$(openssl rand -hex 16)"
+            echo "authentik_redis_password=$(openssl rand -hex 16)"
+            echo "authentik_bootstrap_password=$(openssl rand -hex 16)"
+            echo "authentik_bootstrap_token=$(openssl rand -hex 32)"
+            echo "dietplanner_db_password=$(openssl rand -hex 16)"
+            echo "e2e_user_password=Test-$(openssl rand -hex 8)!"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Write infrastructure/.env
+        run: |
+          cat > infrastructure/.env <<EOF
+          AUTHENTIK_SECRET_KEY=${{ steps.secrets.outputs.authentik_secret_key }}
+          AUTHENTIK_DB_PASSWORD=${{ steps.secrets.outputs.authentik_db_password }}
+          AUTHENTIK_REDIS_PASSWORD=${{ steps.secrets.outputs.authentik_redis_password }}
+          DIETPLANNER_DB_PASSWORD=${{ steps.secrets.outputs.dietplanner_db_password }}
+          AUTHENTIK_BOOTSTRAP_PASSWORD=${{ steps.secrets.outputs.authentik_bootstrap_password }}
+          AUTHENTIK_BOOTSTRAP_EMAIL=admin@home-system.local
+          AUTHENTIK_BOOTSTRAP_TOKEN=${{ steps.secrets.outputs.authentik_bootstrap_token }}
+          E2E_USER_PASSWORD=${{ steps.secrets.outputs.e2e_user_password }}
+          EOF
+
+      # ── Boot infra in the background; prep dependencies in parallel ────────
+      - name: Start Authentik + Postgres
+        working-directory: infrastructure
+        run: docker compose --profile diet-planner up -d
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          # Two lockfiles — one for the e2e harness, one for the Vite frontend
+          # that Playwright's `webServer` block boots automatically.
+          cache-dependency-path: |
+            e2e/package-lock.json
+            src/ui/package-lock.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Restore + build backend
+        run: dotnet build HomeSystem.slnx --configuration Release
+
+      - name: Install frontend deps (Playwright boots Vite via webServer)
+        working-directory: src/ui
+        run: npm ci
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: npm ci
+
+      - name: Install Playwright chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps only
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: e2e
+        run: npx playwright install-deps chromium
+
+      # ── Synchronize: wait for Authentik before starting the backend ────────
+      - name: Wait for Authentik (blueprint applied)
+        env:
+          AUTHENTIK_BOOTSTRAP_TOKEN: ${{ steps.secrets.outputs.authentik_bootstrap_token }}
+        run: ./scripts/ci/wait-for-authentik.sh 240
+
+      - name: Start backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          E2ETestSupport__Enabled: 'true'
+        run: |
+          nohup dotnet run \
+            --no-build \
+            --configuration Release \
+            --project src/Apis/HomeSystem.REST \
+            > backend.log 2>&1 &
+          echo $! > backend.pid
+
+      - name: Wait for backend /health
+        run: ./scripts/ci/wait-for-backend.sh 180
+
+      # ── Run the suite ──────────────────────────────────────────────────────
+      - name: Write e2e/.env
+        working-directory: e2e
+        run: |
+          cat > .env <<EOF
+          PLAYWRIGHT_BASE_URL=http://localhost:5173
+          API_BASE_URL=http://localhost:5000
+          TEST_USER_PASSWORD=${{ steps.secrets.outputs.e2e_user_password }}
+          EOF
+
+      - name: Playwright test
+        working-directory: e2e
+        env:
+          CI: 'true'
+        run: npx playwright test
+
+      # ── Post-run diagnostics (always, to help tuning during phase 1) ───────
+      - name: Collect container logs
+        if: always()
+        run: |
+          mkdir -p ci-logs
+          docker logs authentik-server > ci-logs/authentik-server.log 2>&1 || true
+          docker logs authentik-worker > ci-logs/authentik-worker.log 2>&1 || true
+          docker logs authentik-db > ci-logs/authentik-db.log 2>&1 || true
+          docker logs dietplanner-db > ci-logs/dietplanner-db.log 2>&1 || true
+          cp backend.log ci-logs/backend.log 2>/dev/null || true
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-diagnostics-${{ github.run_attempt }}
+          path: |
+            ci-logs/
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 7
+
+      - name: Stop backend
+        if: always()
+        run: |
+          if [[ -f backend.pid ]]; then
+            kill "$(cat backend.pid)" 2>/dev/null || true
+          fi
+
+      - name: Tear down docker
+        if: always()
+        working-directory: infrastructure
+        run: docker compose --profile diet-planner down -v
