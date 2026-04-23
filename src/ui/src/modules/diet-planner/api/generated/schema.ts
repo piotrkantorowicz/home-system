@@ -424,6 +424,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/weight-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's weight history
+         * @description Returns weight entries ordered by date ascending, optionally filtered by date range.
+         */
+        get: operations["GetWeightEntries"];
+        put?: never;
+        /**
+         * Log a weight entry for a specific date
+         * @description Creates a new entry, or replaces the existing entry for the same date. Always updates the user's current weight.
+         */
+        post: operations["LogWeightEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/weight-entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a weight entry
+         * @description Deletes the entry and recomputes the user's current weight from the latest remaining entry (or null if none).
+         */
+        delete: operations["DeleteWeightEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-support/purge-my-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Hard-delete all data owned by the current user
+         * @description Test-only endpoint. Removes every row owned by the authenticated user across all DietPlanner aggregates (meals, recipes, products, goals, profile, hydration, notifications, schedules). Only registered when the environment is Development or E2ETestSupport:Enabled is true.
+         */
+        delete: operations["PurgeMyData"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -630,6 +694,17 @@ export interface components {
             /** Format: int32 */
             amountMl: number | string;
             note: null | string;
+        };
+        LogWeightEntryRequest: {
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            weightKg: number | string;
+        };
+        LogWeightEntryResponse: {
+            /** Format: uuid */
+            id: string;
+            created: boolean;
         };
         MealEntryDto: {
             /** Format: uuid */
@@ -929,6 +1004,16 @@ export interface components {
             /** Format: int32 */
             totalMl: number | string;
             entries: components["schemas"]["WaterIntakeEntryDto"][];
+        };
+        WeightEntryDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            date: string;
+            /** Format: double */
+            weightKg: number | string;
+            /** Format: date-time */
+            createdAt: string;
         };
         WeightPredictionDto: {
             /** Format: double */
@@ -2204,6 +2289,151 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetWeightEntries: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeightEntryDto"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LogWeightEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogWeightEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogWeightEntryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DeleteWeightEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PurgeMyData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

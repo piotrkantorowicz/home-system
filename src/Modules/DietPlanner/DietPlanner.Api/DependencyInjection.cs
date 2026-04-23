@@ -28,6 +28,7 @@ public static class DietPlannerModule
         app.MapProfileEndpoints();
         app.MapNotificationPreferencesEndpoints();
         app.MapHydrationEndpoints();
+        app.MapWeightEntryEndpoints();
 
         if (IsTestSupportEnabled(app))
             app.MapTestSupportEndpoints();

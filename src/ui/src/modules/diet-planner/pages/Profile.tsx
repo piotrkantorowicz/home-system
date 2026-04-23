@@ -4,19 +4,34 @@ import {
   MealScheduleForm,
   HydrationConfigForm,
   NotificationPrefsForm,
+  WeightHistorySection,
 } from '@modules/diet-planner/components/settings';
 import { cn } from '@shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
-type SectionId = 'body-stats' | 'goals' | 'meal-schedule' | 'hydration' | 'notifications';
+type SectionId =
+  | 'body-stats'
+  | 'weight-history'
+  | 'goals'
+  | 'meal-schedule'
+  | 'hydration'
+  | 'notifications';
 
 function isValidSection(s: string | null): s is SectionId {
-  return ['body-stats', 'goals', 'meal-schedule', 'hydration', 'notifications'].includes(s ?? '');
+  return [
+    'body-stats',
+    'weight-history',
+    'goals',
+    'meal-schedule',
+    'hydration',
+    'notifications',
+  ].includes(s ?? '');
 }
 
 const SECTION_COMPONENTS: Record<SectionId, React.ComponentType<{ onSuccess?: () => void }>> = {
   'body-stats': BodyStatsForm,
+  'weight-history': WeightHistorySection,
   goals: GoalsForm,
   'meal-schedule': MealScheduleForm,
   hydration: HydrationConfigForm,
@@ -36,7 +51,10 @@ export default function Profile() {
   const sidebarGroups = [
     {
       label: t('profile.sidebar.personal'),
-      items: [{ id: 'body-stats' as SectionId, label: t('profile.sidebar.body_stats') }],
+      items: [
+        { id: 'body-stats' as SectionId, label: t('profile.sidebar.body_stats') },
+        { id: 'weight-history' as SectionId, label: t('profile.sidebar.weight_history') },
+      ],
     },
     {
       label: t('profile.sidebar.diet_planner'),

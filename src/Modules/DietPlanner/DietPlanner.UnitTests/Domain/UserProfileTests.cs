@@ -80,6 +80,30 @@ public sealed class UserProfileTests
     }
 
     [Fact]
+    public void UpdateCurrentWeight_WithValue_SetsWeightAndStampsUpdatedAt()
+    {
+        UserProfile profile = UserProfile.Create(
+            UserProfileId.New(), "user-1", null, null, null, 80m, null, null);
+
+        profile.UpdateCurrentWeight(82.5m);
+
+        profile.CurrentWeightKg.ShouldBe(82.5m);
+        profile.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UpdateCurrentWeight_WithNull_ClearsWeight()
+    {
+        UserProfile profile = UserProfile.Create(
+            UserProfileId.New(), "user-1", null, null, null, 80m, null, null);
+
+        profile.UpdateCurrentWeight(null);
+
+        profile.CurrentWeightKg.ShouldBeNull();
+        profile.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void Update_WithNullValues_ClearsFields()
     {
         UserProfile profile = UserProfile.Create(

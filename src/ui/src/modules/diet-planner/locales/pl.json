@@ -314,7 +314,8 @@
       "meal_schedule": "Plan posiłków",
       "hydration": "Nawodnienie",
       "notifications": "Powiadomienia",
-      "alerts": "Alerty"
+      "alerts": "Alerty",
+      "weight_history": "Historia wagi"
     },
     "personal_header": "Dane Osobowe",
     "personal_desc": "Twoje podstawowe dane osobowe",
@@ -509,5 +510,57 @@
     "prep_time_summary": "Czas Przygotowania:",
     "create_btn": "Utwórz Przepis",
     "update_btn": "Aktualizuj Przepis"
+  },
+  "weightHistory": {
+    "log_header": "Zarejestruj wagę",
+    "log_desc": "Zapisz swoją wagę dla dowolnej przeszłej daty. Ponowny wpis na ten sam dzień zastępuje istniejący.",
+    "log_success": "Waga zapisana",
+    "log_error": "Nie udało się zapisać wagi",
+    "delete_success": "Wpis usunięty",
+    "delete_error": "Nie udało się usunąć wpisu",
+    "delete_aria": "Usuń wpis",
+    "delete_confirm_title": "Usunąć wpis wagi?",
+    "delete_confirm_body": "Spowoduje to trwałe usunięcie wpisu i przeliczenie aktualnej wagi z pozostałych wpisów.",
+    "chart_header": "Trend wagi",
+    "chart_desc": "Twoja historia wagi w wybranym okresie.",
+    "entries_header": "Ostatnie wpisy",
+    "range_label": "Zakres",
+    "show_trend": "Pokaż linię trendu",
+    "range": {
+      "30d": "30 dni",
+      "90d": "90 dni",
+      "1y": "1 rok",
+      "all": "Wszystko"
+    },
+    "form": {
+      "date": "Data",
+      "date_placeholder": "Wybierz datę",
+      "weight_kg": "Waga (kg)",
+      "submit": "Zapisz wagę"
+    },
+    "chart": {
+      "actual": "Waga",
+      "trend": "Trend",
+      "empty": "Zarejestruj wagę, aby zobaczyć trend."
+    },
+    "progress": {
+      "current": "Aktualna waga",
+      "kg_remaining": "kg do celu",
+      "complete": "ukończono",
+      "direction": {
+        "losing": "Tracisz",
+        "gaining": "Przybierasz",
+        "maintaining": "Utrzymujesz"
+      }
+    },
+    "widget": {
+      "title": "Trend wagi",
+      "subtitle": "Ostatnie {{days}} dni",
+      "empty": "Brak wpisów wagi w ostatnich 30 dniach.",
+      "log": "Zapisz wagę",
+      "view_history": "Zobacz historię",
+      "log_dialog_title": "Zapisz wagę",
+      "log_dialog_desc": "Zapisz swoją wagę dla dowolnej przeszłej daty."
+    }
   }
 }

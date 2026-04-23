@@ -59,4 +59,10 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
         ActivityLevel = activityLevel;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateCurrentWeight(decimal? weightKg)
+    {
+        CurrentWeightKg = weightKg;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
