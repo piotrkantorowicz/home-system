@@ -8,6 +8,7 @@ import { useProducts } from '@modules/diet-planner/api/hooks/useProducts';
 import { useProfile } from '@modules/diet-planner/api/hooks/useProfile';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { WeightPredictionCard } from '@modules/diet-planner/components/WeightPredictionCard';
+import { WeightTrendWidget } from '@modules/diet-planner/components/WeightTrendWidget';
 import { GoalsForm } from '@modules/diet-planner/components/settings';
 import {
   Card,
@@ -284,9 +285,13 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Weight Prediction */}
-      <div className="animate-fade-in-up mb-10" style={{ animationDelay: '150ms' }}>
+      {/* Weight tracking — prediction + trend */}
+      <div
+        className="animate-fade-in-up mb-10 grid gap-5 lg:grid-cols-2"
+        style={{ animationDelay: '150ms' }}
+      >
         <WeightPredictionCard hasProfile={!!profile} goalCalories={goalsData?.dailyCalorieTarget} />
+        <WeightTrendWidget />
       </div>
 
       <Sheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen}>

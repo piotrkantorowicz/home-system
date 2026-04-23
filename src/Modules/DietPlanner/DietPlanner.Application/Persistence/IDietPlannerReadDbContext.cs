@@ -15,6 +15,7 @@ public interface IDietPlannerReadDbContext
     DbSet<NotificationPreferences> NotificationPreferences { get; }
     DbSet<HydrationConfig> HydrationConfigs { get; }
     DbSet<WaterIntake> WaterIntakes { get; }
+    DbSet<WeightEntry> WeightEntries { get; }
 
     DatabaseFacade Database { get; }
 }

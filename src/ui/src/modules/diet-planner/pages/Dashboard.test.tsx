@@ -31,6 +31,10 @@ vi.mock('@modules/diet-planner/components/WeightPredictionCard', () => ({
   WeightPredictionCard: () => null,
 }));
 
+vi.mock('@modules/diet-planner/components/WeightTrendWidget', () => ({
+  WeightTrendWidget: () => null,
+}));
+
 describe('Dashboard goals CTA', () => {
   it('shows goals CTA when no goals are configured', async () => {
     const Dashboard = (await import('./Dashboard')).default;

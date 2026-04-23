@@ -1,0 +1,18 @@
+namespace DietPlanner.Application.Commands.LogWeightEntry;
+
+using Shared.Abstractions.CQRS;
+
+internal sealed class LogWeightEntryCommandValidator : ICommandValidator<LogWeightEntryCommand>
+{
+    public IEnumerable<ValidationError> Validate(LogWeightEntryCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.UserId))
+            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+
+        if (command.WeightKg <= 0 || command.WeightKg > 999)
+            yield return new ValidationError(nameof(command.WeightKg), "WeightKg must be between 0 and 999.");
+
+        if (command.Date > DateOnly.FromDateTime(DateTime.UtcNow))
+            yield return new ValidationError(nameof(command.Date), "Date cannot be in the future.");
+    }
+}

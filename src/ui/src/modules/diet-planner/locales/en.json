@@ -322,7 +322,8 @@
       "meal_schedule": "Meal Schedule",
       "hydration": "Hydration",
       "notifications": "Notifications",
-      "alerts": "Alerts"
+      "alerts": "Alerts",
+      "weight_history": "Weight History"
     },
     "personal_header": "Personal Information",
     "personal_desc": "Your basic personal details",
@@ -533,5 +534,57 @@
     "create_error": "Failed to create recipe. Check your inputs and try again.",
     "update_success": "Recipe updated successfully",
     "update_error": "Failed to update recipe. Check your inputs and try again."
+  },
+  "weightHistory": {
+    "log_header": "Log a weight entry",
+    "log_desc": "Record your weight for any past date. Logging the same date again replaces the entry.",
+    "log_success": "Weight logged",
+    "log_error": "Failed to log weight",
+    "delete_success": "Entry removed",
+    "delete_error": "Failed to delete entry",
+    "delete_aria": "Delete entry",
+    "delete_confirm_title": "Delete weight entry?",
+    "delete_confirm_body": "This will permanently remove this entry and recalculate your current weight from the remaining entries.",
+    "chart_header": "Weight trend",
+    "chart_desc": "Your weight history over the selected period.",
+    "entries_header": "Recent entries",
+    "range_label": "Range",
+    "show_trend": "Show trend line",
+    "range": {
+      "30d": "30 days",
+      "90d": "90 days",
+      "1y": "1 year",
+      "all": "All time"
+    },
+    "form": {
+      "date": "Date",
+      "date_placeholder": "Pick a date",
+      "weight_kg": "Weight (kg)",
+      "submit": "Log weight"
+    },
+    "chart": {
+      "actual": "Weight",
+      "trend": "Trend",
+      "empty": "Log a weight entry to see your trend."
+    },
+    "progress": {
+      "current": "Current weight",
+      "kg_remaining": "kg to target",
+      "complete": "complete",
+      "direction": {
+        "losing": "Losing",
+        "gaining": "Gaining",
+        "maintaining": "Maintaining"
+      }
+    },
+    "widget": {
+      "title": "Weight trend",
+      "subtitle": "Last {{days}} days",
+      "empty": "No weight logged yet for the last 30 days.",
+      "log": "Log weight",
+      "view_history": "View history",
+      "log_dialog_title": "Log weight",
+      "log_dialog_desc": "Record your weight for any past date."
+    }
   }
 }

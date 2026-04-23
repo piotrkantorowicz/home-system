@@ -31,6 +31,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<INotificationPreferencesRepository, NotificationPreferencesRepository>();
         services.AddScoped<IHydrationConfigRepository, HydrationConfigRepository>();
         services.AddScoped<IWaterIntakeRepository, WaterIntakeRepository>();
+        services.AddScoped<IWeightEntryRepository, WeightEntryRepository>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();

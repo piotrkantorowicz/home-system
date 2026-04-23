@@ -41,4 +41,8 @@ export const queryKeys = {
     detail: (dailyCalorieTarget: number | null | undefined) =>
       ['weight-prediction', dailyCalorieTarget] as const,
   },
+  weightEntries: {
+    all: () => ['weight-entries'] as const,
+    list: (range: { from?: string; to?: string }) => ['weight-entries', range] as const,
+  },
 } as const;

@@ -323,6 +323,36 @@ export const recipeHandlers = [
   }),
 ];
 
+export const weightEntryHandlers = [
+  http.get(`${BASE}/api/v1/weight-entries`, () => {
+    return HttpResponse.json([
+      {
+        id: '77777777-7777-7777-7777-777777777777',
+        date: '2024-01-01',
+        weightKg: 80,
+        createdAt: '2024-01-01T08:00:00Z',
+      },
+      {
+        id: '88888888-8888-8888-8888-888888888888',
+        date: '2024-01-02',
+        weightKg: 79.5,
+        createdAt: '2024-01-02T08:00:00Z',
+      },
+    ]);
+  }),
+
+  http.post(`${BASE}/api/v1/weight-entries`, () => {
+    return HttpResponse.json(
+      { id: '99999999-9999-9999-9999-999999999999', created: true },
+      { status: 201 },
+    );
+  }),
+
+  http.delete(`${BASE}/api/v1/weight-entries/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const handlers = [
   ...productHandlers,
   ...importHandlers,
@@ -333,4 +363,5 @@ export const handlers = [
   ...notificationPreferencesHandlers,
   ...hydrationHandlers,
   ...recipeHandlers,
+  ...weightEntryHandlers,
 ];
