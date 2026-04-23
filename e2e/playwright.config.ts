@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config as loadDotenv } from 'dotenv';
+
+// Load `e2e/.env` before the test runner reads any process.env values.
+// TEST_USER_PASSWORD is required — see e2e/.env.example.
+loadDotenv();
 
 export default defineConfig({
   testDir: '.',

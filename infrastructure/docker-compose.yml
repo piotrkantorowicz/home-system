@@ -9,6 +9,9 @@ x-authentik-env: &authentik-env
   AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
   AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL}
   AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN}
+  # Exposed to the blueprint runtime (!Env E2E_USER_PASSWORD) so the
+  # per-worker E2E users are provisioned without a hard-coded password.
+  E2E_USER_PASSWORD: ${E2E_USER_PASSWORD}
 
 x-authentik-volumes: &authentik-volumes
   - authentik_media:/media

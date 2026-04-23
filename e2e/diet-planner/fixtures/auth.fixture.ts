@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import { test as base, expect } from '@playwright/test';
 
-import { authStatePath } from '../../shared/auth-paths';
+import { authStatePath, credentialsFor } from '../../shared/auth-paths';
 
 import type { Page } from '@playwright/test';
 
@@ -38,16 +38,6 @@ interface StorageState {
     origin: string;
     localStorage: Array<{ name: string; value: string }>;
   }>;
-}
-
-function credentialsFor(workerIndex: number) {
-  const username =
-    process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
-  const password =
-    process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
-    process.env['TEST_USER_PASSWORD'] ??
-    'Password321!';
-  return { username, password };
 }
 
 function readOidcEntry(
