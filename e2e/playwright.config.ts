@@ -2,17 +2,23 @@ import { defineConfig, devices } from '@playwright/test';
 import { config as loadDotenv } from 'dotenv';
 
 // Load `e2e/.env` before the test runner reads any process.env values.
-// TEST_USER_PASSWORD is required — see e2e/.env.example.
-loadDotenv();
+// TEST_USER_PASSWORD is required — see e2e/.env.example. `quiet: true`
+// silences dotenv's per-worker "tips" noise.
+loadDotenv({ quiet: true });
+
+const isCi = !!process.env.CI;
 
 export default defineConfig({
   testDir: '.',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  // Each worker owns a dedicated Authentik user (E2eWorker0..3) so tests can
-  // run fully in parallel without touching each other's data.
-  workers: 4,
+  forbidOnly: isCi,
+  retries: isCi ? 2 : 0,
+  // Each worker owns a dedicated Authentik user (E2eWorker0..3). Local dev
+  // runs all four in parallel; CI stays at 2 because the runner (2 vCPU /
+  // 7 GB) is already carrying Authentik + Postgres + Redis + the backend +
+  // Vite + four Chromium instances, and over-subscription produced timing
+  // flakes in early runs (see #141 phase 1).
+  workers: isCi ? 2 : 4,
   reporter: [['html', { open: 'never' }], ['list']],
   globalTeardown: './shared/global-teardown.ts',
   timeout: 60000,
@@ -22,8 +28,9 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: 15000,
-    navigationTimeout: 30_000,
+    // CI runner is slower than local — give every action 2× the headroom.
+    actionTimeout: isCi ? 30_000 : 15_000,
+    navigationTimeout: isCi ? 60_000 : 30_000,
   },
 
   projects: [
