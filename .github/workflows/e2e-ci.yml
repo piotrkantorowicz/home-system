@@ -54,6 +54,41 @@ jobs:
           E2E_USER_PASSWORD=${{ steps.secrets.outputs.e2e_user_password }}
           EOF
 
+      # ── Docker image cache ─────────────────────────────────────────────────
+      # Saves ~30-60s on warm runs by restoring a tarball of the Authentik +
+      # Postgres + Redis images instead of pulling them fresh from the
+      # registry. Cache key is the compose file hash so image-tag bumps
+      # invalidate automatically.
+      - name: Restore Docker image cache
+        id: docker-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-images
+          key: docker-images-${{ hashFiles('infrastructure/docker-compose.yml') }}
+          restore-keys: |
+            docker-images-
+
+      - name: Load cached images
+        if: steps.docker-cache.outputs.cache-hit == 'true'
+        run: |
+          if [[ -f /tmp/docker-images/images.tar ]]; then
+            docker load -i /tmp/docker-images/images.tar
+          fi
+
+      - name: Pull any missing images
+        working-directory: infrastructure
+        run: docker compose --profile diet-planner pull
+
+      - name: Save image cache on miss
+        if: steps.docker-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /tmp/docker-images
+          docker save \
+            ghcr.io/goauthentik/server:2024.12.3 \
+            postgres:16-alpine \
+            redis:7-alpine \
+            -o /tmp/docker-images/images.tar
+
       # ── Boot infra in the background; prep dependencies in parallel ────────
       - name: Start Authentik + Postgres
         working-directory: infrastructure
