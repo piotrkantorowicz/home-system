@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
 import { NotificationPreferencesPage } from './pages';
+import { seedNotificationPreferences } from './utils/seed';
 
 test.describe('Notification Preferences', () => {
   test('user can navigate to notification preferences page', async ({ page }) => {
@@ -98,6 +99,15 @@ test.describe('Notification Preferences', () => {
 
   test('settings persist after saving and reloading page', async ({ page }) => {
     const prefsPage = new NotificationPreferencesPage(page);
+    await prefsPage.goto();
+
+    // Seed a preferences row so the meal-reminder toggle + lead-time preset
+    // start from a known state — without a row, meal reminder defaults vary
+    // and `setMealLeadTime` can race with the form becoming enabled.
+    await seedNotificationPreferences(page, {
+      mealReminderEnabled: true,
+      mealReminderLeadTimeMinutes: 15,
+    });
     await prefsPage.goto();
 
     // Ensure meal reminder is on so lead time is editable

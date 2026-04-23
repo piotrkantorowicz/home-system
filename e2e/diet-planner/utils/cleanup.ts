@@ -3,60 +3,78 @@ import path from 'path';
 
 import { request } from '@playwright/test';
 
-export async function cleanupTestData() {
-  const authStatePath = path.resolve('playwright/.auth/user.json');
+interface OidcUser {
+  access_token: string;
+}
 
-  if (!fs.existsSync(authStatePath)) {
-    console.warn('No auth state found at ' + authStatePath + ', skipping cleanup');
+interface StorageState {
+  origins?: Array<{
+    origin: string;
+    localStorage?: Array<{ name: string; value: string }>;
+  }>;
+}
+
+function extractAccessToken(authStatePath: string): string | null {
+  if (!fs.existsSync(authStatePath)) return null;
+
+  let authState: StorageState;
+  try {
+    authState = JSON.parse(fs.readFileSync(authStatePath, 'utf-8')) as StorageState;
+  } catch {
+    return null;
+  }
+
+  // Search all origins — the app origin must come before Authentik in the
+  // match, so we scan every origin rather than stopping at the first
+  // localhost hit (which may be http://localhost:9000).
+  for (const origin of authState.origins ?? []) {
+    const storageItem = (origin.localStorage ?? []).find((i) =>
+      i.name.startsWith('oidc.user:'),
+    );
+    if (storageItem) {
+      try {
+        return (JSON.parse(storageItem.value) as OidcUser).access_token;
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  return null;
+}
+
+export async function cleanupWorker(workerIndex: number): Promise<void> {
+  const authStatePath = path.resolve(`playwright/.auth/user-${workerIndex}.json`);
+  const token = extractAccessToken(authStatePath);
+
+  if (!token) {
+    console.warn(
+      `  [worker ${workerIndex}] No usable auth state at ${authStatePath}, skipping cleanup`,
+    );
     return;
   }
 
+  const apiContext = await request.newContext({
+    baseURL: 'http://localhost:5000',
+    extraHTTPHeaders: { Authorization: `Bearer ${token}` },
+  });
+
   try {
-    const authState = JSON.parse(fs.readFileSync(authStatePath, 'utf-8'));
-
-    // Search all origins for the OIDC user entry — the app origin must come
-    // before Authentik in the match, so we scan every origin rather than
-    // stopping at the first localhost hit (which may be http://localhost:9000).
-    let storageItem: { name: string; value: string } | undefined;
-    for (const origin of authState.origins ?? []) {
-      storageItem = (origin.localStorage ?? []).find(
-        (i: { name: string; value: string }) => i.name.startsWith('oidc.user:'),
-      );
-      if (storageItem) break;
-    }
-
-    if (!storageItem) {
-      console.warn('No OIDC user found in any origin in storage, skipping cleanup');
-      return;
-    }
-
-    const user = JSON.parse(storageItem.value);
-    const token = user.access_token;
-
-    const apiContext = await request.newContext({
-      baseURL: 'http://localhost:5000',
-      extraHTTPHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    console.log('Purging test data via test-support endpoint...');
-
     const res = await apiContext.delete('/api/v1/test-support/purge-my-data');
 
     if (res.status() === 204) {
-      console.log('  Purge succeeded (204).');
+      console.log(`  [worker ${workerIndex}] Purge succeeded (204).`);
     } else if (res.status() === 404) {
       console.warn(
-        '  Purge endpoint returned 404 — test-support must be enabled on the backend ' +
+        `  [worker ${workerIndex}] Purge endpoint returned 404 — test-support must be enabled on the backend ` +
           '(ASPNETCORE_ENVIRONMENT=Development or E2ETestSupport:Enabled=true).',
       );
     } else {
-      console.warn(`  Purge failed: HTTP ${res.status()}`);
+      console.warn(`  [worker ${workerIndex}] Purge failed: HTTP ${res.status()}`);
     }
-
-    await apiContext.dispose();
   } catch (error) {
-    console.error('Error during cleanup:', error);
+    console.error(`  [worker ${workerIndex}] Error during cleanup:`, error);
+  } finally {
+    await apiContext.dispose();
   }
 }

@@ -1,5 +1,7 @@
 # Environment variables with secrets
 .env
 
-# Docker volumes (data is stored in named volumes)
-/authentik/
+# Docker volumes (data is stored in named volumes). The declarative blueprints
+# are tracked — only the runtime media/templates/certs directories are ignored.
+/authentik/*
+!/authentik/blueprints/
