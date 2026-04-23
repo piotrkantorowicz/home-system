@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - ci/141-e2e-workflow
+      - chore/141-e2e-workflow
 
 concurrency:
   group: e2e-${{ github.ref }}
