@@ -495,7 +495,8 @@ export interface components {
         CreateMealEntryRequest: {
             /** Format: date */
             date: string;
-            mealType: string;
+            /** Format: uuid */
+            mealSlotId: string;
             /** Format: uuid */
             recipeId: string;
             /** Format: double */
@@ -711,7 +712,13 @@ export interface components {
             id: string;
             /** Format: date */
             date: string;
-            mealType: string;
+            /** Format: uuid */
+            mealSlotId: string;
+            mealSlotName: string;
+            /** Format: time */
+            mealSlotDefaultTime: string;
+            /** Format: int32 */
+            mealSlotSortOrder: number | string;
             /** Format: uuid */
             recipeId: string;
             recipeName: string;
@@ -744,6 +751,8 @@ export interface components {
             sortOrder: number | string;
         };
         MealSlotRequest: {
+            /** Format: uuid */
+            id: null | string;
             name: string;
             defaultTime: string;
         };
@@ -905,7 +914,8 @@ export interface components {
         UpdateMealEntryRequest: {
             /** Format: date */
             date: string;
-            mealType: string;
+            /** Format: uuid */
+            mealSlotId: string;
             /** Format: uuid */
             recipeId: string;
             /** Format: double */

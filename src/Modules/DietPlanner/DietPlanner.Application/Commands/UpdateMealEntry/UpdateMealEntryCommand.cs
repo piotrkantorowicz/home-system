@@ -6,7 +6,7 @@ public sealed record UpdateMealEntryCommand(
     Guid Id,
     string UserId,
     DateOnly Date,
-    string MealType,
+    Guid MealSlotId,
     Guid RecipeId,
     decimal Servings,
     string? Notes,

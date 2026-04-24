@@ -114,7 +114,7 @@ public static class MealEndpoints
         var userId = GetUserId(user);
         var id = await dispatcher.SendAsync<CreateMealEntryCommand, Guid>(
             new CreateMealEntryCommand(
-                userId, request.Date, request.MealType, request.RecipeId,
+                userId, request.Date, request.MealSlotId, request.RecipeId,
                 request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
         return TypedResults.Created($"/api/v1/meals/{id}", id);
     }
@@ -129,7 +129,7 @@ public static class MealEndpoints
         var userId = GetUserId(user);
         await dispatcher.SendAsync(
             new UpdateMealEntryCommand(
-                id, userId, request.Date, request.MealType, request.RecipeId,
+                id, userId, request.Date, request.MealSlotId, request.RecipeId,
                 request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
         return TypedResults.NoContent();
     }
@@ -181,7 +181,7 @@ public sealed record MealDateRangeParams(
 
 public sealed record CreateMealEntryRequest(
     DateOnly Date,
-    string MealType,
+    Guid MealSlotId,
     Guid RecipeId,
     decimal Servings,
     string? Notes,
@@ -190,7 +190,7 @@ public sealed record CreateMealEntryRequest(
 
 public sealed record UpdateMealEntryRequest(
     DateOnly Date,
-    string MealType,
+    Guid MealSlotId,
     Guid RecipeId,
     decimal Servings,
     string? Notes,

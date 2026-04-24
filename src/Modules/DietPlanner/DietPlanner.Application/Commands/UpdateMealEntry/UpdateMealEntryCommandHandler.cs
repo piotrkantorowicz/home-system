@@ -9,10 +9,15 @@ using Shared.Abstractions.Domain;
 internal sealed class UpdateMealEntryCommandHandler : ICommandHandler<UpdateMealEntryCommand>
 {
     private readonly IMealEntryRepository _repository;
+    private readonly IMealScheduleConfigRepository _scheduleRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateMealEntryCommandHandler(IMealEntryRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
+    public UpdateMealEntryCommandHandler(
+        IMealEntryRepository repository,
+        IMealScheduleConfigRepository scheduleRepository,
+        IUnitOfWork unitOfWork)
+        => (_repository, _scheduleRepository, _unitOfWork)
+            = (repository, scheduleRepository, unitOfWork);
 
     public async Task HandleAsync(UpdateMealEntryCommand command, CancellationToken ct = default)
     {
@@ -22,7 +27,14 @@ internal sealed class UpdateMealEntryCommandHandler : ICommandHandler<UpdateMeal
         if (entry.UserId != command.UserId)
             throw new DietPlannerDomainException("You can only update your own meal entries.");
 
-        entry.Update(command.Date, command.MealType, RecipeId.From(command.RecipeId),
+        var slotId = MealSlotId.From(command.MealSlotId);
+        var schedule = await _scheduleRepository.GetByUserIdAsync(command.UserId, ct)
+            ?? throw new NotFoundException("MealScheduleConfig", command.UserId);
+
+        if (schedule.Slots.All(s => s.Id != slotId))
+            throw new NotFoundException("MealSlot", command.MealSlotId);
+
+        entry.Update(command.Date, slotId, RecipeId.From(command.RecipeId),
             command.Servings, command.Notes, command.MealTime, command.SequenceOrder);
 
         _repository.Update(entry);

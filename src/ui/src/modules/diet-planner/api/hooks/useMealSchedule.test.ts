@@ -98,8 +98,8 @@ describe('useUpdateMealSchedule', () => {
 
     const payload = {
       slots: [
-        { name: 'Breakfast', defaultTime: '07:00' },
-        { name: 'Lunch', defaultTime: '12:00' },
+        { id: null, name: 'Breakfast', defaultTime: '07:00' },
+        { id: null, name: 'Lunch', defaultTime: '12:00' },
       ],
     };
 

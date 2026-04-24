@@ -5,6 +5,8 @@ using DietPlanner.Domain.Entities;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+public sealed record MealSlotUpsert(MealSlotId? Id, string Name, TimeOnly DefaultTime);
+
 public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
 {
     private readonly List<MealSlot> _slots = [];
@@ -41,15 +43,58 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
     public DateTime? UpdatedAt { get; private set; }
     public IReadOnlyCollection<MealSlot> Slots => _slots.AsReadOnly();
 
-    public void UpdateSlots(IReadOnlyList<(string Name, TimeOnly DefaultTime)> slots)
+    /// <summary>
+    /// Returns the slot ids that would be removed by applying <paramref name="upserts"/>.
+    /// Callers should use this to verify no MealEntry references those slots before calling
+    /// <see cref="ApplyUpdate"/>.
+    /// </summary>
+    public IReadOnlyList<MealSlotId> ComputeRemovedSlots(IReadOnlyList<MealSlotUpsert> upserts)
     {
-        ValidateSlotCount(slots.Count);
+        var keptIds = upserts
+            .Where(u => u.Id is not null)
+            .Select(u => u.Id!)
+            .ToHashSet();
 
-        _slots.Clear();
+        return _slots
+            .Where(s => !keptIds.Contains(s.Id))
+            .Select(s => s.Id)
+            .ToList();
+    }
 
-        for (var i = 0; i < slots.Count; i++)
+    /// <summary>
+    /// Applies the diff: updates kept slots in place (preserving id), adds new slots,
+    /// removes slots that are absent from the upsert list.
+    /// </summary>
+    public void ApplyUpdate(IReadOnlyList<MealSlotUpsert> upserts)
+    {
+        ValidateSlotCount(upserts.Count);
+
+        var keptIds = upserts
+            .Where(u => u.Id is not null)
+            .Select(u => u.Id!)
+            .ToHashSet();
+
+        // Validate: every supplied id must reference an existing slot
+        foreach (var u in upserts)
         {
-            _slots.Add(MealSlot.Create(MealSlotId.New(), slots[i].Name, slots[i].DefaultTime, i));
+            if (u.Id is not null && _slots.All(s => s.Id != u.Id))
+                throw new DietPlannerDomainException($"Unknown meal slot id '{u.Id.Value}'.");
+        }
+
+        _slots.RemoveAll(s => !keptIds.Contains(s.Id));
+
+        for (var i = 0; i < upserts.Count; i++)
+        {
+            var upsert = upserts[i];
+            if (upsert.Id is null)
+            {
+                _slots.Add(MealSlot.Create(MealSlotId.New(), upsert.Name, upsert.DefaultTime, i));
+            }
+            else
+            {
+                var existing = _slots.First(s => s.Id == upsert.Id);
+                existing.Update(upsert.Name, upsert.DefaultTime, i);
+            }
         }
 
         UpdatedAt = DateTime.UtcNow;

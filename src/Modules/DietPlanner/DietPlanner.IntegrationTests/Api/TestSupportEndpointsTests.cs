@@ -3,6 +3,7 @@ namespace DietPlanner.IntegrationTests.Api;
 using System.Net;
 using System.Net.Http.Json;
 using DietPlanner.Api;
+using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,17 @@ public sealed class TestSupportEndpointsTests
     private readonly DatabaseFixture _db;
 
     public TestSupportEndpointsTests(DatabaseFixture db) => _db = db;
+
+    private static async Task<Guid> EnsureBreakfastSlotAsync(HttpClient client)
+    {
+        var put = await client.PutAsJsonAsync(
+            "/api/v1/meal-schedule",
+            new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00")]));
+        put.EnsureSuccessStatusCode();
+
+        var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule");
+        return schedule!.Slots.First().Id;
+    }
 
     [Fact]
     public async Task DELETE_PurgeMyData_WhenDisabled_Returns404()
@@ -124,11 +136,12 @@ public sealed class TestSupportEndpointsTests
         recipeResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var recipeId = Guid.Parse((await recipeResp.Content.ReadAsStringAsync()).Trim('"'));
 
+        var slotId = await EnsureBreakfastSlotAsync(client);
         var mealResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
                 Date: DateOnly.FromDateTime(DateTime.UtcNow),
-                MealType: "breakfast",
+                MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
                 Notes: null,
@@ -239,11 +252,12 @@ public sealed class TestSupportEndpointsTests
 
         // "Stale" user (different sub): create a meal_entry that references the
         // current user's recipe. Mimics an orphan left over from a previous session.
+        var staleSlotId = await EnsureBreakfastSlotAsync(staleClient);
         var staleMealResp = await staleClient.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
                 Date: DateOnly.FromDateTime(DateTime.UtcNow),
-                MealType: "breakfast",
+                MealSlotId: staleSlotId,
                 RecipeId: recipeId,
                 Servings: 1m,
                 Notes: null,

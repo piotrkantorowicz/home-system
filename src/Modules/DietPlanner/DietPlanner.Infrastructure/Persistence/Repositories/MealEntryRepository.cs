@@ -22,9 +22,11 @@ internal sealed class MealEntryRepository : IMealEntryRepository
                 && (from == null || x.Date >= from)
                 && (to == null || x.Date <= to))
             .OrderBy(x => x.Date)
-            .ThenBy(x => x.MealType)
             .ThenBy(x => x.SequenceOrder)
             .ToListAsync(ct);
+
+    public async Task<bool> AnyForSlotAsync(MealSlotId mealSlotId, CancellationToken ct = default)
+        => await _dbContext.MealEntries.AnyAsync(x => x.MealSlotId == mealSlotId, ct);
 
     public async Task AddAsync(MealEntry entry, CancellationToken ct = default)
         => await _dbContext.MealEntries.AddAsync(entry, ct);

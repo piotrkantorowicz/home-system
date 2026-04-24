@@ -108,7 +108,8 @@
     "today": "Dziś",
     "tab_calendar": "Kalendarz",
     "tab_nutrition": "Odżywianie",
-    "tab_import": "Import"
+    "tab_import": "Import",
+    "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków."
   },
   "nutrition_summary": {
     "title": "Tygodniowe Podsumowanie Żywienia",
