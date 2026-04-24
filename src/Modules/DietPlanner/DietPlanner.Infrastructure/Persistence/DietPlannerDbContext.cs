@@ -13,6 +13,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();
+    public DbSet<MealSlot> MealSlots => Set<MealSlot>();
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     public DbSet<MealScheduleConfig> MealScheduleConfigs => Set<MealScheduleConfig>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();

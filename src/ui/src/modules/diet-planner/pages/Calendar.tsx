@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { useGoals } from '../api/hooks/useGoals';
+import { useMealSchedule } from '../api/hooks/useMealSchedule';
 import {
   useMeals,
   useCreateMeal,
@@ -49,7 +50,9 @@ function formatLocalDate(date: Date) {
 interface Meal {
   id: string;
   date: string;
-  mealType: string;
+  mealSlotId: string;
+  mealSlotName: string;
+  mealSlotSortOrder: number;
   recipeId: string;
   recipeName: string;
   servings: number | string;
@@ -64,9 +67,15 @@ export default function Calendar() {
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
-  const [mealFormType, setMealFormType] = useState('breakfast');
+  const [mealFormSlotId, setMealFormSlotId] = useState('');
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [deletingMeal, setDeletingMeal] = useState<Meal | null>(null);
+
+  const { data: schedule } = useMealSchedule();
+  const slots = useMemo(
+    () => [...(schedule?.slots ?? [])].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
+    [schedule],
+  );
 
   const createMeal = useCreateMeal();
   const updateMeal = useUpdateMeal();
@@ -110,10 +119,8 @@ export default function Calendar() {
     const grouped: Record<string, Record<string, Meal[]>> = {};
     (meals as Meal[]).forEach((meal) => {
       const date = meal.date;
-      const mealType = (meal.mealType || 'other').toLowerCase();
-      grouped[date] ??= {};
-      grouped[date][mealType] ??= [];
-      grouped[date][mealType].push(meal);
+      const dayBucket = (grouped[date] ??= {});
+      (dayBucket[meal.mealSlotId] ??= []).push(meal);
     });
     return grouped;
   }, [meals]);
@@ -124,10 +131,10 @@ export default function Calendar() {
     return d;
   });
 
-  const openCreateForm = (date: string, mealType: string) => {
+  const openCreateForm = (date: string, slotId: string) => {
     setEditingMeal(null);
     setMealFormDate(date);
-    setMealFormType(mealType);
+    setMealFormSlotId(slotId);
     setMealFormOpen(true);
   };
 
@@ -138,7 +145,7 @@ export default function Calendar() {
 
   const handleFormSubmit = async (data: {
     date: string;
-    mealType: string;
+    mealSlotId: string;
     recipeId: string;
     servings: number;
     notes: string;
@@ -258,16 +265,21 @@ export default function Calendar() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {['breakfast', 'lunch', 'dinner', 'snack'].map((mealType) => (
-                        <div key={mealType}>
+                      {slots.length === 0 ? (
+                        <div className="text-muted-foreground/60 rounded-lg border border-dashed p-3 text-center text-xs">
+                          {t('calendar.no_schedule')}
+                        </div>
+                      ) : null}
+                      {slots.map((slot) => (
+                        <div key={slot.id}>
                           <div className="mb-1.5 flex items-center justify-between">
                             <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-                              {t(`diet_plan_detail.meal_types.${mealType}`)}
+                              {slot.name}
                             </h4>
                             <button
                               type="button"
                               onClick={() => {
-                                openCreateForm(dateStr, mealType);
+                                openCreateForm(dateStr, slot.id);
                               }}
                               className="text-muted-foreground/50 hover:text-primary h-4 w-4 rounded transition-colors"
                               title={t('meal_form.add_title')}
@@ -275,7 +287,7 @@ export default function Calendar() {
                               <Plus className="h-3 w-3" />
                             </button>
                           </div>
-                          {dayMeals[mealType]?.map((meal) => (
+                          {dayMeals[slot.id]?.map((meal) => (
                             <div
                               key={meal.id}
                               className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
@@ -419,12 +431,12 @@ export default function Calendar() {
               void handleFormSubmit(data);
             }}
             initialDate={editingMeal ? undefined : mealFormDate}
-            initialMealType={editingMeal ? undefined : mealFormType}
+            initialMealSlotId={editingMeal ? undefined : mealFormSlotId}
             initialValues={
               editingMeal
                 ? {
                     date: editingMeal.date,
-                    mealType: editingMeal.mealType,
+                    mealSlotId: editingMeal.mealSlotId,
                     recipeId: editingMeal.recipeId,
                     recipeName: editingMeal.recipeName,
                     servings: Number(editingMeal.servings),

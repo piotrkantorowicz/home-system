@@ -38,9 +38,9 @@ public sealed class MealScheduleEndpointsTests
     {
         var request = new UpdateMealScheduleRequest(
         [
-            new MealSlotRequest("Breakfast", "07:00"),
-            new MealSlotRequest("Lunch", "12:00"),
-            new MealSlotRequest("Dinner", "18:00")
+            new MealSlotRequest(null, "Breakfast", "07:00"),
+            new MealSlotRequest(null, "Lunch", "12:00"),
+            new MealSlotRequest(null, "Dinner", "18:00")
         ]);
 
         var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
@@ -56,8 +56,8 @@ public sealed class MealScheduleEndpointsTests
 
         var request = new UpdateMealScheduleRequest(
         [
-            new MealSlotRequest("Morning", "06:30"),
-            new MealSlotRequest("Noon", "13:00")
+            new MealSlotRequest(null, "Morning", "06:30"),
+            new MealSlotRequest(null, "Noon", "13:00")
         ]);
 
         await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", request);
@@ -79,11 +79,11 @@ public sealed class MealScheduleEndpointsTests
         var freshUserId = Guid.NewGuid().ToString();
         HttpClient freshClient = new DietPlannerWebApplicationFactory(_db.ConnectionString, freshUserId).CreateClient();
 
-        var first = new UpdateMealScheduleRequest([new MealSlotRequest("Breakfast", "07:00")]);
+        var first = new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00")]);
         var second = new UpdateMealScheduleRequest(
         [
-            new MealSlotRequest("Brunch", "10:00"),
-            new MealSlotRequest("Supper", "20:00")
+            new MealSlotRequest(null, "Brunch", "10:00"),
+            new MealSlotRequest(null, "Supper", "20:00")
         ]);
 
         await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", first);
@@ -112,7 +112,7 @@ public sealed class MealScheduleEndpointsTests
     public async Task PUT_WithTooManySlots_Returns400(int slotCount)
     {
         var slots = Enumerable.Range(1, slotCount)
-            .Select(i => new MealSlotRequest($"Slot {i}", "08:00"))
+            .Select(i => new MealSlotRequest(null, $"Slot {i}", "08:00"))
             .ToList();
 
         var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", new UpdateMealScheduleRequest(slots));
@@ -123,7 +123,7 @@ public sealed class MealScheduleEndpointsTests
     [Fact]
     public async Task PUT_WithEmptySlotName_Returns400()
     {
-        var request = new UpdateMealScheduleRequest([new MealSlotRequest("", "07:00")]);
+        var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "", "07:00")]);
 
         var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
 
@@ -133,7 +133,7 @@ public sealed class MealScheduleEndpointsTests
     [Fact]
     public async Task PUT_WithInvalidSlotTime_Returns400()
     {
-        var request = new UpdateMealScheduleRequest([new MealSlotRequest("Breakfast", "not-a-time")]);
+        var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "not-a-time")]);
 
         var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
 
@@ -143,7 +143,7 @@ public sealed class MealScheduleEndpointsTests
     [Fact]
     public async Task GET_UserIdIsReadFromClaimsPrincipal()
     {
-        var request = new UpdateMealScheduleRequest([new MealSlotRequest("Breakfast", "07:00")]);
+        var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00")]);
 
         await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
 

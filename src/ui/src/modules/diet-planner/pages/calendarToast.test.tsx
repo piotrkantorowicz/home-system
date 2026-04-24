@@ -63,13 +63,13 @@ vi.mock('../components/diet-plans/MealForm', () => ({
     onClose: () => void;
     onSubmit: (data: {
       date: string;
-      mealType: string;
+      mealSlotId: string;
       recipeId: string;
       servings: number;
       notes: string;
     }) => void;
     initialDate?: string;
-    initialMealType?: string;
+    initialMealSlotId?: string;
     initialValues?: object;
     isSubmitting?: boolean;
     mode: 'create' | 'edit';
@@ -81,7 +81,7 @@ vi.mock('../components/diet-plans/MealForm', () => ({
         onClick={() => {
           onSubmit({
             date: '2024-01-15',
-            mealType: 'breakfast',
+            mealSlotId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
             recipeId: '44444444-4444-4444-4444-444444444444',
             servings: 1,
             notes: '',
@@ -116,7 +116,10 @@ function useTodayMeal() {
             id: '33333333-3333-3333-3333-333333333333',
             userId: 'user-1',
             date: todayStr(),
-            mealType: 'breakfast',
+            mealSlotId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+            mealSlotName: 'Breakfast',
+            mealSlotDefaultTime: '07:00',
+            mealSlotSortOrder: 0,
             recipeId: '44444444-4444-4444-4444-444444444444',
             recipeName: 'Oatmeal',
             servings: 1,

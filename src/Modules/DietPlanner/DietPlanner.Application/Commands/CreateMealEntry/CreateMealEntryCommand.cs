@@ -5,7 +5,7 @@ using Shared.Abstractions.CQRS;
 public sealed record CreateMealEntryCommand(
     string UserId,
     DateOnly Date,
-    string MealType,
+    Guid MealSlotId,
     Guid RecipeId,
     decimal Servings,
     string? Notes,

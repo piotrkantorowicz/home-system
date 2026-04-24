@@ -3,7 +3,10 @@ namespace DietPlanner.Application.Queries.GetMealEntries;
 public sealed record MealEntryDto(
     Guid Id,
     DateOnly Date,
-    string MealType,
+    Guid MealSlotId,
+    string MealSlotName,
+    TimeOnly MealSlotDefaultTime,
+    int MealSlotSortOrder,
     Guid RecipeId,
     string RecipeName,
     decimal Servings,

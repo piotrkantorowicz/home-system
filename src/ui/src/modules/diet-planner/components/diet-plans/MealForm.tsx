@@ -1,3 +1,4 @@
+import { useMealSchedule } from '@modules/diet-planner/api/hooks/useMealSchedule';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
 import { Button } from '@shared/components/ui/Button';
 import { DatePicker } from '@shared/components/ui/DatePicker';
@@ -14,11 +15,9 @@ import { Label } from '@shared/components/ui/Label';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
-
 interface MealFormData {
   date: string;
-  mealType: string;
+  mealSlotId: string;
   recipeId: string;
   recipeName: string;
   servings: number;
@@ -30,14 +29,14 @@ interface MealFormProps {
   onClose: () => void;
   onSubmit: (data: Omit<MealFormData, 'recipeName'>) => void;
   initialDate?: string | undefined;
-  initialMealType?: string | undefined;
+  initialMealSlotId?: string | undefined;
   initialValues?:
     | {
         recipeId: string;
         recipeName: string;
         servings: number;
         notes: string;
-        mealType: string;
+        mealSlotId: string;
         date: string;
       }
     | undefined;
@@ -50,17 +49,19 @@ export function MealForm({
   onClose,
   onSubmit,
   initialDate,
-  initialMealType,
+  initialMealSlotId,
   initialValues,
   isSubmitting,
   mode,
 }: MealFormProps) {
   const { t } = useTranslation();
+  const { data: schedule } = useMealSchedule();
+  const slots = schedule?.slots ?? [];
   const [recipeSearch, setRecipeSearch] = useState(initialValues?.recipeName ?? '');
   const [showRecipeList, setShowRecipeList] = useState(false);
   const [form, setForm] = useState<MealFormData>({
     date: initialValues?.date ?? initialDate ?? '',
-    mealType: initialValues?.mealType ?? initialMealType ?? 'breakfast',
+    mealSlotId: initialValues?.mealSlotId ?? initialMealSlotId ?? '',
     recipeId: initialValues?.recipeId ?? '',
     recipeName: initialValues?.recipeName ?? '',
     servings: initialValues?.servings ?? 1,
@@ -79,17 +80,17 @@ export function MealForm({
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!form.recipeId || !form.date || !form.mealType) return;
+    if (!form.recipeId || !form.date || !form.mealSlotId) return;
     onSubmit({
       date: form.date,
-      mealType: form.mealType,
+      mealSlotId: form.mealSlotId,
       recipeId: form.recipeId,
       servings: form.servings,
       notes: form.notes,
     });
   };
 
-  const isValid = !!form.recipeId && !!form.date && !!form.mealType && form.servings > 0;
+  const isValid = !!form.recipeId && !!form.date && !!form.mealSlotId && form.servings > 0;
 
   return (
     <Dialog
@@ -124,15 +125,16 @@ export function MealForm({
               <Label htmlFor="meal-type">{t('meal_form.meal_type_label')}</Label>
               <select
                 id="meal-type"
-                value={form.mealType}
+                value={form.mealSlotId}
                 onChange={(e) => {
-                  setForm((f) => ({ ...f, mealType: e.target.value }));
+                  setForm((f) => ({ ...f, mealSlotId: e.target.value }));
                 }}
                 className="border-input bg-background text-foreground flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
               >
-                {MEAL_TYPES.map((mt) => (
-                  <option key={mt} value={mt}>
-                    {t(`diet_plan_detail.meal_types.${mt}`)}
+                <option value="">—</option>
+                {slots.map((slot) => (
+                  <option key={slot.id} value={slot.id}>
+                    {slot.name}
                   </option>
                 ))}
               </select>

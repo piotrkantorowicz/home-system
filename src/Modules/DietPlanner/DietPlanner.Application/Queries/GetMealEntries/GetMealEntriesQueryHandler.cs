@@ -23,13 +23,27 @@ internal sealed class GetMealEntriesQueryHandler
                 me => me.RecipeId,
                 r => r.Id,
                 (me, r) => new { me, RecipeName = r.Name })
+            .Join(_dbContext.MealSlots.AsNoTracking(),
+                x => x.me.MealSlotId,
+                s => s.Id,
+                (x, s) => new
+                {
+                    x.me,
+                    x.RecipeName,
+                    SlotName = s.Name,
+                    SlotDefaultTime = s.DefaultTime,
+                    SlotSortOrder = s.SortOrder,
+                })
             .OrderBy(x => x.me.Date)
-            .ThenBy(x => x.me.MealType)
+            .ThenBy(x => x.SlotSortOrder)
             .ThenBy(x => x.me.SequenceOrder)
             .Select(x => new MealEntryDto(
                 x.me.Id.Value,
                 x.me.Date,
-                x.me.MealType,
+                x.me.MealSlotId.Value,
+                x.SlotName,
+                x.SlotDefaultTime,
+                x.SlotSortOrder,
                 x.me.RecipeId.Value,
                 x.RecipeName,
                 x.me.Servings,

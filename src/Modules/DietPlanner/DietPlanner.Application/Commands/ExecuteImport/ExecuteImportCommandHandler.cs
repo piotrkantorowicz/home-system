@@ -9,20 +9,31 @@ using Shared.Abstractions.Domain;
 
 internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImportCommand, ImportResultDto>
 {
+    private static readonly IReadOnlyList<(string Name, TimeOnly DefaultTime)> DefaultMealSlots =
+    [
+        ("Breakfast", new TimeOnly(7, 0)),
+        ("Lunch", new TimeOnly(12, 0)),
+        ("Dinner", new TimeOnly(18, 0)),
+        ("Snack", new TimeOnly(15, 0)),
+    ];
+
     private readonly IProductRepository _productRepository;
     private readonly IRecipeRepository _recipeRepository;
     private readonly IMealEntryRepository _mealEntryRepository;
+    private readonly IMealScheduleConfigRepository _scheduleRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ExecuteImportCommandHandler(
         IProductRepository productRepository,
         IRecipeRepository recipeRepository,
         IMealEntryRepository mealEntryRepository,
+        IMealScheduleConfigRepository scheduleRepository,
         IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _recipeRepository = recipeRepository;
         _mealEntryRepository = mealEntryRepository;
+        _scheduleRepository = scheduleRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -104,7 +115,15 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
             }
         }
 
-        // ── 3. Create meal entries ──────────────────────────────────────────
+        // ── 3. Resolve meal schedule (auto-provision default if missing) ────
+        var schedule = await _scheduleRepository.GetByUserIdAsync(userId, ct);
+        if (schedule is null)
+        {
+            schedule = MealScheduleConfig.Create(MealScheduleConfigId.New(), userId, DefaultMealSlots);
+            await _scheduleRepository.AddAsync(schedule, ct);
+        }
+
+        // ── 4. Create meal entries ──────────────────────────────────────────
         foreach (var day in import.Schedule ?? [])
         {
             if (!DateOnly.TryParse(day.Date, out DateOnly date))
@@ -124,11 +143,13 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                     recipeId = dbRecipe.Id;
                 }
 
+                MealSlotId mealSlotId = ResolveMealSlot(schedule, meal.Type);
+
                 var entry = MealEntry.Create(
                     MealEntryId.New(),
                     userId,
                     date,
-                    Capitalize(meal.Type),
+                    mealSlotId,
                     recipeId,
                     meal.Servings ?? 1m,
                     meal.Notes,
@@ -152,6 +173,31 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                 MealEntriesCreated: mealEntriesCreated));
     }
 
-    private static string Capitalize(string s)
-        => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s[1..].ToLowerInvariant();
+    private static MealSlotId ResolveMealSlot(MealScheduleConfig schedule, string? rawType)
+    {
+        if (!string.IsNullOrWhiteSpace(rawType))
+        {
+            var match = schedule.Slots.FirstOrDefault(
+                s => string.Equals(s.Name, rawType, StringComparison.OrdinalIgnoreCase));
+            if (match is not null) return match.Id;
+        }
+
+        // Fallback: dump into "Other"; create the slot if it doesn't exist yet.
+        var other = schedule.Slots.FirstOrDefault(
+            s => string.Equals(s.Name, "Other", StringComparison.OrdinalIgnoreCase));
+
+        if (other is null)
+        {
+            // Append "Other" via the diff API so identity-preservation is honoured.
+            var upserts = schedule.Slots
+                .OrderBy(s => s.SortOrder)
+                .Select(s => new MealSlotUpsert(s.Id, s.Name, s.DefaultTime))
+                .Append(new MealSlotUpsert(null, "Other", new TimeOnly(12, 0)))
+                .ToList();
+            schedule.ApplyUpdate(upserts);
+            other = schedule.Slots.First(s => string.Equals(s.Name, "Other", StringComparison.OrdinalIgnoreCase));
+        }
+
+        return other.Id;
+    }
 }

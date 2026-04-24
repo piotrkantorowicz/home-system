@@ -146,7 +146,7 @@ describe('nutrition summary cache invalidation', () => {
     await act(async () => {
       await createResult.current.mutateAsync({
         date: '2024-01-15',
-        mealType: 'breakfast',
+        mealSlotId: '55555555-5555-5555-5555-555555555555',
         recipeId: 'recipe-1',
         servings: 2,
         notes: '',
@@ -184,7 +184,7 @@ describe('nutrition summary cache invalidation', () => {
         id: 'meal-1',
         data: {
           date: '2024-01-15',
-          mealType: 'breakfast',
+          mealSlotId: '55555555-5555-5555-5555-555555555555',
           recipeId: 'recipe-1',
           servings: 3,
           notes: '',

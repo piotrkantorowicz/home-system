@@ -53,7 +53,7 @@ public static class MealScheduleEndpoints
     {
         var userId = GetUserId(user);
         var slots = request.Slots
-            .Select(s => new MealSlotInput(s.Name, s.DefaultTime))
+            .Select(s => new MealSlotInput(s.Id, s.Name, s.DefaultTime))
             .ToList();
 
         await dispatcher.SendAsync(
@@ -67,5 +67,5 @@ public static class MealScheduleEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
-public sealed record MealSlotRequest(string Name, string DefaultTime);
+public sealed record MealSlotRequest(Guid? Id, string Name, string DefaultTime);
 public sealed record UpdateMealScheduleRequest(IReadOnlyList<MealSlotRequest> Slots);

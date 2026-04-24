@@ -11,7 +11,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
         MealEntryId id,
         string userId,
         DateOnly date,
-        string mealType,
+        MealSlotId mealSlotId,
         RecipeId recipeId,
         decimal servings,
         string? notes,
@@ -19,14 +19,15 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
         int? sequenceOrder)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(mealType);
+        ArgumentNullException.ThrowIfNull(mealSlotId);
+        ArgumentNullException.ThrowIfNull(recipeId);
 
         return new MealEntry
         {
             Id = id,
             UserId = userId,
             Date = date,
-            MealType = mealType,
+            MealSlotId = mealSlotId,
             RecipeId = recipeId,
             Servings = servings,
             Notes = notes,
@@ -38,7 +39,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
 
     public string UserId { get; private set; } = default!;
     public DateOnly Date { get; private set; }
-    public string MealType { get; private set; } = default!;
+    public MealSlotId MealSlotId { get; private set; } = default!;
     public RecipeId RecipeId { get; private set; } = default!;
     public decimal Servings { get; private set; } = 1m;
     public string? Notes { get; private set; }
@@ -48,17 +49,18 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
 
     public void Update(
         DateOnly date,
-        string mealType,
+        MealSlotId mealSlotId,
         RecipeId recipeId,
         decimal servings,
         string? notes,
         TimeOnly? mealTime,
         int? sequenceOrder)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(mealType);
+        ArgumentNullException.ThrowIfNull(mealSlotId);
+        ArgumentNullException.ThrowIfNull(recipeId);
 
         Date = date;
-        MealType = mealType;
+        MealSlotId = mealSlotId;
         RecipeId = recipeId;
         Servings = servings;
         Notes = notes;

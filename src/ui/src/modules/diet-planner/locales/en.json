@@ -109,7 +109,8 @@
     "today": "Today",
     "tab_calendar": "Calendar",
     "tab_nutrition": "Nutrition",
-    "tab_import": "Import"
+    "tab_import": "Import",
+    "no_schedule": "Configure your meal schedule in Profile to see meal slots here."
   },
   "nutrition_summary": {
     "title": "Weekly Nutrition Summary",

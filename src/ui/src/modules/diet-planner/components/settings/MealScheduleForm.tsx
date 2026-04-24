@@ -14,9 +14,12 @@ import { z } from 'zod';
 const MAX_SLOTS = 8;
 const MIN_SLOTS = 1;
 
-const DEFAULT_SLOTS = [{ name: '', defaultTime: '' }];
+const DEFAULT_SLOTS: { id: string | null; name: string; defaultTime: string }[] = [
+  { id: null, name: '', defaultTime: '' },
+];
 
 const mealSlotSchema = z.object({
+  id: z.string().nullable(),
   name: z.string().min(1, 'Name is required'),
   defaultTime: z.string().min(1, 'Time is required'),
 });
@@ -61,7 +64,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
         slots: schedule.slots
           .slice()
           .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder))
-          .map((slot) => ({ name: slot.name, defaultTime: slot.defaultTime })),
+          .map((slot) => ({ id: slot.id, name: slot.name, defaultTime: slot.defaultTime })),
       });
     }
   }, [schedule, reset]);
@@ -165,7 +168,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
             size="sm"
             disabled={fields.length >= MAX_SLOTS}
             onClick={() => {
-              append({ name: '', defaultTime: '12:00' });
+              append({ id: null, name: '', defaultTime: '12:00' });
             }}
             className="mt-2"
           >
