@@ -17,6 +17,8 @@ export interface DailyNutrition {
 type MealEntry = components['schemas']['MealEntryDto'];
 type CreateMealEntryRequest = components['schemas']['CreateMealEntryRequest'];
 type UpdateMealEntryRequest = components['schemas']['UpdateMealEntryRequest'];
+export type OverrideMealEntryRequest = components['schemas']['OverrideMealEntryRequest'];
+export type BulkCompleteMealsResponse = components['schemas']['BulkCompleteMealsResponse'];
 
 interface MealsQueryParams {
   from?: string;
@@ -81,6 +83,82 @@ export function useUpdateMeal() {
       });
       if (response.error) throw new Error('Failed to update meal entry');
       return response.data as unknown as MealEntry;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+    },
+  });
+}
+
+export function useCompleteMeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      const response = await api.PATCH('/api/v1/meals/{id}/complete', {
+        params: { path: { id } },
+      });
+      if (!response.response.ok) throw new Error('Failed to complete meal');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+    },
+  });
+}
+
+export function useOverrideMeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: OverrideMealEntryRequest;
+    }): Promise<void> => {
+      const response = await api.PATCH('/api/v1/meals/{id}/override', {
+        params: { path: { id } },
+        body: data,
+      });
+      if (!response.response.ok) throw new Error('Failed to override meal');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+    },
+  });
+}
+
+export function useResetMeal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      const response = await api.PATCH('/api/v1/meals/{id}/reset', {
+        params: { path: { id } },
+      });
+      if (!response.response.ok) throw new Error('Failed to reset meal');
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+    },
+  });
+}
+
+export function useBulkCompleteMeals() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (date: string): Promise<BulkCompleteMealsResponse> => {
+      const response = await api.POST('/api/v1/meals/bulk-complete', {
+        body: { date },
+      });
+      if (!response.data) throw new Error('Failed to bulk complete meals');
+      return response.data;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });

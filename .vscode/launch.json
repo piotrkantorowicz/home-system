@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "C#: HomeSystem.REST",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/Apis/HomeSystem.REST/HomeSystem.REST.csproj",
+            "launchConfigurationId": "TargetFramework=;HomeSystem.REST"
+        },
+        {
+            "name": "C#: HomeSystem.REST (http :5000)",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/Apis/HomeSystem.REST/HomeSystem.REST.csproj",
+            "launchConfigurationId": "TargetFramework=;Http5000"
+        }
+    ]
+}

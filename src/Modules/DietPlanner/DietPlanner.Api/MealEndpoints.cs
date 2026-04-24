@@ -1,9 +1,13 @@
 namespace DietPlanner.Api;
 
 using System.Security.Claims;
+using DietPlanner.Application.Commands.BulkCompleteMealEntries;
+using DietPlanner.Application.Commands.CompleteMealEntry;
 using DietPlanner.Application.Commands.CreateMealEntry;
 using DietPlanner.Application.Commands.DeleteMealEntry;
 using DietPlanner.Application.Commands.ExecuteImport;
+using DietPlanner.Application.Commands.OverrideMealEntry;
+using DietPlanner.Application.Commands.ResetMealEntry;
 using DietPlanner.Application.Commands.UpdateMealEntry;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
@@ -60,6 +64,40 @@ public static class MealEndpoints
             .WithDescription("Permanently removes a meal entry from the log. Only the entry owner may delete it.")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPatch("/{id:guid}/complete", CompleteMealEntry)
+            .WithName("CompleteMealEntry")
+            .WithSummary("Mark a meal entry as done")
+            .WithDescription("Confirms the user ate the meal as planned. Idempotent on already-Done entries; rejected with 422 if the entry has been Modified — reset the override first.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status422UnprocessableEntity)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPatch("/{id:guid}/override", OverrideMealEntry)
+            .WithName("OverrideMealEntry")
+            .WithSummary("Record what was actually eaten instead of the planned meal")
+            .WithDescription("Replaces the meal's actual recipe and/or ad-hoc product list. Override must include either a recipe or at least one product.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPatch("/{id:guid}/reset", ResetMealEntry)
+            .WithName("ResetMealEntry")
+            .WithSummary("Revert a meal entry to its planned state")
+            .WithDescription("Clears Done/Modified status and any override data. Idempotent on already-Planned entries.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/bulk-complete", BulkCompleteMeals)
+            .WithName("BulkCompleteMeals")
+            .WithSummary("Mark all of the day's planned meals as done")
+            .WithDescription("Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.")
+            .Produces<BulkCompleteMealsResponse>()
+            .ProducesValidationProblem()
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/validate", ValidateImport)
@@ -145,6 +183,57 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<IResult> CompleteMealEntry(
+        Guid id,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        await dispatcher.SendAsync(new CompleteMealEntryCommand(id, userId), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<IResult> OverrideMealEntry(
+        Guid id,
+        OverrideMealEntryRequest request,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        var products = request.ActualProducts
+            .Select(p => new ActualProductInput(p.ProductId, p.Amount, p.Unit))
+            .ToList();
+
+        await dispatcher.SendAsync(
+            new OverrideMealEntryCommand(id, userId, request.ActualRecipeId, products), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<IResult> ResetMealEntry(
+        Guid id,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        await dispatcher.SendAsync(new ResetMealEntryCommand(id, userId), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<IResult> BulkCompleteMeals(
+        BulkCompleteMealsRequest request,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        BulkCompleteResult result = await dispatcher.SendAsync<BulkCompleteMealEntriesCommand, BulkCompleteResult>(
+            new BulkCompleteMealEntriesCommand(userId, request.Date), ct);
+        return TypedResults.Ok(new BulkCompleteMealsResponse(result.Completed));
+    }
+
     private static async Task<IResult> ValidateImport(
         ImportDto request,
         ClaimsPrincipal user,
@@ -196,3 +285,13 @@ public sealed record UpdateMealEntryRequest(
     string? Notes,
     TimeOnly? MealTime,
     int? SequenceOrder);
+
+public sealed record OverrideMealEntryRequest(
+    Guid? ActualRecipeId,
+    IReadOnlyList<ActualProductRequest> ActualProducts);
+
+public sealed record ActualProductRequest(Guid ProductId, decimal Amount, string Unit);
+
+public sealed record BulkCompleteMealsRequest(DateOnly Date);
+
+public sealed record BulkCompleteMealsResponse(int Completed);

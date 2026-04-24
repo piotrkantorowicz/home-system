@@ -13,11 +13,14 @@ internal sealed class MealEntryRepository : IMealEntryRepository
         => _dbContext = dbContext;
 
     public async Task<MealEntry?> GetByIdAsync(MealEntryId id, CancellationToken ct = default)
-        => await _dbContext.MealEntries.FirstOrDefaultAsync(x => x.Id == id, ct);
+        => await _dbContext.MealEntries
+            .Include(x => x.ActualProducts)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<List<MealEntry>> GetByUserAndDateRangeAsync(
         string userId, DateOnly? from, DateOnly? to, CancellationToken ct = default)
         => await _dbContext.MealEntries
+            .Include(x => x.ActualProducts)
             .Where(x => x.UserId == userId
                 && (from == null || x.Date >= from)
                 && (to == null || x.Date <= to))

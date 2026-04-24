@@ -50,6 +50,22 @@ internal sealed class GetMealEntriesQueryHandler
                 x.me.Notes,
                 x.me.MealTime,
                 x.me.SequenceOrder,
-                x.me.CreatedAt))
+                x.me.CreatedAt,
+                x.me.Status.ToString(),
+                x.me.ActualRecipeId == null
+                    ? null
+                    : _dbContext.Recipes
+                        .AsNoTracking()
+                        .IgnoreQueryFilters()
+                        .Where(r => r.Id == x.me.ActualRecipeId)
+                        .Select(r => new ActualRecipeDto(r.Id.Value, r.Name))
+                        .FirstOrDefault(),
+                x.me.ActualProducts
+                    .Join(_dbContext.Products.AsNoTracking().IgnoreQueryFilters(),
+                        ap => ap.ProductId,
+                        p => p.Id,
+                        (ap, p) => new ActualProductDto(
+                            ap.Id.Value, ap.ProductId.Value, p.Name, ap.Amount, ap.Unit))
+                    .ToList()))
             .ToListAsync(ct);
 }
