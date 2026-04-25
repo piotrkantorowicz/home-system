@@ -423,7 +423,10 @@ export default function Calendar() {
                                       <MoreVertical className="h-3.5 w-3.5" />
                                     </button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="min-w-[180px]">
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="min-w-[140px] p-1 [&_[role=menuitem]]:gap-1.5 [&_[role=menuitem]]:px-2 [&_[role=menuitem]]:py-1 [&_[role=menuitem]]:text-xs [&_[role=menuitem]_svg]:size-3"
+                                  >
                                     {meal.status !== 'Done' && meal.status !== 'Modified' && (
                                       <DropdownMenuItem onSelect={() => void handleComplete(meal)}>
                                         <Check className="text-emerald-600" />
