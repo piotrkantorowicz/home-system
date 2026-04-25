@@ -1,4 +1,4 @@
-namespace Shared.Infrastructure.CQRS.Decorators;
+namespace Shared.Infrastructure.Cqrs.Decorators;
 
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;

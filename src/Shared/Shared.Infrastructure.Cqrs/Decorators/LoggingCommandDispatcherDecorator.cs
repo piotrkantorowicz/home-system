@@ -1,4 +1,4 @@
-namespace Shared.Infrastructure.CQRS.Decorators;
+namespace Shared.Infrastructure.Cqrs.Decorators;
 
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;

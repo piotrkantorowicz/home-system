@@ -1,12 +1,12 @@
-namespace Shared.Infrastructure.Extensions;
+namespace Shared.Infrastructure.Cqrs.Extensions;
 
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
-using Shared.Infrastructure.CQRS;
-using Shared.Infrastructure.CQRS.Decorators;
+using Shared.Infrastructure.Cqrs;
+using Shared.Infrastructure.Cqrs.Decorators;
 
 public static class CqrsExtensions
 {

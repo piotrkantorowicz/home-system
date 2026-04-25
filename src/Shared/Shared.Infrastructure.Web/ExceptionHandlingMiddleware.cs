@@ -1,4 +1,4 @@
-namespace Shared.Infrastructure.Middleware;
+namespace Shared.Infrastructure.Web;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

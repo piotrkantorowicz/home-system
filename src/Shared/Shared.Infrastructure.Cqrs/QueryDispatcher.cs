@@ -1,4 +1,4 @@
-namespace Shared.Infrastructure.CQRS;
+namespace Shared.Infrastructure.Cqrs;
 
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Cqrs;
