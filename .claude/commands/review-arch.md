@@ -1,3 +1,7 @@
+---
+description: Review the specified file or directory for architecture rule violations
+---
+
 Review the specified file or directory for architecture rule violations.
 
 ## Usage

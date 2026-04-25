@@ -1,3 +1,7 @@
+---
+description: Scaffold a complete new module following the project's architecture conventions
+---
+
 Scaffold a complete new module following the project's architecture conventions.
 
 ## Usage
