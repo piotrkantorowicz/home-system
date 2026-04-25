@@ -1,16 +1,16 @@
 import js from '@eslint/js';
-
-import type { ESLint } from 'eslint';
-
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
-// REASON: eslint-plugin-jsx-a11y has no TypeScript declarations -- eslint-disable-next-line @typescript-eslint/no-require-imports
-const jsxA11y: { configs: { recommended: { rules: Record<string, unknown> } } } = require('eslint-plugin-jsx-a11y') as { configs: { recommended: { rules: Record<string, unknown> } } }; // eslint-disable-line @typescript-eslint/no-require-imports
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
+import type { ESLint } from 'eslint';
+
+// REASON: eslint-plugin-jsx-a11y has no TypeScript declarations -- eslint-disable-next-line @typescript-eslint/no-require-imports
+const jsxA11y: { configs: { recommended: { rules: Record<string, unknown> } } } = require('eslint-plugin-jsx-a11y') as { configs: { recommended: { rules: Record<string, unknown> } } }; // eslint-disable-line @typescript-eslint/no-require-imports
 
 export default defineConfig([
   globalIgnores(['dist', 'node_modules', 'build', '.eslintcache', 'coverage', '**/api/generated/**', '*.js']),

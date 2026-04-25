@@ -2,19 +2,19 @@
  * Tests that the Hydration page shows success/error toasts for quick-add,
  * custom-add, and delete actions.
  */
+import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, it, expect } from 'vitest';
-
-import { server } from '@/test/mocks/server';
-import { ToastProvider } from '@shared/context/ToastContext';
 
 import { createWrapper } from '../../../test/utils/queryWrapper';
 
 import Hydration from './Hydration';
 
 import type { ReactNode } from 'react';
+
+import { server } from '@/test/mocks/server';
 
 // ── i18n stub ─────────────────────────────────────────────────────────────────
 vi.mock('react-i18next', () => ({

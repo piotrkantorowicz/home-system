@@ -4,18 +4,19 @@
  * - an error toast when the import API call fails
  * - the Confirm Import button re-enables after failure
  */
+import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, it, expect, vi } from 'vitest';
 
-import { server } from '@/test/mocks/server';
-import { ToastProvider } from '@shared/context/ToastContext';
 import { createWrapper } from '../../../../test/utils/queryWrapper';
 
 import ImportWizard from './ImportWizard';
 
 import type { ReactNode } from 'react';
+
+import { server } from '@/test/mocks/server';
 
 const BASE = 'http://localhost:5000';
 
