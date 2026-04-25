@@ -116,6 +116,7 @@
       "modified": "Zmienione"
     },
     "meal_actions": {
+      "menu": "Akcje posiłku",
       "mark_done": "Oznacz jako zjedzone",
       "override": "Zapisz co naprawdę zjadłeś",
       "reset": "Cofnij do zaplanowanego"
