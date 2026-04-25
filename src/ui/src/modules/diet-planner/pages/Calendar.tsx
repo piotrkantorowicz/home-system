@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
+import { useCalendarView } from '@shared/hooks/useCalendarView';
 import { cn } from '@shared/lib/utils';
 import {
   ArrowRight,
@@ -52,6 +53,7 @@ import {
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
+import { DayView } from '../components/calendar-day/DayView';
 import { MealForm } from '../components/diet-plans/MealForm';
 import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog';
 import { MealStatusBadge, type MealStatus } from '../components/diet-plans/MealStatusBadge';
@@ -115,6 +117,13 @@ export default function Calendar() {
   const resetMeal = useResetMeal();
   const bulkCompleteMeals = useBulkCompleteMeals();
   const [overrideMealId, setOverrideMealId] = useState<string | null>(null);
+
+  const [view, setView] = useCalendarView();
+  const [selectedDay, setSelectedDay] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
 
   const weekStartDate = new Date(weekStart);
   const weekEndDate = new Date(weekStartDate);
@@ -257,8 +266,30 @@ export default function Calendar() {
   };
 
   const goToToday = () => {
-    setWeekStart(getWeekStart(new Date()));
+    if (view === 'week') {
+      setWeekStart(getWeekStart(new Date()));
+    } else {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      setSelectedDay(d);
+    }
   };
+
+  const goToPrevDay = () => {
+    const d = new Date(selectedDay);
+    d.setDate(d.getDate() - 1);
+    setSelectedDay(d);
+  };
+
+  const goToNextDay = () => {
+    const d = new Date(selectedDay);
+    d.setDate(d.getDate() + 1);
+    setSelectedDay(d);
+  };
+
+  const dayDateStr = formatLocalDate(selectedDay);
+  const dayRange = view === 'day' ? { from: dayDateStr, to: dayDateStr } : weekRange;
+  const { data: dayMeals } = useMeals({ from: dayRange.from, to: dayRange.to });
 
   return (
     <div
@@ -278,37 +309,116 @@ export default function Calendar() {
 
       {activeTab === 'calendar' && (
         <>
-          {/* Week Navigator */}
-          <div className="mb-6 flex items-center justify-between">
+          {/* Navigator */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold">
-                {t('diet_plan_detail.week_of', {
-                  date:
-                    weekDays[0]?.toLocaleDateString(i18n.language, {
+                {view === 'week'
+                  ? t('diet_plan_detail.week_of', {
+                      date:
+                        weekDays[0]?.toLocaleDateString(i18n.language, {
+                          month: 'long',
+                          day: 'numeric',
+                        }) ?? '',
+                    })
+                  : selectedDay.toLocaleDateString(i18n.language, {
+                      weekday: 'long',
                       month: 'long',
                       day: 'numeric',
-                    }) ?? '',
-                })}
+                    })}
               </h2>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                role="tablist"
+                aria-label={t('calendar.view_label')}
+                className="bg-muted/40 flex rounded-md p-0.5"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'week'}
+                  onClick={() => {
+                    setView('week');
+                  }}
+                  className={cn(
+                    'rounded px-3 py-1 text-xs font-medium transition-colors',
+                    view === 'week'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {t('calendar.view.week')}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'day'}
+                  onClick={() => {
+                    setView('day');
+                  }}
+                  className={cn(
+                    'rounded px-3 py-1 text-xs font-medium transition-colors',
+                    view === 'day'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {t('calendar.view.day')}
+                </button>
+              </div>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 {t('calendar.today')}
               </Button>
-              <Button variant="outline" size="icon" onClick={goToPrevWeek}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={goToNextWeek}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={view === 'week' ? goToNextWeek : goToNextDay}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {mealsLoading ? (
+          {view === 'day' && (
+            <DayView
+              date={dayDateStr}
+              slots={slots.map((s) => ({
+                id: s.id,
+                name: s.name,
+                defaultTime: s.defaultTime,
+                sortOrder: s.sortOrder,
+              }))}
+              meals={dayMeals ?? []}
+              onAddMeal={(slotId) => {
+                openCreateForm(dayDateStr, slotId);
+              }}
+              onEditMeal={(meal) => {
+                openEditForm(meal as unknown as Meal);
+              }}
+              onDeleteMeal={(meal) => {
+                setDeletingMeal(meal as unknown as Meal);
+              }}
+              onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
+              onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
+              onOverrideMeal={(mealId) => {
+                setOverrideMealId(mealId);
+              }}
+            />
+          )}
+
+          {view === 'week' && mealsLoading ? (
             <div className="flex items-center justify-center py-16">
               <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
             </div>
-          ) : (
+          ) : view === 'week' ? (
             <div className="stagger-children grid gap-4 lg:grid-cols-7">
               {weekDays.map((date) => {
                 const dateStr = formatLocalDate(date);
@@ -489,84 +599,86 @@ export default function Calendar() {
                 );
               })}
             </div>
+          ) : null}
+
+          {/* Weekly Nutrition Summary — hidden in day view (DayView has its own summary) */}
+          {view === 'week' && (
+            <Card className="animate-fade-in-up mt-6">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
+                  {goals !== undefined && goals !== null && (
+                    <Link
+                      to="/diet-planner/goals"
+                      className="text-muted-foreground hover:text-primary text-sm transition-colors"
+                    >
+                      {t('nutrition_summary.goals_edit')}
+                    </Link>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {goals === undefined || goals === null ? (
+                  <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
+                    <div className="rounded-xl bg-orange-500/10 p-2.5">
+                      <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {t('nutrition_summary.goals_cta_title')}
+                    </p>
+                    <Link
+                      to="/diet-planner/goals"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                    >
+                      {t('nutrition_summary.goals_cta_button')}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                ) : weeklyTotals.calories === 0 &&
+                  weeklyTotals.protein === 0 &&
+                  weeklyTotals.carbs === 0 ? (
+                  <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    <MacroProgressBar
+                      label={t('nutrition_summary.calories')}
+                      actual={weeklyTotals.calories}
+                      goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
+                      unit="kcal"
+                      gradient="from-rose-500 to-orange-500"
+                    />
+                    <MacroProgressBar
+                      label={t('nutrition_summary.protein')}
+                      actual={weeklyTotals.protein}
+                      goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
+                      gradient="from-blue-500 to-indigo-500"
+                    />
+                    <MacroProgressBar
+                      label={t('nutrition_summary.carbs')}
+                      actual={weeklyTotals.carbs}
+                      goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
+                      gradient="from-emerald-500 to-teal-500"
+                    />
+                    <MacroProgressBar
+                      label={t('nutrition_summary.fat')}
+                      actual={weeklyTotals.fat}
+                      goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
+                      gradient="from-amber-500 to-orange-500"
+                    />
+                    <MacroProgressBar
+                      label={t('nutrition_summary.fiber')}
+                      actual={weeklyTotals.fiber}
+                      goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
+                      gradient="from-violet-500 to-purple-500"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
-          {/* Weekly Nutrition Summary */}
-          <Card className="animate-fade-in-up mt-6">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
-                {goals !== undefined && goals !== null && (
-                  <Link
-                    to="/diet-planner/goals"
-                    className="text-muted-foreground hover:text-primary text-sm transition-colors"
-                  >
-                    {t('nutrition_summary.goals_edit')}
-                  </Link>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {goals === undefined || goals === null ? (
-                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
-                  <div className="rounded-xl bg-orange-500/10 p-2.5">
-                    <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    {t('nutrition_summary.goals_cta_title')}
-                  </p>
-                  <Link
-                    to="/diet-planner/goals"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                  >
-                    {t('nutrition_summary.goals_cta_button')}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              ) : weeklyTotals.calories === 0 &&
-                weeklyTotals.protein === 0 &&
-                weeklyTotals.carbs === 0 ? (
-                <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                  <MacroProgressBar
-                    label={t('nutrition_summary.calories')}
-                    actual={weeklyTotals.calories}
-                    goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
-                    unit="kcal"
-                    gradient="from-rose-500 to-orange-500"
-                  />
-                  <MacroProgressBar
-                    label={t('nutrition_summary.protein')}
-                    actual={weeklyTotals.protein}
-                    goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
-                    gradient="from-blue-500 to-indigo-500"
-                  />
-                  <MacroProgressBar
-                    label={t('nutrition_summary.carbs')}
-                    actual={weeklyTotals.carbs}
-                    goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
-                    gradient="from-emerald-500 to-teal-500"
-                  />
-                  <MacroProgressBar
-                    label={t('nutrition_summary.fat')}
-                    actual={weeklyTotals.fat}
-                    goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
-                    gradient="from-amber-500 to-orange-500"
-                  />
-                  <MacroProgressBar
-                    label={t('nutrition_summary.fiber')}
-                    actual={weeklyTotals.fiber}
-                    goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
-                    gradient="from-violet-500 to-purple-500"
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Hydration Quick Add */}
-          <HydrationQuickAdd />
+          {/* Hydration Quick Add — week view only (DaySummaryCard already includes it) */}
+          {view === 'week' && <HydrationQuickAdd />}
 
           <MealForm
             key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}

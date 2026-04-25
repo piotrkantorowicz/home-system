@@ -292,6 +292,20 @@
       "protein": "Protein"
     }
   },
+  "day_view": {
+    "summary": {
+      "calories": "Calories today",
+      "of_target": "of {{target}} kcal target",
+      "meals": "Meals",
+      "meals_done": "{{done}} / {{total}}"
+    },
+    "macro": {
+      "protein": "P",
+      "carbs": "C",
+      "fat": "F",
+      "fiber": "Fb"
+    }
+  },
   "diet_plan_detail": {
     "back": "Back to Diet Plans",
     "loading": "Loading diet plan...",

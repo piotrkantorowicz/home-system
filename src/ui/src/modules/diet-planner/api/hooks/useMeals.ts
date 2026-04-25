@@ -14,7 +14,8 @@ export interface DailyNutrition {
   fiber: number;
 }
 
-type MealEntry = components['schemas']['MealEntryDto'];
+export type MealEntryDto = components['schemas']['MealEntryDto'];
+type MealEntry = MealEntryDto;
 type CreateMealEntryRequest = components['schemas']['CreateMealEntryRequest'];
 type UpdateMealEntryRequest = components['schemas']['UpdateMealEntryRequest'];
 export type OverrideMealEntryRequest = components['schemas']['OverrideMealEntryRequest'];
