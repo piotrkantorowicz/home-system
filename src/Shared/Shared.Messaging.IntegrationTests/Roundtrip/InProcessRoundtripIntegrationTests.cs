@@ -23,13 +23,20 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
     public sealed record HelloIntegrationEvent(Guid EventId, DateTime OccurredAt, string Greeting)
         : IIntegrationEvent;
 
-    public sealed class HelloHandler : IIntegrationEventHandler<HelloIntegrationEvent>
+    public sealed class HelloReceiver
     {
         public List<HelloIntegrationEvent> Received { get; } = new();
+    }
+
+    public sealed class HelloHandler : IIntegrationEventHandler<HelloIntegrationEvent>
+    {
+        private readonly HelloReceiver _receiver;
+
+        public HelloHandler(HelloReceiver receiver) => _receiver = receiver;
 
         public Task HandleAsync(HelloIntegrationEvent @event, CancellationToken ct = default)
         {
-            Received.Add(@event);
+            _receiver.Received.Add(@event);
             return Task.CompletedTask;
         }
     }
@@ -41,11 +48,9 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         services.AddDbContext<MessagingTestDbContext>(o => o.UseNpgsql(_fixture.ConnectionString));
         services.AddIntegrationEventBus().UseInProcessTransport();
         services.AddOutbox<MessagingTestDbContext>();
-        services.AddInbox<MessagingTestDbContext>();
 
-        services.AddSingleton<HelloHandler>();
-        services.AddScoped<IIntegrationEventHandler<HelloIntegrationEvent>>(sp =>
-            sp.GetRequiredService<HelloHandler>());
+        services.AddSingleton<HelloReceiver>();
+        services.AddIntegrationEventConsumer<HelloIntegrationEvent, HelloHandler, MessagingTestDbContext>();
 
         services.AddLogging();
 
@@ -73,16 +78,16 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             await db.SaveChangesAsync();
         }
 
-        var worker = new OutboxWorker(
+        var worker = new OutboxWorker<MessagingTestDbContext>(
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
-            NullLogger<OutboxWorker>.Instance);
+            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance);
 
         await worker.RunOnceAsync(default);
 
-        var handler = _sp.GetRequiredService<HelloHandler>();
-        handler.Received.Count.ShouldBe(1);
-        handler.Received[0].Greeting.ShouldBe("hi");
+        var receiver = _sp.GetRequiredService<HelloReceiver>();
+        receiver.Received.Count.ShouldBe(1);
+        receiver.Received[0].Greeting.ShouldBe("hi");
     }
 
     [Fact]
@@ -102,13 +107,13 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         await PublishAsync();
         await PublishAsync();
 
-        var worker = new OutboxWorker(
+        var worker = new OutboxWorker<MessagingTestDbContext>(
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
-            NullLogger<OutboxWorker>.Instance);
+            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance);
         await worker.RunOnceAsync(default);
 
-        var handler = _sp.GetRequiredService<HelloHandler>();
-        handler.Received.Count.ShouldBe(1);
+        var receiver = _sp.GetRequiredService<HelloReceiver>();
+        receiver.Received.Count.ShouldBe(1);
     }
 }

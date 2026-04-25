@@ -5,9 +5,12 @@ using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
 using Shared.Infrastructure.Messaging.Transport;
+using Shouldly;
 
 public sealed class InProcessIntegrationEventTransportTests
 {
+    public sealed record TestEvent(Guid EventId, DateTime OccurredAt, string Payload) : IIntegrationEvent;
+
     private static OutboxMessage MakeMessage<TEvent>(TEvent @event, IIntegrationEventSerializer serializer)
         where TEvent : IIntegrationEvent
         => new(
@@ -21,27 +24,16 @@ public sealed class InProcessIntegrationEventTransportTests
             LastError: null);
 
     [Fact]
-    public async Task DispatchAsync_WithRegisteredHandler_ResolvesViaInboxExecutorAndInvokesHandler()
+    public async Task DispatchAsync_WithRegisteredHandler_InvokesHandler()
     {
-        var serializer = new IntegrationEventSerializer();
-        var capturedEvent = (TestEvent?)null;
-
+        var serializer = new IntegrationEventSerializer(new[] { "Shared." });
+        TestEvent? captured = null;
         var handler = Substitute.For<IIntegrationEventHandler<TestEvent>>();
-        await handler.HandleAsync(Arg.Do<TestEvent>(e => capturedEvent = e), Arg.Any<CancellationToken>());
-
-        var inbox = Substitute.For<IInboxExecutor>();
-        inbox
-            .ExecuteAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>())
-            .Returns(async ci =>
-            {
-                var invocation = ci.Arg<Func<CancellationToken, Task>>();
-                await invocation(CancellationToken.None);
-            });
+        await handler.HandleAsync(Arg.Do<TestEvent>(e => captured = e), Arg.Any<CancellationToken>());
 
         var services = new ServiceCollection();
         services.AddSingleton<IIntegrationEventSerializer>(serializer);
         services.AddScoped<IIntegrationEventHandler<TestEvent>>(_ => handler);
-        services.AddScoped<IInboxExecutor>(_ => inbox);
         var sp = services.BuildServiceProvider();
 
         var sut = new InProcessIntegrationEventTransport(sp);
@@ -50,29 +42,46 @@ public sealed class InProcessIntegrationEventTransportTests
 
         await sut.DispatchAsync(message, CancellationToken.None);
 
-        capturedEvent.ShouldNotBeNull();
-        capturedEvent!.Payload.ShouldBe("x");
-
-        await inbox.Received(1).ExecuteAsync(
-            @event.EventId, message.EventType, Arg.Any<Func<CancellationToken, Task>>(), Arg.Any<CancellationToken>());
+        captured.ShouldNotBeNull();
+        captured!.Payload.ShouldBe("x");
     }
 
     [Fact]
     public async Task DispatchAsync_WithNoHandlerRegistered_DoesNotThrow()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IIntegrationEventSerializer, IntegrationEventSerializer>();
-        services.AddScoped<IInboxExecutor>(_ => Substitute.For<IInboxExecutor>());
+        services.AddSingleton<IIntegrationEventSerializer>(new IntegrationEventSerializer(new[] { "Shared." }));
         var sp = services.BuildServiceProvider();
         var sut = new InProcessIntegrationEventTransport(sp);
 
+        var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
         var @event = new TestEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
-        var message = MakeMessage(@event, sp.GetRequiredService<IIntegrationEventSerializer>());
+        var message = MakeMessage(@event, serializer);
 
         var act = async () => await sut.DispatchAsync(message, CancellationToken.None);
-
         await act.ShouldNotThrowAsync();
     }
 
-    public sealed record TestEvent(Guid EventId, DateTime OccurredAt, string Payload) : IIntegrationEvent;
+    [Fact]
+    public async Task DispatchAsync_WithMultipleHandlers_InvokesAll()
+    {
+        var serializer = new IntegrationEventSerializer(new[] { "Shared." });
+        var h1 = Substitute.For<IIntegrationEventHandler<TestEvent>>();
+        var h2 = Substitute.For<IIntegrationEventHandler<TestEvent>>();
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IIntegrationEventSerializer>(serializer);
+        services.AddScoped<IIntegrationEventHandler<TestEvent>>(_ => h1);
+        services.AddScoped<IIntegrationEventHandler<TestEvent>>(_ => h2);
+        var sp = services.BuildServiceProvider();
+
+        var sut = new InProcessIntegrationEventTransport(sp);
+        var @event = new TestEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
+        var message = MakeMessage(@event, serializer);
+
+        await sut.DispatchAsync(message, CancellationToken.None);
+
+        await h1.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());
+        await h2.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());
+    }
 }
