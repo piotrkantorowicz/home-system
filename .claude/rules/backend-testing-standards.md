@@ -1,4 +1,8 @@
-# 09 — Testing Standards
+# Backend — Testing Standards
+
+> **Assertion library:** Shouldly only. Examples below using `.Should()` come from FluentAssertions
+> and are kept for readability of patterns — translate them to `.ShouldBe(...)` /
+> `.ShouldThrow<T>()` in actual test code. Project tech stack: xUnit + Shouldly + NSubstitute.
 
 ## Test Project Layout
 
@@ -113,7 +117,7 @@ public sealed class CreateBudgetPlanCommandHandlerTests
 ### Unit Test Rules
 - No database, no filesystem, no network — everything outside the unit under test is mocked.
 - Use NSubstitute for mocks (`Substitute.For<T>()`).
-- Use Shouldly or FluentAssertions for readable assertions — no plain `Assert.Equal`.
+- Use **Shouldly** for readable assertions (`.ShouldBe`, `.ShouldThrow<T>`, `.ShouldNotBeNull`) — no plain `Assert.Equal`, no FluentAssertions.
 - Test **one behaviour** per test method.
 - Parameterize with `[Theory] + [InlineData]` for value variations, not for different scenarios.
 

@@ -163,6 +163,12 @@ Split into multiple independent PRs:
 
 Use **Squash and Merge** for feature branches unless individual commits are meaningful and well-structured — then **Merge Commit** is acceptable. Never use Rebase and Merge on shared branches.
 
+> **Squash + commit body:** When a branch is squashed, GitHub builds the squashed commit
+> message from the PR title (subject) and PR description (body). Per-commit conventional
+> messages on the branch get folded into a list, so detailed multi-paragraph commit bodies
+> like the examples above are most useful for **PR descriptions**, not for individual
+> commits. Keep individual commits focused; put the rationale in the PR.
+
 ---
 
 ## Release Workflow

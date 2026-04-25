@@ -1,4 +1,4 @@
-# 08 — API Patterns (Minimal API)
+# Backend — API Patterns (Minimal API)
 
 ## Endpoint Organization
 
@@ -21,51 +21,56 @@ public static class BudgetPlanEndpoints
         return app;
     }
 
-    // Each endpoint is a private static method in the same class
+    // Each endpoint is a private static method in the same class.
+    // Inject ICommandDispatcher for writes and IQueryDispatcher for reads — never inject
+    // ICommandHandler<,> / IQueryHandler<,> directly.
     private static async Task<IResult> CreateBudgetPlan(
         CreateBudgetPlanRequest request,
-        ISender sender,
+        ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var id = await sender.Send(
+        var id = await dispatcher.SendAsync<CreateBudgetPlanCommand, Guid>(
             new CreateBudgetPlanCommand(request.UserId, request.LimitValue, request.LimitCurrency), ct);
         return TypedResults.Created($"/api/budget-plans/{id}");
     }
 
     private static async Task<IResult> GetBudgetPlan(
         Guid id,
-        ISender sender,
+        IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var result = await sender.Send(new GetBudgetPlanQuery(id), ct);
+        var result = await dispatcher.SendAsync<GetBudgetPlanQuery, BudgetPlanDto?>(
+            new GetBudgetPlanQuery(id), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<IResult> ListBudgetPlans(
         [AsParameters] ListBudgetPlansParams @params,
-        ISender sender,
+        IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var result = await sender.Send(new ListBudgetPlansQuery(@params.UserId, @params.Page, @params.PageSize), ct);
+        var result = await dispatcher.SendAsync<ListBudgetPlansQuery, PagedList<BudgetPlanSummaryDto>>(
+            new ListBudgetPlansQuery(@params.UserId, @params.Page, @params.PageSize), ct);
         return TypedResults.Ok(result);
     }
 
     private static async Task<IResult> AddEntry(
         Guid id,
         AddBudgetEntryRequest request,
-        ISender sender,
+        ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        await sender.Send(new AddBudgetEntryCommand(id, request.AmountValue, request.AmountCurrency, request.Description), ct);
+        await dispatcher.SendAsync(
+            new AddBudgetEntryCommand(id, request.AmountValue, request.AmountCurrency, request.Description), ct);
         return TypedResults.NoContent();
     }
 
     private static async Task<IResult> CloseBudgetPlan(
         Guid id,
-        ISender sender,
+        ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        await sender.Send(new CloseBudgetPlanCommand(id), ct);
+        await dispatcher.SendAsync(new CloseBudgetPlanCommand(id), ct);
         return TypedResults.NoContent();
     }
 }
@@ -110,7 +115,7 @@ Always use `TypedResults.*` — not `Results.*` — so OpenAPI schema is inferre
 ## Error Handling Middleware
 
 ```csharp
-// Shared.Infrastructure/Middleware/ExceptionHandlingMiddleware.cs
+// Shared.Infrastructure.Web/ExceptionHandlingMiddleware.cs
 public sealed class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
@@ -156,11 +161,11 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
   private static async Task<IResult> CreateBudgetPlan(
       CreateBudgetPlanRequest request,
       ClaimsPrincipal user,
-      ISender sender,
+      ICommandDispatcher dispatcher,
       CancellationToken ct)
   {
       var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-      await sender.Send(new CreateBudgetPlanCommand(userId, request.LimitValue, request.LimitCurrency), ct);
+      await dispatcher.SendAsync(new CreateBudgetPlanCommand(userId, request.LimitValue, request.LimitCurrency), ct);
       return TypedResults.Created();
   }
   ```
@@ -183,7 +188,7 @@ Add `.WithOpenApi()` at the group level. Describe each endpoint's responses expl
 Use a consistent pagination wrapper for list endpoints:
 
 ```csharp
-// Shared.Abstractions/Pagination/PagedList.cs
+// Shared.Abstractions.Core/Pagination/PagedList.cs
 public sealed record PagedList<T>(
     IReadOnlyList<T> Items,
     int TotalCount,

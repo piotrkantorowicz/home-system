@@ -13,10 +13,10 @@ Scaffold a complete new module following the project's architecture conventions.
 
 Given the module name and mode provided by the user:
 
-1. **Read** `docs/rules/backend-module-structure.md` to confirm the expected folder layout.
-2. **Read** `docs/rules/backend-ddd-patterns.md` if mode is `--ddd`.
-3. **Read** `docs/rules/backend-cqrs-patterns.md` for handler scaffolding.
-4. **Read** `docs/rules/backend-ef-core-patterns.md` for DbContext and configuration scaffolding.
+1. **Read** `.claude/rules/backend-module-structure.md` to confirm the expected folder layout.
+2. **Read** `.claude/rules/backend-ddd-patterns.md` if mode is `--ddd`.
+3. **Read** `.claude/rules/backend-cqrs-patterns.md` for handler scaffolding.
+4. **Read** `.claude/rules/backend-ef-core-patterns.md` for DbContext and configuration scaffolding.
 
 Then generate all of the following, adapting names for the given module:
 

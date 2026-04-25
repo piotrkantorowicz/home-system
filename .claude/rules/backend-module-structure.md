@@ -1,9 +1,14 @@
-# 02 — Module Structure
+# Backend — Module Structure (Style 1: DDD + EF Core)
+
+> Companion: `backend-dapper-module-structure.md` for Style-2 (Lightweight + Dapper) modules.
+> See `backend-persistence-styles.md` for the decision criteria.
 
 ## Solution Layout
 
 ```
 src/
+  Apis/
+    HomeSystem.REST/                       # Host project — wires modules, no business logic
   Modules/
     {ModuleName}/
       {ModuleName}.Api/
@@ -11,16 +16,18 @@ src/
       {ModuleName}.Contracts/
       {ModuleName}.Domain/
       {ModuleName}.Infrastructure/
+      {ModuleName}.UnitTests/              # Co-located with the module
+      {ModuleName}.IntegrationTests/
   Shared/
-    Shared.Abstractions/          # Interfaces only: IDomainEvent, IIntegrationEvent,
-                                  # IUnitOfWork, ICommand, IQuery<T>, etc.
-    Shared.Infrastructure/        # Cross-cutting implementations: clock, outbox worker,
-                                  # MediatR pipeline behaviours, base DbContext helpers
-  Api/                            # Host project — wires modules, no business logic
-
-tests/
-  {ModuleName}.UnitTests/
-  {ModuleName}.IntegrationTests/
+    Shared.Abstractions.Core/              # IDomainEvent, AggregateRoot, Entity, IUnitOfWork, exceptions, PagedList
+    Shared.Abstractions.Cqrs/              # ICommand, IQuery, dispatchers, handlers, validators
+    Shared.Abstractions.Messaging/         # IIntegrationEvent, IIntegrationEventBus, IIntegrationEventHandler, IInboxExecutor
+    Shared.Infrastructure.Cqrs/            # CQRS dispatcher implementation + decorators
+    Shared.Infrastructure.Messaging/       # Outbox bus, worker, in-process transport, JSON serializer
+    Shared.Infrastructure.Messaging.Ef/    # EF outbox + inbox executor (parameterised on TDbContext)
+    Shared.Infrastructure.Messaging.Dapper/# Dapper inbox executor (parameterised on INpgsqlConnectionFactory)
+    Shared.Infrastructure.Persistence/     # EF Core interceptors (DomainEventDispatcherInterceptor)
+    Shared.Infrastructure.Web/             # Cross-cutting web middleware (ExceptionHandlingMiddleware)
 ```
 
 ## Full Module Anatomy (DDD Module)
@@ -124,11 +131,11 @@ No Domain project, no Contracts project unless other modules need to consume eve
 ## Layer Dependency Rules
 
 ```
-Domain              ← depends on nothing
-Application         ← depends on Domain, Shared.Abstractions
-Infrastructure      ← depends on Domain, Application (for interfaces), EF Core, RabbitMQ.Client
-Api                 ← depends on Application (via MediatR), Contracts
-Contracts           ← depends on nothing (plain C# records/interfaces only)
+Domain              ← depends on Shared.Abstractions.Core only
+Application         ← depends on Domain, Shared.Abstractions.{Core,Cqrs,Messaging}
+Infrastructure      ← depends on Domain, Application, Shared.Infrastructure.{Cqrs,Messaging,Messaging.Ef,Persistence}, EF Core
+Api                 ← depends on Application (via ICommandDispatcher / IQueryDispatcher), Contracts
+Contracts           ← depends on Shared.Abstractions.Messaging only (for IIntegrationEvent on integration-event records)
 
 Cross-module (OK):    ModuleA.Application → ModuleB.Contracts
 Cross-module (NEVER): ModuleA.Application → ModuleB.Domain

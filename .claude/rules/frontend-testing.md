@@ -82,7 +82,7 @@ export const server = setupServer(...handlers);
 
 ```ts
 // src/test/factories/user.ts
-import type { User } from "@/features/auth";
+import type { User } from "@/modules/auth";
 
 let idCounter = 0;
 
