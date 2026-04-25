@@ -2,7 +2,7 @@ namespace DietPlanner.Application.Queries.GetWeightEntries;
 
 using DietPlanner.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class GetWeightEntriesQueryHandler
     : IQueryHandler<GetWeightEntriesQuery, IReadOnlyList<WeightEntryDto>>

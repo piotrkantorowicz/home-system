@@ -1,4 +1,4 @@
-namespace Shared.Abstractions.CQRS;
+namespace Shared.Abstractions.Cqrs;
 
 public interface IQueryHandler<in TQuery, TResult>
     where TQuery : IQuery<TResult>

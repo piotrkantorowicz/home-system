@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateGoal;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateGoalCommandValidator : ICommandValidator<UpdateGoalCommand>
 {

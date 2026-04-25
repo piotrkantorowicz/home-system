@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateProfile;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record CreateProfileCommand(
     string UserId,

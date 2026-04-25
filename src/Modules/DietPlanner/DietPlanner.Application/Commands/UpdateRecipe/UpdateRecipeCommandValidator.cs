@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateRecipe;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateRecipeCommandValidator : ICommandValidator<UpdateRecipeCommand>
 {

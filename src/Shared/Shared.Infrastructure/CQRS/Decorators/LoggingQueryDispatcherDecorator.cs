@@ -2,7 +2,7 @@ namespace Shared.Infrastructure.CQRS.Decorators;
 
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class LoggingQueryDispatcherDecorator : IQueryDispatcher
 {

@@ -1,7 +1,7 @@
 namespace Shared.Infrastructure.CQRS;
 
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class QueryDispatcher : IQueryDispatcher
 {

@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.BulkCompleteMealEntries;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record BulkCompleteMealEntriesCommand(string UserId, DateOnly Date)
     : ICommand<BulkCompleteResult>;

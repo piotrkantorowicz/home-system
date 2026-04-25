@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateHydrationConfig;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateHydrationConfigCommandValidator : ICommandValidator<UpdateHydrationConfigCommand>
 {

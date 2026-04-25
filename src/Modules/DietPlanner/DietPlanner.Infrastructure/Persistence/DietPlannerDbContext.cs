@@ -4,7 +4,7 @@ using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlannerReadDbContext
 {

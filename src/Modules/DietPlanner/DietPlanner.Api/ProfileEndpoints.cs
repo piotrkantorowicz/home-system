@@ -8,7 +8,7 @@ using DietPlanner.Application.Queries.GetWeightPrediction;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public static class ProfileEndpoints
 {

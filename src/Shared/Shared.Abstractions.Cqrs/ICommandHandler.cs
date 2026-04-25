@@ -1,4 +1,4 @@
-namespace Shared.Abstractions.CQRS;
+namespace Shared.Abstractions.Cqrs;
 
 public interface ICommandHandler<in TCommand>
     where TCommand : ICommand

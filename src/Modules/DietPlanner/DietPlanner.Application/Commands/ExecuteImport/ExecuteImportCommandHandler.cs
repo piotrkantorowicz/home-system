@@ -4,8 +4,8 @@ using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.CQRS;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Cqrs;
+using Shared.Abstractions.Core.Domain;
 
 internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImportCommand, ImportResultDto>
 {

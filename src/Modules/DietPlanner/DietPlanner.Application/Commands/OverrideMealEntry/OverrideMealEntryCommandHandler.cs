@@ -2,8 +2,8 @@ namespace DietPlanner.Application.Commands.OverrideMealEntry;
 
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.CQRS;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Cqrs;
+using Shared.Abstractions.Core.Domain;
 
 internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<OverrideMealEntryCommand>
 {

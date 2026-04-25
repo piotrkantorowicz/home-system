@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Queries.GetWeightEntries;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record GetWeightEntriesQuery(
     string UserId,

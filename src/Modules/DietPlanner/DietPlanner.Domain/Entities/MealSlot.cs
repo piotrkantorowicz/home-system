@@ -1,7 +1,7 @@
 namespace DietPlanner.Domain.Entities;
 
 using DietPlanner.Domain.Exceptions;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 using DietPlanner.Domain.ValueObjects;
 
 public sealed class MealSlot : Entity<MealSlotId>

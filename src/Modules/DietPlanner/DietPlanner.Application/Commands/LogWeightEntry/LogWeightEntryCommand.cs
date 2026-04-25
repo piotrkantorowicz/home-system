@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.LogWeightEntry;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record LogWeightEntryCommand(
     string UserId,

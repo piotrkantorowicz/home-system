@@ -7,7 +7,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class DeleteWaterIntakeCommandHandlerTests
 {

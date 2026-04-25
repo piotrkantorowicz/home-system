@@ -11,7 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared.Abstractions\Shared.Abstractions.csproj" />
+    <ProjectReference Include="..\Shared.Abstractions.Core\Shared.Abstractions.Core.csproj" />
+    <ProjectReference Include="..\Shared.Abstractions.Cqrs\Shared.Abstractions.Cqrs.csproj" />
   </ItemGroup>
 
 </Project>

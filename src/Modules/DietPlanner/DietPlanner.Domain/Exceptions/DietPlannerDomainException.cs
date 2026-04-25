@@ -1,6 +1,6 @@
 namespace DietPlanner.Domain.Exceptions;
 
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class DietPlannerDomainException : DomainException
 {

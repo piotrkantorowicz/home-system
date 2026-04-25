@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateGoal;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record CreateGoalCommand(
     string UserId,

@@ -1,6 +1,6 @@
-namespace Shared.Abstractions.CQRS;
+namespace Shared.Abstractions.Cqrs;
 
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public interface IDomainEventHandler<in TDomainEvent>
     where TDomainEvent : IDomainEvent

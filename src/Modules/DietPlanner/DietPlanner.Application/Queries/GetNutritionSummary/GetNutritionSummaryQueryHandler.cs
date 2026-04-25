@@ -4,7 +4,7 @@ using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class GetNutritionSummaryQueryHandler
     : IQueryHandler<GetNutritionSummaryQuery, IReadOnlyList<DailyNutritionDto>>

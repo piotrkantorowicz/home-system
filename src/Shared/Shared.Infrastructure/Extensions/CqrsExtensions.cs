@@ -4,7 +4,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 using Shared.Infrastructure.CQRS;
 using Shared.Infrastructure.CQRS.Decorators;
 

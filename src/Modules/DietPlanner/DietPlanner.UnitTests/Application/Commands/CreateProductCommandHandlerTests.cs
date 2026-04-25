@@ -3,7 +3,7 @@ namespace DietPlanner.UnitTests.Application.Commands;
 using DietPlanner.Application.Commands.CreateProduct;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class CreateProductCommandHandlerTests
 {

@@ -1,4 +1,4 @@
-namespace Shared.Abstractions.Domain;
+namespace Shared.Abstractions.Core.Domain;
 
 public abstract class Entity<TId>
 {

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Extensions;
 
 public static class InfrastructureDependencyInjection

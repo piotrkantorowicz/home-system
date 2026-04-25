@@ -1,7 +1,7 @@
 namespace DietPlanner.Domain.Aggregates;
 
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class NotificationPreferences : AggregateRoot<NotificationPreferencesId>
 {

@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.LogWeightEntry;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class LogWeightEntryCommandValidator : ICommandValidator<LogWeightEntryCommand>
 {

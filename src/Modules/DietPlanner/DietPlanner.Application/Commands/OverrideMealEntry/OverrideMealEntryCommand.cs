@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.OverrideMealEntry;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record ActualProductInput(Guid ProductId, decimal Amount, string Unit);
 

@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Queries.GetNutritionSummary;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record GetNutritionSummaryQuery(
     string UserId,

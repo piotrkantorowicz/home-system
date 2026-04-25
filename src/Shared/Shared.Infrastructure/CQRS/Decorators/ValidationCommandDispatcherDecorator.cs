@@ -1,7 +1,7 @@
 namespace Shared.Infrastructure.CQRS.Decorators;
 
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class ValidationCommandDispatcherDecorator : ICommandDispatcher
 {

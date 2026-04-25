@@ -1,7 +1,7 @@
 namespace Shared.Infrastructure.CQRS.Decorators;
 
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class TransactionCommandDispatcherDecorator<TDbContext> : ICommandDispatcher
     where TDbContext : DbContext

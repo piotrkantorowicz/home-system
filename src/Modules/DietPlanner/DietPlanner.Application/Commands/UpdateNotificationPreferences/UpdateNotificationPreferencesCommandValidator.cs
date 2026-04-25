@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateNotificationPreferences;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateNotificationPreferencesCommandValidator : ICommandValidator<UpdateNotificationPreferencesCommand>
 {

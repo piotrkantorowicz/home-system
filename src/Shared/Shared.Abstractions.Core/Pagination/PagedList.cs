@@ -1,4 +1,4 @@
-namespace Shared.Abstractions.Pagination;
+namespace Shared.Abstractions.Core.Pagination;
 
 public sealed record PagedList<T>(
     IReadOnlyList<T> Items,
