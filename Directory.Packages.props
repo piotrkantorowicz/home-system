@@ -16,7 +16,7 @@
 
     <!-- Dapper / Npgsql (Style-2 modules + messaging Dapper inbox executor) -->
     <PackageVersion Include="Dapper" Version="2.1.66" />
-    <PackageVersion Include="Npgsql" Version="9.0.2" />
+    <PackageVersion Include="Npgsql" Version="10.0.0" />
 
     <!-- Hosting (BackgroundService for OutboxWorker) -->
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />

@@ -6,6 +6,9 @@
     <Project Path="src/Shared/Shared.Infrastructure.Cqrs/Shared.Infrastructure.Cqrs.csproj" />
     <Project Path="src/Shared/Shared.Infrastructure.Persistence/Shared.Infrastructure.Persistence.csproj" />
     <Project Path="src/Shared/Shared.Infrastructure.Web/Shared.Infrastructure.Web.csproj" />
+    <Project Path="src/Shared/Shared.Infrastructure.Messaging/Shared.Infrastructure.Messaging.csproj" />
+    <Project Path="src/Shared/Shared.Infrastructure.Messaging.Ef/Shared.Infrastructure.Messaging.Ef.csproj" />
+    <Project Path="src/Shared/Shared.Infrastructure.Messaging.Dapper/Shared.Infrastructure.Messaging.Dapper.csproj" />
   </Folder>
   <Folder Name="/Modules/" />
   <Folder Name="/Modules/DietPlanner/">
@@ -21,5 +24,7 @@
   <Folder Name="/Tests/">
     <Project Path="src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
     <Project Path="src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
+    <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
+    <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
   </Folder>
 </Solution>
