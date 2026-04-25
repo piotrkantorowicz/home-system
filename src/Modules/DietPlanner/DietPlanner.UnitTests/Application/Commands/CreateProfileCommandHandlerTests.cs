@@ -5,7 +5,7 @@ using DietPlanner.Application.Commands.CreateProfile;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class CreateProfileCommandHandlerTests
 {

@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Commands.ValidateImport;
 
 using DietPlanner.Domain.Repositories;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class ValidateImportCommandHandler : ICommandHandler<ValidateImportCommand, ValidationResultDto>
 {

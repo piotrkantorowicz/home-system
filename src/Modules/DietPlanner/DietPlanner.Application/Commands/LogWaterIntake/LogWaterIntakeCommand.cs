@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.LogWaterIntake;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record LogWaterIntakeCommand(
     string UserId,

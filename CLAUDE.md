@@ -17,8 +17,12 @@ src/
     DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api
                               # + DietPlanner.UnitTests / DietPlanner.IntegrationTests (co-located)
   Shared/
-    Shared.Abstractions/      # Interfaces only (ICommand, IQuery, IDomainEvent, AggregateRoot…)
-    Shared.Infrastructure/    # Cross-cutting implementations (CQRS dispatchers, middleware, EF interceptors)
+    Shared.Abstractions.Core/         # Domain primitives (IDomainEvent, AggregateRoot, Entity, IUnitOfWork, exceptions, PagedList)
+    Shared.Abstractions.Cqrs/         # ICommand, IQuery, dispatchers, handlers, validators
+    Shared.Abstractions.Messaging/    # IIntegrationEvent and (later) integration-event bus contracts
+    Shared.Infrastructure.Cqrs/       # CQRS dispatcher implementation + decorators
+    Shared.Infrastructure.Persistence/# EF Core interceptors (DomainEventDispatcherInterceptor)
+    Shared.Infrastructure.Web/        # Cross-cutting web middleware (ExceptionHandlingMiddleware)
   ui/                         # React 19 + TypeScript SPA (Vite, TanStack Router/Query, Tailwind v4)
 infrastructure/
   docker-compose.yml          # Authentik (OIDC), Redis, PostgreSQL per module (profiles)

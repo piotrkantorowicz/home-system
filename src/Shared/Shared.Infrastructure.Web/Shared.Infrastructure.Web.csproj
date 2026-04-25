@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shared.Abstractions.Core\Shared.Abstractions.Core.csproj" />
+    <ProjectReference Include="..\Shared.Abstractions.Cqrs\Shared.Abstractions.Cqrs.csproj" />
+  </ItemGroup>
+
+</Project>

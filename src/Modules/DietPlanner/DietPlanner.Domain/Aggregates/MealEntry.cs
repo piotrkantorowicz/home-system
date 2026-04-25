@@ -3,7 +3,7 @@ namespace DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Entities;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class MealEntry : AggregateRoot<MealEntryId>
 {

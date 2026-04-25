@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Commands.CreateProfile;
 
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateProfileCommandValidator : ICommandValidator<CreateProfileCommand>
 {

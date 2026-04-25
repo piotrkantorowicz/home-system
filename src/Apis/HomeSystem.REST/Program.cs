@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using Shared.Infrastructure.Extensions;
-using Shared.Infrastructure.Middleware;
+using Shared.Infrastructure.Cqrs.Extensions;
+using Shared.Infrastructure.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 

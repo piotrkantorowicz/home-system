@@ -7,7 +7,7 @@ using DietPlanner.Application.Queries.GetWeightEntries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public static class WeightEntryEndpoints
 {

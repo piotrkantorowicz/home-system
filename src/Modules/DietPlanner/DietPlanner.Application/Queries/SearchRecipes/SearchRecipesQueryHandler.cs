@@ -3,8 +3,8 @@ namespace DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.CQRS;
-using Shared.Abstractions.Pagination;
+using Shared.Abstractions.Cqrs;
+using Shared.Abstractions.Core.Pagination;
 
 internal sealed class SearchRecipesQueryHandler
     : IQueryHandler<SearchRecipesQuery, PagedList<RecipeDto>>

@@ -1,6 +1,6 @@
 namespace DietPlanner.Domain.Aggregates;
 
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 

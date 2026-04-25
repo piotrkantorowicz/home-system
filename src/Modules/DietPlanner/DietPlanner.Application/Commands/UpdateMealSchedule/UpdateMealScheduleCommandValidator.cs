@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateMealSchedule;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateMealScheduleCommandValidator : ICommandValidator<UpdateMealScheduleCommand>
 {

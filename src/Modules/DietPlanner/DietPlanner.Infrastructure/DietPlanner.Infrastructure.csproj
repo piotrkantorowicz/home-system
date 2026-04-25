@@ -11,7 +11,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DietPlanner.Domain\DietPlanner.Domain.csproj" />
     <ProjectReference Include="..\DietPlanner.Application\DietPlanner.Application.csproj" />
-    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Persistence\Shared.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

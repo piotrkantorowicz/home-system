@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateGoal;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record UpdateGoalCommand(
     string UserId,

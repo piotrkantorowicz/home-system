@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateMealEntry;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record UpdateMealEntryCommand(
     Guid Id,

@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateProduct;
 
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record CreateProductCommand(
     string Name,

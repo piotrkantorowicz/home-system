@@ -1,6 +1,6 @@
 namespace DietPlanner.Domain.Aggregates;
 
-using Shared.Abstractions.Domain;
+using Shared.Abstractions.Core.Domain;
 using DietPlanner.Domain.ValueObjects;
 
 public sealed class UserProfile : AggregateRoot<UserProfileId>

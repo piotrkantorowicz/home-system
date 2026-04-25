@@ -2,7 +2,7 @@ namespace DietPlanner.Application.Queries.GetMealSchedule;
 
 using DietPlanner.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class GetMealScheduleQueryHandler : IQueryHandler<GetMealScheduleQuery, MealScheduleConfigDto?>
 {

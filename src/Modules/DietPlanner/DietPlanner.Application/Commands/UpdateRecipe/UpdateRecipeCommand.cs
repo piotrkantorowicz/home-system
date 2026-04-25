@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Commands.UpdateRecipe;
 
 using DietPlanner.Application.Commands.CreateRecipe;
-using Shared.Abstractions.CQRS;
+using Shared.Abstractions.Cqrs;
 
 public sealed record UpdateRecipeCommand(
     Guid Id,

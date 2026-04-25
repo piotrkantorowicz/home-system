@@ -1,0 +1,46 @@
+namespace Shared.Infrastructure.Persistence;
+
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Shared.Abstractions.Cqrs;
+using Shared.Abstractions.Core.Domain;
+
+internal sealed class DomainEventDispatcherInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
+{
+    public override async ValueTask<int> SavedChangesAsync(
+        SaveChangesCompletedEventData eventData,
+        int result,
+        CancellationToken ct = default)
+    {
+        if (eventData.Context is not null)
+            await DispatchDomainEventsAsync(eventData.Context, ct);
+
+        return await base.SavedChangesAsync(eventData, result, ct);
+    }
+
+    private async Task DispatchDomainEventsAsync(Microsoft.EntityFrameworkCore.DbContext dbContext, CancellationToken ct)
+    {
+        var aggregates = dbContext.ChangeTracker
+            .Entries<IAggregateRoot>()
+            .Where(e => e.Entity.DomainEvents.Count > 0)
+            .Select(e => e.Entity)
+            .ToList();
+
+        var domainEvents = aggregates.SelectMany(a => a.DomainEvents).ToList();
+        aggregates.ForEach(a => a.ClearDomainEvents());
+
+        foreach (var domainEvent in domainEvents)
+        {
+            var eventType = domainEvent.GetType();
+            var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
+            var handlers = serviceProvider.GetServices(handlerType);
+
+            foreach (var handler in handlers)
+            {
+                await (Task)handlerType
+                    .GetMethod("HandleAsync")!
+                    .Invoke(handler, [domainEvent, ct])!;
+            }
+        }
+    }
+}
