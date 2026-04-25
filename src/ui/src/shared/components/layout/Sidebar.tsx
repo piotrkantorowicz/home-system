@@ -25,34 +25,15 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapsed }: Sideb
         collapsed ? 'w-16' : 'w-64',
       )}
     >
-      {/* Brand row + collapse toggle */}
-      <div
-        className={cn(
-          'border-border/50 flex h-16 items-center border-b',
-          collapsed ? 'justify-center px-2' : 'justify-between px-6',
-        )}
-      >
-        {!collapsed && (
+      {/* Brand row */}
+      {!collapsed && (
+        <div className="border-border/50 flex h-16 items-center border-b px-6">
           <Link to="/" onClick={onClose} className="gradient-text text-xl font-bold tracking-tight">
             HomeSystem
           </Link>
-        )}
-        {onToggleCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? t('common.sidebar.expand') : t('common.sidebar.collapse')}
-            title={collapsed ? t('common.sidebar.expand') : t('common.sidebar.collapse')}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent/60 focus-visible:ring-primary rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="h-4 w-4" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4" />
-            )}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
+      {collapsed && <div className="border-border/50 h-16 border-b" />}
 
       {/* Navigation */}
       <nav className={cn('flex-1 space-y-1 overflow-y-auto py-5', collapsed ? 'px-2' : 'px-3')}>
@@ -101,12 +82,30 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapsed }: Sideb
         )}
       </nav>
 
-      {/* Footer */}
-      {!collapsed && (
-        <div className="border-border/50 border-t p-4">
-          <p className="text-muted-foreground/60 text-xs font-medium">v1.0.0</p>
-        </div>
-      )}
+      {/* Footer — collapse toggle (always) + version (when expanded) */}
+      <div
+        className={cn(
+          'border-border/50 flex items-center border-t',
+          collapsed ? 'justify-center p-2' : 'justify-between p-4',
+        )}
+      >
+        {!collapsed && <p className="text-muted-foreground/60 text-xs font-medium">v1.0.0</p>}
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? t('common.sidebar.expand') : t('common.sidebar.collapse')}
+            title={collapsed ? t('common.sidebar.expand') : t('common.sidebar.collapse')}
+            className="text-muted-foreground hover:text-foreground hover:bg-accent/60 focus-visible:ring-primary rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -268,7 +267,12 @@ function CollapsedModuleSection({
           onOpenAutoFocus={(event) => {
             event.preventDefault();
           }}
-          className="bg-card text-card-foreground border-border z-50 min-w-[200px] rounded-lg border p-2 shadow-lg"
+          className="z-50 min-w-[200px] rounded-lg border p-2 shadow-lg"
+          style={{
+            background: 'hsl(var(--color-popover))',
+            color: 'hsl(var(--color-popover-foreground))',
+            borderColor: 'hsl(var(--color-border))',
+          }}
         >
           <p className="text-muted-foreground/70 px-3 pb-1 text-[0.7rem] font-semibold tracking-widest uppercase">
             {t(mod.translationKey)}
