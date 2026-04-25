@@ -7,15 +7,18 @@ using Shared.Abstractions.Core.Domain;
 
 internal sealed class DomainEventDispatcherInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
 {
-    public override async ValueTask<int> SavedChangesAsync(
-        SaveChangesCompletedEventData eventData,
-        int result,
+    // Dispatch BEFORE the flush so handlers can enlist new entities (e.g. outbox rows)
+    // in the same SaveChanges. SavedChangesAsync would run after the flush and any new
+    // ChangeTracker additions would be silently dropped.
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
         CancellationToken ct = default)
     {
         if (eventData.Context is not null)
             await DispatchDomainEventsAsync(eventData.Context, ct);
 
-        return await base.SavedChangesAsync(eventData, result, ct);
+        return await base.SavingChangesAsync(eventData, result, ct);
     }
 
     private async Task DispatchDomainEventsAsync(Microsoft.EntityFrameworkCore.DbContext dbContext, CancellationToken ct)
