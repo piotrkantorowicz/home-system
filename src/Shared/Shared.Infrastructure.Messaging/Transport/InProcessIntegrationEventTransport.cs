@@ -25,26 +25,18 @@ public sealed class InProcessIntegrationEventTransport : IIntegrationEventTransp
         var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
         var @event = serializer.Deserialize(message.Payload, message.EventType);
 
+        // Handlers are pre-decorated with InboxAwareHandler<T> at registration time via
+        // AddIntegrationEventConsumer<TEvent, THandler, TDbContext>(), so the transport
+        // just invokes them — no transport-level inbox concern.
         var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
         var handlers = sp.GetServices(handlerType).ToList();
 
-        if (handlers.Count == 0) return;
-
-        var inbox = sp.GetRequiredService<IInboxExecutor>();
-
         foreach (var handler in handlers)
         {
-            await inbox.ExecuteAsync(
-                eventId: message.EventId,
-                eventType: message.EventType,
-                handlerInvocation: async invocationCt =>
-                {
-                    var task = (Task)handlerType
-                        .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
-                        .Invoke(handler, [@event, invocationCt])!;
-                    await task.ConfigureAwait(false);
-                },
-                ct: ct);
+            var task = (Task)handlerType
+                .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
+                .Invoke(handler, [@event, ct])!;
+            await task.ConfigureAwait(false);
         }
     }
 }
