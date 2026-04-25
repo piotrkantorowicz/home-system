@@ -421,7 +421,6 @@ export default function Calendar() {
 
           {view === 'day' && (
             <DayView
-              date={dayDateStr}
               slots={slots.map((s) => ({
                 id: s.id,
                 name: s.name,
