@@ -1,0 +1,399 @@
+# Git Workflow
+
+## Branching Strategy
+
+This project uses a **simplified trunk-based workflow** built around a single long-lived branch: `main`.
+
+```
+main  ──────────────────────────────────────────────────► (production-ready at all times)
+         ↑            ↑              ↑
+   feat/add-login  fix/api-timeout  feat/export-csv
+```
+
+### Why not GitFlow?
+
+A shared `develop` branch becomes a merge bottleneck. It leads to long-lived branches that drift, complex cherry-picks, and hard-to-resolve merge conflicts. Instead, **every feature branch is short-lived and merges directly into `main`**. Releases are controlled via tags, not branch topology.
+
+### Long-lived branches
+
+| Branch | Purpose |
+|---|---|
+| `main` | Always reflects production-ready state. Protected. Deployments and releases are tagged here. |
+
+All other branches are **short-lived** and deleted after merge.
+
+---
+
+## Branch Naming
+
+Every branch must correspond to a **GitHub Issue** (ticket). Branch names follow this pattern:
+
+```
+<type>/<issue-number>-short-description-in-kebab-case
+```
+
+### Types
+
+| Type | When to use |
+|---|---|
+| `feat` | New feature or enhancement |
+| `fix` | Bug fix |
+| `hotfix` | Urgent production fix (see hotfix workflow) |
+| `chore` | Maintenance, dependency updates, config changes |
+| `refactor` | Code restructuring without behavior change |
+| `docs` | Documentation only |
+| `test` | Adding or updating tests |
+
+### Examples
+
+```
+feat/142-user-authentication
+fix/87-null-reference-on-payment
+hotfix/201-token-expiry-crash
+chore/115-update-nuget-packages
+refactor/99-extract-email-service
+```
+
+### Rules
+
+- Use **kebab-case** only — no underscores, no uppercase
+- Keep descriptions **concise but meaningful**
+- Always include the **issue number** — links the branch to the ticket automatically
+- No branches without a corresponding GitHub Issue — open the ticket first
+
+---
+
+## Commit Conventions
+
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### Format
+
+```
+<type>(<scope>): <short description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+
+| Type | Description |
+|---|---|
+| `feat` | A new feature |
+| `fix` | A bug fix |
+| `docs` | Documentation changes only |
+| `style` | Formatting, missing semicolons, etc. (no logic change) |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `perf` | Performance improvement |
+| `test` | Adding or correcting tests |
+| `chore` | Build process, tooling, dependencies |
+| `ci` | CI/CD configuration changes |
+| `revert` | Reverts a previous commit |
+
+### Rules
+
+- Use **imperative mood**: *"add login"* not *"added login"* or *"adds login"*
+- Keep the first line **under 72 characters**
+- Do **not** end the description with a period
+- Reference the issue in the footer: `Closes #142` or `Refs #87`
+- Breaking changes must include `BREAKING CHANGE:` in the footer
+- Each commit = **one logical change**. If you're writing "and", split it.
+
+### Good examples
+
+```
+feat(auth): add OAuth2 login with GitHub provider
+
+Implements OAuth2 authorization code flow using IdentityServer.
+Adds callback endpoint and session persistence.
+
+Closes #142
+```
+
+```
+fix(api): return 404 instead of 500 for missing resource
+
+Previously, accessing a non-existent resource ID caused an unhandled
+NullReferenceException. Guard clause added in the service layer.
+
+Refs #87
+```
+
+```
+feat(exports)!: change CSV export format to include headers
+
+BREAKING CHANGE: CSV files now include a header row by default.
+Consumers relying on positional parsing must update their parsers.
+
+Closes #201
+```
+
+---
+
+## Pull Requests
+
+### Every branch merges via PR — no direct pushes to `main`
+
+- Open a PR as soon as the branch is ready for review (or earlier as Draft)
+- Link the PR to its GitHub Issue using `Closes #<issue-number>`
+- A PR = **complete, independently deployable unit of work**
+
+### If the ticket is large
+
+Split into multiple independent PRs:
+
+1. Break work into vertical slices (data layer → service → API → UI)
+2. Each slice gets its own branch and PR
+3. PRs can be merged independently
+4. Use feature flags to hide incomplete features in production
+
+### PR checklist
+
+- [ ] Branch name follows naming convention
+- [ ] All commits follow Conventional Commits format
+- [ ] PR description explains *what* and *why*, not just *what*
+- [ ] Linked to a GitHub Issue
+- [ ] Tests added or updated
+- [ ] No unresolved TODO comments left behind
+- [ ] CI passes
+
+### Merge strategy
+
+Use **Squash and Merge** for feature branches unless individual commits are meaningful and well-structured — then **Merge Commit** is acceptable. Never use Rebase and Merge on shared branches.
+
+---
+
+## Release Workflow
+
+Releases are **tags on `main`**, not branch merges.
+
+```
+main  ──●──────●──────●──────●──────►
+        │      │      │      │
+       v1.0   v1.1   v1.2   v2.0
+```
+
+### Steps
+
+1. Ensure all intended PRs are merged into `main` and CI is green
+2. Create a Git tag following [Semantic Versioning](https://semver.org/):
+
+```bash
+git tag -a v1.2.0 -m "Release v1.2.0"
+git push origin v1.2.0
+```
+
+3. Create a **GitHub Release** from the tag with a changelog
+4. Deploy from the tag
+
+### Versioning rules (SemVer)
+
+| Change type | Version bump |
+|---|---|
+| Breaking change | Major (`v2.0.0`) |
+| New feature, backwards-compatible | Minor (`v1.3.0`) |
+| Bug fix, patch | Patch (`v1.2.1`) |
+
+---
+
+## Hotfix Workflow
+
+A hotfix is a **temporary mitigation** for an urgent production issue. It ships fast, but it is **not a substitute for a proper fix**. Every hotfix must be followed up with a real solution in the normal development cycle.
+
+```
+main ──●──────────────────●──────────────────●──────►
+      v1.2              v1.2.1              v1.3.0
+        \                ↑                    ↑
+         hotfix/201-fix  /         feat/210-proper-fix
+          ──────────────              (next release)
+```
+
+### Steps
+
+1. **Open two GitHub Issues** before touching any code:
+   - One for the hotfix itself (label: `hotfix`) — e.g. *#201 Token expiry crash in production*
+   - One for the proper follow-up fix (label: `tech-debt`) — e.g. *#210 Redesign token refresh flow*
+   - Link them: mention `Follow-up: #210` in issue #201
+
+2. Branch from `main`:
+
+```bash
+git checkout main
+git pull
+git checkout -b hotfix/201-token-expiry-crash
+```
+
+3. Implement the **minimal fix**. The commit message must reference both issues:
+
+```
+fix(auth): guard against expired token during refresh
+
+Temporary mitigation — catches the null ref and returns 401.
+This addresses the symptom only; proper fix tracked in #210.
+
+Closes #201
+```
+
+4. Open a PR targeting `main`. The PR description must include:
+
+```markdown
+## What
+Short description of the production issue and what this patch does.
+
+## ⚠️ Temporary fix
+This is a mitigation only. It does not address the root cause.
+Follow-up: #210
+```
+
+5. After merge, tag a new patch release:
+
+```bash
+git tag -a v1.2.1 -m "Hotfix v1.2.1 - token expiry crash (#201)"
+git push origin v1.2.1
+```
+
+6. Deploy from the tag.
+
+7. **Immediately schedule the follow-up issue** (#210) into the next sprint or milestone. Do not leave it in the backlog without a milestone — unscheduled tech-debt tickets disappear.
+
+### Hotfix Rules
+
+- A hotfix branch **must never contain refactoring** — change only what stops the bleeding
+- If the proper fix is straightforward and low-risk, skip the hotfix and do a fast-tracked `fix/` branch
+- The follow-up `feat/` or `refactor/` branch must reference the hotfix PR for traceability
+- Follow-up issue must have a **milestone** before the hotfix PR is merged
+
+---
+
+## Enforcing Conventions — Husky + commitlint
+
+### Initial Setup
+
+```bash
+npm install --save-dev husky @commitlint/cli @commitlint/config-conventional lint-staged
+npx husky init
+```
+
+### commitlint config
+
+Create `commitlint.config.js` in the project root:
+
+```js
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'type-enum': [
+      2,
+      'always',
+      ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'chore', 'ci', 'revert', 'hotfix']
+    ],
+    'subject-case': [2, 'always', 'lower-case'],
+    'header-max-length': [2, 'always', 72],
+  },
+};
+```
+
+### Husky Hooks
+
+**Commit message validation** (`.husky/commit-msg`):
+
+```bash
+npx --no -- commitlint --edit $1
+```
+
+**Pre-commit lint** (`.husky/pre-commit`):
+
+```bash
+npx lint-staged
+```
+
+**Branch name enforcement** (`.husky/pre-push`):
+
+```bash
+branch=$(git rev-parse --abbrev-ref HEAD)
+pattern="^(feat|fix|hotfix|chore|refactor|docs|test)\/[0-9]+-[a-z0-9-]+$"
+
+if [[ "$branch" == "main" ]]; then
+  exit 0
+fi
+
+if ! [[ "$branch" =~ $pattern ]]; then
+  echo "❌ Branch name '$branch' does not follow naming convention."
+  echo "   Expected: <type>/<issue-number>-short-description"
+  echo "   Example:  feat/142-user-authentication"
+  exit 1
+fi
+```
+
+### lint-staged config
+
+In `package.json`:
+
+```json
+{
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{cs}": ["dotnet format --include"],
+    "*.{json,css,md}": ["prettier --write"]
+  }
+}
+```
+
+### CI enforcement
+
+Add to GitHub Actions so hooks cannot be bypassed:
+
+```yaml
+# .github/workflows/lint-commits.yml
+name: Lint Commits
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+```
+
+### GitHub Branch Protection (Settings → Branches → main)
+
+- ✅ Require pull request before merging
+- ✅ Require status checks to pass (CI, commitlint)
+- ✅ Require branches to be up to date before merging
+- ✅ Do not allow bypassing the above settings
+
+---
+
+## Daily Workflow — Quick Reference
+
+```bash
+# 1. Open a GitHub Issue first
+# 2. Create branch from main
+git checkout main && git pull
+git checkout -b feat/142-user-authentication
+
+# 3. Work in small commits
+git add -p   # stage selectively
+git commit -m "feat(auth): add login endpoint"
+git commit -m "feat(auth): add token refresh logic"
+
+# 4. Push and open PR → main
+git push -u origin feat/142-user-authentication
+# Open PR on GitHub, link: "Closes #142"
+
+# 5. After merge, clean up
+git checkout main && git pull
+git branch -d feat/142-user-authentication
+```
