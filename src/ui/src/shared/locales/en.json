@@ -29,6 +29,10 @@
     "welcome_back": "Welcome back, {{name}}!",
     "modules": "Modules",
     "diet_planner": "Diet Planner",
+    "sidebar": {
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar"
+    },
     "unit": {
       "g": "g",
       "ml": "ml",
