@@ -13,4 +13,12 @@ public sealed record MealEntryDto(
     string? Notes,
     TimeOnly? MealTime,
     int? SequenceOrder,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string Status,
+    ActualRecipeDto? ActualRecipe,
+    IReadOnlyList<ActualProductDto> ActualProducts);
+
+public sealed record ActualRecipeDto(Guid Id, string Name);
+
+public sealed record ActualProductDto(
+    Guid Id, Guid ProductId, string ProductName, decimal Amount, string Unit);

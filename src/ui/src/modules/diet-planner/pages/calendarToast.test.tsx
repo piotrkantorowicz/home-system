@@ -5,18 +5,19 @@
  * MealForm is stubbed so tests focus on toast feedback only, bypassing
  * the recipe-search UI inside the real form.
  */
+import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, it, expect, vi } from 'vitest';
 
-import { server } from '@/test/mocks/server';
-import { ToastProvider } from '@shared/context/ToastContext';
 import { createWrapper } from '../../../test/utils/queryWrapper';
 
 import Calendar from './Calendar';
 
 import type { ReactNode } from 'react';
+
+import { server } from '@/test/mocks/server';
 
 const BASE = 'http://localhost:5000';
 
@@ -143,10 +144,10 @@ async function getMealActionButtons() {
     mealItem = mealItem.parentElement;
   }
   if (!mealItem) throw new Error('Could not find .group meal item');
-  const buttons = mealItem.querySelectorAll('button');
-  // First button = pencil (edit), last button = trash (delete)
-  const editBtn = buttons[0] as HTMLElement;
+  const buttons = Array.from(mealItem.querySelectorAll('button'));
+  // Edit (Pencil) and delete (Trash2) buttons share the trailing positions in the action row.
   const deleteBtn = buttons[buttons.length - 1] as HTMLElement;
+  const editBtn = buttons[buttons.length - 2] as HTMLElement;
   return { editBtn, deleteBtn };
 }
 

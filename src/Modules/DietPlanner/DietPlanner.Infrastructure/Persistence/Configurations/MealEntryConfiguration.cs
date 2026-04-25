@@ -42,10 +42,28 @@ internal sealed class MealEntryConfiguration : IEntityTypeConfiguration<MealEntr
         builder.Property(x => x.SequenceOrder).HasColumnName("sequence_order");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
 
+        builder.Property(x => x.Status)
+            .HasConversion<string>()
+            .IsRequired()
+            .HasMaxLength(32)
+            .HasColumnName("status")
+            .HasDefaultValue(MealEntryStatus.Planned);
+
+        builder.Property(x => x.ActualRecipeId)
+            .HasConversion(
+                id => id == null ? (Guid?)null : id.Value,
+                value => value == null ? null : RecipeId.From(value.Value))
+            .HasColumnName("actual_recipe_id");
+
         // FK relationship to Recipe — MealEntry has no navigation, Recipe has no back-collection
         builder.HasOne<Recipe>()
             .WithMany()
             .HasForeignKey(x => x.RecipeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Recipe>()
+            .WithMany()
+            .HasForeignKey(x => x.ActualRecipeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // FK relationship to MealSlot — block slot deletion when entries exist
@@ -54,8 +72,17 @@ internal sealed class MealEntryConfiguration : IEntityTypeConfiguration<MealEntr
             .HasForeignKey(x => x.MealSlotId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasMany(x => x.ActualProducts)
+            .WithOne()
+            .HasForeignKey("meal_entry_id")
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.ActualProducts).UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasIndex(x => new { x.UserId, x.Date }).HasDatabaseName("idx_meal_entries_user_date");
         builder.HasIndex(x => x.RecipeId).HasDatabaseName("idx_meal_entries_recipe");
         builder.HasIndex(x => x.MealSlotId).HasDatabaseName("idx_meal_entries_meal_slot");
+        builder.HasIndex(x => x.ActualRecipeId).HasDatabaseName("idx_meal_entries_actual_recipe");
     }
 }

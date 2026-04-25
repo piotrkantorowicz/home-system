@@ -15,6 +15,15 @@ internal sealed class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct = default)
         => await _dbContext.Products.FirstOrDefaultAsync(x => x.Id == id, ct);
 
+    public async Task<IReadOnlyList<Product>> GetByIdsAsync(
+        IReadOnlyCollection<ProductId> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0) return [];
+        return await _dbContext.Products
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task<Product?> GetByNameAsync(string name, string userId, CancellationToken ct = default)
         => await _dbContext.Products
             .FirstOrDefaultAsync(x => x.Name == name && x.CreatedByUserId == userId, ct);

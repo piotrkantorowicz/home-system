@@ -2,9 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
-import { server } from '@/test/mocks/server';
-import { createWrapper } from '@/test/utils/queryWrapper';
-
 import { queryKeys } from '../queryKeys';
 
 import {
@@ -14,6 +11,9 @@ import {
   useNutritionSummary,
   useUpdateMeal,
 } from './useMeals';
+
+import { server } from '@/test/mocks/server';
+import { createWrapper } from '@/test/utils/queryWrapper';
 
 const BASE = 'http://localhost:5000';
 

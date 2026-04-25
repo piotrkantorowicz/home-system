@@ -192,6 +192,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meals/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Mark a meal entry as done
+         * @description Confirms the user ate the meal as planned. Idempotent on already-Done entries; rejected with 422 if the entry has been Modified — reset the override first.
+         */
+        patch: operations["CompleteMealEntry"];
+        trace?: never;
+    };
+    "/api/v1/meals/{id}/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Record what was actually eaten instead of the planned meal
+         * @description Replaces the meal's actual recipe and/or ad-hoc product list. Override must include either a recipe or at least one product.
+         */
+        patch: operations["OverrideMealEntry"];
+        trace?: never;
+    };
+    "/api/v1/meals/{id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Revert a meal entry to its planned state
+         * @description Clears Done/Modified status and any override data. Idempotent on already-Planned entries.
+         */
+        patch: operations["ResetMealEntry"];
+        trace?: never;
+    };
+    "/api/v1/meals/bulk-complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark all of the day's planned meals as done
+         * @description Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.
+         */
+        post: operations["BulkCompleteMeals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meals/validate": {
         parameters: {
             query?: never;
@@ -492,6 +572,36 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ActualProductDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            /** Format: double */
+            amount: number | string;
+            unit: string;
+        };
+        ActualProductRequest: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: double */
+            amount: number | string;
+            unit: string;
+        };
+        ActualRecipeDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        BulkCompleteMealsRequest: {
+            /** Format: date */
+            date: string;
+        };
+        BulkCompleteMealsResponse: {
+            /** Format: int32 */
+            completed: number | string;
+        };
         CreateMealEntryRequest: {
             /** Format: date */
             date: string;
@@ -731,6 +841,9 @@ export interface components {
             sequenceOrder: null | number | string;
             /** Format: date-time */
             createdAt: string;
+            status: string;
+            actualRecipe: null | components["schemas"]["ActualRecipeDto"];
+            actualProducts: components["schemas"]["ActualProductDto"][];
         };
         MealScheduleConfigDto: {
             /** Format: uuid */
@@ -794,6 +907,11 @@ export interface components {
             fat: number | string;
             /** Format: double */
             fiber: number | string;
+        };
+        OverrideMealEntryRequest: {
+            /** Format: uuid */
+            actualRecipeId: null | string;
+            actualProducts: components["schemas"]["ActualProductRequest"][];
         };
         PagedListOfProductDto: {
             items: components["schemas"]["ProductDto"][];
@@ -1647,6 +1765,168 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CompleteMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OverrideMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideMealEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ResetMealEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BulkCompleteMeals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCompleteMealsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCompleteMealsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

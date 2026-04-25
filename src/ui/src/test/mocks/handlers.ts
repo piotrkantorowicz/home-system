@@ -101,6 +101,9 @@ export const mealHandlers = [
         mealTime: null,
         sequenceOrder: null,
         createdAt: '2024-01-15T07:00:00Z',
+        status: 'Planned',
+        actualRecipe: null,
+        actualProducts: [],
       },
     ]);
   }),
@@ -128,6 +131,22 @@ export const mealHandlers = [
 
   http.delete(`${BASE}/api/v1/meals/:id`, () => {
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch(`${BASE}/api/v1/meals/:id/complete`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch(`${BASE}/api/v1/meals/:id/override`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch(`${BASE}/api/v1/meals/:id/reset`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${BASE}/api/v1/meals/bulk-complete`, () => {
+    return HttpResponse.json({ completed: 3 }, { status: 200 });
   }),
 ];
 

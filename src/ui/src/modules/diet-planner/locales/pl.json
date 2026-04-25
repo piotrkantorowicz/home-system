@@ -109,7 +109,51 @@
     "tab_calendar": "Kalendarz",
     "tab_nutrition": "Odżywianie",
     "tab_import": "Import",
-    "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków."
+    "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków.",
+    "meal_status": {
+      "planned": "Zaplanowane",
+      "done": "Zjedzone",
+      "modified": "Zmienione"
+    },
+    "meal_actions": {
+      "mark_done": "Oznacz jako zjedzone",
+      "override": "Zapisz co naprawdę zjadłeś",
+      "reset": "Cofnij do zaplanowanego"
+    },
+    "meal_action_success": {
+      "done": "Oznaczono jako zjedzone",
+      "override": "Zapisano zmianę",
+      "reset": "Cofnięto do zaplanowanego"
+    },
+    "meal_action_error": {
+      "done": "Nie udało się oznaczyć jako zjedzone",
+      "override": "Nie udało się zapisać zmiany",
+      "reset": "Nie udało się cofnąć"
+    },
+    "bulk_complete": {
+      "button": "✓ wszystko",
+      "success": "Oznaczono {{count}} posiłków jako zjedzone",
+      "error": "Nie udało się oznaczyć posiłków"
+    }
+  },
+  "override_dialog": {
+    "title": "Co zjadłeś zamiast tego?",
+    "replace_recipe": {
+      "heading": "Zastąp innym przepisem",
+      "placeholder": "Szukaj przepisów…"
+    },
+    "add_products": {
+      "heading": "Lub dodaj produkty doraźnie",
+      "add_button": "Dodaj produkt"
+    },
+    "product": "Produkt",
+    "amount": "Ilość",
+    "unit": "Jednostka",
+    "submit": "Zapisz zmianę",
+    "cancel": "Anuluj",
+    "validation": {
+      "empty": "Wybierz przepis lub dodaj przynajmniej jeden produkt."
+    }
   },
   "nutrition_summary": {
     "title": "Tygodniowe Podsumowanie Żywienia",

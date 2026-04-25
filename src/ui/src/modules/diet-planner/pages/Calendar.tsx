@@ -9,7 +9,18 @@ import {
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
-import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, Target, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  Target,
+  Trash2,
+} from 'lucide-react';
 import { lazy, Suspense, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -22,11 +33,16 @@ import {
   useUpdateMeal,
   useDeleteMeal,
   useNutritionSummary,
+  useCompleteMeal,
+  useResetMeal,
+  useBulkCompleteMeals,
 } from '../api/hooks/useMeals';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
 import { MealForm } from '../components/diet-plans/MealForm';
+import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog';
+import { MealStatusBadge, type MealStatus } from '../components/diet-plans/MealStatusBadge';
 
 const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
 const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
@@ -57,6 +73,9 @@ interface Meal {
   recipeName: string;
   servings: number | string;
   notes?: string;
+  status?: string;
+  actualRecipe?: { id: string; name: string } | null;
+  actualProducts?: { id: string; productName: string }[];
 }
 
 export default function Calendar() {
@@ -80,6 +99,10 @@ export default function Calendar() {
   const createMeal = useCreateMeal();
   const updateMeal = useUpdateMeal();
   const deleteMeal = useDeleteMeal();
+  const completeMeal = useCompleteMeal();
+  const resetMeal = useResetMeal();
+  const bulkCompleteMeals = useBulkCompleteMeals();
+  const [overrideMealId, setOverrideMealId] = useState<string | null>(null);
 
   const weekStartDate = new Date(weekStart);
   const weekEndDate = new Date(weekStartDate);
@@ -177,6 +200,36 @@ export default function Calendar() {
     }
   };
 
+  const handleComplete = async (meal: Meal) => {
+    try {
+      await completeMeal.mutateAsync(meal.id);
+      toast.success(t('calendar.meal_action_success.done'));
+    } catch {
+      toast.error(t('calendar.meal_action_error.done'));
+    }
+  };
+
+  const handleReset = async (meal: Meal) => {
+    try {
+      await resetMeal.mutateAsync(meal.id);
+      toast.success(t('calendar.meal_action_success.reset'));
+    } catch {
+      toast.error(t('calendar.meal_action_error.reset'));
+    }
+  };
+
+  const handleBulkComplete = async (date: string) => {
+    try {
+      const result = await bulkCompleteMeals.mutateAsync(date);
+      const completed = Number(result.completed);
+      if (completed > 0) {
+        toast.success(t('calendar.bulk_complete.success', { count: completed }));
+      }
+    } catch {
+      toast.error(t('calendar.bulk_complete.error'));
+    }
+  };
+
   const isSubmitting = createMeal.isPending || updateMeal.isPending;
 
   const goToPrevWeek = () => {
@@ -254,13 +307,29 @@ export default function Calendar() {
                   >
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-muted-foreground text-xs tracking-wider uppercase">
-                            {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
-                          </span>
-                          <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
-                            {date.getDate()}
-                          </span>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-muted-foreground text-xs tracking-wider uppercase">
+                              {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
+                            </span>
+                            <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
+                              {date.getDate()}
+                            </span>
+                          </div>
+                          {Object.values(dayMeals)
+                            .flat()
+                            .some((m) => m.status === 'Planned') && (
+                            <button
+                              type="button"
+                              onClick={() => void handleBulkComplete(dateStr)}
+                              className="text-muted-foreground focus-visible:ring-primary rounded p-1 text-[10px] font-medium transition-colors hover:text-emerald-600 focus-visible:ring-2 focus-visible:outline-none"
+                              title={t('calendar.bulk_complete.button')}
+                              aria-label={t('calendar.bulk_complete.button')}
+                              disabled={bulkCompleteMeals.isPending}
+                            >
+                              {t('calendar.bulk_complete.button')}
+                            </button>
+                          )}
                         </div>
                       </CardTitle>
                     </CardHeader>
@@ -293,13 +362,68 @@ export default function Calendar() {
                               className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
                             >
                               <div className="flex items-start justify-between gap-1">
-                                <Link
-                                  to={`/diet-planner/recipes/${meal.recipeId}`}
-                                  className="min-w-0 flex-1 truncate font-medium hover:underline"
-                                >
-                                  {meal.recipeName}
-                                </Link>
+                                <div className="flex min-w-0 flex-1 items-start gap-1.5">
+                                  <MealStatusBadge
+                                    status={(meal.status as MealStatus | undefined) ?? 'Planned'}
+                                    className="mt-0.5 shrink-0"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    {meal.status === 'Modified' && meal.actualRecipe ? (
+                                      <>
+                                        <Link
+                                          to={`/diet-planner/recipes/${meal.actualRecipe.id}`}
+                                          className="block truncate font-medium hover:underline"
+                                        >
+                                          {meal.actualRecipe.name}
+                                        </Link>
+                                        <span className="text-muted-foreground/70 block truncate text-[10px] line-through">
+                                          {meal.recipeName}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <Link
+                                        to={`/diet-planner/recipes/${meal.recipeId}`}
+                                        className="block truncate font-medium hover:underline"
+                                      >
+                                        {meal.recipeName}
+                                      </Link>
+                                    )}
+                                  </div>
+                                </div>
                                 <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                                  {meal.status !== 'Done' && meal.status !== 'Modified' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleComplete(meal)}
+                                      className="text-muted-foreground focus-visible:ring-primary rounded p-0.5 transition-colors hover:text-emerald-600 focus-visible:ring-2 focus-visible:outline-none"
+                                      title={t('calendar.meal_actions.mark_done')}
+                                      aria-label={t('calendar.meal_actions.mark_done')}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOverrideMealId(meal.id);
+                                    }}
+                                    className="text-muted-foreground focus-visible:ring-primary rounded p-0.5 transition-colors hover:text-amber-600 focus-visible:ring-2 focus-visible:outline-none"
+                                    title={t('calendar.meal_actions.override')}
+                                    aria-label={t('calendar.meal_actions.override')}
+                                  >
+                                    <Sparkles className="h-3 w-3" />
+                                  </button>
+                                  {meal.status !== 'Planned' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleReset(meal)}
+                                      className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                                      title={t('calendar.meal_actions.reset')}
+                                      aria-label={t('calendar.meal_actions.reset')}
+                                    >
+                                      <RotateCcw className="h-3 w-3" />
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -447,6 +571,16 @@ export default function Calendar() {
             isSubmitting={isSubmitting}
             mode={editingMeal ? 'edit' : 'create'}
           />
+
+          {overrideMealId !== null && (
+            <MealOverrideDialog
+              open
+              onClose={() => {
+                setOverrideMealId(null);
+              }}
+              mealEntryId={overrideMealId}
+            />
+          )}
 
           {/* Delete confirmation dialog */}
           <Dialog

@@ -110,7 +110,51 @@
     "tab_calendar": "Calendar",
     "tab_nutrition": "Nutrition",
     "tab_import": "Import",
-    "no_schedule": "Configure your meal schedule in Profile to see meal slots here."
+    "no_schedule": "Configure your meal schedule in Profile to see meal slots here.",
+    "meal_status": {
+      "planned": "Planned",
+      "done": "Done",
+      "modified": "Modified"
+    },
+    "meal_actions": {
+      "mark_done": "Mark done",
+      "override": "Record what was actually eaten",
+      "reset": "Revert to planned"
+    },
+    "meal_action_success": {
+      "done": "Marked as done",
+      "override": "Override saved",
+      "reset": "Reverted to planned"
+    },
+    "meal_action_error": {
+      "done": "Failed to mark as done",
+      "override": "Failed to save override",
+      "reset": "Failed to revert"
+    },
+    "bulk_complete": {
+      "button": "✓ all",
+      "success": "{{count}} meals marked as done",
+      "error": "Failed to mark meals as done"
+    }
+  },
+  "override_dialog": {
+    "title": "What did you eat instead?",
+    "replace_recipe": {
+      "heading": "Replace with a different recipe",
+      "placeholder": "Search recipes…"
+    },
+    "add_products": {
+      "heading": "Or log ad-hoc products",
+      "add_button": "Add product"
+    },
+    "product": "Product",
+    "amount": "Amount",
+    "unit": "Unit",
+    "submit": "Save override",
+    "cancel": "Cancel",
+    "validation": {
+      "empty": "Pick a recipe or add at least one product."
+    }
   },
   "nutrition_summary": {
     "title": "Weekly Nutrition Summary",
