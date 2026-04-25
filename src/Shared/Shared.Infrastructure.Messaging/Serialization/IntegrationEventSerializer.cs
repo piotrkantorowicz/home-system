@@ -16,16 +16,24 @@ public sealed class IntegrationEventSerializer : IIntegrationEventSerializer
         PropertyNameCaseInsensitive = true
     };
 
+    // Default allowlist used when registered via DI.
+    private static readonly string[] DefaultAllowedPrefixes =
+        ["Shared.", "DietPlanner.Contracts", "Notifications.Contracts"];
+
     private readonly IReadOnlyCollection<string> _allowedTypePrefixes;
 
     /// <summary>
-    /// Creates a serializer that will only deserialize types whose assembly-qualified name
-    /// starts with one of the allowed prefixes. Defaults to the project's Shared.* and
-    /// module Contracts namespaces. Pass an explicit list to override (e.g. in tests).
+    /// Parameterless constructor used by DI — applies the built-in prefix allowlist.
     /// </summary>
-    public IntegrationEventSerializer(IEnumerable<string>? allowedTypePrefixes = null)
-        => _allowedTypePrefixes = (allowedTypePrefixes
-            ?? new[] { "Shared.", "DietPlanner.Contracts", "Notifications.Contracts" }).ToArray();
+    public IntegrationEventSerializer()
+        : this(DefaultAllowedPrefixes) { }
+
+    /// <summary>
+    /// Constructor for tests or host-level overrides that need a custom allowlist.
+    /// Pass an explicit set of assembly-qualified-name prefixes to accept.
+    /// </summary>
+    public IntegrationEventSerializer(IReadOnlyCollection<string> allowedTypePrefixes)
+        => _allowedTypePrefixes = allowedTypePrefixes;
 
     public string Serialize(IIntegrationEvent @event)
         => JsonSerializer.Serialize(@event, @event.GetType(), Options);
