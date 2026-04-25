@@ -5,7 +5,7 @@ import type { paths } from './generated/schema';
 
 const baseUrl: string =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  (import.meta.env.DEV ? 'http://localhost:5000' : '');
+  (import.meta.env.DEV ? 'http://localhost:5050' : '');
 
 const DEBUG = import.meta.env.DEV;
 

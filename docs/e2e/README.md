@@ -140,7 +140,7 @@ E2E_USER_PASSWORD=<shared password for E2eWorker0..E2eWorker3>
 
 ```env
 PLAYWRIGHT_BASE_URL=http://localhost:5173
-API_BASE_URL=http://localhost:5000
+API_BASE_URL=http://localhost:5050
 TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
 # Optional per-worker overrides:
 # TEST_USER_EMAIL_<n>=E2eWorker<n>

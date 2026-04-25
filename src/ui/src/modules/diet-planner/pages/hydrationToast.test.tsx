@@ -25,7 +25,7 @@ vi.mock('react-i18next', () => ({
   Trans: ({ i18nKey }: { i18nKey: string }) => i18nKey,
 }));
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 // ── render helper ─────────────────────────────────────────────────────────────
 function renderPage(ui: ReactNode) {

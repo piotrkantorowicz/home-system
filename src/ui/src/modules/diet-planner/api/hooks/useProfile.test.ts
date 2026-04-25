@@ -13,7 +13,7 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
   redirectToLogin: vi.fn(),
 }));
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 describe('useProfile', () => {
   it('returns profile data on success', async () => {
