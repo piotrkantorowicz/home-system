@@ -299,8 +299,10 @@
     "summary": {
       "calories": "Kalorie dziś",
       "of_target": "z {{target}} kcal celu",
-      "meals": "Posiłki",
-      "meals_done": "{{done}} / {{total}}"
+      "macros": "Makro",
+      "meals": "Postęp posiłków",
+      "meals_done": "{{done}} / {{total}}",
+      "hydration": "Nawodnienie"
     },
     "macro": {
       "protein": "B",

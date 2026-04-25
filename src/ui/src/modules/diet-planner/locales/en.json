@@ -296,8 +296,10 @@
     "summary": {
       "calories": "Calories today",
       "of_target": "of {{target}} kcal target",
-      "meals": "Meals",
-      "meals_done": "{{done}} / {{total}}"
+      "macros": "Macros",
+      "meals": "Meals progress",
+      "meals_done": "{{done}} / {{total}}",
+      "hydration": "Hydration"
     },
     "macro": {
       "protein": "P",
