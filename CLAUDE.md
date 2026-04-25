@@ -125,7 +125,9 @@ Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributi
 | I'm working on… | Read this |
 |---|---|
 | C# naming, nullability, style | `.claude/rules/backend-coding-standards.md` |
-| Module / folder structure | `.claude/rules/backend-module-structure.md` |
+| Module / folder structure (DDD + EF) | `.claude/rules/backend-module-structure.md` |
+| Module / folder structure (Dapper) | `.claude/rules/backend-dapper-module-structure.md` |
+| Choosing a persistence style (EF vs Dapper) | `.claude/rules/backend-persistence-styles.md` |
 | Aggregates, Entities, Value Objects | `.claude/rules/backend-ddd-patterns.md` |
 | Commands, Queries, Mapping | `.claude/rules/backend-cqrs-patterns.md` |
 | EF Core, DbContext, Migrations | `.claude/rules/backend-ef-core-patterns.md` |
@@ -180,6 +182,8 @@ Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributi
 
 @.claude/rules/backend-coding-standards.md
 @.claude/rules/backend-module-structure.md
+@.claude/rules/backend-dapper-module-structure.md
+@.claude/rules/backend-persistence-styles.md
 @.claude/rules/backend-ddd-patterns.md
 @.claude/rules/backend-cqrs-patterns.md
 @.claude/rules/backend-ef-core-patterns.md
