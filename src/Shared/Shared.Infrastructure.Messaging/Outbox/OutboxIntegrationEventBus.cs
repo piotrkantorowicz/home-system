@@ -19,7 +19,7 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
         var message = new OutboxMessage(
             Id: Guid.NewGuid(),
             EventId: @event.EventId,
-            EventType: typeof(TEvent).AssemblyQualifiedName!,
+            EventType: @event.GetType().AssemblyQualifiedName!,
             Payload: _serializer.Serialize(@event),
             OccurredAt: @event.OccurredAt,
             ProcessedAt: null,
