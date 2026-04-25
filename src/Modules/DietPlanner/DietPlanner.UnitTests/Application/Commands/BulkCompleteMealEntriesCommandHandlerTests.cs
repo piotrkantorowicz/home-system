@@ -70,21 +70,24 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
     private readonly BulkCompleteMealEntriesCommandValidator _sut = new();
 
     [Fact]
-    public void Validate_WithFutureDate_ReturnsError()
-    {
-        var future = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
-
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("user-1", future)).ToList();
-
-        errors.ShouldContain(e => e.PropertyName == "Date");
-    }
-
-    [Fact]
-    public void Validate_WithTodayOrPast_ReturnsNoError()
+    public void Validate_WithEmptyUserId_ReturnsError()
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("user-1", today)).ToList();
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("", today)).ToList();
+
+        errors.ShouldContain(e => e.PropertyName == nameof(BulkCompleteMealEntriesCommand.UserId));
+    }
+
+    [Fact]
+    public void Validate_AllowsAnyDateIncludingFuture_AvoidsTimezoneFalsePositives()
+    {
+        // The validator deliberately does not restrict the date — server UTC vs the
+        // user's local "today" can disagree across midnight, and the handler is safe
+        // because it only transitions Planned entries that already exist on that date.
+        var future = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
+
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("user-1", future)).ToList();
 
         errors.ShouldBeEmpty();
     }

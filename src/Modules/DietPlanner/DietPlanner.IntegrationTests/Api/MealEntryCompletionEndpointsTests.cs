@@ -247,14 +247,19 @@ public sealed class MealEntryCompletionEndpointsTests
     }
 
     [Fact]
-    public async Task POST_BulkComplete_WithFutureDate_Returns400()
+    public async Task POST_BulkComplete_WithFutureDate_AllowedToTolerateTimezoneSkew()
     {
+        // The user's local "today" can be UTC-tomorrow when the server's clock has
+        // not yet rolled past midnight. The validator accepts any date and returns
+        // Completed = 0 when no Planned entries match.
         var client = FreshClient($"bulk-{Guid.NewGuid():N}");
 
         var resp = await client.PostAsJsonAsync(
             "/api/v1/meals/bulk-complete", new BulkCompleteMealsRequest(Today.AddDays(1)));
 
-        resp.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        resp.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await resp.Content.ReadFromJsonAsync<BulkCompleteMealsResponse>();
+        body!.Completed.ShouldBe(0);
     }
 
     [Fact]

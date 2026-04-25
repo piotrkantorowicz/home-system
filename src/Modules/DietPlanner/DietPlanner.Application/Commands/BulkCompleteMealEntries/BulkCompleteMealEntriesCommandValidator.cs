@@ -9,9 +9,5 @@ internal sealed class BulkCompleteMealEntriesCommandValidator
     {
         if (string.IsNullOrWhiteSpace(command.UserId))
             yield return new ValidationError(nameof(command.UserId), "UserId is required.");
-
-        if (command.Date > DateOnly.FromDateTime(DateTime.UtcNow))
-            yield return new ValidationError(
-                nameof(command.Date), "Cannot bulk-complete meals for a future date.");
     }
 }
