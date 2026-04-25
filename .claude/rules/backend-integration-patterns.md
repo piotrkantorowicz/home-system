@@ -1,8 +1,9 @@
-# 07 — Integration Patterns (Cross-Module & Messaging)
+# Backend — Integration Patterns (Cross-Module & Messaging)
 
-> This project uses **raw RabbitMQ** via the official `RabbitMQ.Client` library — no MassTransit.
-> Full infrastructure source (publisher, consumer host, outbox worker) is in
-> `@docs/claude/11-messaging-infrastructure.md`.
+> v1 transport is **in-process** (`InProcessIntegrationEventTransport`) for simplicity.
+> The transport seam (`IIntegrationEventTransport`) lets us drop in a RabbitMQ implementation
+> later without touching any module code. See `.claude/skills/backend-messaging.md` for the
+> shared messaging stack source.
 
 ---
 
@@ -15,9 +16,9 @@ Another module's internals are as inaccessible as another service's database.
 
 | What | How |
 |---|---|
-| React to something another module did | Subscribe to its integration event via a RabbitMQ consumer |
+| React to something another module did | Implement `IIntegrationEventHandler<TEvent>` for an event from its `Contracts` project |
 | Call a public query from another module | Inject its `IXxxQueryService` from the Contracts project |
-| Reference a shared primitive (UserId, Money) | Put it in `Shared.Abstractions` |
+| Reference a shared primitive (UserId, Money) | Put it in `Shared.Abstractions.Core` |
 | Pass startup config between modules | Options pattern |
 
 ## Forbidden Across Module Boundaries
@@ -28,99 +29,45 @@ Another module's internals are as inaccessible as another service's database.
 ❌ Querying ModuleA's DbContext from ModuleB
 ❌ Sharing EF Core entities across modules
 ❌ Synchronous in-process HTTP calls between modules (use events or Contracts interface)
+❌ Publishing to the bus directly from a transport — always go through IIntegrationEventBus → outbox
 ```
 
 ---
 
-## End-to-End Flow (Outbox → RabbitMQ → Consumer)
+## End-to-End Flow (Outbox → Transport → Inbox → Handler)
 
 ```
 [Write side — within one DB transaction]
   CommandHandler
     → Aggregate mutates + raises DomainEvent
-    → DomainEventHandler maps DomainEvent → IntegrationEvent
-    → OutboxRepository.AddAsync(serialized IntegrationEvent)   ← same transaction
-    → UnitOfWork.CommitAsync()
+    → DomainEventDispatcherInterceptor invokes IDomainEventHandler
+    → Handler calls IIntegrationEventBus.PublishAsync(integrationEvent)
+        → OutboxIntegrationEventBus → IOutboxStore.AddAsync
+            (EF: outbox row tracked in the same DbContext as the aggregate)
+    → IUnitOfWork.CommitAsync
         → aggregate row + outbox row committed atomically
 
 [Outbox worker — BackgroundService, every ~1 s]
-    → SELECT unpublished outbox rows (ProcessedAt IS NULL)
-    → deserialize IntegrationEvent
-    → IEventPublisher.PublishAsync(exchange, routingKey, event)
-        → RabbitMQ BasicPublish (persistent, mandatory)
-    → UPDATE outbox row: ProcessedAt = UtcNow
-    → commit
+    → IOutboxStore.GetUnprocessedAsync(batchSize)
+    → for each message: IIntegrationEventTransport.DispatchAsync(message)
+    → on success: IOutboxStore.MarkProcessedAsync
+    → on failure: IOutboxStore.RecordFailureAsync (increments attempt_count)
 
-[Consumer — BackgroundService per queue]
-    → RabbitMQ BasicConsume on module's queue
-    → deserialize message
-    → IInboxRepository.ExistsAsync(messageId)  ← idempotency check
-    → dispatch to IIntegrationEventHandler<T>
-    → IInboxRepository.MarkAsync(messageId)
-    → UnitOfWork.CommitAsync()
-    → BasicAck
-    (on failure → BasicNack with requeue=false → dead-letter queue)
+[Transport — InProcessIntegrationEventTransport (v1)]
+    → resolves IIntegrationEventHandler<T> from a fresh DI scope
+    → invokes IInboxExecutor.ExecuteAsync(eventId, eventType, handlerInvocation)
+        → executor opens a transaction on the consuming module's storage
+        → checks inbox_messages for eventId  ← idempotency check
+        → if absent: invokes the handler, inserts inbox row, commits
+        → if present: rolls back, no-op (duplicate-safe)
+
+[RabbitMQ transport — future, identical contract]
+    → BasicPublish on a topic exchange + module-bound queues + DLX
+    → Consumer host calls the same IInboxExecutor on the consuming module
 ```
 
-This guarantees **at-least-once delivery** without distributed transactions or dual-write risk.
-
----
-
-## Exchange & Queue Topology
-
-Use a **topic exchange** per publishing module. Consuming modules bind their own durable queue
-to the exchange with a routing key matching the event type.
-
-```
-Exchange:  budgetplan.events          (type=topic, durable)
-  Binding: routingKey = BudgetPlanCreated  →  Queue: notifications.budgetplan-created
-  Binding: routingKey = BudgetPlanClosed   →  Queue: reporting.budgetplan-closed
-
-Exchange:  iam.events                 (type=topic, durable)
-  Binding: routingKey = UserDeleted        →  Queue: budgetplan.user-deleted
-  Binding: routingKey = UserDeleted        →  Queue: notifications.user-deleted
-```
-
-Rules:
-- **One exchange per publishing module.** Name: `{modulename}.events` (lowercase).
-- **One queue per (consuming module, event type) pair.** Name: `{consumer}.{eventtype}` (lowercase, kebab-case).
-- **All exchanges and queues are durable.** Messages are persistent (`DeliveryMode = 2`).
-- Every queue has a **dead-letter exchange** (`{queuename}.dlx`) for poison messages.
-- Routing key = the integration event class name (e.g. `BudgetPlanCreated`).
-
-### Constants
-
-```csharp
-// Shared.Infrastructure/Messaging/MessagingConstants.cs
-public static class Exchanges
-{
-    public const string BudgetPlan = "budgetplan.events";
-    public const string Iam        = "iam.events";
-    // add one per publishing module
-}
-
-public static class Queues
-{
-    public static class BudgetPlan
-    {
-        public const string UserDeleted = "budgetplan.user-deleted";
-    }
-
-    public static class Notifications
-    {
-        public const string BudgetPlanCreated = "notifications.budgetplan-created";
-    }
-}
-
-public static class RoutingKeys
-{
-    public const string BudgetPlanCreated = nameof(BudgetPlanCreatedIntegrationEvent);
-    public const string BudgetPlanClosed  = nameof(BudgetPlanClosedIntegrationEvent);
-    public const string UserDeleted       = nameof(UserDeletedIntegrationEvent);
-}
-```
-
-Never use magic strings — always reference constants from `MessagingConstants`.
+This guarantees **at-least-once delivery with idempotent consumers**, no distributed
+transactions, no dual-write risk.
 
 ---
 
@@ -129,58 +76,65 @@ Never use magic strings — always reference constants from `MessagingConstants`
 ```csharp
 // BudgetPlan.Contracts/Events/BudgetPlanCreatedIntegrationEvent.cs
 public sealed record BudgetPlanCreatedIntegrationEvent(
+    Guid EventId,
+    DateTime OccurredAt,
     Guid BudgetPlanId,
     Guid UserId,
     decimal LimitValue,
-    string LimitCurrency,
-    DateTime OccurredAt) : IIntegrationEvent;
+    string LimitCurrency) : IIntegrationEvent;
 ```
 
 Rules:
-- Integration events are **plain C# records** — primitive types only, no domain types.
-- They live in the **Contracts** project — never in Domain or Infrastructure.
-- They are **immutable** — all properties `init`-only via the record primary constructor.
-- Include `OccurredAt` (UTC) on every event for ordering and debugging.
+- Integration events live in the **Contracts** project — never Domain or Infrastructure.
+- Plain C# records — primitive types only, no domain types.
+- They implement `IIntegrationEvent` and **must include `EventId` and `OccurredAt`** (the
+  interface requires them). `EventId` is what the inbox checks for idempotency.
+- Immutable — all properties `init`-only via the record primary constructor.
 
 ---
 
-## Publishing — Domain Event Handler → Outbox
+## Publishing — Domain Event Handler → Bus
+
+The domain-event handler maps the domain event to an integration event and publishes it
+via `IIntegrationEventBus`. The bus writes to the module's outbox in the same EF Core
+transaction.
 
 ```csharp
 // BudgetPlan.Application/EventHandlers/BudgetPlanCreatedDomainEventHandler.cs
 internal sealed class BudgetPlanCreatedDomainEventHandler
     : IDomainEventHandler<BudgetPlanCreatedDomainEvent>
 {
-    private readonly IOutboxRepository _outbox;
+    private readonly IIntegrationEventBus _bus;
 
-    public BudgetPlanCreatedDomainEventHandler(IOutboxRepository outbox)
-        => _outbox = outbox;
+    public BudgetPlanCreatedDomainEventHandler(IIntegrationEventBus bus)
+        => _bus = bus;
 
-    public async Task HandleAsync(BudgetPlanCreatedDomainEvent domainEvent, CancellationToken ct)
+    public Task HandleAsync(BudgetPlanCreatedDomainEvent domainEvent, CancellationToken ct)
     {
         var integrationEvent = new BudgetPlanCreatedIntegrationEvent(
+            EventId:      Guid.NewGuid(),
+            OccurredAt:   DateTime.UtcNow,
             BudgetPlanId: domainEvent.BudgetPlanId.Value,
-            UserId: domainEvent.UserId.Value,
-            LimitValue: domainEvent.Limit.Value,
-            LimitCurrency: domainEvent.Limit.Currency,
-            OccurredAt: DateTime.UtcNow);
+            UserId:       domainEvent.UserId.Value,
+            LimitValue:   domainEvent.Limit.Value,
+            LimitCurrency: domainEvent.Limit.Currency);
 
-        await _outbox.AddAsync(
-            exchange:    Exchanges.BudgetPlan,
-            routingKey:  RoutingKeys.BudgetPlanCreated,
-            @event:      integrationEvent,
-            ct:          ct);
+        return _bus.PublishAsync(integrationEvent, ct);
     }
 }
 ```
 
-The handler writes to the outbox only — it never touches the RabbitMQ channel directly.
+The handler never touches a transport — it only calls `PublishAsync`. The transport is
+chosen by host wiring (`UseInProcessTransport()` today, `UseRabbitMqTransport()` later).
 
 ---
 
 ## Consuming — Integration Event Handler
 
-Each consumer module implements `IIntegrationEventHandler<T>` for the events it cares about.
+Each consumer module implements `IIntegrationEventHandler<TEvent>` for events it cares
+about. The transport invokes the handler inside `IInboxExecutor.ExecuteAsync`, so the
+handler does **not** need to do its own idempotency check — but its own work should be
+transactional.
 
 ```csharp
 // BudgetPlan.Infrastructure/Messaging/Handlers/UserDeletedIntegrationEventHandler.cs
@@ -209,43 +163,72 @@ internal sealed class UserDeletedIntegrationEventHandler
 
 Rules:
 - Handlers are `internal sealed`.
-- Handlers are **idempotent** — the inbox check happens in the consumer host before calling the handler.
-- If the handler throws, the consumer host NACKs the message → it goes to the dead-letter queue.
-- If complex logic is needed, call a command via `ICommandDispatcher` — don't bloat the handler.
+- Idempotency is provided by the inbox executor — the handler doesn't repeat the check.
+- If the handler throws, the inbox transaction rolls back (no inbox row written) and the
+  outbox worker records a failure → next tick retries.
+- If the work is complex, dispatch a command via `ICommandDispatcher` instead of putting
+  logic in the handler.
 
 ---
 
-## Registering Consumers per Module
+## Module Wiring
+
+### Host (registers the bus + transport once)
+
+```csharp
+// HomeSystem.REST/Program.cs
+builder.Services
+    .AddIntegrationEventBus()       // serializer + bus + outbox worker (graceful no-op if no store)
+    .UseInProcessTransport();        // v1; later: .UseRabbitMqTransport(builder.Configuration)
+```
+
+### Publishing module (EF — registers an outbox store)
 
 ```csharp
 // BudgetPlan.Infrastructure/DependencyInjection.cs
-internal static IServiceCollection AddBudgetPlanMessaging(
-    this IServiceCollection services,
-    IConfiguration configuration)
-{
-    // Register integration event handlers
-    services.AddScoped<IIntegrationEventHandler<UserDeletedIntegrationEvent>,
-                       UserDeletedIntegrationEventHandler>();
-
-    // Register a consumer host for each queue this module listens to
-    services.AddSingleton<IHostedService>(sp =>
-        new RabbitMqConsumerHost<UserDeletedIntegrationEvent>(
-            sp,
-            queue:      Queues.BudgetPlan.UserDeleted,
-            exchange:   Exchanges.Iam,
-            routingKey: RoutingKeys.UserDeleted,
-            options:    sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value));
-
-    return services;
-}
+services.AddOutbox<BudgetPlanDbContext>();
 ```
+
+This binds `IOutboxStore` to `EfOutboxStore<BudgetPlanDbContext>` so `IIntegrationEventBus`
+writes outbox rows in the module's DbContext, atomic with the aggregate write.
+
+The module's `DbContext` must `ApplyConfiguration(new OutboxMessageEntityConfiguration())`
+so the `outbox_messages` table is part of its schema and migrations.
+
+### Consuming module (EF — registers the inbox executor + handlers)
+
+```csharp
+// BudgetPlan.Infrastructure/DependencyInjection.cs
+services.AddInbox<BudgetPlanDbContext>();
+
+services.AddScoped<
+    IIntegrationEventHandler<UserDeletedIntegrationEvent>,
+    UserDeletedIntegrationEventHandler>();
+```
+
+The DbContext must also apply `InboxMessageEntityConfiguration` so the
+`inbox_messages` table exists.
+
+### Consuming module (Dapper — Style 2)
+
+```csharp
+// Notifications.Infrastructure/DependencyInjection.cs
+services.AddDapperInbox<NotificationsConnectionFactory>();
+
+services.AddScoped<
+    IIntegrationEventHandler<MealReminderDueIntegrationEvent>,
+    MealReminderDueIntegrationEventHandler>();
+```
+
+The Dapper inbox executor uses the module's `INpgsqlConnectionFactory` — see
+`backend-dapper-module-structure.md`.
 
 ---
 
 ## Synchronous Cross-Module Contract (When Truly Needed)
 
-Only use this when an event-driven approach is impractical — e.g. you need a synchronous answer
-during request processing, not just a side effect.
+Only use this when an event-driven approach is impractical — e.g. you need a synchronous
+answer during request processing, not just a side effect.
 
 ```csharp
 // In IAM.Contracts/Interfaces/IUserContextService.cs
@@ -262,5 +245,14 @@ public sealed record UserDto(Guid Id, string Email, string DisplayName);
 // In BudgetPlan.Application: inject IUserContextService — no reference to IAM internals
 ```
 
-The consuming module (BudgetPlan) only references `IAM.Contracts` — never `IAM.Domain` or
-`IAM.Infrastructure`.
+The consuming module (BudgetPlan) only references `IAM.Contracts` — never `IAM.Domain`
+or `IAM.Infrastructure`.
+
+---
+
+## Future — RabbitMQ transport
+
+Drops in by registering a different `IIntegrationEventTransport` implementation in the
+host. Module code (publishers + consumers) is unchanged. RabbitMQ-specific concerns
+(topic exchange per publishing module, durable queues per consumer, dead-letter
+exchanges, persistent messages) live entirely inside that transport implementation.

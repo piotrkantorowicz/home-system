@@ -71,7 +71,7 @@ const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
 
 // Lazy-load heavy feature components
 const RichTextEditor = lazy(() =>
-  import("@/features/editor/components/RichTextEditor")
+  import("@/modules/editor/components/RichTextEditor")
 );
 ```
 

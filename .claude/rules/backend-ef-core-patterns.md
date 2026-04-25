@@ -1,4 +1,6 @@
-# 06 — EF Core Patterns
+# Backend — EF Core Patterns
+
+> Applies to **Style-1** modules. For Dapper modules see `backend-dapper-module-structure.md`.
 
 ## DbContext Per Module
 
@@ -157,22 +159,27 @@ internal sealed class BudgetPlanRepository : IBudgetPlanRepository
 - Migration files are **committed to source control** — never auto-migrate in production startup.
 - Never edit a migration that has been deployed. Add a new one instead.
 
-## Outbox Table Configuration
+## Outbox / Inbox Table Configuration
+
+The shared messaging library ships ready-made `IEntityTypeConfiguration<T>` for the
+`outbox_messages` and `inbox_messages` tables. Apply them in the module's DbContext:
 
 ```csharp
-internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
+protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    public void Configure(EntityTypeBuilder<OutboxMessage> builder)
-    {
-        builder.ToTable("outbox_messages");
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Type).HasMaxLength(512).IsRequired();
-        builder.Property(x => x.Payload).HasColumnType("jsonb").IsRequired();
-        builder.Property(x => x.OccurredAt).IsRequired();
-        builder.Property(x => x.ProcessedAt).IsRequired(false);
-    }
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetPlanDbContext).Assembly);
+
+    // Add the shared outbox + inbox tables to this module's schema:
+    modelBuilder.ApplyConfiguration(new OutboxMessageEntityConfiguration());  // Shared.Infrastructure.Messaging.Ef.Outbox
+    modelBuilder.ApplyConfiguration(new InboxMessageEntityConfiguration());    // Shared.Infrastructure.Messaging.Ef.Inbox
+
+    base.OnModelCreating(modelBuilder);
 }
 ```
+
+See `backend-integration-patterns.md` for the publishing/consuming flow and
+`.claude/skills/backend-messaging.md` for the full schema (`event_id`, `event_type`,
+`payload jsonb`, `occurred_at`, `processed_at`, `attempt_count`, `last_error`).
 
 ## DI Registration
 

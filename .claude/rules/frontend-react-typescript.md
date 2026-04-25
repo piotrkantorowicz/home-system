@@ -124,6 +124,9 @@ export function Button({
 
 ### React 19 features — use them
 
+> This is a Vite SPA — no RSC, no Server Actions. The features below are the ones that
+> apply on the client.
+
 ```tsx
 // ✅ use() hook for async resources and context
 import { use } from "react";
@@ -131,13 +134,6 @@ import { use } from "react";
 function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
   const user = use(userPromise); // suspends automatically
   return <h1>{user.name}</h1>;
-}
-
-// ✅ Server Actions (if using Next.js / frameworks with RSC)
-async function updateUser(formData: FormData) {
-  "use server";
-  const name = formData.get("name");
-  await db.user.update({ data: { name } });
 }
 
 // ✅ useOptimistic for immediate UI feedback

@@ -10,15 +10,15 @@ Example: `/scaffold-feature budget-plans`
 
 ## Instructions
 
-Read `docs/rules/frontend-architecture.md` and `docs/rules/frontend-react-typescript.md` before generating.
+Read `.claude/rules/frontend-architecture.md` and `.claude/rules/frontend-react-typescript.md` before generating.
 
 Given `FeatureName` (kebab-case input), derive:
-- Folder name: `features/{featureName}/` (kebab-case)
+- Folder name: `modules/{featureName}/` (kebab-case)
 - Type prefix: PascalCase version (e.g. `budget-plans` → `BudgetPlan`)
 
 ### Generate:
 
-**`src/features/{featureName}/`**
+**`src/modules/{featureName}/`**
 
 ```
 components/
@@ -112,7 +112,7 @@ export function useCreate{TypePrefix}() {
 
 **`index.ts`**
 ```tsx
-// Public API — only export what other features need
+// Public API — only export what other modules need
 export { {TypePrefix}List } from "./components/{TypePrefix}List";
 export { {TypePrefix}Card } from "./components/{TypePrefix}Card";
 export { use{TypePrefix}, use{TypePrefix}s } from "./api/{featureName}.queries";

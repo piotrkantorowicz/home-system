@@ -1,28 +1,28 @@
-# 10 — CQRS Infrastructure (Custom Implementation)
+# Backend — CQRS Infrastructure (Full Source)
 
-> This file contains the **complete source** for the custom CQRS dispatcher stack that lives in
-> `Shared.Abstractions` and `Shared.Infrastructure`. Copy these files once and reuse across projects.
+> Complete source for the custom CQRS dispatcher stack. Contracts live in
+> `Shared.Abstractions.Cqrs`; implementations + decorators in `Shared.Infrastructure.Cqrs`.
 > Do not reach for MediatR — this implementation is intentionally simple and explicit.
 
 ---
 
-## Shared.Abstractions — Interfaces
+## Shared.Abstractions.Cqrs — Interfaces
 
 ### CQRS Marker Interfaces
 
 ```csharp
-// Shared.Abstractions/CQRS/ICommand.cs
+// Shared.Abstractions.Cqrs/ICommand.cs
 public interface ICommand { }
 public interface ICommand<out TResult> { }
 ```
 
 ```csharp
-// Shared.Abstractions/CQRS/IQuery.cs
+// Shared.Abstractions.Cqrs/IQuery.cs
 public interface IQuery<out TResult> { }
 ```
 
 ```csharp
-// Shared.Abstractions/CQRS/ICommandHandler.cs
+// Shared.Abstractions.Cqrs/ICommandHandler.cs
 public interface ICommandHandler<in TCommand>
     where TCommand : ICommand
 {
@@ -37,7 +37,7 @@ public interface ICommandHandler<in TCommand, TResult>
 ```
 
 ```csharp
-// Shared.Abstractions/CQRS/IQueryHandler.cs
+// Shared.Abstractions.Cqrs/IQueryHandler.cs
 public interface IQueryHandler<in TQuery, TResult>
     where TQuery : IQuery<TResult>
 {
@@ -48,7 +48,7 @@ public interface IQueryHandler<in TQuery, TResult>
 ### Dispatcher Interfaces
 
 ```csharp
-// Shared.Abstractions/CQRS/ICommandDispatcher.cs
+// Shared.Abstractions.Cqrs/ICommandDispatcher.cs
 public interface ICommandDispatcher
 {
     Task SendAsync<TCommand>(TCommand command, CancellationToken ct = default)
@@ -60,7 +60,7 @@ public interface ICommandDispatcher
 ```
 
 ```csharp
-// Shared.Abstractions/CQRS/IQueryDispatcher.cs
+// Shared.Abstractions.Cqrs/IQueryDispatcher.cs
 public interface IQueryDispatcher
 {
     Task<TResult> SendAsync<TQuery, TResult>(TQuery query, CancellationToken ct = default)
@@ -71,7 +71,7 @@ public interface IQueryDispatcher
 ### Validation Interface
 
 ```csharp
-// Shared.Abstractions/CQRS/ICommandValidator.cs
+// Shared.Abstractions.Cqrs/ICommandValidator.cs
 public interface ICommandValidator<in TCommand>
 {
     IEnumerable<ValidationError> Validate(TCommand command);
@@ -83,7 +83,7 @@ public sealed record ValidationError(string PropertyName, string ErrorMessage);
 ### Domain Event Handler Interface
 
 ```csharp
-// Shared.Abstractions/CQRS/IDomainEventHandler.cs
+// Shared.Abstractions.Cqrs/IDomainEventHandler.cs
 public interface IDomainEventHandler<in TDomainEvent>
     where TDomainEvent : IDomainEvent
 {
@@ -93,12 +93,12 @@ public interface IDomainEventHandler<in TDomainEvent>
 
 ---
 
-## Shared.Infrastructure — Implementations
+## Shared.Infrastructure.Cqrs — Implementations
 
 ### Command Dispatcher (base implementation)
 
 ```csharp
-// Shared.Infrastructure/CQRS/CommandDispatcher.cs
+// Shared.Infrastructure.Cqrs/CommandDispatcher.cs
 internal sealed class CommandDispatcher : ICommandDispatcher
 {
     private readonly IServiceProvider _serviceProvider;
@@ -125,7 +125,7 @@ internal sealed class CommandDispatcher : ICommandDispatcher
 ### Query Dispatcher (base implementation)
 
 ```csharp
-// Shared.Infrastructure/CQRS/QueryDispatcher.cs
+// Shared.Infrastructure.Cqrs/QueryDispatcher.cs
 internal sealed class QueryDispatcher : IQueryDispatcher
 {
     private readonly IServiceProvider _serviceProvider;
@@ -162,7 +162,7 @@ Queries only get the logging decorator — no transaction needed.
 ### Logging Decorator
 
 ```csharp
-// Shared.Infrastructure/CQRS/Decorators/LoggingCommandDispatcherDecorator.cs
+// Shared.Infrastructure.Cqrs/Decorators/LoggingCommandDispatcherDecorator.cs
 internal sealed class LoggingCommandDispatcherDecorator : ICommandDispatcher
 {
     private readonly ICommandDispatcher _inner;
@@ -213,7 +213,7 @@ internal sealed class LoggingCommandDispatcherDecorator : ICommandDispatcher
 ```
 
 ```csharp
-// Shared.Infrastructure/CQRS/Decorators/LoggingQueryDispatcherDecorator.cs
+// Shared.Infrastructure.Cqrs/Decorators/LoggingQueryDispatcherDecorator.cs
 internal sealed class LoggingQueryDispatcherDecorator : IQueryDispatcher
 {
     private readonly IQueryDispatcher _inner;
@@ -248,7 +248,7 @@ internal sealed class LoggingQueryDispatcherDecorator : IQueryDispatcher
 ### Validation Decorator
 
 ```csharp
-// Shared.Infrastructure/CQRS/Decorators/ValidationCommandDispatcherDecorator.cs
+// Shared.Infrastructure.Cqrs/Decorators/ValidationCommandDispatcherDecorator.cs
 internal sealed class ValidationCommandDispatcherDecorator : ICommandDispatcher
 {
     private readonly ICommandDispatcher _inner;
@@ -287,7 +287,7 @@ internal sealed class ValidationCommandDispatcherDecorator : ICommandDispatcher
 ```
 
 ```csharp
-// Shared.Abstractions/CQRS/CommandValidationException.cs
+// Shared.Abstractions.Cqrs/CommandValidationException.cs
 public sealed class CommandValidationException : Exception
 {
     public IReadOnlyList<ValidationError> Errors { get; }
@@ -301,7 +301,7 @@ public sealed class CommandValidationException : Exception
 ### Transaction Decorator
 
 ```csharp
-// Shared.Infrastructure/CQRS/Decorators/TransactionCommandDispatcherDecorator.cs
+// Shared.Infrastructure.Cqrs/Decorators/TransactionCommandDispatcherDecorator.cs
 // Wraps each command in a DB transaction using the module's DbContext.
 // Register per-module with the correct TDbContext type parameter.
 internal sealed class TransactionCommandDispatcherDecorator<TDbContext> : ICommandDispatcher
@@ -338,10 +338,10 @@ internal sealed class TransactionCommandDispatcherDecorator<TDbContext> : IComma
 
 ## DI Registration
 
-### Shared.Infrastructure extension
+### Shared.Infrastructure.Cqrs extension
 
 ```csharp
-// Shared.Infrastructure/Extensions/CqrsExtensions.cs
+// Shared.Infrastructure.Cqrs/Extensions/CqrsExtensions.cs
 public static class CqrsExtensions
 {
     /// <summary>
@@ -408,7 +408,7 @@ public static class CqrsExtensions
 ```
 
 > **Note:** This uses [Scrutor](https://github.com/khellang/Scrutor) for assembly scanning
-> (`services.Scan`). Add `<PackageReference Include="Scrutor" />` to `Shared.Infrastructure`.
+> (`services.Scan`). Already referenced from `Shared.Infrastructure.Cqrs`.
 
 ### Module usage
 
@@ -439,7 +439,7 @@ internal static IServiceCollection AddBudgetPlanInfrastructure(
 Domain events are dispatched within the same transaction as the `SaveChanges` call.
 
 ```csharp
-// Shared.Infrastructure/Persistence/DomainEventDispatcherInterceptor.cs
+// Shared.Infrastructure.Persistence/DomainEventDispatcherInterceptor.cs
 internal sealed class DomainEventDispatcherInterceptor : SaveChangesInterceptor
 {
     private readonly IServiceProvider _serviceProvider;
@@ -499,7 +499,7 @@ services.AddDbContext<BudgetPlanDbContext>((sp, opts) =>
 ## Error Middleware — Handling Validation Exceptions
 
 ```csharp
-// Shared.Infrastructure/Middleware/ExceptionHandlingMiddleware.cs (relevant excerpt)
+// Shared.Infrastructure.Web/ExceptionHandlingMiddleware.cs (relevant excerpt)
 catch (CommandValidationException ex)
 {
     context.Response.StatusCode = StatusCodes.Status400BadRequest;

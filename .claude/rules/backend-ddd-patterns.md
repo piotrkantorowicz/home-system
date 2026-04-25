@@ -1,4 +1,7 @@
-# 04 — DDD Tactical Patterns
+# Backend — DDD Tactical Patterns
+
+> Applies to **Style-1 (DDD + EF Core)** modules. For Style-2 (Dapper) modules see
+> `backend-persistence-styles.md` §"Style 2 — Rules" and `backend-dapper-module-structure.md`.
 
 ## Aggregate Root
 
@@ -161,16 +164,18 @@ Domain events are **internal** to the module — never exposed in Contracts.
 ## Integration Events
 
 ```csharp
-// Integration event = published to the bus for other modules to consume
+// Integration event = published to the bus for other modules to consume.
 // Lives in Contracts project. Plain C# records. No domain types — use primitives only.
+// IIntegrationEvent requires EventId (used by the inbox for idempotency) and OccurredAt.
 public sealed record BudgetPlanCreatedIntegrationEvent(
+    Guid EventId,
+    DateTime OccurredAt,
     Guid BudgetPlanId,
     Guid UserId,
     decimal LimitValue,
     string LimitCurrency,
     DateOnly PeriodStart,
-    DateOnly PeriodEnd,
-    DateTime OccurredAt) : IIntegrationEvent;
+    DateOnly PeriodEnd) : IIntegrationEvent;
 ```
 
 ## Domain Service
@@ -207,13 +212,16 @@ public interface IBudgetPlanRepository
 ```
 
 - `GetById` returns **nullable** — not-found is expected.
-- `Update` and `Delete` are **synchronous** — they just mark the EF Core entity; the actual DB call happens in `UnitOfWork.CommitAsync()`.
+- `Update` and `Delete` are **synchronous** for EF-backed repositories — they just mark the
+  tracked entity; the actual DB call happens in `UnitOfWork.CommitAsync()`. Dapper-backed
+  repositories (Style 2) write inline via the unit-of-work transaction — see
+  `backend-dapper-module-structure.md`.
 - Do **not** expose `IQueryable<T>` from repositories. Queries go through DbContext directly.
 
 ## Domain Exceptions
 
 ```csharp
-// Base domain exception — in Shared.Abstractions or module Domain
+// Base domain exception — in Shared.Abstractions.Core or module Domain
 public class DomainException : Exception
 {
     public DomainException(string message) : base(message) { }
@@ -229,7 +237,7 @@ public sealed class BudgetPlanDomainException : DomainException
 - Domain exceptions carry **business language** — no stack traces, no EF/SQL detail.
 - Infrastructure exceptions are let through and handled at the API boundary middleware.
 
-## Base Types in Shared.Abstractions
+## Base Types in Shared.Abstractions.Core
 
 ```csharp
 public abstract class AggregateRoot<TId>
@@ -249,7 +257,10 @@ public abstract class Entity<TId>
 }
 
 public interface IDomainEvent { }
-public interface IIntegrationEvent { }
+
+// IIntegrationEvent (in Shared.Abstractions.Messaging) requires EventId + OccurredAt
+// — see backend-integration-patterns.md for the full contract.
+
 public interface IUnitOfWork
 {
     Task CommitAsync(CancellationToken ct = default);

@@ -14,7 +14,7 @@ Examples:
 
 ## Instructions
 
-Read `docs/rules/frontend-react-typescript.md` and `docs/rules/frontend-styling.md` before generating.
+Read `.claude/rules/frontend-react-typescript.md` and `.claude/rules/frontend-styling.md` before generating.
 
 ### Generate:
 

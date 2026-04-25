@@ -1,8 +1,9 @@
-# 05 — CQRS Patterns (Custom Dispatcher)
+# Backend — CQRS Patterns (Custom Dispatcher)
 
 > This project uses a **custom CQRS implementation** — no MediatR.
-> The full infrastructure code (interfaces, dispatchers, decorators, DI registration) lives in
-> `Shared.Abstractions` and `Shared.Infrastructure`. See `@docs/claude/10-cqrs-infrastructure.md`.
+> Contracts live in `Shared.Abstractions.Cqrs`; implementations in `Shared.Infrastructure.Cqrs`
+> (dispatchers, decorators, DI registration). See `.claude/skills/backend-cqrs.md` for the full
+> infrastructure source.
 
 ---
 
@@ -90,7 +91,7 @@ internal sealed class CreateBudgetPlanCommandValidator
 ```
 
 Validators are picked up automatically by the `ValidationCommandDispatcherDecorator`.
-See `10-cqrs-infrastructure.md` for the decorator implementation.
+See `.claude/skills/backend-cqrs.md` for the decorator implementation.
 
 ---
 
@@ -172,7 +173,8 @@ internal static class BudgetPlanMapper
 ### Mapping rules
 
 - **Never use AutoMapper.** Map explicitly so the transformation is always visible.
-- Read-side projections: use EF `Select()` inline in the query handler — no aggregate is loaded.
+- Read-side projections (Style 1): use EF `Select()` inline in the query handler — no aggregate is loaded.
+- Read-side projections (Style 2): use Dapper `QueryAsync<TDto>` in the query handler — see `backend-dapper-module-structure.md`.
 - Write-side mappings (domain event → integration event): live in `Application/EventHandlers/`.
 - Request → command: mapped inline in the endpoint method body.
 - `ToDto()` mapper methods on aggregates: only add when the same projection is needed in more than one place.
@@ -181,23 +183,28 @@ internal static class BudgetPlanMapper
 
 ## Domain Event Handler
 
-Domain events are dispatched synchronously after `SaveChanges` via an EF Core interceptor.
-Handlers write to the outbox — they never publish to the bus directly.
+Domain events are dispatched synchronously after `SaveChanges` via the
+`DomainEventDispatcherInterceptor` in `Shared.Infrastructure.Persistence`. Handlers map the
+domain event to an integration event and publish it via `IIntegrationEventBus` — the bus
+writes to the module's outbox in the same EF Core transaction.
 
 ```csharp
 // Application/EventHandlers/BudgetPlanCreatedDomainEventHandler.cs
 internal sealed class BudgetPlanCreatedDomainEventHandler
     : IDomainEventHandler<BudgetPlanCreatedDomainEvent>
 {
-    private readonly IOutboxRepository _outbox;
+    private readonly IIntegrationEventBus _bus;
 
-    public BudgetPlanCreatedDomainEventHandler(IOutboxRepository outbox)
-        => _outbox = outbox;
+    public BudgetPlanCreatedDomainEventHandler(IIntegrationEventBus bus)
+        => _bus = bus;
 
-    public async Task HandleAsync(BudgetPlanCreatedDomainEvent domainEvent, CancellationToken ct)
-        => await _outbox.AddAsync(domainEvent.ToIntegrationEvent(), ct);
+    public Task HandleAsync(BudgetPlanCreatedDomainEvent domainEvent, CancellationToken ct)
+        => _bus.PublishAsync(domainEvent.ToIntegrationEvent(), ct);
 }
 ```
+
+See `backend-integration-patterns.md` for the publishing flow and the in-process / future
+RabbitMQ transports.
 
 ---
 
@@ -242,4 +249,4 @@ private static async Task<IResult> GetBudgetPlan(
 | No AutoMapper | Map explicitly with static methods or inline `Select()` |
 | Validators are separate classes | Never inline validation in handlers |
 | Dispatchers injected into endpoints | Never inject `ICommandHandler<,>` directly |
-| Domain event handlers write to outbox | Never publish to the bus from a handler |
+| Domain event handlers publish via `IIntegrationEventBus` | The bus writes to the module's outbox in the same transaction |

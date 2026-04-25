@@ -17,12 +17,15 @@ src/
     DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api
                               # + DietPlanner.UnitTests / DietPlanner.IntegrationTests (co-located)
   Shared/
-    Shared.Abstractions.Core/         # Domain primitives (IDomainEvent, AggregateRoot, Entity, IUnitOfWork, exceptions, PagedList)
-    Shared.Abstractions.Cqrs/         # ICommand, IQuery, dispatchers, handlers, validators
-    Shared.Abstractions.Messaging/    # IIntegrationEvent and (later) integration-event bus contracts
-    Shared.Infrastructure.Cqrs/       # CQRS dispatcher implementation + decorators
-    Shared.Infrastructure.Persistence/# EF Core interceptors (DomainEventDispatcherInterceptor)
-    Shared.Infrastructure.Web/        # Cross-cutting web middleware (ExceptionHandlingMiddleware)
+    Shared.Abstractions.Core/                # Domain primitives (IDomainEvent, AggregateRoot, Entity, IUnitOfWork, exceptions, PagedList)
+    Shared.Abstractions.Cqrs/                # ICommand, IQuery, dispatchers, handlers, validators
+    Shared.Abstractions.Messaging/           # IIntegrationEvent, IIntegrationEventBus, IIntegrationEventHandler, IInboxExecutor
+    Shared.Infrastructure.Cqrs/              # CQRS dispatcher implementation + decorators
+    Shared.Infrastructure.Messaging/         # Outbox bus, worker, in-process transport, JSON serializer
+    Shared.Infrastructure.Messaging.Ef/      # EF outbox + inbox executor (parameterised on TDbContext)
+    Shared.Infrastructure.Messaging.Dapper/  # Dapper inbox executor (parameterised on INpgsqlConnectionFactory)
+    Shared.Infrastructure.Persistence/       # EF Core interceptors (DomainEventDispatcherInterceptor)
+    Shared.Infrastructure.Web/               # Cross-cutting web middleware (ExceptionHandlingMiddleware)
   ui/                         # React 19 + TypeScript SPA (Vite, TanStack Router/Query, Tailwind v4)
 infrastructure/
   docker-compose.yml          # Authentik (OIDC), Redis, PostgreSQL per module (profiles)
@@ -30,10 +33,10 @@ infrastructure/
 ```
 
 **Key architectural decisions:**
-- No MediatR, AutoMapper, or MassTransit — custom CQRS dispatcher stack, raw RabbitMQ, explicit mapping.
-- Each module owns its own `DbContext` and migrations. No shared database context across modules.
-- Queries bypass repositories — they hit `DbContext` directly with `AsNoTracking()` + `Select()`.
-- Cross-module communication only via integration events (RabbitMQ outbox/inbox) or Contracts interfaces.
+- No MediatR, AutoMapper, or MassTransit — custom CQRS dispatcher stack, custom messaging bus, explicit mapping.
+- Each module picks one persistence style (DDD + EF Core, or Lightweight + Dapper) and owns its own data store + migrations. No shared `DbContext` or connection pool across modules.
+- Queries bypass repositories — EF queries use `DbContext` with `AsNoTracking()` + `Select()`; Dapper queries call `connection.QueryAsync<TDto>` directly.
+- Cross-module communication only via integration events (`IIntegrationEventBus` → outbox → in-process or future RabbitMQ transport → `IInboxExecutor` → handler) or Contracts interfaces.
 - Frontend API types are generated from the OpenAPI spec: `npm run generate:api:diet-planner`.
 
 ---
@@ -131,7 +134,7 @@ Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributi
 | Aggregates, Entities, Value Objects | `.claude/rules/backend-ddd-patterns.md` |
 | Commands, Queries, Mapping | `.claude/rules/backend-cqrs-patterns.md` |
 | EF Core, DbContext, Migrations | `.claude/rules/backend-ef-core-patterns.md` |
-| Cross-module integration, RabbitMQ | `.claude/rules/backend-integration-patterns.md` |
+| Cross-module integration, event bus, in-process transport | `.claude/rules/backend-integration-patterns.md` |
 | API endpoints, request/response | `.claude/rules/backend-api-patterns.md` |
 | Backend unit & integration tests | `.claude/rules/backend-testing-standards.md` |
 | React + TypeScript coding standards | `.claude/rules/frontend-react-typescript.md` |
@@ -143,7 +146,7 @@ Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributi
 | ESLint + Prettier + Husky | `.claude/rules/frontend-tooling.md` |
 | Git workflow, branching, commits | `.claude/rules/git-workflow.md` |
 | CQRS dispatcher full source | `.claude/skills/backend-cqrs.md` |
-| RabbitMQ messaging full source | `.claude/skills/backend-messaging.md` |
+| Messaging (bus, outbox/inbox, transports) full source | `.claude/skills/backend-messaging.md` |
 
 ---
 
@@ -162,7 +165,7 @@ Do **not** add `Co-Authored-By: Claude` trailers to commits. Claude's contributi
 
 ## Non-negotiable Rules (Always Apply)
 
-1. **No MediatR. No AutoMapper. No MassTransit.** Use the custom dispatcher stack and raw RabbitMQ with explicit mapping.
+1. **No MediatR. No AutoMapper. No MassTransit.** Use the custom dispatcher stack, the custom integration-event bus, and explicit mapping.
 2. **No cross-module domain imports.** Modules communicate through Contracts and integration events only.
 3. **No public setters on aggregates or entities.** All mutations go through named methods.
 4. **No returning domain objects from Application layer.** Always map to DTOs.

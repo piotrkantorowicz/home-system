@@ -16,15 +16,15 @@ src/
 │   └── settings/
 │       └── SettingsPage.tsx
 │
-├── features/               # ← PRIMARY DOMAIN CODE
-│   └── [feature]/
-│       ├── components/     # UI specific to this feature
-│       ├── hooks/          # Feature-scoped custom hooks
+├── modules/                # ← PRIMARY DOMAIN CODE (one folder per backend module)
+│   └── [module]/           # e.g. diet-planner, notifications
+│       ├── components/     # UI specific to this module
+│       ├── hooks/          # Module-scoped custom hooks
 │       ├── api/            # API calls + TanStack Query definitions
 │       ├── store/          # Zustand slice (if needed)
-│       ├── types.ts        # Feature-local types
+│       ├── types.ts        # Module-local types
 │       ├── utils.ts        # Pure helpers
-│       └── index.ts        # Public API — ONLY export what other features need
+│       └── index.ts        # Public API — ONLY export what other modules need
 │
 ├── components/             # Truly shared, domain-agnostic UI
 │   ├── ui/                 # Primitive components (Button, Input, Modal…)
@@ -54,14 +54,14 @@ src/
 
 ---
 
-## Feature module rules
+## Module rules
 
 ### Public API via `index.ts`
 
-Every feature exposes **only** what other features need through its `index.ts`:
+Every module exposes **only** what other modules need through its `index.ts`:
 
 ```ts
-// features/auth/index.ts
+// modules/auth/index.ts
 export { LoginForm } from "./components/LoginForm";
 export { useCurrentUser } from "./hooks/useCurrentUser";
 export type { User, AuthState } from "./types";
@@ -72,25 +72,25 @@ export type { User, AuthState } from "./types";
 // - loginFormSchema (internal validation)
 ```
 
-### Cross-feature imports
+### Cross-module imports
 
 ```ts
-// ✅ Import from feature public API
-import { useCurrentUser } from "@/features/auth";
+// ✅ Import from module public API
+import { useCurrentUser } from "@/modules/auth";
 
-// ❌ Never reach into feature internals
-import { useLoginMutation } from "@/features/auth/hooks/useLoginMutation";
+// ❌ Never reach into module internals
+import { useLoginMutation } from "@/modules/auth/hooks/useLoginMutation";
 ```
 
 ### Dependency direction
 
 ```
-pages → features → components/ui → lib → utils
+pages → modules → components/ui → lib → utils
 ```
 
-- Pages import from features.
-- Features import from shared `components`, `hooks`, `lib`, `utils`.
-- Shared components must **never** import from features.
+- Pages import from modules.
+- Modules import from shared `components`, `hooks`, `lib`, `utils`.
+- Shared components must **never** import from modules.
 - `utils` has zero React dependencies.
 
 ---
@@ -114,7 +114,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import { formatDate } from "@/utils/date";
-import type { User } from "@/features/auth";
+import type { User } from "@/modules/auth";
 
 // 2. Constants
 const STALE_TIME = 1000 * 60 * 5;
@@ -160,7 +160,7 @@ export function UserCard({ userId, onSelect }: UserCardProps) {
 
 ## Module boundaries & barrel files
 
-- **Use `index.ts` only at feature boundaries**, not inside feature subdirectories.
+- **Use `index.ts` only at module boundaries**, not inside module subdirectories.
 - Avoid deep barrel chains — they destroy tree-shaking and slow down TS Language Server.
 - Path aliases (`@/`) should point to `src/` only.
 
@@ -213,13 +213,13 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// features/users/api/users.api.ts
+// modules/users/api/users.api.ts
 export async function getUser(id: string): Promise<User> {
   const { data } = await apiClient.get<User>(`/users/${id}`);
   return data;
 }
 
-// features/users/api/users.queries.ts  ← TanStack Query definitions
+// modules/users/api/users.queries.ts  ← TanStack Query definitions
 export const userKeys = {
   all: ["users"] as const,
   detail: (id: string) => [...userKeys.all, id] as const,
