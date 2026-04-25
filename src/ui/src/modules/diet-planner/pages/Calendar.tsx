@@ -1,4 +1,15 @@
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@shared/components/ui';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +25,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
   Pencil,
   Plus,
   RotateCcw,
@@ -249,7 +261,13 @@ export default function Calendar() {
   };
 
   return (
-    <div className="animate-fade-in-up p-8 lg:p-10">
+    <div
+      className={cn(
+        'animate-fade-in-up py-8 lg:py-10',
+        // Calendar tab needs maximum horizontal real estate for the 7-day grid
+        activeTab === 'calendar' ? 'px-4 lg:px-6' : 'px-8 lg:px-10',
+      )}
+    >
       <div className="mb-8">
         <h1 className="mb-3 text-4xl font-bold tracking-tight">{t('calendar.title')}</h1>
         <p className="text-muted-foreground text-lg">{t('calendar.subtitle')}</p>
@@ -372,77 +390,83 @@ export default function Calendar() {
                                       <>
                                         <Link
                                           to={`/diet-planner/recipes/${meal.actualRecipe.id}`}
-                                          className="block truncate font-medium hover:underline"
+                                          title={meal.actualRecipe.name}
+                                          className="line-clamp-2 block font-medium break-words hover:underline"
                                         >
                                           {meal.actualRecipe.name}
                                         </Link>
-                                        <span className="text-muted-foreground/70 block truncate text-[10px] line-through">
+                                        <span
+                                          title={meal.recipeName}
+                                          className="text-muted-foreground/70 block truncate text-[10px] line-through"
+                                        >
                                           {meal.recipeName}
                                         </span>
                                       </>
                                     ) : (
                                       <Link
                                         to={`/diet-planner/recipes/${meal.recipeId}`}
-                                        className="block truncate font-medium hover:underline"
+                                        title={meal.recipeName}
+                                        className="line-clamp-2 block font-medium break-words hover:underline"
                                       >
                                         {meal.recipeName}
                                       </Link>
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
-                                  {meal.status !== 'Done' && meal.status !== 'Modified' && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
                                     <button
                                       type="button"
-                                      onClick={() => void handleComplete(meal)}
-                                      className="text-muted-foreground focus-visible:ring-primary rounded p-0.5 transition-colors hover:text-emerald-600 focus-visible:ring-2 focus-visible:outline-none"
-                                      title={t('calendar.meal_actions.mark_done')}
-                                      aria-label={t('calendar.meal_actions.mark_done')}
+                                      className="text-muted-foreground hover:text-foreground focus-visible:ring-primary shrink-0 rounded p-0.5 opacity-50 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none [@media(hover:none)]:opacity-100"
+                                      aria-label={t('calendar.meal_actions.menu')}
                                     >
-                                      <Check className="h-3 w-3" />
+                                      <MoreVertical className="h-3.5 w-3.5" />
                                     </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setOverrideMealId(meal.id);
-                                    }}
-                                    className="text-muted-foreground focus-visible:ring-primary rounded p-0.5 transition-colors hover:text-amber-600 focus-visible:ring-2 focus-visible:outline-none"
-                                    title={t('calendar.meal_actions.override')}
-                                    aria-label={t('calendar.meal_actions.override')}
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="min-w-[140px] p-1 [&_[role=menuitem]]:gap-1.5 [&_[role=menuitem]]:px-2 [&_[role=menuitem]]:py-1 [&_[role=menuitem]]:text-xs [&_[role=menuitem]_svg]:size-3"
                                   >
-                                    <Sparkles className="h-3 w-3" />
-                                  </button>
-                                  {meal.status !== 'Planned' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => void handleReset(meal)}
-                                      className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                                      title={t('calendar.meal_actions.reset')}
-                                      aria-label={t('calendar.meal_actions.reset')}
+                                    {meal.status !== 'Done' && meal.status !== 'Modified' && (
+                                      <DropdownMenuItem onSelect={() => void handleComplete(meal)}>
+                                        <Check className="text-emerald-600" />
+                                        {t('calendar.meal_actions.mark_done')}
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem
+                                      onSelect={() => {
+                                        setOverrideMealId(meal.id);
+                                      }}
                                     >
-                                      <RotateCcw className="h-3 w-3" />
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      openEditForm(meal);
-                                    }}
-                                    className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                                  >
-                                    <Pencil className="h-3 w-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setDeletingMeal(meal);
-                                    }}
-                                    className="text-muted-foreground hover:text-destructive focus-visible:ring-primary rounded p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </button>
-                                </div>
+                                      <Sparkles className="text-amber-600" />
+                                      {t('calendar.meal_actions.override')}
+                                    </DropdownMenuItem>
+                                    {meal.status !== 'Planned' && (
+                                      <DropdownMenuItem onSelect={() => void handleReset(meal)}>
+                                        <RotateCcw />
+                                        {t('calendar.meal_actions.reset')}
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onSelect={() => {
+                                        openEditForm(meal);
+                                      }}
+                                    >
+                                      <Pencil />
+                                      {t('common.edit')}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onSelect={() => {
+                                        setDeletingMeal(meal);
+                                      }}
+                                      className="text-destructive focus:text-destructive"
+                                    >
+                                      <Trash2 />
+                                      {t('common.delete')}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                               <p className="text-muted-foreground mt-0.5">
                                 {t('recipes.servings', { count: Number(meal.servings) || 1 })}

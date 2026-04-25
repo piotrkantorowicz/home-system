@@ -135,20 +135,28 @@ function useTodayMeal() {
   });
 }
 
-// ── Helpers to find meal action buttons ───────────────────────────────────────
-async function getMealActionButtons() {
+// ── Helpers to find meal action menu items ───────────────────────────────────
+/**
+ * Open the per-meal 3-dot dropdown menu and return its menu items.
+ * Edit and Delete are now nested under the dropdown rather than inline buttons.
+ */
+async function openMealMenu() {
   const mealTitle = await screen.findByText('Oatmeal');
-  // The meal card div has class "group ..." — walk up until we find it
   let mealItem = mealTitle.parentElement;
   while (mealItem && !mealItem.classList.contains('group')) {
     mealItem = mealItem.parentElement;
   }
   if (!mealItem) throw new Error('Could not find .group meal item');
-  const buttons = Array.from(mealItem.querySelectorAll('button'));
-  // Edit (Pencil) and delete (Trash2) buttons share the trailing positions in the action row.
-  const deleteBtn = buttons[buttons.length - 1] as HTMLElement;
-  const editBtn = buttons[buttons.length - 2] as HTMLElement;
-  return { editBtn, deleteBtn };
+  const trigger = mealItem.querySelector('button[aria-label="calendar.meal_actions.menu"]');
+  if (!trigger) throw new Error('Could not find meal actions trigger');
+  await userEvent.click(trigger as HTMLElement);
+}
+
+async function clickMenuItem(name: RegExp) {
+  await openMealMenu();
+  // Radix renders the menu in a portal — query at the screen level.
+  const item = await screen.findByRole('menuitem', { name });
+  await userEvent.click(item);
 }
 
 // ── Create meal ───────────────────────────────────────────────────────────────
@@ -195,8 +203,7 @@ describe('Calendar — edit meal toast', () => {
   it('shows success toast after updating a meal', async () => {
     renderPage();
 
-    const { editBtn } = await getMealActionButtons();
-    await userEvent.click(editBtn);
+    await clickMenuItem(/common\.edit/i);
 
     // MealForm stub is open in edit mode
     await userEvent.click(screen.getByRole('button', { name: /meal_form\.save_btn/i }));
@@ -211,8 +218,7 @@ describe('Calendar — edit meal toast', () => {
 
     renderPage();
 
-    const { editBtn } = await getMealActionButtons();
-    await userEvent.click(editBtn);
+    await clickMenuItem(/common\.edit/i);
 
     await userEvent.click(screen.getByRole('button', { name: /meal_form\.save_btn/i }));
 
@@ -229,8 +235,7 @@ describe('Calendar — delete meal toast', () => {
   it('shows success toast after deleting a meal', async () => {
     renderPage();
 
-    const { deleteBtn } = await getMealActionButtons();
-    await userEvent.click(deleteBtn);
+    await clickMenuItem(/common\.delete/i);
 
     // Confirm delete in the dialog
     await userEvent.click(screen.getByRole('button', { name: /common\.delete/i }));
@@ -247,8 +252,7 @@ describe('Calendar — delete meal toast', () => {
 
     renderPage();
 
-    const { deleteBtn } = await getMealActionButtons();
-    await userEvent.click(deleteBtn);
+    await clickMenuItem(/common\.delete/i);
 
     await userEvent.click(screen.getByRole('button', { name: /common\.delete/i }));
 

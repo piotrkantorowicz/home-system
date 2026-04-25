@@ -117,6 +117,7 @@
       "modified": "Modified"
     },
     "meal_actions": {
+      "menu": "Meal actions",
       "mark_done": "Mark done",
       "override": "Record what was actually eaten",
       "reset": "Revert to planned"
