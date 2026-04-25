@@ -12,7 +12,7 @@ import {
 } from '@shared/components/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
@@ -60,7 +60,6 @@ export function RecipeForm({
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors },
   } = useForm<RecipeFormData>({
     resolver: zodResolver(recipeSchema),
@@ -76,7 +75,8 @@ export function RecipeForm({
     name: 'ingredients',
   });
 
-  const watchedServings = watch('servings') || 1;
+  const watchedServings = useWatch({ control, name: 'servings' }) || 1;
+  const watchedPrepTime = useWatch({ control, name: 'prepTimeMinutes' });
 
   const { data: productResults } = useProducts({
     search: Object.values(productSearch).find((s) => s) ?? '',
@@ -323,11 +323,11 @@ export function RecipeForm({
               <span className="text-muted-foreground">{t('recipe_form.servings_summary')}</span>
               <span className="font-semibold">{watchedServings}</span>
             </div>
-            {watch('prepTimeMinutes') && (
+            {watchedPrepTime !== undefined && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('recipe_form.prep_time_summary')}</span>
                 <span className="font-semibold">
-                  {watch('prepTimeMinutes')} {t('recipes.prep_time')}
+                  {watchedPrepTime} {t('recipes.prep_time')}
                 </span>
               </div>
             )}

@@ -844,6 +844,16 @@ export interface components {
             status: string;
             actualRecipe: null | components["schemas"]["ActualRecipeDto"];
             actualProducts: components["schemas"]["ActualProductDto"][];
+            /** Format: double */
+            calories: number | string;
+            /** Format: double */
+            protein: number | string;
+            /** Format: double */
+            carbs: number | string;
+            /** Format: double */
+            fat: number | string;
+            /** Format: double */
+            fiber: number | string;
         };
         MealScheduleConfigDto: {
             /** Format: uuid */

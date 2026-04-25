@@ -3,9 +3,9 @@ import { cn } from '@shared/lib/utils';
 import { format, isValid, parseISO } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 
-import type { Matcher } from 'react-day-picker';
-
 import { Calendar } from './Calendar';
+
+import type { Matcher } from 'react-day-picker';
 
 const DEFAULT_START_YEAR = new Date().getFullYear() - 100;
 const DEFAULT_END_YEAR = new Date().getFullYear() + 10;

@@ -34,7 +34,15 @@ export interface ToastContextValue {
   dismiss: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextValue | null>(null);
+// eslint-disable-next-line react-refresh/only-export-components
+export const ToastContext = createContext<ToastContextValue | null>(null);
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast must be used within a ToastProvider');
+  return ctx;
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(toastReducer, { toasts: [] });
@@ -72,12 +80,4 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <ToastContainer toasts={state.toasts} onDismiss={dismiss} />
     </ToastContext.Provider>
   );
-}
-
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return ctx;
 }

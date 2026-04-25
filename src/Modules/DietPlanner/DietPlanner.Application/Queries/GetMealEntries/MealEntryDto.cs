@@ -16,7 +16,12 @@ public sealed record MealEntryDto(
     DateTime CreatedAt,
     string Status,
     ActualRecipeDto? ActualRecipe,
-    IReadOnlyList<ActualProductDto> ActualProducts);
+    IReadOnlyList<ActualProductDto> ActualProducts,
+    decimal Calories,
+    decimal Protein,
+    decimal Carbs,
+    decimal Fat,
+    decimal Fiber);
 
 public sealed record ActualRecipeDto(Guid Id, string Name);
 

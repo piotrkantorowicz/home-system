@@ -7,7 +7,7 @@ import { Card, CardContent, Button, Label, Checkbox, Select } from '@shared/comp
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
@@ -58,7 +58,6 @@ export function NotificationPrefsForm({ onSuccess }: NotificationPrefsFormProps)
     register,
     handleSubmit,
     reset,
-    watch,
     control,
     formState: { isDirty },
   } = useForm<NotificationPrefsFormInput, unknown, NotificationPrefsFormData>({
@@ -66,8 +65,8 @@ export function NotificationPrefsForm({ onSuccess }: NotificationPrefsFormProps)
     defaultValues: DEFAULT_VALUES,
   });
 
-  const mealReminderEnabled = watch('mealReminderEnabled');
-  const waterReminderEnabled = watch('waterReminderEnabled');
+  const mealReminderEnabled = useWatch({ control, name: 'mealReminderEnabled' });
+  const waterReminderEnabled = useWatch({ control, name: 'waterReminderEnabled' });
 
   useEffect(() => {
     if (preferences) {

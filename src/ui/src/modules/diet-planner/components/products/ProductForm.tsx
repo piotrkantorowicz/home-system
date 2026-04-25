@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@shared/components/ui';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
@@ -43,7 +43,7 @@ export function ProductForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -53,10 +53,10 @@ export function ProductForm({
     },
   });
 
-  const protein = watch('proteinPer100g') || 0;
-  const carbs = watch('carbsPer100g') || 0;
-  const fat = watch('fatPer100g') || 0;
-  const fiber = Number(watch('fiberPer100g')) || 0;
+  const protein = useWatch({ control, name: 'proteinPer100g' }) || 0;
+  const carbs = useWatch({ control, name: 'carbsPer100g' }) || 0;
+  const fat = useWatch({ control, name: 'fatPer100g' }) || 0;
+  const fiber = Number(useWatch({ control, name: 'fiberPer100g' })) || 0;
 
   const totalMacros = protein + carbs + fat;
   const isMacroWarning = totalMacros > 100;

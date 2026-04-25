@@ -79,6 +79,48 @@ public sealed class MealEntryCompletionEndpointsTests
     }
 
     [Fact]
+    public async Task GET_Meals_IncludesPerEntryMacros()
+    {
+        // Recipe ingredient: 80g of a product with 100 kcal/100g + macros, 1 serving.
+        // Expected per-meal: 80g × 1.0 kcal/g = 80 kcal.
+        var client = FreshClient($"macros-{Guid.NewGuid():N}");
+        var slotId = await EnsureBreakfastSlotAsync(client);
+        var recipeId = await CreateRecipeAsync(client, $"Recipe {Guid.NewGuid():N}");
+        var mealId = await CreateMealAsync(client, slotId, recipeId);
+
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entry = entries!.Single(e => e.Id == mealId);
+
+        entry.Calories.ShouldBe(80m);
+        entry.Protein.ShouldBe(4m);
+        entry.Carbs.ShouldBe(8m);
+        entry.Fat.ShouldBe(1.6m);
+        entry.Fiber.ShouldBe(0.8m);
+    }
+
+    [Fact]
+    public async Task GET_Meals_ModifiedEntry_UsesActualMacros()
+    {
+        var client = FreshClient($"macros-mod-{Guid.NewGuid():N}");
+        var slotId = await EnsureBreakfastSlotAsync(client);
+        var plannedRecipe = await CreateRecipeAsync(client, $"Planned {Guid.NewGuid():N}");
+        var mealId = await CreateMealAsync(client, slotId, plannedRecipe);
+        var snackId = await CreateProductAsync(client, $"Snack {Guid.NewGuid():N}");
+
+        // Override with a 50g ad-hoc snack: 200 kcal/100g × 50g = 100 kcal.
+        var resp = await client.PatchAsJsonAsync(
+            $"/api/v1/meals/{mealId}/override",
+            new OverrideMealEntryRequest(null, [new ActualProductRequest(snackId, 50m, "g")]));
+        resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entry = entries!.Single(e => e.Id == mealId);
+
+        entry.Status.ShouldBe("Modified");
+        entry.Calories.ShouldBe(100m);
+    }
+
+    [Fact]
     public async Task PATCH_Complete_HappyPath_Returns204AndMarksDone()
     {
         var client = FreshClient($"complete-{Guid.NewGuid():N}");

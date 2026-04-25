@@ -110,6 +110,11 @@
     "tab_nutrition": "Odżywianie",
     "tab_import": "Import",
     "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków.",
+    "view_label": "Widok",
+    "view": {
+      "week": "Tydzień",
+      "day": "Dzień"
+    },
     "meal_status": {
       "planned": "Zaplanowane",
       "done": "Zjedzone",
@@ -288,6 +293,22 @@
       "unit": "Jedn.",
       "calories": "Kalorie",
       "protein": "Białko"
+    }
+  },
+  "day_view": {
+    "summary": {
+      "calories": "Kalorie dziś",
+      "of_target": "z {{target}} kcal celu",
+      "macros": "Makro",
+      "meals": "Postęp posiłków",
+      "meals_done": "{{done}} / {{total}}",
+      "hydration": "Nawodnienie"
+    },
+    "macro": {
+      "protein": "B",
+      "carbs": "W",
+      "fat": "T",
+      "fiber": "Bł"
     }
   },
   "diet_plan_detail": {

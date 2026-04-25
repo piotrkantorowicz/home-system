@@ -5,13 +5,13 @@
  * Form components are stubbed so tests focus on the toast behaviour only,
  * not on form validation or rendering details.
  */
+
+import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, it, expect, vi } from 'vitest';
 
-import { server } from '@/test/mocks/server';
-import { ToastProvider } from '@shared/context/ToastContext';
 import { createWrapper } from '../../../test/utils/queryWrapper';
 
 import ProductCreate from './products/ProductCreate';
@@ -20,6 +20,8 @@ import RecipeCreate from './recipes/RecipeCreate';
 import RecipeEdit from './recipes/RecipeEdit';
 
 import type { ReactNode } from 'react';
+
+import { server } from '@/test/mocks/server';
 
 const BASE = 'http://localhost:5000';
 
