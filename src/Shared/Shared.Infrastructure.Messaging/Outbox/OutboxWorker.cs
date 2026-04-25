@@ -45,8 +45,10 @@ public sealed class OutboxWorker : BackgroundService
     public async Task RunOnceAsync(CancellationToken ct)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
-        var transport = scope.ServiceProvider.GetRequiredService<IIntegrationEventTransport>();
+        var store = scope.ServiceProvider.GetService<IOutboxStore>();
+        if (store is null) return;
+        var transport = scope.ServiceProvider.GetService<IIntegrationEventTransport>();
+        if (transport is null) return;
 
         var pending = await store.GetUnprocessedAsync(_options.BatchSize, ct).ConfigureAwait(false);
         if (pending.Count == 0) return;

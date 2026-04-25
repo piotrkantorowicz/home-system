@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Shared.Infrastructure.Cqrs.Extensions;
+using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Web;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Modules
 // ==============================================
 builder.Services.AddDietPlannerModule(builder.Configuration);
+
+// ==============================================
+// Messaging (integration-event bus + in-process transport)
+// ==============================================
+builder.Services
+    .AddIntegrationEventBus()
+    .UseInProcessTransport();
 
 // ==============================================
 // Authentication & Authorization

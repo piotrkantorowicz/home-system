@@ -87,4 +87,17 @@ public sealed class OutboxWorkerTests
 
         await transport.DidNotReceive().DispatchAsync(Arg.Any<OutboxMessage>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task RunOnceAsync_WithNoStoreRegistered_ReturnsWithoutThrowing()
+    {
+        var services = new ServiceCollection();
+        var sp = services.BuildServiceProvider();
+        var sut = new OutboxWorker(sp.GetRequiredService<IServiceScopeFactory>(),
+            Options.Create(new OutboxWorkerOptions()),
+            NullLogger<OutboxWorker>.Instance);
+
+        var act = () => sut.RunOnceAsync(CancellationToken.None);
+        await act.ShouldNotThrowAsync();
+    }
 }
