@@ -19,7 +19,7 @@ import type { ReactNode } from 'react';
 
 import { server } from '@/test/mocks/server';
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 /** Return today's date as YYYY-MM-DD so the mock meal appears in the current week. */
 function todayStr() {

@@ -31,7 +31,7 @@ describe('useProducts', () => {
 
   it('exposes error when API fails', async () => {
     server.use(
-      http.get('http://localhost:5000/api/v1/products', () =>
+      http.get('http://localhost:5050/api/v1/products', () =>
         HttpResponse.json({ title: 'Server Error' }, { status: 500 }),
       ),
     );

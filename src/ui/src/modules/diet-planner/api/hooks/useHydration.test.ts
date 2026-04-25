@@ -19,7 +19,7 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
   redirectToLogin: vi.fn(),
 }));
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 describe('useHydrationConfig', () => {
   it('returns hydration config data on success', async () => {

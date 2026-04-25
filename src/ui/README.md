@@ -5,7 +5,7 @@ React 19 + Vite + TypeScript SPA for the home-system platform.
 ## Requirements
 
 - Node.js 22+
-- Diet Planner API running on http://localhost:5000 (see `src/apis/diet-planner/README.md`)
+- Diet Planner API running on http://localhost:5050 (see `src/apis/diet-planner/README.md`)
 - Authentik running on http://localhost:9000 (see `infrastructure/README.md`)
 
 ## Setup
@@ -17,7 +17,7 @@ cp .env.example .env
 
 | Variable | Description |
 |---|---|
-| `VITE_API_BASE_URL` | Diet Planner API base URL (default: `http://localhost:5000`) |
+| `VITE_API_BASE_URL` | Diet Planner API base URL (default: `http://localhost:5050`) |
 | `VITE_AUTHENTIK_DOMAIN` | Authentik domain (default: `http://localhost:9000`) |
 | `VITE_OIDC_CLIENT_ID` | OIDC client ID from Authentik |
 | `VITE_REDIRECT_URI` | Auth redirect URI (default: `http://localhost:5173`) |

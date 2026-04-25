@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 
 import type { APIRequestContext, Page } from '@playwright/test';
 
-const API_BASE_URL = process.env['API_BASE_URL'] ?? 'http://localhost:5000';
+const API_BASE_URL = process.env['API_BASE_URL'] ?? 'http://localhost:5050';
 
 /**
  * Pulls the current access token out of the authenticated page's localStorage.

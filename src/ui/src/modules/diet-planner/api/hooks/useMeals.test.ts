@@ -15,7 +15,7 @@ import {
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 // Silence auth logs — no real OIDC context in tests
 vi.mock('@shared/api/tokenInterceptor', () => ({

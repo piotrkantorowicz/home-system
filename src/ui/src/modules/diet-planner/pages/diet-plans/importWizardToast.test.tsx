@@ -18,7 +18,7 @@ import type { ReactNode } from 'react';
 
 import { server } from '@/test/mocks/server';
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 // ── i18n stub ─────────────────────────────────────────────────────────────────
 vi.mock('react-i18next', () => ({

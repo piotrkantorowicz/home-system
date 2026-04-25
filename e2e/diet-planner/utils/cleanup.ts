@@ -55,7 +55,7 @@ export async function cleanupWorker(workerIndex: number): Promise<void> {
   }
 
   const apiContext = await request.newContext({
-    baseURL: 'http://localhost:5000',
+    baseURL: 'http://localhost:5050',
     extraHTTPHeaders: { Authorization: `Bearer ${token}` },
   });
 

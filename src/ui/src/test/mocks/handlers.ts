@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
-const BASE = 'http://localhost:5000';
+const BASE = 'http://localhost:5050';
 
 export const productHandlers = [
   http.get(`${BASE}/api/v1/products`, () => {
