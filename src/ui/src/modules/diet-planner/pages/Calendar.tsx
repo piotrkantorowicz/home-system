@@ -19,7 +19,6 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
-import { useCalendarView } from '@shared/hooks/useCalendarView';
 import { cn } from '@shared/lib/utils';
 import {
   ArrowRight,
@@ -34,9 +33,9 @@ import {
   Target,
   Trash2,
 } from 'lucide-react';
-import { lazy, Suspense, useState, useMemo } from 'react';
+import { lazy, Suspense, useCallback, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useGoals } from '../api/hooks/useGoals';
 import { useMealSchedule } from '../api/hooks/useMealSchedule';
@@ -77,6 +76,18 @@ function formatLocalDate(date: Date) {
   return `${String(year)}-${month}-${day}`;
 }
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseLocalDate(value: string | null): Date | null {
+  if (value === null || !ISO_DATE_RE.test(value)) return null;
+  const d = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+type CalendarView = 'week' | 'day';
+
 interface Meal {
   id: string;
   date: string;
@@ -96,7 +107,47 @@ export default function Calendar() {
   const { t, i18n } = useTranslation();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<CalendarTab>('calendar');
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const view: CalendarView = searchParams.get('view') === 'day' ? 'day' : 'week';
+
+  // Single shared anchor — interpreted as the selected day in day view, or any
+  // day within the shown week in week view. Toggling views keeps you on the
+  // same date so week ↔ day navigation feels continuous.
+  const selectedDay = useMemo(() => {
+    const parsed = parseLocalDate(searchParams.get('date'));
+    if (parsed !== null) return parsed;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }, [searchParams]);
+
+  const weekStart = useMemo(() => getWeekStart(selectedDay), [selectedDay]);
+
+  const updateParams = useCallback(
+    (patch: Record<string, string | null>, options: { replace?: boolean } = {}) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(patch)) {
+            if (value === null) next.delete(key);
+            else next.set(key, value);
+          }
+          return next;
+        },
+        { replace: options.replace ?? true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setView = useCallback(
+    (next: CalendarView) => {
+      // View switch is a meaningful navigation step — push so back returns to the previous view.
+      updateParams({ view: next }, { replace: false });
+    },
+    [updateParams],
+  );
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
@@ -117,13 +168,6 @@ export default function Calendar() {
   const resetMeal = useResetMeal();
   const bulkCompleteMeals = useBulkCompleteMeals();
   const [overrideMealId, setOverrideMealId] = useState<string | null>(null);
-
-  const [view, setView] = useCalendarView();
-  const [selectedDay, setSelectedDay] = useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
 
   const weekStartDate = new Date(weekStart);
   const weekEndDate = new Date(weekStartDate);
@@ -253,38 +297,26 @@ export default function Calendar() {
 
   const isSubmitting = createMeal.isPending || updateMeal.isPending;
 
+  const shiftDate = (days: number) => {
+    const d = new Date(selectedDay);
+    d.setDate(d.getDate() + days);
+    updateParams({ date: formatLocalDate(d) });
+  };
+
   const goToPrevWeek = () => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() - 7);
-    setWeekStart(d);
+    shiftDate(-7);
   };
-
   const goToNextWeek = () => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + 7);
-    setWeekStart(d);
+    shiftDate(7);
   };
-
-  const goToToday = () => {
-    if (view === 'week') {
-      setWeekStart(getWeekStart(new Date()));
-    } else {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      setSelectedDay(d);
-    }
-  };
-
   const goToPrevDay = () => {
-    const d = new Date(selectedDay);
-    d.setDate(d.getDate() - 1);
-    setSelectedDay(d);
+    shiftDate(-1);
   };
-
   const goToNextDay = () => {
-    const d = new Date(selectedDay);
-    d.setDate(d.getDate() + 1);
-    setSelectedDay(d);
+    shiftDate(1);
+  };
+  const goToToday = () => {
+    updateParams({ date: null });
   };
 
   const dayDateStr = formatLocalDate(selectedDay);
