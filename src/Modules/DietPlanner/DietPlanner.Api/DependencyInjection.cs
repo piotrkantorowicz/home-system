@@ -26,7 +26,7 @@ public static class DietPlannerModule
         app.MapGoalEndpoints();
         app.MapMealScheduleEndpoints();
         app.MapProfileEndpoints();
-        app.MapNotificationPreferencesEndpoints();
+        app.MapDietReminderSettingsEndpoints();
         app.MapHydrationEndpoints();
         app.MapWeightEntryEndpoints();
 

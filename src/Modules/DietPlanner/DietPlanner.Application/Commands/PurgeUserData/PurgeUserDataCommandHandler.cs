@@ -48,7 +48,7 @@ internal sealed class PurgeUserDataCommandHandler : ICommandHandler<PurgeUserDat
             DELETE FROM hydration_configs WHERE user_id = {userId};
             DELETE FROM user_goals WHERE user_id = {userId};
             DELETE FROM meal_schedule_configs WHERE user_id = {userId};
-            DELETE FROM notification_preferences WHERE user_id = {userId};
+            DELETE FROM diet_reminder_settings WHERE user_id = {userId};
             DELETE FROM user_profiles WHERE user_id = {userId};
             """, ct);
     }

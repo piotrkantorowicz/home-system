@@ -17,7 +17,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
     public DbSet<MealScheduleConfig> MealScheduleConfigs => Set<MealScheduleConfig>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
-    public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
+    public DbSet<DietReminderSettings> DietReminderSettings => Set<DietReminderSettings>();
     public DbSet<HydrationConfig> HydrationConfigs => Set<HydrationConfig>();
     public DbSet<WaterIntake> WaterIntakes => Set<WaterIntake>();
     public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();

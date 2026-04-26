@@ -100,7 +100,7 @@ public sealed class TestSupportEndpointsTests
             (await db.UserGoals.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
             (await db.MealScheduleConfigs.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
             (await db.UserProfiles.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
-            (await db.NotificationPreferences.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
+            (await db.DietReminderSettings.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
             (await db.HydrationConfigs.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
             (await db.WaterIntakes.AnyAsync(x => x.UserId == userId)).ShouldBeFalse();
         }
