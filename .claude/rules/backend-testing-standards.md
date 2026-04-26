@@ -1,8 +1,7 @@
 # Backend — Testing Standards
 
-> **Assertion library:** Shouldly only. Examples below using `.Should()` come from FluentAssertions
-> and are kept for readability of patterns — translate them to `.ShouldBe(...)` /
-> `.ShouldThrow<T>()` in actual test code. Project tech stack: xUnit + Shouldly + NSubstitute.
+> **Assertion library:** Shouldly only. Project tech stack: xUnit + Shouldly + NSubstitute.
+> FluentAssertions is intentionally not on the package list — do not add it.
 
 ## Test Project Layout
 
@@ -46,8 +45,8 @@ public sealed class BudgetPlanTests
         var act = () => plan.AddEntry(new Money(150, "PLN"), "Over-limit expense");
 
         // Assert
-        act.Should().Throw<BudgetPlanDomainException>()
-           .WithMessage("*limit*");
+        act.ShouldThrow<BudgetPlanDomainException>()
+           .Message.ShouldContain("limit");
     }
 
     [Fact]
@@ -63,9 +62,9 @@ public sealed class BudgetPlanTests
         plan.AddEntry(new Money(100, "PLN"), "Coffee");
 
         // Assert
-        plan.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<BudgetEntryAddedDomainEvent>();
-        plan.Entries.Should().HaveCount(1);
+        plan.DomainEvents.ShouldHaveSingleItem()
+            .ShouldBeOfType<BudgetEntryAddedDomainEvent>();
+        plan.Entries.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -75,8 +74,8 @@ public sealed class BudgetPlanTests
         var plan = BudgetPlan.Create(BudgetPlanId.New(), new Money(1000, "PLN"), DateRange.CurrentMonth());
 
         // Assert
-        plan.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<BudgetPlanCreatedDomainEvent>();
+        plan.DomainEvents.ShouldHaveSingleItem()
+            .ShouldBeOfType<BudgetPlanCreatedDomainEvent>();
     }
 }
 ```
@@ -102,7 +101,7 @@ public sealed class CreateBudgetPlanCommandHandlerTests
         var command = new CreateBudgetPlanCommand(Guid.NewGuid(), 500m, "PLN");
 
         // Act
-        await _sut.Handle(command, CancellationToken.None);
+        await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         await _repository.Received(1).AddAsync(
@@ -117,7 +116,7 @@ public sealed class CreateBudgetPlanCommandHandlerTests
 ### Unit Test Rules
 - No database, no filesystem, no network — everything outside the unit under test is mocked.
 - Use NSubstitute for mocks (`Substitute.For<T>()`).
-- Use **Shouldly** for readable assertions (`.ShouldBe`, `.ShouldThrow<T>`, `.ShouldNotBeNull`) — no plain `Assert.Equal`, no FluentAssertions.
+- Use **Shouldly** for readable assertions (`.ShouldBe`, `.ShouldThrow<T>`, `.ShouldNotBeNull`, `.ShouldHaveSingleItem`, `.ShouldBeOfType<T>`) — no plain `Assert.Equal`, no FluentAssertions.
 - Test **one behaviour** per test method.
 - Parameterize with `[Theory] + [InlineData]` for value variations, not for different scenarios.
 
@@ -148,8 +147,8 @@ public sealed class BudgetPlanEndpointsTests : IClassFixture<BudgetPlanWebApplic
         var response = await _client.PostAsJsonAsync("/api/budget-plans", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        response.Headers.Location.Should().NotBeNull();
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        response.Headers.Location.ShouldNotBeNull();
     }
 
     [Fact]
@@ -159,7 +158,7 @@ public sealed class BudgetPlanEndpointsTests : IClassFixture<BudgetPlanWebApplic
         var response = await _client.GetAsync($"/api/budget-plans/{Guid.NewGuid()}");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 }
 ```

@@ -1,3 +1,7 @@
+---
+description: Create a new shared UI component with variants, tests, and proper exports
+---
+
 Create a new shared UI component with variants, tests, and proper exports.
 
 ## Usage

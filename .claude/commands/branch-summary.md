@@ -1,3 +1,7 @@
+---
+description: Produce a commit-body-style summary of unmerged commits on the current branch
+---
+
 Produce a concise commit-body-style summary of everything on the current branch that has not yet been merged into `main`.
 
 ## Instructions

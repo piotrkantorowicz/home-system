@@ -1,3 +1,7 @@
+---
+description: Add a new aggregate root (and related files) to an existing DDD module
+---
+
 Add a new aggregate root (and related files) to an existing DDD module.
 
 ## Usage

@@ -1,3 +1,7 @@
+---
+description: Add a new API endpoint along with its command or query to an existing module
+---
+
 Add a new API endpoint along with its command or query to an existing module.
 
 ## Usage
