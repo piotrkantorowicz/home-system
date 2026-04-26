@@ -45,3 +45,75 @@ public sealed class UserGoalTests
         act.ShouldThrow<ArgumentException>();
     }
 }
+
+public sealed class UserGoalMilestoneTests
+{
+    [Fact]
+    public void ShouldEmitWeightMilestone_WhenNoTarget_ReturnsFalse()
+    {
+        var goal = UserGoal.Create(UserGoalId.New(), "user-1", 2000, null, null, null, null);
+
+        goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldEmitWeightMilestone_WhenAboveTarget_ReturnsFalse()
+    {
+        var goal = UserGoal.Create(
+            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            targetWeightKg: 70m);
+
+        goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldEmitWeightMilestone_WhenAtOrBelowTarget_ReturnsTrue()
+    {
+        var goal = UserGoal.Create(
+            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            targetWeightKg: 70m);
+
+        goal.ShouldEmitWeightMilestone(70m).ShouldBeTrue();
+        goal.ShouldEmitWeightMilestone(69.5m).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldEmitWeightMilestone_AfterMarkAchieved_ReturnsFalse()
+    {
+        var goal = UserGoal.Create(
+            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            targetWeightKg: 70m);
+
+        goal.MarkMilestoneAchieved(DateTime.UtcNow);
+
+        goal.ShouldEmitWeightMilestone(65m).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MarkMilestoneAchieved_FirstCall_SetsTimestamp()
+    {
+        var goal = UserGoal.Create(
+            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            targetWeightKg: 70m);
+        var now = DateTime.UtcNow;
+
+        goal.MarkMilestoneAchieved(now);
+
+        goal.MilestoneAchievedAt.ShouldBe(now);
+    }
+
+    [Fact]
+    public void MarkMilestoneAchieved_SecondCall_IsNoOp()
+    {
+        var goal = UserGoal.Create(
+            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            targetWeightKg: 70m);
+        var first = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var second = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        goal.MarkMilestoneAchieved(first);
+        goal.MarkMilestoneAchieved(second);
+
+        goal.MilestoneAchievedAt.ShouldBe(first);
+    }
+}

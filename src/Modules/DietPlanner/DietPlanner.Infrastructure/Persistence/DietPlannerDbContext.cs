@@ -5,6 +5,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
+using Shared.Infrastructure.Messaging.Ef.Outbox;
 
 internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlannerReadDbContext
 {
@@ -25,6 +26,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DietPlannerDbContext).Assembly);
+        modelBuilder.ApplyConfiguration(new OutboxMessageEntityConfiguration());
         base.OnModelCreating(modelBuilder);
     }
 

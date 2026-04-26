@@ -30,6 +30,10 @@ internal sealed class UserGoalConfiguration : IEntityTypeConfiguration<UserGoal>
         builder.Property(x => x.CarbsGrams).HasColumnName("carbs_grams");
         builder.Property(x => x.FatGrams).HasColumnName("fat_grams");
         builder.Property(x => x.FiberGrams).HasColumnName("fiber_grams");
+        builder.Property(x => x.TargetWeightKg)
+            .HasPrecision(8, 2)
+            .HasColumnName("target_weight_kg");
+        builder.Property(x => x.MilestoneAchievedAt).HasColumnName("milestone_achieved_at");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }
