@@ -1,0 +1,138 @@
+namespace Notifications.IntegrationTests.Persistence;
+
+using Notifications.Domain.Models;
+using Notifications.Domain.ValueObjects;
+using Notifications.IntegrationTests.Infrastructure;
+using Notifications.Infrastructure.Persistence;
+using Notifications.Infrastructure.Persistence.Repositories;
+using Npgsql;
+
+[Collection(NotificationsDatabaseCollection.Name)]
+public sealed class RepositoryRoundtripTests
+{
+    private readonly NotificationsPostgresFixture _fixture;
+
+    public RepositoryRoundtripTests(NotificationsPostgresFixture fixture)
+        => _fixture = fixture;
+
+    private (NotificationsConnectionFactory Factory, DapperUnitOfWork Uow) CreateScope()
+    {
+        var dataSource = new NpgsqlDataSourceBuilder(_fixture.ConnectionString).Build();
+        var factory = new NotificationsConnectionFactory(dataSource);
+        var uow = new DapperUnitOfWork(factory);
+        return (factory, uow);
+    }
+
+    [Fact]
+    public async Task Notification_InsertAndRead_RoundTrips()
+    {
+        var (_, uow) = CreateScope();
+        await using var _u = uow;
+        var repo = new NotificationRepository(uow);
+        var id = NotificationId.New();
+        var notification = Notification.Create(
+            id, $"user-{Guid.NewGuid():N}", NotificationType.MealReminder,
+            "Lunch", "Eat now", """{"slot":"lunch"}""", DateTime.UtcNow);
+
+        await repo.AddAsync(notification, CancellationToken.None);
+        await uow.CommitAsync(CancellationToken.None);
+
+        var (_, uow2) = CreateScope();
+        await using var _u2 = uow2;
+        var roundtrip = await new NotificationRepository(uow2).GetByIdAsync(id, CancellationToken.None);
+
+        roundtrip.ShouldNotBeNull();
+        roundtrip.UserId.ShouldBe(notification.UserId);
+        roundtrip.Type.ShouldBe(NotificationType.MealReminder);
+        roundtrip.Title.ShouldBe("Lunch");
+    }
+
+    [Fact]
+    public async Task NotificationDelivery_InsertAndRead_RoundTrips()
+    {
+        var (_, uow) = CreateScope();
+        await using var _u = uow;
+        var repo = new NotificationRepository(uow);
+
+        var notificationId = NotificationId.New();
+        var notification = Notification.Create(
+            notificationId, $"user-{Guid.NewGuid():N}", NotificationType.WaterReminder,
+            "Water", "Drink now", "{}", DateTime.UtcNow);
+        await repo.AddAsync(notification, CancellationToken.None);
+
+        var deliveryId = NotificationDeliveryId.New();
+        var delivery = NotificationDelivery.Create(deliveryId, notificationId, NotificationChannel.Console);
+        await repo.AddDeliveryAsync(delivery, CancellationToken.None);
+        await uow.CommitAsync(CancellationToken.None);
+
+        var (_, uow2) = CreateScope();
+        await using var _u2 = uow2;
+        var roundtrip = await new NotificationRepository(uow2).GetDeliveryAsync(deliveryId, CancellationToken.None);
+
+        roundtrip.ShouldNotBeNull();
+        roundtrip.Channel.ShouldBe(NotificationChannel.Console);
+        roundtrip.Status.ShouldBe(DeliveryStatus.Pending);
+        roundtrip.NotificationId.ShouldBe(notificationId);
+    }
+
+    [Fact]
+    public async Task ChannelPreferences_InsertUpdateRead_RoundTrips()
+    {
+        var userId = $"user-{Guid.NewGuid():N}";
+        var (_, uow) = CreateScope();
+        await using var _u = uow;
+        var repo = new NotificationChannelPreferencesRepository(uow);
+
+        var prefs = NotificationChannelPreferences.CreateDefault(
+            NotificationChannelPreferencesId.New(), userId, DateTime.UtcNow);
+        await repo.AddAsync(prefs, CancellationToken.None);
+        await uow.CommitAsync(CancellationToken.None);
+
+        var (_, uow2) = CreateScope();
+        await using var _u2 = uow2;
+        var loaded = await new NotificationChannelPreferencesRepository(uow2)
+            .GetByUserIdAsync(userId, CancellationToken.None);
+        loaded.ShouldNotBeNull();
+        loaded.ConsoleEnabled.ShouldBeTrue();
+        loaded.EmailEnabled.ShouldBeTrue();
+
+        loaded.Update(consoleEnabled: false, emailEnabled: true, webSocketEnabled: false, updatedAt: DateTime.UtcNow);
+
+        var (_, uow3) = CreateScope();
+        await using var _u3 = uow3;
+        var updateRepo = new NotificationChannelPreferencesRepository(uow3);
+        await updateRepo.UpdateAsync(loaded, CancellationToken.None);
+        await uow3.CommitAsync(CancellationToken.None);
+
+        var (_, uow4) = CreateScope();
+        await using var _u4 = uow4;
+        var refetched = await new NotificationChannelPreferencesRepository(uow4)
+            .GetByUserIdAsync(userId, CancellationToken.None);
+        refetched.ShouldNotBeNull();
+        refetched.ConsoleEnabled.ShouldBeFalse();
+        refetched.EmailEnabled.ShouldBeTrue();
+        refetched.WebSocketEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task InboxStore_RecordsAndDetectsDuplicates()
+    {
+        var (factory, _) = CreateScope();
+        var store = new InboxStore(factory);
+        var eventId = Guid.NewGuid();
+
+        (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeFalse();
+
+        await store.RecordAsync(eventId, "Some.Event", DateTime.UtcNow, CancellationToken.None);
+
+        (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task DbUp_IsIdempotent()
+    {
+        var (_, _) = CreateScope();
+        Notifications.Infrastructure.Persistence.Migrations.DbUpRunner.Run(_fixture.ConnectionString);
+        Notifications.Infrastructure.Persistence.Migrations.DbUpRunner.Run(_fixture.ConnectionString);
+    }
+}
