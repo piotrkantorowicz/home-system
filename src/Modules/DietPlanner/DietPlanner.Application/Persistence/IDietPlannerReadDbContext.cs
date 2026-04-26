@@ -14,7 +14,7 @@ public interface IDietPlannerReadDbContext
     DbSet<UserGoal> UserGoals { get; }
     DbSet<MealScheduleConfig> MealScheduleConfigs { get; }
     DbSet<UserProfile> UserProfiles { get; }
-    DbSet<NotificationPreferences> NotificationPreferences { get; }
+    DbSet<DietReminderSettings> DietReminderSettings { get; }
     DbSet<HydrationConfig> HydrationConfigs { get; }
     DbSet<WaterIntake> WaterIntakes { get; }
     DbSet<WeightEntry> WeightEntries { get; }
