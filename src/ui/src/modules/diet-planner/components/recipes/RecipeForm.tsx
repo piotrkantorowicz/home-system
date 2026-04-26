@@ -51,9 +51,9 @@ interface ProductPickerProps {
 }
 
 function ProductPicker({ value, onChange, placeholder, invalid, inputId }: ProductPickerProps) {
+  // Local input state — the form's productId stays untouched until the user actually
+  // picks an option, so typing without selecting and then blurring leaves the row alone.
   const [inputValue, setInputValue] = useState(value.productName);
-  // Track the last externally committed name; if it changes (e.g. defaultValues hydrate
-  // or another row commits), resync the local input. Avoids a setState-in-effect.
   const [lastCommittedName, setLastCommittedName] = useState(value.productName);
   if (value.productName !== lastCommittedName) {
     setLastCommittedName(value.productName);
@@ -61,7 +61,6 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
   }
   const [isOpen, setIsOpen] = useState(false);
   const blurTimeoutRef = useRef<number | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(
     () => () => {
@@ -87,14 +86,13 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
   const handleBlur = () => {
     blurTimeoutRef.current = window.setTimeout(() => {
       const exact = products.find((p) => p.name === inputValue);
-      if (exact) {
+      if (exact && exact.id !== value.productId) {
         commit(exact);
       } else {
-        // Revert to last committed value (or clear when no product was ever picked).
+        // No new selection: snap the input back to whatever was last committed.
+        // Form state (productId/productName) is untouched, so a previously picked
+        // product stays picked.
         setInputValue(value.productName);
-        if (!value.productId && inputValue !== '') {
-          onChange({ productId: '', productName: '' });
-        }
       }
       setIsOpen(false);
     }, 150);
@@ -109,7 +107,7 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       <Input
         id={inputId}
         value={inputValue}
@@ -120,13 +118,8 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
         aria-expanded={isOpen}
         role="combobox"
         onChange={(e) => {
-          const next = e.target.value;
-          setInputValue(next);
+          setInputValue(e.target.value);
           setIsOpen(true);
-          // Typing invalidates the previously picked product until the user picks again.
-          if (value.productId) {
-            onChange({ productId: '', productName: next });
-          }
         }}
         onFocus={handleFocus}
         onBlur={handleBlur}
@@ -134,7 +127,12 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
       {isOpen && products.length > 0 && (
         <ul
           role="listbox"
-          className="bg-popover text-popover-foreground border-border absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border shadow-lg"
+          className="border-border absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border shadow-lg"
+          style={{
+            background: 'hsl(var(--color-popover))',
+            color: 'hsl(var(--color-popover-foreground))',
+            borderColor: 'hsl(var(--color-border))',
+          }}
         >
           {products.map((product) => (
             <li key={product.id}>
