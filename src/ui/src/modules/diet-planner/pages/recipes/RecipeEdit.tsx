@@ -68,7 +68,7 @@ export default function RecipeEdit() {
           prepTimeMinutes: recipe.prepTimeMinutes ? Number(recipe.prepTimeMinutes) : undefined,
           ingredients: recipe.ingredients.map((ing) => ({
             productId: ing.productId,
-            productName: '',
+            productName: ing.productName,
             amount: Number(ing.amount),
             unit: ing.unit,
           })),
