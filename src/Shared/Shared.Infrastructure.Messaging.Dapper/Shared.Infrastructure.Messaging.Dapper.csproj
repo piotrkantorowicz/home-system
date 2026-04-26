@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Shared.Messaging.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shared.Abstractions.Messaging\Shared.Abstractions.Messaging.csproj" />
+    <ProjectReference Include="..\Shared.Infrastructure.Messaging\Shared.Infrastructure.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>

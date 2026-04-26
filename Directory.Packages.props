@@ -14,8 +14,19 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
 
+    <!-- Dapper / Npgsql (Style-2 modules + messaging Dapper inbox executor) -->
+    <PackageVersion Include="Dapper" Version="2.1.66" />
+    <PackageVersion Include="Npgsql" Version="10.0.0" />
+
+    <!-- Hosting (BackgroundService for OutboxWorker) -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+
     <!-- Infrastructure -->
     <PackageVersion Include="Scrutor" Version="4.2.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.13.1" />
 
