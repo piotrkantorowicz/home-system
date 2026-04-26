@@ -3,6 +3,7 @@ namespace DietPlanner.IntegrationTests.Api;
 using System.Net;
 using System.Net.Http.Json;
 using DietPlanner.Api;
+using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.IntegrationTests.Infrastructure;
 
@@ -118,6 +119,34 @@ public sealed class MealEndpointsTests
             new UpdateMealScheduleRequest([new MealSlotRequest(null, "Lunch", "12:00")]));
 
         deleteResp.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task GET_Meals_ComputesNonZeroNutritionFromRecipeIngredients()
+    {
+        // Regression: GetMealEntriesQueryHandler used to project r.Ingredients in EF,
+        // which silently returned an empty list because Recipe exposes the navigation
+        // as `IReadOnlyCollection<RecipeIngredient> => _ingredients.AsReadOnly()` —
+        // EF can't translate AsReadOnly() in an expression tree. Per-meal calories
+        // came back as 0 for every entry until the day view rendered them as "0 kcal".
+        var client = FreshClient($"meal-{Guid.NewGuid():N}");
+        var slotId = await EnsureBreakfastSlotAsync(client);
+        var recipeId = await CreateRecipeAsync(client, $"NutritionRecipe-{Guid.NewGuid():N}");
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var createResp = await client.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0));
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // CreateRecipeAsync seeds: product 100 kcal/100g, recipe with 80 g, servings=1.
+        // Meal eats 1 serving → 80 g × 100 kcal/100 g × (1/1) = 80 kcal.
+        var meals = await client.GetFromJsonAsync<List<MealEntryDto>>(
+            $"/api/v1/meals?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+
+        meals.ShouldNotBeNull();
+        var meal = meals!.Single(m => m.RecipeId == recipeId);
+        meal.Calories.ShouldBe(80m);
     }
 
     [Fact]
