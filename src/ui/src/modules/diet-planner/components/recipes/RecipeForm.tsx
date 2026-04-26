@@ -8,9 +8,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Select,
   Textarea,
 } from '@shared/components/ui';
 import { Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -38,6 +40,123 @@ interface RecipeFormProps {
   onSubmit: (data: RecipeFormData) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
+}
+
+interface ProductPickerProps {
+  value: { productId: string; productName: string };
+  onChange: (next: { productId: string; productName: string }) => void;
+  placeholder?: string;
+  invalid?: boolean;
+  inputId?: string;
+}
+
+function ProductPicker({ value, onChange, placeholder, invalid, inputId }: ProductPickerProps) {
+  const [inputValue, setInputValue] = useState(value.productName);
+  // Track the last externally committed name; if it changes (e.g. defaultValues hydrate
+  // or another row commits), resync the local input. Avoids a setState-in-effect.
+  const [lastCommittedName, setLastCommittedName] = useState(value.productName);
+  if (value.productName !== lastCommittedName) {
+    setLastCommittedName(value.productName);
+    setInputValue(value.productName);
+  }
+  const [isOpen, setIsOpen] = useState(false);
+  const blurTimeoutRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(
+    () => () => {
+      if (blurTimeoutRef.current !== null) window.clearTimeout(blurTimeoutRef.current);
+    },
+    [],
+  );
+
+  const { data: results } = useProducts({
+    search: inputValue,
+    onlyMine: false,
+    page: 1,
+    pageSize: 10,
+  });
+  const products = results?.items ?? [];
+
+  const commit = (product: { id: string; name: string }) => {
+    onChange({ productId: product.id, productName: product.name });
+    setInputValue(product.name);
+    setIsOpen(false);
+  };
+
+  const handleBlur = () => {
+    blurTimeoutRef.current = window.setTimeout(() => {
+      const exact = products.find((p) => p.name === inputValue);
+      if (exact) {
+        commit(exact);
+      } else {
+        // Revert to last committed value (or clear when no product was ever picked).
+        setInputValue(value.productName);
+        if (!value.productId && inputValue !== '') {
+          onChange({ productId: '', productName: '' });
+        }
+      }
+      setIsOpen(false);
+    }, 150);
+  };
+
+  const handleFocus = () => {
+    if (blurTimeoutRef.current !== null) {
+      window.clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    setIsOpen(true);
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Input
+        id={inputId}
+        value={inputValue}
+        placeholder={placeholder}
+        autoComplete="off"
+        aria-invalid={invalid}
+        aria-autocomplete="list"
+        aria-expanded={isOpen}
+        role="combobox"
+        onChange={(e) => {
+          const next = e.target.value;
+          setInputValue(next);
+          setIsOpen(true);
+          // Typing invalidates the previously picked product until the user picks again.
+          if (value.productId) {
+            onChange({ productId: '', productName: next });
+          }
+        }}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+      />
+      {isOpen && products.length > 0 && (
+        <ul
+          role="listbox"
+          className="bg-popover text-popover-foreground border-border absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border shadow-lg"
+        >
+          {products.map((product) => (
+            <li key={product.id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={product.id === value.productId}
+                className="hover:bg-accent hover:text-accent-foreground w-full px-4 py-2 text-left text-sm"
+                onMouseDown={(e) => {
+                  // Prevent the input's blur from firing before we commit.
+                  e.preventDefault();
+                  commit(product);
+                }}
+              >
+                {product.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 export function RecipeForm({
@@ -71,18 +190,6 @@ export function RecipeForm({
   const watchedServings = useWatch({ control, name: 'servings' }) || 1;
   const watchedPrepTime = useWatch({ control, name: 'prepTimeMinutes' });
   const watchedIngredients = useWatch({ control, name: 'ingredients' });
-
-  // Search by the first row the user is currently filling (typed name, no product picked yet).
-  const activeSearch =
-    watchedIngredients.find((row) => !row.productId && row.productName)?.productName ?? '';
-
-  const { data: productResults } = useProducts({
-    search: activeSearch,
-    onlyMine: false,
-    page: 1,
-    pageSize: 10,
-  });
-  const products = productResults?.items ?? [];
 
   return (
     <form
@@ -174,6 +281,7 @@ export function RecipeForm({
           {fields.map((field, index) => {
             const idx = index;
             const idxStr = String(index);
+            const row = watchedIngredients[idx];
             return (
               <div key={field.id} className="flex items-start gap-3">
                 <div className="grid flex-1 grid-cols-3 gap-3">
@@ -181,30 +289,25 @@ export function RecipeForm({
                     <Label htmlFor={`ingredients.${idxStr}.productName`}>
                       {t('recipe_form.product_label')}
                     </Label>
-                    <Input
-                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-                      id={`ingredients.${idx}.productName`}
+                    <ProductPicker
+                      inputId={`ingredients.${idxStr}.productName`}
                       placeholder={t('recipe_form.product_placeholder')}
-                      list={`products-${idxStr}`}
-                      value={watchedIngredients[idx]?.productName ?? ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const matched = products.find((p) => p.name === value);
+                      invalid={!!errors.ingredients?.[index]?.productId}
+                      value={{
+                        productId: row?.productId ?? '',
+                        productName: row?.productName ?? '',
+                      }}
+                      onChange={(next) => {
                         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-                        setValue(`ingredients.${idx}.productName`, value, {
+                        setValue(`ingredients.${idx}.productName`, next.productName, {
                           shouldValidate: true,
                         });
                         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-                        setValue(`ingredients.${idx}.productId`, matched?.id ?? '', {
+                        setValue(`ingredients.${idx}.productId`, next.productId, {
                           shouldValidate: true,
                         });
                       }}
                     />
-                    <datalist id={`products-${idxStr}`}>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.name} />
-                      ))}
-                    </datalist>
                     {errors.ingredients?.[index]?.productId && (
                       <p className="text-destructive mt-1.5 text-sm">
                         {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
@@ -236,15 +339,15 @@ export function RecipeForm({
                     <Label htmlFor={`ingredients.${idxStr}.unit`}>
                       {t('recipe_form.unit_label')}
                     </Label>
-                    <select
+                    <Select
+                      id={`ingredients.${idxStr}.unit`}
                       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
                       {...register(`ingredients.${idx}.unit`)}
-                      className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full rounded-lg border px-4 py-2.5 text-[0.9rem] transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none"
                     >
                       <option value="g">{t('product_form.units.g')}</option>
                       <option value="ml">{t('product_form.units.ml')}</option>
                       <option value="piece">{t('product_form.units.piece')}</option>
-                    </select>
+                    </Select>
                     {errors.ingredients?.[index]?.unit && (
                       <p className="text-destructive mt-1.5 text-sm">
                         {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
