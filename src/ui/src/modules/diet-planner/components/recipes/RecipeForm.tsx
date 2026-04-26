@@ -12,7 +12,8 @@ import {
   Textarea,
 } from '@shared/components/ui';
 import { Plus, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -61,6 +62,12 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
   }
   const [isOpen, setIsOpen] = useState(false);
   const blurTimeoutRef = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [popoverRect, setPopoverRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   useEffect(
     () => () => {
@@ -68,6 +75,23 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
     },
     [],
   );
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const updateRect = () => {
+      const input = inputRef.current;
+      if (!input) return;
+      const rect = input.getBoundingClientRect();
+      setPopoverRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    };
+    updateRect();
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect);
+    return () => {
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
+    };
+  }, [isOpen]);
 
   const { data: results } = useProducts({
     search: inputValue,
@@ -109,6 +133,7 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
   return (
     <div className="relative">
       <Input
+        ref={inputRef}
         id={inputId}
         value={inputValue}
         placeholder={placeholder}
@@ -124,35 +149,44 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
         onFocus={handleFocus}
         onBlur={handleBlur}
       />
-      {isOpen && products.length > 0 && (
-        <ul
-          role="listbox"
-          className="border-border absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border shadow-lg"
-          style={{
-            background: 'hsl(var(--color-popover))',
-            color: 'hsl(var(--color-popover-foreground))',
-            borderColor: 'hsl(var(--color-border))',
-          }}
-        >
-          {products.map((product) => (
-            <li key={product.id}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={product.id === value.productId}
-                className="hover:bg-accent hover:text-accent-foreground w-full px-4 py-2 text-left text-sm"
-                onMouseDown={(e) => {
-                  // Prevent the input's blur from firing before we commit.
-                  e.preventDefault();
-                  commit(product);
-                }}
-              >
-                {product.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {isOpen &&
+        products.length > 0 &&
+        popoverRect &&
+        createPortal(
+          <ul
+            role="listbox"
+            className="max-h-60 overflow-auto rounded-lg border shadow-lg"
+            style={{
+              position: 'fixed',
+              top: popoverRect.top,
+              left: popoverRect.left,
+              width: popoverRect.width,
+              zIndex: 60,
+              background: 'hsl(var(--color-popover))',
+              color: 'hsl(var(--color-popover-foreground))',
+              borderColor: 'hsl(var(--color-border))',
+            }}
+          >
+            {products.map((product) => (
+              <li key={product.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={product.id === value.productId}
+                  className="hover:bg-accent hover:text-accent-foreground w-full px-4 py-2 text-left text-sm"
+                  onMouseDown={(e) => {
+                    // Prevent the input's blur from firing before we commit.
+                    e.preventDefault();
+                    commit(product);
+                  }}
+                >
+                  {product.name}
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )}
     </div>
   );
 }
