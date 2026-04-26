@@ -138,6 +138,33 @@ services:
     networks:
       - home-system-shared
 
+  # ============================================
+  # PostgreSQL for Notifications API
+  # Use: docker compose --profile notifications up
+  # ============================================
+  notifications-db:
+    image: postgres:16-alpine
+    container_name: notifications-db
+    restart: unless-stopped
+    profiles: ["notifications"]
+    ports:
+      - "5433:5432"
+    volumes:
+      - notifications_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: notifications
+      POSTGRES_USER: notifications
+      POSTGRES_PASSWORD: ${NOTIFICATIONS_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notifications"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+    networks:
+      - home-system-shared
+
 networks:
   home-system-shared:
     driver: bridge
@@ -148,3 +175,4 @@ volumes:
   authentik_media:
   authentik_templates:
   dietplanner_db_data:
+  notifications_db_data:

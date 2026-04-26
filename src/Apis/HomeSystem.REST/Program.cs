@@ -1,5 +1,6 @@
 using DietPlanner.Api;
 using DietPlanner.Infrastructure;
+using Notifications.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
@@ -14,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Modules
 // ==============================================
 builder.Services.AddDietPlannerModule(builder.Configuration);
+builder.Services.AddNotificationsModule(builder.Configuration);
 
 // ==============================================
 // Messaging (integration-event bus + in-process transport)
@@ -166,6 +168,7 @@ app.MapGet("/health", () => TypedResults.Ok(new HealthResponse("healthy", DateTi
     .AllowAnonymous();
 
 app.MapDietPlannerEndpoints();
+app.MapNotificationsEndpoints();
 
 // ==============================================
 // Dev: auto-migrate on startup
@@ -173,6 +176,7 @@ app.MapDietPlannerEndpoints();
 if (app.Environment.IsDevelopment())
 {
     await app.Services.MigrateDietPlannerDatabaseAsync(app.Logger);
+    app.Services.MigrateNotificationsDatabase();
 }
 
 app.Run();

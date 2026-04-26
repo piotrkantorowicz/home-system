@@ -18,12 +18,21 @@
     <Project Path="src/Modules/DietPlanner/DietPlanner.Infrastructure/DietPlanner.Infrastructure.csproj" />
     <Project Path="src/Modules/DietPlanner/DietPlanner.Api/DietPlanner.Api.csproj" />
   </Folder>
+  <Folder Name="/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Application/Notifications.Application.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Contracts/Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Api/Notifications.Api.csproj" />
+  </Folder>
   <Folder Name="/Host/">
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" />
     <Project Path="src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.IntegrationTests/Notifications.IntegrationTests.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.UnitTests/Notifications.UnitTests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
   </Folder>
