@@ -5,7 +5,6 @@ using Notifications.Domain.ValueObjects;
 using Notifications.IntegrationTests.Infrastructure;
 using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Repositories;
-using Npgsql;
 
 [Collection(NotificationsDatabaseCollection.Name)]
 public sealed class RepositoryRoundtripTests
@@ -17,8 +16,7 @@ public sealed class RepositoryRoundtripTests
 
     private (NotificationsConnectionFactory Factory, DapperUnitOfWork Uow) CreateScope()
     {
-        var dataSource = new NpgsqlDataSourceBuilder(_fixture.ConnectionString).Build();
-        var factory = new NotificationsConnectionFactory(dataSource);
+        var factory = new NotificationsConnectionFactory(_fixture.ConnectionString);
         var uow = new DapperUnitOfWork(factory);
         return (factory, uow);
     }

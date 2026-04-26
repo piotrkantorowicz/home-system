@@ -4,101 +4,64 @@ using System.Reflection;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 
-internal sealed record NotificationRow(
-    Guid Id,
-    string UserId,
-    string Type,
-    string Title,
-    string Body,
-    string Payload,
-    DateTime CreatedAt,
-    DateTime? ReadAt);
-
-internal sealed record NotificationDeliveryRow(
-    Guid Id,
-    Guid NotificationId,
-    string Channel,
-    string Status,
-    int AttemptCount,
-    DateTime? LastAttemptAt,
-    DateTime? SentAt,
-    string? FailureReason);
-
-internal sealed record ChannelPreferencesRow(
-    Guid Id,
-    string UserId,
-    bool ConsoleEnabled,
-    bool EmailEnabled,
-    bool WebSocketEnabled,
-    DateTime UpdatedAt);
-
 internal static class NotificationMapping
 {
     internal static Notification ToDomain(NotificationRow row)
     {
-        var notification = (Notification)Activator.CreateInstance(
-            typeof(Notification),
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            args: null,
-            culture: null)!;
+        var notification = CreateInstance<Notification>();
 
-        SetPrivate(notification, "Id", NotificationId.From(row.Id));
-        SetPrivate(notification, "UserId", row.UserId);
-        SetPrivate(notification, "Type", Enum.Parse<NotificationType>(row.Type));
-        SetPrivate(notification, "Title", row.Title);
-        SetPrivate(notification, "Body", row.Body);
-        SetPrivate(notification, "Payload", row.Payload);
-        SetPrivate(notification, "CreatedAt", row.CreatedAt);
-        SetPrivate(notification, "ReadAt", row.ReadAt);
+        Set(notification, "Id", NotificationId.From(row.Id));
+        Set(notification, "UserId", row.UserId);
+        Set(notification, "Type", Enum.Parse<NotificationType>(row.Type));
+        Set(notification, "Title", row.Title);
+        Set(notification, "Body", row.Body);
+        Set(notification, "Payload", row.Payload);
+        Set(notification, "CreatedAt", row.CreatedAt);
+        Set(notification, "ReadAt", row.ReadAt);
 
         return notification;
     }
 
     internal static NotificationDelivery ToDomain(NotificationDeliveryRow row)
     {
-        var delivery = (NotificationDelivery)Activator.CreateInstance(
-            typeof(NotificationDelivery),
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            args: null,
-            culture: null)!;
+        var delivery = CreateInstance<NotificationDelivery>();
 
-        SetPrivate(delivery, "Id", NotificationDeliveryId.From(row.Id));
-        SetPrivate(delivery, "NotificationId", NotificationId.From(row.NotificationId));
-        SetPrivate(delivery, "Channel", Enum.Parse<NotificationChannel>(row.Channel));
-        SetPrivate(delivery, "Status", Enum.Parse<DeliveryStatus>(row.Status));
-        SetPrivate(delivery, "AttemptCount", row.AttemptCount);
-        SetPrivate(delivery, "LastAttemptAt", row.LastAttemptAt);
-        SetPrivate(delivery, "SentAt", row.SentAt);
-        SetPrivate(delivery, "FailureReason", row.FailureReason);
+        Set(delivery, "Id", NotificationDeliveryId.From(row.Id));
+        Set(delivery, "NotificationId", NotificationId.From(row.NotificationId));
+        Set(delivery, "Channel", Enum.Parse<NotificationChannel>(row.Channel));
+        Set(delivery, "Status", Enum.Parse<DeliveryStatus>(row.Status));
+        Set(delivery, "AttemptCount", row.AttemptCount);
+        Set(delivery, "LastAttemptAt", row.LastAttemptAt);
+        Set(delivery, "SentAt", row.SentAt);
+        Set(delivery, "FailureReason", row.FailureReason);
 
         return delivery;
     }
 
     internal static NotificationChannelPreferences ToDomain(ChannelPreferencesRow row)
     {
-        var prefs = (NotificationChannelPreferences)Activator.CreateInstance(
-            typeof(NotificationChannelPreferences),
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            args: null,
-            culture: null)!;
+        var prefs = CreateInstance<NotificationChannelPreferences>();
 
-        SetPrivate(prefs, "Id", NotificationChannelPreferencesId.From(row.Id));
-        SetPrivate(prefs, "UserId", row.UserId);
-        SetPrivate(prefs, "ConsoleEnabled", row.ConsoleEnabled);
-        SetPrivate(prefs, "EmailEnabled", row.EmailEnabled);
-        SetPrivate(prefs, "WebSocketEnabled", row.WebSocketEnabled);
-        SetPrivate(prefs, "UpdatedAt", row.UpdatedAt);
+        Set(prefs, "Id", NotificationChannelPreferencesId.From(row.Id));
+        Set(prefs, "UserId", row.UserId);
+        Set(prefs, "ConsoleEnabled", row.ConsoleEnabled);
+        Set(prefs, "EmailEnabled", row.EmailEnabled);
+        Set(prefs, "WebSocketEnabled", row.WebSocketEnabled);
+        Set(prefs, "UpdatedAt", row.UpdatedAt);
 
         return prefs;
     }
 
-    private static void SetPrivate<T>(T target, string propertyName, object? value)
+    private static T CreateInstance<T>()
+        => (T)Activator.CreateInstance(typeof(T), BindingFlags.Instance | BindingFlags.NonPublic, null, null, null)!;
+
+    // FlattenHierarchy ensures inherited properties are found if the model ever
+    // gains a base class — avoids a silent runtime failure from a plain typeof(T) lookup.
+    private static void Set<T>(T target, string propertyName, object? value)
     {
-        var property = typeof(T).GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new InvalidOperationException($"Property {propertyName} not found on {typeof(T).Name}.");
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy;
+        var property = typeof(T).GetProperty(propertyName, flags)
+            ?? throw new InvalidOperationException($"Property '{propertyName}' not found on {typeof(T).Name}.");
         property.SetValue(target, value);
     }
 }

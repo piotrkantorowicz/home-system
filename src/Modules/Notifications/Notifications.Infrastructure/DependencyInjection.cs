@@ -6,8 +6,6 @@ using Notifications.Domain.Abstractions;
 using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Migrations;
 using Notifications.Infrastructure.Persistence.Repositories;
-using Npgsql;
-using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Messaging.Dapper;
 
 public static class InfrastructureDependencyInjection
@@ -19,13 +17,19 @@ public static class InfrastructureDependencyInjection
         var connectionString = configuration.GetConnectionString("Notifications")
             ?? throw new InvalidOperationException("Missing connection string 'Notifications'.");
 
-        services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
-
-        services.AddScoped<NotificationsConnectionFactory>();
-        services.AddScoped<INpgsqlConnectionFactory>(sp => sp.GetRequiredService<NotificationsConnectionFactory>());
+        // NotificationsConnectionFactory owns NpgsqlDataSource internally (not in DI).
+        // Registering NpgsqlDataSource as a bare DI singleton causes Npgsql EF Core
+        // provider (v8+) to auto-adopt it for all DbContexts, corrupting other module tests.
+        services.AddSingleton<NotificationsConnectionFactory>(
+            _ => new NotificationsConnectionFactory(connectionString));
+        services.AddSingleton<INpgsqlConnectionFactory>(
+            sp => sp.GetRequiredService<NotificationsConnectionFactory>());
 
         services.AddScoped<DapperUnitOfWork>();
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DapperUnitOfWork>());
+        // Note: IUnitOfWork is intentionally NOT registered globally here.
+        // Notifications command handlers (N4) inject DapperUnitOfWork directly.
+        // Two modules registering IUnitOfWork collide — the last one wins and
+        // silently breaks the other module's command handlers.
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationChannelPreferencesRepository, NotificationChannelPreferencesRepository>();
