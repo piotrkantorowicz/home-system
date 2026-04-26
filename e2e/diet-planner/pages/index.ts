@@ -5,7 +5,7 @@ export { HydrationPage } from './hydration.page';
 export { HydrationSettingsPage } from './hydration-settings.page';
 export { ImportPage } from './import.page';
 export { MealSchedulePage } from './meal-schedule.page';
-export { NotificationPreferencesPage } from './notification-preferences.page';
+export { DietReminderSettingsPage } from './diet-reminder-settings.page';
 export { NutritionPage } from './nutrition.page';
 export { ProductsPage } from './products.page';
 export { ProfilePage } from './profile.page';

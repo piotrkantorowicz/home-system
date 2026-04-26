@@ -92,37 +92,47 @@ export async function seedProfile(page: Page, overrides: ProfileSeed = {}): Prom
   }
 }
 
-// ── Notification preferences ─────────────────────────────────────────────────
+// ── Diet reminder settings ───────────────────────────────────────────────────
 
-export interface NotificationPreferencesSeed {
-  mealReminderEnabled?: boolean;
+export interface DietReminderSettingsSeed {
+  mealRemindersEnabled?: boolean;
   mealReminderLeadTimeMinutes?: number;
-  waterReminderEnabled?: boolean;
+  mealMissedGraceMinutes?: number;
+  waterRemindersEnabled?: boolean;
   waterReminderIntervalMinutes?: number;
+  waterWindowStartUtc?: string;
+  waterWindowEndUtc?: string;
   weeklySummaryEnabled?: boolean;
-  goalMilestoneAlertsEnabled?: boolean;
+  weeklySummaryDayOfWeekUtc?: number;
+  weeklySummaryTimeOfDayUtc?: string;
+  goalAlertsEnabled?: boolean;
 }
 
-const DEFAULT_NOTIFICATION_PREFS: Required<NotificationPreferencesSeed> = {
-  mealReminderEnabled: true,
+const DEFAULT_DIET_REMINDER_SETTINGS: Required<DietReminderSettingsSeed> = {
+  mealRemindersEnabled: true,
   mealReminderLeadTimeMinutes: 15,
-  waterReminderEnabled: false,
+  mealMissedGraceMinutes: 30,
+  waterRemindersEnabled: false,
   waterReminderIntervalMinutes: 60,
+  waterWindowStartUtc: '06:00:00',
+  waterWindowEndUtc: '22:00:00',
   weeklySummaryEnabled: false,
-  goalMilestoneAlertsEnabled: true,
+  weeklySummaryDayOfWeekUtc: 0,
+  weeklySummaryTimeOfDayUtc: '08:00:00',
+  goalAlertsEnabled: true,
 };
 
-export async function seedNotificationPreferences(
+export async function seedDietReminderSettings(
   page: Page,
-  overrides: NotificationPreferencesSeed = {},
+  overrides: DietReminderSettingsSeed = {},
 ): Promise<void> {
-  const body = { ...DEFAULT_NOTIFICATION_PREFS, ...overrides };
+  const body = { ...DEFAULT_DIET_REMINDER_SETTINGS, ...overrides };
   const api = await createApiContext(page);
   try {
-    const res = await api.put('/api/v1/notification-preferences', { data: body });
+    const res = await api.put('/api/v1/diet-reminder-settings', { data: body });
     if (!res.ok()) {
       throw new Error(
-        `seedNotificationPreferences: PUT returned ${res.status()}: ${await res.text()}`,
+        `seedDietReminderSettings: PUT returned ${res.status()}: ${await res.text()}`,
       );
     }
   } finally {
