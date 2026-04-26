@@ -11,14 +11,13 @@ import {
   Textarea,
 } from '@shared/components/ui';
 import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 const ingredientSchema = z.object({
-  productId: z.string(),
-  productName: z.string(),
+  productId: z.string().min(1, 'Select a product from the list'),
+  productName: z.string().min(1, 'Select a product from the list'),
   amount: z.number().positive('Amount must be greater than 0'),
   unit: z.string().min(1, 'Unit is required'),
 });
@@ -29,13 +28,7 @@ const recipeSchema = z.object({
   instructions: z.string().optional(),
   servings: z.number().int().min(1, 'Servings must be at least 1'),
   prepTimeMinutes: z.number().int().min(0).optional(),
-  ingredients: z
-    .array(ingredientSchema)
-    .min(1, 'At least one ingredient is required')
-    .refine(
-      (items) => items.every((item) => item.productId.length > 0 || item.productName.length > 0),
-      { message: 'Each ingredient must have a product selected' },
-    ),
+  ingredients: z.array(ingredientSchema).min(1, 'At least one ingredient is required'),
 });
 
 export type RecipeFormData = z.infer<typeof recipeSchema>;
@@ -54,12 +47,12 @@ export function RecipeForm({
   submitLabel,
 }: RecipeFormProps) {
   const { t } = useTranslation();
-  const [productSearch, setProductSearch] = useState<Record<number, string>>({});
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<RecipeFormData>({
     resolver: zodResolver(recipeSchema),
@@ -77,20 +70,24 @@ export function RecipeForm({
 
   const watchedServings = useWatch({ control, name: 'servings' }) || 1;
   const watchedPrepTime = useWatch({ control, name: 'prepTimeMinutes' });
+  const watchedIngredients = useWatch({ control, name: 'ingredients' });
+
+  // Search by the first row the user is currently filling (typed name, no product picked yet).
+  const activeSearch =
+    watchedIngredients.find((row) => !row.productId && row.productName)?.productName ?? '';
 
   const { data: productResults } = useProducts({
-    search: Object.values(productSearch).find((s) => s) ?? '',
+    search: activeSearch,
     onlyMine: false,
     page: 1,
     pageSize: 10,
   });
+  const products = productResults?.items ?? [];
 
   return (
     <form
       onSubmit={(e) => {
-        // REASON: zod .refine on ingredients changes the inferred output type, but runtime data shape is identical
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-        void handleSubmit(onSubmit as any)(e);
+        void handleSubmit(onSubmit)(e);
       }}
       className="stagger-children space-y-6"
     >
@@ -177,10 +174,6 @@ export function RecipeForm({
           {fields.map((field, index) => {
             const idx = index;
             const idxStr = String(index);
-            const { onChange: onProductNameChange, ...productNameProps } = register(
-              // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
-              `ingredients.${idx}.productName`,
-            );
             return (
               <div key={field.id} className="flex items-start gap-3">
                 <div className="grid flex-1 grid-cols-3 gap-3">
@@ -189,23 +182,33 @@ export function RecipeForm({
                       {t('recipe_form.product_label')}
                     </Label>
                     <Input
-                      {...productNameProps}
+                      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
+                      id={`ingredients.${idx}.productName`}
                       placeholder={t('recipe_form.product_placeholder')}
                       list={`products-${idxStr}`}
+                      value={watchedIngredients[idx]?.productName ?? ''}
                       onChange={(e) => {
-                        void onProductNameChange(e);
-                        setProductSearch((prev) => ({ ...prev, [index]: e.target.value }));
+                        const value = e.target.value;
+                        const matched = products.find((p) => p.name === value);
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
+                        setValue(`ingredients.${idx}.productName`, value, {
+                          shouldValidate: true,
+                        });
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- RHF requires number index
+                        setValue(`ingredients.${idx}.productId`, matched?.id ?? '', {
+                          shouldValidate: true,
+                        });
                       }}
                     />
                     <datalist id={`products-${idxStr}`}>
-                      {productResults?.items.map((product) => (
+                      {products.map((product) => (
                         <option key={product.id} value={product.name} />
                       ))}
                     </datalist>
-                    {errors.ingredients?.[index]?.productName && (
+                    {errors.ingredients?.[index]?.productId && (
                       <p className="text-destructive mt-1.5 text-sm">
                         {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive: checked above */}
-                        {errors.ingredients[index]?.productName.message}
+                        {errors.ingredients[index]?.productId.message}
                       </p>
                     )}
                   </div>
