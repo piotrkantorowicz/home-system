@@ -169,6 +169,7 @@ app.MapGet("/health", () => TypedResults.Ok(new HealthResponse("healthy", DateTi
 
 app.MapDietPlannerEndpoints();
 app.MapNotificationsEndpoints();
+app.MapNotificationChannelPreferencesEndpoints();
 
 // ==============================================
 // Dev: auto-migrate on startup

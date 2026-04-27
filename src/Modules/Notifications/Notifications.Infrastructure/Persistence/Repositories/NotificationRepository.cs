@@ -92,4 +92,36 @@ internal sealed class NotificationRepository : INotificationRepository
 
         return row is null ? null : NotificationMapping.ToDomain(row);
     }
+
+    public async Task UpdateDeliveryAsync(NotificationDelivery delivery, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        var tx = await _uow.BeginTransactionAsync(ct);
+        await tx.Connection!.ExecuteAsync(new CommandDefinition(
+            NotificationDeliverySql.Update,
+            new
+            {
+                Id = delivery.Id.Value,
+                Status = delivery.Status.ToString(),
+                delivery.AttemptCount,
+                delivery.LastAttemptAt,
+                delivery.SentAt,
+                delivery.FailureReason,
+            },
+            transaction: tx,
+            cancellationToken: ct));
+    }
+
+    public async Task<IReadOnlyList<NotificationDelivery>> GetFailedDeliveriesForRetryAsync(
+        int batchSize, int maxAttempts, CancellationToken ct = default)
+    {
+        var connection = await _uow.GetConnectionAsync(ct);
+        var rows = await connection.QueryAsync<NotificationDeliveryRow>(new CommandDefinition(
+            NotificationDeliverySql.SelectFailedForRetry,
+            new { BatchSize = batchSize, MaxAttempts = maxAttempts },
+            cancellationToken: ct));
+
+        return rows.Select(NotificationMapping.ToDomain).ToList();
+    }
 }

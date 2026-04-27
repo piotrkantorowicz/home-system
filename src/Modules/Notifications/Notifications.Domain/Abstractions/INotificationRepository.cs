@@ -11,4 +11,6 @@ public interface INotificationRepository
 
     Task AddDeliveryAsync(NotificationDelivery delivery, CancellationToken ct = default);
     Task<NotificationDelivery?> GetDeliveryAsync(NotificationDeliveryId id, CancellationToken ct = default);
+    Task UpdateDeliveryAsync(NotificationDelivery delivery, CancellationToken ct = default);
+    Task<IReadOnlyList<NotificationDelivery>> GetFailedDeliveriesForRetryAsync(int batchSize, int maxAttempts, CancellationToken ct = default);
 }
