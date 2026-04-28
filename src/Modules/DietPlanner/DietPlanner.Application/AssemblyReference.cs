@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("DietPlanner.UnitTests")]
+[assembly: InternalsVisibleTo("DietPlanner.Infrastructure")]
 
 namespace DietPlanner.Application;
 

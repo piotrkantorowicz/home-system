@@ -2,10 +2,12 @@ namespace DietPlanner.Infrastructure;
 
 using DietPlanner.Application;
 using DietPlanner.Application.Persistence;
+using DietPlanner.Application.Workers;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.Services;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.Infrastructure.Persistence.Repositories;
+using DietPlanner.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -47,6 +49,18 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<WeightPredictionService>();
 
         services.AddCqrs<DietPlannerDbContext>(AssemblyReference.Assembly);
+
+        // Meal-reminder ledger + read-side
+        services.AddScoped<ISentMealReminderRepository, SentMealReminderRepository>();
+        services.AddScoped<IMealReminderCandidateQueries, MealReminderCandidateQueries>();
+
+        // Diet reminder jobs (registered as IDietReminderJob; resolved per tick)
+        services.AddScoped<IDietReminderJob, MealReminderJob>();
+
+        // Tick service options + hosted service
+        services.AddOptions<DietReminderTickServiceOptions>()
+            .BindConfiguration(DietReminderTickServiceOptions.SectionName);
+        services.AddHostedService<DietReminderTickService>();
 
         return services;
     }
