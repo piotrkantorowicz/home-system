@@ -105,5 +105,48 @@ public sealed class MealReminderJobTests
 
         await _bus.DidNotReceive().PublishAsync(Arg.Any<MealReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
         await _ledger.DidNotReceive().AddAsync(Arg.Any<SentMealReminder>(), Arg.Any<CancellationToken>());
+        await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunAsync_MixedCandidates_PublishesOnlyForUnseenAndCommitsOnce()
+    {
+        var dueId1 = Guid.NewGuid();
+        var dueId2 = Guid.NewGuid();
+        var missedId = Guid.NewGuid();
+
+        _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>())
+            .Returns([
+                new MealReminderCandidate("u1", "en", dueId1, "Lunch", Now.AddMinutes(10)),
+                new MealReminderCandidate("u1", "en", dueId2, "Snack", Now.AddMinutes(20))
+            ]);
+        _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>())
+            .Returns([new MealReminderCandidate("u1", "en", missedId, "Breakfast", Now.AddHours(-2))]);
+
+        // dueId1 already sent; dueId2 and missedId fresh
+        _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == dueId1), MealReminderKind.Reminder, Arg.Any<CancellationToken>())
+            .Returns(true);
+        _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == dueId2), MealReminderKind.Reminder, Arg.Any<CancellationToken>())
+            .Returns(false);
+        _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == missedId), MealReminderKind.Missed, Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        await _sut.RunAsync(Now, CancellationToken.None);
+
+        // dueId1 skipped
+        await _bus.DidNotReceive().PublishAsync(
+            Arg.Is<MealReminderDueIntegrationEvent>(e => e.MealEntryId == dueId1),
+            Arg.Any<CancellationToken>());
+        // dueId2 published
+        await _bus.Received(1).PublishAsync(
+            Arg.Is<MealReminderDueIntegrationEvent>(e => e.MealEntryId == dueId2),
+            Arg.Any<CancellationToken>());
+        // missedId published
+        await _bus.Received(1).PublishAsync(
+            Arg.Is<MealMissedIntegrationEvent>(e => e.MealEntryId == missedId),
+            Arg.Any<CancellationToken>());
+
+        await _ledger.Received(2).AddAsync(Arg.Any<SentMealReminder>(), Arg.Any<CancellationToken>());
+        await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 }
