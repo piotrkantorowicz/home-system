@@ -7,11 +7,14 @@ using DietPlanner.Domain.Services;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Cqrs.Extensions;
+using Shared.Infrastructure.Messaging.Ef.Extensions;
+using Shared.Infrastructure.Persistence.Extensions;
 
 public static class InfrastructureDependencyInjection
 {
@@ -19,8 +22,14 @@ public static class InfrastructureDependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<DietPlannerDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DietPlanner")));
+        services.AddDomainEventDispatcher();
+
+        services.AddDbContext<DietPlannerDbContext>((sp, options) =>
+            options
+                .UseNpgsql(configuration.GetConnectionString("DietPlanner"))
+                .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
+
+        services.AddOutbox<DietPlannerDbContext>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IRecipeRepository, RecipeRepository>();

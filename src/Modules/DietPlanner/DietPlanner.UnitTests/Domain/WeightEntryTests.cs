@@ -1,6 +1,7 @@
 namespace DietPlanner.UnitTests.Domain;
 
 using DietPlanner.Domain.Aggregates;
+using DietPlanner.Domain.Events;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
@@ -85,5 +86,33 @@ public sealed class WeightEntryTests
         var act = () => entry.ChangeWeight(weight);
 
         act.ShouldThrow<DietPlannerDomainException>();
+    }
+}
+
+public sealed class WeightEntryDomainEventTests
+{
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    [Fact]
+    public void Create_RaisesWeightEntryAddedDomainEvent()
+    {
+        var entry = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 75m);
+
+        var domainEvent = entry.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<WeightEntryAddedDomainEvent>();
+        domainEvent.UserId.ShouldBe("user-1");
+        domainEvent.WeightKg.ShouldBe(75m);
+        domainEvent.Date.ShouldBe(Today);
+    }
+
+    [Fact]
+    public void ChangeWeight_RaisesWeightEntryAddedDomainEvent()
+    {
+        var entry = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 75m);
+        entry.ClearDomainEvents();
+
+        entry.ChangeWeight(74m);
+
+        var domainEvent = entry.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<WeightEntryAddedDomainEvent>();
+        domainEvent.WeightKg.ShouldBe(74m);
     }
 }

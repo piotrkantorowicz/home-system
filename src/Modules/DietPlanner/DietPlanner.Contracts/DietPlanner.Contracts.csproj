@@ -1,2 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Messaging\Shared.Abstractions.Messaging.csproj" />
+  </ItemGroup>
+
 </Project>

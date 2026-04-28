@@ -13,6 +13,8 @@
     <ProjectReference Include="..\DietPlanner.Application\DietPlanner.Application.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Persistence\Shared.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Messaging\Shared.Infrastructure.Messaging.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Messaging.Ef\Shared.Infrastructure.Messaging.Ef.csproj" />
   </ItemGroup>
 
 </Project>

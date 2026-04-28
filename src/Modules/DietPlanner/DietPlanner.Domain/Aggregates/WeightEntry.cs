@@ -1,5 +1,6 @@
 namespace DietPlanner.Domain.Aggregates;
 
+using DietPlanner.Domain.Events;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
@@ -17,14 +18,17 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
         EnsureValidWeight(weightKg);
         EnsureNotFutureDate(date);
 
-        return new WeightEntry
+        var entry = new WeightEntry
         {
             Id = id,
             UserId = userId,
             Date = date,
             WeightKg = weightKg,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
+
+        entry.RaiseDomainEvent(new WeightEntryAddedDomainEvent(userId, weightKg, date));
+        return entry;
     }
 
     public string UserId { get; private set; } = default!;
@@ -38,6 +42,7 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
         EnsureValidWeight(newWeightKg);
         WeightKg = newWeightKg;
         UpdatedAt = DateTime.UtcNow;
+        RaiseDomainEvent(new WeightEntryAddedDomainEvent(UserId, newWeightKg, Date));
     }
 
     private static void EnsureValidWeight(decimal weightKg)
