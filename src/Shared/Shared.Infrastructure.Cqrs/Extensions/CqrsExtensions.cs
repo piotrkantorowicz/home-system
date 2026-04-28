@@ -63,4 +63,34 @@ public static class CqrsExtensions
 
         return services;
     }
+
+    // Dapper-style modules don't have a DbContext for the transaction decorator —
+    // their handlers manage commit lifecycle through DapperUnitOfWork directly.
+    // The host registers the dispatcher chain via AddCqrs<TDbContext> for a Style-1
+    // module; this overload only adds the additional handler/validator scan so
+    // a Dapper module's handlers become resolvable from the same dispatcher.
+    public static IServiceCollection AddCqrsHandlers(
+        this IServiceCollection services,
+        params Assembly[] handlersAssemblies)
+    {
+        services.Scan(scan => scan
+            .FromAssemblies(handlersAssemblies)
+            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(ICommandValidator<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
+        return services;
+    }
 }

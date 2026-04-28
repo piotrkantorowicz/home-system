@@ -28,4 +28,21 @@ internal static class NotificationSql
         WHERE id = @Id
           AND read_at IS NULL;
         """;
+
+    internal const string ListByUserPaged = """
+        SELECT id          AS Id,
+               type        AS Type,
+               title       AS Title,
+               body        AS Body,
+               created_at  AS CreatedAt,
+               read_at     AS ReadAt
+        FROM notifications
+        WHERE user_id = @UserId
+        ORDER BY created_at DESC
+        OFFSET @Offset LIMIT @Limit;
+        """;
+
+    internal const string CountByUser = """
+        SELECT count(*) FROM notifications WHERE user_id = @UserId;
+        """;
 }

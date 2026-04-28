@@ -5,7 +5,9 @@
     <PackageReference Include="dbup-postgresql" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
@@ -14,6 +16,7 @@
     <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Core\Shared.Abstractions.Core.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Messaging\Shared.Abstractions.Messaging.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Messaging\Shared.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Messaging.Dapper\Shared.Infrastructure.Messaging.Dapper.csproj" />
   </ItemGroup>
