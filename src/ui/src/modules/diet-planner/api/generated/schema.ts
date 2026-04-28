@@ -412,7 +412,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/notification-preferences": {
+    "/api/v1/diet-reminder-settings": {
         parameters: {
             query?: never;
             header?: never;
@@ -420,15 +420,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get the current user's notification preferences
-         * @description Returns notification preference settings for the current user. Returns 404 when no preferences have been configured yet.
+         * Get the current user's diet reminder settings
+         * @description Returns diet reminder settings for the current user. Returns 404 when no settings have been configured yet.
          */
-        get: operations["GetNotificationPreferences"];
+        get: operations["GetDietReminderSettings"];
         /**
-         * Update the current user's notification preferences
-         * @description Creates or updates notification preference settings for the current user.
+         * Update the current user's diet reminder settings
+         * @description Creates or updates diet reminder settings for the current user. All times are UTC; the frontend converts from user-local time.
          */
-        put: operations["UpdateNotificationPreferences"];
+        put: operations["UpdateDietReminderSettings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -568,6 +568,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MarkNotificationRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNotificationChannelPreferences"];
+        put: operations["UpdateNotificationChannelPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -601,6 +649,11 @@ export interface components {
         BulkCompleteMealsResponse: {
             /** Format: int32 */
             completed: number | string;
+        };
+        ChannelPreferencesDto: {
+            consoleEnabled: boolean;
+            emailEnabled: boolean;
+            webSocketEnabled: boolean;
         };
         CreateMealEntryRequest: {
             /** Format: date */
@@ -658,6 +711,52 @@ export interface components {
             fat: number | string;
             /** Format: double */
             fiber: number | string;
+        };
+        DayOfWeek: number;
+        DietReminderSettingsDto: {
+            /** Format: uuid */
+            id: string;
+            userId: string;
+            mealRemindersEnabled: boolean;
+            /** Format: int32 */
+            mealReminderLeadTimeMinutes: number | string;
+            /** Format: int32 */
+            mealMissedGraceMinutes: number | string;
+            waterRemindersEnabled: boolean;
+            /** Format: int32 */
+            waterReminderIntervalMinutes: number | string;
+            /** Format: time */
+            waterWindowStartUtc: string;
+            /** Format: time */
+            waterWindowEndUtc: string;
+            weeklySummaryEnabled: boolean;
+            weeklySummaryDayOfWeekUtc: components["schemas"]["DayOfWeek"];
+            /** Format: time */
+            weeklySummaryTimeOfDayUtc: string;
+            goalAlertsEnabled: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
+        DietReminderSettingsRequest: {
+            mealRemindersEnabled: boolean;
+            /** Format: int32 */
+            mealReminderLeadTimeMinutes: number | string;
+            /** Format: int32 */
+            mealMissedGraceMinutes: number | string;
+            waterRemindersEnabled: boolean;
+            /** Format: int32 */
+            waterReminderIntervalMinutes: number | string;
+            /** Format: time */
+            waterWindowStartUtc: string;
+            /** Format: time */
+            waterWindowEndUtc: string;
+            weeklySummaryEnabled: boolean;
+            weeklySummaryDayOfWeekUtc: components["schemas"]["DayOfWeek"];
+            /** Format: time */
+            weeklySummaryTimeOfDayUtc: string;
+            goalAlertsEnabled: boolean;
         };
         GoalDto: {
             /** Format: uuid */
@@ -879,32 +978,16 @@ export interface components {
             name: string;
             defaultTime: string;
         };
-        NotificationPreferencesDto: {
+        NotificationDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
-            mealReminderEnabled: boolean;
-            /** Format: int32 */
-            mealReminderLeadTimeMinutes: number | string;
-            waterReminderEnabled: boolean;
-            /** Format: int32 */
-            waterReminderIntervalMinutes: number | string;
-            weeklySummaryEnabled: boolean;
-            goalMilestoneAlertsEnabled: boolean;
+            type: string;
+            title: string;
+            body: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
-            updatedAt: null | string;
-        };
-        NotificationPreferencesRequest: {
-            mealReminderEnabled: boolean;
-            /** Format: int32 */
-            mealReminderLeadTimeMinutes: number | string;
-            waterReminderEnabled: boolean;
-            /** Format: int32 */
-            waterReminderIntervalMinutes: number | string;
-            weeklySummaryEnabled: boolean;
-            goalMilestoneAlertsEnabled: boolean;
+            readAt: null | string;
         };
         NutritionDto: {
             /** Format: double */
@@ -922,6 +1005,19 @@ export interface components {
             /** Format: uuid */
             actualRecipeId: null | string;
             actualProducts: components["schemas"]["ActualProductRequest"][];
+        };
+        PagedListOfNotificationDto: {
+            items: components["schemas"]["NotificationDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
+            totalPages?: number | string;
+            hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
         };
         PagedListOfProductDto: {
             items: components["schemas"]["ProductDto"][];
@@ -1031,6 +1127,11 @@ export interface components {
             /** Format: double */
             amount: number | string;
             unit: string;
+        };
+        UpdateChannelPreferencesRequest: {
+            consoleEnabled: boolean;
+            emailEnabled: boolean;
+            webSocketEnabled: boolean;
         };
         UpdateHydrationConfigRequest: {
             /** Format: int32 */
@@ -2356,7 +2457,7 @@ export interface operations {
             };
         };
     };
-    GetNotificationPreferences: {
+    GetDietReminderSettings: {
         parameters: {
             query?: never;
             header?: never;
@@ -2371,7 +2472,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NotificationPreferencesDto"];
+                    "application/json": components["schemas"]["DietReminderSettingsDto"];
                 };
             };
             /** @description Unauthorized */
@@ -2390,7 +2491,7 @@ export interface operations {
             };
         };
     };
-    UpdateNotificationPreferences: {
+    UpdateDietReminderSettings: {
         parameters: {
             query?: never;
             header?: never;
@@ -2399,7 +2500,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NotificationPreferencesRequest"];
+                "application/json": components["schemas"]["DietReminderSettingsRequest"];
             };
         };
         responses: {
@@ -2738,6 +2839,109 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ListNotifications: {
+        parameters: {
+            query?: {
+                page?: number | string;
+                pageSize?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedListOfNotificationDto"];
+                };
+            };
+        };
+    };
+    MarkNotificationRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetNotificationChannelPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelPreferencesDto"];
+                };
+            };
+        };
+    };
+    UpdateNotificationChannelPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChannelPreferencesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
             };
         };
     };

@@ -116,18 +116,18 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
         mealRemindersEnabled: settings.mealRemindersEnabled,
         mealReminderLeadTimeMinutes: inOptions<MealLeadTime>(
           MEAL_LEAD_TIME_OPTIONS,
-          settings.mealReminderLeadTimeMinutes,
+          Number(settings.mealReminderLeadTimeMinutes),
           15,
         ),
         mealMissedGraceMinutes: inOptions<MealGrace>(
           MEAL_GRACE_OPTIONS,
-          settings.mealMissedGraceMinutes,
+          Number(settings.mealMissedGraceMinutes),
           30,
         ),
         waterRemindersEnabled: settings.waterRemindersEnabled,
         waterReminderIntervalMinutes: inOptions<WaterInterval>(
           WATER_INTERVAL_OPTIONS,
-          settings.waterReminderIntervalMinutes,
+          Number(settings.waterReminderIntervalMinutes),
           60,
         ),
         waterWindowStartLocal: utcTimeToLocal(settings.waterWindowStartUtc),
