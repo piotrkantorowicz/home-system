@@ -3,6 +3,7 @@ namespace DietPlanner.Infrastructure.Persistence;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Entities;
+using DietPlanner.Domain.Ledgers;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
@@ -22,6 +23,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     public DbSet<HydrationConfig> HydrationConfigs => Set<HydrationConfig>();
     public DbSet<WaterIntake> WaterIntakes => Set<WaterIntake>();
     public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();
+    public DbSet<SentMealReminder> SentMealReminders => Set<SentMealReminder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
