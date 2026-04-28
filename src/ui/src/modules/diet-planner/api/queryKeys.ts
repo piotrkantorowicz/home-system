@@ -34,8 +34,8 @@ export const queryKeys = {
   profile: {
     detail: () => ['profile'] as const,
   },
-  notificationPreferences: {
-    detail: () => ['notification-preferences'] as const,
+  dietReminderSettings: {
+    detail: () => ['diet-reminder-settings'] as const,
   },
   weightPrediction: {
     detail: (dailyCalorieTarget: number | null | undefined) =>

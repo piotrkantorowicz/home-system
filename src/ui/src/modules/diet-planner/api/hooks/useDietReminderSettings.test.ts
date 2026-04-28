@@ -1,10 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
-import {
-  useNotificationPreferences,
-  useUpdateNotificationPreferences,
-} from './useNotificationPreferences';
+import { useDietReminderSettings, useUpdateDietReminderSettings } from './useDietReminderSettings';
 
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
@@ -18,28 +15,33 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
 
 const BASE = 'http://localhost:5050';
 
-const mockPreferences = {
+const mockSettings = {
   id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   userId: 'user-1',
-  mealReminderEnabled: true,
+  mealRemindersEnabled: true,
   mealReminderLeadTimeMinutes: 15,
-  waterReminderEnabled: true,
+  mealMissedGraceMinutes: 30,
+  waterRemindersEnabled: true,
   waterReminderIntervalMinutes: 60,
+  waterWindowStartUtc: '06:00:00',
+  waterWindowEndUtc: '22:00:00',
   weeklySummaryEnabled: true,
-  goalMilestoneAlertsEnabled: true,
+  weeklySummaryDayOfWeekUtc: 0,
+  weeklySummaryTimeOfDayUtc: '08:00:00',
+  goalAlertsEnabled: true,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: null,
 };
 
-describe('useNotificationPreferences', () => {
-  it('enters error state when API returns 404 (no preferences configured yet)', async () => {
+describe('useDietReminderSettings', () => {
+  it('enters error state when API returns 404 (no settings configured yet)', async () => {
     server.use(
-      http.get(`${BASE}/api/v1/notification-preferences`, () =>
+      http.get(`${BASE}/api/v1/diet-reminder-settings`, () =>
         HttpResponse.json({ title: 'Not found' }, { status: 404 }),
       ),
     );
 
-    const { result } = renderHook(() => useNotificationPreferences(), {
+    const { result } = renderHook(() => useDietReminderSettings(), {
       wrapper: createWrapper(),
     });
 
@@ -54,12 +56,12 @@ describe('useNotificationPreferences', () => {
     expect(result.current.data).toBeUndefined();
   });
 
-  it('returns preferences on success', async () => {
+  it('returns settings on success', async () => {
     server.use(
-      http.get(`${BASE}/api/v1/notification-preferences`, () => HttpResponse.json(mockPreferences)),
+      http.get(`${BASE}/api/v1/diet-reminder-settings`, () => HttpResponse.json(mockSettings)),
     );
 
-    const { result } = renderHook(() => useNotificationPreferences(), {
+    const { result } = renderHook(() => useDietReminderSettings(), {
       wrapper: createWrapper(),
     });
 
@@ -67,20 +69,21 @@ describe('useNotificationPreferences', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.data).toEqual(mockPreferences);
-    expect(result.current.data?.mealReminderEnabled).toBe(true);
-    expect(result.current.data?.mealReminderLeadTimeMinutes).toBe(15);
-    expect(result.current.data?.waterReminderIntervalMinutes).toBe(60);
+    expect(result.current.data).toEqual(mockSettings);
+    expect(result.current.data?.mealRemindersEnabled).toBe(true);
+    expect(result.current.data?.mealMissedGraceMinutes).toBe(30);
+    expect(result.current.data?.waterWindowStartUtc).toBe('06:00:00');
+    expect(result.current.data?.weeklySummaryDayOfWeekUtc).toBe(0);
   });
 
   it('exposes error when GET API fails', async () => {
     server.use(
-      http.get(`${BASE}/api/v1/notification-preferences`, () =>
+      http.get(`${BASE}/api/v1/diet-reminder-settings`, () =>
         HttpResponse.json({ title: 'Server Error' }, { status: 500 }),
       ),
     );
 
-    const { result } = renderHook(() => useNotificationPreferences(), {
+    const { result } = renderHook(() => useDietReminderSettings(), {
       wrapper: createWrapper(),
     });
 
@@ -92,29 +95,34 @@ describe('useNotificationPreferences', () => {
   });
 });
 
-describe('useUpdateNotificationPreferences', () => {
+describe('useUpdateDietReminderSettings', () => {
+  const payload = {
+    mealRemindersEnabled: false,
+    mealReminderLeadTimeMinutes: 30,
+    mealMissedGraceMinutes: 45,
+    waterRemindersEnabled: false,
+    waterReminderIntervalMinutes: 120,
+    waterWindowStartUtc: '07:00:00',
+    waterWindowEndUtc: '21:00:00',
+    weeklySummaryEnabled: false,
+    weeklySummaryDayOfWeekUtc: 1,
+    weeklySummaryTimeOfDayUtc: '09:00:00',
+    goalAlertsEnabled: false,
+  };
+
   it('sends PUT request with provided data', async () => {
     let capturedBody: unknown;
 
     server.use(
-      http.put(`${BASE}/api/v1/notification-preferences`, async ({ request }) => {
+      http.put(`${BASE}/api/v1/diet-reminder-settings`, async ({ request }) => {
         capturedBody = await request.json();
         return new HttpResponse(null, { status: 204 });
       }),
     );
 
-    const { result } = renderHook(() => useUpdateNotificationPreferences(), {
+    const { result } = renderHook(() => useUpdateDietReminderSettings(), {
       wrapper: createWrapper(),
     });
-
-    const payload = {
-      mealReminderEnabled: false,
-      mealReminderLeadTimeMinutes: 30,
-      waterReminderEnabled: false,
-      waterReminderIntervalMinutes: 120,
-      weeklySummaryEnabled: false,
-      goalMilestoneAlertsEnabled: false,
-    };
 
     await act(async () => {
       await result.current.mutateAsync(payload);
@@ -128,25 +136,18 @@ describe('useUpdateNotificationPreferences', () => {
 
   it('exposes error when PUT API fails', async () => {
     server.use(
-      http.put(`${BASE}/api/v1/notification-preferences`, () =>
+      http.put(`${BASE}/api/v1/diet-reminder-settings`, () =>
         HttpResponse.json({ title: 'Validation Error' }, { status: 400 }),
       ),
     );
 
-    const { result } = renderHook(() => useUpdateNotificationPreferences(), {
+    const { result } = renderHook(() => useUpdateDietReminderSettings(), {
       wrapper: createWrapper(),
     });
 
     await act(async () => {
       try {
-        await result.current.mutateAsync({
-          mealReminderEnabled: true,
-          mealReminderLeadTimeMinutes: 15,
-          waterReminderEnabled: true,
-          waterReminderIntervalMinutes: 60,
-          weeklySummaryEnabled: true,
-          goalMilestoneAlertsEnabled: true,
-        });
+        await result.current.mutateAsync(payload);
       } catch {
         // expected
       }

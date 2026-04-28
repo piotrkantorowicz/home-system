@@ -244,23 +244,28 @@ export const profileHandlers = [
   }),
 ];
 
-export const notificationPreferencesHandlers = [
-  http.get(`${BASE}/api/v1/notification-preferences`, () => {
+export const dietReminderSettingsHandlers = [
+  http.get(`${BASE}/api/v1/diet-reminder-settings`, () => {
     return HttpResponse.json({
       id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
       userId: 'user-1',
-      mealReminderEnabled: true,
+      mealRemindersEnabled: true,
       mealReminderLeadTimeMinutes: 15,
-      waterReminderEnabled: true,
+      mealMissedGraceMinutes: 30,
+      waterRemindersEnabled: true,
       waterReminderIntervalMinutes: 60,
+      waterWindowStartUtc: '06:00:00',
+      waterWindowEndUtc: '22:00:00',
       weeklySummaryEnabled: true,
-      goalMilestoneAlertsEnabled: true,
+      weeklySummaryDayOfWeekUtc: 0,
+      weeklySummaryTimeOfDayUtc: '08:00:00',
+      goalAlertsEnabled: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: null,
     });
   }),
 
-  http.put(`${BASE}/api/v1/notification-preferences`, () => {
+  http.put(`${BASE}/api/v1/diet-reminder-settings`, () => {
     return new HttpResponse(null, { status: 204 });
   }),
 ];
@@ -382,7 +387,7 @@ export const handlers = [
   ...goalHandlers,
   ...mealScheduleHandlers,
   ...profileHandlers,
-  ...notificationPreferencesHandlers,
+  ...dietReminderSettingsHandlers,
   ...hydrationHandlers,
   ...recipeHandlers,
   ...weightEntryHandlers,

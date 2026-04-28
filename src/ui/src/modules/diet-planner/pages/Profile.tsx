@@ -3,7 +3,7 @@ import {
   GoalsForm,
   MealScheduleForm,
   HydrationConfigForm,
-  NotificationPrefsForm,
+  DietReminderSettingsForm,
   WeightHistorySection,
 } from '@modules/diet-planner/components/settings';
 import { cn } from '@shared/lib/utils';
@@ -35,7 +35,7 @@ const SECTION_COMPONENTS: Record<SectionId, React.ComponentType<{ onSuccess?: ()
   goals: GoalsForm,
   'meal-schedule': MealScheduleForm,
   hydration: HydrationConfigForm,
-  notifications: NotificationPrefsForm,
+  notifications: DietReminderSettingsForm,
 };
 
 export default function Profile() {
