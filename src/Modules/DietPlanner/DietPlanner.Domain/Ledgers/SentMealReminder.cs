@@ -2,6 +2,12 @@ namespace DietPlanner.Domain.Ledgers;
 
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>
+/// Idempotency ledger for meal reminder publication. NOT a DDD aggregate root —
+/// flat dedup row keyed on (MealEntryId, Kind). Filed under Domain/Ledgers/ to
+/// signal it is owned by the bounded context but does not participate in the
+/// aggregate model.
+/// </summary>
 public sealed class SentMealReminder
 {
     private SentMealReminder() { }
@@ -17,7 +23,7 @@ public sealed class SentMealReminder
         };
     }
 
-    public MealEntryId MealEntryId { get; private set; } = default!;
-    public MealReminderKind Kind { get; private set; }
-    public DateTime SentAt { get; private set; }
+    public MealEntryId MealEntryId { get; private init; } = default!;
+    public MealReminderKind Kind { get; private init; }
+    public DateTime SentAt { get; private init; }
 }
