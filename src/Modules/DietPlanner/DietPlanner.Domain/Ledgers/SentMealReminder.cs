@@ -1,4 +1,4 @@
-namespace DietPlanner.Domain.Aggregates;
+namespace DietPlanner.Domain.Ledgers;
 
 using DietPlanner.Domain.ValueObjects;
 
