@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Workers;
 
-public interface IDietReminderJob
+internal interface IDietReminderJob
 {
     string Name { get; }
     Task RunAsync(DateTime nowUtc, CancellationToken ct);

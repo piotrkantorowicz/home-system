@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-public sealed class DietReminderTickService(
+internal sealed class DietReminderTickService(
     IServiceScopeFactory scopeFactory,
     IOptions<DietReminderTickServiceOptions> options,
     ILogger<DietReminderTickService> logger) : BackgroundService

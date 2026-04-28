@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Workers;
 
-public interface IMealReminderCandidateQueries
+internal interface IMealReminderCandidateQueries
 {
     /// <summary>
     /// Returns meals where computed PlannedAt ∈ (nowUtc, nowUtc + lead]
