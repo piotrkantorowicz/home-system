@@ -72,6 +72,9 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<
             IIntegrationEventHandler<GoalMilestoneReachedIntegrationEvent>,
             GoalMilestoneReachedIntegrationEventHandler>();
+        services.AddScoped<
+            IIntegrationEventHandler<WaterReminderDueIntegrationEvent>,
+            WaterReminderDueIntegrationEventHandler>();
 
         return services;
     }
