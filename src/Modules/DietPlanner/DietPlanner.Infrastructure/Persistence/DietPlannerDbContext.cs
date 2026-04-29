@@ -24,6 +24,7 @@ internal sealed class DietPlannerDbContext : DbContext, IUnitOfWork, IDietPlanne
     public DbSet<WaterIntake> WaterIntakes => Set<WaterIntake>();
     public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();
     public DbSet<SentMealReminder> SentMealReminders => Set<SentMealReminder>();
+    public DbSet<WaterReminderState> WaterReminderStates => Set<WaterReminderState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

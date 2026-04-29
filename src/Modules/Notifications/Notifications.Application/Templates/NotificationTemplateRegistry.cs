@@ -27,10 +27,16 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
                 new(NotificationType.MealMissed, "pl",
                     "Pominięty {{MealSlotName}}",
                     "Pominąłeś posiłek {{MealSlotName}} zaplanowany na {{PlannedAt}}."),
+
             [(NotificationType.WaterReminder, "en")] =
                 new(NotificationType.WaterReminder, "en",
                     "Water break",
                     "Time to drink some water."),
+            [(NotificationType.WaterReminder, "pl")] =
+                new(NotificationType.WaterReminder, "pl",
+                    "Przerwa na wodę",
+                    "Czas na wypicie wody."),
+
             [(NotificationType.WeeklySummary, "en")] =
                 new(NotificationType.WeeklySummary, "en",
                     "Weekly nutrition summary",

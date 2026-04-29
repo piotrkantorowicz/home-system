@@ -54,8 +54,13 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<ISentMealReminderRepository, SentMealReminderRepository>();
         services.AddScoped<IMealReminderCandidateQueries, MealReminderCandidateQueries>();
 
+        // Water-reminder ledger + read-side
+        services.AddScoped<IWaterReminderStateRepository, WaterReminderStateRepository>();
+        services.AddScoped<IWaterReminderCandidateQueries, WaterReminderCandidateQueries>();
+
         // Diet reminder jobs (registered as IDietReminderJob; resolved per tick)
         services.AddScoped<IDietReminderJob, MealReminderJob>();
+        services.AddScoped<IDietReminderJob, WaterReminderJob>();
 
         // Tick service options + hosted service
         services.AddOptions<DietReminderTickServiceOptions>()
