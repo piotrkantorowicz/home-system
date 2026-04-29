@@ -8,6 +8,17 @@ using Shared.Infrastructure.Messaging.Outbox;
 public static class DapperMessagingExtensions
 {
     /// <summary>
+    /// Registers the Dapper-backed inbox executor for idempotent integration event handling
+    /// with the given Npgsql connection factory.
+    /// </summary>
+    public static IServiceCollection AddDapperInbox<TFactory>(this IServiceCollection services)
+        where TFactory : class, INpgsqlConnectionFactory
+    {
+        services.AddScoped<IInboxExecutor, DapperInboxExecutor<TFactory>>();
+        return services;
+    }
+
+    /// <summary>
     /// Registers an inbox-aware integration event handler bound to this consuming module's
     /// Npgsql connection factory.
     /// </summary>

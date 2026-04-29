@@ -20,7 +20,7 @@ public sealed class NotificationTemplateRegistryTests
     [Fact]
     public void Resolve_WithUnknownLocale_FallsBackToEnglish()
     {
-        var template = _sut.Resolve(NotificationType.MealMissed, "pl");
+        var template = _sut.Resolve(NotificationType.MealMissed, "de");
 
         template.Locale.ShouldBe("en");
     }

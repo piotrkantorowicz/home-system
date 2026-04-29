@@ -1,11 +1,13 @@
 namespace Notifications.Infrastructure;
 
+using DietPlanner.Contracts.Events;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Notifications.Application.Channels;
 using Notifications.Application.Dispatching;
+using Notifications.Application.EventHandlers;
 using Notifications.Application.Templates;
 using Notifications.Domain.Abstractions;
 using Notifications.Infrastructure.Dispatching;
@@ -13,8 +15,10 @@ using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Migrations;
 using Notifications.Infrastructure.Persistence.Repositories;
 using Notifications.Infrastructure.Workers;
+using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Dapper;
+using Shared.Infrastructure.Messaging.Dapper.Extensions;
 
 public static class InfrastructureDependencyInjection
 {
@@ -54,6 +58,20 @@ public static class InfrastructureDependencyInjection
         services.AddOptions<RetryDeliveryWorkerOptions>()
             .BindConfiguration(RetryDeliveryWorkerOptions.SectionName);
         services.AddHostedService<RetryDeliveryWorker>();
+
+        // Idempotent inbox for incoming integration events (Dapper-backed; uses inbox_messages)
+        services.AddDapperInbox<NotificationsConnectionFactory>();
+
+        // Integration-event handler registrations (explicit per spec — no assembly scanning for these)
+        services.AddScoped<
+            IIntegrationEventHandler<MealReminderDueIntegrationEvent>,
+            MealReminderDueIntegrationEventHandler>();
+        services.AddScoped<
+            IIntegrationEventHandler<MealMissedIntegrationEvent>,
+            MealMissedIntegrationEventHandler>();
+        services.AddScoped<
+            IIntegrationEventHandler<GoalMilestoneReachedIntegrationEvent>,
+            GoalMilestoneReachedIntegrationEventHandler>();
 
         return services;
     }

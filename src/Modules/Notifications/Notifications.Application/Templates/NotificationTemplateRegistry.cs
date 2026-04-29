@@ -12,12 +12,21 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
         {
             [(NotificationType.MealReminder, "en")] =
                 new(NotificationType.MealReminder, "en",
-                    "Meal reminder",
-                    "Your {{MealSlotName}} is coming up at {{PlannedAt}}."),
+                    "Time for {{MealSlotName}}",
+                    "Your {{MealSlotName}} is planned at {{PlannedAt}}."),
+            [(NotificationType.MealReminder, "pl")] =
+                new(NotificationType.MealReminder, "pl",
+                    "Czas na {{MealSlotName}}",
+                    "Twój posiłek {{MealSlotName}} zaplanowano na {{PlannedAt}}."),
+
             [(NotificationType.MealMissed, "en")] =
                 new(NotificationType.MealMissed, "en",
-                    "Missed meal",
+                    "Missed {{MealSlotName}}",
                     "You missed your {{MealSlotName}} planned for {{PlannedAt}}."),
+            [(NotificationType.MealMissed, "pl")] =
+                new(NotificationType.MealMissed, "pl",
+                    "Pominięty {{MealSlotName}}",
+                    "Pominąłeś posiłek {{MealSlotName}} zaplanowany na {{PlannedAt}}."),
             [(NotificationType.WaterReminder, "en")] =
                 new(NotificationType.WaterReminder, "en",
                     "Water break",
