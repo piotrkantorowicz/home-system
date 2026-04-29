@@ -30,7 +30,7 @@ public sealed class WaterReminderDueIntegrationEventHandlerTests
             NotificationType.WaterReminder,
             "u42",
             "pl",
-            Arg.Is<string>(p => p.Contains("u42")),
+            Arg.Is<string>(p => p.Contains("\"UserId\"") && p.Contains("u42")),
             Arg.Any<IReadOnlyDictionary<string, string>>(),
             Arg.Any<CancellationToken>());
     }
