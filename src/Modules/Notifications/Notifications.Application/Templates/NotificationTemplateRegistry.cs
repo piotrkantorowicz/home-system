@@ -36,6 +36,7 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
                 new(NotificationType.WaterReminder, "pl",
                     "Przerwa na wodę",
                     "Czas na wypicie wody."),
+
             [(NotificationType.WeeklySummary, "en")] =
                 new(NotificationType.WeeklySummary, "en",
                     "Weekly nutrition summary",
