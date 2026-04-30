@@ -43,7 +43,7 @@ internal sealed class GetWeeklySummaryQueryHandler
             .Select(g => g.DailyCalorieTarget)
             .FirstOrDefaultAsync(ct);
 
-        return (goal ?? 0) * 7;
+        return (goal ?? 0) * DaysInWeek;
     }
 
     private async Task<decimal> ComputeAvgWaterLitersAsync(
