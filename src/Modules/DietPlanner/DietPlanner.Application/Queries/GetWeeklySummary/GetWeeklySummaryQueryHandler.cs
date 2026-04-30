@@ -9,6 +9,9 @@ using Shared.Abstractions.Cqrs;
 internal sealed class GetWeeklySummaryQueryHandler
     : IQueryHandler<GetWeeklySummaryQuery, WeeklySummaryDto>
 {
+    private const decimal MlPerLiter = 1000m;
+    private const int DaysInWeek = 7;
+
     private readonly IDietPlannerReadDbContext _db;
 
     public GetWeeklySummaryQueryHandler(IDietPlannerReadDbContext db) => _db = db;
@@ -17,20 +20,19 @@ internal sealed class GetWeeklySummaryQueryHandler
         GetWeeklySummaryQuery query, CancellationToken ct = default)
     {
         int targetKcal = await ComputeTargetKcalAsync(query.UserId, ct);
-        (int mealsPlanned, int mealsCompleted) = await ComputeMealCountsAsync(query, ct);
+        KcalResult kcalResult = await ComputeTotalKcalAndCountsAsync(query, ct);
         decimal avgWaterLiters = await ComputeAvgWaterLitersAsync(query, ct);
         decimal? weightDeltaKg = await ComputeWeightDeltaAsync(query, ct);
-        int totalKcal = await ComputeTotalKcalAsync(query, ct);
 
         return new WeeklySummaryDto(
             WeekStart: query.WeekStart,
             WeekEnd: query.WeekEnd,
-            TotalKcal: totalKcal,
+            TotalKcal: kcalResult.TotalKcal,
             TargetKcal: targetKcal,
             AvgWaterLiters: avgWaterLiters,
             WeightDeltaKg: weightDeltaKg,
-            MealsCompleted: mealsCompleted,
-            MealsPlanned: mealsPlanned);
+            MealsCompleted: kcalResult.MealsCompleted,
+            MealsPlanned: kcalResult.MealsPlanned);
     }
 
     private async Task<int> ComputeTargetKcalAsync(string userId, CancellationToken ct)
@@ -44,23 +46,6 @@ internal sealed class GetWeeklySummaryQueryHandler
         return (goal ?? 0) * 7;
     }
 
-    private async Task<(int mealsPlanned, int mealsCompleted)> ComputeMealCountsAsync(
-        GetWeeklySummaryQuery query, CancellationToken ct)
-    {
-        var statuses = await _db.MealEntries
-            .AsNoTracking()
-            .Where(me => me.UserId == query.UserId
-                && me.Date >= query.WeekStart
-                && me.Date <= query.WeekEnd)
-            .Select(me => me.Status)
-            .ToListAsync(ct);
-
-        int mealsPlanned = statuses.Count;
-        int mealsCompleted = statuses.Count(s => s == MealEntryStatus.Done || s == MealEntryStatus.Modified);
-
-        return (mealsPlanned, mealsCompleted);
-    }
-
     private async Task<decimal> ComputeAvgWaterLitersAsync(
         GetWeeklySummaryQuery query, CancellationToken ct)
     {
@@ -71,7 +56,7 @@ internal sealed class GetWeeklySummaryQueryHandler
                 && w.Date <= query.WeekEnd)
             .SumAsync(w => w.AmountMl, ct);
 
-        return Math.Round(totalMl / 7000.0m, 2);
+        return Math.Round(totalMl / MlPerLiter / DaysInWeek, 2);
     }
 
     private async Task<decimal?> ComputeWeightDeltaAsync(
@@ -91,7 +76,8 @@ internal sealed class GetWeeklySummaryQueryHandler
         return Math.Round(weights[weights.Count - 1] - weights[0], 2);
     }
 
-    private async Task<int> ComputeTotalKcalAsync(GetWeeklySummaryQuery query, CancellationToken ct)
+    private async Task<KcalResult> ComputeTotalKcalAndCountsAsync(
+        GetWeeklySummaryQuery query, CancellationToken ct)
     {
         var entries = await _db.MealEntries
             .AsNoTracking()
@@ -115,7 +101,11 @@ internal sealed class GetWeeklySummaryQueryHandler
             })
             .ToListAsync(ct);
 
-        if (entries.Count == 0) return 0;
+        int mealsPlanned = entries.Count;
+        int mealsCompleted = entries.Count(e =>
+            e.Status == MealEntryStatus.Done || e.Status == MealEntryStatus.Modified);
+
+        if (entries.Count == 0) return new KcalResult(0, mealsPlanned, mealsCompleted);
 
         var recipeIds = entries
             .Select(EffectiveRecipeId)
@@ -172,7 +162,7 @@ internal sealed class GetWeeklySummaryQueryHandler
                 AccumulateActualProductCalories(entry, products, ref totalCalories);
         }
 
-        return (int)Math.Round(totalCalories, 0);
+        return new KcalResult((int)Math.Round(totalCalories, 0), mealsPlanned, mealsCompleted);
     }
 
     private static RecipeId? EffectiveRecipeId(EntryProjection entry)
@@ -218,6 +208,8 @@ internal sealed class GetWeeklySummaryQueryHandler
             calories += (product.Calories ?? 0) * factor;
         }
     }
+
+    private sealed record KcalResult(int TotalKcal, int MealsPlanned, int MealsCompleted);
 
     private sealed class EntryProjection
     {
