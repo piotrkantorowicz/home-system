@@ -45,6 +45,7 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
                 new(NotificationType.WeeklySummary, "pl",
                     "Tygodniowe podsumowanie diety",
                     "Ostatni tydzień: {{TotalKcal}} kcal z {{TargetKcal}} kcal celu, {{MealsCompleted}}/{{MealsPlanned}} posiłków."),
+
             [(NotificationType.GoalMilestone, "en")] =
                 new(NotificationType.GoalMilestone, "en",
                     "Goal reached",
