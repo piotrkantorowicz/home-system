@@ -1,0 +1,24 @@
+{
+  "inbox": {
+    "title": "Powiadomienia",
+    "subtitle": "Twoje ostatnie aktualizacje",
+    "preferences_link": "Preferencje kanałów",
+    "empty_title": "Brak powiadomień",
+    "empty_body": "Gdy coś do Ciebie wyślemy, pojawi się tutaj.",
+    "loading": "Ładowanie…",
+    "error": "Nie udało się pobrać powiadomień.",
+    "retry": "Spróbuj ponownie",
+    "previous_page": "Poprzednia",
+    "next_page": "Następna",
+    "page_indicator": "Strona {{page}} z {{totalPages}}",
+    "mark_read_aria": "Oznacz jako przeczytane"
+  },
+  "types": {
+    "meal_reminder": "Przypomnienie o posiłku",
+    "meal_missed": "Pominięty posiłek",
+    "water_reminder": "Przypomnienie o nawodnieniu",
+    "weekly_summary": "Podsumowanie tygodnia",
+    "goal_milestone": "Kamień milowy celu",
+    "unknown": "Powiadomienie"
+  }
+}

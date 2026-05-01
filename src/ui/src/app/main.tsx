@@ -1,4 +1,5 @@
 import { dietPlannerModule } from '@modules/diet-planner';
+import { notificationsModule } from '@modules/notifications';
 import { queryClient } from '@shared/api/queryClient';
 import { AuthProvider } from '@shared/auth/AuthProvider';
 import { AppErrorBoundary } from '@shared/components/ErrorBoundary';
@@ -16,6 +17,7 @@ import '../index.css';
 
 // 1. Register all modules
 registerModule(dietPlannerModule);
+registerModule(notificationsModule);
 
 // 2. Init i18n with merged module translations
 initI18n(getModules());
