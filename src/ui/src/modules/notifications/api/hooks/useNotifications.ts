@@ -21,9 +21,11 @@ export function useNotifications({ page = 1, pageSize = 20 }: UseNotificationsPa
         params: { query: { page, pageSize } },
       });
 
-      if (!response.data) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime errors are not reflected in the typed shape; data is undefined when the request fails
+      if (response.error || !response.data) {
         throw new Error('Failed to fetch notifications');
       }
+
       return response.data;
     },
     placeholderData: keepPreviousData,
