@@ -1,0 +1,24 @@
+{
+  "inbox": {
+    "title": "Notifications",
+    "subtitle": "Your recent updates",
+    "preferences_link": "Channel preferences",
+    "empty_title": "No notifications yet",
+    "empty_body": "Once we send you something, it will show up here.",
+    "loading": "Loading…",
+    "error": "Failed to load notifications.",
+    "retry": "Retry",
+    "previous_page": "Previous",
+    "next_page": "Next",
+    "page_indicator": "Page {{page}} of {{totalPages}}",
+    "mark_read_aria": "Mark as read"
+  },
+  "types": {
+    "meal_reminder": "Meal reminder",
+    "meal_missed": "Meal missed",
+    "water_reminder": "Water reminder",
+    "weekly_summary": "Weekly summary",
+    "goal_milestone": "Goal milestone",
+    "unknown": "Notification"
+  }
+}
