@@ -14,9 +14,12 @@ export function useMarkRead() {
 
   return useMutation<undefined, Error, string, MarkReadContext>({
     mutationFn: async (id: string): Promise<undefined> => {
-      await api.POST('/api/notifications/{id}/read', {
+      const { response } = await api.POST('/api/notifications/{id}/read', {
         params: { path: { id } },
       });
+      if (!response.ok) {
+        throw new Error(`Failed to mark notification as read: ${response.status.toString()}`);
+      }
       return undefined;
     },
 
