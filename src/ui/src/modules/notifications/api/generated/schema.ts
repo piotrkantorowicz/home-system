@@ -34,6 +34,28 @@ export interface paths {
       };
     };
   };
+  '/api/notification-preferences': {
+    get: {
+      responses: {
+        200: {
+          content: {
+            'application/json': components['schemas']['ChannelPreferencesDto'];
+          };
+        };
+      };
+    };
+    put: {
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['ChannelPreferencesDto'];
+        };
+      };
+      responses: {
+        204: { content: never };
+        400: { content: never };
+      };
+    };
+  };
 }
 
 export interface components {
@@ -52,6 +74,11 @@ export interface components {
       pageSize?: number;
       totalCount?: number;
       totalPages?: number;
+    };
+    ChannelPreferencesDto: {
+      consoleEnabled: boolean;
+      emailEnabled: boolean;
+      webSocketEnabled: boolean;
     };
   };
 }
