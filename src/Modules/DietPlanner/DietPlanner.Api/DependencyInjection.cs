@@ -29,6 +29,7 @@ public static class DietPlannerModule
         app.MapDietReminderSettingsEndpoints();
         app.MapHydrationEndpoints();
         app.MapWeightEntryEndpoints();
+        app.MapWeeklySummaryEndpoints();
 
         if (IsTestSupportEnabled(app))
             app.MapTestSupportEndpoints();
