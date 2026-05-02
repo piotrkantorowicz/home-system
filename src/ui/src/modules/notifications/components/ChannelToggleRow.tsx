@@ -48,23 +48,35 @@ export function ChannelToggleRow({
         </div>
       </div>
 
-      <input
-        id={id}
-        type="checkbox"
-        role="switch"
-        checked={checked}
-        disabled={disabled}
-        aria-disabled={disabled}
-        aria-checked={checked}
-        aria-label={label}
-        onChange={handleChange}
+      <label
+        htmlFor={id}
         className={cn(
-          'border-border bg-surface h-5 w-9 cursor-pointer appearance-none rounded-full border-2 transition-colors',
-          'checked:bg-primary checked:border-primary',
-          'focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          disabled && 'cursor-not-allowed',
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 transition-colors',
+          checked ? 'bg-primary border-primary' : 'bg-surface-alt border-border',
+          disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+          'focus-within:ring-primary focus-within:ring-2 focus-within:ring-offset-2',
         )}
-      />
+      >
+        <input
+          id={id}
+          type="checkbox"
+          role="switch"
+          checked={checked}
+          disabled={disabled}
+          aria-disabled={disabled}
+          aria-checked={checked}
+          aria-label={label}
+          onChange={handleChange}
+          className="sr-only"
+        />
+        <span
+          aria-hidden
+          className={cn(
+            'inline-block size-4 rounded-full bg-white shadow transition-transform',
+            checked ? 'translate-x-5' : 'translate-x-0.5',
+          )}
+        />
+      </label>
     </div>
   );
 }
