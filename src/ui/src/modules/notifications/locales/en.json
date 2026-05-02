@@ -20,5 +20,24 @@
     "weekly_summary": "Weekly summary",
     "goal_milestone": "Goal milestone",
     "unknown": "Notification"
+  },
+  "preferences": {
+    "title": "Channel preferences",
+    "subtitle": "Choose where you receive notifications",
+    "back_to_inbox": "Back to inbox",
+    "diet_settings_link": "Looking for the reminder schedule? →",
+    "loading": "Loading…",
+    "error": "Failed to load preferences.",
+    "retry": "Retry",
+    "coming_soon": "Coming soon",
+    "channel": {
+      "console": "In-app",
+      "console_desc": "Show notifications inside this app.",
+      "email": "Email",
+      "email_desc": "Send notifications to your email address.",
+      "websocket": "Real-time",
+      "websocket_desc": "Push notifications to this browser as they happen."
+    },
+    "save_failed": "Couldn't save your preference. Please try again."
   }
 }

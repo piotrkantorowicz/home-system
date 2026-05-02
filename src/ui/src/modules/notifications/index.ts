@@ -7,6 +7,7 @@ import pl from './locales/pl.json';
 import type { AppModule } from '@shared/lib/module-registry';
 
 const Inbox = lazy(() => import('./pages/Inbox'));
+const ChannelPreferences = lazy(() => import('./pages/ChannelPreferences'));
 
 export const notificationsModule: AppModule = {
   name: 'notifications',
@@ -27,5 +28,8 @@ export const notificationsModule: AppModule = {
       translationKey: 'common.notifications',
     },
   ],
-  routes: [{ index: true, Component: Inbox }],
+  routes: [
+    { index: true, Component: Inbox },
+    { path: 'preferences', Component: ChannelPreferences },
+  ],
 };

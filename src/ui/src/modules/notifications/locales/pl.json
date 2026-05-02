@@ -20,5 +20,24 @@
     "weekly_summary": "Podsumowanie tygodnia",
     "goal_milestone": "Kamień milowy celu",
     "unknown": "Powiadomienie"
+  },
+  "preferences": {
+    "title": "Preferencje kanałów",
+    "subtitle": "Wybierz, gdzie otrzymywać powiadomienia",
+    "back_to_inbox": "Powrót do skrzynki",
+    "diet_settings_link": "Szukasz harmonogramu przypomnień? →",
+    "loading": "Ładowanie…",
+    "error": "Nie udało się pobrać preferencji.",
+    "retry": "Spróbuj ponownie",
+    "coming_soon": "Wkrótce",
+    "channel": {
+      "console": "W aplikacji",
+      "console_desc": "Pokazuj powiadomienia w tej aplikacji.",
+      "email": "E-mail",
+      "email_desc": "Wysyłaj powiadomienia na Twój e-mail.",
+      "websocket": "W czasie rzeczywistym",
+      "websocket_desc": "Wysyłaj powiadomienia do tej przeglądarki na bieżąco."
+    },
+    "save_failed": "Nie udało się zapisać preferencji. Spróbuj ponownie."
   }
 }
