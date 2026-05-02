@@ -19,6 +19,13 @@ export const notificationsModule: AppModule = {
     en: { notifications: en },
     pl: { notifications: pl },
   },
-  navItems: [],
+  navItems: [
+    {
+      name: 'Inbox',
+      href: '/notifications',
+      icon: Bell,
+      translationKey: 'common.notifications',
+    },
+  ],
   routes: [{ index: true, Component: Inbox }],
 };

@@ -43,7 +43,7 @@ describe('UserProfileDropdown', () => {
     await user.click(screen.getByRole('button', { name: /common.user_menu/i }));
 
     expect(screen.getByText('common.profile')).toBeInTheDocument();
-    expect(screen.getByText('notifications.nav')).toBeInTheDocument();
+    expect(screen.getByText('common.notifications')).toBeInTheDocument();
     expect(screen.getByText('common.logout')).toBeInTheDocument();
   });
 
@@ -67,10 +67,7 @@ describe('UserProfileDropdown', () => {
     const profileLink = screen.getByText('common.profile').closest('a');
     expect(profileLink).toHaveAttribute('href', '/diet-planner/profile');
 
-    const notificationsLink = screen.getByText('notifications.nav').closest('a');
-    expect(notificationsLink).toHaveAttribute(
-      'href',
-      '/diet-planner/profile?section=notifications',
-    );
+    const notificationsLink = screen.getByText('common.notifications').closest('a');
+    expect(notificationsLink).toHaveAttribute('href', '/notifications');
   });
 });
