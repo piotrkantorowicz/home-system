@@ -1,5 +1,5 @@
 import { Mail, Monitor, Wifi } from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -9,35 +9,20 @@ import { ChannelToggleRow } from '../components/ChannelToggleRow';
 
 import type { ChannelPreferencesDto } from '../api/hooks/useChannelPreferences';
 
-const DEBOUNCE_MS = 250;
-
 export default function ChannelPreferences() {
   const { t } = useTranslation('notifications');
   const { data, isLoading, isError, refetch } = useChannelPreferences();
   const update = useUpdateChannelPreferences();
   const saveErrorMsg = update.isError ? t('preferences.save_failed') : null;
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const handleChange = useCallback(
     (field: keyof ChannelPreferencesDto, next: boolean) => {
       if (!data) return;
-
       const updated: ChannelPreferencesDto = { ...data, [field]: next };
-
-      if (debounceRef.current !== null) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        update.mutate(updated);
-      }, DEBOUNCE_MS);
+      update.mutate(updated);
     },
     [data, update],
   );
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current !== null) clearTimeout(debounceRef.current);
-    };
-  }, []);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6">
@@ -125,7 +110,7 @@ export default function ChannelPreferences() {
 
       <footer className="mt-8">
         <Link
-          to="/diet-planner/reminders"
+          to="/diet-planner/profile?section=notifications"
           className="text-primary focus-visible:ring-primary text-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
           {t('preferences.diet_settings_link')}

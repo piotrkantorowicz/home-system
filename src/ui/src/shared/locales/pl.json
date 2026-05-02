@@ -30,6 +30,8 @@
     "modules": "Moduły",
     "diet_planner": "Planer Diety",
     "notifications": "Powiadomienia",
+    "inbox": "Skrzynka",
+    "preferences": "Preferencje",
     "sidebar": {
       "collapse": "Zwiń pasek boczny",
       "expand": "Rozwiń pasek boczny"

@@ -38,8 +38,10 @@ public static class InfrastructureDependencyInjection
             sp => sp.GetRequiredService<NotificationsConnectionFactory>());
 
         services.AddScoped<DapperUnitOfWork>();
-        // IUnitOfWork is intentionally NOT registered globally — Notifications handlers
-        // inject DapperUnitOfWork directly to avoid colliding with DietPlanner's binding.
+        // IUnitOfWork is intentionally NOT registered globally to avoid colliding with
+        // DietPlanner's binding. Application handlers commit through INotificationsUnitOfWork
+        // (a Notifications-scoped abstraction) bound to DapperUnitOfWork here.
+        services.AddScoped<INotificationsUnitOfWork>(sp => sp.GetRequiredService<DapperUnitOfWork>());
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationChannelPreferencesRepository, NotificationChannelPreferencesRepository>();
