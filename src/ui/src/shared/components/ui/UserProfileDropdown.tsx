@@ -27,9 +27,9 @@ const dietPlannerLinks = [
 
 const settingsLinks = [
   {
-    to: '/diet-planner/profile?section=notifications',
+    to: '/notifications',
     icon: Bell,
-    translationKey: 'notifications.nav',
+    translationKey: 'common.notifications',
   },
 ] as const;
 
