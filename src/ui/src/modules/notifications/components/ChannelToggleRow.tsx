@@ -52,9 +52,11 @@ export function ChannelToggleRow({
         htmlFor={id}
         className={cn(
           'relative inline-flex h-7 w-14 shrink-0 items-center rounded-full border-2 transition-colors',
-          checked ? 'bg-success border-success' : 'bg-surface-alt border-border',
+          checked
+            ? 'border-emerald-600 bg-emerald-600 dark:border-emerald-500 dark:bg-emerald-500'
+            : 'border-zinc-300 bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700',
           disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-          'focus-within:ring-primary focus-within:ring-2 focus-within:ring-offset-2',
+          'focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2',
         )}
       >
         <input
@@ -73,7 +75,7 @@ export function ChannelToggleRow({
           aria-hidden
           className={cn(
             'pointer-events-none absolute text-[0.625rem] font-bold tracking-wide uppercase',
-            checked ? 'left-1.5 text-white' : 'text-text-muted right-1.5',
+            checked ? 'left-1.5 text-white' : 'right-1.5 text-zinc-600 dark:text-zinc-300',
           )}
         >
           {checked ? 'On' : 'Off'}
