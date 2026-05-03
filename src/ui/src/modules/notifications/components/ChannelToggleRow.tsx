@@ -51,8 +51,8 @@ export function ChannelToggleRow({
       <label
         htmlFor={id}
         className={cn(
-          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 transition-colors',
-          checked ? 'bg-primary border-primary' : 'bg-surface-alt border-border',
+          'relative inline-flex h-7 w-14 shrink-0 items-center rounded-full border-2 transition-colors',
+          checked ? 'bg-success border-success' : 'bg-surface-alt border-border',
           disabled ? 'cursor-not-allowed' : 'cursor-pointer',
           'focus-within:ring-primary focus-within:ring-2 focus-within:ring-offset-2',
         )}
@@ -72,8 +72,17 @@ export function ChannelToggleRow({
         <span
           aria-hidden
           className={cn(
-            'inline-block size-4 rounded-full bg-white shadow transition-transform',
-            checked ? 'translate-x-5' : 'translate-x-0.5',
+            'pointer-events-none absolute text-[0.625rem] font-bold tracking-wide uppercase',
+            checked ? 'left-1.5 text-white' : 'text-text-muted right-1.5',
+          )}
+        >
+          {checked ? 'On' : 'Off'}
+        </span>
+        <span
+          aria-hidden
+          className={cn(
+            'inline-block size-5 rounded-full bg-white shadow-md ring-1 ring-black/10 transition-transform',
+            checked ? 'translate-x-7' : 'translate-x-0.5',
           )}
         />
       </label>
