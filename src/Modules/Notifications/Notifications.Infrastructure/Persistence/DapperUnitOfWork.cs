@@ -1,9 +1,10 @@
 namespace Notifications.Infrastructure.Persistence;
 
+using Notifications.Domain.Abstractions;
 using Npgsql;
 using Shared.Abstractions.Core.Domain;
 
-internal sealed class DapperUnitOfWork : IUnitOfWork, IAsyncDisposable
+internal sealed class DapperUnitOfWork : IUnitOfWork, INotificationsUnitOfWork, IAsyncDisposable
 {
     private readonly NotificationsConnectionFactory _factory;
     private NpgsqlConnection? _connection;

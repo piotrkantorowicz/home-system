@@ -47,14 +47,20 @@ export function initI18n(modules: readonly AppModule[]) {
   const enTranslation: Record<string, unknown> = { ...sharedEn };
   const plTranslation: Record<string, unknown> = { ...sharedPl };
 
-  // Deep-merge each module's locale entries so overlapping keys like "common"
-  // are merged recursively instead of being replaced.
+  const enResources: Record<string, Record<string, unknown>> = {};
+  const plResources: Record<string, Record<string, unknown>> = {};
+
+  // For each module: register every declared namespace as its own resource bundle,
+  // and also deep-merge into the default `translation` namespace so callers using
+  // `useTranslation()` (no namespace) keep resolving keys from any module.
   for (const mod of modules) {
-    for (const nsContent of Object.values(mod.i18nResources.en)) {
-      deepMerge(enTranslation, nsContent as Record<string, unknown>);
+    for (const [ns, content] of Object.entries(mod.i18nResources.en)) {
+      enResources[ns] = content as Record<string, unknown>;
+      deepMerge(enTranslation, content as Record<string, unknown>);
     }
-    for (const nsContent of Object.values(mod.i18nResources.pl)) {
-      deepMerge(plTranslation, nsContent as Record<string, unknown>);
+    for (const [ns, content] of Object.entries(mod.i18nResources.pl)) {
+      plResources[ns] = content as Record<string, unknown>;
+      deepMerge(plTranslation, content as Record<string, unknown>);
     }
   }
 
@@ -62,8 +68,8 @@ export function initI18n(modules: readonly AppModule[]) {
     lng: defaultLang,
     initImmediate: false,
     resources: {
-      en: { translation: enTranslation },
-      pl: { translation: plTranslation },
+      en: { translation: enTranslation, ...enResources },
+      pl: { translation: plTranslation, ...plResources },
     },
     fallbackLng: 'en',
     interpolation: { escapeValue: false },

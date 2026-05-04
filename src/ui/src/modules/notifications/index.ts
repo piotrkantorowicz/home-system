@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react';
+import { Bell, Inbox as InboxIcon, SlidersHorizontal } from 'lucide-react';
 import { lazy } from 'react';
 
 import en from './locales/en.json';
@@ -24,8 +24,14 @@ export const notificationsModule: AppModule = {
     {
       name: 'Inbox',
       href: '/notifications',
-      icon: Bell,
-      translationKey: 'common.notifications',
+      icon: InboxIcon,
+      translationKey: 'common.inbox',
+    },
+    {
+      name: 'Preferences',
+      href: '/notifications/preferences',
+      icon: SlidersHorizontal,
+      translationKey: 'common.preferences',
     },
   ],
   routes: [

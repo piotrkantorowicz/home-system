@@ -6,7 +6,8 @@ using Notifications.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateChannelPreferencesCommandHandler(
-    INotificationChannelPreferencesRepository repository)
+    INotificationChannelPreferencesRepository repository,
+    INotificationsUnitOfWork unitOfWork)
     : ICommandHandler<UpdateChannelPreferencesCommand>
 {
     public async Task HandleAsync(UpdateChannelPreferencesCommand command, CancellationToken ct = default)
@@ -26,5 +27,7 @@ internal sealed class UpdateChannelPreferencesCommandHandler(
             existing.Update(command.ConsoleEnabled, command.EmailEnabled, command.WebSocketEnabled, now);
             await repository.UpdateAsync(existing, ct);
         }
+
+        await unitOfWork.CommitAsync(ct);
     }
 }
