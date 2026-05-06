@@ -101,8 +101,9 @@ export default function ChannelPreferences() {
               description={t('preferences.channel.websocket_desc')}
               icon={Wifi}
               checked={data.webSocketEnabled}
-              disabled={true}
-              disabledReason={t('preferences.coming_soon')}
+              onChange={(next) => {
+                handleChange('webSocketEnabled', next);
+              }}
             />
           </li>
         </ul>
