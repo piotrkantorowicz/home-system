@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Routing;
 
 using Notifications.Application.Commands.MarkNotificationRead;
 using Notifications.Application.Queries.ListNotifications;
+using Notifications.Infrastructure.SignalR;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
@@ -29,6 +30,8 @@ public static class NotificationsEndpoints
              .WithName("MarkNotificationRead")
              .Produces(StatusCodes.Status204NoContent)
              .ProducesProblem(StatusCodes.Status404NotFound);
+
+        app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
 
         return app;
     }

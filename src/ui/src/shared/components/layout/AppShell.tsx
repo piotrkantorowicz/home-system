@@ -1,14 +1,19 @@
+import { useNotificationStream } from '@modules/notifications/api/hooks/useNotificationStream';
 import { Sheet, SheetContent } from '@shared/components/ui';
 import { useSidebarCollapsed } from '@shared/hooks/useSidebarCollapsed';
 import { useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import { Outlet } from 'react-router-dom';
 
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
 export function AppShell() {
+  const auth = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useSidebarCollapsed();
+
+  useNotificationStream(auth.isAuthenticated);
 
   const closeSidebar = () => {
     setSidebarOpen(false);

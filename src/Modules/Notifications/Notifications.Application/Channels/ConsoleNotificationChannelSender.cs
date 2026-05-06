@@ -9,16 +9,14 @@ internal sealed class ConsoleNotificationChannelSender(
 {
     public NotificationChannel Channel => NotificationChannel.Console;
 
-    public Task SendAsync(string userId, string title, string body, CancellationToken ct = default)
+    public Task<DeliveryOutcome> SendAsync(NotificationSendContext context, CancellationToken ct = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        ArgumentException.ThrowIfNullOrWhiteSpace(body);
+        ArgumentNullException.ThrowIfNull(context);
 
         logger.LogInformation(
-            "[Notification] user={UserId} channel=Console title=\"{Title}\" body=\"{Body}\"",
-            userId, title, body);
+            "[Notification] user={UserId} delivery={DeliveryId} channel=Console title=\"{Title}\" body=\"{Body}\"",
+            context.UserId, context.DeliveryId, context.Title, context.Body);
 
-        return Task.CompletedTask;
+        return Task.FromResult(DeliveryOutcome.Sent);
     }
 }

@@ -32,6 +32,21 @@ internal static class NotificationDeliverySql
         WHERE id = @Id;
         """;
 
+    internal const string SelectPendingByChannelForUser = """
+        SELECT d.id              AS DeliveryId,
+               n.id              AS NotificationId,
+               n.type            AS Type,
+               n.title           AS Title,
+               n.body            AS Body,
+               n.created_at      AS CreatedAt
+        FROM notification_deliveries d
+        INNER JOIN notifications n ON n.id = d.notification_id
+        WHERE n.user_id = @UserId
+          AND d.channel = @Channel
+          AND d.status = 'Pending'
+        ORDER BY n.created_at;
+        """;
+
     // Exponential backoff: gap in minutes = attempt_count^2 (1, 4, 9, 16, 25)
     internal const string SelectFailedForRetry = """
         SELECT id              AS Id,
