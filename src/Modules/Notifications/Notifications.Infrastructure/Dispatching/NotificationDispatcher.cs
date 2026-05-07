@@ -75,8 +75,16 @@ internal sealed class NotificationDispatcher(
 
             try
             {
-                await sender.SendAsync(userId, title, body, ct);
-                delivery.MarkSent(DateTime.UtcNow);
+                var sendContext = new NotificationSendContext(
+                    DeliveryId: delivery.Id.Value,
+                    NotificationId: notification.Id.Value,
+                    UserId: userId,
+                    Type: type,
+                    Title: title,
+                    Body: body,
+                    CreatedAt: notification.CreatedAt);
+                var outcome = await sender.SendAsync(sendContext, ct);
+                DeliveryOutcomeApplier.Apply(delivery, outcome, DateTime.UtcNow);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

@@ -88,9 +88,16 @@ internal sealed class RetryDeliveryWorker(
 
         try
         {
-            await sender.SendAsync(notification.UserId, notification.Title, notification.Body, ct)
-                .ConfigureAwait(false);
-            delivery.MarkSent(DateTime.UtcNow);
+            var sendContext = new NotificationSendContext(
+                DeliveryId: delivery.Id.Value,
+                NotificationId: notification.Id.Value,
+                UserId: notification.UserId,
+                Type: notification.Type,
+                Title: notification.Title,
+                Body: notification.Body,
+                CreatedAt: notification.CreatedAt);
+            var outcome = await sender.SendAsync(sendContext, ct).ConfigureAwait(false);
+            DeliveryOutcomeApplier.Apply(delivery, outcome, DateTime.UtcNow);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

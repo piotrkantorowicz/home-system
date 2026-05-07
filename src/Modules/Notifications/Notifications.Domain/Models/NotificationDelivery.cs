@@ -30,8 +30,17 @@ public sealed class NotificationDelivery
 
     public void MarkSent(DateTime utcNow)
     {
+        if (Status == DeliveryStatus.Sent) return;
+
         Status = DeliveryStatus.Sent;
         SentAt = utcNow;
+        LastAttemptAt = utcNow;
+        AttemptCount++;
+    }
+
+    public void RecordPendingAttempt(DateTime utcNow)
+    {
+        Status = DeliveryStatus.Pending;
         LastAttemptAt = utcNow;
         AttemptCount++;
     }

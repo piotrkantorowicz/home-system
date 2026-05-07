@@ -59,6 +59,48 @@ public sealed class NotificationDeliveryTests
     }
 
     [Fact]
+    public void RecordPendingAttempt_LeavesStatusPendingAndIncrementsAttempts()
+    {
+        var delivery = NewPending();
+        var now = DateTime.UtcNow;
+
+        delivery.RecordPendingAttempt(now);
+
+        delivery.Status.ShouldBe(DeliveryStatus.Pending);
+        delivery.LastAttemptAt.ShouldBe(now);
+        delivery.AttemptCount.ShouldBe(1);
+        delivery.SentAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void MarkSent_AfterPendingAttempt_TransitionsToSent()
+    {
+        var delivery = NewPending();
+        delivery.RecordPendingAttempt(DateTime.UtcNow.AddSeconds(-5));
+        var ackedAt = DateTime.UtcNow;
+
+        delivery.MarkSent(ackedAt);
+
+        delivery.Status.ShouldBe(DeliveryStatus.Sent);
+        delivery.SentAt.ShouldBe(ackedAt);
+        delivery.AttemptCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void MarkSent_WhenAlreadySent_IsNoOp()
+    {
+        var delivery = NewPending();
+        var firstAck = DateTime.UtcNow;
+        delivery.MarkSent(firstAck);
+
+        delivery.MarkSent(DateTime.UtcNow.AddSeconds(10));
+
+        delivery.Status.ShouldBe(DeliveryStatus.Sent);
+        delivery.SentAt.ShouldBe(firstAck);
+        delivery.AttemptCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void MarkSkipped_TransitionsToSkippedWithoutIncrementing()
     {
         var delivery = NewPending();
