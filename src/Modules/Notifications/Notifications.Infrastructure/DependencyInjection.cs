@@ -10,12 +10,10 @@ using Notifications.Application.Dispatching;
 using Notifications.Application.EventHandlers;
 using Notifications.Application.Templates;
 using Notifications.Domain.Abstractions;
-using Notifications.Infrastructure.Channels;
 using Notifications.Infrastructure.Dispatching;
 using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Migrations;
 using Notifications.Infrastructure.Persistence.Repositories;
-using Notifications.Infrastructure.SignalR;
 using Notifications.Infrastructure.Workers;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Cqrs.Extensions;
@@ -58,17 +56,6 @@ public static class InfrastructureDependencyInjection
 
         services.TryAddEnumerable(
             ServiceDescriptor.Scoped<INotificationChannelSender, ConsoleNotificationChannelSender>());
-
-        services.AddSingleton<INotificationConnectionRegistry, NotificationConnectionRegistry>();
-        services.TryAddEnumerable(
-            ServiceDescriptor.Scoped<INotificationChannelSender, WebSocketNotificationChannelSender>());
-        services.AddSignalR(options =>
-        {
-            options.KeepAliveInterval = TimeSpan.FromSeconds(10);
-            options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-            options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-            options.EnableDetailedErrors = true;
-        });
 
         services.AddOptions<RetryDeliveryWorkerOptions>()
             .BindConfiguration(RetryDeliveryWorkerOptions.SectionName);

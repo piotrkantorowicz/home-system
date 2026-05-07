@@ -1,11 +1,11 @@
-namespace Notifications.Infrastructure.Channels;
+namespace Notifications.Api.Channels;
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
+using Notifications.Api.SignalR;
 using Notifications.Application.Channels;
 using Notifications.Domain.ValueObjects;
-using Notifications.Infrastructure.SignalR;
 
 internal sealed class WebSocketNotificationChannelSender(
     IHubContext<NotificationsHub> hubContext,

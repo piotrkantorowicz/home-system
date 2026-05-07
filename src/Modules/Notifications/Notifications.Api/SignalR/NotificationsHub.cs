@@ -1,4 +1,4 @@
-namespace Notifications.Infrastructure.SignalR;
+namespace Notifications.Api.SignalR;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;

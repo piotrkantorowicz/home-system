@@ -1,4 +1,4 @@
-namespace Notifications.Infrastructure.SignalR;
+namespace Notifications.Api.SignalR;
 
 public sealed record NotificationPayload(
     Guid DeliveryId,

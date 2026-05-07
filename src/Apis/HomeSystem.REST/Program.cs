@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Modules
 // ==============================================
 builder.Services.AddDietPlannerModule(builder.Configuration);
-builder.Services.AddNotificationsModule(builder.Configuration);
+builder.Services.AddNotificationsModule(builder.Configuration, builder.Environment);
 
 // ==============================================
 // Messaging (integration-event bus + in-process transport)

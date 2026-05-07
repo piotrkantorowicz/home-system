@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 
 using Notifications.Application.Commands.MarkNotificationRead;
 using Notifications.Application.Queries.ListNotifications;
-using Notifications.Infrastructure.SignalR;
+using Notifications.Api.SignalR;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 

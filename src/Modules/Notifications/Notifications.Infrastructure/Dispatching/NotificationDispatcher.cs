@@ -84,18 +84,7 @@ internal sealed class NotificationDispatcher(
                     Body: body,
                     CreatedAt: notification.CreatedAt);
                 var outcome = await sender.SendAsync(sendContext, ct);
-                switch (outcome)
-                {
-                    case DeliveryOutcome.Sent:
-                        delivery.MarkSent(DateTime.UtcNow);
-                        break;
-                    case DeliveryOutcome.Pending:
-                        delivery.RecordPendingAttempt(DateTime.UtcNow);
-                        break;
-                    case DeliveryOutcome.Failed:
-                        delivery.MarkFailed(DateTime.UtcNow, "sender returned Failed");
-                        break;
-                }
+                DeliveryOutcomeApplier.Apply(delivery, outcome, DateTime.UtcNow);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
