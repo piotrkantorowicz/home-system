@@ -39,7 +39,7 @@ function renderPage() {
 }
 
 describe('ChannelPreferences', () => {
-  it('renders the three channel toggle rows after loading', async () => {
+  it('renders the email and websocket toggle rows after loading (console toggle hidden)', async () => {
     server.use(
       http.get(`${BASE}/api/notification-preferences`, () => HttpResponse.json(defaultPreferences)),
     );
@@ -48,17 +48,17 @@ describe('ChannelPreferences', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('switch', { name: 'preferences.channel.console' }),
+        screen.getByRole('switch', { name: 'preferences.channel.websocket' }),
       ).toBeInTheDocument();
     });
 
     expect(screen.getByRole('switch', { name: 'preferences.channel.email' })).toBeInTheDocument();
     expect(
-      screen.getByRole('switch', { name: 'preferences.channel.websocket' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('switch', { name: 'preferences.channel.console' }),
+    ).not.toBeInTheDocument();
   });
 
-  it('calls PUT when the console toggle is changed', async () => {
+  it('calls PUT when the websocket toggle is changed', async () => {
     const putSpy = vi.fn();
 
     server.use(
@@ -73,16 +73,16 @@ describe('ChannelPreferences', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('switch', { name: 'preferences.channel.console' }),
+        screen.getByRole('switch', { name: 'preferences.channel.websocket' }),
       ).toBeInTheDocument();
     });
 
-    const consoleToggle = screen.getByRole('switch', { name: 'preferences.channel.console' });
-    await userEvent.click(consoleToggle);
+    const websocketToggle = screen.getByRole('switch', { name: 'preferences.channel.websocket' });
+    await userEvent.click(websocketToggle);
 
     await waitFor(
       () => {
-        expect(putSpy).toHaveBeenCalledWith({ ...defaultPreferences, consoleEnabled: false });
+        expect(putSpy).toHaveBeenCalledWith({ ...defaultPreferences, webSocketEnabled: true });
       },
       { timeout: 1000 },
     );
@@ -117,12 +117,12 @@ describe('ChannelPreferences', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('switch', { name: 'preferences.channel.console' }),
+        screen.getByRole('switch', { name: 'preferences.channel.websocket' }),
       ).toBeInTheDocument();
     });
 
-    const consoleToggle = screen.getByRole('switch', { name: 'preferences.channel.console' });
-    await userEvent.click(consoleToggle);
+    const websocketToggle = screen.getByRole('switch', { name: 'preferences.channel.websocket' });
+    await userEvent.click(websocketToggle);
 
     await waitFor(
       () => {
