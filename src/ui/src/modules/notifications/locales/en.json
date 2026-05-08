@@ -45,5 +45,12 @@
       "websocket_desc": "Push notifications to this browser as they happen."
     },
     "save_failed": "Couldn't save your preference. Please try again."
+  },
+  "panel": {
+    "open_aria": "Open notifications",
+    "title": "Notifications",
+    "subtitle": "Your most recent updates",
+    "view_all": "View all",
+    "preferences_link": "Channel preferences"
   }
 }

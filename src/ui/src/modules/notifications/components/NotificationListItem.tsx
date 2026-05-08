@@ -11,16 +11,18 @@ export interface NotificationListItemProps {
   notification: NotificationDto;
   onActivate: (id: string) => void;
   now: Date;
-  selected: boolean;
-  onToggleSelect: (id: string, next: boolean) => void;
+  selected?: boolean;
+  onToggleSelect?: (id: string, next: boolean) => void;
+  showSelect?: boolean;
 }
 
 export function NotificationListItem({
   notification,
   onActivate,
   now,
-  selected,
+  selected = false,
   onToggleSelect,
+  showSelect = true,
 }: NotificationListItemProps) {
   const { t, i18n } = useTranslation('notifications');
   const meta = getTypeMeta(notification.type);
@@ -39,15 +41,17 @@ export function NotificationListItem({
         isUnread ? 'border-l-primary border-l-4' : 'opacity-60',
       )}
     >
-      <Checkbox
-        className="mt-1"
-        checked={selected}
-        disabled={!isUnread}
-        aria-label={t('inbox.select_row_aria')}
-        onChange={(e) => {
-          onToggleSelect(id, e.target.checked);
-        }}
-      />
+      {showSelect && onToggleSelect && (
+        <Checkbox
+          className="mt-1"
+          checked={selected}
+          disabled={!isUnread}
+          aria-label={t('inbox.select_row_aria')}
+          onChange={(e) => {
+            onToggleSelect(id, e.target.checked);
+          }}
+        />
+      )}
       <button
         type="button"
         onClick={handleActivate}

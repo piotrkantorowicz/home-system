@@ -45,5 +45,12 @@
       "websocket_desc": "Wysyłaj powiadomienia do tej przeglądarki na bieżąco."
     },
     "save_failed": "Nie udało się zapisać preferencji. Spróbuj ponownie."
+  },
+  "panel": {
+    "open_aria": "Otwórz powiadomienia",
+    "title": "Powiadomienia",
+    "subtitle": "Twoje najnowsze aktualizacje",
+    "view_all": "Zobacz wszystkie",
+    "preferences_link": "Preferencje kanałów"
   }
 }
