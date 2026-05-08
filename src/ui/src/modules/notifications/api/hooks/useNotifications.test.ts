@@ -44,7 +44,7 @@ describe('useNotifications', () => {
       expect(result.current.isLoading).toBe(false);
     });
     expect(result.current.data?.items).toHaveLength(1);
-    expect(result.current.data?.items?.[0]?.title).toBe('Time for lunch');
+    expect(result.current.data?.items[0]?.title).toBe('Time for lunch');
   });
 
   it('passes page and pageSize to the request', async () => {

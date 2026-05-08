@@ -1,6 +1,7 @@
 import { Bell, Inbox as InboxIcon, SlidersHorizontal } from 'lucide-react';
 import { lazy } from 'react';
 
+import { UnreadBadge } from './components/UnreadBadge';
 import en from './locales/en.json';
 import pl from './locales/pl.json';
 
@@ -26,6 +27,7 @@ export const notificationsModule: AppModule = {
       href: '/notifications',
       icon: InboxIcon,
       translationKey: 'common.inbox',
+      Badge: UnreadBadge,
     },
     {
       name: 'Preferences',

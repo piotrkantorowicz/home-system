@@ -7,6 +7,7 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   translationKey: string;
+  Badge?: ComponentType;
 }
 
 export interface AppModule {

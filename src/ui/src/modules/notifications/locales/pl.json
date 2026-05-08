@@ -11,7 +11,13 @@
     "previous_page": "Poprzednia",
     "next_page": "Następna",
     "page_indicator": "Strona {{page}} z {{totalPages}}",
-    "mark_read_aria": "Oznacz jako przeczytane"
+    "mark_read_aria": "Oznacz jako przeczytane",
+    "select_row_aria": "Zaznacz powiadomienie",
+    "select_all_aria": "Zaznacz wszystkie nieprzeczytane na tej stronie",
+    "select_hint": "Zaznacz wiersze, aby oznaczyć je jako przeczytane",
+    "selected_count": "Zaznaczono: {{count}}",
+    "cancel_selection": "Anuluj",
+    "mark_selected_read": "Oznacz jako przeczytane ({{count}})"
   },
   "types": {
     "meal_reminder": "Przypomnienie o posiłku",

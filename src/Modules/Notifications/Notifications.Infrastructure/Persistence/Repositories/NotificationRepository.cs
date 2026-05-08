@@ -58,6 +58,22 @@ internal sealed class NotificationRepository : INotificationRepository
             cancellationToken: ct));
     }
 
+    public async Task<int> BulkMarkReadAsync(
+        IReadOnlyCollection<Guid> ids, string userId, DateTime readAt, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        if (ids.Count == 0) return 0;
+
+        var tx = await _uow.BeginTransactionAsync(ct);
+        return await tx.Connection!.ExecuteAsync(new CommandDefinition(
+            NotificationSql.BulkMarkReadByUser,
+            new { Ids = ids.ToArray(), UserId = userId, ReadAt = readAt },
+            transaction: tx,
+            cancellationToken: ct));
+    }
+
     public async Task AddDeliveryAsync(NotificationDelivery delivery, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(delivery);

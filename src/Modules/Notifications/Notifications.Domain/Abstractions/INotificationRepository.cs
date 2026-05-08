@@ -8,6 +8,7 @@ public interface INotificationRepository
     Task AddAsync(Notification notification, CancellationToken ct = default);
     Task<Notification?> GetByIdAsync(NotificationId id, CancellationToken ct = default);
     Task MarkReadAsync(NotificationId id, DateTime readAt, CancellationToken ct = default);
+    Task<int> BulkMarkReadAsync(IReadOnlyCollection<Guid> ids, string userId, DateTime readAt, CancellationToken ct = default);
 
     Task AddDeliveryAsync(NotificationDelivery delivery, CancellationToken ct = default);
     Task<NotificationDelivery?> GetDeliveryAsync(NotificationDeliveryId id, CancellationToken ct = default);
