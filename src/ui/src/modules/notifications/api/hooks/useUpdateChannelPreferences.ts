@@ -18,7 +18,6 @@ export function useUpdateChannelPreferences() {
         body: preferences,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime errors are not reflected in the typed shape
       if (response.error || !response.response.ok) {
         throw new Error('Failed to update channel preferences');
       }

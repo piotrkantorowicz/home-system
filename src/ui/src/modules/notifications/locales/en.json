@@ -11,7 +11,13 @@
     "previous_page": "Previous",
     "next_page": "Next",
     "page_indicator": "Page {{page}} of {{totalPages}}",
-    "mark_read_aria": "Mark as read"
+    "mark_read_aria": "Mark as read",
+    "select_row_aria": "Select notification",
+    "select_all_aria": "Select all unread on this page",
+    "select_hint": "Select rows to mark them as read",
+    "selected_count": "{{count}} selected",
+    "cancel_selection": "Cancel",
+    "mark_selected_read": "Mark as read ({{count}})"
   },
   "types": {
     "meal_reminder": "Meal reminder",

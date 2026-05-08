@@ -35,6 +35,7 @@ export { Skeleton, type SkeletonProps } from './Skeleton';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { Select, type SelectProps } from './Select';
 export { Checkbox, type CheckboxProps } from './Checkbox';
+export { Badge, type BadgeProps } from './Badge';
 export {
   Sheet,
   SheetContent,

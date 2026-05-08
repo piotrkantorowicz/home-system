@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
+using Notifications.Application.Commands.BulkMarkNotificationsRead;
 using Notifications.Application.Commands.MarkNotificationRead;
+using Notifications.Application.Queries.GetUnreadCount;
 using Notifications.Application.Queries.ListNotifications;
 using Notifications.Api.SignalR;
 using Shared.Abstractions.Core.Pagination;
@@ -31,10 +33,20 @@ public static class NotificationsEndpoints
              .Produces(StatusCodes.Status204NoContent)
              .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/read", BulkMarkRead)
+             .WithName("BulkMarkNotificationsRead")
+             .Produces(StatusCodes.Status204NoContent);
+
+        group.MapGet("/unread-count", GetUnreadCount)
+             .WithName("GetNotificationsUnreadCount")
+             .Produces<UnreadCountDto>(StatusCodes.Status200OK);
+
         app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
 
         return app;
     }
+
+    public sealed record BulkMarkReadRequest(IReadOnlyCollection<Guid> Ids);
 
     private static async Task<Ok<PagedList<NotificationDto>>> ListNotifications(
         ClaimsPrincipal user,
@@ -63,5 +75,34 @@ public static class NotificationsEndpoints
 
         await dispatcher.SendAsync(new MarkNotificationReadCommand(id, userId), ct);
         return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> BulkMarkRead(
+        BulkMarkReadRequest request,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new UnauthorizedAccessException("Missing user identifier claim.");
+
+        await dispatcher.SendAsync(
+            new BulkMarkNotificationsReadCommand(request.Ids, userId), ct);
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<UnreadCountDto>> GetUnreadCount(
+        ClaimsPrincipal user,
+        IQueryDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new UnauthorizedAccessException("Missing user identifier claim.");
+
+        var result = await dispatcher.SendAsync<GetUnreadCountQuery, UnreadCountDto>(
+            new GetUnreadCountQuery(userId), ct);
+
+        return TypedResults.Ok(result);
     }
 }

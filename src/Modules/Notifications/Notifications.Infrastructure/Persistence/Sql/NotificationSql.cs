@@ -45,4 +45,17 @@ internal static class NotificationSql
     internal const string CountByUser = """
         SELECT count(*) FROM notifications WHERE user_id = @UserId;
         """;
+
+    internal const string CountUnreadByUser = """
+        SELECT count(*) FROM notifications
+        WHERE user_id = @UserId AND read_at IS NULL;
+        """;
+
+    internal const string BulkMarkReadByUser = """
+        UPDATE notifications
+        SET read_at = @ReadAt
+        WHERE user_id = @UserId
+          AND id = ANY(@Ids)
+          AND read_at IS NULL;
+        """;
 }

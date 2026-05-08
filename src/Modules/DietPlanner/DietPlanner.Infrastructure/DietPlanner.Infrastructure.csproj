@@ -7,6 +7,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <!-- Pinned to patched 10.x to override transitive 9.0.0 flagged by NU1903
+         (GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf) -->
+    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 
   <ItemGroup>

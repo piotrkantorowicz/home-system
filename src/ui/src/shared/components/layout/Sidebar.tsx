@@ -332,7 +332,8 @@ function SubNavLink({ item, modBasePath, location, t, onClose }: SubNavLinkProps
           isActive ? 'text-primary' : 'text-muted-foreground',
         )}
       />
-      {t(item.translationKey)}
+      <span className="flex-1">{t(item.translationKey)}</span>
+      {item.Badge ? <item.Badge /> : null}
     </Link>
   );
 }

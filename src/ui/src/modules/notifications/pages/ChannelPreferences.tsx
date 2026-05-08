@@ -1,4 +1,4 @@
-import { Mail, Monitor, Wifi } from 'lucide-react';
+import { Mail, Wifi } from 'lucide-react';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -71,18 +71,6 @@ export default function ChannelPreferences() {
 
       {!isLoading && !isError && data ? (
         <ul className="space-y-3">
-          <li>
-            <ChannelToggleRow
-              id="console"
-              label={t('preferences.channel.console')}
-              description={t('preferences.channel.console_desc')}
-              icon={Monitor}
-              checked={data.consoleEnabled}
-              onChange={(next) => {
-                handleChange('consoleEnabled', next);
-              }}
-            />
-          </li>
           <li>
             <ChannelToggleRow
               id="email"

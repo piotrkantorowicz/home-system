@@ -21,6 +21,8 @@ export function useNotificationStream(enabled: boolean): void {
     }
 
     const handler = (payload: NotificationPayload): void => {
+      // Single invalidation: 'notifications' prefix matches both the list and
+      // unreadCount query keys — TanStack treats the array prefix-style.
       void queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.notifications.all() });
       void ensureNotificationConnection().then((c) =>
         c.invoke(ACK_METHOD, payload.deliveryId).catch((err: unknown) => {
