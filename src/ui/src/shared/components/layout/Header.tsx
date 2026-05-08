@@ -1,4 +1,4 @@
-import { NotificationsBell } from '@modules/notifications/components/NotificationsBell';
+import { NotificationsPanel } from '@modules/notifications/components/NotificationsPanel';
 import { UserProfileDropdown } from '@shared/components/ui';
 import { Menu } from 'lucide-react';
 import { useAuth } from 'react-oidc-context';
@@ -33,7 +33,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
         </button>
       </div>
       <div className="flex items-center gap-2">
-        <NotificationsBell />
+        <NotificationsPanel />
         <UserProfileDropdown
           displayName={displayName}
           email={profile.email ?? undefined}
