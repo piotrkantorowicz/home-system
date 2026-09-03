@@ -1,11 +1,11 @@
 import { useRecipes, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
 import {
+  RecipeCard,
+  type RecipeCardData,
+} from '@modules/diet-planner/components/recipes/RecipeCard';
+import {
+  Banner,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,37 +13,31 @@ import {
   DialogHeader,
   DialogTitle,
   EmptyState,
-  Input,
   Pagination,
+  SegmentedControl,
   Skeleton,
 } from '@shared/components/ui';
-import { Badge } from '@shared/components/ui/Badge';
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  Grid,
-  List as ListIcon,
-  Clock,
-  Users,
-  BookOpen,
-} from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useToast } from '@shared/context/ToastContext';
+import { BookOpen, Plus, Search } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+type Filter = 'all' | 'high_protein' | 'quick';
+
+const n = (v: number | string | null | undefined): number =>
+  typeof v === 'number' ? v : Number(v ?? 0);
+
 export default function RecipeList() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [onlyMine, setOnlyMine] = useState(false);
+  const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [recipeToDelete, setRecipeToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useRecipes({
     search: debouncedSearch,
@@ -51,7 +45,6 @@ export default function RecipeList() {
     page,
     pageSize,
   });
-
   const deleteMutation = useDeleteRecipe();
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -71,344 +64,158 @@ export default function RecipeList() {
     }, 300);
   };
 
+  const items = useMemo(() => (data?.items ?? []) as RecipeCardData[], [data]);
+  const filtered = useMemo(() => {
+    if (filter === 'high_protein') {
+      return items.filter((r) => n(r.nutritionPerServing?.protein) >= 20);
+    }
+    if (filter === 'quick') {
+      return items.filter((r) => n(r.prepTimeMinutes) > 0 && n(r.prepTimeMinutes) <= 20);
+    }
+    return items;
+  }, [items, filter]);
+
   const handleDelete = async () => {
-    if (recipeToDelete) {
-      await deleteMutation.mutateAsync({ id: recipeToDelete.id });
-      setDeleteDialogOpen(false);
-      setRecipeToDelete(null);
+    if (!toDelete) return;
+    try {
+      await deleteMutation.mutateAsync({ id: toDelete.id });
+      setToDelete(null);
+    } catch {
+      toast.error(t('common.error'));
     }
   };
 
-  const openDeleteDialog = (id: string, name: string) => {
-    setRecipeToDelete({ id, name });
-    setDeleteDialogOpen(true);
-  };
-
   return (
-    <div className="animate-fade-in-up p-8 lg:p-10">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="animate-fade-in flex flex-col gap-6 px-4 py-6 md:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipes.title')}</h1>
-          <p className="text-muted-foreground text-[0.95rem]">{t('recipes.subtitle')}</p>
+          <h1 className="text-[26px] font-bold">{t('recipes.title')}</h1>
+          <p className="text-muted-foreground mt-1 text-sm">{t('recipes.subtitle')}</p>
         </div>
-        <Button asChild>
+        <Button size="xl" asChild>
           <Link to="/diet-planner/recipes/new">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="size-4" />
             {t('recipes.create_recipe')}
           </Link>
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center gap-4">
-        <div className="relative max-w-sm flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
-          <Input
-            placeholder={t('recipes.search_placeholder')}
+      <div className="border-border bg-card flex flex-wrap items-center gap-2.5 rounded-[18px] border p-3.5">
+        <div className="bg-secondary border-border flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3">
+          <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
+          <input
             value={search}
             onChange={(e) => {
               handleSearchChange(e.target.value);
             }}
-            className="pl-10"
+            placeholder={t('recipes.search_placeholder')}
+            aria-label={t('recipes.search_placeholder')}
+            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent text-[13px] outline-none"
           />
         </div>
-        <Button
-          variant={onlyMine ? 'default' : 'outline'}
+
+        <button
+          type="button"
           onClick={() => {
-            setOnlyMine(!onlyMine);
+            setOnlyMine((v) => !v);
             setPage(1);
           }}
+          className={
+            onlyMine
+              ? 'bg-accent text-accent-foreground inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold'
+              : 'bg-secondary border-border text-text-2 hover:text-foreground inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold'
+          }
         >
-          {onlyMine ? t('recipes.show_my_recipes') : t('recipes.show_only_mine')}
-        </Button>
-        <div className="flex gap-1 rounded-lg border p-1">
-          <Button
-            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              setViewMode('grid');
-            }}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-            size="icon"
-            onClick={() => {
-              setViewMode('list');
-            }}
-          >
-            <ListIcon className="h-4 w-4" />
-          </Button>
-        </div>
+          {t('recipes.my_recipes')}
+          {onlyMine ? <span aria-hidden>×</span> : null}
+        </button>
+
+        <SegmentedControl
+          className="ml-auto"
+          label={t('recipes.filter_label')}
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: t('recipes.filter_all') },
+            { value: 'high_protein', label: t('recipes.filter_high_protein') },
+            { value: 'quick', label: t('recipes.filter_quick') },
+          ]}
+        />
       </div>
 
-      {error && (
-        <div className="border-destructive/30 bg-destructive/5 text-destructive animate-scale-in mb-4 rounded-xl border p-4">
-          {t('common.error')}: {error.message}
-        </div>
-      )}
+      {error ? <Banner variant="error">{error.message}</Banner> : null}
 
       {isLoading ? (
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                  <Skeleton className="h-6 w-12 rounded-full" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex gap-4">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Skeleton className="h-14 rounded-lg" />
-                    <Skeleton className="h-14 rounded-lg" />
-                  </div>
-                  <div className="flex gap-2 border-t pt-3">
-                    <Skeleton className="h-9 flex-1 rounded-md" />
-                    <Skeleton className="h-9 w-9 rounded-md" />
-                    <Skeleton className="h-9 w-9 rounded-md" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Skeleton key={i} className="h-[264px] rounded-[22px]" />
           ))}
         </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title={t('recipes.no_recipes_found')}
+          description={debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
+          action={
+            debouncedSearch
+              ? undefined
+              : { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
+          }
+        />
       ) : (
-        <>
-          {data?.items.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title={t('recipes.no_recipes_found')}
-              description={
-                debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')
-              }
-              action={
-                !debouncedSearch
-                  ? { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
-                  : undefined
-              }
-              className="animate-fade-in py-16"
-            />
-          ) : (
-            <>
-              {viewMode === 'grid' ? (
-                <div className="stagger-children grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                  {data?.items.map((recipe) => (
-                    <Card
-                      key={recipe.id}
-                      className="group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">{recipe.name}</CardTitle>
-                            {recipe.description && (
-                              <CardDescription className="mt-2 line-clamp-2">
-                                {recipe.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                          {recipe.isOwner ? (
-                            <Badge variant="default">{t('common.you')}</Badge>
-                          ) : (
-                            <Badge variant="outline">{t('common.shared')}</Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="text-muted-foreground flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-1.5">
-                              <Users className="h-4 w-4" />
-                              <span>
-                                {t('recipes.servings', { count: Number(recipe.servings) })}
-                              </span>
-                            </div>
-                            {recipe.prepTimeMinutes && (
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {recipe.prepTimeMinutes} {t('recipes.prep_time')}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-muted/40 rounded-lg p-2.5">
-                              <p className="text-muted-foreground text-xs">
-                                {t('recipes.per_serving')}
-                              </p>
-                              <p className="mt-0.5 text-sm font-semibold">
-                                {`${Number(recipe.nutritionPerServing?.calories ?? 0).toFixed(0)} kcal`}
-                              </p>
-                            </div>
-                            <div className="bg-muted/40 rounded-lg p-2.5">
-                              <p className="text-muted-foreground text-xs">
-                                {t('products.table.protein')}
-                              </p>
-                              <p className="mt-0.5 text-sm font-semibold">
-                                {`${Number(recipe.nutritionPerServing?.protein ?? 0).toFixed(1)}g`}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2 border-t pt-3">
-                            <Button asChild variant="outline" size="sm" className="w-full flex-1">
-                              <Link to={`/diet-planner/recipes/${recipe.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                {t('recipes.view')}
-                              </Link>
-                            </Button>
-                            {recipe.isOwner && (
-                              <>
-                                <Button asChild variant="outline" size="sm" aria-label="Edit">
-                                  <Link to={`/diet-planner/recipes/${recipe.id}/edit`}>
-                                    <Edit className="h-4 w-4" />
-                                  </Link>
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  aria-label="Delete"
-                                  onClick={() => {
-                                    openDeleteDialog(recipe.id, recipe.name);
-                                  }}
-                                >
-                                  <Trash2 className="text-destructive h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="stagger-children space-y-3">
-                  {data?.items.map((recipe) => (
-                    <Card key={recipe.id} className="transition-all duration-200 hover:shadow-md">
-                      <CardContent className="p-5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="mb-1.5 flex items-center gap-3">
-                              <h3 className="text-lg font-semibold">{recipe.name}</h3>
-                              {recipe.isOwner ? (
-                                <Badge variant="default">{t('common.you')}</Badge>
-                              ) : (
-                                <Badge variant="outline">{t('common.shared')}</Badge>
-                              )}
-                            </div>
-                            <div className="text-muted-foreground flex items-center gap-5 text-sm">
-                              <span>
-                                {t('recipes.servings', { count: Number(recipe.servings) })}
-                              </span>
-                              {recipe.prepTimeMinutes && (
-                                <span>
-                                  {recipe.prepTimeMinutes} {t('recipes.prep_time')}
-                                </span>
-                              )}
-                              <span>
-                                {Number(recipe.nutritionPerServing?.calories ?? 0).toFixed(0)} kcal/
-                                {t('recipes.per_serving').toLowerCase()}
-                              </span>
-                              <span>
-                                P: {Number(recipe.nutritionPerServing?.protein ?? 0).toFixed(1)}g
-                              </span>
-                              <span>
-                                C: {Number(recipe.nutritionPerServing?.carbs ?? 0).toFixed(1)}g
-                              </span>
-                              <span>
-                                F: {Number(recipe.nutritionPerServing?.fat ?? 0).toFixed(1)}g
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="icon"
-                              className="hover:text-primary"
-                              aria-label="View"
-                            >
-                              <Link to={`/diet-planner/recipes/${recipe.id}`}>
-                                <Eye className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            {recipe.isOwner && (
-                              <>
-                                <Button
-                                  asChild
-                                  variant="ghost"
-                                  size="icon"
-                                  className="hover:text-primary"
-                                  aria-label="Edit"
-                                >
-                                  <Link to={`/diet-planner/recipes/${recipe.id}/edit`}>
-                                    <Edit className="h-4 w-4" />
-                                  </Link>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label="Delete"
-                                  onClick={() => {
-                                    openDeleteDialog(recipe.id, recipe.name);
-                                  }}
-                                  className="hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {data && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalCount={Number(data.totalCount)}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
+        <div className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]">
+          {filtered.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onDelete={() => {
+                setToDelete({ id: recipe.id, name: recipe.name });
               }}
             />
-          )}
-        </>
+          ))}
+          <Link
+            to="/diet-planner/recipes/new"
+            className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-[22px] border border-dashed transition-colors"
+          >
+            <span className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-2xl">
+              <Plus className="size-5" />
+            </span>
+            <span className="text-[13px] font-semibold">{t('recipes.create_tile')}</span>
+          </Link>
+        </div>
       )}
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {data ? (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={n(data.totalCount)}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      ) : null}
+
+      <Dialog
+        open={toDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setToDelete(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('recipes.delete_dialog.title')}</DialogTitle>
             <DialogDescription>
-              {t('recipes.delete_dialog.description', { name: recipeToDelete?.name })}
+              {t('recipes.delete_dialog.description', { name: toDelete?.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
-                setDeleteDialogOpen(false);
+                setToDelete(null);
               }}
             >
               {t('common.cancel')}

@@ -137,7 +137,13 @@
       "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone. The recipe will only be deleted if it's not used in any meal plans.",
       "confirm": "Delete",
       "deleting": "Deleting..."
-    }
+    },
+    "my_recipes": "My recipes",
+    "filter_label": "Filter",
+    "filter_all": "All",
+    "filter_high_protein": "High protein",
+    "filter_quick": "Quick",
+    "create_tile": "Create a recipe"
   },
   "calendar": {
     "title": "Calendar",
@@ -393,7 +399,12 @@
       "unit": "Unit",
       "calories": "Calories",
       "protein": "Protein"
-    }
+    },
+    "add_to_plan": "Add to plan",
+    "method": "Method",
+    "servings_label": "Servings",
+    "scale_note": "Ingredient amounts scale automatically.",
+    "per_serving_note": "Per serving at the current servings count."
   },
   "day_view": {
     "summary": {

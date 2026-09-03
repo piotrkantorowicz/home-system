@@ -136,7 +136,13 @@
       "description": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć. Przepis zostanie usunięty tylko jeśli nie jest używany w żadnych planach posiłków.",
       "confirm": "Usuń",
       "deleting": "Usuwanie..."
-    }
+    },
+    "my_recipes": "Moje przepisy",
+    "filter_label": "Filtr",
+    "filter_all": "Wszystkie",
+    "filter_high_protein": "Wysokobiałkowe",
+    "filter_quick": "Szybkie",
+    "create_tile": "Utwórz przepis"
   },
   "calendar": {
     "title": "Kalendarz",
@@ -396,7 +402,12 @@
       "unit": "Jedn.",
       "calories": "Kalorie",
       "protein": "Białko"
-    }
+    },
+    "add_to_plan": "Dodaj do planu",
+    "method": "Sposób przygotowania",
+    "servings_label": "Porcje",
+    "scale_note": "Ilości składników skalują się automatycznie.",
+    "per_serving_note": "Na porcję przy bieżącej liczbie porcji."
   },
   "day_view": {
     "summary": {
