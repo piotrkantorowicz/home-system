@@ -109,6 +109,7 @@
     "today": "Today",
     "tab_calendar": "Calendar",
     "tab_nutrition": "Nutrition",
+    "tab_shopping": "Shopping list",
     "tab_import": "Import",
     "no_schedule": "Configure your meal schedule in Profile to see meal slots here.",
     "meal_status": {
@@ -184,6 +185,25 @@
     "vs_goal": "Goal Progress ({{days}}-day target)",
     "daily_breakdown": "Daily Breakdown",
     "date": "Date"
+  },
+  "shopping_list": {
+    "title": "Shopping List",
+    "subtitle": "Aggregated ingredients from your planned meals — overrides are ignored.",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "date_range_error": "'From' date must be before 'To' date",
+    "empty_title": "Nothing to buy",
+    "empty_desc": "No planned meals fall in this date range. Try expanding it.",
+    "items_count": "{{count}} items",
+    "product": "Product",
+    "amount": "Amount",
+    "unit": "Unit",
+    "copy": "Copy",
+    "copied": "Shopping list copied",
+    "copy_failed": "Could not copy to clipboard",
+    "export_csv": "Export CSV",
+    "export_json": "Export JSON"
   },
   "import_wizard": {
     "title": "Import Diet Plan",

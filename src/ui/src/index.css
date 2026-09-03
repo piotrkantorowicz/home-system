@@ -32,6 +32,7 @@
 
 /* Light theme — clean slate, deep violet primary, strong contrast */
 :root {
+  color-scheme: light;
   --color-background: 220 16% 96%;
   --color-foreground: 224 71% 4%;
   --color-card: 0 0% 100%;
@@ -66,6 +67,7 @@
 
 /* Dark theme — deep midnight, electric violet primary */
 .dark {
+  color-scheme: dark;
   --color-background: 250 30% 6%;
   --color-foreground: 240 20% 92%;
   --color-card: 250 25% 10%;
@@ -97,6 +99,21 @@
 
 * {
   border-color: hsl(var(--color-border));
+}
+
+/* Native form controls follow the active theme — fixes white option list / spinner
+   buttons on <input type="number"> and <select> when in dark mode. */
+.dark input,
+.dark select,
+.dark textarea {
+  color-scheme: dark;
+}
+
+/* Fallback for browsers that don't honor color-scheme on <select> popups
+   (Firefox on some Linux compositors). */
+.dark option {
+  background-color: hsl(var(--color-popover));
+  color: hsl(var(--color-popover-foreground));
 }
 
 body {

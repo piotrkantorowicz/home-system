@@ -9,6 +9,10 @@ export const queryKeys = {
     all: () => ['nutrition-summary'] as const,
     detail: (params: { from: string; to: string }) => ['nutrition-summary', params] as const,
   },
+  shoppingList: {
+    all: () => ['shopping-list'] as const,
+    detail: (params: { from: string; to: string }) => ['shopping-list', params] as const,
+  },
   goals: {
     detail: () => ['goals'] as const,
   },

@@ -28,8 +28,6 @@ const goalSchema = z.object({
 type GoalFormInput = z.input<typeof goalSchema>;
 type GoalFormData = z.output<typeof goalSchema>;
 
-const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
-
 export interface GoalsFormProps {
   onSuccess?: () => void;
 }
@@ -41,7 +39,7 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
   const createMutation = useCreateGoals();
   const updateMutation = useUpdateGoals();
 
-  const goalsExist = goals !== null && goals !== undefined && goals.id !== EMPTY_GUID;
+  const goalsExist = goals !== null && goals !== undefined;
   const saveMutation = goalsExist ? updateMutation : createMutation;
 
   const {

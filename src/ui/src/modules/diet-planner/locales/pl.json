@@ -108,6 +108,7 @@
     "today": "Dziś",
     "tab_calendar": "Kalendarz",
     "tab_nutrition": "Odżywianie",
+    "tab_shopping": "Lista zakupów",
     "tab_import": "Import",
     "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków.",
     "view_label": "Widok",
@@ -188,6 +189,25 @@
     "vs_goal": "Realizacja Celu (cel na {{days}} dni)",
     "daily_breakdown": "Podział Dzienny",
     "date": "Data"
+  },
+  "shopping_list": {
+    "title": "Lista Zakupów",
+    "subtitle": "Zagregowane składniki z zaplanowanych posiłków — modyfikacje są ignorowane.",
+    "from": "Od",
+    "to": "Do",
+    "apply": "Zastosuj",
+    "date_range_error": "Data 'Od' musi być wcześniejsza niż data 'Do'",
+    "empty_title": "Nic do kupienia",
+    "empty_desc": "W tym zakresie dat nie ma zaplanowanych posiłków. Spróbuj go rozszerzyć.",
+    "items_count": "{{count}} pozycji",
+    "product": "Produkt",
+    "amount": "Ilość",
+    "unit": "Jednostka",
+    "copy": "Kopiuj",
+    "copied": "Lista zakupów skopiowana",
+    "copy_failed": "Nie udało się skopiować do schowka",
+    "export_csv": "Eksport CSV",
+    "export_json": "Eksport JSON"
   },
   "import_wizard": {
     "title": "Import Planu Diety",

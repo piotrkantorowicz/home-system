@@ -63,6 +63,7 @@ export function useCreateMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -88,6 +89,7 @@ export function useUpdateMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -105,6 +107,7 @@ export function useCompleteMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -129,6 +132,7 @@ export function useOverrideMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -146,6 +150,7 @@ export function useResetMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -164,6 +169,7 @@ export function useBulkCompleteMeals() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -181,6 +187,7 @@ export function useDeleteMeal() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
     },
   });
 }
@@ -237,6 +244,7 @@ export function useExecuteImport() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.products.all() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.recipes.all() });
     },

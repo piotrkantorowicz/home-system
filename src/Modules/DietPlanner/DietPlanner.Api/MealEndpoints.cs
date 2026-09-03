@@ -12,6 +12,7 @@ using DietPlanner.Application.Commands.UpdateMealEntry;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.Application.Queries.GetNutritionSummary;
+using DietPlanner.Application.Queries.GetShoppingList;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,13 @@ public static class MealEndpoints
             .WithSummary("Get daily nutrition summary for a date range")
             .WithDescription("Aggregates meal entries by day and returns total calories, protein, carbohydrates, fat, and fibre for each day in the range.")
             .Produces<IReadOnlyList<DailyNutritionDto>>()
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/shopping-list", GetShoppingList)
+            .WithName("GetShoppingList")
+            .WithSummary("Get aggregated shopping list for planned meals in a date range")
+            .WithDescription("Aggregates the ingredients of each planned meal's recipe (scaled by servings) across the date range and groups them by product and unit. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.")
+            .Produces<IReadOnlyList<ShoppingListItemDto>>()
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/", CreateMealEntry)
@@ -140,6 +148,18 @@ public static class MealEndpoints
         var userId = GetUserId(user);
         IReadOnlyList<DailyNutritionDto> result = await dispatcher.SendAsync<GetNutritionSummaryQuery, IReadOnlyList<DailyNutritionDto>>(
             new GetNutritionSummaryQuery(userId, @params.From, @params.To), ct);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> GetShoppingList(
+        [AsParameters] MealDateRangeParams @params,
+        ClaimsPrincipal user,
+        IQueryDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        IReadOnlyList<ShoppingListItemDto> result = await dispatcher.SendAsync<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>(
+            new GetShoppingListQuery(userId, @params.From, @params.To), ct);
         return TypedResults.Ok(result);
     }
 

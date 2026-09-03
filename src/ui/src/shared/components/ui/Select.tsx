@@ -11,7 +11,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       <div className="relative w-full">
         <select
           className={cn(
-            'border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full appearance-none rounded-lg border px-4 py-2.5 text-[0.9rem] transition-all duration-200 focus-visible:border-transparent focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+            'border-input bg-background ring-offset-background focus-visible:ring-ring flex h-11 w-full appearance-none rounded-lg border px-4 py-2.5 text-[0.9rem] [color-scheme:light] transition-all duration-200 focus-visible:border-transparent focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:[color-scheme:dark]',
             className,
           )}
           ref={ref}
