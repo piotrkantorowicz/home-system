@@ -166,6 +166,15 @@
       "button": "✓ all",
       "success": "{{count}} meals marked as done",
       "error": "Failed to mark meals as done"
+    },
+    "week_grid": {
+      "day_total": "Day total",
+      "gap": "gap",
+      "legend": "Legend",
+      "carb_led": "Carb-led",
+      "protein_led": "Protein-led",
+      "veg_led": "Veg-led",
+      "today": "today"
     }
   },
   "override_dialog": {

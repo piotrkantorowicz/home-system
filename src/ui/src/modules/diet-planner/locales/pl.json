@@ -170,6 +170,15 @@
       "button": "✓ wszystko",
       "success": "Oznaczono {{count}} posiłków jako zjedzone",
       "error": "Nie udało się oznaczyć posiłków"
+    },
+    "week_grid": {
+      "day_total": "Suma dnia",
+      "gap": "brak",
+      "legend": "Legenda",
+      "carb_led": "Węglowodanowe",
+      "protein_led": "Białkowe",
+      "veg_led": "Warzywne",
+      "today": "dziś"
     }
   },
   "override_dialog": {

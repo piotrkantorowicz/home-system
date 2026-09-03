@@ -4,11 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  SegmentedControl,
 } from '@shared/components/ui';
 import {
   Dialog,
@@ -20,19 +16,7 @@ import {
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
-import {
-  ArrowRight,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Sparkles,
-  Target,
-  Trash2,
-} from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 import { lazy, Suspense, useCallback, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -48,14 +32,16 @@ import {
   useCompleteMeal,
   useResetMeal,
   useBulkCompleteMeals,
+  type MealEntryDto,
+  type DailyNutrition,
 } from '../api/hooks/useMeals';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
+import { WeekGrid } from '../components/calendar/WeekGrid';
 import { DayView } from '../components/calendar-day/DayView';
 import { MealForm } from '../components/diet-plans/MealForm';
 import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog';
-import { MealStatusBadge, type MealStatus } from '../components/diet-plans/MealStatusBadge';
 
 const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
 const ShoppingListPage = lazy(() => import('./ShoppingList'));
@@ -184,6 +170,12 @@ export default function Calendar() {
   });
   const { data: goals } = useGoals();
 
+  const nutritionByDate = useMemo(() => {
+    const map = new Map<string, DailyNutrition>();
+    for (const day of nutritionSummary ?? []) map.set(day.date.slice(0, 10), day);
+    return map;
+  }, [nutritionSummary]);
+
   const weeklyTotals = useMemo(() => {
     if (!nutritionSummary) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
     return nutritionSummary.reduce(
@@ -202,17 +194,6 @@ export default function Calendar() {
     from: weekRange.from,
     to: weekRange.to,
   });
-
-  const mealsByDay = useMemo(() => {
-    if (!meals) return {};
-    const grouped: Record<string, Record<string, Meal[]>> = {};
-    (meals as Meal[]).forEach((meal) => {
-      const date = meal.date;
-      const dayBucket = (grouped[date] ??= {});
-      (dayBucket[meal.mealSlotId] ??= []).push(meal);
-    });
-    return grouped;
-  }, [meals]);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStartDate);
@@ -361,62 +342,35 @@ export default function Calendar() {
                     })}
               </h2>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                role="tablist"
-                aria-label={t('calendar.view_label')}
-                className="bg-muted/40 flex rounded-md p-0.5"
-              >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === 'week'}
-                  onClick={() => {
-                    setView('week');
-                  }}
-                  className={cn(
-                    'rounded px-3 py-1 text-xs font-medium transition-colors',
-                    view === 'week'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {t('calendar.view.week')}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={view === 'day'}
-                  onClick={() => {
-                    setView('day');
-                  }}
-                  className={cn(
-                    'rounded px-3 py-1 text-xs font-medium transition-colors',
-                    view === 'day'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {t('calendar.view.day')}
-                </button>
-              </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <SegmentedControl
+                label={t('calendar.view_label')}
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: 'day', label: t('calendar.view.day') },
+                  { value: 'week', label: t('calendar.view.week') },
+                ]}
+              />
               <Button variant="outline" size="sm" onClick={goToToday}>
                 {t('calendar.today')}
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
+              <button
+                type="button"
                 onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
+                aria-label={t('common.previous')}
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-[38px] place-items-center rounded-[12px] border transition-colors"
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                type="button"
                 onClick={view === 'week' ? goToNextWeek : goToNextDay}
+                aria-label={t('common.next')}
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-[38px] place-items-center rounded-[12px] border transition-colors"
               >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                <ChevronRight className="size-4" />
+              </button>
             </div>
           </div>
 
@@ -446,191 +400,29 @@ export default function Calendar() {
             />
           )}
 
-          {view === 'week' && mealsLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
-            </div>
-          ) : view === 'week' ? (
-            <div className="stagger-children grid gap-4 lg:grid-cols-7">
-              {weekDays.map((date) => {
-                const dateStr = formatLocalDate(date);
-                const dayMeals = mealsByDay[dateStr] ?? {};
-                const isToday = dateStr === formatLocalDate(new Date());
-
-                return (
-                  <Card
-                    key={dateStr}
-                    className={cn(
-                      'min-h-[400px] transition-all duration-200',
-                      isToday && 'border-primary/50 shadow-primary/10 shadow-md',
-                    )}
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-muted-foreground text-xs tracking-wider uppercase">
-                              {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
-                            </span>
-                            <span className={cn('text-xl font-bold', isToday && 'text-primary')}>
-                              {date.getDate()}
-                            </span>
-                          </div>
-                          {Object.values(dayMeals)
-                            .flat()
-                            .some((m) => m.status === 'Planned') && (
-                            <button
-                              type="button"
-                              onClick={() => void handleBulkComplete(dateStr)}
-                              className="text-muted-foreground focus-visible:ring-primary rounded p-1 text-[10px] font-medium transition-colors hover:text-emerald-600 focus-visible:ring-2 focus-visible:outline-none"
-                              title={t('calendar.bulk_complete.button')}
-                              aria-label={t('calendar.bulk_complete.button')}
-                              disabled={bulkCompleteMeals.isPending}
-                            >
-                              {t('calendar.bulk_complete.button')}
-                            </button>
-                          )}
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {slots.length === 0 ? (
-                        <div className="text-muted-foreground/60 rounded-lg border border-dashed p-3 text-center text-xs">
-                          {t('calendar.no_schedule')}
-                        </div>
-                      ) : null}
-                      {slots.map((slot) => (
-                        <div key={slot.id}>
-                          <div className="mb-1.5 flex items-center justify-between">
-                            <h4 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-                              {slot.name}
-                            </h4>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                openCreateForm(dateStr, slot.id);
-                              }}
-                              className="text-muted-foreground/50 hover:text-primary h-4 w-4 rounded transition-colors"
-                              title={t('meal_form.add_title')}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
-                          {dayMeals[slot.id]?.map((meal) => (
-                            <div
-                              key={meal.id}
-                              className="group bg-muted/30 hover:bg-muted/50 mb-1.5 rounded-lg border p-2 text-xs transition-colors"
-                            >
-                              <div className="flex items-start justify-between gap-1">
-                                <div className="flex min-w-0 flex-1 items-start gap-1.5">
-                                  <MealStatusBadge
-                                    status={(meal.status as MealStatus | undefined) ?? 'Planned'}
-                                    className="mt-0.5 shrink-0"
-                                  />
-                                  <div className="min-w-0 flex-1">
-                                    {meal.status === 'Modified' && meal.actualRecipe ? (
-                                      <>
-                                        <Link
-                                          to={`/diet-planner/recipes/${meal.actualRecipe.id}`}
-                                          title={meal.actualRecipe.name}
-                                          className="line-clamp-2 block font-medium break-words hover:underline"
-                                        >
-                                          {meal.actualRecipe.name}
-                                        </Link>
-                                        <span
-                                          title={meal.recipeName}
-                                          className="text-muted-foreground/70 block truncate text-[10px] line-through"
-                                        >
-                                          {meal.recipeName}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <Link
-                                        to={`/diet-planner/recipes/${meal.recipeId}`}
-                                        title={meal.recipeName}
-                                        className="line-clamp-2 block font-medium break-words hover:underline"
-                                      >
-                                        {meal.recipeName}
-                                      </Link>
-                                    )}
-                                  </div>
-                                </div>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button
-                                      type="button"
-                                      className="text-muted-foreground hover:text-foreground focus-visible:ring-primary shrink-0 rounded p-0.5 opacity-50 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none [@media(hover:none)]:opacity-100"
-                                      aria-label={t('calendar.meal_actions.menu')}
-                                    >
-                                      <MoreVertical className="h-3.5 w-3.5" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-[140px] p-1 [&_[role=menuitem]]:gap-1.5 [&_[role=menuitem]]:px-2 [&_[role=menuitem]]:py-1 [&_[role=menuitem]]:text-xs [&_[role=menuitem]_svg]:size-3"
-                                  >
-                                    {meal.status !== 'Done' && meal.status !== 'Modified' && (
-                                      <DropdownMenuItem onSelect={() => void handleComplete(meal)}>
-                                        <Check className="text-emerald-600" />
-                                        {t('calendar.meal_actions.mark_done')}
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                      onSelect={() => {
-                                        setOverrideMealId(meal.id);
-                                      }}
-                                    >
-                                      <Sparkles className="text-amber-600" />
-                                      {t('calendar.meal_actions.override')}
-                                    </DropdownMenuItem>
-                                    {meal.status !== 'Planned' && (
-                                      <DropdownMenuItem onSelect={() => void handleReset(meal)}>
-                                        <RotateCcw />
-                                        {t('calendar.meal_actions.reset')}
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onSelect={() => {
-                                        openEditForm(meal);
-                                      }}
-                                    >
-                                      <Pencil />
-                                      {t('common.edit')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onSelect={() => {
-                                        setDeletingMeal(meal);
-                                      }}
-                                      className="text-destructive focus:text-destructive"
-                                    >
-                                      <Trash2 />
-                                      {t('common.delete')}
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                              <p className="text-muted-foreground mt-0.5">
-                                {t('recipes.servings', { count: Number(meal.servings) || 1 })}
-                              </p>
-                              {meal.notes && (
-                                <p className="text-muted-foreground/70 mt-0.5 truncate">
-                                  {meal.notes}
-                                </p>
-                              )}
-                            </div>
-                          )) ?? (
-                            <div className="text-muted-foreground/60 rounded-lg border border-dashed p-2 text-center text-xs">
-                              {t('diet_plan_detail.no_meal')}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+          {view === 'week' ? (
+            <WeekGrid
+              weekDays={weekDays}
+              slots={slots.map((s) => ({ id: s.id, name: s.name, sortOrder: s.sortOrder }))}
+              meals={meals ? (meals as unknown as MealEntryDto[]) : []}
+              nutritionByDate={nutritionByDate}
+              calorieTarget={goals?.dailyCalorieTarget ?? null}
+              loading={mealsLoading}
+              bulkPending={bulkCompleteMeals.isPending}
+              onAddMeal={openCreateForm}
+              onEditMeal={(meal) => {
+                openEditForm(meal as unknown as Meal);
+              }}
+              onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
+              onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
+              onOverrideMeal={(mealId) => {
+                setOverrideMealId(mealId);
+              }}
+              onDeleteMeal={(meal) => {
+                setDeletingMeal(meal as unknown as Meal);
+              }}
+              onBulkComplete={(date) => void handleBulkComplete(date)}
+            />
           ) : null}
 
           {/* Weekly Nutrition Summary — hidden in day view (DayView has its own summary) */}
