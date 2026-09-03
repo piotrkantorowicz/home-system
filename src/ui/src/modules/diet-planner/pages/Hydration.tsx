@@ -6,98 +6,86 @@ import {
 } from '@modules/diet-planner/api/hooks/useHydration';
 import { HydrationConfigForm } from '@modules/diet-planner/components/settings';
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
   Button,
-  Input,
-  Label,
+  Card,
   EmptyState,
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { Droplets, Loader2, Trash2, Plus, Settings } from 'lucide-react';
+import { cn } from '@shared/lib/utils';
+import { Droplet, Settings, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const DEFAULT_DAILY_TARGET_ML = 2500;
-const DEFAULT_GLASS_SIZE_ML = 250;
+const DEFAULT_TARGET_ML = 2500;
+const DEFAULT_GLASS_ML = 250;
+const MAX_GLASSES = 12;
 
-function formatDate(date: Date): string {
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function today(): string {
+  const d = new Date();
+  return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate(),
+  ).padStart(2, '0')}`;
 }
 
-function formatTime(timestamp: string): string {
-  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatTime(ts: string): string {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function Hydration() {
   const { t } = useTranslation();
   const toast = useToast();
-  const today = formatDate(new Date());
+  const date = today();
 
   const { data: config, isLoading: configLoading } = useHydrationConfig();
-  const { data: intake, isLoading: intakeLoading } = useWaterIntake(today);
-  const logIntakeMutation = useLogWaterIntake();
-  const deleteIntakeMutation = useDeleteWaterIntake();
+  const { data: intake, isLoading: intakeLoading } = useWaterIntake(date);
+  const logIntake = useLogWaterIntake();
+  const deleteIntake = useDeleteWaterIntake();
 
-  const [customAmount, setCustomAmount] = useState<string>('');
-  const [customNote, setCustomNote] = useState<string>('');
-  const [pendingAmount, setPendingAmount] = useState<number | null>(null);
-  const [configSheetOpen, setConfigSheetOpen] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
+  const [customNote, setCustomNote] = useState('');
+  const [pending, setPending] = useState<number | null>(null);
+  const [configOpen, setConfigOpen] = useState(false);
 
-  const glassSizeMl = config?.glassSizeMl ?? DEFAULT_GLASS_SIZE_ML;
-  const dailyTargetMl = config?.dailyWaterTargetMl ?? DEFAULT_DAILY_TARGET_ML;
+  const glassMl = config?.glassSizeMl ?? DEFAULT_GLASS_ML;
+  const targetMl = config?.dailyWaterTargetMl ?? DEFAULT_TARGET_ML;
   const totalMl = intake?.totalMl ?? 0;
   const entries = intake?.entries ?? [];
 
-  const progressPercent = Math.min((totalMl / dailyTargetMl) * 100, 100);
+  const percent = targetMl > 0 ? Math.min(100, Math.round((totalMl / targetMl) * 100)) : 0;
+  const toGoMl = Math.max(0, targetMl - totalMl);
+  const targetGlasses = Math.min(MAX_GLASSES, Math.max(1, Math.round(targetMl / glassMl)));
+  const filled = Math.floor(totalMl / glassMl);
+  const partial = (totalMl % glassMl) / glassMl;
 
-  const handleQuickAdd = async (amountMl: number) => {
-    setPendingAmount(amountMl);
+  const add = async (amountMl: number, note?: string) => {
+    setPending(amountMl);
     try {
-      await logIntakeMutation.mutateAsync({ date: today, amountMl });
+      await logIntake.mutateAsync({ date, amountMl, ...(note ? { note } : {}) });
       toast.success(t('hydration.log_success', { amount: amountMl }));
     } catch {
       toast.error(t('hydration.log_error'));
     } finally {
-      setPendingAmount(null);
+      setPending(null);
     }
   };
 
-  const handleCustomAdd = async () => {
+  const addCustom = async () => {
     const amount = parseInt(customAmount, 10);
-    if (isNaN(amount) || amount <= 0) return;
-    const trimmedNote = customNote.trim();
-    setPendingAmount(amount);
-    try {
-      await logIntakeMutation.mutateAsync({
-        date: today,
-        amountMl: amount,
-        ...(trimmedNote && { note: trimmedNote }),
-      });
-      toast.success(t('hydration.log_success', { amount }));
-      setCustomAmount('');
-      setCustomNote('');
-    } catch {
-      toast.error(t('hydration.log_error'));
-    } finally {
-      setPendingAmount(null);
-    }
+    if (Number.isNaN(amount) || amount <= 0) return;
+    await add(amount, customNote.trim() || undefined);
+    setCustomAmount('');
+    setCustomNote('');
   };
 
-  const handleDelete = async (id: string) => {
+  const remove = async (id: string) => {
     try {
-      await deleteIntakeMutation.mutateAsync({ id, date: today });
+      await deleteIntake.mutateAsync({ id, date });
       toast.success(t('hydration.delete_success'));
     } catch {
       toast.error(t('hydration.delete_error'));
@@ -106,215 +94,202 @@ export default function Hydration() {
 
   if (configLoading || intakeLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      <div className="mx-auto max-w-4xl px-4 py-6 md:px-8">
+        <Skeleton className="h-[420px] w-full rounded-[22px]" />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
-      {/* Hero */}
-      <div className="mb-8">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="rounded-xl bg-blue-500/10 p-2.5">
-            <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('hydration.title')}</h1>
-          <button
-            onClick={() => {
-              setConfigSheetOpen(true);
-            }}
-            className="text-muted-foreground hover:text-foreground ml-auto rounded-lg p-2 transition-colors"
-            aria-label={t('hydration.settings_section', { defaultValue: 'Hydration settings' })}
-          >
-            <Settings className="h-5 w-5" />
-          </button>
+    <div className="animate-fade-in mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[26px] font-bold">{t('hydration.title')}</h1>
+          <p className="text-muted-foreground mt-1 text-sm">{t('hydration.subtitle')}</p>
         </div>
-        <p className="text-muted-foreground">{t('hydration.subtitle')}</p>
+        <Button
+          size="xl"
+          variant="outline"
+          onClick={() => {
+            setConfigOpen(true);
+          }}
+        >
+          <Settings className="size-4" />
+          {t('hydration.settings_header')}
+        </Button>
       </div>
 
-      {/* Today's Water Intake */}
-      <div className="mb-8 space-y-6">
-        <h2 className="text-xl font-semibold">{t('hydration.today_section')}</h2>
+      <Card className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
+        {/* Glass visual */}
+        <div
+          className="bg-secondary relative h-[176px] w-[132px] flex-none overflow-hidden border-2 border-[hsl(var(--color-water))]"
+          style={{ borderRadius: '18px 18px 26px 26px' }}
+        >
+          <div
+            className="absolute inset-x-0 bottom-0 transition-[height] duration-500"
+            style={{
+              height: `${String(percent)}%`,
+              background:
+                'linear-gradient(180deg, color-mix(in oklab, hsl(var(--color-water)) 75%, transparent), hsl(var(--color-water)))',
+            }}
+          />
+          <div className="tnum absolute inset-0 grid place-items-center text-center text-[13px] font-bold">
+            {(totalMl / 1000).toFixed(1)} L
+            <br />
+            <span className="text-text-2 text-[11px] font-medium">
+              / {(targetMl / 1000).toFixed(1)} L
+            </span>
+          </div>
+        </div>
 
-        {/* Progress */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">{t('hydration.progress_label')}</span>
-              <span className="text-sm font-medium">
-                {totalMl} / {dailyTargetMl} ml
-              </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div>
+            <div className="numeral text-[22px] font-bold">
+              {toGoMl > 0
+                ? t('hydration.to_go', { amount: (toGoMl / 1000).toFixed(1) })
+                : t('hydration.goal_reached')}
             </div>
-            <div className="bg-muted h-4 w-full overflow-hidden rounded-full">
+            <div className="text-muted-foreground tnum text-[12.5px]">{percent}%</div>
+          </div>
+
+          <div className="flex gap-1.5">
+            {Array.from({ length: targetGlasses }, (_, i) => {
+              const state = i < filled ? 'full' : i === filled && partial > 0 ? 'partial' : 'empty';
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-[54px] flex-1 rounded-[12px]',
+                    state === 'empty' && 'bg-muted border-border-strong border border-dashed',
+                  )}
+                  style={
+                    state === 'full'
+                      ? { background: 'hsl(var(--color-water))' }
+                      : state === 'partial'
+                        ? { background: 'hsl(var(--color-water) / 0.55)' }
+                        : undefined
+                  }
+                />
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="xl"
+              onClick={() => {
+                void add(glassMl);
+              }}
+              disabled={pending !== null}
+              style={{ background: 'hsl(var(--color-water))' }}
+            >
+              <Droplet className="size-4" />
+              {t('hydration.add_glass', { amount: glassMl })}
+            </Button>
+            <Button
+              size="xl"
+              variant="secondary"
+              onClick={() => {
+                void add(500);
+              }}
+              disabled={pending !== null}
+            >
+              + 500 ml
+            </Button>
+            <Button
+              size="xl"
+              variant="secondary"
+              onClick={() => {
+                void add(750);
+              }}
+              disabled={pending !== null}
+            >
+              + 750 ml
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <label className="text-text-2 flex-1 text-[12px] font-semibold">
+              {t('hydration.custom_amount_label')}
+              <input
+                type="number"
+                min="1"
+                value={customAmount}
+                onChange={(e) => {
+                  setCustomAmount(e.target.value);
+                }}
+                placeholder={t('hydration.custom_amount_placeholder')}
+                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+              />
+            </label>
+            <label className="text-text-2 flex-1 text-[12px] font-semibold">
+              {t('hydration.custom_note_label')}
+              <input
+                type="text"
+                value={customNote}
+                onChange={(e) => {
+                  setCustomNote(e.target.value);
+                }}
+                placeholder={t('hydration.custom_note_placeholder')}
+                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+              />
+            </label>
+            <Button
+              size="xl"
+              variant="outline"
+              onClick={() => {
+                void addCustom();
+              }}
+              disabled={pending !== null || !customAmount}
+            >
+              {t('hydration.add_btn')}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-[22px]">
+        <div className="text-[15px] font-bold">{t('hydration.entries_header')}</div>
+        {entries.length === 0 ? (
+          <EmptyState
+            icon={Droplet}
+            title={t('hydration.no_entries')}
+            description={t('hydration.no_entries_desc')}
+          />
+        ) : (
+          <div className="flex flex-col">
+            {entries.map((entry) => (
               <div
-                className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                style={{ width: `${String(progressPercent)}%` }}
-                role="progressbar"
-                aria-valuenow={totalMl}
-                aria-valuemin={0}
-                aria-valuemax={dailyTargetMl}
-                aria-label={t('hydration.progress_aria')}
-              />
-            </div>
-            <p className="text-muted-foreground mt-2 text-center text-sm">
-              {progressPercent >= 100
-                ? t('hydration.goal_reached')
-                : t('hydration.remaining', { amount: dailyTargetMl - totalMl })}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Quick-add buttons */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t('hydration.quick_add_header')}</CardTitle>
-            <CardDescription>{t('hydration.quick_add_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  void handleQuickAdd(glassSizeMl);
-                }}
-                disabled={pendingAmount !== null}
+                key={entry.id}
+                className="border-border flex items-center gap-3 border-t py-2.5 first:border-t-0"
               >
-                {pendingAmount === glassSizeMl ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Droplets className="mr-2 h-4 w-4" />
-                )}
-                {t('hydration.add_glass', { amount: glassSizeMl })}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  void handleQuickAdd(500);
-                }}
-                disabled={pendingAmount !== null}
-              >
-                {pendingAmount === 500 ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}
-                {t('hydration.add_500ml')}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  void handleQuickAdd(250);
-                }}
-                disabled={pendingAmount !== null}
-              >
-                {pendingAmount === 250 ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="mr-2 h-4 w-4" />
-                )}
-                {t('hydration.add_250ml')}
-              </Button>
-            </div>
-
-            {/* Custom amount */}
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label htmlFor="customAmount">{t('hydration.custom_amount_label')}</Label>
-                <Input
-                  id="customAmount"
-                  type="number"
-                  min="1"
-                  placeholder={t('hydration.custom_amount_placeholder')}
-                  value={customAmount}
-                  onChange={(e) => {
-                    setCustomAmount(e.target.value);
+                <span className="text-muted-foreground tnum w-11 flex-none text-[12px]">
+                  {formatTime(entry.timestamp)}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
+                  {entry.note ?? t('hydration.entry_water')}
+                </span>
+                <span className="tnum text-[13px] font-bold text-[hsl(var(--color-water))]">
+                  {entry.amountMl} ml
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void remove(entry.id);
                   }}
-                />
+                  disabled={deleteIntake.isPending}
+                  aria-label={t('hydration.delete_entry_aria')}
+                  className="text-muted-foreground hover:text-destructive grid size-8 place-items-center rounded-[10px]"
+                >
+                  <Trash2 className="size-4" />
+                </button>
               </div>
-              <div className="flex-1">
-                <Label htmlFor="customNote">{t('hydration.custom_note_label')}</Label>
-                <Input
-                  id="customNote"
-                  type="text"
-                  placeholder={t('hydration.custom_note_placeholder')}
-                  value={customNote}
-                  onChange={(e) => {
-                    setCustomNote(e.target.value);
-                  }}
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={() => {
-                  void handleCustomAdd();
-                }}
-                disabled={pendingAmount !== null || !customAmount}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t('hydration.add_btn')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        )}
+      </Card>
 
-        {/* Entry list */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t('hydration.entries_header')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {entries.length === 0 ? (
-              <EmptyState
-                icon={Droplets}
-                title={t('hydration.no_entries')}
-                description={t('hydration.no_entries_desc')}
-              />
-            ) : (
-              <ul className="space-y-2">
-                {entries.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="bg-muted/40 flex items-center justify-between rounded-lg px-4 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                      <div>
-                        <span className="font-medium">{entry.amountMl} ml</span>
-                        {entry.note && (
-                          <span className="text-muted-foreground ml-2 text-sm">{entry.note}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground text-sm">
-                        {formatTime(entry.timestamp)}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          void handleDelete(entry.id);
-                        }}
-                        disabled={deleteIntakeMutation.isPending}
-                        aria-label={t('hydration.delete_entry_aria')}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Sheet open={configSheetOpen} onOpenChange={setConfigSheetOpen}>
+      <Sheet open={configOpen} onOpenChange={setConfigOpen}>
         <SheetContent side="right">
           <SheetHeader>
             <SheetTitle>{t('sheets.hydration.title')}</SheetTitle>
@@ -323,7 +298,7 @@ export default function Hydration() {
           <div className="mt-6 overflow-y-auto">
             <HydrationConfigForm
               onSuccess={() => {
-                setConfigSheetOpen(false);
+                setConfigOpen(false);
               }}
             />
           </div>

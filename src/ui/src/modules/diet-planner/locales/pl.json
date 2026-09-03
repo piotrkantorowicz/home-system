@@ -239,7 +239,19 @@
     "daily_avg": "Średnia Dzienna",
     "vs_goal": "Realizacja Celu (cel na {{days}} dni)",
     "daily_breakdown": "Podział Dzienny",
-    "date": "Data"
+    "date": "Data",
+    "range_label": "Zakres",
+    "range_7": "7 dni",
+    "range_30": "30 dni",
+    "range_90": "90 dni",
+    "avg_intake": "Śr. spożycie",
+    "avg_protein": "Śr. białko",
+    "days_logged": "Dni zapisane",
+    "over_days": "Dni ponad cel",
+    "intake_vs_target": "Spożycie vs cel",
+    "macro_split": "Średni podział makro",
+    "actual": "Rzeczywiste",
+    "target": "Cel"
   },
   "shopping_list": {
     "title": "Lista Zakupów",
@@ -616,7 +628,9 @@
     "save_settings_btn": "Zapisz Ustawienia",
     "settings_saved": "Ustawienia zapisane pomyślnie!",
     "quick_title": "Nawodnienie dzisiaj",
-    "glasses_count": "{{current}} / {{target}} szklanek"
+    "glasses_count": "{{current}} / {{target}} szklanek",
+    "to_go": "Pozostało {{amount}} L",
+    "entry_water": "Woda"
   },
   "common": {
     "cancel": "Anuluj",

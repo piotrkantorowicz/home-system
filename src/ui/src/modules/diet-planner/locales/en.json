@@ -235,7 +235,19 @@
     "daily_avg": "Daily Average",
     "vs_goal": "Goal Progress ({{days}}-day target)",
     "daily_breakdown": "Daily Breakdown",
-    "date": "Date"
+    "date": "Date",
+    "range_label": "Range",
+    "range_7": "7 days",
+    "range_30": "30 days",
+    "range_90": "90 days",
+    "avg_intake": "Avg intake",
+    "avg_protein": "Avg protein",
+    "days_logged": "Days logged",
+    "over_days": "Over-target days",
+    "intake_vs_target": "Intake vs target",
+    "macro_split": "Average macro split",
+    "actual": "Actual",
+    "target": "Target"
   },
   "shopping_list": {
     "title": "Shopping List",
@@ -625,7 +637,9 @@
     "delete_success": "Entry removed",
     "delete_error": "Failed to delete entry. Please try again.",
     "quick_title": "Hydration Today",
-    "glasses_count": "{{current}} / {{target}} glasses"
+    "glasses_count": "{{current}} / {{target}} glasses",
+    "to_go": "{{amount}} L to go",
+    "entry_water": "Water"
   },
   "common": {
     "cancel": "Cancel",
