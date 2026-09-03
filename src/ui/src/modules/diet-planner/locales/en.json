@@ -109,7 +109,14 @@
       "description": "Are you sure you want to delete this product? This action cannot be undone. The product will only be deleted if it's not used in any recipes.",
       "confirm": "Delete",
       "deleting": "Deleting..."
-    }
+    },
+    "count": "{{count}} items",
+    "only_mine": "My products",
+    "incomplete_chip": "Incomplete · {{count}}",
+    "incomplete_badge": "INCOMPLETE",
+    "view_label": "View",
+    "view_table": "Table",
+    "view_cards": "Cards"
   },
   "recipes": {
     "title": "Recipes",
@@ -671,7 +678,10 @@
     "create_success": "Product created successfully",
     "create_error": "Failed to create product. Check your inputs and try again.",
     "update_success": "Product updated successfully",
-    "update_error": "Failed to update product. Check your inputs and try again."
+    "update_error": "Failed to update product. Check your inputs and try again.",
+    "macros_reconcile": "Macros reconcile with the energy value.",
+    "macros_mismatch_title": "Macros don't match the calories",
+    "macros_mismatch": "{{macroCal}} kcal from macros vs {{calories}} kcal entered."
   },
   "meal_schedule": {
     "nav": "Meal Schedule",

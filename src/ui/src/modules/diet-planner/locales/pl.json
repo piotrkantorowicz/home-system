@@ -108,7 +108,14 @@
       "description": "Czy na pewno chcesz usunąć ten produkt? Tej operacji nie można cofnąć. Produkt zostanie usunięty tylko jeśli nie jest używany w żadnych przepisach.",
       "confirm": "Usuń",
       "deleting": "Usuwanie..."
-    }
+    },
+    "count": "{{count}} pozycji",
+    "only_mine": "Moje produkty",
+    "incomplete_chip": "Niekompletne · {{count}}",
+    "incomplete_badge": "NIEKOMPLETNE",
+    "view_label": "Widok",
+    "view_table": "Tabela",
+    "view_cards": "Karty"
   },
   "recipes": {
     "title": "Przepisy",
@@ -658,7 +665,10 @@
     "piece_help": "Średnia waga jednej sztuki w gramach",
     "create_btn": "Utwórz Produkt",
     "update_btn": "Aktualizuj Produkt",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "macros_reconcile": "Makroskładniki zgadzają się z wartością energetyczną.",
+    "macros_mismatch_title": "Makroskładniki nie zgadzają się z kaloriami",
+    "macros_mismatch": "{{macroCal}} kcal z makro vs {{calories}} kcal wpisane."
   },
   "meal_schedule": {
     "nav": "Harmonogram Posiłków",
