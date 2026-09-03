@@ -36,7 +36,7 @@ export function Header() {
       <div className="flex items-baseline gap-2.5">
         <span className="text-[17px] font-bold tracking-tight">HomeSystem</span>
         <span className="text-muted-foreground hidden text-xs sm:inline">
-          Diet planner · Planer diety
+          {t('common.app_tagline')}
         </span>
       </div>
 

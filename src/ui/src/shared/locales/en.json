@@ -42,6 +42,7 @@
       "piece": "piece"
     },
     "home": "Home",
-    "search_placeholder": "Search food, recipes… / Szukaj…"
+    "search_placeholder": "Search food, recipes…",
+    "app_tagline": "Diet planner"
   }
 }

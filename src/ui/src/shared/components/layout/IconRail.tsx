@@ -8,12 +8,11 @@ import { NavLink } from 'react-router-dom';
 import { getRailNavItems } from './navModel';
 
 export function IconRail() {
-  // Subscribe to language changes so the stacked EN/PL labels stay current.
-  useTranslation();
+  const { t } = useTranslation();
   const { resolvedTheme, setTheme } = useTheme();
   const auth = useAuth();
 
-  const items = getRailNavItems();
+  const items = getRailNavItems(t);
   const profile = auth.user?.profile;
   const displayName = profile?.name ?? profile?.preferred_username ?? profile?.email ?? 'User';
 
@@ -49,8 +48,7 @@ export function IconRail() {
             }
           >
             <Icon className="size-5" strokeWidth={1.9} />
-            <span className="text-[9.5px] leading-none font-semibold">{item.labelEn}</span>
-            <span className="text-[8.5px] leading-none opacity-65">{item.labelPl}</span>
+            <span className="text-[10px] leading-tight font-semibold">{item.label}</span>
             {item.Badge ? (
               <span className="absolute top-1 right-1">
                 <item.Badge />

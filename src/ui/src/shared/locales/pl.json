@@ -42,6 +42,7 @@
       "piece": "sztuka"
     },
     "home": "Dom",
-    "search_placeholder": "Search food, recipes… / Szukaj…"
+    "search_placeholder": "Szukaj potraw, przepisów…",
+    "app_tagline": "Planer diety"
   }
 }

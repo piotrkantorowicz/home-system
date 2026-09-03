@@ -1,15 +1,14 @@
-import i18n from '@shared/lib/i18n';
 import { getModules } from '@shared/lib/module-registry';
 import { Home } from 'lucide-react';
 
+import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 export interface RailNavItem {
   href: string;
   icon: LucideIcon;
-  labelEn: string;
-  labelPl: string;
+  label: string;
   Badge?: ComponentType;
   /** Exact-match the route (index / module-root links). */
   end: boolean;
@@ -18,24 +17,17 @@ export interface RailNavItem {
 /**
  * Flattened navigation model shared by the desktop icon rail and the mobile
  * bottom tab bar: the system home followed by every registered module's
- * declared nav items. Both English and Polish labels are resolved up front so
- * the rail can stack them per the bilingual rule.
+ * declared nav items. Labels resolve through the active i18n language.
  */
-export function getRailNavItems(): RailNavItem[] {
-  const en = i18n.getFixedT('en');
-  const pl = i18n.getFixedT('pl');
-
-  const items: RailNavItem[] = [
-    { href: '/', icon: Home, labelEn: en('common.home'), labelPl: pl('common.home'), end: true },
-  ];
+export function getRailNavItems(t: TFunction): RailNavItem[] {
+  const items: RailNavItem[] = [{ href: '/', icon: Home, label: t('common.home'), end: true }];
 
   for (const mod of getModules()) {
     for (const nav of mod.navItems) {
       items.push({
         href: nav.href,
         icon: nav.icon,
-        labelEn: en(nav.translationKey),
-        labelPl: pl(nav.translationKey),
+        label: t(nav.translationKey),
         end: nav.href === mod.basePath,
         ...(nav.Badge ? { Badge: nav.Badge } : {}),
       });

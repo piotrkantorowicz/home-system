@@ -5,9 +5,8 @@ import { NavLink } from 'react-router-dom';
 import { getRailNavItems } from './navModel';
 
 export function BottomTabBar() {
-  // Subscribe to language changes so labels stay current.
-  useTranslation();
-  const items = getRailNavItems();
+  const { t } = useTranslation();
+  const items = getRailNavItems(t);
 
   return (
     <nav
@@ -29,7 +28,7 @@ export function BottomTabBar() {
             }
           >
             <Icon className="size-[21px]" strokeWidth={1.9} />
-            <span className="text-[10px] leading-none font-semibold">{item.labelEn}</span>
+            <span className="text-[10px] leading-none font-semibold">{item.label}</span>
             {item.Badge ? (
               <span className="absolute top-0.5 right-2">
                 <item.Badge />

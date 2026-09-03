@@ -4,10 +4,6 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { IconRail } from './IconRail';
 
-vi.mock('@shared/lib/i18n', () => ({
-  default: { getFixedT: () => (key: string) => key },
-}));
-
 vi.mock('@shared/lib/module-registry', () => ({
   getModules: () => [
     {
