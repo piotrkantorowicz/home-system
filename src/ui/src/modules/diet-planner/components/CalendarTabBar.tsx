@@ -1,8 +1,8 @@
 import { cn } from '@shared/lib/utils';
-import { CalendarDays, BarChart2, Upload } from 'lucide-react';
+import { CalendarDays, BarChart2, ShoppingCart, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type CalendarTab = 'calendar' | 'nutrition' | 'import';
+export type CalendarTab = 'calendar' | 'nutrition' | 'shopping' | 'import';
 
 interface CalendarTabBarProps {
   activeTab: CalendarTab;
@@ -12,6 +12,7 @@ interface CalendarTabBarProps {
 const tabs = [
   { id: 'calendar' as const, icon: CalendarDays, translationKey: 'calendar.tab_calendar' },
   { id: 'nutrition' as const, icon: BarChart2, translationKey: 'calendar.tab_nutrition' },
+  { id: 'shopping' as const, icon: ShoppingCart, translationKey: 'calendar.tab_shopping' },
   { id: 'import' as const, icon: Upload, translationKey: 'calendar.tab_import' },
 ];
 

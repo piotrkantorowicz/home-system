@@ -58,6 +58,7 @@ import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog'
 import { MealStatusBadge, type MealStatus } from '../components/diet-plans/MealStatusBadge';
 
 const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
+const ShoppingListPage = lazy(() => import('./ShoppingList'));
 const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
 
 function getWeekStart(date: Date) {
@@ -640,7 +641,7 @@ export default function Calendar() {
                   <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
                   {goals !== undefined && goals !== null && (
                     <Link
-                      to="/diet-planner/goals"
+                      to="/diet-planner/profile?section=goals"
                       className="text-muted-foreground hover:text-primary text-sm transition-colors"
                     >
                       {t('nutrition_summary.goals_edit')}
@@ -658,7 +659,7 @@ export default function Calendar() {
                       {t('nutrition_summary.goals_cta_title')}
                     </p>
                     <Link
-                      to="/diet-planner/goals"
+                      to="/diet-planner/profile?section=goals"
                       className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                     >
                       {t('nutrition_summary.goals_cta_button')}
@@ -797,6 +798,18 @@ export default function Calendar() {
           }
         >
           <NutritionSummaryPage />
+        </Suspense>
+      )}
+
+      {activeTab === 'shopping' && (
+        <Suspense
+          fallback={
+            <div className="text-muted-foreground flex items-center justify-center py-16">
+              {t('common.loading')}
+            </div>
+          }
+        >
+          <ShoppingListPage />
         </Suspense>
       )}
 

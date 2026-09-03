@@ -29,4 +29,5 @@ public sealed class CreateGoalCommandHandlerTests
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
+
 }

@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.Application.Queries.GetMealSchedule;
+using DietPlanner.Application.Queries.GetShoppingList;
 using DietPlanner.IntegrationTests.Infrastructure;
 
 [Collection(DatabaseCollection.Name)]
@@ -147,6 +148,90 @@ public sealed class MealEndpointsTests
         meals.ShouldNotBeNull();
         var meal = meals!.Single(m => m.RecipeId == recipeId);
         meal.Calories.ShouldBe(80m);
+    }
+
+    [Fact]
+    public async Task GET_ShoppingList_ReturnsOk()
+    {
+        var response = await _client.GetAsync("/api/v1/meals/shopping-list");
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
+    }
+
+    [Fact]
+    public async Task GET_ShoppingList_AggregatesPlannedIngredientsAcrossEntries()
+    {
+        var client = FreshClient($"meal-{Guid.NewGuid():N}");
+        var slotId = await EnsureBreakfastSlotAsync(client);
+        var recipeId = await CreateRecipeAsync(client, $"ShoppingRecipe-{Guid.NewGuid():N}");
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Recipe (servings=1) has one ingredient at 80g. Two meal entries: 1 serving + 2 servings.
+        // Expect aggregated total = 80 * 1 + 80 * 2 = 240g for the single product.
+        var first = await client.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0));
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var second = await client.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(date, slotId, recipeId, 2m, null, null, 1));
+        second.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
+            $"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+
+        items.ShouldNotBeNull();
+        items!.Count.ShouldBe(1);
+
+        var item = items.Single();
+        item.TotalAmount.ShouldBe(240m);
+        item.Unit.ShouldBe("g");
+        item.ProductName.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task GET_ShoppingList_IgnoresOverridesAndUsesPlannedRecipe()
+    {
+        var client = FreshClient($"meal-{Guid.NewGuid():N}");
+        var slotId = await EnsureBreakfastSlotAsync(client);
+        var plannedRecipeId = await CreateRecipeAsync(client, $"PlannedRecipe-{Guid.NewGuid():N}");
+        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var mealResp = await client.PostAsJsonAsync(
+            "/api/v1/meals",
+            new CreateMealEntryRequest(date, slotId, plannedRecipeId, 1m, null, null, 0));
+        mealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var mealId = Guid.Parse((await mealResp.Content.ReadAsStringAsync()).Trim('"'));
+
+        // Override with ad-hoc products — should be ignored by shopping list.
+        var replacementRecipeId = await CreateRecipeAsync(client, $"ReplacementRecipe-{Guid.NewGuid():N}");
+        var overrideResp = await client.PatchAsJsonAsync(
+            $"/api/v1/meals/{mealId}/override",
+            new OverrideMealEntryRequest(replacementRecipeId, []));
+        overrideResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
+            $"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+
+        items.ShouldNotBeNull();
+        // Only the planned recipe's ingredient should appear (80g), not the replacement.
+        items!.Count.ShouldBe(1);
+        items.Single().TotalAmount.ShouldBe(80m);
+    }
+
+    [Fact]
+    public async Task GET_ShoppingList_EmptyRange_ReturnsEmpty()
+    {
+        var client = FreshClient($"meal-{Guid.NewGuid():N}");
+        var farFuture = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(10));
+
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
+            $"/api/v1/meals/shopping-list?From={farFuture:yyyy-MM-dd}&To={farFuture:yyyy-MM-dd}");
+
+        items.ShouldNotBeNull();
+        items!.ShouldBeEmpty();
     }
 
     [Fact]

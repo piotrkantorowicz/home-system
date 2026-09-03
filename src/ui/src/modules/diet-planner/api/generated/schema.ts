@@ -168,6 +168,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meals/shopping-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get aggregated shopping list for planned meals in a date range
+         * @description Aggregates the ingredients of each planned meal's recipe (scaled by servings) across the date range and groups them by product and unit. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.
+         */
+        get: operations["GetShoppingList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meals/{id}": {
         parameters: {
             query?: never;
@@ -548,6 +568,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/weekly-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the weekly diet summary for the current user
+         * @description Returns aggregated nutrition and hydration statistics for the specified week. Returns zeros for weeks with no data.
+         */
+        get: operations["GetWeeklySummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/test-support/purge-my-data": {
         parameters: {
             query?: never;
@@ -594,6 +634,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["MarkNotificationRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BulkMarkNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNotificationsUnreadCount"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -649,6 +721,9 @@ export interface components {
         BulkCompleteMealsResponse: {
             /** Format: int32 */
             completed: number | string;
+        };
+        BulkMarkReadRequest: {
+            ids: string[];
         };
         ChannelPreferencesDto: {
             consoleEnabled: boolean;
@@ -1128,6 +1203,18 @@ export interface components {
             amount: number | string;
             unit: string;
         };
+        ShoppingListItemDto: {
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            /** Format: double */
+            totalAmount: number | string;
+            unit: string;
+        };
+        UnreadCountDto: {
+            /** Format: int32 */
+            total: number | string;
+        };
         UpdateChannelPreferencesRequest: {
             consoleEnabled: boolean;
             emailEnabled: boolean;
@@ -1243,6 +1330,24 @@ export interface components {
             /** Format: int32 */
             totalMl: number | string;
             entries: components["schemas"]["WaterIntakeEntryDto"][];
+        };
+        WeeklySummaryDto: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: date */
+            weekEnd: string;
+            /** Format: int32 */
+            totalKcal: number | string;
+            /** Format: int32 */
+            targetKcal: number | string;
+            /** Format: double */
+            avgWaterLiters: number | string;
+            /** Format: double */
+            weightDeltaKg: null | number | string;
+            /** Format: int32 */
+            mealsCompleted: number | string;
+            /** Format: int32 */
+            mealsPlanned: number | string;
         };
         WeightEntryDto: {
             /** Format: uuid */
@@ -1791,6 +1896,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DailyNutritionDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetShoppingList: {
+        parameters: {
+            query?: {
+                From?: string;
+                To?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShoppingListItemDto"][];
                 };
             };
             /** @description Unauthorized */
@@ -2817,6 +2952,45 @@ export interface operations {
             };
         };
     };
+    GetWeeklySummary: {
+        parameters: {
+            query: {
+                weekStart: string;
+                weekEnd: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeeklySummaryDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PurgeMyData: {
         parameters: {
             query?: never;
@@ -2890,6 +3064,48 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    BulkMarkNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkMarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetNotificationsUnreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCountDto"];
                 };
             };
         };
