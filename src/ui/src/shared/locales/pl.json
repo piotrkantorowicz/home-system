@@ -40,6 +40,8 @@
       "g": "g",
       "ml": "ml",
       "piece": "sztuka"
-    }
+    },
+    "home": "Dom",
+    "search_placeholder": "Search food, recipes… / Szukaj…"
   }
 }

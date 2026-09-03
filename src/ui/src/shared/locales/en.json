@@ -40,6 +40,8 @@
       "g": "g",
       "ml": "ml",
       "piece": "piece"
-    }
+    },
+    "home": "Home",
+    "search_placeholder": "Search food, recipes… / Szukaj…"
   }
 }

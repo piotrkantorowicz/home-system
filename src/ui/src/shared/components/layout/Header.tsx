@@ -1,14 +1,16 @@
 import { NotificationsPanel } from '@modules/notifications/components/NotificationsPanel';
 import { UserProfileDropdown } from '@shared/components/ui';
-import { Menu } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router-dom';
 
-interface HeaderProps {
-  onOpenSidebar?: () => void;
-}
-
-export function Header({ onOpenSidebar }: HeaderProps) {
+export function Header() {
   const auth = useAuth();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
 
   if (!auth.isAuthenticated || !auth.user) {
     return null;
@@ -21,20 +23,45 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     void auth.signoutRedirect();
   };
 
+  const handleSearch = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void navigate('/diet-planner/products');
+  };
+
   return (
-    <header className="glass flex h-16 items-center justify-between border-b px-6">
-      <div className="flex items-center">
-        <button
-          className="text-muted-foreground hover:text-foreground -ml-1 rounded-md p-1.5 transition-colors lg:hidden"
-          onClick={onOpenSidebar}
-          aria-label="Open navigation"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+    <header
+      style={{ background: 'var(--glass-bg)' }}
+      className="border-border sticky top-0 z-10 flex flex-wrap items-center gap-4 border-b px-4 py-3.5 backdrop-blur-[14px] md:gap-5 md:px-8"
+    >
+      <div className="flex items-baseline gap-2.5">
+        <span className="text-[17px] font-bold tracking-tight">HomeSystem</span>
+        <span className="text-muted-foreground hidden text-xs sm:inline">
+          Diet planner · Planer diety
+        </span>
       </div>
-      <div className="flex items-center gap-2">
+
+      <form
+        onSubmit={handleSearch}
+        role="search"
+        className="border-border bg-card text-muted-foreground hidden h-[38px] max-w-[380px] flex-1 items-center gap-2.5 rounded-[12px] border px-3 md:flex"
+      >
+        <Search className="size-[15px] shrink-0" strokeWidth={2} />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+          }}
+          placeholder={t('common.search_placeholder')}
+          aria-label={t('common.search_placeholder')}
+          className="text-foreground placeholder:text-muted-foreground w-full bg-transparent text-[13px] outline-none"
+        />
+      </form>
+
+      <div className="ml-auto flex items-center gap-2.5">
         <NotificationsPanel />
         <UserProfileDropdown
+          compact
           displayName={displayName}
           email={profile.email ?? undefined}
           onLogout={handleLogout}
