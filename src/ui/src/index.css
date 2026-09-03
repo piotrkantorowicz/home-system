@@ -3,98 +3,171 @@
 /* Use .dark class (set by ThemeProvider) instead of OS prefers-color-scheme */
 @variant dark (&:where(.dark, .dark *));
 
+/*
+ * Design tokens — HomeSystem UI refresh (issue #208).
+ * Authoring reference is oklch (see design handoff); values below are the
+ * approximate HSL-triple equivalents so existing `hsl(var(--color-*))`
+ * consumers keep working. Do not mix the two formats.
+ *
+ * Handoff name → app token name:
+ *   --bg            → background
+ *   --surface       → card / popover
+ *   --surface-2     → secondary
+ *   --bg-2          → muted
+ *   --text          → foreground / *-foreground
+ *   --text-2        → text-2 (new: secondary data values)
+ *   --text-3        → muted-foreground
+ *   --border        → border / input
+ *   --border-strong → border-strong (new)
+ *   --primary       → primary / ring
+ *   --primary-soft  → accent
+ *   --primary-ink   → accent-foreground
+ *   --good          → success
+ *   --carbs         → warning
+ *   --fat           → destructive
+ *   --protein/--carbs/--fat/--fiber/--water → macro tokens (new)
+ */
+
 @theme {
-  --color-background: 220 16% 96%;
-  --color-foreground: 224 71% 4%;
+  --color-background: 260 20% 97%;
+  --color-foreground: 264 12% 15%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 224 71% 4%;
+  --color-card-foreground: 264 12% 15%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 224 71% 4%;
-  --color-primary: 258 88% 52%;
+  --color-popover-foreground: 264 12% 15%;
+  --color-primary: 261 75% 54%;
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 220 14% 90%;
-  --color-secondary-foreground: 224 71% 4%;
-  --color-muted: 220 14% 88%;
-  --color-muted-foreground: 220 9% 36%;
-  --color-accent: 258 100% 95%;
-  --color-accent-foreground: 258 88% 38%;
-  --color-destructive: 0 84% 44%;
+  --color-secondary: 270 20% 99%;
+  --color-secondary-foreground: 264 12% 15%;
+  --color-muted: 264 14% 93%;
+  --color-muted-foreground: 264 6% 57%;
+  --color-accent: 258 88% 96%;
+  --color-accent-foreground: 262 70% 42%;
+  --color-destructive: 357 65% 57%;
   --color-destructive-foreground: 0 0% 100%;
-  --color-border: 220 13% 82%;
-  --color-input: 220 13% 82%;
-  --color-ring: 258 88% 52%;
-  --color-success: 142 69% 34%;
-  --color-warning: 38 92% 42%;
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.375rem;
+  --color-border: 258 14% 89%;
+  --color-input: 258 14% 89%;
+  --color-ring: 261 75% 54%;
+  --color-success: 150 50% 35%;
+  --color-warning: 35 70% 50%;
+
+  /* New tokens — refresh */
+  --color-text-2: 264 6% 41%;
+  --color-border-strong: 258 14% 83%;
+  --color-primary-soft: 258 88% 96%;
+  --color-primary-ink: 262 70% 42%;
+  --color-protein: 215 60% 52%;
+  --color-carbs: 35 70% 50%;
+  --color-fat: 357 65% 57%;
+  --color-fiber: 162 50% 38%;
+  --color-water: 195 60% 46%;
+  --color-good: 150 50% 35%;
+
+  /* Radii — cards 22px, controls 12–13px */
+  --radius-xl: 1.375rem;
+  --radius-lg: 0.8125rem;
+  --radius-md: 0.6875rem;
+  --radius-sm: 0.5rem;
+
+  /* Exactly one shadow level on cards */
+  --shadow-sm: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
+  --shadow-md: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
+  --shadow-lg: 0 2px 4px oklch(20% 0.02 286 / 0.06), 0 24px 48px -20px oklch(20% 0.02 286 / 0.28);
 }
 
-/* Light theme — clean slate, deep violet primary, strong contrast */
+/* Light theme */
 :root {
   color-scheme: light;
-  --color-background: 220 16% 96%;
-  --color-foreground: 224 71% 4%;
+  --color-background: 260 20% 97%;
+  --color-foreground: 264 12% 15%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 224 71% 4%;
+  --color-card-foreground: 264 12% 15%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 224 71% 4%;
-  --color-primary: 258 88% 52%;
+  --color-popover-foreground: 264 12% 15%;
+  --color-primary: 261 75% 54%;
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 220 14% 90%;
-  --color-secondary-foreground: 224 71% 4%;
-  --color-muted: 220 14% 88%;
-  --color-muted-foreground: 220 9% 36%;
-  --color-accent: 258 100% 95%;
-  --color-accent-foreground: 258 88% 38%;
-  --color-destructive: 0 84% 44%;
+  --color-secondary: 270 20% 99%;
+  --color-secondary-foreground: 264 12% 15%;
+  --color-muted: 264 14% 93%;
+  --color-muted-foreground: 264 6% 57%;
+  --color-accent: 258 88% 96%;
+  --color-accent-foreground: 262 70% 42%;
+  --color-destructive: 357 65% 57%;
   --color-destructive-foreground: 0 0% 100%;
-  --color-border: 220 13% 82%;
-  --color-input: 220 13% 82%;
-  --color-ring: 258 88% 52%;
-  --color-success: 142 69% 34%;
-  --color-warning: 38 92% 42%;
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.375rem;
+  --color-border: 258 14% 89%;
+  --color-input: 258 14% 89%;
+  --color-ring: 261 75% 54%;
+  --color-success: 150 50% 35%;
+  --color-warning: 35 70% 50%;
 
-  --gradient-primary: linear-gradient(135deg, hsl(258 88% 52%), hsl(280 80% 50%));
-  --gradient-accent: linear-gradient(135deg, hsl(258 88% 52%), hsl(200 80% 52%));
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(220, 215, 240, 0.6);
-  --glass-shadow: 0 8px 32px rgba(50, 40, 100, 0.1);
+  --color-text-2: 264 6% 41%;
+  --color-border-strong: 258 14% 83%;
+  --color-primary-soft: 258 88% 96%;
+  --color-primary-ink: 262 70% 42%;
+  --color-protein: 215 60% 52%;
+  --color-carbs: 35 70% 50%;
+  --color-fat: 357 65% 57%;
+  --color-fiber: 162 50% 38%;
+  --color-water: 195 60% 46%;
+  --color-good: 150 50% 35%;
+
+  --shadow: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
+  --shadow-lg: 0 2px 4px oklch(20% 0.02 286 / 0.06), 0 24px 48px -20px oklch(20% 0.02 286 / 0.28);
+
+  --gradient-primary: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-water)));
+  --gradient-accent: linear-gradient(140deg, hsl(var(--color-primary)), hsl(var(--color-water)));
+  --gradient-avatar: linear-gradient(140deg, hsl(var(--color-primary)), hsl(var(--color-water)));
+  --gradient-goal: linear-gradient(90deg, hsl(var(--color-primary)), hsl(var(--color-water)));
+
+  --glass-bg: color-mix(in oklab, hsl(var(--color-background)) 88%, transparent);
+  --glass-border: hsl(var(--color-border));
+  --glass-shadow: var(--shadow);
 }
 
-/* Dark theme — deep midnight, electric violet primary */
+/* Dark theme — desaturated violet-neutral (not blue-black) */
 .dark {
   color-scheme: dark;
-  --color-background: 250 30% 6%;
-  --color-foreground: 240 20% 92%;
-  --color-card: 250 25% 10%;
-  --color-card-foreground: 240 20% 92%;
-  --color-popover: 250 25% 10%;
-  --color-popover-foreground: 240 20% 92%;
-  --color-primary: 260 80% 68%;
-  --color-primary-foreground: 250 30% 6%;
-  --color-secondary: 255 20% 16%;
-  --color-secondary-foreground: 240 20% 92%;
-  --color-muted: 255 15% 15%;
-  --color-muted-foreground: 240 12% 58%;
-  --color-accent: 260 30% 18%;
-  --color-accent-foreground: 260 80% 72%;
-  --color-destructive: 0 62% 55%;
-  --color-destructive-foreground: 0 0% 100%;
-  --color-border: 255 18% 18%;
-  --color-input: 255 18% 20%;
-  --color-ring: 260 80% 68%;
-  --color-success: 152 60% 48%;
-  --color-warning: 38 92% 50%;
+  --color-background: 249 10% 14%;
+  --color-foreground: 260 21% 95%;
+  --color-card: 247 10% 18%;
+  --color-card-foreground: 260 21% 95%;
+  --color-popover: 247 10% 18%;
+  --color-popover-foreground: 260 21% 95%;
+  --color-primary: 257 78% 74%;
+  --color-primary-foreground: 256 44% 14%;
+  --color-secondary: 255 8% 21%;
+  --color-secondary-foreground: 260 21% 95%;
+  --color-muted: 248 9% 17%;
+  --color-muted-foreground: 266 6% 55%;
+  --color-accent: 256 44% 25%;
+  --color-accent-foreground: 258 90% 85%;
+  --color-destructive: 358 75% 70%;
+  --color-destructive-foreground: 256 44% 14%;
+  --color-border: 251 9% 25%;
+  --color-input: 251 9% 25%;
+  --color-ring: 257 78% 74%;
+  --color-success: 153 50% 56%;
+  --color-warning: 36 73% 62%;
 
-  --gradient-primary: linear-gradient(135deg, hsl(260 80% 68%), hsl(285 70% 60%));
-  --gradient-accent: linear-gradient(135deg, hsl(260 80% 68%), hsl(210 80% 62%));
-  --glass-bg: rgba(18, 14, 32, 0.72);
-  --glass-border: rgba(80, 60, 160, 0.15);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --color-text-2: 265 8% 71%;
+  --color-border-strong: 250 7% 31%;
+  --color-primary-soft: 256 44% 25%;
+  --color-primary-ink: 258 90% 85%;
+  --color-protein: 211 67% 65%;
+  --color-carbs: 36 73% 62%;
+  --color-fat: 358 75% 70%;
+  --color-fiber: 157 48% 58%;
+  --color-water: 197 61% 62%;
+  --color-good: 153 50% 56%;
+
+  --shadow: 0 1px 2px #0006, 0 8px 24px -12px #0009;
+  --shadow-sm: 0 1px 2px #0006, 0 8px 24px -12px #0009;
+  --shadow-md: 0 1px 2px #0006, 0 8px 24px -12px #0009;
+  --shadow-lg: 0 2px 4px #0006, 0 24px 48px -20px #000c;
+
+  --glass-bg: color-mix(in oklab, hsl(var(--color-background)) 88%, transparent);
+  --glass-border: hsl(var(--color-border));
+  --glass-shadow: var(--shadow);
 }
 
 * {
@@ -126,8 +199,26 @@ body {
     sans-serif;
   font-size: 16px;
   line-height: 1.6;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.03em;
+}
+
+/* Data values: tabular figures + tighter tracking for big numerals */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.numeral {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
 }
 
 /* ── Glass utility ── */
