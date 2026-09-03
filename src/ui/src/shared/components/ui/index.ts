@@ -69,3 +69,4 @@ export {
 } from './SegmentedControl';
 export { Ring, type RingProps } from './Ring';
 export { Switch, type SwitchProps } from './Switch';
+export { Banner, type BannerProps, type BannerVariant } from './Banner';

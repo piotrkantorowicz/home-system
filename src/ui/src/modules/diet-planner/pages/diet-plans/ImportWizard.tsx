@@ -1,44 +1,26 @@
 import { useValidateImport, useExecuteImport } from '@modules/diet-planner/api/hooks/useMeals';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Textarea,
-  Label,
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@shared/components/ui';
+import { Banner, Button, Card } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { cn } from '@shared/lib/utils';
-import {
-  FileJson,
-  AlertCircle,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  XCircle,
-  Copy,
-  Check,
-} from 'lucide-react';
-import { useState } from 'react';
+import { cn, formatNumber } from '@shared/lib/utils';
+import { Check, FileJson, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import type { components } from '../../api/generated/schema';
 
 type ImportDto = components['schemas']['ImportDto'];
+type ImportProductDto = components['schemas']['ImportProductDto'];
 type ValidationResultDto = components['schemas']['ValidationResultDto'];
-type ValidationIssueDto = components['schemas']['ValidationIssueDto'];
 
 interface ValidationState extends ValidationResultDto {
   isApiError?: boolean;
 }
+
+type Step = 'upload' | 'review' | 'done';
+
+const num = (v: number | string | null | undefined): number =>
+  typeof v === 'number' ? v : Number(v ?? 0);
 
 const sampleJson = {
   products: [
@@ -89,53 +71,38 @@ const sampleJson = {
 export default function ImportWizard() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [step, setStep] = useState<Step>('upload');
   const [jsonInput, setJsonInput] = useState('');
-  const [importData, setImportData] = useState<ImportDto | null>(null);
-  const [validationResult, setValidationResult] = useState<ValidationState | null>(null);
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [parsed, setParsed] = useState<ImportDto | null>(null);
+  const [validation, setValidation] = useState<ValidationState | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
 
-  const [copied, setCopied] = useState(false);
-  const navigate = useNavigate();
   const validateMutation = useValidateImport();
   const importMutation = useExecuteImport();
 
-  const handleCopySample = () => {
-    void navigator.clipboard.writeText(JSON.stringify(sampleJson, null, 2)).then(() => {
-      setCopied(true);
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    });
-  };
-
-  const handleJsonParse = () => {
-    try {
-      const parsed = JSON.parse(jsonInput) as ImportDto;
-      setJsonError(null);
-      setImportData(parsed);
-      setStep(2);
-    } catch {
-      setJsonError(t('import_wizard.step1.invalid_json'));
+  const readFile = (file: File) => {
+    if (!file.name.endsWith('.json')) {
+      setJsonError(t('import_wizard.upload.not_json'));
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setJsonInput(typeof reader.result === 'string' ? reader.result : '');
+      setJsonError(null);
+    };
+    reader.readAsText(file);
   };
 
-  const handleValidate = async () => {
-    if (!importData) return;
-
+  const runValidation = async (data: ImportDto) => {
     try {
-      const result = await validateMutation.mutateAsync(importData);
-      const validationData = { ...result, isApiError: false };
-      setValidationResult(validationData);
-
-      if (validationData.canProceed) {
-        setStep(3);
-      }
+      const result = await validateMutation.mutateAsync(data);
+      setValidation({ ...result, isApiError: false });
     } catch (error) {
-      console.error('Validation API error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      setValidationResult({
+      setValidation({
         valid: false,
         canProceed: false,
         summary: { errors: 1, warnings: 0, info: 0 },
@@ -145,7 +112,7 @@ export default function ImportWizard() {
             category: 'api',
             path: null,
             item: null,
-            message: errorMessage,
+            message: error instanceof Error ? error.message : t('import_wizard.review.error_hint'),
             resolution: null,
           },
         ],
@@ -155,493 +122,336 @@ export default function ImportWizard() {
     }
   };
 
-  const hasDetailedIssues = (issues: ValidationIssueDto[] | undefined): boolean => {
-    if (!issues || issues.length === 0) return false;
-    return issues.some(
-      (issue) => Boolean(issue.category) || issue.path !== null || issue.item !== null,
-    );
+  const handleContinue = async () => {
+    let data: ImportDto;
+    try {
+      data = JSON.parse(jsonInput) as ImportDto;
+    } catch {
+      setJsonError(t('import_wizard.upload.invalid_json'));
+      return;
+    }
+    setJsonError(null);
+    setParsed(data);
+    await runValidation(data);
+    setStep('review');
   };
 
   const handleImport = async () => {
-    if (!importData) return;
+    if (!parsed) return;
     setImportError(null);
-
     try {
-      await importMutation.mutateAsync(importData);
-      setStep(4);
+      await importMutation.mutateAsync(parsed);
+      setStep('done');
       setTimeout(() => {
         void navigate('/diet-planner/calendar');
       }, 2000);
-    } catch (error) {
+    } catch {
       const msg = t('import_wizard.import_error');
       setImportError(msg);
       toast.error(msg);
-      console.error('Import failed:', error);
     }
   };
 
+  const products: ImportProductDto[] = parsed?.products ?? [];
+  const days = parsed?.schedule?.length ?? 0;
+  const mealEntries =
+    num(validation?.plan?.mealEntriesToCreate) ||
+    (parsed?.schedule ?? []).reduce((sum, d) => sum + (d.meals?.length ?? 0), 0);
+  const newProducts = num(validation?.plan?.productsToCreate);
+  const warnings = num(validation?.summary.warnings);
+  const canProceed = validation?.canProceed === true;
+
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
-      <div className="mb-8">
-        <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('import_wizard.title')}</h1>
-        <p className="text-muted-foreground text-[0.95rem]">{t('import_wizard.subtitle')}</p>
+    <div className="animate-fade-in mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:px-8">
+      <div>
+        <h1 className="text-[26px] font-bold">{t('import_wizard.title')}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t('import_wizard.subtitle')}</p>
       </div>
 
-      {/* Progress Steps */}
-      <div className="mb-10 flex items-center justify-between">
-        {[
-          { num: 1, label: t('import_wizard.steps.upload') },
-          { num: 2, label: t('import_wizard.steps.validate') },
-          { num: 3, label: t('import_wizard.steps.review') },
-          { num: 4, label: t('import_wizard.steps.complete') },
-        ].map((s, idx) => (
-          <div key={s.num} className="flex items-center">
-            <div
-              className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-xl border-2 text-sm font-bold transition-all duration-300',
-                step >= s.num
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-muted bg-background text-muted-foreground',
-              )}
-            >
-              {step > s.num ? <CheckCircle2 className="h-5 w-5" /> : s.num}
-            </div>
-            <span
-              className={cn(
-                'ml-2 text-sm font-medium transition-colors',
-                step >= s.num ? 'text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {s.label}
-            </span>
-            {idx < 3 && <ArrowRight className="text-muted-foreground/40 mx-4 h-4 w-4" />}
-          </div>
-        ))}
-      </div>
+      <Card className="overflow-hidden p-0">
+        <StepBar step={step} />
 
-      {/* Step 1: Upload/Paste JSON */}
-      {step === 1 && (
-        <Card className="animate-scale-in">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileJson className="text-primary h-5 w-5" />
-              {t('import_wizard.step1.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <Label htmlFor="json-input">{t('import_wizard.step1.label')}</Label>
-              <Textarea
-                id="json-input"
+        {step === 'upload' ? (
+          <div className="grid gap-5 p-6 md:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="border-border-strong bg-secondary text-muted-foreground hover:text-foreground hover:border-foreground/40 flex flex-col items-center gap-2 rounded-[18px] border border-dashed p-7 text-center transition-colors"
+              >
+                <Upload className="size-6" strokeWidth={1.9} />
+                <span className="text-[13px] font-semibold">
+                  {t('import_wizard.upload.dropzone_title')}
+                </span>
+                <span className="text-[11.5px]">{t('import_wizard.upload.dropzone_hint')}</span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) readFile(file);
+                }}
+              />
+
+              <textarea
+                aria-label={t('import_wizard.upload.paste_label')}
                 value={jsonInput}
                 onChange={(e) => {
                   setJsonInput(e.target.value);
                 }}
-                placeholder={t('import_wizard.step1.placeholder')}
-                rows={12}
-                className="font-mono text-sm"
+                placeholder={t('import_wizard.upload.placeholder')}
+                rows={10}
+                className="border-border bg-muted rounded-[16px] border p-3 font-mono text-[11.5px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
               />
+              {jsonError ? <Banner variant="error">{jsonError}</Banner> : null}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => {
+                    setJsonInput(JSON.stringify(sampleJson, null, 2));
+                  }}
+                >
+                  {t('import_wizard.upload.load_sample')}
+                </Button>
+              </div>
             </div>
 
-            {jsonError && (
-              <p role="alert" className="text-destructive text-sm">
-                {jsonError}
-              </p>
-            )}
-
-            <div className="flex gap-4">
-              <Button onClick={handleJsonParse} disabled={!jsonInput.trim()}>
-                {t('import_wizard.step1.continue')}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setJsonInput(JSON.stringify(sampleJson, null, 2));
-                }}
-              >
-                {t('import_wizard.step1.load_sample')}
-              </Button>
-              <Button variant="outline" onClick={handleCopySample}>
-                {copied ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    {t('import_wizard.step1.copied')}
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-2 h-4 w-4" />
-                    {t('import_wizard.step1.copy_sample')}
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <div className="border-muted bg-muted/30 rounded-xl border p-5">
-              <p className="mb-2 text-sm font-semibold">
-                {t('import_wizard.step1.expected_format')}
-              </p>
-              <pre className="text-muted-foreground max-h-32 overflow-auto text-xs">
+            <div className="flex flex-col gap-3">
+              <div className="text-text-2 text-[13px] font-bold">
+                {t('import_wizard.upload.expected_format')}
+              </div>
+              <pre className="bg-muted max-h-[280px] overflow-auto rounded-[16px] p-3 font-mono text-[11.5px] leading-relaxed whitespace-pre">
                 {JSON.stringify(sampleJson, null, 2)}
               </pre>
             </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Step 2: Validation (Dry Run) */}
-      {step === 2 && importData && (
-        <Card className="animate-scale-in">
-          <CardHeader>
-            <CardTitle>{t('import_wizard.step2.title')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-muted/20 grid grid-cols-2 gap-4 rounded-xl p-5 md:grid-cols-3">
-              <div>
-                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
-                  {t('import_wizard.step2.products')}
-                </span>
-                <span className="block text-sm font-medium">
-                  {importData.products?.length ?? 0} items
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
-                  {t('import_wizard.step2.recipes')}
-                </span>
-                <span className="block text-sm font-medium">
-                  {importData.recipes?.length ?? 0} items
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground mb-1 block text-xs tracking-wider uppercase">
-                  {t('import_wizard.step2.schedule_days')}
-                </span>
-                <span className="block text-sm font-medium">
-                  {importData.schedule?.length ?? 0} days
-                </span>
-              </div>
-            </div>
-
-            {validationResult && !validationResult.canProceed && (
-              <div className="animate-fade-in-up space-y-4">
-                {validationResult.isApiError ? (
-                  <div className="rounded-xl border border-red-300 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/20">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-xl bg-red-100 p-3 dark:bg-red-900/50">
-                        <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="mb-2 text-lg font-semibold text-red-700 dark:text-red-400">
-                          {t('import_wizard.step2.api_error_title')}
-                        </h3>
-                        <p className="mb-3 text-sm text-red-600 dark:text-red-300">
-                          {validationResult.issues[0]?.message ??
-                            t('import_wizard.step2.api_error_title')}
-                        </p>
-                        <p className="text-xs text-red-500 dark:text-red-400">
-                          {t('import_wizard.step2.api_error_hint')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/10">
-                      <div className="flex items-center gap-2">
-                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        <h3 className="font-semibold text-red-700 dark:text-red-400">
-                          {t('import_wizard.step2.validation_failed')}
-                        </h3>
-                        <span className="ml-auto text-sm font-medium text-red-600 dark:text-red-400">
-                          {t(
-                            Number(validationResult.summary.errors) === 1
-                              ? 'import_wizard.step2.errors_count_one'
-                              : 'import_wizard.step2.errors_count_other',
-                            { count: Number(validationResult.summary.errors) },
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    {validationResult.issues.length > 0 &&
-                      hasDetailedIssues(validationResult.issues) && (
-                        <div className="overflow-hidden rounded-xl border">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="bg-muted/30">
-                                <TableHead className="w-[100px]">
-                                  {t('import_wizard.step2.table.severity')}
-                                </TableHead>
-                                <TableHead className="w-[100px]">
-                                  {t('import_wizard.step2.table.type')}
-                                </TableHead>
-                                <TableHead className="w-[120px]">
-                                  {t('import_wizard.step2.table.item')}
-                                </TableHead>
-                                <TableHead>{t('import_wizard.step2.table.message')}</TableHead>
-                                <TableHead className="w-[200px]">
-                                  {t('import_wizard.step2.table.existing_item')}
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {validationResult.issues.map(
-                                (issue: ValidationIssueDto, idx: number) => {
-                                  const isError = issue.severity === 'error';
-                                  return (
-                                    <TableRow
-                                      key={idx}
-                                      className={
-                                        isError
-                                          ? 'bg-red-50/50 dark:bg-red-950/10'
-                                          : 'bg-amber-50/50 dark:bg-amber-950/10'
-                                      }
-                                    >
-                                      <TableCell>
-                                        <span
-                                          className={cn(
-                                            'inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium',
-                                            isError
-                                              ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
-                                              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400',
-                                          )}
-                                        >
-                                          {issue.severity}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-xs font-medium">
-                                            {issue.category || '-'}
-                                          </span>
-                                          {issue.path && (
-                                            <span className="text-muted-foreground font-mono text-xs">
-                                              {issue.path}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="font-medium">
-                                        {issue.item ?? '-'}
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="space-y-1">
-                                          <p className="text-sm">{issue.message}</p>
-                                          {issue.resolution && (
-                                            <p className="text-xs text-blue-600 dark:text-blue-400">
-                                              <span className="font-medium">
-                                                {t('import_wizard.step2.tip')}
-                                              </span>{' '}
-                                              {issue.resolution}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell>
-                                        <span className="text-muted-foreground">-</span>
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                },
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="flex gap-4 border-t pt-4">
+            <div className="flex justify-end md:col-span-2">
               <Button
+                size="xl"
                 onClick={() => {
-                  setStep(1);
+                  void handleContinue();
                 }}
-                variant="outline"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t('common.previous')}
-              </Button>
-              <Button
-                onClick={() => {
-                  void handleValidate();
-                }}
-                disabled={validateMutation.isPending}
+                disabled={!jsonInput.trim() || validateMutation.isPending}
               >
                 {validateMutation.isPending
-                  ? t('import_wizard.step2.validating')
-                  : validationResult && !validationResult.canProceed
-                    ? t('import_wizard.step2.revalidate')
-                    : t('import_wizard.step2.validate')}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                  ? t('import_wizard.upload.checking')
+                  : t('import_wizard.upload.continue')}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        ) : null}
 
-      {/* Step 3: Review & Confirm */}
-      {step === 3 && validationResult && validationResult.canProceed && (
-        <Card className="animate-scale-in">
-          <CardHeader>
-            <CardTitle>{t('import_wizard.step3.title')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {validationResult.valid ? (
-              <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/10">
-                <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">{t('import_wizard.step3.success')}</span>
+        {step === 'review' && validation ? (
+          <div className="grid gap-5 p-6 md:grid-cols-2">
+            <div className="flex flex-col gap-3">
+              <div className="border-border bg-secondary flex items-center gap-3 rounded-[16px] border p-3.5">
+                <FileJson className="text-primary size-5 shrink-0" />
+                <div className="min-w-0 text-[12.5px]">
+                  <div className="font-semibold">{t('import_wizard.review.detected')}</div>
+                  <div className="text-muted-foreground">
+                    {t('import_wizard.review.detected_meta', {
+                      products: products.length,
+                      recipes: parsed?.recipes?.length ?? 0,
+                      days,
+                    })}
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/10">
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                  <AlertCircle className="h-5 w-5" />
-                  <span className="font-medium">{t('import_wizard.step3.warnings_exist')}</span>
-                  <span className="ml-auto text-sm">
-                    {validationResult.summary.warnings}{' '}
-                    {Number(validationResult.summary.warnings) !== 1 ? 'Warnings' : 'Warning'}
-                  </span>
-                </div>
-                {validationResult.issues.length > 0 && (
-                  <ul className="mt-2 space-y-1 pl-7 text-sm">
-                    {validationResult.issues.map((issue, idx) => (
-                      <li key={idx} className="text-amber-600 dark:text-amber-300">
-                        • {issue.item ? `${issue.item}: ` : ''}
+
+              <div className="grid grid-cols-2 gap-3">
+                <DetectedTile label={t('common.products')} value={products.length} />
+                <DetectedTile label={t('common.recipes')} value={parsed?.recipes?.length ?? 0} />
+                <DetectedTile label={t('import_wizard.review.days')} value={days} />
+                <DetectedTile label={t('import_wizard.review.meal_entries')} value={mealEntries} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {validation.isApiError || !canProceed ? (
+                <Banner
+                  variant="error"
+                  title={t('import_wizard.review.cannot_proceed')}
+                  retryLabel={t('import_wizard.review.revalidate')}
+                  onRetry={() => {
+                    if (parsed) void runValidation(parsed);
+                  }}
+                >
+                  <ul className="list-disc space-y-0.5 pl-4">
+                    {validation.issues.slice(0, 6).map((issue, i) => (
+                      <li key={i}>
+                        {issue.item ? `${issue.item}: ` : ''}
                         {issue.message}
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <h4 className="font-semibold">{t('import_wizard.step3.what_imported')}</h4>
-              <div className="grid grid-cols-2 gap-4 rounded-xl border p-5 sm:grid-cols-3 md:grid-cols-5">
-                {[
-                  {
-                    val: validationResult.plan?.productsToCreate ?? 0,
-                    label: t('import_wizard.step3.new_products'),
-                    primary: true,
-                  },
-                  {
-                    val: validationResult.plan?.productsToReuse ?? 0,
-                    label: t('import_wizard.step3.products_reuse'),
-                    primary: false,
-                  },
-                  {
-                    val: validationResult.plan?.recipesToCreate ?? 0,
-                    label: t('import_wizard.step3.new_recipes'),
-                    primary: true,
-                  },
-                  {
-                    val: validationResult.plan?.recipesToReuse ?? 0,
-                    label: t('import_wizard.step3.recipes_reuse'),
-                    primary: false,
-                  },
-                  {
-                    val: validationResult.plan?.mealEntriesToCreate ?? 0,
-                    label: t('import_wizard.step3.meal_entries'),
-                    primary: true,
-                  },
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-muted/30 rounded-xl p-3 text-center">
-                    <span
-                      className={cn(
-                        'block text-2xl font-bold',
-                        item.primary ? 'text-primary' : 'text-muted-foreground',
-                      )}
-                    >
-                      {item.val}
-                    </span>
-                    <span className="text-muted-foreground text-xs">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/10">
-              <div className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                <div className="text-sm">
-                  <p className="mb-1 font-medium">{t('import_wizard.step3.warning_title')}</p>
-                  <ul className="list-inside list-disc space-y-1">
-                    {Number(validationResult.plan?.productsToCreate ?? 0) > 0 && (
-                      <li>
-                        {t('import_wizard.step3.warning_products', {
-                          count: Number(validationResult.plan?.productsToCreate),
-                        })}
+                </Banner>
+              ) : warnings > 0 ? (
+                <Banner
+                  variant="warning"
+                  title={t('import_wizard.review.warnings_title', { count: warnings })}
+                >
+                  <ul className="list-disc space-y-0.5 pl-4">
+                    {validation.issues.slice(0, 6).map((issue, i) => (
+                      <li key={i}>
+                        {issue.item ? `${issue.item}: ` : ''}
+                        {issue.message}
                       </li>
-                    )}
-                    {Number(validationResult.plan?.recipesToCreate ?? 0) > 0 && (
-                      <li>
-                        {t('import_wizard.step3.warning_recipes', {
-                          count: Number(validationResult.plan?.recipesToCreate),
-                        })}
-                      </li>
-                    )}
-                    <li>{t('import_wizard.step3.warning_undone')}</li>
+                    ))}
                   </ul>
+                </Banner>
+              ) : (
+                <Banner variant="success" title={t('import_wizard.review.ready')}>
+                  {t('import_wizard.review.ready_hint', { count: newProducts })}
+                </Banner>
+              )}
+
+              {products.length > 0 ? (
+                <div className="border-border overflow-hidden rounded-[16px] border">
+                  <div className="bg-secondary text-muted-foreground grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 px-3 py-2 text-[10.5px] font-semibold uppercase">
+                    <span>{t('import_wizard.review.col_product')}</span>
+                    <span>{t('import_wizard.review.col_unit')}</span>
+                    <span className="text-right">kcal</span>
+                  </div>
+                  <div className="max-h-[220px] overflow-auto">
+                    {products.map((p, i) => {
+                      const missing = !p.unit;
+                      return (
+                        <div
+                          key={i}
+                          className="border-border grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 border-t px-3 py-2 text-[12px]"
+                        >
+                          <span className="truncate font-semibold">{p.name}</span>
+                          <span className={cn(missing && 'text-destructive font-semibold')}>
+                            {missing ? t('import_wizard.review.missing_unit') : p.unit}
+                          </span>
+                          <span className="tnum text-right">
+                            {formatNumber(num(p.caloriesPer100g))}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
-            {importError && (
+            {importError ? (
               <p
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-400"
+                className="border-destructive/30 text-destructive rounded-[16px] border px-4 py-3 text-[12.5px] md:col-span-2"
+                style={{
+                  background: 'color-mix(in oklab, hsl(var(--color-fat)) 12%, transparent)',
+                }}
               >
                 {importError}
               </p>
-            )}
+            ) : null}
 
-            <div className="flex gap-4 pt-2">
+            <div className="flex flex-wrap justify-between gap-2 md:col-span-2">
               <Button
-                onClick={() => {
-                  setStep(2);
-                }}
                 variant="outline"
+                size="xl"
+                onClick={() => {
+                  setStep('upload');
+                }}
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
                 {t('common.previous')}
               </Button>
               <Button
+                size="xl"
+                className="flex-1"
                 onClick={() => {
                   void handleImport();
                 }}
-                disabled={importMutation.isPending}
+                disabled={!canProceed || importMutation.isPending}
               >
                 {importMutation.isPending
-                  ? t('import_wizard.step3.importing')
-                  : t('import_wizard.step3.confirm')}
+                  ? t('import_wizard.review.importing')
+                  : t('import_wizard.review.import_days', { count: days })}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        ) : null}
 
-      {/* Step 4: Success */}
-      {step === 4 && (
-        <Card className="animate-scale-in">
-          <CardContent className="py-16">
-            <div className="space-y-5 text-center">
-              <div className="flex justify-center">
-                <div className="animate-float rounded-2xl bg-green-500/10 p-4">
-                  <CheckCircle2 className="h-14 w-14 text-green-500" />
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold">{t('import_wizard.step4.success_title')}</h2>
-              <p className="text-muted-foreground text-lg">
-                {t('import_wizard.step4.success_message')}
-              </p>
+        {step === 'done' ? (
+          <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
+            <div
+              className="grid size-14 place-items-center rounded-2xl"
+              style={{ background: 'color-mix(in oklab, hsl(var(--color-good)) 14%, transparent)' }}
+            >
+              <Check className="size-7 text-[hsl(var(--color-good))]" strokeWidth={2.4} />
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <h2 className="text-[22px] font-bold">{t('import_wizard.done.title')}</h2>
+            <p className="text-muted-foreground text-sm">{t('import_wizard.done.message')}</p>
+          </div>
+        ) : null}
+      </Card>
+    </div>
+  );
+}
+
+function DetectedTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border-border bg-secondary rounded-[15px] border p-3.5">
+      <div className="text-muted-foreground text-[10.5px] font-semibold tracking-[0.05em] uppercase">
+        {label}
+      </div>
+      <div className="numeral mt-0.5 text-[19px] font-bold">{value}</div>
+    </div>
+  );
+}
+
+const STEPS: Step[] = ['upload', 'review', 'done'];
+
+function StepBar({ step }: { step: Step }) {
+  const { t } = useTranslation();
+  const current = STEPS.indexOf(step);
+  const labels = [
+    t('import_wizard.stepbar.upload'),
+    t('import_wizard.stepbar.review'),
+    t('import_wizard.stepbar.confirm'),
+  ];
+
+  return (
+    <div className="border-border bg-secondary flex items-center gap-2 border-b px-6 py-5">
+      {labels.map((label, i) => {
+        const state = i < current ? 'done' : i === current ? 'current' : 'upcoming';
+        return (
+          <div
+            key={label}
+            className={cn(
+              'flex items-center gap-2',
+              i < labels.length - 1 && 'flex-1',
+              state === 'upcoming' && 'opacity-55',
+            )}
+          >
+            <span
+              className={cn(
+                'grid size-7 flex-none place-items-center rounded-full text-[12.5px] font-bold',
+                state === 'done' && 'text-white',
+                state === 'current' && 'bg-primary text-primary-foreground',
+                state === 'upcoming' && 'bg-muted border-border-strong border',
+              )}
+              style={state === 'done' ? { background: 'hsl(var(--color-good))' } : undefined}
+            >
+              {state === 'done' ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
+            </span>
+            <span className="text-[13px] font-semibold">{label}</span>
+            {i < labels.length - 1 ? (
+              <span
+                className={cn(
+                  'h-0.5 flex-1 rounded-full',
+                  state === 'done' ? 'bg-[hsl(var(--color-good))]' : 'bg-border-strong',
+                )}
+              />
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

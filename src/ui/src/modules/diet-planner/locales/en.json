@@ -308,7 +308,45 @@
       "success_title": "Import Successful!",
       "success_message": "Your meals have been imported successfully. Redirecting to calendar..."
     },
-    "import_error": "Import failed. Please try again."
+    "import_error": "Import failed. Please try again.",
+    "stepbar": {
+      "upload": "Upload",
+      "review": "Review",
+      "confirm": "Confirm"
+    },
+    "upload": {
+      "dropzone_title": "Drop a plan file here",
+      "dropzone_hint": "JSON only — or paste it below",
+      "paste_label": "Diet plan JSON",
+      "placeholder": "Paste your JSON here…",
+      "expected_format": "Expected format",
+      "load_sample": "Load sample",
+      "continue": "Continue",
+      "checking": "Checking…",
+      "invalid_json": "Invalid JSON. Check your input and try again.",
+      "not_json": "Only .json files are accepted."
+    },
+    "review": {
+      "detected": "Detected",
+      "detected_meta": "{{products}} products · {{recipes}} recipes · {{days}} days",
+      "days": "Days",
+      "meal_entries": "Meal entries",
+      "ready": "Ready to import",
+      "ready_hint": "{{count}} new products will be created.",
+      "warnings_title": "{{count}} warning(s)",
+      "cannot_proceed": "Can't import yet",
+      "error_hint": "Something went wrong while validating. Try again.",
+      "revalidate": "Re-check",
+      "col_product": "Product",
+      "col_unit": "Unit",
+      "missing_unit": "missing",
+      "import_days": "Import {{count}} days",
+      "importing": "Importing…"
+    },
+    "done": {
+      "title": "Import complete",
+      "message": "Your plan was imported. Taking you to the calendar…"
+    }
   },
   "product_detail": {
     "back": "Back to Products",

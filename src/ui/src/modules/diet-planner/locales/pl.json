@@ -311,6 +311,44 @@
     "step4": {
       "success_title": "Import Zakończony Sukcesem!",
       "success_message": "Twoje posiłki zostały pomyślnie zaimportowane. Przekierowywanie do kalendarza..."
+    },
+    "stepbar": {
+      "upload": "Wgraj",
+      "review": "Sprawdź",
+      "confirm": "Zatwierdź"
+    },
+    "upload": {
+      "dropzone_title": "Upuść plik planu tutaj",
+      "dropzone_hint": "Tylko JSON — lub wklej poniżej",
+      "paste_label": "Plan diety JSON",
+      "placeholder": "Wklej JSON tutaj…",
+      "expected_format": "Oczekiwany format",
+      "load_sample": "Wczytaj przykład",
+      "continue": "Dalej",
+      "checking": "Sprawdzanie…",
+      "invalid_json": "Nieprawidłowy JSON. Sprawdź dane i spróbuj ponownie.",
+      "not_json": "Akceptowane są tylko pliki .json."
+    },
+    "review": {
+      "detected": "Wykryto",
+      "detected_meta": "{{products}} produktów · {{recipes}} przepisów · {{days}} dni",
+      "days": "Dni",
+      "meal_entries": "Posiłki",
+      "ready": "Gotowe do importu",
+      "ready_hint": "Zostanie utworzonych {{count}} nowych produktów.",
+      "warnings_title": "Ostrzeżenia: {{count}}",
+      "cannot_proceed": "Nie można jeszcze zaimportować",
+      "error_hint": "Coś poszło nie tak podczas sprawdzania. Spróbuj ponownie.",
+      "revalidate": "Sprawdź ponownie",
+      "col_product": "Produkt",
+      "col_unit": "Jednostka",
+      "missing_unit": "brak",
+      "import_days": "Importuj {{count}} dni",
+      "importing": "Importowanie…"
+    },
+    "done": {
+      "title": "Import zakończony",
+      "message": "Plan został zaimportowany. Przechodzę do kalendarza…"
     }
   },
   "product_detail": {
