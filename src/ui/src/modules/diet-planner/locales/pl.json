@@ -440,7 +440,8 @@
       "hydration": "Nawodnienie",
       "notifications": "Powiadomienia",
       "alerts": "Alerty",
-      "weight_history": "Historia wagi"
+      "weight_history": "Historia wagi",
+      "overview": "Przegląd"
     },
     "personal_header": "Dane Osobowe",
     "personal_desc": "Twoje podstawowe dane osobowe",
@@ -463,7 +464,25 @@
     "activity_very": "Bardzo Aktywny",
     "activity_extra": "Ekstremalnie Aktywny",
     "save_btn": "Zapisz Profil",
-    "save_success": "Profil zapisany pomyślnie!"
+    "save_success": "Profil zapisany pomyślnie!",
+    "overview": {
+      "edit_profile": "Edytuj profil",
+      "energy_model": "Model energetyczny",
+      "energy_model_sub": "Przeliczany codziennie",
+      "energy_model_empty": "Ustaw dzienny cel kaloryczny, aby zobaczyć model energetyczny.",
+      "daily_deficit": "Dzienny deficyt",
+      "weekly_change": "Zmiana tygodniowa",
+      "current_bmi": "Aktualne BMI",
+      "target_bmi": "Docelowe BMI",
+      "macro_targets": "Cele makro",
+      "macro_targets_empty": "Brak ustawionych celów makro.",
+      "edit_targets": "Edytuj cele",
+      "all_reminder_settings": "Wszystkie ustawienia przypomnień",
+      "reminder_saved": "Zaktualizowano przypomnienie",
+      "reminder_error": "Nie udało się zaktualizować przypomnienia",
+      "weight_to_go": "Pozostało {{kg}} kg",
+      "est_goal_date": "Szacowana data celu:"
+    }
   },
   "sheets": {
     "goals": {

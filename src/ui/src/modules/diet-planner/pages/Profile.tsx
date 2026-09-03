@@ -5,12 +5,14 @@ import {
   HydrationConfigForm,
   DietReminderSettingsForm,
   WeightHistorySection,
+  ProfileOverview,
 } from '@modules/diet-planner/components/settings';
 import { cn } from '@shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 type SectionId =
+  | 'overview'
   | 'body-stats'
   | 'weight-history'
   | 'goals'
@@ -20,6 +22,7 @@ type SectionId =
 
 function isValidSection(s: string | null): s is SectionId {
   return [
+    'overview',
     'body-stats',
     'weight-history',
     'goals',
@@ -29,29 +32,33 @@ function isValidSection(s: string | null): s is SectionId {
   ].includes(s ?? '');
 }
 
-const SECTION_COMPONENTS: Record<SectionId, React.ComponentType<{ onSuccess?: () => void }>> = {
-  'body-stats': BodyStatsForm,
-  'weight-history': WeightHistorySection,
-  goals: GoalsForm,
-  'meal-schedule': MealScheduleForm,
-  hydration: HydrationConfigForm,
-  notifications: DietReminderSettingsForm,
-};
-
 export default function Profile() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawSection = searchParams.get('section');
-  const activeSection: SectionId = isValidSection(rawSection) ? rawSection : 'body-stats';
+  const activeSection: SectionId = isValidSection(rawSection) ? rawSection : 'overview';
 
   function navigate(section: SectionId) {
-    setSearchParams({ section });
+    setSearchParams(section === 'overview' ? {} : { section });
   }
+
+  const FORM_COMPONENTS: Record<
+    Exclude<SectionId, 'overview'>,
+    React.ComponentType<{ onSuccess?: () => void }>
+  > = {
+    'body-stats': BodyStatsForm,
+    'weight-history': WeightHistorySection,
+    goals: GoalsForm,
+    'meal-schedule': MealScheduleForm,
+    hydration: HydrationConfigForm,
+    notifications: DietReminderSettingsForm,
+  };
 
   const sidebarGroups = [
     {
       label: t('profile.sidebar.personal'),
       items: [
+        { id: 'overview' as SectionId, label: t('profile.sidebar.overview') },
         { id: 'body-stats' as SectionId, label: t('profile.sidebar.body_stats') },
         { id: 'weight-history' as SectionId, label: t('profile.sidebar.weight_history') },
       ],
@@ -71,8 +78,6 @@ export default function Profile() {
   ];
 
   const allItems = sidebarGroups.flatMap((g) => g.items);
-
-  const ActiveForm = SECTION_COMPONENTS[activeSection];
 
   return (
     <div className="animate-fade-in-up p-8 lg:p-10">
@@ -135,8 +140,15 @@ export default function Profile() {
             ))}
           </div>
 
-          {/* Active section form */}
-          <ActiveForm />
+          {/* Active section */}
+          {activeSection === 'overview' ? (
+            <ProfileOverview onEdit={navigate} />
+          ) : (
+            (() => {
+              const ActiveForm = FORM_COMPONENTS[activeSection];
+              return <ActiveForm />;
+            })()
+          )}
         </div>
       </div>
     </div>

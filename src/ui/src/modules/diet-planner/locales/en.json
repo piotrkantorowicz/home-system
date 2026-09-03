@@ -443,7 +443,8 @@
       "hydration": "Hydration",
       "notifications": "Notifications",
       "alerts": "Alerts",
-      "weight_history": "Weight History"
+      "weight_history": "Weight History",
+      "overview": "Overview"
     },
     "personal_header": "Personal Information",
     "personal_desc": "Your basic personal details",
@@ -467,7 +468,25 @@
     "activity_extra": "Extra Active",
     "save_btn": "Save Profile",
     "save_success": "Profile saved successfully!",
-    "save_error": "Failed to save profile. Please try again."
+    "save_error": "Failed to save profile. Please try again.",
+    "overview": {
+      "edit_profile": "Edit profile",
+      "energy_model": "Energy model",
+      "energy_model_sub": "Recalculated daily",
+      "energy_model_empty": "Set a daily calorie target to see your energy model.",
+      "daily_deficit": "Daily deficit",
+      "weekly_change": "Weekly change",
+      "current_bmi": "Current BMI",
+      "target_bmi": "Target BMI",
+      "macro_targets": "Macro targets",
+      "macro_targets_empty": "No macro targets set yet.",
+      "edit_targets": "Edit targets",
+      "all_reminder_settings": "All reminder settings",
+      "reminder_saved": "Reminder updated",
+      "reminder_error": "Could not update the reminder",
+      "weight_to_go": "{{kg}} kg to go",
+      "est_goal_date": "Estimated goal date:"
+    }
   },
   "sheets": {
     "goals": {
