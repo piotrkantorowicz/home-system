@@ -21,6 +21,7 @@ const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Hydration = lazy(() => import('./pages/Hydration'));
 const Preferences = lazy(() => import('./pages/Preferences'));
+const ControlKit = lazy(() => import('./pages/ControlKit'));
 
 export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
@@ -75,5 +76,6 @@ export const dietPlannerModule: AppModule = {
     { path: 'profile', Component: Profile },
     { path: 'hydration', Component: Hydration },
     { path: 'preferences', Component: Preferences },
+    { path: 'control-kit', Component: ControlKit },
   ],
 };

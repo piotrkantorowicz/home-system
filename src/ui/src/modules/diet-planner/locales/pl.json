@@ -813,5 +813,16 @@
     "sign_out": "Wyloguj",
     "delete_account": "Usuń konto",
     "delete_account_btn": "Usuń"
+  },
+  "control_kit": {
+    "title": "Zestaw kontrolek",
+    "subtitle": "Wszystkie komponenty i stany — wspólny język interfejsu.",
+    "buttons": "Przyciski",
+    "inputs": "Pola",
+    "toggles": "Przełączniki",
+    "pills": "Plakietki",
+    "data": "Dane",
+    "ring": "Pierścień",
+    "banners": "Komunikaty"
   }
 }

@@ -831,5 +831,16 @@
     "sign_out": "Sign out",
     "delete_account": "Delete account",
     "delete_account_btn": "Delete"
+  },
+  "control_kit": {
+    "title": "Control kit",
+    "subtitle": "Every primitive, every state — the shared vocabulary.",
+    "buttons": "Buttons",
+    "inputs": "Inputs",
+    "toggles": "Toggles",
+    "pills": "Pills & badges",
+    "data": "Data",
+    "ring": "Ring",
+    "banners": "Banners"
   }
 }
