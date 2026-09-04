@@ -1,5 +1,5 @@
 import { cn, getInitials } from '@shared/lib/utils';
-import { User, Bell, LogOut } from 'lucide-react';
+import { User, Bell, LogOut, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -28,6 +28,11 @@ const dietPlannerLinks = [
 ] as const;
 
 const settingsLinks = [
+  {
+    to: '/diet-planner/preferences',
+    icon: SlidersHorizontal,
+    translationKey: 'common.preferences',
+  },
   {
     to: '/notifications',
     icon: Bell,

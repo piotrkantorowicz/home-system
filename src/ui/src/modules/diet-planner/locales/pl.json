@@ -787,5 +787,31 @@
       "log_dialog_title": "Zapisz wagę",
       "log_dialog_desc": "Zapisz swoją wagę dla dowolnej przeszłej daty."
     }
+  },
+  "preferences": {
+    "title": "Preferencje",
+    "subtitle": "Wygląd, jednostki i konto.",
+    "appearance": "Wygląd",
+    "theme": "Motyw",
+    "theme_light": "Jasny",
+    "theme_dark": "Ciemny",
+    "theme_system": "Systemowy",
+    "language": "Język",
+    "compact_density": "Kompaktowy układ",
+    "compact_density_hint": "Ciaśniejsze odstępy i mniejsze kontrolki.",
+    "units": "Jednostki i formaty",
+    "energy": "Energia",
+    "weight": "Waga",
+    "volume": "Objętość",
+    "week_start": "Początek tygodnia",
+    "week_monday": "Poniedziałek",
+    "week_sunday": "Niedziela",
+    "thin_space": "Wąska spacja w tysiącach",
+    "thin_space_hint": "Pokaż 2 150 zamiast 2,150.",
+    "units_note": "Preferencje jednostek są zapisywane; ekrany zaczną z nich korzystać później.",
+    "account": "Konto",
+    "sign_out": "Wyloguj",
+    "delete_account": "Usuń konto",
+    "delete_account_btn": "Usuń"
   }
 }

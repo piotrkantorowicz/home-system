@@ -805,5 +805,31 @@
       "log_dialog_title": "Log weight",
       "log_dialog_desc": "Record your weight for any past date."
     }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Appearance, units and account.",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "language": "Language",
+    "compact_density": "Compact density",
+    "compact_density_hint": "Tighter spacing and smaller controls.",
+    "units": "Units & formats",
+    "energy": "Energy",
+    "weight": "Weight",
+    "volume": "Volume",
+    "week_start": "Week starts",
+    "week_monday": "Monday",
+    "week_sunday": "Sunday",
+    "thin_space": "Thin-space thousands",
+    "thin_space_hint": "Show 2 150 instead of 2,150.",
+    "units_note": "Unit preferences are saved now; screens will adopt them in a later pass.",
+    "account": "Account",
+    "sign_out": "Sign out",
+    "delete_account": "Delete account",
+    "delete_account_btn": "Delete"
   }
 }
