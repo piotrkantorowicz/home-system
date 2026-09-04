@@ -26,6 +26,7 @@ export function Switch({
       aria-checked={checked}
       aria-label={aria['aria-label']}
       aria-labelledby={aria['aria-labelledby']}
+      aria-disabled={disabled || undefined}
       disabled={disabled}
       onClick={() => {
         onCheckedChange(!checked);

@@ -3,9 +3,6 @@ import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,9 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
   Skeleton,
+  StatusPill,
 } from '@shared/components/ui';
-import { Badge } from '@shared/components/ui/Badge';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { formatNumber } from '@shared/lib/utils';
+import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -39,197 +37,158 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl p-8 lg:p-10">
-        <Skeleton className="mb-4 h-8 w-24" />
-        <div className="mb-8 flex items-start justify-between">
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-64" />
-            <div className="flex gap-2">
-              <Skeleton className="h-6 w-16 rounded-full" />
-              <Skeleton className="h-6 w-16 rounded-full" />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-20 rounded-md" />
-            <Skeleton className="h-9 w-20 rounded-md" />
-          </div>
+      <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
+        <Skeleton className="mb-4 h-4 w-40" />
+        <Skeleton className="mb-6 h-9 w-64" />
+        <div className="grid gap-[18px] lg:grid-cols-3">
+          <Skeleton className="h-72 rounded-[22px] lg:col-span-2" />
+          <Skeleton className="h-72 rounded-[22px]" />
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-36" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex justify-between">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-12" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-28" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <Skeleton className="mt-6 h-32 w-full rounded-xl" />
+        <Skeleton className="mt-[18px] h-48 w-full rounded-[22px]" />
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="p-8 lg:p-10">
-        <div className="text-destructive text-lg">{t('product_detail.not_found')}</div>
+      <div className="px-4 py-6 md:px-8">
+        <p className="text-destructive">{t('product_detail.not_found')}</p>
       </div>
     );
   }
 
+  const macroTotal =
+    (product.proteinPer100g ?? 0) + (product.carbsPer100g ?? 0) + (product.fatPer100g ?? 0);
+
+  const rows: { label: string; grams: number; token: string }[] = [
+    { label: t('products.table.protein'), grams: product.proteinPer100g ?? 0, token: 'protein' },
+    { label: t('product_detail.carbohydrates'), grams: product.carbsPer100g ?? 0, token: 'carbs' },
+    { label: t('product_detail.fat'), grams: product.fatPer100g ?? 0, token: 'fat' },
+    { label: t('product_detail.fiber'), grams: product.fiberPer100g ?? 0, token: 'fiber' },
+  ];
+
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
-      <div className="mb-8">
-        <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
-          <Link to="/diet-planner/products">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('product_detail.back')}
-          </Link>
-        </Button>
+    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:px-8">
+      <nav className="text-muted-foreground flex items-center gap-1 text-[12.5px]">
+        <Link to="/diet-planner/products" className="hover:text-foreground">
+          {t('products.title')}
+        </Link>
+        <ChevronRight className="size-3.5" />
+        <span className="text-text-2 font-semibold">{product.name}</span>
+      </nav>
 
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="mb-3 text-4xl font-bold tracking-tight">{product.name}</h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">{unitLabel(product.defaultUnit, t)}</Badge>
-              {product.isOwner ? (
-                <Badge variant="default">{t('common.you')}</Badge>
-              ) : (
-                <Badge variant="outline">{t('common.shared')}</Badge>
-              )}
-            </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[26px] font-bold tracking-tight">{product.name}</h1>
+          <div className="mt-2 flex items-center gap-2">
+            <StatusPill variant="neutral">{unitLabel(product.defaultUnit, t)}</StatusPill>
+            <StatusPill variant={product.isOwner ? 'good' : 'neutral'}>
+              {product.isOwner ? t('common.you') : t('common.shared')}
+            </StatusPill>
           </div>
-
-          {product.isOwner && (
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link to={`/diet-planner/products/${id ?? ''}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  {t('common.edit')}
-                </Link>
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {t('common.delete')}
-              </Button>
-            </div>
-          )}
         </div>
+
+        {product.isOwner && (
+          <div className="flex gap-2.5">
+            <Button size="xl" asChild>
+              <Link to={`/diet-planner/products/${id ?? ''}/edit`}>
+                <Pencil className="size-4" />
+                {t('common.edit')}
+              </Link>
+            </Button>
+            <Button
+              size="xl"
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="text-destructive size-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="stagger-children grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('product_detail.nutrition_facts')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-b pb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">{t('products.table.calories')}</span>
-                  <span className="text-3xl font-bold tracking-tight">
-                    {(product.caloriesPer100g ?? 0).toFixed(1)}{' '}
-                    <span className="text-muted-foreground text-lg font-normal">kcal</span>
-                  </span>
-                </div>
-              </div>
+      <div className="grid gap-[18px] lg:grid-cols-3">
+        <Card className="flex flex-col gap-5 p-[22px] lg:col-span-2">
+          <div className="text-[15px] font-bold">{t('product_detail.nutrition_facts')}</div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('products.table.protein')}</span>
-                  <span className="font-medium">{(product.proteinPer100g ?? 0).toFixed(1)}g</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('product_detail.carbohydrates')}</span>
-                  <span className="font-medium">{(product.carbsPer100g ?? 0).toFixed(1)}g</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('product_detail.fat')}</span>
-                  <span className="font-medium">{(product.fatPer100g ?? 0).toFixed(1)}g</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('product_detail.fiber')}</span>
-                  <span className="font-medium">{(product.fiberPer100g ?? 0).toFixed(1)}g</span>
-                </div>
-              </div>
+          <div className="border-border flex items-baseline justify-between border-b pb-4">
+            <span className="text-[15px] font-semibold">{t('products.table.calories')}</span>
+            <span className="numeral text-[34px] leading-none font-bold">
+              <span className="tnum">{formatNumber(product.caloriesPer100g ?? 0)}</span>
+              <span className="text-muted-foreground ml-1 text-[12px] font-medium">
+                kcal / 100 {t('product_form.units.g')}
+              </span>
+            </span>
+          </div>
 
-              <div className="border-t pt-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t('product_detail.total_macros')}</span>
-                  <span className="font-medium">
-                    {(
-                      (product.proteinPer100g ?? 0) +
-                      (product.carbsPer100g ?? 0) +
-                      (product.fatPer100g ?? 0)
-                    ).toFixed(1)}
-                    g
-                  </span>
+          <div className="flex flex-col gap-2.5">
+            {rows.map((r) => {
+              const pct = macroTotal > 0 ? Math.min(100, (r.grams / macroTotal) * 100) : 0;
+              return (
+                <div key={r.label} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[12.5px]">
+                    <span className="font-semibold">{r.label}</span>
+                    <span className="text-text-2 tnum">{r.grams.toFixed(1)} g</span>
+                  </div>
+                  <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${String(pct)}%`,
+                        background: `hsl(var(--color-${r.token}))`,
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
+              );
+            })}
+          </div>
+
+          <div className="border-border flex justify-between border-t pt-3 text-[12.5px]">
+            <span className="text-muted-foreground">{t('product_detail.total_macros')}</span>
+            <span className="tnum font-medium">{macroTotal.toFixed(1)} g</span>
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('product_detail.conversions')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="mb-1.5 font-medium">{t('product_detail.default_unit')}</h4>
-              <p className="text-muted-foreground">{unitLabel(product.defaultUnit, t)}</p>
+        <Card className="flex flex-col gap-4 p-[22px]">
+          <div className="text-[15px] font-bold">{t('product_detail.conversions')}</div>
+
+          <div>
+            <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+              {t('product_detail.default_unit')}
             </div>
+            <p className="mt-0.5 text-[13px]">{unitLabel(product.defaultUnit, t)}</p>
+          </div>
 
-            {product.densityGramsPerMl && (
-              <div>
-                <h4 className="mb-1.5 font-medium">{t('product_detail.density')}</h4>
-                <p className="text-muted-foreground">{product.densityGramsPerMl.toFixed(2)} g/ml</p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('product_detail.density_info', {
-                    value: product.densityGramsPerMl.toFixed(2),
-                  })}
-                </p>
+          {product.densityGramsPerMl ? (
+            <div>
+              <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+                {t('product_detail.density')}
               </div>
-            )}
+              <p className="tnum mt-0.5 text-[13px]">{product.densityGramsPerMl.toFixed(2)} g/ml</p>
+              <p className="text-muted-foreground mt-1 text-[11px]">
+                {t('product_detail.density_info', { value: product.densityGramsPerMl.toFixed(2) })}
+              </p>
+            </div>
+          ) : null}
 
-            {product.gramPerPiece && (
-              <div>
-                <h4 className="mb-1.5 font-medium">{t('product_detail.weight_per_piece')}</h4>
-                <p className="text-muted-foreground">{product.gramPerPiece.toFixed(1)}g</p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {t('product_detail.piece_info', { value: product.gramPerPiece.toFixed(1) })}
-                </p>
+          {product.gramPerPiece ? (
+            <div>
+              <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+                {t('product_detail.weight_per_piece')}
               </div>
-            )}
+              <p className="tnum mt-0.5 text-[13px]">{product.gramPerPiece.toFixed(1)} g</p>
+              <p className="text-muted-foreground mt-1 text-[11px]">
+                {t('product_detail.piece_info', { value: product.gramPerPiece.toFixed(1) })}
+              </p>
+            </div>
+          ) : null}
 
-            {!product.densityGramsPerMl && !product.gramPerPiece && (
-              <p className="text-muted-foreground">{t('product_detail.no_conversion')}</p>
-            )}
-          </CardContent>
+          {!product.densityGramsPerMl && !product.gramPerPiece ? (
+            <p className="text-muted-foreground text-[13px]">{t('product_detail.no_conversion')}</p>
+          ) : null}
         </Card>
       </div>
 
@@ -239,7 +198,6 @@ export default function ProductDetail() {
         fat={product.fatPer100g ?? 0}
         fiber={product.fiberPer100g ?? 0}
         t={t}
-        className="mt-6"
       />
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

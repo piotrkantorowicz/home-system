@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/components/ui';
-import { cn } from '@shared/lib/utils';
+import { formatNumber } from '@shared/lib/utils';
 
 import type { TFunction } from 'i18next';
 
@@ -14,22 +14,10 @@ interface MacroDistributionCardProps {
 }
 
 const macros = [
-  {
-    key: 'protein' as const,
-    labelKey: 'products.table.protein',
-    gradient: 'from-blue-500 to-indigo-500',
-  },
-  {
-    key: 'carbs' as const,
-    labelKey: 'product_detail.carbohydrates',
-    gradient: 'from-emerald-500 to-teal-500',
-  },
-  { key: 'fat' as const, labelKey: 'product_detail.fat', gradient: 'from-amber-500 to-orange-500' },
-  {
-    key: 'fiber' as const,
-    labelKey: 'products.table.fiber',
-    gradient: 'from-violet-500 to-purple-500',
-  },
+  { key: 'protein' as const, labelKey: 'products.table.protein' },
+  { key: 'carbs' as const, labelKey: 'product_detail.carbohydrates' },
+  { key: 'fat' as const, labelKey: 'product_detail.fat' },
+  { key: 'fiber' as const, labelKey: 'products.table.fiber' },
 ];
 
 export function MacroDistributionCard({
@@ -59,17 +47,18 @@ export function MacroDistributionCard({
               <div key={macro.key}>
                 <div className="mb-2 flex justify-between text-[0.9rem]">
                   <span className="font-medium">{t(macro.labelKey)}</span>
-                  <span className="text-muted-foreground">
-                    {val.toFixed(1)}g<span className="ml-1.5 text-xs">({percent.toFixed(0)}%)</span>
+                  <span className="text-muted-foreground tnum">
+                    {val.toFixed(1)} g
+                    <span className="ml-1.5 text-xs">({formatNumber(percent)}%)</span>
                   </span>
                 </div>
                 <div className="bg-muted h-2.5 overflow-hidden rounded-full">
                   <div
-                    className={cn(
-                      'animate-bar-fill h-full rounded-full bg-gradient-to-r',
-                      macro.gradient,
-                    )}
-                    style={{ width: `${String(percent)}%` }}
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${String(percent)}%`,
+                      background: `hsl(var(--color-${macro.key}))`,
+                    }}
                   />
                 </div>
               </div>

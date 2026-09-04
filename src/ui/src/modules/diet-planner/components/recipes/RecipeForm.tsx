@@ -228,7 +228,7 @@ export function RecipeForm({
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="stagger-children space-y-6"
+      className="mx-auto flex max-w-3xl flex-col gap-[18px]"
     >
       <Card>
         <CardHeader>
@@ -316,7 +316,7 @@ export function RecipeForm({
             const row = watchedIngredients[idx];
             return (
               <div key={field.id} className="flex items-start gap-3">
-                <div className="grid flex-1 grid-cols-3 gap-3">
+                <div className="grid flex-1 gap-3 sm:grid-cols-[2fr_0.8fr_0.8fr]">
                   <div>
                     <Label htmlFor={`ingredients.${idxStr}.productName`}>
                       {t('recipe_form.product_label')}
@@ -452,19 +452,19 @@ export function RecipeForm({
           <CardTitle>{t('recipe_form.summary_header')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-3 text-[13px]">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('recipe_form.total_ingredients')}</span>
-              <span className="font-semibold">{fields.length}</span>
+              <span className="tnum font-semibold">{fields.length}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('recipe_form.servings_summary')}</span>
-              <span className="font-semibold">{watchedServings}</span>
+              <span className="tnum font-semibold">{watchedServings}</span>
             </div>
             {watchedPrepTime !== undefined && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('recipe_form.prep_time_summary')}</span>
-                <span className="font-semibold">
+                <span className="tnum font-semibold">
                   {watchedPrepTime} {t('recipes.prep_time')}
                 </span>
               </div>
@@ -476,6 +476,7 @@ export function RecipeForm({
       <div className="flex justify-end gap-3 pt-2">
         <Button
           type="button"
+          size="xl"
           variant="outline"
           onClick={() => {
             window.history.back();
@@ -483,7 +484,7 @@ export function RecipeForm({
         >
           {t('common.cancel')}
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" size="xl" disabled={isSubmitting}>
           {isSubmitting ? t('product_form.saving') : (submitLabel ?? t('common.save'))}
         </Button>
       </div>
