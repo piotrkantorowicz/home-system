@@ -89,7 +89,7 @@ export default function ProductDetail() {
         </div>
 
         {product.isOwner && (
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             <Button size="xl" asChild>
               <Link to={`/diet-planner/products/${id ?? ''}/edit`}>
                 <Pencil className="size-4" />
@@ -113,7 +113,7 @@ export default function ProductDetail() {
         <Card className="flex flex-col gap-5 p-[22px] lg:col-span-2">
           <div className="text-[15px] font-bold">{t('product_detail.nutrition_facts')}</div>
 
-          <div className="border-border flex items-baseline justify-between border-b pb-4">
+          <div className="border-border flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-4">
             <span className="text-[15px] font-semibold">{t('products.table.calories')}</span>
             <span className="numeral text-[34px] leading-none font-bold">
               <span className="tnum">{formatNumber(product.caloriesPer100g ?? 0)}</span>

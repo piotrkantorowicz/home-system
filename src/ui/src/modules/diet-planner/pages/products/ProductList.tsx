@@ -128,7 +128,7 @@ export default function ProductList() {
 
       {/* Filter strip */}
       <div className="border-border bg-card flex flex-wrap items-center gap-2.5 rounded-[18px] border p-3.5">
-        <div className="bg-secondary border-border flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3">
+        <div className="bg-secondary border-border focus-within:ring-primary flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3 focus-within:ring-2">
           <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
           <input
             value={search}

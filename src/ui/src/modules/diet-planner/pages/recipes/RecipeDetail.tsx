@@ -102,7 +102,7 @@ export default function RecipeDetail() {
           </p>
         </div>
         {recipe.isOwner ? (
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             <Button size="xl" asChild>
               <Link to="/diet-planner/calendar">{t('recipe_detail.add_to_plan')}</Link>
             </Button>

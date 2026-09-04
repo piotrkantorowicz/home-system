@@ -43,7 +43,7 @@ export function Header() {
       <form
         onSubmit={handleSearch}
         role="search"
-        className="border-border bg-card text-muted-foreground hidden h-[38px] max-w-[380px] flex-1 items-center gap-2.5 rounded-[12px] border px-3 md:flex"
+        className="border-border bg-card text-muted-foreground focus-within:ring-primary hidden h-[38px] max-w-[380px] flex-1 items-center gap-2.5 rounded-[12px] border px-3 focus-within:ring-2 md:flex"
       >
         <Search className="size-[15px] shrink-0" strokeWidth={2} />
         <input
