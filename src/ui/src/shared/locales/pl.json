@@ -42,7 +42,16 @@
       "piece": "sztuka"
     },
     "home": "Dom",
-    "search_placeholder": "Szukaj potraw, przepisów…",
-    "app_tagline": "Planer diety"
+    "app_tagline": "Planer diety",
+    "hydration": "Nawodnienie",
+    "shopping_list": "Lista zakupów",
+    "meal_plan": "Plan posiłków",
+    "switch_module": "Przełącz moduł",
+    "search_everything": "Szukaj wszędzie",
+    "collapse_nav": "Zwiń",
+    "expand_nav": "Rozwiń",
+    "no_modules_title": "Brak zainstalowanych modułów",
+    "no_modules_body": "Poproś administratora o włączenie modułu dla Twojego konta.",
+    "no_matches": "Brak wyników"
   }
 }

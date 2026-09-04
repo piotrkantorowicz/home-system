@@ -42,7 +42,16 @@
       "piece": "piece"
     },
     "home": "Home",
-    "search_placeholder": "Search food, recipes…",
-    "app_tagline": "Diet planner"
+    "app_tagline": "Diet planner",
+    "hydration": "Hydration",
+    "shopping_list": "Shopping list",
+    "meal_plan": "Meal plan",
+    "switch_module": "Switch module",
+    "search_everything": "Search everything",
+    "collapse_nav": "Collapse",
+    "expand_nav": "Expand",
+    "no_modules_title": "No modules installed",
+    "no_modules_body": "Ask an administrator to enable a module for your account.",
+    "no_matches": "No matches"
   }
 }

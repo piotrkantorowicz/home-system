@@ -842,5 +842,10 @@
     "data": "Data",
     "ring": "Ring",
     "banners": "Banners"
+  },
+  "nav_groups": {
+    "plan": "Plan",
+    "library": "Library",
+    "track": "Track"
   }
 }

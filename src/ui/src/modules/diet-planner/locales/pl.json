@@ -824,5 +824,10 @@
     "data": "Dane",
     "ring": "Pierścień",
     "banners": "Komunikaty"
+  },
+  "nav_groups": {
+    "plan": "Plan",
+    "library": "Biblioteka",
+    "track": "Śledzenie"
   }
 }
