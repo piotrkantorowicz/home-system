@@ -8,7 +8,7 @@ import {
   CardContent,
   Button,
   Input,
-  Label,
+  Field,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
@@ -31,6 +31,13 @@ type GoalFormData = z.output<typeof goalSchema>;
 export interface GoalsFormProps {
   onSuccess?: () => void;
 }
+
+const MACRO_FIELDS = [
+  { id: 'proteinGrams', labelKey: 'goals.protein_label', phKey: 'goals.protein_placeholder' },
+  { id: 'carbsGrams', labelKey: 'goals.carbs_label', phKey: 'goals.carbs_placeholder' },
+  { id: 'fatGrams', labelKey: 'goals.fat_label', phKey: 'goals.fat_placeholder' },
+  { id: 'fiberGrams', labelKey: 'goals.fiber_label', phKey: 'goals.fiber_placeholder' },
+] as const;
 
 export function GoalsForm({ onSuccess }: GoalsFormProps) {
   const { t } = useTranslation();
@@ -99,99 +106,59 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="space-y-6"
+      className="flex flex-col gap-[18px]"
     >
-      {/* Nutrition Goals — single card with calories + 2×2 macro grid */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t('goals.nutrition_header')}</CardTitle>
+          <CardTitle className="text-[15px]">{t('goals.nutrition_header')}</CardTitle>
           <CardDescription>{t('goals.nutrition_desc')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Daily Calorie Target — full-width row, capped at max-w-xs */}
-          <div className="max-w-xs">
-            <Label htmlFor="dailyCalorieTarget">{t('goals.calories_label')}</Label>
+        <CardContent className="space-y-5">
+          <Field
+            id="dailyCalorieTarget"
+            label={t('goals.calories_label')}
+            error={errors.dailyCalorieTarget?.message}
+            className="max-w-xs"
+          >
             <Input
               id="dailyCalorieTarget"
               type="number"
               step="1"
+              className="tnum"
               placeholder={t('goals.calories_placeholder')}
+              aria-invalid={!!errors.dailyCalorieTarget}
               {...register('dailyCalorieTarget')}
             />
-            {errors.dailyCalorieTarget && (
-              <p className="text-destructive mt-1 text-sm">{errors.dailyCalorieTarget.message}</p>
-            )}
-          </div>
+          </Field>
 
-          {/* Macros — 2×2 grid */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="proteinGrams">{t('goals.protein_label')}</Label>
-              <Input
-                id="proteinGrams"
-                type="number"
-                step="0.1"
-                placeholder={t('goals.protein_placeholder')}
-                {...register('proteinGrams')}
-              />
-              {errors.proteinGrams && (
-                <p className="text-destructive mt-1 text-sm">{errors.proteinGrams.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="carbsGrams">{t('goals.carbs_label')}</Label>
-              <Input
-                id="carbsGrams"
-                type="number"
-                step="0.1"
-                placeholder={t('goals.carbs_placeholder')}
-                {...register('carbsGrams')}
-              />
-              {errors.carbsGrams && (
-                <p className="text-destructive mt-1 text-sm">{errors.carbsGrams.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="fatGrams">{t('goals.fat_label')}</Label>
-              <Input
-                id="fatGrams"
-                type="number"
-                step="0.1"
-                placeholder={t('goals.fat_placeholder')}
-                {...register('fatGrams')}
-              />
-              {errors.fatGrams && (
-                <p className="text-destructive mt-1 text-sm">{errors.fatGrams.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="fiberGrams">{t('goals.fiber_label')}</Label>
-              <Input
-                id="fiberGrams"
-                type="number"
-                step="0.1"
-                placeholder={t('goals.fiber_placeholder')}
-                {...register('fiberGrams')}
-              />
-              {errors.fiberGrams && (
-                <p className="text-destructive mt-1 text-sm">{errors.fiberGrams.message}</p>
-              )}
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {MACRO_FIELDS.map((f) => (
+              <Field key={f.id} id={f.id} label={t(f.labelKey)} error={errors[f.id]?.message}>
+                <Input
+                  id={f.id}
+                  type="number"
+                  step="0.1"
+                  className="tnum"
+                  placeholder={t(f.phKey)}
+                  aria-invalid={!!errors[f.id]}
+                  {...register(f.id)}
+                />
+              </Field>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Save */}
       <div className="flex justify-end">
-        <Button type="submit" disabled={saveMutation.isPending || !isDirty}>
+        <Button type="submit" size="xl" disabled={saveMutation.isPending || !isDirty}>
           {saveMutation.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.saving')}
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="h-4 w-4" />
               {t('goals.save_btn')}
             </>
           )}

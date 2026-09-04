@@ -92,7 +92,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="space-y-6"
+      className="flex flex-col gap-[18px]"
     >
       <Card>
         <CardContent className="space-y-4 pt-6">
@@ -179,15 +179,15 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
       </Card>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={updateMutation.isPending || !isDirty}>
+        <Button type="submit" size="xl" disabled={updateMutation.isPending || !isDirty}>
           {updateMutation.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.saving')}
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="h-4 w-4" />
               {t('meal_schedule.save_btn')}
             </>
           )}

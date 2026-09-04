@@ -111,16 +111,16 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="space-y-6"
+      className="flex flex-col gap-[18px]"
     >
       {/* Personal Info — dateOfBirth, gender, activityLevel */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t('profile.personal_header')}</CardTitle>
+          <CardTitle className="text-[15px]">{t('profile.personal_header')}</CardTitle>
           <CardDescription>{t('profile.personal_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <Label>{t('profile.date_of_birth')}</Label>
               <Controller
@@ -137,24 +137,34 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 )}
               />
               {errors.dateOfBirth && (
-                <p className="text-destructive mt-1 text-sm">{errors.dateOfBirth.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">{errors.dateOfBirth.message}</p>
               )}
             </div>
             <div>
               <Label htmlFor="gender">{t('profile.gender')}</Label>
-              <Select id="gender" className="mt-1" {...register('gender')}>
+              <Select
+                id="gender"
+                className="mt-1"
+                aria-invalid={!!errors.gender}
+                {...register('gender')}
+              >
                 <option value="">—</option>
                 <option value="Male">{t('profile.gender_male')}</option>
                 <option value="Female">{t('profile.gender_female')}</option>
                 <option value="Other">{t('profile.gender_other')}</option>
               </Select>
               {errors.gender && (
-                <p className="text-destructive mt-1 text-sm">{errors.gender.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">{errors.gender.message}</p>
               )}
             </div>
             <div>
               <Label htmlFor="activityLevel">{t('profile.activity_level')}</Label>
-              <Select id="activityLevel" className="mt-1" {...register('activityLevel')}>
+              <Select
+                id="activityLevel"
+                className="mt-1"
+                aria-invalid={!!errors.activityLevel}
+                {...register('activityLevel')}
+              >
                 <option value="">—</option>
                 <option value="Sedentary">{t('profile.activity_sedentary')}</option>
                 <option value="LightlyActive">{t('profile.activity_lightly')}</option>
@@ -163,7 +173,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 <option value="ExtraActive">{t('profile.activity_extra')}</option>
               </Select>
               {errors.activityLevel && (
-                <p className="text-destructive mt-1 text-sm">{errors.activityLevel.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">
+                  {errors.activityLevel.message}
+                </p>
               )}
             </div>
           </div>
@@ -173,11 +185,11 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
       {/* Body Measurements — heightCm, currentWeightKg, targetWeightKg */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t('profile.measurements_header')}</CardTitle>
+          <CardTitle className="text-[15px]">{t('profile.measurements_header')}</CardTitle>
           <CardDescription>{t('profile.measurements_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <Label htmlFor="heightCm">{t('profile.height')}</Label>
               <Input
@@ -185,10 +197,12 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 type="number"
                 step="0.1"
                 placeholder="e.g., 175"
+                className="tnum"
+                aria-invalid={!!errors.heightCm}
                 {...register('heightCm')}
               />
               {errors.heightCm && (
-                <p className="text-destructive mt-1 text-sm">{errors.heightCm.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">{errors.heightCm.message}</p>
               )}
             </div>
             <div>
@@ -198,10 +212,14 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 type="number"
                 step="0.1"
                 placeholder="e.g., 75"
+                className="tnum"
+                aria-invalid={!!errors.currentWeightKg}
                 {...register('currentWeightKg')}
               />
               {errors.currentWeightKg && (
-                <p className="text-destructive mt-1 text-sm">{errors.currentWeightKg.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">
+                  {errors.currentWeightKg.message}
+                </p>
               )}
             </div>
             <div>
@@ -211,10 +229,14 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 type="number"
                 step="0.1"
                 placeholder="e.g., 70"
+                className="tnum"
+                aria-invalid={!!errors.targetWeightKg}
                 {...register('targetWeightKg')}
               />
               {errors.targetWeightKg && (
-                <p className="text-destructive mt-1 text-sm">{errors.targetWeightKg.message}</p>
+                <p className="text-destructive mt-1 text-[11.5px]">
+                  {errors.targetWeightKg.message}
+                </p>
               )}
             </div>
           </div>
@@ -223,15 +245,15 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
 
       {/* Save */}
       <div className="flex justify-end">
-        <Button type="submit" disabled={saveMutation.isPending || !isDirty}>
+        <Button type="submit" size="xl" disabled={saveMutation.isPending || !isDirty}>
           {saveMutation.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.saving')}
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="h-4 w-4" />
               {t('profile.save_btn')}
             </>
           )}
