@@ -426,6 +426,20 @@ h4 {
   }
 }
 
+/* ── Compact density ── Preferences toggle; tightens the shared card + page rhythm ── */
+:root[data-density='compact'] .p-\[22px\] {
+  padding: 16px;
+}
+:root[data-density='compact'] .gap-\[18px\] {
+  gap: 12px;
+}
+:root[data-density='compact'] .py-6 {
+  padding-block: 1rem;
+}
+:root[data-density='compact'] .space-y-5 > * + * {
+  margin-top: 1rem;
+}
+
 /* ── Select styling ── */
 select {
   appearance: none;

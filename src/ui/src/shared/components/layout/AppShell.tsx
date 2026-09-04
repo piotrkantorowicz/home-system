@@ -1,4 +1,5 @@
 import { useNotificationStream } from '@modules/notifications/api/hooks/useNotificationStream';
+import { usePreferenceEffects } from '@shared/hooks/usePreferences';
 import { useAuth } from 'react-oidc-context';
 import { Outlet } from 'react-router-dom';
 
@@ -10,6 +11,7 @@ export function AppShell() {
   const auth = useAuth();
 
   useNotificationStream(auth.isAuthenticated);
+  usePreferenceEffects();
 
   return (
     <div className="flex h-screen overflow-hidden">

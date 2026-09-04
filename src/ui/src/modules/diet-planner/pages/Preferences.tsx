@@ -1,9 +1,6 @@
-import {
-  usePreferences,
-  type Preferences as Prefs,
-} from '@modules/diet-planner/hooks/usePreferences';
 import { Banner, Button, Card, SegmentedControl, Switch } from '@shared/components/ui';
 import { useTheme } from '@shared/context/ThemeContext';
+import { usePreferences, type Preferences as Prefs } from '@shared/hooks/usePreferences';
 import { cn, getInitials } from '@shared/lib/utils';
 import { LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
