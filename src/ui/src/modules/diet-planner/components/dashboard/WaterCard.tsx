@@ -56,7 +56,7 @@ export function WaterCard() {
             {(totalMl / 1000).toFixed(1)} / {(targetMl / 1000).toFixed(1)} L
           </div>
         </div>
-        <div className="text-[24px] font-bold text-[hsl(var(--color-water))]">{percent}%</div>
+        <div className="text-[24px] font-bold text-[var(--color-water)]">{percent}%</div>
       </div>
 
       <div className="flex gap-1.5">
@@ -71,9 +71,9 @@ export function WaterCard() {
               )}
               style={
                 state === 'full'
-                  ? { background: 'hsl(var(--color-water))' }
+                  ? { background: 'var(--color-water)' }
                   : state === 'partial'
-                    ? { background: 'hsl(var(--color-water) / 0.55)' }
+                    ? { background: 'color-mix(in oklab, var(--color-water) 55%, transparent)' }
                     : undefined
               }
             />

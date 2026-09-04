@@ -240,7 +240,7 @@ function MacroTargetsCard({
               key={key}
               style={{
                 width: `${String(pct(i === 0 ? pCal : i === 1 ? cCal : fCal))}%`,
-                background: `hsl(var(--color-${key}))`,
+                background: `var(--color-${key})`,
               }}
             />
           ))}
@@ -263,7 +263,7 @@ function MacroTargetsCard({
             <span className="inline-flex items-center gap-2 font-semibold">
               <span
                 className="size-2.5 rounded-full"
-                style={{ background: `hsl(var(--color-${row.key}))` }}
+                style={{ background: `var(--color-${row.key})` }}
               />
               {row.label}
             </span>

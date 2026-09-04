@@ -57,7 +57,7 @@ export function MacroDistributionCard({
                     className="h-full rounded-full"
                     style={{
                       width: `${String(percent)}%`,
-                      background: `hsl(var(--color-${macro.key}))`,
+                      background: `var(--color-${macro.key})`,
                     }}
                   />
                 </div>

@@ -177,8 +177,8 @@ export default function Preferences() {
           <div
             className="flex items-center justify-between rounded-[13px] border px-3.5 py-3 text-[13px] font-semibold"
             style={{
-              borderColor: 'color-mix(in oklab, hsl(var(--color-fat)) 40%, transparent)',
-              background: 'color-mix(in oklab, hsl(var(--color-fat)) 8%, transparent)',
+              borderColor: 'color-mix(in oklab, var(--color-fat) 40%, transparent)',
+              background: 'color-mix(in oklab, var(--color-fat) 8%, transparent)',
             }}
           >
             <span className="text-destructive">{t('preferences.delete_account')}</span>
@@ -235,7 +235,7 @@ function SelectRow({
         onChange={(e) => {
           onChange(e.target.value);
         }}
-        className="border-border bg-secondary text-foreground mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] font-medium normal-case outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+        className="border-border bg-secondary text-foreground mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] font-medium normal-case outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
       >
         {options.map((o) => (
           <option key={o} value={o}>

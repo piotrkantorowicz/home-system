@@ -97,9 +97,9 @@ export function WeightTrendWidget() {
                     <Line
                       type="monotone"
                       dataKey="weightKg"
-                      stroke="hsl(var(--color-primary))"
+                      stroke="var(--color-primary)"
                       strokeWidth={2}
-                      dot={{ r: 2, fill: 'hsl(var(--color-primary))' }}
+                      dot={{ r: 2, fill: 'var(--color-primary)' }}
                       isAnimationActive={false}
                     />
                   </LineChart>

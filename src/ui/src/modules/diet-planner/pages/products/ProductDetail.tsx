@@ -137,7 +137,7 @@ export default function ProductDetail() {
                       className="h-full rounded-full"
                       style={{
                         width: `${String(pct)}%`,
-                        background: `hsl(var(--color-${r.token}))`,
+                        background: `var(--color-${r.token})`,
                       }}
                     />
                   </div>

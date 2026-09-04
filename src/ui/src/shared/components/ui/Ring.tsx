@@ -21,8 +21,8 @@ export function Ring({
   className,
 }: RingProps) {
   const pct = Math.min(100, Math.max(0, percent));
-  const track = 'hsl(var(--color-muted))';
-  const fill = color === 'fat' ? 'hsl(var(--color-destructive))' : 'hsl(var(--color-primary))';
+  const track = 'var(--color-muted)';
+  const fill = color === 'fat' ? 'var(--color-destructive)' : 'var(--color-primary)';
 
   const style: CSSProperties = {
     width: size,

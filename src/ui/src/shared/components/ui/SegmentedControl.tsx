@@ -58,7 +58,7 @@ export function SegmentedControl<T extends string>({
               }
             }}
             className={cn(
-              'rounded-[9px] px-3.5 py-[7px] text-[12.5px] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))] focus-visible:outline-none',
+              'rounded-[9px] px-3.5 py-[7px] text-[12.5px] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none',
               active
                 ? 'bg-card text-foreground font-bold shadow-sm'
                 : 'text-text-2 hover:text-foreground font-semibold',

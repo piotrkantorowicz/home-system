@@ -25,9 +25,9 @@ const accentValueClass: Record<MetricTileAccent, string> = {
 
 const accentTint: Record<MetricTileAccent, string | undefined> = {
   default: undefined,
-  good: 'color-mix(in oklab, hsl(var(--color-good)) 12%, transparent)',
-  fat: 'color-mix(in oklab, hsl(var(--color-fat)) 12%, transparent)',
-  primary: 'color-mix(in oklab, hsl(var(--color-primary)) 10%, transparent)',
+  good: 'color-mix(in oklab, var(--color-good) 12%, transparent)',
+  fat: 'color-mix(in oklab, var(--color-fat) 12%, transparent)',
+  primary: 'color-mix(in oklab, var(--color-primary) 10%, transparent)',
 };
 
 export function MetricTile({

@@ -162,9 +162,9 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
               left: popoverRect.left,
               width: popoverRect.width,
               zIndex: 60,
-              background: 'hsl(var(--color-popover))',
-              color: 'hsl(var(--color-popover-foreground))',
-              borderColor: 'hsl(var(--color-border))',
+              background: 'var(--color-popover)',
+              color: 'var(--color-popover-foreground)',
+              borderColor: 'var(--color-border)',
             }}
           >
             {products.map((product) => (

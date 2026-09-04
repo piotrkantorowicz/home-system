@@ -122,7 +122,7 @@ export default function Hydration() {
       <Card className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
         {/* Glass visual */}
         <div
-          className="bg-secondary relative h-[176px] w-[132px] flex-none overflow-hidden border-2 border-[hsl(var(--color-water))]"
+          className="bg-secondary relative h-[176px] w-[132px] flex-none overflow-hidden border-2 border-[var(--color-water)]"
           style={{ borderRadius: '18px 18px 26px 26px' }}
         >
           <div
@@ -130,7 +130,7 @@ export default function Hydration() {
             style={{
               height: `${String(percent)}%`,
               background:
-                'linear-gradient(180deg, color-mix(in oklab, hsl(var(--color-water)) 75%, transparent), hsl(var(--color-water)))',
+                'linear-gradient(180deg, color-mix(in oklab, var(--color-water) 75%, transparent), var(--color-water))',
             }}
           />
           <div className="tnum absolute inset-0 grid place-items-center text-center text-[13px] font-bold">
@@ -164,9 +164,9 @@ export default function Hydration() {
                   )}
                   style={
                     state === 'full'
-                      ? { background: 'hsl(var(--color-water))' }
+                      ? { background: 'var(--color-water)' }
                       : state === 'partial'
-                        ? { background: 'hsl(var(--color-water) / 0.55)' }
+                        ? { background: 'color-mix(in oklab, var(--color-water) 55%, transparent)' }
                         : undefined
                   }
                 />
@@ -181,7 +181,7 @@ export default function Hydration() {
                 void add(glassMl);
               }}
               disabled={pending !== null}
-              style={{ background: 'hsl(var(--color-water))' }}
+              style={{ background: 'var(--color-water)' }}
             >
               <Droplet className="size-4" />
               {t('hydration.add_glass', { amount: glassMl })}
@@ -219,7 +219,7 @@ export default function Hydration() {
                   setCustomAmount(e.target.value);
                 }}
                 placeholder={t('hydration.custom_amount_placeholder')}
-                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
               />
             </label>
             <label className="text-text-2 flex-1 text-[12px] font-semibold">
@@ -231,7 +231,7 @@ export default function Hydration() {
                   setCustomNote(e.target.value);
                 }}
                 placeholder={t('hydration.custom_note_placeholder')}
-                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+                className="border-border bg-secondary mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
               />
             </label>
             <Button
@@ -269,7 +269,7 @@ export default function Hydration() {
                 <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
                   {entry.note ?? t('hydration.entry_water')}
                 </span>
-                <span className="tnum text-[13px] font-bold text-[hsl(var(--color-water))]">
+                <span className="tnum text-[13px] font-bold text-[var(--color-water)]">
                   {entry.amountMl} ml
                 </span>
                 <button

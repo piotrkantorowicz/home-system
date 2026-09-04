@@ -139,7 +139,7 @@ export default function NutritionSummary() {
             <div className="relative flex h-[190px] items-end gap-1">
               {targetLinePct !== null ? (
                 <div
-                  className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[hsl(var(--color-fat))]"
+                  className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[var(--color-fat)]"
                   style={{ bottom: `${String(targetLinePct)}%` }}
                 />
               ) : null}
@@ -162,10 +162,10 @@ export default function NutritionSummary() {
                         kcal === 0
                           ? 'transparent'
                           : isToday
-                            ? 'hsl(var(--color-primary))'
+                            ? 'var(--color-primary)'
                             : over
-                              ? 'color-mix(in oklab, hsl(var(--color-fat)) 45%, transparent)'
-                              : 'color-mix(in oklab, hsl(var(--color-primary)) 30%, transparent)',
+                              ? 'color-mix(in oklab, var(--color-fat) 45%, transparent)'
+                              : 'color-mix(in oklab, var(--color-primary) 30%, transparent)',
                     }}
                   />
                 );
@@ -184,7 +184,7 @@ export default function NutritionSummary() {
                 <span key={m} className="inline-flex items-center gap-1.5 capitalize">
                   <span
                     className="size-2 rounded-full"
-                    style={{ background: `hsl(var(--color-${m}))` }}
+                    style={{ background: `var(--color-${m})` }}
                   />
                   {t(`products.table.${m}`)}
                 </span>
@@ -248,7 +248,7 @@ function SplitRow({
         {(['protein', 'carbs', 'fat'] as const).map((m) => (
           <div
             key={m}
-            style={{ width: `${String(split[m])}%`, background: `hsl(var(--color-${m}))` }}
+            style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }}
           />
         ))}
       </div>

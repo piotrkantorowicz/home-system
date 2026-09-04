@@ -19,9 +19,9 @@ const variantText: Record<StatusPillVariant, string> = {
 };
 
 const variantBg: Record<StatusPillVariant, string> = {
-  good: 'color-mix(in oklab, hsl(var(--color-good)) 14%, transparent)',
-  over: 'color-mix(in oklab, hsl(var(--color-fat)) 14%, transparent)',
-  neutral: 'hsl(var(--color-muted))',
+  good: 'color-mix(in oklab, var(--color-good) 14%, transparent)',
+  over: 'color-mix(in oklab, var(--color-fat) 14%, transparent)',
+  neutral: 'var(--color-muted)',
 };
 
 export function StatusPill({ variant, icon: Icon, children, className }: StatusPillProps) {

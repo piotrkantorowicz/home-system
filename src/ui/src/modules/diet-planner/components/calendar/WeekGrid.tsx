@@ -69,10 +69,10 @@ function dominantMacro(meals: MealEntryDto[]): Macro {
 }
 
 const macroTint: Record<Macro, string> = {
-  protein: 'color-mix(in oklab, hsl(var(--color-protein)) 16%, transparent)',
-  carbs: 'color-mix(in oklab, hsl(var(--color-carbs)) 16%, transparent)',
-  fat: 'color-mix(in oklab, hsl(var(--color-fat)) 16%, transparent)',
-  fiber: 'color-mix(in oklab, hsl(var(--color-fiber)) 16%, transparent)',
+  protein: 'color-mix(in oklab, var(--color-protein) 16%, transparent)',
+  carbs: 'color-mix(in oklab, var(--color-carbs) 16%, transparent)',
+  fat: 'color-mix(in oklab, var(--color-fat) 16%, transparent)',
+  fiber: 'color-mix(in oklab, var(--color-fiber) 16%, transparent)',
 };
 
 export function WeekGrid({
@@ -344,7 +344,7 @@ function MealChip({
               onCompleteMeal(meal);
             }}
           >
-            <Check className="size-4 text-[hsl(var(--color-good))]" />
+            <Check className="size-4 text-[var(--color-good)]" />
             {t('calendar.meal_actions.mark_done')}
           </DropdownMenuItem>
         )}
@@ -394,7 +394,7 @@ function LegendSwatch({ macro, label }: { macro: Macro; label: string }) {
     <span className="text-muted-foreground inline-flex items-center gap-1.5">
       <span
         className="size-2.5 rounded-full"
-        style={{ background: `hsl(var(--color-${macro}))` }}
+        style={{ background: `var(--color-${macro})` }}
       />
       {label}
     </span>

@@ -213,7 +213,7 @@ export default function ProductList() {
                     incomplete
                       ? {
                           background:
-                            'color-mix(in oklab, hsl(var(--color-carbs)) 7%, transparent)',
+                            'color-mix(in oklab, var(--color-carbs) 7%, transparent)',
                         }
                       : undefined
                   }
@@ -358,8 +358,8 @@ function MacroCell({
 function IncompleteBadge({ label }: { label: string }) {
   return (
     <span
-      className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--color-carbs))]"
-      style={{ background: 'color-mix(in oklab, hsl(var(--color-carbs)) 22%, transparent)' }}
+      className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-carbs)]"
+      style={{ background: 'color-mix(in oklab, var(--color-carbs) 22%, transparent)' }}
     >
       {label}
     </span>
@@ -442,7 +442,7 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
             key={c.key}
             className="rounded-[9px] p-2 text-center"
             style={{
-              background: `color-mix(in oklab, hsl(var(--color-${c.key})) 12%, transparent)`,
+              background: `color-mix(in oklab, var(--color-${c.key}) 12%, transparent)`,
             }}
           >
             <div className="tnum text-[13px] font-bold">{fmt(val[c.key])}</div>
