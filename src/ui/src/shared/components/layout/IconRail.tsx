@@ -1,5 +1,6 @@
+import { UserProfileDropdown } from '@shared/components/ui';
 import { useTheme } from '@shared/context/ThemeContext';
-import { cn, getInitials } from '@shared/lib/utils';
+import { cn } from '@shared/lib/utils';
 import { Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
@@ -15,6 +16,10 @@ export function IconRail() {
   const items = getRailNavItems(t);
   const profile = auth.user?.profile;
   const displayName = profile?.name ?? profile?.preferred_username ?? profile?.email ?? 'User';
+
+  const handleLogout = () => {
+    void auth.signoutRedirect();
+  };
 
   return (
     <nav
@@ -76,15 +81,14 @@ export function IconRail() {
         )}
       </button>
 
-      <NavLink
-        to="/diet-planner/profile"
-        aria-label={displayName}
-        title={displayName}
-        className="mt-2 grid size-[34px] place-items-center rounded-[11px] text-[12px] font-bold text-white"
-        style={{ background: 'var(--gradient-avatar)' }}
-      >
-        {getInitials(displayName)}
-      </NavLink>
+      <div className="mt-2">
+        <UserProfileDropdown
+          compact
+          displayName={displayName}
+          email={profile?.email ?? undefined}
+          onLogout={handleLogout}
+        />
+      </div>
     </nav>
   );
 }

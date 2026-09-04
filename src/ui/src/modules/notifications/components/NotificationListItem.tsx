@@ -37,7 +37,7 @@ export function NotificationListItem({
   return (
     <li
       className={cn(
-        'border-border bg-surface flex items-start gap-3 rounded-md border p-4 transition-opacity',
+        'border-border bg-card flex items-start gap-3 rounded-md border p-4 transition-opacity',
         isUnread ? 'border-l-primary border-l-4' : 'opacity-60',
       )}
     >
@@ -64,25 +64,27 @@ export function NotificationListItem({
           isUnread && 'hover:opacity-80',
         )}
       >
-        <Icon aria-hidden className="text-text-muted mt-0.5 size-5 shrink-0" />
+        <Icon aria-hidden className="text-muted-foreground mt-0.5 size-5 shrink-0" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <p
               className={cn(
                 'truncate text-sm',
-                isUnread ? 'text-text font-semibold' : 'text-text-muted font-medium line-through',
+                isUnread
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground font-medium line-through',
               )}
             >
               {notification.title}
             </p>
-            <span className="text-text-muted shrink-0 text-xs">
+            <span className="text-muted-foreground shrink-0 text-xs">
               {notification.createdAt
                 ? formatTimeAgo(notification.createdAt, i18n.language, now)
                 : ''}
             </span>
           </div>
-          <p className="text-text-muted mt-1 line-clamp-1 text-sm">{notification.body}</p>
-          <p className="text-text-muted mt-1 text-xs">{t(meta.labelKey)}</p>
+          <p className="text-muted-foreground mt-1 line-clamp-1 text-sm">{notification.body}</p>
+          <p className="text-muted-foreground mt-1 text-xs">{t(meta.labelKey)}</p>
         </div>
       </button>
     </li>

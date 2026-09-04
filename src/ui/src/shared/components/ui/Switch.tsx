@@ -32,13 +32,18 @@ export function Switch({
         onCheckedChange(!checked);
       }}
       className={cn(
-        'flex h-6 w-[42px] flex-none items-center rounded-full p-[3px] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-primary justify-end' : 'bg-muted border-border-strong justify-start border',
+        'focus-visible:ring-ring flex h-6 w-[42px] flex-none items-center rounded-full p-[3px] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        checked
+          ? 'bg-primary justify-end'
+          : 'bg-border-strong dark:bg-muted dark:border-border-strong justify-start dark:border',
         className,
       )}
     >
       <span
-        className={cn('size-[18px] rounded-full', checked ? 'bg-white' : 'bg-card shadow-sm')}
+        className={cn(
+          'size-[18px] rounded-full bg-white shadow-sm ring-1 ring-black/5',
+          checked && 'ring-black/10',
+        )}
       />
     </button>
   );
