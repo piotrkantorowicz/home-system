@@ -639,7 +639,20 @@
     "quick_title": "Hydration Today",
     "glasses_count": "{{current}} / {{target}} glasses",
     "to_go": "{{amount}} L to go",
-    "entry_water": "Water"
+    "entry_water": "Water",
+    "add_glass_aria": "Add a glass ({{amount}} ml)",
+    "remove_glass_aria": "Remove last entry",
+    "custom_trigger": "Custom",
+    "custom_popover_title": "Custom amount",
+    "custom_step_down_aria": "Decrease amount",
+    "custom_step_up_aria": "Increase amount",
+    "custom_ml_unit": "ml",
+    "undo": "Undo",
+    "day_total": "Today",
+    "remove_entry_confirm": "Remove this entry?",
+    "remove_entry_no": "No",
+    "remove_entry_yes": "Remove",
+    "quick_add_note": "Keep tapping — every button stays live while one is saving."
   },
   "common": {
     "cancel": "Cancel",

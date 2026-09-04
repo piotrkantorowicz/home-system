@@ -71,3 +71,4 @@ export { Ring, type RingProps } from './Ring';
 export { Switch, type SwitchProps } from './Switch';
 export { Banner, type BannerProps, type BannerVariant } from './Banner';
 export { Field, type FieldProps } from './Field';
+export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent } from './Popover';

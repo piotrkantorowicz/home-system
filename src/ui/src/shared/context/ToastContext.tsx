@@ -5,18 +5,24 @@ import type { ReactNode } from 'react';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastItem {
   id: string;
   variant: ToastVariant;
   message: string;
   duration: number;
+  action?: ToastAction;
 }
 
-type ToastAction = { type: 'ADD'; toast: ToastItem } | { type: 'REMOVE'; id: string };
+type ToastReducerAction = { type: 'ADD'; toast: ToastItem } | { type: 'REMOVE'; id: string };
 
 function toastReducer(
   state: { toasts: ToastItem[] },
-  action: ToastAction,
+  action: ToastReducerAction,
 ): { toasts: ToastItem[] } {
   switch (action.type) {
     case 'ADD':
@@ -26,11 +32,16 @@ function toastReducer(
   }
 }
 
+export interface ToastOptions {
+  duration?: number;
+  action?: ToastAction;
+}
+
 export interface ToastContextValue {
-  success: (message: string, duration?: number) => void;
-  error: (message: string, duration?: number) => void;
-  warning: (message: string, duration?: number) => void;
-  info: (message: string, duration?: number) => void;
+  success: (message: string, options?: ToastOptions) => void;
+  error: (message: string, options?: ToastOptions) => void;
+  warning: (message: string, options?: ToastOptions) => void;
+  info: (message: string, options?: ToastOptions) => void;
   dismiss: (id: string) => void;
 }
 
@@ -52,24 +63,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'REMOVE', id });
   }, []);
 
-  const add = useCallback((variant: ToastVariant, message: string, duration = 4000) => {
+  const add = useCallback((variant: ToastVariant, message: string, options?: ToastOptions) => {
     counterRef.current += 1;
     const id = `toast-${String(counterRef.current)}`;
-    dispatch({ type: 'ADD', toast: { id, variant, message, duration } });
+    const duration = options?.duration ?? 4000;
+    dispatch({
+      type: 'ADD',
+      toast: { id, variant, message, duration, ...(options?.action ? { action: options.action } : {}) },
+    });
   }, []);
 
   const value: ToastContextValue = {
-    success: (msg, dur) => {
-      add('success', msg, dur);
+    success: (msg, opts) => {
+      add('success', msg, opts);
     },
-    error: (msg, dur) => {
-      add('error', msg, dur);
+    error: (msg, opts) => {
+      add('error', msg, opts);
     },
-    warning: (msg, dur) => {
-      add('warning', msg, dur);
+    warning: (msg, opts) => {
+      add('warning', msg, opts);
     },
-    info: (msg, dur) => {
-      add('info', msg, dur);
+    info: (msg, opts) => {
+      add('info', msg, opts);
     },
     dismiss,
   };

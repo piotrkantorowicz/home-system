@@ -98,9 +98,23 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
     >
       <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', config.iconClass)} aria-hidden />
 
-      <p className="dark:text-foreground/90 flex-1 text-sm leading-snug font-medium text-slate-700">
-        {toast.message}
-      </p>
+      <div className="flex-1">
+        <p className="dark:text-foreground/90 text-sm leading-snug font-medium text-slate-700">
+          {toast.message}
+        </p>
+        {toast.action ? (
+          <button
+            type="button"
+            onClick={() => {
+              toast.action?.onClick();
+              handleDismiss();
+            }}
+            className="border-border text-foreground hover:bg-muted mt-2 h-7 rounded-[9px] border px-2.5 text-xs font-bold transition-colors"
+          >
+            {toast.action.label}
+          </button>
+        ) : null}
+      </div>
 
       <button
         type="button"

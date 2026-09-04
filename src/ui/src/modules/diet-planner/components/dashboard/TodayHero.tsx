@@ -1,5 +1,5 @@
 import { Button, Card, MacroBar, Ring, StatusPill, type Macro } from '@shared/components/ui';
-import { formatNumber } from '@shared/lib/utils';
+import { cn, formatNumber } from '@shared/lib/utils';
 import { Check, Target, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -113,7 +113,11 @@ export function TodayHero({ goals, nutrition, onSetGoals }: TodayHeroProps) {
             <div className="bg-border w-px" />
             <Stat label={t('dashboard.hero_target')} value={target} />
             <div className="bg-border w-px" />
-            <Stat label={t('dashboard.hero_remaining')} value={remaining} />
+            <Stat
+              label={t('dashboard.hero_remaining')}
+              value={remaining}
+              negative={remaining < 0}
+            />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -135,13 +139,23 @@ export function TodayHero({ goals, nutrition, onSetGoals }: TodayHeroProps) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({
+  label,
+  value,
+  negative = false,
+}: {
+  label: string;
+  value: number;
+  negative?: boolean;
+}) {
   return (
     <div>
       <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.06em] uppercase">
         {label}
       </div>
-      <div className="numeral text-[19px] font-bold">{formatNumber(value)}</div>
+      <div className={cn('numeral text-[19px] font-bold', negative && 'text-destructive')}>
+        {formatNumber(value)}
+      </div>
     </div>
   );
 }
