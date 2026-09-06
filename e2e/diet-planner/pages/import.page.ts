@@ -4,20 +4,26 @@ import { BasePage } from './BasePage';
 
 import type { Page, Locator } from '@playwright/test';
 
+/**
+ * The wizard was collapsed from 3 steps to 2 in the #208 redesign: "Continue"
+ * now validates automatically (no separate "Validate" click / step-3 screen)
+ * — the review step shows the validation result (ready/warning/error banner)
+ * directly, with "Import N days" doing the actual import.
+ */
 export class ImportPage extends BasePage {
   readonly jsonInput: Locator;
   readonly continueButton: Locator;
-  readonly validateButton: Locator;
   readonly importButton: Locator;
   readonly loadSampleButton: Locator;
+  readonly reviewDetected: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.jsonInput = page.getByLabel(/json/i);
-    this.continueButton = page.getByRole('button', { name: /continue/i });
-    this.validateButton = page.getByRole('button', { name: /validate data|re-validate/i });
-    this.importButton = page.getByRole('button', { name: /confirm.*import/i });
+    this.jsonInput = page.getByLabel(/diet plan json/i);
+    this.continueButton = page.getByRole('button', { name: /^continue$/i });
+    this.importButton = page.getByRole('button', { name: /^import \d+ days?$/i });
     this.loadSampleButton = page.getByRole('button', { name: /load sample/i });
+    this.reviewDetected = page.getByText('Detected', { exact: true });
   }
 
   async goto() {
@@ -36,9 +42,8 @@ export class ImportPage extends BasePage {
 
   /**
    * Run the full import wizard:
-   *  Step 1 → paste/load JSON, click Continue
-   *  Step 2 → click Validate, wait for Step 3
-   *  Step 3 → click Confirm Import, wait for redirect to /calendar
+   *  Upload → paste/load JSON, click Continue (auto-validates)
+   *  Review → wait for the validation summary, click "Import N days"
    */
   async runImportWizard(json?: object) {
     if (json) {
@@ -47,41 +52,24 @@ export class ImportPage extends BasePage {
       await this.loadSample();
     }
 
-    // Step 1 → 2
-    await this.continueButton.click();
-    await expect(this.page.getByText(/step 2/i)).toBeVisible({ timeout: 10000 });
-
-    // Step 2: Validate
-    await this.clickAndWaitForResponse(
-      this.validateButton,
-      '/meals/validate',
-      this.page.getByText(/step 3/i),
+    const validatePromise = this.page.waitForResponse(
+      (resp) => resp.url().includes('/meals/validate') && resp.request().method() === 'POST',
+      { timeout: 15000 },
     );
+    await this.continueButton.click();
+    await validatePromise;
+    await expect(this.reviewDetected).toBeVisible({ timeout: 10000 });
 
-    // Step 3: Execute import
-    await this.clickAndWaitForResponse(this.importButton, '/meals/import', null);
-
-    await this.page.waitForURL(/\/diet-planner\/calendar/, { timeout: 15000 });
-  }
-
-  private async clickAndWaitForResponse(
-    button: Locator,
-    urlPattern: string,
-    successLocator: Locator | null,
-  ) {
-    const responsePromise = this.page.waitForResponse(
-      (resp) => resp.url().includes(urlPattern) && resp.request().method() === 'POST',
+    const importPromise = this.page.waitForResponse(
+      (resp) => resp.url().includes('/meals/import') && resp.request().method() === 'POST',
       { timeout: 30000 },
     );
-    await button.click();
-    const response = await responsePromise;
-
+    await this.importButton.click();
+    const response = await importPromise;
     if (!response.ok()) {
       throw new Error(`Import step failed with status ${String(response.status())}`);
     }
 
-    if (successLocator) {
-      await expect(successLocator).toBeVisible({ timeout: 15000 });
-    }
+    await this.page.waitForURL(/\/diet-planner\/calendar/, { timeout: 15000 });
   }
 }

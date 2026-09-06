@@ -48,7 +48,11 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
   ];
 
   return (
-    <div className="border-border bg-card flex flex-col overflow-hidden rounded-[22px] border shadow-sm">
+    <div
+      role="listitem"
+      aria-label={recipe.name}
+      className="border-border bg-card flex flex-col overflow-hidden rounded-[22px] border shadow-sm"
+    >
       <div
         className="relative h-[132px]"
         style={{

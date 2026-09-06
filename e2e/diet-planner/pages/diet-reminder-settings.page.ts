@@ -80,11 +80,15 @@ export class DietReminderSettingsPage extends BasePage {
   }
 
   async save() {
-    await this.saveButton.click();
-    await this.page.waitForResponse(
+    // Register the response listener BEFORE clicking — on a fast local
+    // backend the PUT can resolve before a listener attached afterward
+    // would ever see it.
+    const responsePromise = this.page.waitForResponse(
       (resp) =>
         resp.url().includes('/api/v1/diet-reminder-settings') && resp.request().method() === 'PUT',
     );
+    await this.saveButton.click();
+    await responsePromise;
   }
 
   async expectSaveButtonEnabled() {

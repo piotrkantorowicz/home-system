@@ -163,7 +163,10 @@ export default function RecipeList() {
           }
         />
       ) : (
-        <div className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]">
+        <div
+          role="list"
+          className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]"
+        >
           {filtered.map((recipe) => (
             <RecipeCard
               key={recipe.id}

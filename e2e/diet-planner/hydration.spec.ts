@@ -9,11 +9,11 @@ test.describe('Hydration', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
-  test('progress bar is visible on the page', async ({ page }) => {
+  test('the water-level meter is visible on the page', async ({ page }) => {
     const hydrationPage = new HydrationPage(page);
     await hydrationPage.goto();
 
-    await hydrationPage.expectProgressBarVisible();
+    await hydrationPage.expectLevelMeterVisible();
   });
 
   test('settings form shows daily target and glass size fields', async ({ page }) => {

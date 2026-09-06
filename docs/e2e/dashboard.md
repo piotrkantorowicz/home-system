@@ -1,46 +1,58 @@
 # dashboard.spec.ts — Dashboard
 
-**Purpose**: smoke that the diet-planner dashboard renders its three module cards (Products, Recipes, Calendar), shows numeric counts, and links into the right pages.
+**Purpose**: smoke that the redesigned diet-planner dashboard renders and its quick actions and section cards work.
 
-**Setup**: `DashboardPage.goto()` navigates to `/diet-planner` and waits for `networkidle`. No data setup — uses whatever counts the backend reports for the test user.
+> **#208 redesign** — the dashboard no longer shows Products / Recipes / Calendar
+> quick-stat cards (that entry point moved into the two-tier nav's grouped
+> section panel, and `/` now redirects into a module rather than rendering a
+> launcher). It now shows a **Today** hero (calories left / eaten / target +
+> macro bars), a **Next up** meal card, a **Water** card, and a **This week**
+> review card. `SystemDashboard` was deleted.
 
-**POM**: `pages/dashboard.page.ts` exposes locators by `data-testid`:
+**Setup**: `DashboardPage.goto()` navigates to `/diet-planner` and waits for
+`networkidle`. No data setup.
 
-- `product-card`, `recipe-card`, `calendar-card` — the three stat cards
-- `product-count`, `recipe-count`, `calendar-count` — the numeric children inside each card
+**POM**: `pages/dashboard.page.ts`:
+
+- `heading` — `getByRole('heading', { name: 'Today', level: 1 })`
+- `logWaterLink` — `getByRole('link', { name: /log water/i })`
+- `logMealButton` — `getByRole('button', { name: /log a meal/i }).first()` (the
+  same label also appears on the Next up card's empty-state CTA; both open the
+  MealForm sheet)
+- `fullPlanLink` — `getByRole('link', { name: /full plan/i })` (on the Next up card)
 
 ## Tests
 
-### `all three stat cards are visible on load`
+### `shows the today hero and quick actions on load`
 
-- **Given** the user is on `/diet-planner`
-- **When** the page finishes loading
-- **Then** all three `data-testid` cards (`product-card`, `recipe-card`, `calendar-card`) are visible
-- **Notes**: pure smoke — proves the dashboard renders without crashing and the three module entry points exist.
+Heading "Today", "Log water" link, and "Log a meal" button are all visible.
 
-### `stat cards show numeric counts after data loads`
+### `water card and week review card are visible`
 
-- **Given** the user is on `/diet-planner`
-- **When** `expectStatsLoaded()` waits up to 10 s for each count to be visible
-- **Then** each count locator's text matches `/\d+/` (one or more digits)
-- **Notes**: doesn't assert specific counts (depends on user data); only proves that numeric content is rendered, not "loading" or "—" placeholders.
+The `Water` and `This week` section headings render.
 
-### `each stat card links to its respective page`
+### `the "Full plan" link on the Next up card opens the calendar`
 
-- **Given** the user is on `/diet-planner`
-- **When** the user clicks each card in turn (with `page.goBack()` between)
-- **Then** clicking `product-card` navigates to `/diet-planner/products`; `recipe-card` → `/diet-planner/recipes`; `calendar-card` → `/diet-planner/calendar`
-- **Notes**: `toHaveURL` is exact (no trailing wildcards) so the test catches accidental query-param leaks or unintended sub-routes.
+Clicking `Full plan` navigates to `/diet-planner/calendar`.
+
+### `"Log water" opens the hydration page`
+
+Clicking `Log water` navigates to `/diet-planner/hydration`.
+
+### `"Log a meal" opens the meal form sheet`
+
+Clicking `Log a meal` opens a `role="dialog"` (the MealForm).
 
 ## Acceptance
 
-The dashboard is reachable, the three module cards render with numeric counts, and their navigation contracts hold.
+The dashboard is reachable, the four cards render, and the quick-action
+navigation contracts hold.
 
 ## Gaps
 
-- Goals CTA card (when no goals configured)
-- Inline goal progress card (when goals exist) — protein / carbs / fat / fiber bars
-- WeightPredictionCard (covered separately by [weight-prediction](weight-prediction.md))
-- Welcome / empty-state messaging
-- Avatar / username / theme toggle in the header (covered partially by [theme](theme.md))
-- Mobile sidebar drawer behaviour
+- Today hero empty-state (no goals configured) — the "Set goals" CTA
+- Macro-bar values / progress against goal
+- Next up card meal completion ("Mark eaten") + optimistic toast
+- Water card glass-row add/remove (shared with [hydration](hydration.md))
+- This week review bar chart values
+- Mobile layout

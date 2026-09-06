@@ -189,15 +189,28 @@ export default function ProductList() {
           }
         />
       ) : view === 'table' ? (
-        <div className="border-border bg-card overflow-x-auto rounded-[22px] border">
+        <div className="border-border bg-card overflow-x-auto rounded-[22px] border" role="table">
           <div className="min-w-[720px]">
-            <div className="bg-secondary text-muted-foreground grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 text-[10.5px] font-semibold uppercase">
-              <span>{t('products.table.name')}</span>
-              <span className="text-right">{t('products.table.calories')}</span>
-              <span className="text-right">{t('products.table.protein')}</span>
-              <span className="text-right">{t('products.table.carbs')}</span>
-              <span className="text-right">{t('products.table.fat')}</span>
-              <span className="text-right">{t('products.table.fiber')}</span>
+            <div
+              role="row"
+              className="bg-secondary text-muted-foreground grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 text-[10.5px] font-semibold uppercase"
+            >
+              <span role="columnheader">{t('products.table.name')}</span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.calories')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.protein')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.carbs')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.fat')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.fiber')}
+              </span>
               <span />
             </div>
             {rows.map((p) => {
@@ -206,14 +219,15 @@ export default function ProductList() {
               return (
                 <div
                   key={p.id}
+                  role="row"
+                  aria-label={p.name}
                   className={cn(
                     'border-border grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 text-[13px]',
                   )}
                   style={
                     incomplete
                       ? {
-                          background:
-                            'color-mix(in oklab, var(--color-carbs) 7%, transparent)',
+                          background: 'color-mix(in oklab, var(--color-carbs) 7%, transparent)',
                         }
                       : undefined
                   }
@@ -247,7 +261,7 @@ export default function ProductList() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3" role="list">
           {rows.map((p) => (
             <ProductCardItem
               key={p.id}
@@ -421,7 +435,11 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
   };
 
   return (
-    <div className="border-border bg-card flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm">
+    <div
+      role="listitem"
+      aria-label={product.name}
+      className="border-border bg-card flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm"
+    >
       <div className="flex items-start justify-between gap-2">
         <Link
           to={`/diet-planner/products/${product.id}`}

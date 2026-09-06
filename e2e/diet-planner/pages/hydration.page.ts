@@ -5,11 +5,12 @@ import { BasePage } from './BasePage';
 import type { Page, Locator } from '@playwright/test';
 
 export class HydrationPage extends BasePage {
-  readonly progressBar: Locator;
+  /** The bottle-fill visual — role="meter" + aria-valuenow (see Hydration.tsx). */
+  readonly levelMeter: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.progressBar = page.locator('div:has(> [role="progressbar"])');
+    this.levelMeter = page.getByRole('meter');
   }
 
   async goto() {
@@ -17,7 +18,7 @@ export class HydrationPage extends BasePage {
     await this.waitForPageReady();
   }
 
-  async expectProgressBarVisible() {
-    await expect(this.progressBar).toBeVisible();
+  async expectLevelMeterVisible() {
+    await expect(this.levelMeter).toBeVisible();
   }
 }

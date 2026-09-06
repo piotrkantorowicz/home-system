@@ -47,11 +47,21 @@ export class RecipesPage extends BasePage {
         await this.page.getByRole('button', { name: /add ingredient/i }).click();
       }
 
-      // Product name field uses a datalist-backed input — fill by placeholder
-      const productInputs = this.page.getByPlaceholder(/search product/i);
-      await productInputs.nth(index).fill(ingredient.name);
+      // The product field is a type-ahead combobox (ProductPicker) — type the
+      // name and pick the matching option from its listbox. Relying on the
+      // blur-triggered "exact match" auto-commit is a race against the
+      // in-flight product search, so click the option explicitly instead.
+      const productInput = this.page.getByPlaceholder(/search product/i).nth(index);
+      // Centre the field first so the listbox (a position:fixed popover
+      // anchored just below the input) opens inside the viewport.
+      await productInput.evaluate((el) => {
+        el.scrollIntoView({ block: 'center' });
+      });
+      await productInput.fill(ingredient.name);
+      const option = this.page.getByRole('option', { name: ingredient.name }).first();
+      await option.waitFor({ state: 'visible', timeout: 10000 });
+      await option.click({ force: true });
 
-      // Amount field — locate by placeholder
       const amountInputs = this.page.getByPlaceholder('100');
       await amountInputs.nth(index).fill(String(ingredient.amount));
 
@@ -82,21 +92,37 @@ export class RecipesPage extends BasePage {
 
   // ── Read ─────────────────────────────────────────────────────────────────────
 
+  // RecipeCard's root carries role="listitem" + aria-label={recipe.name}
+  // (there is no heading in the card — the name is a plain link).
   recipeCardFor(name: string): Locator {
-    return this.page
-      .locator('div')
-      .filter({ has: this.page.getByRole('heading', { name }) })
-      .filter({ has: this.page.getByRole('link', { name: /view/i }) })
-      .first();
+    return this.page.getByRole('listitem', { name });
   }
 
   async expectRecipeVisible(name: string) {
     await this.searchFor(name);
-    await expect(this.page.getByText(name).first()).toBeVisible({ timeout: 10000 });
+    await expect(this.recipeCardFor(name)).toBeVisible({ timeout: 10000 });
   }
 
   async expectRecipeNotVisible(name: string) {
-    await expect(this.page.getByRole('heading', { name })).not.toBeVisible({ timeout: 5000 });
+    await expect(this.recipeCardFor(name)).not.toBeVisible({ timeout: 5000 });
+  }
+
+  // ── Row actions ────────────────────────────────────────────────────────────────
+  // Edit/View/Delete live behind a "…" dropdown menu, portaled to
+  // document.body by Radix — so once open, its items are queried at the page
+  // level rather than scoped to the card.
+
+  private async openCardMenu(card: Locator) {
+    await card.getByRole('button', { name: /^actions$/i }).click();
+  }
+
+  /** Opens the card's "…" menu and clicks "View". */
+  async viewRecipe(name: string) {
+    await this.searchFor(name);
+    const card = this.recipeCardFor(name);
+    await expect(card).toBeVisible({ timeout: 10000 });
+    await this.openCardMenu(card);
+    await this.page.getByRole('menuitem', { name: /^view$/i }).click();
   }
 
   // ── Edit ─────────────────────────────────────────────────────────────────────
@@ -104,10 +130,9 @@ export class RecipesPage extends BasePage {
   async editRecipe(name: string) {
     await this.searchFor(name);
     const card = this.recipeCardFor(name);
-    const editLink = card.getByRole('link', { name: /edit/i }).first();
-
-    await expect(editLink).toBeVisible({ timeout: 10000 });
-    await editLink.click();
+    await expect(card).toBeVisible({ timeout: 10000 });
+    await this.openCardMenu(card);
+    await this.page.getByRole('menuitem', { name: /^edit$/i }).click();
     await this.page.waitForURL(/\/edit$/);
   }
 
@@ -117,9 +142,8 @@ export class RecipesPage extends BasePage {
     await this.searchFor(name);
     const card = this.recipeCardFor(name);
     await expect(card).toBeVisible({ timeout: 10000 });
-
-    const deleteButton = card.getByRole('button', { name: /delete/i }).first();
-    await deleteButton.click();
+    await this.openCardMenu(card);
+    await this.page.getByRole('menuitem', { name: /^delete$/i }).click();
 
     const dialog = this.page.getByRole('dialog');
     await expect(dialog.getByText(/delete recipe/i)).toBeVisible({ timeout: 5000 });

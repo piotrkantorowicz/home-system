@@ -192,19 +192,33 @@ export default function NutritionSummary() {
             </div>
           </Card>
 
-          <Card className="overflow-x-auto p-0">
+          <Card className="overflow-x-auto p-0" role="table">
             <div className="min-w-[560px]">
-              <div className="bg-secondary text-muted-foreground grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 text-[10.5px] font-semibold uppercase">
-                <span>{t('nutrition_page.date')}</span>
-                <span className="text-right">kcal</span>
-                <span className="text-right">{t('nutrition_summary.protein')}</span>
-                <span className="text-right">{t('nutrition_summary.carbs')}</span>
-                <span className="text-right">{t('nutrition_summary.fat')}</span>
-                <span className="text-right">{t('nutrition_summary.fiber')}</span>
+              <div
+                role="row"
+                className="bg-secondary text-muted-foreground grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 text-[10.5px] font-semibold uppercase"
+              >
+                <span role="columnheader">{t('nutrition_page.date')}</span>
+                <span role="columnheader" className="text-right">
+                  kcal
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.protein')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.carbs')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.fat')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.fiber')}
+                </span>
               </div>
               {pagedDays.map((day) => (
                 <div
                   key={day.date}
+                  role="row"
                   className="border-border grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 border-t px-4 py-2.5 text-[12.5px]"
                 >
                   <span className="font-semibold">{day.date.slice(0, 10)}</span>
@@ -246,10 +260,7 @@ function SplitRow({
       <div className="text-muted-foreground text-[10.5px] font-semibold uppercase">{label}</div>
       <div className={cn('flex h-3.5 overflow-hidden rounded-full', dim && 'opacity-40')}>
         {(['protein', 'carbs', 'fat'] as const).map((m) => (
-          <div
-            key={m}
-            style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }}
-          />
+          <div key={m} style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }} />
         ))}
       </div>
     </div>

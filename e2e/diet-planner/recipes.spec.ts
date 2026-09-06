@@ -33,13 +33,7 @@ test.describe('Recipes CRUD', () => {
   test('user can view recipe details including the ingredient', async ({ page }) => {
     const recipesPage = new RecipesPage(page);
     await recipesPage.goto();
-    await recipesPage.searchFor(recipeName);
-
-    // Find the View link within the recipe card and navigate
-    const card = recipesPage.recipeCardFor(recipeName);
-    const viewLink = card.getByRole('link', { name: /view/i }).first();
-    await expect(viewLink).toBeVisible({ timeout: 10000 });
-    await viewLink.click();
+    await recipesPage.viewRecipe(recipeName);
 
     await expect(page.getByText(/nutrition per serving/i)).toBeVisible();
     await expect(page.getByText(ingredientName)).toBeVisible();
