@@ -7,6 +7,7 @@ export {
   type DietReminderSettingsFormProps,
 } from './DietReminderSettingsForm';
 export { WeightHistorySection } from './WeightHistorySection';
+export { ProfileOverview } from './ProfileOverview';
 export { WeightChart, type WeightChartProps } from './WeightChart';
 export { WeightLogForm, type WeightLogFormProps } from './WeightLogForm';
 export { WeightProgressCard, type WeightProgressCardProps } from './WeightProgressCard';

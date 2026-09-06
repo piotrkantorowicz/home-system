@@ -28,7 +28,36 @@
       "step2_desc": "Łącz produkty w przepisy z automatycznym obliczaniem wartości odżywczych",
       "step3_title": "Importuj lub Planuj Posiłki",
       "step3_desc": "Zaimportuj kompletny plan diety lub ręcznie zaplanuj posiłki"
-    }
+    },
+    "today_title": "Dzisiaj",
+    "log_water": "Dodaj wodę",
+    "log_meal": "Dodaj posiłek",
+    "hero_on_track_title": "Na dobrej drodze",
+    "hero_over_title": "Przekroczono limit",
+    "hero_progress": "{{percent}}% celu zjedzone",
+    "hero_within_budget": "W limicie",
+    "hero_over_budget": "Ponad limit",
+    "hero_left_label": "kcal pozostało",
+    "hero_over_label": "kcal ponad",
+    "hero_eaten": "Zjedzone",
+    "hero_target": "Cel",
+    "hero_remaining": "Pozostało",
+    "next_up_title": "Następne posiłki",
+    "full_plan": "Pełny plan",
+    "no_meals": "Brak zaplanowanych posiłków na dziś",
+    "mark_eaten": "Oznacz jako zjedzone",
+    "meal_marked_eaten": "Posiłek oznaczony jako zjedzony",
+    "meal_mark_error": "Nie udało się zaktualizować posiłku",
+    "meal_macros": "{{kcal}} kcal · B {{protein}} g · W {{carbs}} g · T {{fat}} g",
+    "kcal": "{{kcal}} kcal",
+    "kcal_logged": "{{kcal}} kcal zapisane",
+    "water_title": "Woda",
+    "water_logged": "Dodano {{amount}} ml",
+    "water_error": "Nie udało się zapisać wody",
+    "water_custom": "Własna",
+    "week_review_title": "Ten tydzień",
+    "week_avg_intake": "Śr. spożycie",
+    "week_days_logged": "Dni zapisane"
   },
   "goals": {
     "nav": "Cele",
@@ -79,7 +108,14 @@
       "description": "Czy na pewno chcesz usunąć ten produkt? Tej operacji nie można cofnąć. Produkt zostanie usunięty tylko jeśli nie jest używany w żadnych przepisach.",
       "confirm": "Usuń",
       "deleting": "Usuwanie..."
-    }
+    },
+    "count": "{{count}} pozycji",
+    "only_mine": "Moje produkty",
+    "incomplete_chip": "Niekompletne · {{count}}",
+    "incomplete_badge": "NIEKOMPLETNE",
+    "view_label": "Widok",
+    "view_table": "Tabela",
+    "view_cards": "Karty"
   },
   "recipes": {
     "title": "Przepisy",
@@ -100,7 +136,13 @@
       "description": "Czy na pewno chcesz usunąć \"{{name}}\"? Tej operacji nie można cofnąć. Przepis zostanie usunięty tylko jeśli nie jest używany w żadnych planach posiłków.",
       "confirm": "Usuń",
       "deleting": "Usuwanie..."
-    }
+    },
+    "my_recipes": "Moje przepisy",
+    "filter_label": "Filtr",
+    "filter_all": "Wszystkie",
+    "filter_high_protein": "Wysokobiałkowe",
+    "filter_quick": "Szybkie",
+    "create_tile": "Utwórz przepis"
   },
   "calendar": {
     "title": "Kalendarz",
@@ -141,6 +183,15 @@
       "button": "✓ wszystko",
       "success": "Oznaczono {{count}} posiłków jako zjedzone",
       "error": "Nie udało się oznaczyć posiłków"
+    },
+    "week_grid": {
+      "day_total": "Suma dnia",
+      "gap": "brak",
+      "legend": "Legenda",
+      "carb_led": "Węglowodanowe",
+      "protein_led": "Białkowe",
+      "veg_led": "Warzywne",
+      "today": "dziś"
     }
   },
   "override_dialog": {
@@ -188,7 +239,19 @@
     "daily_avg": "Średnia Dzienna",
     "vs_goal": "Realizacja Celu (cel na {{days}} dni)",
     "daily_breakdown": "Podział Dzienny",
-    "date": "Data"
+    "date": "Data",
+    "range_label": "Zakres",
+    "range_7": "7 dni",
+    "range_30": "30 dni",
+    "range_90": "90 dni",
+    "avg_intake": "Śr. spożycie",
+    "avg_protein": "Śr. białko",
+    "days_logged": "Dni zapisane",
+    "over_days": "Dni ponad cel",
+    "intake_vs_target": "Spożycie vs cel",
+    "macro_split": "Średni podział makro",
+    "actual": "Rzeczywiste",
+    "target": "Cel"
   },
   "shopping_list": {
     "title": "Lista Zakupów",
@@ -273,6 +336,44 @@
     "step4": {
       "success_title": "Import Zakończony Sukcesem!",
       "success_message": "Twoje posiłki zostały pomyślnie zaimportowane. Przekierowywanie do kalendarza..."
+    },
+    "stepbar": {
+      "upload": "Wgraj",
+      "review": "Sprawdź",
+      "confirm": "Zatwierdź"
+    },
+    "upload": {
+      "dropzone_title": "Upuść plik planu tutaj",
+      "dropzone_hint": "Tylko JSON — lub wklej poniżej",
+      "paste_label": "Plan diety JSON",
+      "placeholder": "Wklej JSON tutaj…",
+      "expected_format": "Oczekiwany format",
+      "load_sample": "Wczytaj przykład",
+      "continue": "Dalej",
+      "checking": "Sprawdzanie…",
+      "invalid_json": "Nieprawidłowy JSON. Sprawdź dane i spróbuj ponownie.",
+      "not_json": "Akceptowane są tylko pliki .json."
+    },
+    "review": {
+      "detected": "Wykryto",
+      "detected_meta": "{{products}} produktów · {{recipes}} przepisów · {{days}} dni",
+      "days": "Dni",
+      "meal_entries": "Posiłki",
+      "ready": "Gotowe do importu",
+      "ready_hint": "Zostanie utworzonych {{count}} nowych produktów.",
+      "warnings_title": "Ostrzeżenia: {{count}}",
+      "cannot_proceed": "Nie można jeszcze zaimportować",
+      "error_hint": "Coś poszło nie tak podczas sprawdzania. Spróbuj ponownie.",
+      "revalidate": "Sprawdź ponownie",
+      "col_product": "Produkt",
+      "col_unit": "Jednostka",
+      "missing_unit": "brak",
+      "import_days": "Importuj {{count}} dni",
+      "importing": "Importowanie…"
+    },
+    "done": {
+      "title": "Import zakończony",
+      "message": "Plan został zaimportowany. Przechodzę do kalendarza…"
     }
   },
   "product_detail": {
@@ -313,7 +414,12 @@
       "unit": "Jedn.",
       "calories": "Kalorie",
       "protein": "Białko"
-    }
+    },
+    "add_to_plan": "Dodaj do planu",
+    "method": "Sposób przygotowania",
+    "servings_label": "Porcje",
+    "scale_note": "Ilości składników skalują się automatycznie.",
+    "per_serving_note": "Na porcję przy bieżącej liczbie porcji."
   },
   "day_view": {
     "summary": {
@@ -402,7 +508,8 @@
       "hydration": "Nawodnienie",
       "notifications": "Powiadomienia",
       "alerts": "Alerty",
-      "weight_history": "Historia wagi"
+      "weight_history": "Historia wagi",
+      "overview": "Przegląd"
     },
     "personal_header": "Dane Osobowe",
     "personal_desc": "Twoje podstawowe dane osobowe",
@@ -425,7 +532,25 @@
     "activity_very": "Bardzo Aktywny",
     "activity_extra": "Ekstremalnie Aktywny",
     "save_btn": "Zapisz Profil",
-    "save_success": "Profil zapisany pomyślnie!"
+    "save_success": "Profil zapisany pomyślnie!",
+    "overview": {
+      "edit_profile": "Edytuj profil",
+      "energy_model": "Model energetyczny",
+      "energy_model_sub": "Przeliczany codziennie",
+      "energy_model_empty": "Ustaw dzienny cel kaloryczny, aby zobaczyć model energetyczny.",
+      "daily_deficit": "Dzienny deficyt",
+      "weekly_change": "Zmiana tygodniowa",
+      "current_bmi": "Aktualne BMI",
+      "target_bmi": "Docelowe BMI",
+      "macro_targets": "Cele makro",
+      "macro_targets_empty": "Brak ustawionych celów makro.",
+      "edit_targets": "Edytuj cele",
+      "all_reminder_settings": "Wszystkie ustawienia przypomnień",
+      "reminder_saved": "Zaktualizowano przypomnienie",
+      "reminder_error": "Nie udało się zaktualizować przypomnienia",
+      "weight_to_go": "Pozostało {{kg}} kg",
+      "est_goal_date": "Szacowana data celu:"
+    }
   },
   "sheets": {
     "goals": {
@@ -503,7 +628,23 @@
     "save_settings_btn": "Zapisz Ustawienia",
     "settings_saved": "Ustawienia zapisane pomyślnie!",
     "quick_title": "Nawodnienie dzisiaj",
-    "glasses_count": "{{current}} / {{target}} szklanek"
+    "glasses_count": "{{current}} / {{target}} szklanek",
+    "to_go": "Pozostało {{amount}} L",
+    "entry_water": "Woda",
+    "add_glass_aria": "Dodaj szklankę ({{amount}} ml)",
+    "remove_glass_aria": "Usuń ostatni wpis",
+    "level_aria": "Poziom wody",
+    "custom_trigger": "Własna",
+    "custom_popover_title": "Własna ilość",
+    "custom_step_down_aria": "Zmniejsz ilość",
+    "custom_step_up_aria": "Zwiększ ilość",
+    "custom_ml_unit": "ml",
+    "undo": "Cofnij",
+    "day_total": "Dzisiaj",
+    "remove_entry_confirm": "Usunąć ten wpis?",
+    "remove_entry_no": "Nie",
+    "remove_entry_yes": "Usuń",
+    "quick_add_note": "Możesz stukać dalej — pozostałe przyciski działają podczas zapisu."
   },
   "common": {
     "cancel": "Anuluj",
@@ -563,7 +704,10 @@
     "piece_help": "Średnia waga jednej sztuki w gramach",
     "create_btn": "Utwórz Produkt",
     "update_btn": "Aktualizuj Produkt",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "macros_reconcile": "Makroskładniki zgadzają się z wartością energetyczną.",
+    "macros_mismatch_title": "Makroskładniki nie zgadzają się z kaloriami",
+    "macros_mismatch": "{{macroCal}} kcal z makro vs {{calories}} kcal wpisane."
   },
   "meal_schedule": {
     "nav": "Harmonogram Posiłków",
@@ -657,5 +801,47 @@
       "log_dialog_title": "Zapisz wagę",
       "log_dialog_desc": "Zapisz swoją wagę dla dowolnej przeszłej daty."
     }
+  },
+  "preferences": {
+    "title": "Preferencje",
+    "subtitle": "Wygląd, jednostki i konto.",
+    "appearance": "Wygląd",
+    "theme": "Motyw",
+    "theme_light": "Jasny",
+    "theme_dark": "Ciemny",
+    "theme_system": "Systemowy",
+    "language": "Język",
+    "compact_density": "Kompaktowy układ",
+    "compact_density_hint": "Ciaśniejsze odstępy i mniejsze kontrolki.",
+    "units": "Jednostki i formaty",
+    "energy": "Energia",
+    "weight": "Waga",
+    "volume": "Objętość",
+    "week_start": "Początek tygodnia",
+    "week_monday": "Poniedziałek",
+    "week_sunday": "Niedziela",
+    "thin_space": "Wąska spacja w tysiącach",
+    "thin_space_hint": "Pokaż 2 150 zamiast 2,150.",
+    "units_note": "Preferencje jednostek są zapisywane; ekrany zaczną z nich korzystać później.",
+    "account": "Konto",
+    "sign_out": "Wyloguj",
+    "delete_account": "Usuń konto",
+    "delete_account_btn": "Usuń"
+  },
+  "control_kit": {
+    "title": "Zestaw kontrolek",
+    "subtitle": "Wszystkie komponenty i stany — wspólny język interfejsu.",
+    "buttons": "Przyciski",
+    "inputs": "Pola",
+    "toggles": "Przełączniki",
+    "pills": "Plakietki",
+    "data": "Dane",
+    "ring": "Pierścień",
+    "banners": "Komunikaty"
+  },
+  "nav_groups": {
+    "plan": "Plan",
+    "library": "Biblioteka",
+    "track": "Śledzenie"
   }
 }

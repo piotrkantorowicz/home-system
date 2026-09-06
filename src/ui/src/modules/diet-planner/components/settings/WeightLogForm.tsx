@@ -82,7 +82,9 @@ export function WeightLogForm({ onSuccess, defaultDate, className }: WeightLogFo
               />
             )}
           />
-          {errors.date && <p className="text-destructive mt-1 text-sm">{errors.date.message}</p>}
+          {errors.date && (
+            <p className="text-destructive mt-1 text-[11.5px]">{errors.date.message}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="weight-kg">{t('weightHistory.form.weight_kg', 'Weight (kg)')}</Label>
@@ -93,17 +95,18 @@ export function WeightLogForm({ onSuccess, defaultDate, className }: WeightLogFo
             min="0.1"
             max="999"
             placeholder="e.g., 75.5"
+            aria-invalid={!!errors.weightKg}
             className="mt-1"
             {...register('weightKg')}
           />
           {errors.weightKg && (
-            <p className="text-destructive mt-1 text-sm">{errors.weightKg.message}</p>
+            <p className="text-destructive mt-1 text-[11.5px]">{errors.weightKg.message}</p>
           )}
         </div>
-        <Button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" size="xl" disabled={mutation.isPending}>
           {mutation.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.saving', 'Saving…')}
             </>
           ) : (

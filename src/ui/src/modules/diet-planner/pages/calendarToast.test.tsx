@@ -142,15 +142,11 @@ function useTodayMeal() {
  * Edit and Delete are now nested under the dropdown rather than inline buttons.
  */
 async function openMealMenu() {
+  // In the week grid each meal chip is itself the dropdown trigger.
   const mealTitle = await screen.findByText('Oatmeal');
-  let mealItem = mealTitle.parentElement;
-  while (mealItem && !mealItem.classList.contains('group')) {
-    mealItem = mealItem.parentElement;
-  }
-  if (!mealItem) throw new Error('Could not find .group meal item');
-  const trigger = mealItem.querySelector('button[aria-label="calendar.meal_actions.menu"]');
-  if (!trigger) throw new Error('Could not find meal actions trigger');
-  await userEvent.click(trigger as HTMLElement);
+  const trigger = mealTitle.closest('button');
+  if (!trigger) throw new Error('Could not find meal chip trigger');
+  await userEvent.click(trigger);
 }
 
 async function clickMenuItem(name: RegExp) {

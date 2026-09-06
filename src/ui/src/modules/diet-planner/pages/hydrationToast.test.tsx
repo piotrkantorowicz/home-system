@@ -45,7 +45,7 @@ describe('Hydration page — quick-add toast feedback', () => {
     // Wait for page to load (entries header is a reliable landmark)
     await screen.findByText('hydration.entries_header');
 
-    await userEvent.click(screen.getByRole('button', { name: /hydration\.add_glass/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'hydration.add_glass' }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_success')).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('Hydration page — quick-add toast feedback', () => {
 
     await screen.findByText('hydration.entries_header');
 
-    await userEvent.click(screen.getByRole('button', { name: /hydration\.add_glass/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'hydration.add_glass' }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_error')).toBeInTheDocument();
@@ -69,17 +69,15 @@ describe('Hydration page — quick-add toast feedback', () => {
   });
 });
 
-// ── Custom-add ────────────────────────────────────────────────────────────────
+// ── Custom-add (popover) ────────────────────────────────────────────────────────
 describe('Hydration page — custom-add toast feedback', () => {
-  it('shows success toast after custom-add', async () => {
+  it('shows success toast after adding the default custom amount', async () => {
     renderPage(<Hydration />);
 
     await screen.findByText('hydration.entries_header');
 
-    const amountInput = screen.getByLabelText('hydration.custom_amount_label');
-    await userEvent.type(amountInput, '350');
-
-    await userEvent.click(screen.getByRole('button', { name: /hydration\.add_btn/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'hydration.custom_trigger' }));
+    await userEvent.click(await screen.findByRole('button', { name: /hydration\.add_btn/i }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_success')).toBeInTheDocument();
@@ -95,10 +93,8 @@ describe('Hydration page — custom-add toast feedback', () => {
 
     await screen.findByText('hydration.entries_header');
 
-    const amountInput = screen.getByLabelText('hydration.custom_amount_label');
-    await userEvent.type(amountInput, '350');
-
-    await userEvent.click(screen.getByRole('button', { name: /hydration\.add_btn/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'hydration.custom_trigger' }));
+    await userEvent.click(await screen.findByRole('button', { name: /hydration\.add_btn/i }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_error')).toBeInTheDocument();
@@ -106,26 +102,28 @@ describe('Hydration page — custom-add toast feedback', () => {
   });
 });
 
-// ── Delete ────────────────────────────────────────────────────────────────────
+// ── Delete (inline confirm) ──────────────────────────────────────────────────────
 describe('Hydration page — delete toast feedback', () => {
-  it('shows success toast after deleting an entry', async () => {
+  it('shows success toast after confirming a delete', async () => {
     renderPage(<Hydration />);
 
-    // Wait for entries to load (MSW returns 2 entries)
     const deleteButtons = await screen.findAllByRole('button', {
       name: /hydration\.delete_entry_aria/i,
     });
-
     const firstDeleteButton = deleteButtons[0];
     if (!firstDeleteButton) throw new Error('No delete button found');
     await userEvent.click(firstDeleteButton);
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'hydration.remove_entry_yes' }),
+    );
 
     await waitFor(() => {
       expect(screen.getByText('hydration.delete_success')).toBeInTheDocument();
     });
   });
 
-  it('shows error toast when delete fails', async () => {
+  it('shows error toast when a confirmed delete fails', async () => {
     server.use(
       http.delete(`${BASE}/api/v1/hydration/intake/:id`, () =>
         HttpResponse.json({}, { status: 500 }),
@@ -137,10 +135,13 @@ describe('Hydration page — delete toast feedback', () => {
     const deleteButtons = await screen.findAllByRole('button', {
       name: /hydration\.delete_entry_aria/i,
     });
-
     const firstDeleteButton = deleteButtons[0];
     if (!firstDeleteButton) throw new Error('No delete button found');
     await userEvent.click(firstDeleteButton);
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'hydration.remove_entry_yes' }),
+    );
 
     await waitFor(() => {
       expect(screen.getByText('hydration.delete_error')).toBeInTheDocument();

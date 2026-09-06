@@ -1,5 +1,5 @@
-import { cn } from '@shared/lib/utils';
-import { User, Bell, LogOut } from 'lucide-react';
+import { cn, getInitials } from '@shared/lib/utils';
+import { User, Bell, LogOut, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -19,6 +19,8 @@ export interface UserProfileDropdownProps {
   displayName: string;
   email?: string | undefined;
   onLogout: () => void;
+  /** Render just a 34px initials avatar as the trigger (icon rail / condensed header). */
+  compact?: boolean;
 }
 
 const dietPlannerLinks = [
@@ -27,30 +29,50 @@ const dietPlannerLinks = [
 
 const settingsLinks = [
   {
+    to: '/diet-planner/preferences',
+    icon: SlidersHorizontal,
+    translationKey: 'common.preferences',
+  },
+  {
     to: '/notifications',
     icon: Bell,
     translationKey: 'common.notifications',
   },
 ] as const;
 
-export function UserProfileDropdown({ displayName, email, onLogout }: UserProfileDropdownProps) {
+export function UserProfileDropdown({
+  displayName,
+  email,
+  onLogout,
+  compact = false,
+}: UserProfileDropdownProps) {
   const { t } = useTranslation();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="hover:bg-accent/60 focus-visible:ring-primary flex items-center gap-2.5 rounded-lg p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-          aria-label={t('common.user_menu')}
-        >
-          <div className="from-primary/20 to-accent/30 rounded-full bg-gradient-to-br p-2">
-            <User className="text-primary h-4 w-4" />
-          </div>
-          <div className="hidden text-left sm:block">
-            <p className="text-sm leading-tight font-medium">{displayName}</p>
-            {email && <p className="text-muted-foreground text-xs leading-tight">{email}</p>}
-          </div>
-        </button>
+        {compact ? (
+          <button
+            aria-label={t('common.user_menu')}
+            className="focus-visible:ring-primary grid size-[34px] place-items-center rounded-[11px] text-[12px] font-bold text-white transition-[filter] duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:outline-none"
+            style={{ background: 'var(--gradient-avatar)' }}
+          >
+            {getInitials(displayName)}
+          </button>
+        ) : (
+          <button
+            className="hover:bg-accent/60 focus-visible:ring-primary flex items-center gap-2.5 rounded-lg p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            aria-label={t('common.user_menu')}
+          >
+            <div className="from-primary/20 to-accent/30 rounded-full bg-gradient-to-br p-2">
+              <User className="text-primary h-4 w-4" />
+            </div>
+            <div className="hidden text-left sm:block">
+              <p className="text-sm leading-tight font-medium">{displayName}</p>
+              {email && <p className="text-muted-foreground text-xs leading-tight">{email}</p>}
+            </div>
+          </button>
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-64">

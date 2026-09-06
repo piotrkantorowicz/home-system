@@ -72,23 +72,21 @@ const validJson = JSON.stringify({
   schedule: [],
 });
 
-async function advanceToStep3() {
-  // Step 1: paste JSON and continue
-  // Use fireEvent.change because userEvent.type misinterprets JSON's `{` and `}` as key modifiers
+async function advanceToReview() {
+  // Upload step: paste JSON and continue.
+  // Use fireEvent.change because userEvent.type misinterprets JSON's `{` and `}` as key modifiers.
   const textarea = screen.getByRole('textbox');
   fireEvent.change(textarea, { target: { value: validJson } });
-  await userEvent.click(screen.getByRole('button', { name: /import_wizard.step1.continue/i }));
+  // Continue parses the JSON then runs the validate dry-run (MSW → canProceed: true).
+  await userEvent.click(screen.getByRole('button', { name: /import_wizard\.upload\.continue/i }));
 
-  // Step 2: validate (MSW returns canProceed: true → auto-advances to step 3)
-  await userEvent.click(screen.getByRole('button', { name: /import_wizard.step2.validate/i }));
-
-  // Wait for step 3 heading to appear
-  await screen.findByText('import_wizard.step3.title');
+  // Review step renders the detected panel and the Import button.
+  await screen.findByText('import_wizard.review.detected');
 }
 
 // ── tests ─────────────────────────────────────────────────────────────────────
 
-describe('ImportWizard step 3 — import failure feedback', () => {
+describe('ImportWizard — import failure feedback', () => {
   it('shows inline error banner when import fails', async () => {
     server.use(
       http.post(`${BASE}/api/v1/meals/import`, () =>
@@ -97,9 +95,11 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     );
 
     renderWizard();
-    await advanceToStep3();
+    await advanceToReview();
 
-    await userEvent.click(screen.getByRole('button', { name: /import_wizard.step3.confirm/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    );
 
     // The inline error is a <p role="alert"> inside the step 3 card
     await waitFor(() => {
@@ -117,9 +117,11 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     );
 
     renderWizard();
-    await advanceToStep3();
+    await advanceToReview();
 
-    await userEvent.click(screen.getByRole('button', { name: /import_wizard.step3.confirm/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    );
 
     await waitFor(() => {
       // Both the inline banner and the toast render the same message text
@@ -135,9 +137,11 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     );
 
     renderWizard();
-    await advanceToStep3();
+    await advanceToReview();
 
-    const confirmButton = screen.getByRole('button', { name: /import_wizard.step3.confirm/i });
+    const confirmButton = screen.getByRole('button', {
+      name: /import_wizard\.review\.import_days/i,
+    });
 
     await userEvent.click(confirmButton);
 
@@ -148,7 +152,9 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     });
 
     // Button must be re-enabled (not disabled) so user can retry
-    expect(screen.getByRole('button', { name: /import_wizard.step3.confirm/i })).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    ).not.toBeDisabled();
   });
 
   it('does not advance to step 4 when import fails', async () => {
@@ -159,9 +165,11 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     );
 
     renderWizard();
-    await advanceToStep3();
+    await advanceToReview();
 
-    await userEvent.click(screen.getByRole('button', { name: /import_wizard.step3.confirm/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    );
 
     await waitFor(() => {
       expect(
@@ -170,7 +178,7 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     });
 
     // Step 4 success heading should NOT appear
-    expect(screen.queryByText('import_wizard.step4.success_title')).not.toBeInTheDocument();
+    expect(screen.queryByText('import_wizard.done.title')).not.toBeInTheDocument();
   });
 
   it('clears inline error when user retries and import succeeds', async () => {
@@ -187,10 +195,12 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     );
 
     renderWizard();
-    await advanceToStep3();
+    await advanceToReview();
 
     // First click — fails
-    await userEvent.click(screen.getByRole('button', { name: /import_wizard.step3.confirm/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    );
 
     await waitFor(() => {
       expect(
@@ -199,7 +209,9 @@ describe('ImportWizard step 3 — import failure feedback', () => {
     });
 
     // Second click — succeeds; error banner should disappear
-    await userEvent.click(screen.getByRole('button', { name: /import_wizard.step3.confirm/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+    );
 
     await waitFor(() => {
       expect(

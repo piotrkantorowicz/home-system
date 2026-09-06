@@ -28,7 +28,36 @@
       "step2_desc": "Combine products into recipes with automatic nutrition calculation",
       "step3_title": "Import or Plan Meals",
       "step3_desc": "Import a complete diet plan or manually schedule your meals"
-    }
+    },
+    "today_title": "Today",
+    "log_water": "Log water",
+    "log_meal": "Log a meal",
+    "hero_on_track_title": "On track",
+    "hero_over_title": "Over budget",
+    "hero_progress": "{{percent}}% of target eaten",
+    "hero_within_budget": "Within budget",
+    "hero_over_budget": "Over budget",
+    "hero_left_label": "kcal left",
+    "hero_over_label": "kcal over",
+    "hero_eaten": "Eaten",
+    "hero_target": "Target",
+    "hero_remaining": "Remaining",
+    "next_up_title": "Next up",
+    "full_plan": "Full plan",
+    "no_meals": "No meals planned for today",
+    "mark_eaten": "Mark eaten",
+    "meal_marked_eaten": "Meal marked as eaten",
+    "meal_mark_error": "Could not update the meal",
+    "meal_macros": "{{kcal}} kcal · P {{protein}} g · C {{carbs}} g · F {{fat}} g",
+    "kcal": "{{kcal}} kcal",
+    "kcal_logged": "{{kcal}} kcal logged",
+    "water_title": "Water",
+    "water_logged": "Added {{amount}} ml",
+    "water_error": "Could not log water",
+    "water_custom": "Custom",
+    "week_review_title": "This week",
+    "week_avg_intake": "Avg intake",
+    "week_days_logged": "Days logged"
   },
   "goals": {
     "nav": "Goals",
@@ -80,7 +109,14 @@
       "description": "Are you sure you want to delete this product? This action cannot be undone. The product will only be deleted if it's not used in any recipes.",
       "confirm": "Delete",
       "deleting": "Deleting..."
-    }
+    },
+    "count": "{{count}} items",
+    "only_mine": "My products",
+    "incomplete_chip": "Incomplete · {{count}}",
+    "incomplete_badge": "INCOMPLETE",
+    "view_label": "View",
+    "view_table": "Table",
+    "view_cards": "Cards"
   },
   "recipes": {
     "title": "Recipes",
@@ -101,7 +137,13 @@
       "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone. The recipe will only be deleted if it's not used in any meal plans.",
       "confirm": "Delete",
       "deleting": "Deleting..."
-    }
+    },
+    "my_recipes": "My recipes",
+    "filter_label": "Filter",
+    "filter_all": "All",
+    "filter_high_protein": "High protein",
+    "filter_quick": "Quick",
+    "create_tile": "Create a recipe"
   },
   "calendar": {
     "title": "Calendar",
@@ -137,6 +179,15 @@
       "button": "✓ all",
       "success": "{{count}} meals marked as done",
       "error": "Failed to mark meals as done"
+    },
+    "week_grid": {
+      "day_total": "Day total",
+      "gap": "gap",
+      "legend": "Legend",
+      "carb_led": "Carb-led",
+      "protein_led": "Protein-led",
+      "veg_led": "Veg-led",
+      "today": "today"
     }
   },
   "override_dialog": {
@@ -184,7 +235,19 @@
     "daily_avg": "Daily Average",
     "vs_goal": "Goal Progress ({{days}}-day target)",
     "daily_breakdown": "Daily Breakdown",
-    "date": "Date"
+    "date": "Date",
+    "range_label": "Range",
+    "range_7": "7 days",
+    "range_30": "30 days",
+    "range_90": "90 days",
+    "avg_intake": "Avg intake",
+    "avg_protein": "Avg protein",
+    "days_logged": "Days logged",
+    "over_days": "Over-target days",
+    "intake_vs_target": "Intake vs target",
+    "macro_split": "Average macro split",
+    "actual": "Actual",
+    "target": "Target"
   },
   "shopping_list": {
     "title": "Shopping List",
@@ -270,7 +333,45 @@
       "success_title": "Import Successful!",
       "success_message": "Your meals have been imported successfully. Redirecting to calendar..."
     },
-    "import_error": "Import failed. Please try again."
+    "import_error": "Import failed. Please try again.",
+    "stepbar": {
+      "upload": "Upload",
+      "review": "Review",
+      "confirm": "Confirm"
+    },
+    "upload": {
+      "dropzone_title": "Drop a plan file here",
+      "dropzone_hint": "JSON only — or paste it below",
+      "paste_label": "Diet plan JSON",
+      "placeholder": "Paste your JSON here…",
+      "expected_format": "Expected format",
+      "load_sample": "Load sample",
+      "continue": "Continue",
+      "checking": "Checking…",
+      "invalid_json": "Invalid JSON. Check your input and try again.",
+      "not_json": "Only .json files are accepted."
+    },
+    "review": {
+      "detected": "Detected",
+      "detected_meta": "{{products}} products · {{recipes}} recipes · {{days}} days",
+      "days": "Days",
+      "meal_entries": "Meal entries",
+      "ready": "Ready to import",
+      "ready_hint": "{{count}} new products will be created.",
+      "warnings_title": "{{count}} warning(s)",
+      "cannot_proceed": "Can't import yet",
+      "error_hint": "Something went wrong while validating. Try again.",
+      "revalidate": "Re-check",
+      "col_product": "Product",
+      "col_unit": "Unit",
+      "missing_unit": "missing",
+      "import_days": "Import {{count}} days",
+      "importing": "Importing…"
+    },
+    "done": {
+      "title": "Import complete",
+      "message": "Your plan was imported. Taking you to the calendar…"
+    }
   },
   "product_detail": {
     "back": "Back to Products",
@@ -310,7 +411,12 @@
       "unit": "Unit",
       "calories": "Calories",
       "protein": "Protein"
-    }
+    },
+    "add_to_plan": "Add to plan",
+    "method": "Method",
+    "servings_label": "Servings",
+    "scale_note": "Ingredient amounts scale automatically.",
+    "per_serving_note": "Per serving at the current servings count."
   },
   "day_view": {
     "summary": {
@@ -405,7 +511,8 @@
       "hydration": "Hydration",
       "notifications": "Notifications",
       "alerts": "Alerts",
-      "weight_history": "Weight History"
+      "weight_history": "Weight History",
+      "overview": "Overview"
     },
     "personal_header": "Personal Information",
     "personal_desc": "Your basic personal details",
@@ -429,7 +536,25 @@
     "activity_extra": "Extra Active",
     "save_btn": "Save Profile",
     "save_success": "Profile saved successfully!",
-    "save_error": "Failed to save profile. Please try again."
+    "save_error": "Failed to save profile. Please try again.",
+    "overview": {
+      "edit_profile": "Edit profile",
+      "energy_model": "Energy model",
+      "energy_model_sub": "Recalculated daily",
+      "energy_model_empty": "Set a daily calorie target to see your energy model.",
+      "daily_deficit": "Daily deficit",
+      "weekly_change": "Weekly change",
+      "current_bmi": "Current BMI",
+      "target_bmi": "Target BMI",
+      "macro_targets": "Macro targets",
+      "macro_targets_empty": "No macro targets set yet.",
+      "edit_targets": "Edit targets",
+      "all_reminder_settings": "All reminder settings",
+      "reminder_saved": "Reminder updated",
+      "reminder_error": "Could not update the reminder",
+      "weight_to_go": "{{kg}} kg to go",
+      "est_goal_date": "Estimated goal date:"
+    }
   },
   "sheets": {
     "goals": {
@@ -512,7 +637,23 @@
     "delete_success": "Entry removed",
     "delete_error": "Failed to delete entry. Please try again.",
     "quick_title": "Hydration Today",
-    "glasses_count": "{{current}} / {{target}} glasses"
+    "glasses_count": "{{current}} / {{target}} glasses",
+    "to_go": "{{amount}} L to go",
+    "entry_water": "Water",
+    "add_glass_aria": "Add a glass ({{amount}} ml)",
+    "remove_glass_aria": "Remove last entry",
+    "level_aria": "Water level",
+    "custom_trigger": "Custom",
+    "custom_popover_title": "Custom amount",
+    "custom_step_down_aria": "Decrease amount",
+    "custom_step_up_aria": "Increase amount",
+    "custom_ml_unit": "ml",
+    "undo": "Undo",
+    "day_total": "Today",
+    "remove_entry_confirm": "Remove this entry?",
+    "remove_entry_no": "No",
+    "remove_entry_yes": "Remove",
+    "quick_add_note": "Keep tapping — every button stays live while one is saving."
   },
   "common": {
     "cancel": "Cancel",
@@ -576,7 +717,10 @@
     "create_success": "Product created successfully",
     "create_error": "Failed to create product. Check your inputs and try again.",
     "update_success": "Product updated successfully",
-    "update_error": "Failed to update product. Check your inputs and try again."
+    "update_error": "Failed to update product. Check your inputs and try again.",
+    "macros_reconcile": "Macros reconcile with the energy value.",
+    "macros_mismatch_title": "Macros don't match the calories",
+    "macros_mismatch": "{{macroCal}} kcal from macros vs {{calories}} kcal entered."
   },
   "meal_schedule": {
     "nav": "Meal Schedule",
@@ -675,5 +819,47 @@
       "log_dialog_title": "Log weight",
       "log_dialog_desc": "Record your weight for any past date."
     }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Appearance, units and account.",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "language": "Language",
+    "compact_density": "Compact density",
+    "compact_density_hint": "Tighter spacing and smaller controls.",
+    "units": "Units & formats",
+    "energy": "Energy",
+    "weight": "Weight",
+    "volume": "Volume",
+    "week_start": "Week starts",
+    "week_monday": "Monday",
+    "week_sunday": "Sunday",
+    "thin_space": "Thin-space thousands",
+    "thin_space_hint": "Show 2 150 instead of 2,150.",
+    "units_note": "Unit preferences are saved now; screens will adopt them in a later pass.",
+    "account": "Account",
+    "sign_out": "Sign out",
+    "delete_account": "Delete account",
+    "delete_account_btn": "Delete"
+  },
+  "control_kit": {
+    "title": "Control kit",
+    "subtitle": "Every primitive, every state — the shared vocabulary.",
+    "buttons": "Buttons",
+    "inputs": "Inputs",
+    "toggles": "Toggles",
+    "pills": "Pills & badges",
+    "data": "Data",
+    "ring": "Ring",
+    "banners": "Banners"
+  },
+  "nav_groups": {
+    "plan": "Plan",
+    "library": "Library",
+    "track": "Track"
   }
 }

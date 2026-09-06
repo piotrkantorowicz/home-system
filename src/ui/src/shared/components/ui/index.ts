@@ -59,3 +59,16 @@ export {
   DropdownMenuGroup,
 } from './DropdownMenu';
 export { UserProfileDropdown, type UserProfileDropdownProps } from './UserProfileDropdown';
+export { MetricTile, type MetricTileProps } from './MetricTile';
+export { MacroBar, type MacroBarProps, type Macro } from './MacroBar';
+export { StatusPill, type StatusPillProps, type StatusPillVariant } from './StatusPill';
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedControlOption,
+} from './SegmentedControl';
+export { Ring, type RingProps } from './Ring';
+export { Switch, type SwitchProps } from './Switch';
+export { Banner, type BannerProps, type BannerVariant } from './Banner';
+export { Field, type FieldProps } from './Field';
+export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent } from './Popover';

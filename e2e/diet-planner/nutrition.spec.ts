@@ -1,52 +1,42 @@
-import { format, startOfWeek } from 'date-fns';
-
 import { test, expect } from './fixtures';
 import { ImportPage, NutritionPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
 
-function currentWeekRange() {
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  return {
-    from: format(weekStart, 'yyyy-MM-dd'),
-    to: format(weekEnd, 'yyyy-MM-dd'),
-  };
-}
-
 // ── Structure tests (independent of meal data) ────────────────────────────────
 
 test.describe('Nutrition Summary — page structure', () => {
-  test('date range inputs are visible and default to the current week', async ({ page }) => {
+  test('range presets are visible and default to 7 days', async ({ page }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await expect(nutritionPage.fromInput).toBeVisible();
-    await expect(nutritionPage.toInput).toBeVisible();
-    await expect(nutritionPage.applyButton).toBeVisible();
-
-    const { from, to } = currentWeekRange();
-    await expect(nutritionPage.fromInput).toHaveAttribute('data-value', from);
-    await expect(nutritionPage.toInput).toHaveAttribute('data-value', to);
+    await expect(nutritionPage.rangeGroup).toBeVisible();
+    await expect(nutritionPage.rangeOption('7')).toHaveAttribute('aria-checked', 'true');
+    await expect(nutritionPage.rangeOption('30')).toHaveAttribute('aria-checked', 'false');
+    await expect(nutritionPage.rangeOption('90')).toHaveAttribute('aria-checked', 'false');
   });
 
-  test('selecting a past range with no meals shows the empty state', async ({ page }) => {
+  test('switching to a longer range re-fetches the summary', async ({ page }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await nutritionPage.setDateRange('2020-01-01', '2020-01-07');
-    await nutritionPage.applyRange('2020-01-01', '2020-01-07');
+    await nutritionPage.selectRange('30');
+
+    await expect(nutritionPage.rangeOption('30')).toHaveAttribute('aria-checked', 'true');
+    await expect(nutritionPage.rangeOption('7')).toHaveAttribute('aria-checked', 'false');
+  });
+
+  test('an empty summary shows the empty state', async ({ page }) => {
+    // There is no longer a way to pick a guaranteed-empty *past* range (the
+    // presets are always "last N days ending today") — mock the response
+    // instead of depending on this worker's shared meal data being absent.
+    await page.route('**/api/v1/meals/nutrition-summary**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    );
+
+    const nutritionPage = new NutritionPage(page);
+    await nutritionPage.goto();
 
     await nutritionPage.expectEmptyState();
-  });
-
-  test('Apply button is disabled when the from date is later than the to date', async ({ page }) => {
-    const nutritionPage = new NutritionPage(page);
-    await nutritionPage.goto();
-
-    await nutritionPage.setDateRange('2026-12-31', '2026-01-01');
-
-    await expect(nutritionPage.applyButton).toBeDisabled();
   });
 });
 
@@ -64,34 +54,39 @@ test.describe('Nutrition Summary — with meal data', () => {
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);
   });
 
-  test('totals and daily average cards appear after applying the current week range', async ({
+  test('metric tiles and the intake chart appear for the default 7-day range', async ({
     page,
   }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await nutritionPage.expectTotalsVisible();
-    await nutritionPage.expectDailyAvgVisible();
+    await expect(page.getByText('Avg intake', { exact: true })).toBeVisible();
+    await expect(page.getByText('Days logged', { exact: true })).toBeVisible();
+    await nutritionPage.expectChartVisible();
+    await nutritionPage.expectMacroSplitVisible();
   });
 
-  test('daily breakdown table has at least one row for the current week', async ({ page }) => {
+  test('daily breakdown table has at least one row for the default range', async ({ page }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await expect(nutritionPage.tableRows.first()).toBeVisible({ timeout: 8000 });
+    const rowCount = await nutritionPage.getTableRowCount();
+    expect(rowCount).toBeGreaterThan(0);
   });
 
-  test('switching to an empty date range shows the empty state', async ({ page }) => {
+  test('a 90-day range with no meals in the older window still renders (empty or partial)', async ({
+    page,
+  }) => {
+    // The imported plan only covers the current week — a 90-day range still
+    // includes it, so this just exercises the preset switch without erroring.
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
+    await nutritionPage.selectRange('90');
 
-    await nutritionPage.setDateRange('2020-01-01', '2020-01-07');
-    await nutritionPage.applyRange('2020-01-01', '2020-01-07');
-
-    await nutritionPage.expectEmptyState();
+    await expect(page.getByText('Days logged', { exact: true })).toBeVisible();
   });
 
-  test('goal progress panel appears when nutrition goals are configured', async ({ page }) => {
+  test('the average-intake tile reflects the configured calorie goal', async ({ page }) => {
     // Configure goals (now under the profile hub — #114)
     await page.goto('/diet-planner/profile?section=goals');
     await page.waitForLoadState('networkidle');
@@ -115,11 +110,14 @@ test.describe('Nutrition Summary — with meal data', () => {
     await expect(submitBtn).toBeEnabled({ timeout: 8000 });
     await submitBtn.click();
 
-    // Navigate to nutrition page and verify goals panel
+    // Once a calorie goal exists, the "Avg intake" tile's hint switches from
+    // the generic "kcal" unit to a signed delta against the goal.
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await nutritionPage.expectGoalProgressVisible();
+    const tile = page.getByText('Avg intake', { exact: true }).locator('xpath=..');
+    const hint = tile.locator('> div').nth(2);
+    await expect(hint).not.toHaveText('kcal');
   });
 
   test('pagination defaults to page size 25', async ({ page }) => {

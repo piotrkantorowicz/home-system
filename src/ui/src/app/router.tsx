@@ -5,8 +5,8 @@ import { AppShell } from '@shared/components/layout/AppShell';
 import { getModules } from '@shared/lib/module-registry';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 
+import RootRedirect from './RootRedirect';
 import { SuspenseWrapper } from './SuspenseWrapper';
-import SystemDashboard from './SystemDashboard';
 
 import type { RouteObject } from 'react-router-dom';
 
@@ -49,7 +49,7 @@ export function createRouter() {
       children: [
         {
           path: '/',
-          element: <SystemDashboard />,
+          element: <RootRedirect />,
         },
         ...buildModuleRoutes(),
       ],

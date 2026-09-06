@@ -24,6 +24,10 @@ const buttonVariants = cva(
         sm: 'h-9 rounded-md px-3.5 text-sm',
         lg: 'h-12 rounded-lg px-8 text-base',
         icon: 'h-10 w-10',
+        // Refresh scale — primary CTA / row action / chip.
+        xl: 'h-[42px] gap-2 rounded-[13px] px-4 text-[13.5px]',
+        chip: 'h-8 gap-1.5 rounded-[10px] px-3.5 text-[12.5px]',
+        xs: 'h-[30px] gap-1.5 rounded-[10px] px-3 text-[12.5px]',
       },
     },
     defaultVariants: {

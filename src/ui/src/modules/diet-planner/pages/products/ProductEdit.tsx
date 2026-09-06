@@ -50,10 +50,10 @@ export default function ProductEdit() {
   }
 
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
+    <div className="animate-fade-in-up mx-auto max-w-6xl px-4 py-6 md:px-8">
       <div className="mb-8">
-        <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('product_form.edit_title')}</h1>
-        <p className="text-muted-foreground text-[0.95rem]">
+        <h1 className="text-[26px] font-bold">{t('product_form.edit_title')}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
           {t('product_form.update_subtitle', { name: product.name })}
         </p>
       </div>

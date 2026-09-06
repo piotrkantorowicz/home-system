@@ -6,6 +6,10 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+vi.mock('@shared/context/ToastContext', () => ({
+  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+}));
+
 vi.mock('@modules/diet-planner/api/hooks/useGoals', () => ({
   useGoals: () => ({ data: null }),
 }));
@@ -13,38 +17,41 @@ vi.mock('@modules/diet-planner/api/hooks/useGoals', () => ({
 vi.mock('@modules/diet-planner/api/hooks/useMeals', () => ({
   useMeals: () => ({ data: [], isLoading: false }),
   useNutritionSummary: () => ({ data: [] }),
+  useCreateMeal: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-vi.mock('@modules/diet-planner/api/hooks/useProducts', () => ({
-  useProducts: () => ({ data: { totalCount: 0 }, isLoading: false }),
+vi.mock('@modules/diet-planner/components/dashboard/TodayHero', () => ({
+  TodayHero: () => <div data-testid="today-hero" />,
+}));
+vi.mock('@modules/diet-planner/components/dashboard/NextUpCard', () => ({
+  NextUpCard: () => <div data-testid="next-up" />,
+}));
+vi.mock('@modules/diet-planner/components/dashboard/WaterCard', () => ({
+  WaterCard: () => <div data-testid="water-card" />,
+}));
+vi.mock('@modules/diet-planner/components/dashboard/WeekReviewCard', () => ({
+  WeekReviewCard: () => <div data-testid="week-review" />,
+}));
+vi.mock('@modules/diet-planner/components/diet-plans/MealForm', () => ({
+  MealForm: () => null,
+}));
+vi.mock('@modules/diet-planner/components/settings', () => ({
+  GoalsForm: () => null,
 }));
 
-vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
-  useRecipes: () => ({ data: { totalCount: 0 }, isLoading: false }),
-}));
-
-vi.mock('@modules/diet-planner/api/hooks/useProfile', () => ({
-  useProfile: () => ({ data: null }),
-}));
-
-vi.mock('@modules/diet-planner/components/WeightPredictionCard', () => ({
-  WeightPredictionCard: () => null,
-}));
-
-vi.mock('@modules/diet-planner/components/WeightTrendWidget', () => ({
-  WeightTrendWidget: () => null,
-}));
-
-describe('Dashboard goals CTA', () => {
-  it('shows goals CTA when no goals are configured', async () => {
+describe('Dashboard', () => {
+  it('renders the Today screen with all four cards', async () => {
     const Dashboard = (await import('./Dashboard')).default;
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>,
     );
-    expect(screen.getByText('dashboard.goals_cta_title')).toBeInTheDocument();
-    // CTA is now a button that opens a sheet, not a navigation link
-    expect(screen.getByText('dashboard.goals_cta_button')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: 'dashboard.today_title' })).toBeInTheDocument();
+    expect(screen.getByTestId('today-hero')).toBeInTheDocument();
+    expect(screen.getByTestId('next-up')).toBeInTheDocument();
+    expect(screen.getByTestId('water-card')).toBeInTheDocument();
+    expect(screen.getByTestId('week-review')).toBeInTheDocument();
   });
 });

@@ -4,6 +4,13 @@ import { BasePage } from './BasePage';
 
 import type { Page, Locator } from '@playwright/test';
 
+/**
+ * The calendar week view was rebuilt as WeekGrid for the #208 redesign: a
+ * single ARIA grid (role="grid" / "columnheader" / "rowheader" / "gridcell"),
+ * empty day/slot cells hold a dashed "Add Meal" button, and a scheduled meal
+ * is a "chip" <button> that opens a dropdown menu (Edit / Delete / Mark done /
+ * …) — it is no longer a link. See docs/e2e/meals.md.
+ */
 export class CalendarPage extends BasePage {
   readonly mealFormDialog: Locator;
 
@@ -17,58 +24,42 @@ export class CalendarPage extends BasePage {
     await this.waitForPageReady();
   }
 
-  // ── Week display ────────────────────────────────────────────────────────────
+  // ── Cells / chips ───────────────────────────────────────────────────────────
 
-  async expectMealInDay(weekdayAbbr: string, recipeName: string) {
-    // Find a cell in the calendar that matches the weekday header text
-    const dayCard = this.page
-      .locator('[class*="grid"] > *')
-      .filter({ has: this.page.getByText(new RegExp(`^${weekdayAbbr}$`, 'i')) })
-      .first();
-    await expect(dayCard).toBeVisible({ timeout: 10000 });
-    await expect(dayCard.getByText(recipeName)).toBeVisible({ timeout: 10000 });
+  /** A day/slot cell, e.g. ("Mon", "Snack") — matched on the gridcell aria-label. */
+  cell(weekdayAbbr: string, slotName: string): Locator {
+    return this.page.getByRole('gridcell', { name: `${weekdayAbbr} ${slotName}` });
   }
 
-  async expectNoMealInDay(weekdayAbbr: string) {
-    const dayCard = this.page
-      .locator('[class*="grid"] > *')
-      .filter({ has: this.page.getByText(new RegExp(`^${weekdayAbbr}$`, 'i')) })
-      .first();
-    await expect(dayCard).toBeVisible({ timeout: 10000 });
-    await expect(dayCard.getByText(/no meal/i).first()).toBeVisible();
+  /** All meal chips (across the whole grid) whose recipe name contains `recipeName`. */
+  mealChips(recipeName: string): Locator {
+    return this.page.getByRole('button', { name: recipeName });
+  }
+
+  async expectMealInDay(weekdayAbbr: string, recipeName: string) {
+    const mondayCells = this.page.getByRole('gridcell', {
+      name: new RegExp(`^${weekdayAbbr} `),
+    });
+    await expect(
+      mondayCells.filter({ has: this.page.getByRole('button', { name: recipeName }) }).first(),
+    ).toBeVisible({ timeout: 10000 });
+  }
+
+  async expectNoMealInDay(weekdayAbbr: string, slotName: string) {
+    await expect(this.cell(weekdayAbbr, slotName).getByRole('button', { name: /add meal/i })).toBeVisible(
+      { timeout: 10000 },
+    );
   }
 
   // ── Add meal ────────────────────────────────────────────────────────────────
 
-  /**
-   * Click the "+" button for a given meal type within a day column.
-   * mealTypeLabel: the translated meal type label shown in the UI (e.g. "Breakfast", "Snack").
-   */
-  async clickAddMeal(weekdayAbbr: string, mealTypeLabel: string) {
-    const dayCard = this.page
-      .locator('[class*="grid"] > *')
-      .filter({ has: this.page.getByText(new RegExp(`^${weekdayAbbr}$`, 'i')) })
-      .first();
-    await expect(dayCard).toBeVisible({ timeout: 10000 });
-
-    // The + button sits next to the meal type heading, inside a flex row
-    const addButton = dayCard
-      .locator('div')
-      .filter({ hasText: new RegExp(mealTypeLabel, 'i') })
-      .getByRole('button')
-      .first();
-
-    // Force click to bypass layout-based pointer-event interception in narrow columns
-    await addButton.click({ force: true });
+  async clickAddMeal(weekdayAbbr: string, slotName: string) {
+    await this.cell(weekdayAbbr, slotName).getByRole('button', { name: /add meal/i }).click();
     await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
   }
 
   // ── Meal form ───────────────────────────────────────────────────────────────
 
-  /**
-   * Fill the open meal form dialog.
-   * recipeName is typed into the recipe search box; the first autocomplete suggestion is clicked.
-   */
   async fillMealForm(recipeName: string, servings?: number, notes?: string) {
     const dialog = this.mealFormDialog;
 
@@ -81,47 +72,35 @@ export class CalendarPage extends BasePage {
     if (servings !== undefined) {
       await dialog.getByLabel(/servings/i).fill(String(servings));
     }
-
     if (notes !== undefined) {
       await dialog.getByLabel(/notes/i).fill(notes);
     }
   }
 
   async submitMealForm() {
-    await this.mealFormDialog.getByRole('button', { name: /save|add|update/i }).click();
+    await this.mealFormDialog
+      .getByRole('button', { name: /add meal|save changes/i })
+      .click();
     await expect(this.mealFormDialog).not.toBeVisible({ timeout: 10000 });
   }
 
   // ── Edit / Delete meal ──────────────────────────────────────────────────────
+  // The chip's dropdown menu is portaled to document.body — its items are
+  // queried at the page level once open.
 
   async openEditMeal(recipeName: string) {
-    // Find the meal card by Tailwind's "group" class which enables hover-reveal controls
-    const mealCard = this.page
-      .locator('.group')
-      .filter({ has: this.page.getByRole('link', { name: recipeName }) })
-      .first();
-    await mealCard.hover();
-
-    // Edit button: the first icon-only button after hover (Pencil)
-    const editButton = mealCard.getByRole('button').first();
-    await editButton.click();
+    await this.mealChips(recipeName).first().click();
+    await this.page.getByRole('menuitem', { name: /^edit$/i }).click();
     await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
   }
 
   async deleteMeal(recipeName: string) {
-    const mealCard = this.page
-      .locator('.group')
-      .filter({ has: this.page.getByRole('link', { name: recipeName }) })
-      .first();
-    await mealCard.hover();
-
-    // Delete button: the second icon-only button after hover (Trash)
-    const deleteButton = mealCard.getByRole('button').last();
-    await deleteButton.click();
+    await this.mealChips(recipeName).first().click();
+    await this.page.getByRole('menuitem', { name: /^delete$/i }).click();
 
     const dialog = this.page.getByRole('dialog');
-    await expect(dialog).toBeVisible({ timeout: 5000 });
-    await dialog.getByRole('button', { name: /delete/i }).last().click();
+    await expect(dialog.getByText(/delete meal/i)).toBeVisible({ timeout: 5000 });
+    await dialog.getByRole('button', { name: /^delete$/i }).click();
     await expect(dialog).not.toBeVisible({ timeout: 5000 });
   }
 }

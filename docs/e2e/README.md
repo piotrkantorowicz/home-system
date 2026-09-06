@@ -1,6 +1,15 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `e2e/` covers **82 tests across 13 specs**, plus one auth setup (83 entries in total). It runs serially against a real backend, real frontend, and real Authentik (no mocks except for one explicit `route.fulfill` 404 case in `weight-prediction.md`).
+The Playwright end-to-end suite at `e2e/` covers **89 tests across 15 spec
+files**, plus the auth setup (4 worker logins). It runs against a real backend,
+real frontend, and real Authentik; the two `notifications/` specs are fully
+route-mocked, and a few diet-planner tests mock one endpoint to force a
+deterministic branch (see per-spec docs).
+
+> **Audited against the #208 UI redesign (2026-09).** The redesign moved,
+> restructured, or removed a lot of what the suite targeted — see
+> [Redesign impact & findings](#redesign-impact--findings) below. All specs
+> and POMs in this doc reflect the post-redesign app.
 
 This directory is the human-readable reference. Each spec has its own page below; this README is the hub for cross-cutting concerns and discovery.
 
@@ -10,19 +19,20 @@ This directory is the human-readable reference. Each spec has its own page below
 
 | Spec | What it covers | Tests |
 |---|---|---|
-| [dashboard](dashboard.md) | Stat cards on the diet-planner dashboard | 3 |
-| [import](import.md) | Multi-step import wizard end-to-end | 5 |
-| [meals](meals.md) | Calendar CRUD and week navigation | 6 |
+| [dashboard](dashboard.md) | Today hero + quick actions on the redesigned dashboard | 5 |
+| [import](import.md) | 2-step import wizard end-to-end | 5 |
+| [meals](meals.md) | WeekGrid calendar CRUD and week navigation | 6 |
 | [pagination](pagination.md) | List pagination on Products and Recipes | 8 |
 | [products](products.md) | Products CRUD and search | 5 |
 | [recipes](recipes.md) | Recipes CRUD with ingredients | 4 |
-| [nutrition](nutrition.md) | Nutrition summary, totals, goal progress | 11 |
+| [nutrition](nutrition.md) | Nutrition summary — range presets, tiles, chart, table | 12 |
 | [profile](profile.md) | Biometrics form on the profile hub | 6 |
 | [meal-schedule](meal-schedule.md) | Meal slots on the profile hub | 9 |
 | [hydration](hydration.md) | Hydration page + settings | 6 |
-| [notification-preferences](notification-preferences.md) | Notification prefs on the profile hub | 8 |
-| [weight-prediction](weight-prediction.md) | WeightPredictionCard on the dashboard | 9 |
+| [notification-preferences](notification-preferences.md) | `diet-reminder-settings.spec.ts` — reminder prefs on the profile hub (now `serial`) | 8 |
+| [weight-prediction](weight-prediction.md) | Read-only "Energy model" card on Profile → Overview | 6 |
 | [theme](theme.md) | Theme toggle in the user-menu dropdown | 2 |
+| [notifications](notifications.md) | `notifications/` module — channel prefs + inbox (route-mocked) | 4 |
 
 ---
 
@@ -31,7 +41,7 @@ This directory is the human-readable reference. Each spec has its own page below
 | Concern | Choice |
 |---|---|
 | Framework | `@playwright/test` (Chromium only) |
-| Test directory | `e2e/diet-planner/` |
+| Test directory | `e2e/diet-planner/` + `e2e/notifications/` (`testDir: '.'`) |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
 | Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh and per-worker `storageState` resolution |
 | Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), password sourced from `TEST_USER_PASSWORD` in `e2e/.env` (must match `E2E_USER_PASSWORD` in `infrastructure/.env`). Per-worker overrides available via `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` |
@@ -93,8 +103,13 @@ Most specs are independent and can run in any order. A few share state and must 
 | [meals](meals.md) | All tests reuse a single weekly plan imported by the first `setup:` test. Later tests edit/delete meals from that plan. |
 | [nutrition](nutrition.md) (with-meal-data describe) | Same pattern — first test imports the plan, later tests assert nutrition aggregates. |
 | [recipes](recipes.md) | Edit and delete tests reuse the recipe created by the first test. |
+| [notification-preferences](notification-preferences.md) (`diet-reminder-settings.spec.ts`) | Every test writes the same per-user reminder-settings record — made `serial` during the audit. |
+| [weight-prediction](weight-prediction.md) | Every test writes the same per-user profile + goals record — `serial` + per-test profile seeding. |
 
-Cross-spec state: `goalCalories` configured by `nutrition.spec.ts › goal progress panel appears...` persists for the rest of the run (it's user-level data, not test-scoped). The weight-prediction POM tolerates this via a short-circuit when the calorie input is already at the requested value.
+Cross-spec state: a `dailyCalorieTarget` goal configured by `nutrition.spec.ts`
+(and by `weight-prediction.spec.ts`) persists for the rest of the run (it's
+user-level data). `weight-prediction.spec.ts`'s empty-state test route-mocks
+`GET /api/v1/goals → null` to stay deterministic despite this.
 
 ---
 
@@ -151,18 +166,73 @@ TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
 
 ---
 
+## Redesign impact & findings
+
+What the #208 audit changed, and what it surfaced.
+
+### Behaviour changes the redesign shipped (tests were rewritten to match)
+
+| Area | Before | After |
+|---|---|---|
+| `/` route | Rendered a "Welcome back" launcher (`SystemDashboard`) | Redirects into a module (`RootRedirect`); `SystemDashboard` deleted |
+| Dashboard | Products / Recipes / Calendar quick-stat cards linking out | Today hero + Next up + Water + This week cards; no quick-stat cards |
+| Nav | Flat icon rail | 64px `ModuleRail` + 216px grouped `SectionPanel`, `ModuleSwitcher`, ⌘K `CommandPalette` (replaced the dead header search) |
+| Nutrition summary | Custom from/to `DatePicker` + Apply; "Totals" / "Daily average" / "Goal progress" panels | `7 / 30 / 90 days` `SegmentedControl`; `MetricTile`s + bar chart + macro split |
+| Import wizard | 3 steps (Continue → Validate → Confirm Import) | 2 steps (Continue auto-validates → `Import N days`) |
+| Calendar week view | Day "cards", meals as links, hover-reveal edit/delete icons | `WeekGrid` ARIA grid; meals are chip `<button>`s with a "…" dropdown |
+| Products / Recipes lists | `<table>` rows / cards with inline action buttons | CSS-grid `role="table"`/`role="list"`; actions behind a "…" dropdown menu |
+| Hydration | Linear `role="progressbar"` | Bottle-fill `role="meter"`; shared glass-row add/remove |
+| Notification channels | 3 rows (console / email / websocket) | 2 rows (email disabled, websocket toggle) — **console channel dropped** |
+
+### Regressions / reductions worth a product decision
+
+- **Weight-prediction calculator removed.** The interactive "type a hypothetical
+  calorie target, watch BMR/TDEE recompute" card (`WeightPredictionCard`) is no
+  longer rendered anywhere — the component file is now dead code. Its
+  replacement (Profile → Overview "Energy model") is read-only and driven only
+  by the saved goal, with no "enter a target" prompt and no distinct
+  incomplete-profile message. `weight-prediction.spec.ts` shrank 9 → 6 tests.
+- **"Console" notification channel** disappeared from the preferences UI
+  (intentional simplification? the DTO field still exists).
+- Several data tables were rebuilt as `<div>` CSS grids with no semantic
+  markup; the audit added the appropriate ARIA roles (`table` / `row` /
+  `columnheader` / `gridcell` / `listitem` + `aria-label`) back in
+  `ProductList.tsx`, `RecipeCard.tsx` / `RecipeList.tsx`,
+  `NutritionSummary.tsx`, `WeekGrid.tsx`, and `Hydration.tsx` — small a11y
+  wins, not just test hooks.
+
+### Flaky-test fixes (independent of the redesign)
+
+- `diet-reminder-settings.spec.ts` → `mode: 'serial'` (tests raced over the
+  shared per-user settings record) **and** its POM `save()` reordered to
+  register `waitForResponse` before `click()` (fast-local-backend race).
+- `weight-prediction.spec.ts` → `mode: 'serial'` + per-test profile seeding
+  (was racing the shared profile/goals record under `fullyParallel`).
+- `notifications/inbox.spec.ts` "mark read" → the list mock is now stateful, so
+  the mutation's `onSettled` refetch doesn't revert the optimistic update.
+- `recipes.page.ts` ingredient picker → click the listbox `option` explicitly
+  (was relying on a blur-to-commit that races the product search) and centre
+  the field first (the popover is `position: fixed`).
+
+---
+
 ## Known coverage gaps (cross-cutting)
 
 Features that have no e2e coverage today:
 
-- **Mobile sidebar drawer** (#95) — hamburger menu, drawer open/close, focus trap, escape to close.
-- **Goals CTA card** (#110) on dashboard when no goals exist.
-- **Hydration quick-add widget** (#111) on the Calendar tab — count increment/decrement, target reached state.
-- **Calendar sub-views** (#111) — Calendar / Nutrition / Import tab navigation.
-- **User profile dropdown** (#108) — language switcher, settings deep-links, logout.
-- **Recipe search dropdown** (#112) — opacity / overlay behaviour.
-- **Authentication failure paths** — invalid credentials, locked account, password reset flow (currently only the happy path is exercised by `auth.setup.ts`).
-- **i18n parity** — every text-based selector hard-codes English; no Polish coverage.
+- **Two-tier nav** — `ModuleRail` / `SectionPanel` grouping + collapse,
+  `ModuleSwitcher`, the ⌘K `CommandPalette`.
+- **`/` redirect logic** (`RootRedirect`) — 0 / 1 / many registered modules.
+- **Mobile** — `BottomTabBar`, narrow-viewport layouts, sidebar drawer.
+- **Dashboard cards' interactions** — Today hero goals CTA, Next up "Mark
+  eaten", Water card glass-row, This week chart.
+- **Calendar** — day view (`view: 'day'`), the meal-chip dropdown's other
+  actions (Mark done / Record actual / Revert / bulk-complete), drag-to-move.
+- **Weight-prediction** — the interactive calculator (removed; nothing to test).
+- **User profile dropdown** — language switcher, settings deep-links, logout.
+- **`notifications/` specs run fully mocked** — no real-backend inbox / channel path.
+- **Authentication failure paths** — invalid credentials, locked account, password reset.
+- **i18n parity** — every text selector hard-codes English; no Polish coverage.
 - **Accessibility** — no keyboard-only flows, no screen-reader assertions, no axe checks.
 - **Visual regression** — `playwright/visual` baselines do not exist.
 

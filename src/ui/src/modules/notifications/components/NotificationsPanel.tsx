@@ -56,11 +56,7 @@ export function NotificationsPanel() {
           <UnreadBadge />
         </span>
       </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="bg-surface flex h-full flex-col gap-0 p-0"
-        onClose={close}
-      >
+      <SheetContent side="right" className="bg-card flex h-full flex-col gap-0 p-0" onClose={close}>
         <SheetHeader className="border-border border-b">
           <SheetTitle>{t('panel.title')}</SheetTitle>
           <SheetDescription>{t('panel.subtitle')}</SheetDescription>
@@ -70,7 +66,7 @@ export function NotificationsPanel() {
           {isLoading && (
             <ul aria-busy="true" className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <li key={i} className="bg-surface-alt h-20 animate-pulse rounded-md" />
+                <li key={i} className="bg-muted h-20 animate-pulse rounded-md" />
               ))}
             </ul>
           )}
@@ -78,13 +74,13 @@ export function NotificationsPanel() {
           {isError && (
             <div
               role="alert"
-              className="border-error/40 bg-error/10 text-text flex items-center justify-between rounded-md border p-4 text-sm"
+              className="border-destructive/40 bg-destructive/10 text-foreground flex items-center justify-between rounded-md border p-4 text-sm"
             >
               <p>{t('inbox.error')}</p>
               <button
                 type="button"
                 onClick={() => void refetch()}
-                className="border-error/40 focus-visible:ring-primary hover:bg-error/20 rounded-md border px-3 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
+                className="border-destructive/40 focus-visible:ring-primary hover:bg-destructive/20 rounded-md border px-3 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
               >
                 {t('inbox.retry')}
               </button>
@@ -93,8 +89,8 @@ export function NotificationsPanel() {
 
           {!isLoading && !isError && items.length === 0 && (
             <div className="border-border rounded-md border border-dashed p-8 text-center">
-              <p className="text-text text-base font-medium">{t('inbox.empty_title')}</p>
-              <p className="text-text-muted mt-1 text-sm">{t('inbox.empty_body')}</p>
+              <p className="text-foreground text-base font-medium">{t('inbox.empty_title')}</p>
+              <p className="text-muted-foreground mt-1 text-sm">{t('inbox.empty_body')}</p>
             </div>
           )}
 
