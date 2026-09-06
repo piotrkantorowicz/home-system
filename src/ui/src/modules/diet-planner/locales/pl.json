@@ -633,6 +633,7 @@
     "entry_water": "Woda",
     "add_glass_aria": "Dodaj szklankę ({{amount}} ml)",
     "remove_glass_aria": "Usuń ostatni wpis",
+    "level_aria": "Poziom wody",
     "custom_trigger": "Własna",
     "custom_popover_title": "Własna ilość",
     "custom_step_down_aria": "Zmniejsz ilość",

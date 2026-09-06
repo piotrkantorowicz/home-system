@@ -642,6 +642,7 @@
     "entry_water": "Water",
     "add_glass_aria": "Add a glass ({{amount}} ml)",
     "remove_glass_aria": "Remove last entry",
+    "level_aria": "Water level",
     "custom_trigger": "Custom",
     "custom_popover_title": "Custom amount",
     "custom_step_down_aria": "Decrease amount",

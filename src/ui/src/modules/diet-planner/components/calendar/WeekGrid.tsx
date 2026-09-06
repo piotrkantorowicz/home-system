@@ -115,7 +115,12 @@ export function WeekGrid({
   return (
     <div className="flex flex-col gap-3">
       <Card className="overflow-x-auto p-0">
-        <div className="grid min-w-[840px]" style={{ gridTemplateColumns: columns }}>
+        <div
+          role="grid"
+          aria-label={t('calendar.view.week')}
+          className="grid min-w-[840px]"
+          style={{ gridTemplateColumns: columns }}
+        >
           {/* Header row */}
           <div className="border-border border-b" />
           {weekDays.map((date) => {
@@ -124,6 +129,8 @@ export function WeekGrid({
             return (
               <div
                 key={dateStr}
+                role="columnheader"
+                aria-label={date.toLocaleDateString(i18n.language, { weekday: 'short' })}
                 className={cn(
                   'border-border border-b border-l px-2.5 py-3.5 text-center',
                   isToday && 'bg-accent',
@@ -249,10 +256,13 @@ function FragmentRow({
   onOverrideMeal,
   onDeleteMeal,
 }: FragmentRowProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <>
-      <div className="border-border text-muted-foreground border-t px-3 py-3 text-[12px] font-bold">
+      <div
+        role="rowheader"
+        className="border-border text-muted-foreground border-t px-3 py-3 text-[12px] font-bold"
+      >
         {slot.name}
       </div>
       {weekDays.map((date) => {
@@ -262,6 +272,8 @@ function FragmentRow({
         return (
           <div
             key={dateStr}
+            role="gridcell"
+            aria-label={`${date.toLocaleDateString(i18n.language, { weekday: 'short' })} ${slot.name}`}
             className={cn('border-border border-t border-l p-2', isToday && 'bg-accent/40')}
           >
             {cellMeals.length === 0 ? (
@@ -392,10 +404,7 @@ function MealChip({
 function LegendSwatch({ macro, label }: { macro: Macro; label: string }) {
   return (
     <span className="text-muted-foreground inline-flex items-center gap-1.5">
-      <span
-        className="size-2.5 rounded-full"
-        style={{ background: `var(--color-${macro})` }}
-      />
+      <span className="size-2.5 rounded-full" style={{ background: `var(--color-${macro})` }} />
       {label}
     </span>
   );

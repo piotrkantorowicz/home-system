@@ -192,6 +192,11 @@ export default function Hydration() {
 
       <Card className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
         <div
+          role="meter"
+          aria-label={t('hydration.level_aria')}
+          aria-valuenow={percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
           className="bg-secondary relative h-[176px] w-[132px] flex-none overflow-hidden border-2 border-[var(--color-water)]"
           style={{ borderRadius: '18px 18px 26px 26px' }}
         >
