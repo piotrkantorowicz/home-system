@@ -26,12 +26,10 @@ test.describe('Calendar CRUD & Navigation', () => {
     // Week header is visible
     await expect(page.getByText(/week of/i)).toBeVisible();
 
-    // All 7 weekdays are rendered
+    // All 7 weekday column headers are rendered
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     for (const day of weekdays) {
-      await expect(
-        page.getByRole('heading', { name: new RegExp(`^${day}\\b`, 'i') }),
-      ).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: day })).toBeVisible();
     }
   });
 
@@ -106,15 +104,15 @@ test.describe('Calendar CRUD & Navigation', () => {
     const calendar = new CalendarPage(page);
     await calendar.goto();
 
-    // Count meals with this recipe name before deletion
-    const mealLinksBefore = page.getByRole('link', { name: recipeName });
-    const countBefore = await mealLinksBefore.count();
+    // Count meal chips with this recipe name before deletion
+    const chipsBefore = page.getByRole('button', { name: recipeName });
+    const countBefore = await chipsBefore.count();
     expect(countBefore).toBeGreaterThan(0);
 
     await calendar.deleteMeal(recipeName);
 
-    // One fewer meal link after deletion
-    await expect(page.getByRole('link', { name: recipeName })).toHaveCount(countBefore - 1, {
+    // One fewer meal chip after deletion
+    await expect(page.getByRole('button', { name: recipeName })).toHaveCount(countBefore - 1, {
       timeout: 5000,
     });
   });

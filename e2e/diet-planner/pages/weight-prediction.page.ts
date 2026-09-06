@@ -4,92 +4,69 @@ import { BasePage } from './BasePage';
 
 import type { Page, Locator } from '@playwright/test';
 
+/**
+ * The interactive "type a hypothetical calorie target and watch BMR/TDEE
+ * recompute" calculator (the old WeightPredictionCard, with its own
+ * `dailyCalorieTarget` input) was dropped in the #208 redesign — the
+ * component still exists in the tree but is no longer imported anywhere. It
+ * was replaced by a READ-ONLY "Energy model" card on the Profile overview
+ * page, driven entirely by the user's saved `dailyCalorieTarget` goal
+ * (Profile → Goals) rather than a free-typed value. See docs/e2e/weight-prediction.md.
+ */
 export class WeightPredictionPage extends BasePage {
-  readonly calorieTargetInput: Locator;
+  readonly energyModelEmptyMessage: Locator;
   readonly bmrValue: Locator;
   readonly tdeeValue: Locator;
   readonly weeklyChangeValue: Locator;
   readonly currentBmiValue: Locator;
   readonly targetBmiValue: Locator;
-  readonly goalDateValue: Locator;
-  readonly noProfileMessage: Locator;
-  readonly enterCaloriesMessage: Locator;
-  readonly incompleteProfileMessage: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.calorieTargetInput = page.getByLabel(/daily calorie target/i);
-
-    // Stat card values — locate the label <p>, navigate up to the container div,
-    // then find the numeric value <p> within it.
-    // Using xpath=.. is required because Playwright has no built-in parent-locator API.
-    this.bmrValue = page
-      .getByText('BMR', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-2xl');
-
-    this.tdeeValue = page
-      .getByText('TDEE', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-2xl');
-
-    // Weekly change value lives inside a nested flex div (alongside the trend icon)
-    this.weeklyChangeValue = page
-      .getByText('Weekly Change', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-2xl');
-
-    this.currentBmiValue = page
-      .getByText('Current BMI', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-2xl');
-
-    this.targetBmiValue = page
-      .getByText('Target BMI', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-2xl');
-
-    // Goal date uses text-xl, not text-2xl
-    this.goalDateValue = page
-      .getByText('Estimated Goal Date', { exact: true })
-      .locator('xpath=..')
-      .locator('p.text-xl');
-
-    // State messages — matched against actual i18n strings (en.json)
-    this.noProfileMessage = page.getByText(/set up your biometrics profile/i);
-    this.enterCaloriesMessage = page.getByText(/enter a daily calorie target/i);
-    this.incompleteProfileMessage = page.getByText(/complete your profile/i);
+    this.energyModelEmptyMessage = page.getByText(/set a daily calorie target/i);
+    this.bmrValue = this.tileValue(page, 'BMR');
+    this.tdeeValue = this.tileValue(page, 'TDEE');
+    this.weeklyChangeValue = this.tileValue(page, 'Weekly change');
+    this.currentBmiValue = this.tileValue(page, 'Current BMI');
+    this.targetBmiValue = this.tileValue(page, 'Target BMI');
   }
 
-  /** Navigate to the Dashboard where the prediction card now lives. */
+  // MetricTile renders <label div><value div class="numeral">...</value></label div's parent>
+  // as two sibling divs — walk up to the shared parent, then into the value div.
+  private tileValue(page: Page, label: string): Locator {
+    return page.getByText(label, { exact: true }).locator('xpath=..').locator('.numeral');
+  }
+
+  /** Navigate to the Profile overview, where the Energy model card now lives. */
   async goto() {
-    await this.page.goto('/diet-planner');
+    await this.page.goto('/diet-planner/profile');
     await this.waitForPageReady();
   }
 
   /**
-   * Type a calorie value into the input and wait for the prediction API response.
-   * waitForResponse must be registered BEFORE fill() to avoid missing the response.
+   * Set the daily calorie target via Profile → Goals — the only way left to
+   * drive the Energy model card (there is no in-place override any more).
    */
-  async enterCalories(calories: number) {
-    // The card prefills from the user's goals (#116). When the requested
-    // value equals the prefilled value, React Query short-circuits with a
-    // cached response so no new HTTP call fires — short-circuit here too.
-    const currentValue = await this.calorieTargetInput.inputValue();
-    if (currentValue === String(calories)) {
-      return;
-    }
+  async setDailyCalorieTarget(calories: number) {
+    await this.page.goto('/diet-planner/profile?section=goals');
+    await this.waitForPageReady();
+
+    const input = this.page.locator('#dailyCalorieTarget');
+    const current = await input.inputValue();
+    if (current === String(calories)) return;
 
     const responsePromise = this.page.waitForResponse(
-      (r) => r.url().includes('/api/v1/profile/prediction') && r.status() < 500,
-      { timeout: 10_000 },
+      (r) =>
+        r.url().includes('/api/v1/goals') &&
+        (r.request().method() === 'PUT' || r.request().method() === 'POST'),
     );
-    await this.calorieTargetInput.fill(String(calories));
+    await input.fill(String(calories));
+    await this.page.getByRole('button', { name: /save goals/i }).click();
     await responsePromise;
   }
 
-  /** Assert that all main prediction stat cards are visible. */
-  async expectPredictionVisible() {
+  /** Assert the read-only Energy model card is populated. */
+  async expectEnergyModelVisible() {
     await expect(this.bmrValue).toBeVisible({ timeout: 15000 });
     await expect(this.tdeeValue).toBeVisible({ timeout: 15000 });
     await expect(this.weeklyChangeValue).toBeVisible({ timeout: 15000 });

@@ -6,12 +6,23 @@
 
 **Setup**: the first test creates an ingredient product and a recipe referencing it. Subsequent tests look up that same recipe by its `Date.now()`-suffixed name. The auth fixture tracks both the product and recipe IDs for teardown.
 
+> **#208 redesign** — the recipe grid is `role="list"` and each `RecipeCard`
+> root carries `role="listitem"` + `aria-label={recipe.name}` (there is no
+> heading in the card — the name is a plain link). View / Edit / Delete moved
+> behind a "…" dropdown menu, portaled to `document.body`. The recipe-form
+> ingredient field is a type-ahead **combobox** (`ProductPicker`) with a
+> `role="listbox"` of `role="option"` results — the POM clicks the matching
+> option explicitly rather than relying on blur-to-commit (a race against the
+> in-flight product search).
+
 **POM**: `pages/recipes.page.ts`:
 
 - `createButton`: `getByRole('link', { name: /create recipe/i })`
-- `searchFor(query)`: registers `waitForResponse` for `GET /api/v1/recipes` BEFORE filling the search input (so a fast response isn't missed); falls back to `networkidle` if the search term equals the current value (no API call)
-- `recipeCardFor(name)`: a div containing both an `h*` heading with the name AND a `View` link — disambiguates from cards in other states
-- `editRecipe(name)`: searches, finds the card, clicks the Edit link, waits for `/edit$` URL
+- `searchFor(query)`: registers `waitForResponse` for `GET /api/v1/recipes` BEFORE filling the search input; falls back to `networkidle` if the search term equals the current value
+- `recipeCardFor(name)`: `getByRole('listitem', { name })`
+- `openCardMenu(card)`: clicks the card's `Actions` button; `viewRecipe` /
+  `editRecipe` / `deleteRecipe` then click the portaled
+  `getByRole('menuitem', { name: /^view$|^edit$|^delete$/i })`
 
 ## Tests
 
@@ -21,15 +32,18 @@
 - **When** `createRecipe({ name: 'Recipe <ts>', servings: 2, prepTime: 15, ingredients: [{ name: 'Ingredient <ts>', amount: 100, unit: 'g' }] })` fills the form and saves
 - **Then** the recipe appears in the list after searching for its name
 - **Selectors of note**:
-  - Ingredient product input: `getByPlaceholder(/search product/i)` — datalist-backed
+  - Ingredient product input: `getByPlaceholder(/search product/i)` — a
+    `role="combobox"`; the POM centres it in the viewport (the listbox is a
+    `position: fixed` popover), types the name, then clicks the
+    `getByRole('option', { name })` with `{ force: true }`
   - Amount input: `getByPlaceholder('100')` — exact numeric placeholder
-  - Unit select: `page.locator('select[name^="ingredients"]')` — targeted by name prefix because the product input also has `combobox` role
+  - Unit select: `page.locator('select[name^="ingredients"]')` — targeted by name prefix
 - **API**: `POST /api/v1/products` then `POST /api/v1/recipes`
 
 ### `user can view recipe details including the ingredient`
 
 - **Given** the recipe from the previous test exists
-- **When** the user searches for the recipe name, finds the card, clicks the View link
+- **When** `viewRecipe(name)` opens the card's "…" menu and clicks the portaled `View` menuitem
 - **Then** the detail page shows `/nutrition per serving/i` and the ingredient name
 - **Notes**: validates that the recipe-to-ingredient relationship persists and that nutrition is computed at the per-serving level (proving the backend's aggregation logic).
 
@@ -43,8 +57,8 @@
 ### `user can delete a recipe and it disappears from the list`
 
 - **Given** the recipe exists
-- **When** `deleteRecipe(name)` opens the confirm dialog and clicks the Delete button (matched by `/^delete$/i` to avoid the heading)
-- **Then** `expectRecipeNotVisible(name)` — no heading with that name is visible within 5 s
+- **When** `deleteRecipe(name)` opens the card's "…" menu, clicks the `Delete` menuitem, then confirms in the dialog (button matched by `/^delete$/i`)
+- **Then** `expectRecipeNotVisible(name)` — no `role="listitem"` with that name is visible within 5 s
 - **API**: `DELETE /api/v1/recipes/{id}`
 
 ## Acceptance

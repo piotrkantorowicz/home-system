@@ -1,10 +1,17 @@
 # hydration.spec.ts — Hydration
 
-**Purpose**: the hydration page UI (heading, progress bar, quick-add control) plus settings form CRUD on the profile hub. Page-level concerns and settings concerns live on different routes after #114, so the spec uses two POMs.
+**Purpose**: the hydration page UI (heading, water-level meter, quick-add control) plus settings form CRUD on the profile hub. Page-level concerns and settings concerns live on different routes after #114, so the spec uses two POMs.
+
+> **#208 redesign** — the linear `role="progressbar"` is gone. The page shows a
+> bottle-fill visual, now marked `role="meter"` + `aria-valuenow/min/max` +
+> `aria-label` (i18n key `hydration.level_aria`) in `Hydration.tsx`. The
+> glass-row (tap to add / tap the newest filled glass to remove) is shared with
+> the dashboard's water card.
 
 **POMs**:
 
-- `pages/hydration.page.ts` — `/diet-planner/hydration` page-level locators (heading, progress bar)
+- `pages/hydration.page.ts` — `/diet-planner/hydration` page-level locators
+  (`heading`, `levelMeter` = `getByRole('meter')`)
 - `pages/hydration-settings.page.ts` — `/diet-planner/profile?section=hydration` settings form (`dailyTargetInput`, `glassSizeInput`, `saveSettingsButton`)
 
 The settings POM uses the shared `gotoProfileSection(page, 'hydration')` helper from `profile-hub.helper.ts`.
@@ -18,12 +25,12 @@ The settings POM uses the shared `gotoProfileSection(page, 'hydration')` helper 
 - **Then** an h1 heading is visible (`getByRole('heading', { level: 1 })`)
 - **Notes**: heading text is not asserted to keep i18n changes from breaking the test.
 
-### `progress bar is visible on the page`
+### `the water-level meter is visible on the page`
 
 - **Given** the user is on `/diet-planner/hydration`
 - **When** the page settles
-- **Then** the progress bar wrapper (`div:has(> [role="progressbar"])`) is visible
-- **Notes**: targets the wrapper rather than the progressbar element directly so the test passes whether the bar is at 0% or filled.
+- **Then** `getByRole('meter')` is visible
+- **Notes**: the meter is always present regardless of fill level (`aria-valuenow` is 0 → 100).
 
 ### `settings form shows daily target and glass size fields`
 

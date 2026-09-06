@@ -27,7 +27,9 @@ test.describe('Diet Plan Import', () => {
     await expect(page.getByText(/invalid json/i)).toBeVisible();
   });
 
-  test('validation step shows success before reaching step 3', async ({ page }) => {
+  test('continuing past step 1 auto-validates and shows a ready-to-import summary', async ({
+    page,
+  }) => {
     const importPage = new ImportPage(page);
     const ts = Date.now();
 
@@ -62,13 +64,16 @@ test.describe('Diet Plan Import', () => {
     };
 
     await importPage.setJson(data);
+
+    const validatePromise = page.waitForResponse(
+      (resp) => resp.url().includes('/meals/validate') && resp.request().method() === 'POST',
+    );
     await importPage.continueButton.click();
-    await expect(page.getByText(/step 2/i)).toBeVisible({ timeout: 10000 });
+    await validatePromise;
 
-    await importPage.validateButton.click();
-
-    await expect(page.getByText(/step 3/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/validation successful/i)).toBeVisible();
+    await expect(importPage.reviewDetected).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/ready to import/i)).toBeVisible();
+    await expect(importPage.importButton).toBeEnabled();
   });
 
   test('full import wizard creates products, recipes and calendar entries', async ({ page }) => {
@@ -150,23 +155,20 @@ test.describe('Diet Plan Import', () => {
     // Wait for the calendar to load meal data
     await page.waitForLoadState('networkidle');
 
-    // Each of the 4 recipes should appear exactly 7 times (once per day of the week)
+    // Each of the 4 recipes should appear exactly 7 times (once per day of the
+    // week). Meal chips are <button>s whose accessible name is
+    // "<recipe name> <kcal> kcal", so a substring match on the name works.
     for (const recipe of recipes) {
-      await expect(page.getByRole('link', { name: recipe.name }).first()).toBeVisible({
+      await expect(page.getByRole('button', { name: recipe.name }).first()).toBeVisible({
         timeout: 10000,
       });
-      await expect(page.getByRole('link', { name: recipe.name })).toHaveCount(7);
+      await expect(page.getByRole('button', { name: recipe.name })).toHaveCount(7);
     }
 
-    // All 7 weekday headers should be visible
+    // All 7 weekday column headers should be visible
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     for (const day of weekdays) {
-      await expect(
-        page.getByRole('heading', { name: new RegExp(`^${day}\\b`, 'i') }),
-      ).toBeVisible();
+      await expect(page.getByRole('columnheader', { name: day })).toBeVisible();
     }
-
-    // Total: 4 recipes × 7 days = 28 meal entries on the calendar
-    await expect(page.getByText(/no meal/i)).toHaveCount(0);
   });
 });

@@ -1,6 +1,19 @@
-# notification-preferences.spec.ts — Notification Preferences
+# diet-reminder-settings.spec.ts — Diet Reminder Settings
 
-**Purpose**: notification preferences CRUD on the profile hub's Notifications section. The form has four toggle groups (meal reminder, water reminder, weekly summary, goal milestone) and two preset `<select>`s for lead time and water interval.
+> The spec file is `diet-planner/diet-reminder-settings.spec.ts`; the POM is
+> `pages/diet-reminder-settings.page.ts`. (Distinct from the Notifications
+> module's own `notifications/channel-preferences.spec.ts` — see
+> [notifications](notifications.md).)
+
+`test.describe.configure({ mode: 'serial' })` — **added during the e2e audit.**
+Every test reads/writes the same per-user diet-reminder-settings record, so
+`fullyParallel` execution across the file's tests raced: a checkbox toggled by
+one test could be reset mid-flight by another right as "user can save diet
+reminder settings" clicked Save, so the awaited `PUT` never fired. The POM's
+`save()` also registered its `waitForResponse` **after** `click()` — a
+classic Playwright race on a fast local backend, now reordered.
+
+**Purpose**: diet-reminder settings CRUD on the profile hub's Notifications section. The form has four toggle groups (meal reminder, water reminder, weekly summary, goal milestone) and two preset `<select>`s for lead time and water interval.
 
 After the #114 settings refactor, lead-time and water-interval inputs became `<select>` dropdowns with preset values:
 

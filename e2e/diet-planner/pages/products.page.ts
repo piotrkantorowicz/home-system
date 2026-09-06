@@ -60,18 +60,11 @@ export class ProductsPage extends BasePage {
 
   // ── Read ────────────────────────────────────────────────────────────────────
 
-  async getProductCount(): Promise<number> {
-    const table = this.page.getByRole('table');
-    try {
-      await table.waitFor({ state: 'visible', timeout: 5000 });
-    } catch {
-      return 0;
-    }
-    return (await table.getByRole('row').count()) - 1; // minus header row
-  }
-
+  // The table view is a CSS-grid list, not a native <table> — each row div
+  // carries an explicit role="row" + aria-label={name} (see ProductList.tsx)
+  // so it's still reachable by role + name.
   rowFor(name: string): Locator {
-    return this.page.getByRole('row', { name: new RegExp(name) });
+    return this.page.getByRole('row', { name });
   }
 
   async expectProductVisible(name: string) {
@@ -83,13 +76,23 @@ export class ProductsPage extends BasePage {
     await expect(this.rowFor(name)).not.toBeVisible({ timeout: 5000 });
   }
 
+  // ── Row actions ────────────────────────────────────────────────────────────────
+  // Row actions (Edit/Delete) live behind a "…" dropdown menu, and Radix
+  // portals its content to document.body — so once the menu is open, its
+  // items are queried at the page level, not scoped to the row.
+
+  private async openRowMenu(row: Locator) {
+    await row.getByRole('button', { name: /^actions$/i }).click();
+  }
+
   // ── Edit ────────────────────────────────────────────────────────────────────
 
   async editProduct(name: string, newData: { calories?: number }) {
     await this.searchFor(name);
     const row = this.rowFor(name);
     await expect(row).toBeVisible({ timeout: 10000 });
-    await row.getByRole('link', { name: /edit/i }).click();
+    await this.openRowMenu(row);
+    await this.page.getByRole('menuitem', { name: /^edit$/i }).click();
     await this.page.waitForURL(/\/edit$/);
 
     if (newData.calories !== undefined) {
@@ -107,7 +110,8 @@ export class ProductsPage extends BasePage {
     await this.searchFor(name);
     const row = this.rowFor(name);
     await expect(row).toBeVisible({ timeout: 10000 });
-    await row.getByRole('button', { name: /delete/i }).click();
+    await this.openRowMenu(row);
+    await this.page.getByRole('menuitem', { name: /^delete$/i }).click();
 
     const dialog = this.page.getByRole('dialog');
     await expect(dialog.getByText(/delete product/i)).toBeVisible();
