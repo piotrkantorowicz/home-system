@@ -39,7 +39,8 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
         {tiles.map((tile) => {
           const Icon = tile.icon;
           const isActive =
-            location.pathname === tile.basePath || location.pathname.startsWith(`${tile.basePath}/`);
+            location.pathname === tile.basePath ||
+            location.pathname.startsWith(`${tile.basePath}/`);
           return (
             <DropdownMenuItem
               key={tile.name}

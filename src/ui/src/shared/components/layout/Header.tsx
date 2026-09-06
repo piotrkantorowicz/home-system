@@ -28,7 +28,7 @@ export function Header() {
         <button
           type="button"
           aria-label={t('common.switch_module')}
-          className="hover:bg-muted flex items-baseline gap-2.5 rounded-[10px] px-1.5 py-1 -ml-1.5 transition-colors"
+          className="hover:bg-muted -ml-1.5 flex items-baseline gap-2.5 rounded-[10px] px-1.5 py-1 transition-colors"
         >
           <span className="text-[17px] font-bold tracking-tight">HomeSystem</span>
           <span className="text-muted-foreground hidden text-xs sm:inline">

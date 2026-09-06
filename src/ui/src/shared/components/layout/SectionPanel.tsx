@@ -65,7 +65,9 @@ export function SectionPanel() {
           <span className="bg-accent text-accent-foreground grid size-7 flex-none place-items-center rounded-[9px]">
             <Icon className="size-[15px]" />
           </span>
-          <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold">{t(mod.translationKey)}</span>
+          <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold">
+            {t(mod.translationKey)}
+          </span>
           <button
             type="button"
             onClick={() => {
@@ -80,7 +82,10 @@ export function SectionPanel() {
         </div>
       )}
 
-      <nav aria-label={t(mod.translationKey)} className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+      <nav
+        aria-label={t(mod.translationKey)}
+        className="flex flex-1 flex-col gap-0.5 overflow-y-auto"
+      >
         {groups.map((group, gi) => (
           <div key={group.label ?? `g${String(gi)}`} className={gi > 0 ? 'mt-3.5' : undefined}>
             {group.label && !collapsed ? (

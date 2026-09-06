@@ -59,9 +59,9 @@ describe('ModuleRail', () => {
       'aria-current',
       'page',
     );
-    expect(
-      screen.getByRole('button', { name: 'common.notifications' }),
-    ).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: 'common.notifications' })).not.toHaveAttribute(
+      'aria-current',
+    );
   });
 
   it('shows a theme toggle and the profile menu trigger', () => {

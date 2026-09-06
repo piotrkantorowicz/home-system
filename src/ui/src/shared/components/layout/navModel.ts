@@ -31,7 +31,14 @@ export interface ModuleTile {
   label: string;
 }
 
-function toRailNavItem(t: TFunction, mod: AppModule, href: string, icon: LucideIcon, translationKey: string, Badge?: ComponentType): RailNavItem {
+function toRailNavItem(
+  t: TFunction,
+  mod: AppModule,
+  href: string,
+  icon: LucideIcon,
+  translationKey: string,
+  Badge?: ComponentType,
+): RailNavItem {
   return {
     href,
     icon,

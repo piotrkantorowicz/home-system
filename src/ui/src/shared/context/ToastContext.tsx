@@ -69,7 +69,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const duration = options?.duration ?? 4000;
     dispatch({
       type: 'ADD',
-      toast: { id, variant, message, duration, ...(options?.action ? { action: options.action } : {}) },
+      toast: {
+        id,
+        variant,
+        message,
+        duration,
+        ...(options?.action ? { action: options.action } : {}),
+      },
     });
   }, []);
 
