@@ -2,6 +2,13 @@ import { test, expect } from './fixtures';
 import { DietReminderSettingsPage } from './pages';
 import { seedDietReminderSettings } from './utils/seed';
 
+// Serial: every test reads/writes the same per-user diet-reminder-settings
+// record (there's no per-test scoping for this resource), so fullyParallel
+// execution across tests in this file races and flakes — a checkbox toggled
+// by one test can be reset mid-flight by another, e.g. right as "user can
+// save diet reminder settings" clicks Save.
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Diet Reminder Settings', () => {
   test('user can navigate to diet reminders page', async ({ page }) => {
     const prefsPage = new DietReminderSettingsPage(page);

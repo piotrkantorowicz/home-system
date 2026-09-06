@@ -187,7 +187,7 @@ export function ProductForm({
                 key={k}
                 style={{
                   width: `${String(pct(i === 0 ? pCal : i === 1 ? cCal : fCal))}%`,
-                  background: `hsl(var(--color-${k}))`,
+                  background: `var(--color-${k})`,
                 }}
               />
             ))}
@@ -204,7 +204,7 @@ export function ProductForm({
                 <span className="inline-flex items-center gap-2 font-semibold">
                   <span
                     className="size-2.5 rounded-full"
-                    style={{ background: `hsl(var(--color-${k}))` }}
+                    style={{ background: `var(--color-${k})` }}
                   />
                   {label}
                 </span>
@@ -237,7 +237,7 @@ export function ProductForm({
 
 function inputClass(invalid: boolean): string {
   return cn(
-    'h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]',
+    'h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
     invalid ? 'border-destructive' : 'border-border bg-secondary',
   );
 }
@@ -272,7 +272,7 @@ function Field({
         style={
           error
             ? {
-                background: 'color-mix(in oklab, hsl(var(--color-fat)) 7%, transparent)',
+                background: 'color-mix(in oklab, var(--color-fat) 7%, transparent)',
                 borderRadius: 13,
               }
             : undefined

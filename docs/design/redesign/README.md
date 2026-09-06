@@ -150,8 +150,10 @@ Order: Today/Dzisiaj · Plan/Plan · Food/Jedzenie · Water/Woda · Import/Impor
 **Header** — `position: sticky; top: 0; z-index: 5`, `padding: 14px 32px`, 1px bottom border,
 `background: color-mix(in oklab, var(--bg) 88%, transparent)` + `backdrop-filter: blur(14px)`.
 Left: "HomeSystem" 17px/700 + "Diet planner · Planer diety" 12px `--text-3`.
-Middle: search field, 38px tall, `max-width: 380px`, 12px radius, `--surface` + border,
-15px magnifier icon, placeholder "Search food, recipes… / Szukaj…".
+Middle: a **command trigger, not a search field** — 38px tall, 12px radius, `--surface` +
+border, magnifier icon, label "Search · Szukaj" and a `⌘K` key hint chip (22px, 6px radius,
+`--bg-2`). It opens the cross-module command palette; a permanently-open global input that
+searches nothing is exactly what got removed.
 Right: plan pill (`--primary-soft`, 34px tall, 999px radius, 6px dot + "Cut plan · 2 150 kcal")
 and a 38px notification icon button with a `--fat` count badge (17px min-width, 2px `--bg` ring).
 
@@ -496,11 +498,14 @@ Google Fonts link. No photography or illustration.
 `screenshots/` — `NN-light.png` and `NN-dark.png`, same numbering in both themes:
 01 Today · 02 Meal plan · 03 Profile & goals · 04 Import wizard · 05 Products ·
 06 Product form · 07 Recipes · 08 Recipe detail · 09 Nutrition · 10 Hydration ·
-11 Preferences · 12 Control kit · 13 Mobile. Captured at a ~900px-wide viewport, so some rows
+11 Preferences · 12 Control kit · 13 Mobile. Plus `00-review-*` (audit, nav, water, home) for
+the round-2 changes in `BUILD_REVIEW.md`. Captured at a ~900px-wide viewport, so some rows
 wrap tighter than they will at desktop widths, and the conic-gradient ring and blurred header
 render approximately. **The HTML file is authoritative** for geometry.
 
 ## Files
+- `BUILD_REVIEW.md` — review of the shipped build + the round-2 changes (nav grouping,
+  water controls, dropping the launcher page). **Start here if the app is already built.**
 - `HomeSystem Redesign.dc.html` — the full design (all four screens + mobile + theme toggle)
 - `support.js` — runtime needed to open that file in a browser
 - `IMPLEMENTATION_PLAN.md` — suggested phase order for Claude Code

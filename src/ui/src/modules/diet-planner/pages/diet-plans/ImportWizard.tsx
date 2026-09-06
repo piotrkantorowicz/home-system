@@ -204,7 +204,7 @@ export default function ImportWizard() {
                 }}
                 placeholder={t('import_wizard.upload.placeholder')}
                 rows={10}
-                className="border-border bg-muted rounded-[16px] border p-3 font-mono text-[11.5px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--color-ring))]"
+                className="border-border bg-muted rounded-[16px] border p-3 font-mono text-[11.5px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
               />
               {jsonError ? <Banner variant="error">{jsonError}</Banner> : null}
               <div className="flex flex-wrap gap-2">
@@ -344,7 +344,7 @@ export default function ImportWizard() {
                 role="alert"
                 className="border-destructive/30 text-destructive rounded-[16px] border px-4 py-3 text-[12.5px] md:col-span-2"
                 style={{
-                  background: 'color-mix(in oklab, hsl(var(--color-fat)) 12%, transparent)',
+                  background: 'color-mix(in oklab, var(--color-fat) 12%, transparent)',
                 }}
               >
                 {importError}
@@ -381,9 +381,9 @@ export default function ImportWizard() {
           <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
             <div
               className="grid size-14 place-items-center rounded-2xl"
-              style={{ background: 'color-mix(in oklab, hsl(var(--color-good)) 14%, transparent)' }}
+              style={{ background: 'color-mix(in oklab, var(--color-good) 14%, transparent)' }}
             >
-              <Check className="size-7 text-[hsl(var(--color-good))]" strokeWidth={2.4} />
+              <Check className="size-7 text-[var(--color-good)]" strokeWidth={2.4} />
             </div>
             <h2 className="text-[22px] font-bold">{t('import_wizard.done.title')}</h2>
             <p className="text-muted-foreground text-sm">{t('import_wizard.done.message')}</p>
@@ -436,7 +436,7 @@ function StepBar({ step }: { step: Step }) {
                 state === 'current' && 'bg-primary text-primary-foreground',
                 state === 'upcoming' && 'bg-muted border-border-strong border',
               )}
-              style={state === 'done' ? { background: 'hsl(var(--color-good))' } : undefined}
+              style={state === 'done' ? { background: 'var(--color-good)' } : undefined}
             >
               {state === 'done' ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
             </span>
@@ -445,7 +445,7 @@ function StepBar({ step }: { step: Step }) {
               <span
                 className={cn(
                   'h-0.5 flex-1 rounded-full',
-                  state === 'done' ? 'bg-[hsl(var(--color-good))]' : 'bg-border-strong',
+                  state === 'done' ? 'bg-[var(--color-good)]' : 'bg-border-strong',
                 )}
               />
             ) : null}

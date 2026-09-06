@@ -40,9 +40,9 @@ const DialogContent = React.forwardRef<
         className,
       )}
       style={{
-        backgroundColor: 'hsl(var(--color-card))',
-        color: 'hsl(var(--color-card-foreground))',
-        borderColor: 'hsl(var(--color-border))',
+        backgroundColor: 'var(--color-card)',
+        color: 'var(--color-card-foreground)',
+        borderColor: 'var(--color-border)',
         ...style,
       }}
       {...props}

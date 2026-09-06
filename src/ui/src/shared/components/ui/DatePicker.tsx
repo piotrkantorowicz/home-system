@@ -68,10 +68,10 @@ export function DatePicker({
             className,
           )}
           style={{
-            backgroundColor: 'hsl(var(--color-background))',
-            borderColor: 'hsl(var(--color-input))',
-            color: selected ? 'hsl(var(--color-foreground))' : 'hsl(var(--color-muted-foreground))',
-            outlineColor: 'hsl(var(--color-ring))',
+            backgroundColor: 'var(--color-background)',
+            borderColor: 'var(--color-input)',
+            color: selected ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
+            outlineColor: 'var(--color-ring)',
           }}
         >
           <span>{selected ? format(selected, 'dd MMM yyyy') : placeholder}</span>
@@ -91,9 +91,9 @@ export function DatePicker({
             'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
           )}
           style={{
-            backgroundColor: 'hsl(var(--color-popover))',
-            color: 'hsl(var(--color-popover-foreground))',
-            borderColor: 'hsl(var(--color-border))',
+            backgroundColor: 'var(--color-popover)',
+            color: 'var(--color-popover-foreground)',
+            borderColor: 'var(--color-border)',
           }}
         >
           <Calendar

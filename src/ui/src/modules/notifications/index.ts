@@ -1,3 +1,4 @@
+import { NAV_GROUP_SETTINGS } from '@shared/lib/module-registry';
 import { Bell, Inbox as InboxIcon, SlidersHorizontal } from 'lucide-react';
 import { lazy } from 'react';
 
@@ -34,6 +35,7 @@ export const notificationsModule: AppModule = {
       href: '/notifications/preferences',
       icon: SlidersHorizontal,
       translationKey: 'common.preferences',
+      group: NAV_GROUP_SETTINGS,
     },
   ],
   routes: [

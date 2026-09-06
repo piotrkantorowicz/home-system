@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
+import { usePreferences } from '@shared/hooks/usePreferences';
 import { cn } from '@shared/lib/utils';
 import { ArrowRight, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 import { lazy, Suspense, useCallback, useState, useMemo } from 'react';
@@ -47,11 +48,12 @@ const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
 const ShoppingListPage = lazy(() => import('./ShoppingList'));
 const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
 
-function getWeekStart(date: Date) {
+function getWeekStart(date: Date, weekStart: 'monday' | 'sunday') {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+  const diff =
+    weekStart === 'sunday' ? d.getDate() - day : d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
   return d;
 }
@@ -109,7 +111,11 @@ export default function Calendar() {
     return today;
   }, [searchParams]);
 
-  const weekStart = useMemo(() => getWeekStart(selectedDay), [selectedDay]);
+  const { prefs } = usePreferences();
+  const weekStart = useMemo(
+    () => getWeekStart(selectedDay, prefs.weekStart),
+    [selectedDay, prefs.weekStart],
+  );
 
   const updateParams = useCallback(
     (patch: Record<string, string | null>, options: { replace?: boolean } = {}) => {

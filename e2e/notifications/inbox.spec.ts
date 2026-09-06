@@ -18,7 +18,9 @@ test.describe('Notifications inbox', () => {
 
     await page.goto('/notifications');
 
-    await expect(page.getByRole('heading', { name: /notifications/i })).toBeVisible();
+    // Exact + level:1 — the empty-state's own "No notifications yet" is
+    // itself a heading and matches a loose /notifications/i substring.
+    await expect(page.getByRole('heading', { name: 'Notifications', level: 1 })).toBeVisible();
     await expect(page.getByText(/no notifications yet/i)).toBeVisible();
   });
 
@@ -26,6 +28,8 @@ test.describe('Notifications inbox', () => {
     const id = '11111111-1111-1111-1111-111111111111';
     let readCalled = false;
 
+    // Stateful mock: the list must reflect the read once the POST lands, or
+    // the mutation's onSettled refetch reverts the optimistic update.
     await page.route('**/api/notifications?**', (route) =>
       route.fulfill({
         status: 200,
@@ -38,7 +42,7 @@ test.describe('Notifications inbox', () => {
               title: 'Time for lunch',
               body: 'Lunch is starting',
               createdAt: new Date().toISOString(),
-              readAt: null,
+              readAt: readCalled ? new Date().toISOString() : null,
             },
           ],
           page: 1,
@@ -56,7 +60,13 @@ test.describe('Notifications inbox', () => {
 
     await page.goto('/notifications');
 
-    const row = page.getByRole('button', { name: /mark as read/i });
+    // NotificationListItem's row button only carries an accessible name
+    // ("Mark as read") while unread — once read, aria-label is removed
+    // entirely (it becomes a disabled, unlabeled control). A name-scoped
+    // role locator would stop matching the instant the click succeeds, so
+    // anchor on the notification's own title text instead, which is stable
+    // across the read/unread transition.
+    const row = page.getByText('Time for lunch').locator('xpath=ancestor::button[1]');
     await expect(row).toHaveAttribute('aria-pressed', 'false');
     await row.click();
     await expect(row).toHaveAttribute('aria-pressed', 'true');

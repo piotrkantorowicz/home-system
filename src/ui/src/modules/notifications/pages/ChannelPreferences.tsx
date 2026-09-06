@@ -1,3 +1,4 @@
+import { Banner, Button } from '@shared/components/ui';
 import { Mail, Wifi } from 'lucide-react';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,47 +26,34 @@ export default function ChannelPreferences() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-6">
-      <header className="mb-6 flex items-baseline justify-between">
+    <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8">
+      <header className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-text text-2xl font-semibold">{t('preferences.title')}</h1>
-          <p className="text-text-muted text-sm">{t('preferences.subtitle')}</p>
+          <h1 className="text-[26px] font-bold tracking-tight">{t('preferences.title')}</h1>
+          <p className="text-muted-foreground mt-0.5 text-sm">{t('preferences.subtitle')}</p>
         </div>
-        <Link
-          to="/notifications"
-          className="text-primary focus-visible:ring-primary text-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
-        >
-          ← {t('preferences.back_to_inbox')}
-        </Link>
+        <Button asChild variant="secondary" size="sm">
+          <Link to="/notifications">{t('preferences.back_to_inbox')}</Link>
+        </Button>
       </header>
 
       {isLoading && (
         <ul aria-busy="true" aria-label={t('preferences.loading')} className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <li key={i} className="bg-surface-alt h-20 animate-pulse rounded-md" />
+            <li key={i} className="bg-muted h-20 animate-pulse rounded-[13px]" />
           ))}
         </ul>
       )}
 
       {isError && (
-        <div
-          role="alert"
-          className="border-error/40 bg-error/10 text-text flex items-center justify-between rounded-md border p-4 text-sm"
-        >
-          <p>{t('preferences.error')}</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="border-error/40 focus-visible:ring-primary hover:bg-error/20 rounded-md border px-3 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
-          >
-            {t('preferences.retry')}
-          </button>
-        </div>
+        <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('preferences.retry')}>
+          {t('preferences.error')}
+        </Banner>
       )}
 
       {saveErrorMsg ? (
-        <div role="alert" aria-live="polite" className="mb-4">
-          <p className="text-error text-sm">{saveErrorMsg}</p>
+        <div className="mb-4">
+          <Banner variant="error">{saveErrorMsg}</Banner>
         </div>
       ) : null}
 

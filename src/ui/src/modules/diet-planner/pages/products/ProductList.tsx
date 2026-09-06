@@ -128,7 +128,7 @@ export default function ProductList() {
 
       {/* Filter strip */}
       <div className="border-border bg-card flex flex-wrap items-center gap-2.5 rounded-[18px] border p-3.5">
-        <div className="bg-secondary border-border flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3">
+        <div className="bg-secondary border-border focus-within:ring-primary flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3 focus-within:ring-2">
           <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
           <input
             value={search}
@@ -189,15 +189,28 @@ export default function ProductList() {
           }
         />
       ) : view === 'table' ? (
-        <div className="border-border bg-card overflow-x-auto rounded-[22px] border">
+        <div className="border-border bg-card overflow-x-auto rounded-[22px] border" role="table">
           <div className="min-w-[720px]">
-            <div className="bg-secondary text-muted-foreground grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 text-[10.5px] font-semibold uppercase">
-              <span>{t('products.table.name')}</span>
-              <span className="text-right">{t('products.table.calories')}</span>
-              <span className="text-right">{t('products.table.protein')}</span>
-              <span className="text-right">{t('products.table.carbs')}</span>
-              <span className="text-right">{t('products.table.fat')}</span>
-              <span className="text-right">{t('products.table.fiber')}</span>
+            <div
+              role="row"
+              className="bg-secondary text-muted-foreground grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 text-[10.5px] font-semibold uppercase"
+            >
+              <span role="columnheader">{t('products.table.name')}</span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.calories')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.protein')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.carbs')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.fat')}
+              </span>
+              <span role="columnheader" className="text-right">
+                {t('products.table.fiber')}
+              </span>
               <span />
             </div>
             {rows.map((p) => {
@@ -206,14 +219,15 @@ export default function ProductList() {
               return (
                 <div
                   key={p.id}
+                  role="row"
+                  aria-label={p.name}
                   className={cn(
                     'border-border grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 text-[13px]',
                   )}
                   style={
                     incomplete
                       ? {
-                          background:
-                            'color-mix(in oklab, hsl(var(--color-carbs)) 7%, transparent)',
+                          background: 'color-mix(in oklab, var(--color-carbs) 7%, transparent)',
                         }
                       : undefined
                   }
@@ -247,7 +261,7 @@ export default function ProductList() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3" role="list">
           {rows.map((p) => (
             <ProductCardItem
               key={p.id}
@@ -358,8 +372,8 @@ function MacroCell({
 function IncompleteBadge({ label }: { label: string }) {
   return (
     <span
-      className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--color-carbs))]"
-      style={{ background: 'color-mix(in oklab, hsl(var(--color-carbs)) 22%, transparent)' }}
+      className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-carbs)]"
+      style={{ background: 'color-mix(in oklab, var(--color-carbs) 22%, transparent)' }}
     >
       {label}
     </span>
@@ -421,7 +435,11 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
   };
 
   return (
-    <div className="border-border bg-card flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm">
+    <div
+      role="listitem"
+      aria-label={product.name}
+      className="border-border bg-card flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm"
+    >
       <div className="flex items-start justify-between gap-2">
         <Link
           to={`/diet-planner/products/${product.id}`}
@@ -442,7 +460,7 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
             key={c.key}
             className="rounded-[9px] p-2 text-center"
             style={{
-              background: `color-mix(in oklab, hsl(var(--color-${c.key})) 12%, transparent)`,
+              background: `color-mix(in oklab, var(--color-${c.key}) 12%, transparent)`,
             }}
           >
             <div className="tnum text-[13px] font-bold">{fmt(val[c.key])}</div>

@@ -6,7 +6,7 @@
 /*
  * Design tokens — HomeSystem UI refresh (issue #208).
  * Authoring reference is oklch (see design handoff); values below are the
- * approximate HSL-triple equivalents so existing `hsl(var(--color-*))`
+ * approximate HSL-triple equivalents so existing `var(--color-*)`
  * consumers keep working. Do not mix the two formats.
  *
  * Handoff name → app token name:
@@ -29,39 +29,39 @@
  */
 
 @theme {
-  --color-background: 260 20% 97%;
-  --color-foreground: 264 12% 15%;
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 264 12% 15%;
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 264 12% 15%;
-  --color-primary: 261 75% 54%;
-  --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 270 20% 99%;
-  --color-secondary-foreground: 264 12% 15%;
-  --color-muted: 264 14% 93%;
-  --color-muted-foreground: 264 6% 57%;
-  --color-accent: 258 88% 96%;
-  --color-accent-foreground: 262 70% 42%;
-  --color-destructive: 357 65% 57%;
-  --color-destructive-foreground: 0 0% 100%;
-  --color-border: 258 14% 89%;
-  --color-input: 258 14% 89%;
-  --color-ring: 261 75% 54%;
-  --color-success: 150 50% 35%;
-  --color-warning: 35 70% 50%;
+  --color-background: hsl(260 20% 97%);
+  --color-foreground: hsl(264 12% 15%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(264 12% 15%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(264 12% 15%);
+  --color-primary: hsl(261 75% 54%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(270 20% 99%);
+  --color-secondary-foreground: hsl(264 12% 15%);
+  --color-muted: hsl(264 14% 93%);
+  --color-muted-foreground: hsl(264 6% 57%);
+  --color-accent: hsl(258 88% 96%);
+  --color-accent-foreground: hsl(262 70% 42%);
+  --color-destructive: hsl(357 65% 57%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(258 14% 89%);
+  --color-input: hsl(258 14% 89%);
+  --color-ring: hsl(261 75% 54%);
+  --color-success: hsl(150 50% 35%);
+  --color-warning: hsl(35 70% 50%);
 
   /* New tokens — refresh */
-  --color-text-2: 264 6% 41%;
-  --color-border-strong: 258 14% 83%;
-  --color-primary-soft: 258 88% 96%;
-  --color-primary-ink: 262 70% 42%;
-  --color-protein: 215 60% 52%;
-  --color-carbs: 35 70% 50%;
-  --color-fat: 357 65% 57%;
-  --color-fiber: 162 50% 38%;
-  --color-water: 195 60% 46%;
-  --color-good: 150 50% 35%;
+  --color-text-2: hsl(264 6% 41%);
+  --color-border-strong: hsl(258 14% 83%);
+  --color-primary-soft: hsl(258 88% 96%);
+  --color-primary-ink: hsl(262 70% 42%);
+  --color-protein: hsl(215 60% 52%);
+  --color-carbs: hsl(35 70% 50%);
+  --color-fat: hsl(357 65% 57%);
+  --color-fiber: hsl(162 50% 38%);
+  --color-water: hsl(195 60% 46%);
+  --color-good: hsl(150 50% 35%);
 
   /* Radii — cards 22px, controls 12–13px */
   --radius-xl: 1.375rem;
@@ -78,100 +78,100 @@
 /* Light theme */
 :root {
   color-scheme: light;
-  --color-background: 260 20% 97%;
-  --color-foreground: 264 12% 15%;
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 264 12% 15%;
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 264 12% 15%;
-  --color-primary: 261 75% 54%;
-  --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 270 20% 99%;
-  --color-secondary-foreground: 264 12% 15%;
-  --color-muted: 264 14% 93%;
-  --color-muted-foreground: 264 6% 57%;
-  --color-accent: 258 88% 96%;
-  --color-accent-foreground: 262 70% 42%;
-  --color-destructive: 357 65% 57%;
-  --color-destructive-foreground: 0 0% 100%;
-  --color-border: 258 14% 89%;
-  --color-input: 258 14% 89%;
-  --color-ring: 261 75% 54%;
-  --color-success: 150 50% 35%;
-  --color-warning: 35 70% 50%;
+  --color-background: hsl(260 20% 97%);
+  --color-foreground: hsl(264 12% 15%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(264 12% 15%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(264 12% 15%);
+  --color-primary: hsl(261 75% 54%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(270 20% 99%);
+  --color-secondary-foreground: hsl(264 12% 15%);
+  --color-muted: hsl(264 14% 93%);
+  --color-muted-foreground: hsl(264 6% 57%);
+  --color-accent: hsl(258 88% 96%);
+  --color-accent-foreground: hsl(262 70% 42%);
+  --color-destructive: hsl(357 65% 57%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(258 14% 89%);
+  --color-input: hsl(258 14% 89%);
+  --color-ring: hsl(261 75% 54%);
+  --color-success: hsl(150 50% 35%);
+  --color-warning: hsl(35 70% 50%);
 
-  --color-text-2: 264 6% 41%;
-  --color-border-strong: 258 14% 83%;
-  --color-primary-soft: 258 88% 96%;
-  --color-primary-ink: 262 70% 42%;
-  --color-protein: 215 60% 52%;
-  --color-carbs: 35 70% 50%;
-  --color-fat: 357 65% 57%;
-  --color-fiber: 162 50% 38%;
-  --color-water: 195 60% 46%;
-  --color-good: 150 50% 35%;
+  --color-text-2: hsl(264 6% 41%);
+  --color-border-strong: hsl(258 14% 83%);
+  --color-primary-soft: hsl(258 88% 96%);
+  --color-primary-ink: hsl(262 70% 42%);
+  --color-protein: hsl(215 60% 52%);
+  --color-carbs: hsl(35 70% 50%);
+  --color-fat: hsl(357 65% 57%);
+  --color-fiber: hsl(162 50% 38%);
+  --color-water: hsl(195 60% 46%);
+  --color-good: hsl(150 50% 35%);
 
   --shadow: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
   --shadow-lg: 0 2px 4px oklch(20% 0.02 286 / 0.06), 0 24px 48px -20px oklch(20% 0.02 286 / 0.28);
 
-  --gradient-primary: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-water)));
-  --gradient-accent: linear-gradient(140deg, hsl(var(--color-primary)), hsl(var(--color-water)));
-  --gradient-avatar: linear-gradient(140deg, hsl(var(--color-primary)), hsl(var(--color-water)));
-  --gradient-goal: linear-gradient(90deg, hsl(var(--color-primary)), hsl(var(--color-water)));
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-water));
+  --gradient-accent: linear-gradient(140deg, var(--color-primary), var(--color-water));
+  --gradient-avatar: linear-gradient(140deg, var(--color-primary), var(--color-water));
+  --gradient-goal: linear-gradient(90deg, var(--color-primary), var(--color-water));
 
-  --glass-bg: color-mix(in oklab, hsl(var(--color-background)) 88%, transparent);
-  --glass-border: hsl(var(--color-border));
+  --glass-bg: color-mix(in oklab, var(--color-background) 88%, transparent);
+  --glass-border: var(--color-border);
   --glass-shadow: var(--shadow);
 }
 
 /* Dark theme — desaturated violet-neutral (not blue-black) */
 .dark {
   color-scheme: dark;
-  --color-background: 249 10% 14%;
-  --color-foreground: 260 21% 95%;
-  --color-card: 247 10% 18%;
-  --color-card-foreground: 260 21% 95%;
-  --color-popover: 247 10% 18%;
-  --color-popover-foreground: 260 21% 95%;
-  --color-primary: 257 78% 74%;
-  --color-primary-foreground: 256 44% 14%;
-  --color-secondary: 255 8% 21%;
-  --color-secondary-foreground: 260 21% 95%;
-  --color-muted: 248 9% 17%;
-  --color-muted-foreground: 266 6% 55%;
-  --color-accent: 256 44% 25%;
-  --color-accent-foreground: 258 90% 85%;
-  --color-destructive: 358 75% 70%;
-  --color-destructive-foreground: 256 44% 14%;
-  --color-border: 251 9% 25%;
-  --color-input: 251 9% 25%;
-  --color-ring: 257 78% 74%;
-  --color-success: 153 50% 56%;
-  --color-warning: 36 73% 62%;
+  --color-background: hsl(249 10% 14%);
+  --color-foreground: hsl(260 21% 95%);
+  --color-card: hsl(247 10% 18%);
+  --color-card-foreground: hsl(260 21% 95%);
+  --color-popover: hsl(247 10% 18%);
+  --color-popover-foreground: hsl(260 21% 95%);
+  --color-primary: hsl(257 78% 74%);
+  --color-primary-foreground: hsl(256 44% 14%);
+  --color-secondary: hsl(255 8% 21%);
+  --color-secondary-foreground: hsl(260 21% 95%);
+  --color-muted: hsl(248 9% 17%);
+  --color-muted-foreground: hsl(266 6% 55%);
+  --color-accent: hsl(256 44% 25%);
+  --color-accent-foreground: hsl(258 90% 85%);
+  --color-destructive: hsl(358 75% 70%);
+  --color-destructive-foreground: hsl(256 44% 14%);
+  --color-border: hsl(251 9% 25%);
+  --color-input: hsl(251 9% 25%);
+  --color-ring: hsl(257 78% 74%);
+  --color-success: hsl(153 50% 56%);
+  --color-warning: hsl(36 73% 62%);
 
-  --color-text-2: 265 8% 71%;
-  --color-border-strong: 250 7% 31%;
-  --color-primary-soft: 256 44% 25%;
-  --color-primary-ink: 258 90% 85%;
-  --color-protein: 211 67% 65%;
-  --color-carbs: 36 73% 62%;
-  --color-fat: 358 75% 70%;
-  --color-fiber: 157 48% 58%;
-  --color-water: 197 61% 62%;
-  --color-good: 153 50% 56%;
+  --color-text-2: hsl(265 8% 71%);
+  --color-border-strong: hsl(250 7% 31%);
+  --color-primary-soft: hsl(256 44% 25%);
+  --color-primary-ink: hsl(258 90% 85%);
+  --color-protein: hsl(211 67% 65%);
+  --color-carbs: hsl(36 73% 62%);
+  --color-fat: hsl(358 75% 70%);
+  --color-fiber: hsl(157 48% 58%);
+  --color-water: hsl(197 61% 62%);
+  --color-good: hsl(153 50% 56%);
 
   --shadow: 0 1px 2px #0006, 0 8px 24px -12px #0009;
   --shadow-sm: 0 1px 2px #0006, 0 8px 24px -12px #0009;
   --shadow-md: 0 1px 2px #0006, 0 8px 24px -12px #0009;
   --shadow-lg: 0 2px 4px #0006, 0 24px 48px -20px #000c;
 
-  --glass-bg: color-mix(in oklab, hsl(var(--color-background)) 88%, transparent);
-  --glass-border: hsl(var(--color-border));
+  --glass-bg: color-mix(in oklab, var(--color-background) 88%, transparent);
+  --glass-border: var(--color-border);
   --glass-shadow: var(--shadow);
 }
 
 * {
-  border-color: hsl(var(--color-border));
+  border-color: var(--color-border);
 }
 
 /* Native form controls follow the active theme — fixes white option list / spinner
@@ -185,13 +185,13 @@
 /* Fallback for browsers that don't honor color-scheme on <select> popups
    (Firefox on some Linux compositors). */
 .dark option {
-  background-color: hsl(var(--color-popover));
-  color: hsl(var(--color-popover-foreground));
+  background-color: var(--color-popover);
+  color: var(--color-popover-foreground);
 }
 
 body {
-  background-color: hsl(var(--color-background));
-  color: hsl(var(--color-foreground));
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family:
     'Outfit',
     system-ui,
@@ -399,17 +399,17 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--color-border));
+  background: var(--color-border);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--color-muted-foreground) / 0.3);
+  background: color-mix(in oklab, var(--color-muted-foreground) 30%, transparent);
 }
 
 /* ── Focus visible global ── */
 *:focus-visible {
-  outline: 2px solid hsl(var(--color-ring));
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -424,6 +424,20 @@ h4 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Compact density ── Preferences toggle; tightens the shared card + page rhythm ── */
+:root[data-density='compact'] .p-\[22px\] {
+  padding: 16px;
+}
+:root[data-density='compact'] .gap-\[18px\] {
+  gap: 12px;
+}
+:root[data-density='compact'] .py-6 {
+  padding-block: 1rem;
+}
+:root[data-density='compact'] .space-y-5 > * + * {
+  margin-top: 1rem;
 }
 
 /* ── Select styling ── */

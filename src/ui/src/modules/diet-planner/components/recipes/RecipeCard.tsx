@@ -48,11 +48,15 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
   ];
 
   return (
-    <div className="border-border bg-card flex flex-col overflow-hidden rounded-[22px] border shadow-sm">
+    <div
+      role="listitem"
+      aria-label={recipe.name}
+      className="border-border bg-card flex flex-col overflow-hidden rounded-[22px] border shadow-sm"
+    >
       <div
         className="relative h-[132px]"
         style={{
-          background: `linear-gradient(140deg, color-mix(in oklab, hsl(var(--color-${macro})) 45%, transparent), color-mix(in oklab, hsl(var(--color-${macro})) 12%, transparent))`,
+          background: `linear-gradient(140deg, color-mix(in oklab, var(--color-${macro}) 45%, transparent), color-mix(in oklab, var(--color-${macro}) 12%, transparent))`,
         }}
       >
         {recipe.prepTimeMinutes ? (
@@ -124,7 +128,7 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
                 cell.key === 'kcal'
                   ? undefined
                   : {
-                      background: `color-mix(in oklab, hsl(var(--color-${cell.key})) 12%, transparent)`,
+                      background: `color-mix(in oklab, var(--color-${cell.key}) 12%, transparent)`,
                     }
               }
             >

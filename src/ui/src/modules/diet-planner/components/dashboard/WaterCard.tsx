@@ -1,17 +1,19 @@
 import {
+  useDeleteWaterIntake,
   useHydrationConfig,
   useLogWaterIntake,
   useWaterIntake,
 } from '@modules/diet-planner/api/hooks/useHydration';
+import {
+  DEFAULT_GLASS_ML,
+  DEFAULT_TARGET_ML,
+  GlassRow,
+} from '@modules/diet-planner/components/GlassRow';
+import { WaterCustomAmountPopover } from '@modules/diet-planner/components/WaterCustomAmountPopover';
 import { Button, Card } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { cn } from '@shared/lib/utils';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-
-const DEFAULT_TARGET_ML = 2500;
-const DEFAULT_GLASS_ML = 250;
-const MAX_GLASSES = 12;
 
 function today(): string {
   const d = new Date();
@@ -28,24 +30,71 @@ export function WaterCard() {
   const { data: config } = useHydrationConfig();
   const { data: intake } = useWaterIntake(date);
   const logIntake = useLogWaterIntake();
+  const deleteIntake = useDeleteWaterIntake();
+
+  const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set());
 
   const glassMl = config?.glassSizeMl ?? DEFAULT_GLASS_ML;
   const targetMl = config?.dailyWaterTargetMl ?? DEFAULT_TARGET_ML;
   const totalMl = intake?.totalMl ?? 0;
-
-  const targetGlasses = Math.min(MAX_GLASSES, Math.max(1, Math.round(targetMl / glassMl)));
-  const filled = Math.floor(totalMl / glassMl);
-  const partial = (totalMl % glassMl) / glassMl;
   const percent = targetMl > 0 ? Math.round((totalMl / targetMl) * 100) : 0;
 
-  const add = async (amountMl: number) => {
-    try {
-      await logIntake.mutateAsync({ date, amountMl });
-      toast.success(t('dashboard.water_logged', { amount: amountMl }));
-    } catch {
-      toast.error(t('dashboard.water_error'));
-    }
-  };
+  const entries = intake?.entries ?? [];
+  const newestId = [...entries].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  )[0]?.id;
+
+  function clearPending(key: string) {
+    setPendingKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+  }
+
+  function add(amountMl: number, note?: string) {
+    const key = `add-${String(amountMl)}-${String(Date.now())}`;
+    setPendingKeys((prev) => new Set(prev).add(key));
+    logIntake.mutate(
+      { date, amountMl, ...(note ? { note } : {}) },
+      {
+        onSuccess: (newId) => {
+          toast.success(t('dashboard.water_logged', { amount: amountMl }), {
+            action: {
+              label: t('hydration.undo'),
+              onClick: () => {
+                if (newId) deleteIntake.mutate({ id: newId, date });
+              },
+            },
+          });
+        },
+        onError: () => {
+          toast.error(t('dashboard.water_error'));
+        },
+        onSettled: () => {
+          clearPending(key);
+        },
+      },
+    );
+  }
+
+  function removeNewest() {
+    if (!newestId) return;
+    const key = `remove-${newestId}`;
+    setPendingKeys((prev) => new Set(prev).add(key));
+    deleteIntake.mutate(
+      { id: newestId, date },
+      {
+        onSettled: () => {
+          clearPending(key);
+        },
+      },
+    );
+  }
+
+  const anyGlassPending = [...pendingKeys].some(
+    (k) => k.startsWith('add-') || k.startsWith('remove-'),
+  );
 
   return (
     <Card className="flex flex-col gap-4 p-[22px]">
@@ -56,39 +105,30 @@ export function WaterCard() {
             {(totalMl / 1000).toFixed(1)} / {(targetMl / 1000).toFixed(1)} L
           </div>
         </div>
-        <div className="text-[24px] font-bold text-[hsl(var(--color-water))]">{percent}%</div>
+        <div className="text-[24px] font-bold text-[var(--color-water)]">{percent}%</div>
       </div>
 
-      <div className="flex gap-1.5">
-        {Array.from({ length: targetGlasses }, (_, i) => {
-          const state = i < filled ? 'full' : i === filled && partial > 0 ? 'partial' : 'empty';
-          return (
-            <div
-              key={i}
-              className={cn(
-                'h-11 flex-1 rounded-[11px]',
-                state === 'empty' && 'bg-muted border-border-strong border border-dashed',
-              )}
-              style={
-                state === 'full'
-                  ? { background: 'hsl(var(--color-water))' }
-                  : state === 'partial'
-                    ? { background: 'hsl(var(--color-water) / 0.55)' }
-                    : undefined
-              }
-            />
-          );
-        })}
-      </div>
+      <GlassRow
+        totalMl={totalMl}
+        targetMl={targetMl}
+        glassMl={glassMl}
+        size="sm"
+        onAdd={() => {
+          add(glassMl);
+        }}
+        onRemoveNewest={removeNewest}
+        addDisabled={anyGlassPending}
+        removeDisabled={anyGlassPending}
+      />
 
       <div className="flex flex-wrap gap-2">
         <Button
           size="xs"
           variant="secondary"
           onClick={() => {
-            void add(250);
+            add(250);
           }}
-          disabled={logIntake.isPending}
+          disabled={pendingKeys.has('add-250')}
         >
           + 250 ml
         </Button>
@@ -96,15 +136,13 @@ export function WaterCard() {
           size="xs"
           variant="secondary"
           onClick={() => {
-            void add(500);
+            add(500);
           }}
-          disabled={logIntake.isPending}
+          disabled={pendingKeys.has('add-500')}
         >
           + 500 ml
         </Button>
-        <Button size="xs" variant="outline" asChild>
-          <Link to="/diet-planner/hydration">{t('dashboard.water_custom')}</Link>
-        </Button>
+        <WaterCustomAmountPopover presets={[glassMl, 500, 750]} onAdd={add} triggerSize="sm" />
       </div>
     </Card>
   );

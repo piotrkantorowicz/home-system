@@ -139,7 +139,7 @@ export default function NutritionSummary() {
             <div className="relative flex h-[190px] items-end gap-1">
               {targetLinePct !== null ? (
                 <div
-                  className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[hsl(var(--color-fat))]"
+                  className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[var(--color-fat)]"
                   style={{ bottom: `${String(targetLinePct)}%` }}
                 />
               ) : null}
@@ -162,10 +162,10 @@ export default function NutritionSummary() {
                         kcal === 0
                           ? 'transparent'
                           : isToday
-                            ? 'hsl(var(--color-primary))'
+                            ? 'var(--color-primary)'
                             : over
-                              ? 'color-mix(in oklab, hsl(var(--color-fat)) 45%, transparent)'
-                              : 'color-mix(in oklab, hsl(var(--color-primary)) 30%, transparent)',
+                              ? 'color-mix(in oklab, var(--color-fat) 45%, transparent)'
+                              : 'color-mix(in oklab, var(--color-primary) 30%, transparent)',
                     }}
                   />
                 );
@@ -184,7 +184,7 @@ export default function NutritionSummary() {
                 <span key={m} className="inline-flex items-center gap-1.5 capitalize">
                   <span
                     className="size-2 rounded-full"
-                    style={{ background: `hsl(var(--color-${m}))` }}
+                    style={{ background: `var(--color-${m})` }}
                   />
                   {t(`products.table.${m}`)}
                 </span>
@@ -192,19 +192,33 @@ export default function NutritionSummary() {
             </div>
           </Card>
 
-          <Card className="overflow-x-auto p-0">
+          <Card className="overflow-x-auto p-0" role="table">
             <div className="min-w-[560px]">
-              <div className="bg-secondary text-muted-foreground grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 text-[10.5px] font-semibold uppercase">
-                <span>{t('nutrition_page.date')}</span>
-                <span className="text-right">kcal</span>
-                <span className="text-right">{t('nutrition_summary.protein')}</span>
-                <span className="text-right">{t('nutrition_summary.carbs')}</span>
-                <span className="text-right">{t('nutrition_summary.fat')}</span>
-                <span className="text-right">{t('nutrition_summary.fiber')}</span>
+              <div
+                role="row"
+                className="bg-secondary text-muted-foreground grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 text-[10.5px] font-semibold uppercase"
+              >
+                <span role="columnheader">{t('nutrition_page.date')}</span>
+                <span role="columnheader" className="text-right">
+                  kcal
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.protein')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.carbs')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.fat')}
+                </span>
+                <span role="columnheader" className="text-right">
+                  {t('nutrition_summary.fiber')}
+                </span>
               </div>
               {pagedDays.map((day) => (
                 <div
                   key={day.date}
+                  role="row"
                   className="border-border grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 border-t px-4 py-2.5 text-[12.5px]"
                 >
                   <span className="font-semibold">{day.date.slice(0, 10)}</span>
@@ -246,10 +260,7 @@ function SplitRow({
       <div className="text-muted-foreground text-[10.5px] font-semibold uppercase">{label}</div>
       <div className={cn('flex h-3.5 overflow-hidden rounded-full', dim && 'opacity-40')}>
         {(['protein', 'carbs', 'fat'] as const).map((m) => (
-          <div
-            key={m}
-            style={{ width: `${String(split[m])}%`, background: `hsl(var(--color-${m}))` }}
-          />
+          <div key={m} style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }} />
         ))}
       </div>
     </div>

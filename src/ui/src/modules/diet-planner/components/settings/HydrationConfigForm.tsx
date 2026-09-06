@@ -215,18 +215,19 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
               <CardDescription>{t('hydration.settings_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="dailyWaterTargetMl">{t('hydration.daily_target_label')}</Label>
                   <Input
                     id="dailyWaterTargetMl"
                     type="number"
                     step="50"
+                    aria-invalid={!!errors.dailyWaterTargetMl}
                     placeholder="2500"
                     {...register('dailyWaterTargetMl')}
                   />
                   {errors.dailyWaterTargetMl && (
-                    <p className="text-destructive mt-1 text-sm">
+                    <p className="text-destructive mt-1 text-[11.5px]">
                       {errors.dailyWaterTargetMl.message}
                     </p>
                   )}
@@ -237,11 +238,14 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
                     id="glassSizeMl"
                     type="number"
                     step="10"
+                    aria-invalid={!!errors.glassSizeMl}
                     placeholder="250"
                     {...register('glassSizeMl')}
                   />
                   {errors.glassSizeMl && (
-                    <p className="text-destructive mt-1 text-sm">{errors.glassSizeMl.message}</p>
+                    <p className="text-destructive mt-1 text-[11.5px]">
+                      {errors.glassSizeMl.message}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-3 sm:col-span-2">
@@ -253,15 +257,15 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
           </Card>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={updateConfigMutation.isPending || !isDirty}>
+            <Button type="submit" size="xl" disabled={updateConfigMutation.isPending || !isDirty}>
               {updateConfigMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   {t('common.saving')}
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4" />
                   {t('hydration.save_settings_btn')}
                 </>
               )}

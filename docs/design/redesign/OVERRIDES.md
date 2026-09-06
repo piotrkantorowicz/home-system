@@ -16,9 +16,26 @@ IMPLEMENTATION_PLAN item 40 and the bilingual instructions in README §"Layout s
 ## Routing unchanged
 
 The handoff assumes diet-planner routes live at the root (`/`, `/calendar`, `/profile`,
-`/import`, …). This is a modular app: those routes stay under `/diet-planner/*`, and
-`/` remains the system dashboard. Nav is built from the module registry. Screen
-rebuilds are presentation-only — no route restructuring.
+`/import`, …). This is a modular app: those routes stay under `/diet-planner/*`. Nav is
+built from the module registry. Screen rebuilds are presentation-only — no route
+restructuring. **Update (BUILD_REVIEW.md round 2):** `/` itself no longer renders a
+page — it redirects into a module per `#fix-home` (see below).
+
+## Round 2 (BUILD_REVIEW.md) — a few narrower calls
+
+- **No group sub-labels, no "Household" placeholder module.** The handoff's module
+  switcher mock shows a second, not-yet-built "Household" module for illustration.
+  We only have two real modules (diet-planner, notifications) — the switcher lists
+  exactly what's registered, nothing speculative. Same reasoning drops the dashed
+  "+ add module" rail tile: there's no module marketplace to open it onto.
+- **Command palette is hand-rolled**, not a `cmdk`-style library — matches "no new
+  dependencies without discussion". It's a filterable list of every registered
+  module's `navItems`, opened by ⌘K, the header trigger, or the switcher's
+  "Search everything" row.
+- **No nav-item counts/badges** beyond the existing notifications unread dot. The
+  handoff mocks a Products "412" and a Shopping-list "8" pill; we don't have cheap
+  queries backing those numbers everywhere yet, so we don't fake them (same rule as
+  "Data gaps" below). `Badge` stays wired for when a module has a real one.
 
 ## No new dependencies without discussion
 

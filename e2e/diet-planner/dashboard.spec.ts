@@ -2,40 +2,45 @@ import { test, expect } from './fixtures';
 import { DashboardPage } from './pages';
 
 test.describe('Dashboard', () => {
-  test('all three stat cards are visible on load', async ({ page }) => {
+  test('shows the today hero and quick actions on load', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    await expect(dashboard.productCard).toBeVisible();
-    await expect(dashboard.recipeCard).toBeVisible();
-    await expect(dashboard.calendarCard).toBeVisible();
+    await expect(dashboard.heading).toBeVisible();
+    await expect(dashboard.logWaterLink).toBeVisible();
+    await expect(dashboard.logMealButton).toBeVisible();
   });
 
-  test('stat cards show numeric counts after data loads', async ({ page }) => {
+  test('water card and week review card are visible', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    await dashboard.expectStatsLoaded();
-
-    // Verify each stat card contains a numeric value (web-first assertions)
-    await expect(dashboard.productCount).toHaveText(/\d+/);
-    await expect(dashboard.recipeCount).toHaveText(/\d+/);
-    await expect(dashboard.calendarCount).toHaveText(/\d+/);
+    await expect(page.getByText('Water', { exact: true })).toBeVisible();
+    await expect(page.getByText('This week', { exact: true })).toBeVisible();
   });
 
-  test('each stat card links to its respective page', async ({ page }) => {
+  test('the "Full plan" link on the Next up card opens the calendar', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    await dashboard.productCard.click();
-    await expect(page).toHaveURL('/diet-planner/products');
-
-    await page.goBack();
-    await dashboard.recipeCard.click();
-    await expect(page).toHaveURL('/diet-planner/recipes');
-
-    await page.goBack();
-    await dashboard.calendarCard.click();
+    await expect(page.getByText('Next up', { exact: true })).toBeVisible();
+    await dashboard.fullPlanLink.click();
     await expect(page).toHaveURL('/diet-planner/calendar');
+  });
+
+  test('"Log water" opens the hydration page', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+
+    await dashboard.logWaterLink.click();
+    await expect(page).toHaveURL('/diet-planner/hydration');
+  });
+
+  test('"Log a meal" opens the meal form sheet', async ({ page }) => {
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+
+    await dashboard.logMealButton.click();
+    await expect(page.getByRole('dialog')).toBeVisible();
   });
 });

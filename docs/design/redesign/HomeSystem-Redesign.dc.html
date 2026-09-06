@@ -68,7 +68,13 @@
   <nav style="position: sticky; top: 0; align-self: flex-start; height: 100vh; width: 76px; flex: 0 0 76px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 0 14px; overflow-y: auto;">
     <div style="width: 40px; height: 40px; border-radius: 13px; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 17px; margin-bottom: 16px; box-shadow: var(--shadow);">H</div>
 
-    <a href="#screen-dashboard" style="width: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-radius: 14px; background: var(--primary-soft); color: var(--primary-ink); text-decoration: none;">
+    <a href="#review" style="width: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-radius: 14px; background: var(--primary-soft); color: var(--primary-ink); text-decoration: none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 6-6"></path><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path></svg>
+      <span style="font-size: 9.5px; font-weight: 600; line-height: 1;">Review</span>
+      <span style="font-size: 8.5px; line-height: 1; opacity: 0.65;">Przegląd</span>
+    </a>
+
+    <a href="#screen-dashboard" style="width: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-radius: 14px; color: var(--text-2); text-decoration: none;" style-hover="background: var(--bg-2); color: var(--text);">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
       <span style="font-size: 9.5px; font-weight: 600; line-height: 1;">Today</span>
       <span style="font-size: 8.5px; line-height: 1; opacity: 0.65;">Dzisiaj</span>
@@ -148,10 +154,11 @@
         <span style="font-size: 17px; font-weight: 700;">HomeSystem</span>
         <span style="font-size: 12px; color: var(--text-3);">Diet planner · Planer diety</span>
       </div>
-      <div style="flex: 1; min-width: 180px; max-width: 380px; display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 13px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text-3);">
+      <button style="display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text-3); font-family: inherit; cursor: pointer;" style-hover="border-color: var(--border-strong); color: var(--text-2);">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
-        <span style="font-size: 13px;">Search food, recipes… / Szukaj…</span>
-      </div>
+        <span style="font-size: 13px;">Search · Szukaj</span>
+        <span style="height: 22px; padding: 0 7px; border-radius: 6px; background: var(--bg-2); color: var(--text-3); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center;">⌘K</span>
+      </button>
       <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
         <div style="display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-ink); font-size: 12.5px; font-weight: 600;">
           <span style="width: 6px; height: 6px; border-radius: 999px; background: currentColor;"></span>Cut plan · 2 150 kcal
@@ -162,6 +169,337 @@
         </div>
       </div>
     </header>
+
+    <section id="review" data-screen-label="Build review" style="padding: 0 32px; display: flex; flex-direction: column; gap: 18px;">
+      <div>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.03em;">Build review</h1>
+        <p style="margin: 4px 0 0; font-size: 14px; color: var(--text-3);">Przegląd wdrożenia · what landed well, what to change next — with redesigned controls below</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="width: 26px; height: 26px; border-radius: 999px; background: color-mix(in oklab, var(--good) 16%, transparent); color: var(--good); display: grid; place-items: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5.5 5.5L20 7"></path></svg></span>
+            <div style="font-size: 15px; font-weight: 700;">What's good — keep it</div>
+          </div>
+          <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text-2); line-height: 1.55;">
+            <li><strong style="color: var(--text);">The token layer is right.</strong> Semantic names (<code style="font-size: 12px;">--color-water</code>, <code style="font-size: 12px;">text-text-2</code>, <code style="font-size: 12px;">border-border-strong</code>) are used consistently instead of raw hexes, and both themes resolve from one place.</li>
+            <li><strong style="color: var(--text);">Real primitives, not copies.</strong> Ring, MacroBar, MetricTile, StatusPill, SegmentedControl, Skeleton, EmptyState, Banner and Pagination each ship as their own module — the Control Kit page paid for itself.</li>
+            <li><strong style="color: var(--text);">Every screen has loading and empty states.</strong> Skeletons match the real geometry and empty states carry a CTA.</li>
+            <li><strong style="color: var(--text);">The module registry is the best decision in this build.</strong> <code style="font-size: 12px;">basePath</code>, <code style="font-size: 12px;">navItems</code>, <code style="font-size: 12px;">routes</code> and per-module i18n namespaces mean a second module needs no shell changes.</li>
+            <li><strong style="color: var(--text);">Bilingual copy is fully wired</strong> through i18n rather than hard-coded — nothing to redo when you add a third language.</li>
+            <li><strong style="color: var(--text);">The redundant header search is already gone.</strong> Agreed — it was a global field that searched nothing. Two leftovers: delete the stale <code style="font-size: 12px;">search_placeholder: "Search food, recipes…"</code> key, and note that the header in <em>this</em> document now shows the replacement instead — a ⌘K command trigger, per <a href="#fix-home">2c</a>.</li>
+          </ul>
+        </div>
+
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="width: 26px; height: 26px; border-radius: 999px; background: color-mix(in oklab, var(--carbs) 18%, transparent); color: var(--carbs); display: grid; place-items: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg></span>
+            <div style="font-size: 15px; font-weight: 700;">What to change — in priority order</div>
+          </div>
+          <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text-2); line-height: 1.55;">
+            <li><strong style="color: var(--text);">The rail can't survive a second module.</strong> It flattens every module's <code style="font-size: 12px;">navItems</code> into one unlabeled column of icons — with two modules you can't tell which item belongs where. Fix in <a href="#fix-nav">2a</a>.</li>
+            <li><strong style="color: var(--text);">Six routes are unreachable from the rail.</strong> Only Dashboard, Calendar, Products and Recipes are registered; Hydration, Nutrition, Import, Profile, Preferences and Control Kit exist but you must type the URL. Also fixed in <a href="#fix-nav">2a</a>.</li>
+            <li><strong style="color: var(--text);">Water can't be un-added where you add it.</strong> The entries list does have a delete, but a mistap on a glass sends you hunting down the page. Fix in <a href="#fix-water">2b</a>.</li>
+            <li><strong style="color: var(--text);">One pending write disables every quick-add.</strong> <code style="font-size: 12px;">disabled={isPending}</code> greys all three buttons; only the pressed one should show progress.</li>
+            <li><strong style="color: var(--text);">Custom amount is three controls for one number</strong> — two 42px inputs plus a button, permanently expanded. Fix in <a href="#fix-water">2b</a>.</li>
+            <li><strong style="color: var(--text);">The launcher page is a door in front of a door.</strong> "Welcome back" plus a single module card costs a click and teaches nothing. Fix in <a href="#fix-home">2c</a>.</li>
+            <li><strong style="color: var(--text);">Two water widgets, two geometries.</strong> The dashboard card draws 44px glasses, Hydration draws 54px, and the dashboard's "Custom" navigates away. Extract one <code style="font-size: 12px;">GlassRow</code> and share it.</li>
+            <li><strong style="color: var(--text);">"Remaining" goes negative without saying so.</strong> The hero swaps to over-budget, but the stat strip still prints a bare number — give it the <code style="font-size: 12px;">−</code> sign and <code style="font-size: 12px;">--fat</code> colour.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div id="fix-nav" style="display: flex; flex-direction: column; gap: 14px; padding-top: 6px;">
+        <div style="display: flex; align-items: center; gap: 11px;">
+          <span style="height: 26px; padding: 0 10px; border-radius: 8px; background: var(--primary-soft); color: var(--primary-ink); font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center;">2a</span>
+          <div>
+            <div style="font-size: 17px; font-weight: 700;">Two-tier navigation, grouped per module</div>
+            <div style="font-size: 12.5px; color: var(--text-3);">Nawigacja dwupoziomowa · module rail picks the product, the panel names its sections</div>
+          </div>
+        </div>
+
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; display: flex; min-height: 470px;">
+          <div style="flex: 0 0 64px; background: var(--surface-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 0;">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 16px; margin-bottom: 10px;">H</div>
+            <div style="position: relative; width: 42px; height: 42px; border-radius: 13px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--primary); display: grid; place-items: center; box-shadow: var(--shadow);">
+              <span style="position: absolute; left: -13px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 999px; background: var(--primary);"></span>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+            </div>
+            <div style="width: 42px; height: 42px; border-radius: 13px; color: var(--text-3); display: grid; place-items: center;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path></svg>
+            </div>
+            <div style="width: 42px; height: 42px; border-radius: 13px; color: var(--text-3); display: grid; place-items: center;">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l1.5 6H4.5z"></path><path d="M6 9v11h12V9"></path><path d="M10 20v-6h4v6"></path></svg>
+            </div>
+            <div style="width: 42px; height: 42px; border-radius: 13px; border: 1px dashed var(--border-strong); color: var(--text-3); display: grid; place-items: center;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-3); display: grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"></path></svg></div>
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(140deg, var(--primary), var(--water)); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 700;">KM</div>
+          </div>
+
+          <div style="flex: 0 0 216px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; padding: 16px 12px;">
+            <div style="display: flex; align-items: center; gap: 9px; padding: 0 6px 12px;">
+              <span style="width: 28px; height: 28px; border-radius: 9px; background: var(--primary-soft); color: var(--primary-ink); display: grid; place-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"></path></svg></span>
+              <div style="min-width: 0;">
+                <div style="font-size: 13.5px; font-weight: 700; line-height: 1.2;">Diet planner</div>
+                <div style="font-size: 10.5px; color: var(--text-3);">Planer diety</div>
+              </div>
+            </div>
+
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; padding: 8px 8px 5px;">Plan</div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; background: var(--primary-soft); color: var(--primary-ink); font-size: 13px; font-weight: 650;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Today
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;" style-hover="background: var(--bg-2); color: var(--text);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Meal plan
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>Import plan
+            </div>
+
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; padding: 14px 8px 5px;">Library</div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>Products
+              <span style="margin-left: auto; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums;">412</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v7a4 4 0 0 0 8 0V3M12 14v7"></path></svg>Recipes
+              <span style="margin-left: auto; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums;">64</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle><path d="M6 6 5 3H3"></path></svg>Shopping list
+              <span style="margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">8</span>
+            </div>
+
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; padding: 14px 8px 5px;">Track</div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Nutrition
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 10.4A6 6 0 0 1 6 13.4C6 9.4 12 3 12 3Z"></path></svg>Hydration
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-2); font-size: 13px; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4.5"></circle></svg>Goals
+            </div>
+
+            <div style="flex: 1; min-height: 14px;"></div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 10px; color: var(--text-3); font-size: 12.5px; font-weight: 600; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 12px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"></path><circle cx="15" cy="7" r="2.2"></circle><circle cx="9" cy="17" r="2.2"></circle></svg>Preferences
+            </div>
+          </div>
+
+          <div style="flex: 1; min-width: 0; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 19px; font-weight: 700; letter-spacing: -0.02em;">Today</div>
+                <div style="font-size: 12px; color: var(--text-3);">Diet planner · Dzisiaj</div>
+              </div>
+              <span style="height: 30px; padding: 0 11px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-ink); font-size: 11.5px; font-weight: 650; display: inline-flex; align-items: center;">Cut plan · 2 150 kcal</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 11px;">
+              <div style="height: 78px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--border);"></div>
+              <div style="display: flex; gap: 11px;">
+                <div style="flex: 1; height: 108px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--border);"></div>
+                <div style="flex: 1; height: 108px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--border);"></div>
+              </div>
+              <div style="height: 78px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--border);"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-3); text-align: center; padding-top: 4px;">Screen content unchanged — only the chrome around it moves</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+          <div style="padding: 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border);">
+            <div style="font-size: 13.5px; font-weight: 700; margin-bottom: 7px;">Why two tiers</div>
+            <p style="margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.6; text-wrap: pretty;">The 64px rail answers "which product am I in" and holds one icon per registered module plus a "+" for what's next. The 216px panel answers "where in it" with real text labels — which is what lets a module carry ten destinations instead of four. Section headings (Plan / Library / Track) come from a new optional <code style="font-size: 12px;">group</code> field on each <code style="font-size: 12px;">navItem</code>; items without one fall into an unlabeled first group, so existing modules keep working.</p>
+          </div>
+          <div style="padding: 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border);">
+            <div style="font-size: 13.5px; font-weight: 700; margin-bottom: 7px;">Cost of the panel</div>
+            <p style="margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.6; text-wrap: pretty;">280px total vs 76px today. Collapsible: a chevron at the module heading folds the panel to icons-only (64+56px) and the choice persists. Below 768px both tiers disappear — the module rail becomes a switcher in the header and sections become the bottom tab bar, exactly as the mobile mock already shows.</p>
+          </div>
+          <div style="padding: 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border);">
+            <div style="font-size: 13.5px; font-weight: 700; margin-bottom: 7px;">Registry change</div>
+            <p style="margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.6; text-wrap: pretty;">Register all ten diet-planner destinations in <code style="font-size: 12px;">navItems</code>, each with <code style="font-size: 12px;">group</code> and an optional <code style="font-size: 12px;">Badge</code> (the shopping-list count, the inbox dot). Control Kit stays out of the panel — keep it dev-only behind a flag. The shell then renders nav entirely from the registry, so a new module is still one file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="fix-water" style="display: flex; flex-direction: column; gap: 14px; padding-top: 12px;">
+        <div style="display: flex; align-items: center; gap: 11px;">
+          <span style="height: 26px; padding: 0 10px; border-radius: 8px; background: var(--primary-soft); color: var(--primary-ink); font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center;">2b</span>
+          <div>
+            <div style="font-size: 17px; font-weight: 700;">Water controls: add and remove in the same place</div>
+            <div style="font-size: 12.5px; color: var(--text-3);">Kontrolki wody · reversible taps, per-button progress, custom amount on demand</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+          <div style="grid-column: span 2; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div><div style="font-size: 15px; font-weight: 700;">Interactive glasses</div><div style="font-size: 12.5px; color: var(--text-3);">Szklanki · tap an empty glass to add, a filled one to remove</div></div>
+              <div style="font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums;">1.4 / 2.5 L · 56%</div>
+            </div>
+
+            <div style="display: flex; gap: 8px; padding-top: 36px;">
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--water); position: relative; display: grid; place-items: center; cursor: pointer;">
+                <span style="font-size: 11px; font-weight: 700; color: #fff; opacity: 0.85;">250</span>
+              </div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--water); position: relative; display: grid; place-items: center; cursor: pointer;">
+                <span style="font-size: 11px; font-weight: 700; color: #fff; opacity: 0.85;">250</span>
+              </div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--water); position: relative; display: grid; place-items: center; cursor: pointer; outline: 2px solid var(--water); outline-offset: 2px;">
+                <span style="width: 26px; height: 26px; border-radius: 999px; background: #ffffffe6; color: var(--water); display: grid; place-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"></path></svg></span>
+                <span style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); z-index: 3; height: 24px; padding: 0 9px; border-radius: 8px; background: var(--text); color: var(--bg); font-size: 11px; font-weight: 650; display: inline-flex; align-items: center; white-space: nowrap;">Remove 250 ml</span>
+              </div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: color-mix(in oklab, var(--water) 55%, transparent); display: grid; place-items: center; cursor: pointer;">
+                <span style="font-size: 10.5px; font-weight: 700; color: #fff; opacity: 0.9;">150</span>
+              </div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--bg-2); border: 1px dashed var(--border-strong); display: grid; place-items: center; cursor: pointer; color: var(--text-3);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              </div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--bg-2); border: 1px dashed var(--border-strong);"></div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--bg-2); border: 1px dashed var(--border-strong);"></div>
+              <div style="flex: 1; height: 60px; border-radius: 13px; background: var(--bg-2); border: 1px dashed var(--border-strong);"></div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5;">Each glass is a real 60px button. Filled glasses show their amount, and on hover or focus swap it for a minus with a tooltip; the first empty glass shows a plus. Removing deletes the newest entry of that size — so a mistap is undone with a second tap, in place. Partial glasses print the actual millilitres so the row never lies about a 150 ml sip.</div>
+
+            <div style="height: 1px; background: var(--border);"></div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 13px; font-weight: 700;">Quick add — only the pressed button waits</div>
+              <div style="display: flex; gap: 9px; flex-wrap: wrap; align-items: center;">
+                <button style="height: 42px; padding: 0 16px; border-radius: 13px; border: none; background: var(--water); color: #fff; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: progress; display: inline-flex; align-items: center; gap: 9px; box-shadow: var(--shadow);"><span style="width: 14px; height: 14px; border-radius: 999px; border: 2px solid #ffffff55; border-top-color: #fff;"></span>+ 250 ml</button>
+                <button style="height: 42px; padding: 0 16px; border-radius: 13px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;">+ 500 ml</button>
+                <button style="height: 42px; padding: 0 16px; border-radius: 13px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;">+ 750 ml</button>
+                <button style="height: 42px; padding: 0 14px; border-radius: 13px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text-2); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Custom · Własna
+                </button>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5;">Keep the other buttons live and let the mutation queue — water logging is additive, so two fast taps are a feature, not a race. Only the pressed button takes the spinner.</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 13px; font-weight: 700;">Custom amount — a popover, not a permanent form</div>
+              <div style="width: fit-content; max-width: 100%; border-radius: 18px; border: 1px solid var(--border); background: var(--surface-2); box-shadow: var(--shadow-lg); padding: 16px; display: flex; flex-direction: column; gap: 13px;">
+                <div style="font-size: 12.5px; font-weight: 700;">Custom amount <span style="font-weight: 400; color: var(--text-3);">· Własna ilość</span></div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; height: 42px; border-radius: 13px; border: 1px solid var(--border); background: var(--surface); overflow: hidden;">
+                    <button style="width: 38px; height: 100%; border: none; background: transparent; color: var(--text-2); font-size: 17px; cursor: pointer;">−</button>
+                    <span style="width: 68px; text-align: center; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;">330</span>
+                    <button style="width: 38px; height: 100%; border: none; background: transparent; color: var(--text-2); font-size: 17px; cursor: pointer;">+</button>
+                  </div>
+                  <span style="font-size: 12.5px; color: var(--text-3); font-weight: 600;">ml</span>
+                  <div style="display: flex; gap: 6px;">
+                    <span style="height: 30px; padding: 0 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); font-size: 12px; font-weight: 650; display: inline-flex; align-items: center;">330</span>
+                    <span style="height: 30px; padding: 0 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); font-size: 12px; font-weight: 650; display: inline-flex; align-items: center;">200</span>
+                    <span style="height: 30px; padding: 0 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); font-size: 12px; font-weight: 650; display: inline-flex; align-items: center;">1 000</span>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 9px;">
+                  <span style="flex: 1; height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); font-size: 12.5px; color: var(--text-3);">Note — coffee, tea… (optional)</span>
+                  <button style="height: 38px; padding: 0 15px; border-radius: 12px; border: none; background: var(--water); color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer;">Add</button>
+                </div>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5;">Stepper instead of a number input (±50 ml steps, arrow keys work), three presets from your own most-used amounts, and the note demoted to an optional field inside the popover. Two permanent 42px inputs become one dashed button until you need them.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px;">
+              <div><div style="font-size: 15px; font-weight: 700;">Undo lives in the toast</div><div style="font-size: 12.5px; color: var(--text-3);">Cofnij · 6 seconds, keyboard reachable</div></div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--text); color: var(--bg); box-shadow: var(--shadow-lg);">
+                <span style="width: 20px; height: 20px; border-radius: 999px; background: var(--water); display: grid; place-items: center; flex: 0 0 auto;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 5.5 5.5L20 7"></path></svg></span>
+                <span style="flex: 1; font-size: 13px; font-weight: 600;">250 ml added · Dodano</span>
+                <button style="height: 28px; padding: 0 10px; border-radius: 9px; border: 1px solid currentColor; background: transparent; color: inherit; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; opacity: 0.85;">Undo</button>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5;">The success toast already fires — it just needs an action. Same pattern for meals, so "Mark eaten" becomes reversible too.</div>
+            </div>
+
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                <div><div style="font-size: 15px; font-weight: 700;">Today's log</div><div style="font-size: 12.5px; color: var(--text-3);">Dziennik · 5 entries</div></div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--water); font-variant-numeric: tabular-nums;">1 400 ml</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border);">
+                <span style="font-size: 12.5px; font-weight: 650; color: var(--text-3); flex: 0 0 44px; font-variant-numeric: tabular-nums;">14:10</span>
+                <span style="flex: 1; font-size: 13.5px; font-weight: 600;">Water · Woda</span>
+                <span style="font-size: 13px; color: var(--water); font-weight: 700; font-variant-numeric: tabular-nums;">150 ml</span>
+                <button style="width: 30px; height: 30px; border-radius: 9px; border: none; background: var(--bg-2); color: var(--fat); cursor: pointer; display: grid; place-items: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg></button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--border); background: color-mix(in oklab, var(--fat) 7%, transparent); margin: 0 -22px; padding-left: 22px; padding-right: 22px;">
+                <span style="font-size: 12.5px; font-weight: 650; color: var(--text-3); flex: 0 0 44px; font-variant-numeric: tabular-nums;">12:45</span>
+                <span style="flex: 1; font-size: 12.5px; color: var(--text-2);">Remove this entry?</span>
+                <button style="height: 28px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;">No</button>
+                <button style="height: 28px; padding: 0 10px; border-radius: 9px; border: none; background: var(--fat); color: #fff; font-family: inherit; font-size: 12px; font-weight: 650; cursor: pointer;">Remove</button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border);">
+                <span style="font-size: 12.5px; font-weight: 650; color: var(--text-3); flex: 0 0 44px; font-variant-numeric: tabular-nums;">11:30</span>
+                <span style="flex: 1; font-size: 13.5px; font-weight: 600;">Water · Woda</span>
+                <span style="font-size: 13px; color: var(--water); font-weight: 700; font-variant-numeric: tabular-nums;">500 ml</span>
+                <button style="width: 30px; height: 30px; border-radius: 9px; border: none; background: transparent; color: var(--text-3); cursor: pointer; display: grid; place-items: center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg></button>
+              </div>
+              <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5; padding-top: 4px;">A trash glyph beats an ×, the row confirms inline instead of opening a dialog, and the card now shows the day's total.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fix-home" style="display: flex; flex-direction: column; gap: 14px; padding-top: 12px;">
+        <div style="display: flex; align-items: center; gap: 11px;">
+          <span style="height: 26px; padding: 0 10px; border-radius: 8px; background: var(--primary-soft); color: var(--primary-ink); font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center;">2c</span>
+          <div>
+            <div style="font-size: 17px; font-weight: 700;">Drop the launcher page</div>
+            <div style="font-size: 12.5px; color: var(--text-3);">Strona główna · you're right, it's a door in front of a door</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; align-items: stretch;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px;">
+            <div><div style="font-size: 15px; font-weight: 700;">The rule</div><div style="font-size: 12.5px; color: var(--text-3);">Zasada</div></div>
+            <p style="margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.6; text-wrap: pretty;"><code style="font-size: 12px;">/</code> resolves rather than renders. One module installed → redirect to its <code style="font-size: 12px;">basePath</code>. Several → redirect to the last one used, remembered in local storage. Nothing installed → the only case that still needs a page, and then it's an onboarding empty state, not a grid of one card.</p>
+            <p style="margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.6; text-wrap: pretty;">Switching modules is a job for the rail, not a page you back out to. The "H" mark opens a switcher; ⌘K jumps straight to any destination in any module.</p>
+            <div style="display: flex; flex-direction: column; gap: 9px; padding: 16px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border);">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em;">What the launcher was for</div>
+              <div style="font-size: 12.5px; color: var(--text-2); line-height: 1.55;">Module discovery — now the rail's "+" tile, which opens the same list as a sheet.<br />A greeting — now the "Today" heading, which greets you with something useful.</div>
+            </div>
+          </div>
+
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px;">
+            <div><div style="font-size: 15px; font-weight: 700;">Module switcher</div><div style="font-size: 12.5px; color: var(--text-3);">Przełącznik modułów · from the rail mark</div></div>
+            <div style="border-radius: 16px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-lg); padding: 7px; display: flex; flex-direction: column; gap: 2px;">
+              <div style="padding: 8px 10px; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em;">Modules · Moduły</div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px; background: var(--primary-soft);">
+                <span style="width: 30px; height: 30px; border-radius: 10px; background: var(--primary); color: #fff; display: grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"></path></svg></span>
+                <div style="flex: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 700; color: var(--primary-ink);">Diet planner</div><div style="font-size: 11px; color: var(--primary-ink); opacity: 0.75;">Planer diety</div></div>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-ink);"><path d="m4 12 5.5 5.5L20 7"></path></svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px;">
+                <span style="width: 30px; height: 30px; border-radius: 10px; background: var(--bg-2); color: var(--text-2); display: grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path></svg></span>
+                <div style="flex: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 650;">Home</div><div style="font-size: 11px; color: var(--text-3);">Dom · next module</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px;">
+                <span style="width: 30px; height: 30px; border-radius: 10px; background: var(--bg-2); color: var(--text-2); display: grid; place-items: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l1.5 6H4.5z"></path><path d="M6 9v11h12V9"></path></svg></span>
+                <div style="flex: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 650;">Household</div><div style="font-size: 11px; color: var(--text-3);">Gospodarstwo</div></div>
+              </div>
+              <div style="height: 1px; background: var(--border); margin: 5px 8px;"></div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px; color: var(--text-2);">
+                <span style="width: 30px; height: 30px; border-radius: 10px; border: 1px dashed var(--border-strong); display: grid; place-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">Browse modules</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 11px; color: var(--text-2);">
+                <span style="width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></span>
+                <div style="flex: 1; font-size: 13px; font-weight: 600;">Search everything</div>
+                <span style="height: 22px; padding: 0 7px; border-radius: 6px; background: var(--bg-2); color: var(--text-3); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center;">⌘K</span>
+              </div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--text-3); line-height: 1.5;">This is also where the removed header search belongs — scoped, on demand, and able to reach across modules, instead of a permanent field that searched nothing.</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section id="screen-dashboard" data-screen-label="Dashboard" style="padding: 0 32px; display: flex; flex-direction: column; gap: 18px; animation: hsFade 0.4s ease both;">
       <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">

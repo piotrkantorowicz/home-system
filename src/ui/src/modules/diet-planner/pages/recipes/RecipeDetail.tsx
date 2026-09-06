@@ -102,7 +102,7 @@ export default function RecipeDetail() {
           </p>
         </div>
         {recipe.isOwner ? (
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             <Button size="xl" asChild>
               <Link to="/diet-planner/calendar">{t('recipe_detail.add_to_plan')}</Link>
             </Button>
@@ -131,7 +131,7 @@ export default function RecipeDetail() {
             className="h-[180px]"
             style={{
               background:
-                'linear-gradient(140deg, color-mix(in oklab, hsl(var(--color-primary)) 40%, transparent), color-mix(in oklab, hsl(var(--color-water)) 20%, transparent))',
+                'linear-gradient(140deg, color-mix(in oklab, var(--color-primary) 40%, transparent), color-mix(in oklab, var(--color-water) 20%, transparent))',
             }}
           />
           <div className="flex flex-col gap-6 p-6">
@@ -205,7 +205,7 @@ export default function RecipeDetail() {
                       <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                         <div
                           className="h-full rounded-full"
-                          style={{ width: `${String(pct)}%`, background: `hsl(var(--color-${m}))` }}
+                          style={{ width: `${String(pct)}%`, background: `var(--color-${m})` }}
                         />
                       </div>
                     </div>

@@ -77,24 +77,24 @@ export function WeightChart({ entries, height = 280, showTrend = false }: Weight
     <div data-testid="weight-chart" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--color-border))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
             dataKey="dateLabel"
-            tick={{ fontSize: 12, fill: 'hsl(var(--color-muted-foreground))' }}
-            stroke="hsl(var(--color-border))"
+            tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+            stroke="var(--color-border)"
           />
           <YAxis
             domain={['dataMin - 2', 'dataMax + 2']}
-            tick={{ fontSize: 12, fill: 'hsl(var(--color-muted-foreground))' }}
-            stroke="hsl(var(--color-border))"
+            tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+            stroke="var(--color-border)"
             tickFormatter={(v: number) => v.toFixed(1)}
           />
           <Tooltip
             contentStyle={{
-              background: 'hsl(var(--color-card))',
-              border: '1px solid hsl(var(--color-border))',
+              background: 'var(--color-card)',
+              border: '1px solid var(--color-border)',
               borderRadius: '0.5rem',
-              color: 'hsl(var(--color-foreground))',
+              color: 'var(--color-foreground)',
             }}
             formatter={(value, name) => [
               `${typeof value === 'number' ? value.toFixed(1) : String(value)} kg`,
@@ -106,9 +106,9 @@ export function WeightChart({ entries, height = 280, showTrend = false }: Weight
           <Line
             type="monotone"
             dataKey="actual"
-            stroke="hsl(var(--color-primary))"
+            stroke="var(--color-primary)"
             strokeWidth={2}
-            dot={{ r: 4, fill: 'hsl(var(--color-primary))', stroke: 'hsl(var(--color-primary))' }}
+            dot={{ r: 4, fill: 'var(--color-primary)', stroke: 'var(--color-primary)' }}
             activeDot={{ r: 6 }}
             isAnimationActive={false}
           />
@@ -116,7 +116,7 @@ export function WeightChart({ entries, height = 280, showTrend = false }: Weight
             <Line
               type="linear"
               dataKey="trend"
-              stroke="hsl(var(--color-muted-foreground))"
+              stroke="var(--color-muted-foreground)"
               strokeDasharray="6 4"
               strokeWidth={1.5}
               dot={false}

@@ -8,7 +8,19 @@ export function cn(...inputs: ClassValue[]) {
 const THIN_SPACE = ' ';
 const MINUS = '−';
 
-/** Integer with thin-space thousands separators: 2150 → "2 150". */
+// Mutable so the Preferences "thin-space thousands" toggle can switch every
+// formatted figure in the app at once. Defaults to the thin space (the design).
+let thousandsSeparator: string = THIN_SPACE;
+
+/** The default (design) thousands separator — U+2009 THIN SPACE. */
+export const THIN_SPACE_SEPARATOR = THIN_SPACE;
+
+/** Set the thousands separator used by {@link formatNumber} (Preferences toggle). */
+export function setThousandsSeparator(separator: string): void {
+  thousandsSeparator = separator;
+}
+
+/** Integer with thousands separators: 2150 -> "2 150" (or "2,150" when toggled off). */
 export function formatNumber(value: number): string {
   const rounded = Math.round(value);
   const sign = rounded < 0 ? MINUS : '';
@@ -16,7 +28,7 @@ export function formatNumber(value: number): string {
     sign +
     Math.abs(rounded)
       .toString()
-      .replace(/\B(?=(\d{3})+(?!\d))/g, THIN_SPACE)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator)
   );
 }
 

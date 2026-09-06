@@ -76,8 +76,8 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
                       day.calories === 0
                         ? 'transparent'
                         : day.isToday
-                          ? 'hsl(var(--color-primary))'
-                          : 'color-mix(in oklab, hsl(var(--color-primary)) 32%, transparent)',
+                          ? 'var(--color-primary)'
+                          : 'color-mix(in oklab, var(--color-primary) 32%, transparent)',
                   }}
                 />
               </div>

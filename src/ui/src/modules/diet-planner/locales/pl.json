@@ -630,7 +630,21 @@
     "quick_title": "Nawodnienie dzisiaj",
     "glasses_count": "{{current}} / {{target}} szklanek",
     "to_go": "Pozostało {{amount}} L",
-    "entry_water": "Woda"
+    "entry_water": "Woda",
+    "add_glass_aria": "Dodaj szklankę ({{amount}} ml)",
+    "remove_glass_aria": "Usuń ostatni wpis",
+    "level_aria": "Poziom wody",
+    "custom_trigger": "Własna",
+    "custom_popover_title": "Własna ilość",
+    "custom_step_down_aria": "Zmniejsz ilość",
+    "custom_step_up_aria": "Zwiększ ilość",
+    "custom_ml_unit": "ml",
+    "undo": "Cofnij",
+    "day_total": "Dzisiaj",
+    "remove_entry_confirm": "Usunąć ten wpis?",
+    "remove_entry_no": "Nie",
+    "remove_entry_yes": "Usuń",
+    "quick_add_note": "Możesz stukać dalej — pozostałe przyciski działają podczas zapisu."
   },
   "common": {
     "cancel": "Anuluj",
@@ -813,5 +827,21 @@
     "sign_out": "Wyloguj",
     "delete_account": "Usuń konto",
     "delete_account_btn": "Usuń"
+  },
+  "control_kit": {
+    "title": "Zestaw kontrolek",
+    "subtitle": "Wszystkie komponenty i stany — wspólny język interfejsu.",
+    "buttons": "Przyciski",
+    "inputs": "Pola",
+    "toggles": "Przełączniki",
+    "pills": "Plakietki",
+    "data": "Dane",
+    "ring": "Pierścień",
+    "banners": "Komunikaty"
+  },
+  "nav_groups": {
+    "plan": "Plan",
+    "library": "Biblioteka",
+    "track": "Śledzenie"
   }
 }
