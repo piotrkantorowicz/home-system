@@ -11,4 +11,6 @@ public interface IHouseholdRepository
     Task<HouseholdAggregate?> GetByMemberPersonIdAsync(PersonId personId, CancellationToken ct = default);
 
     Task AddAsync(HouseholdAggregate household, CancellationToken ct = default);
+
+    void Remove(HouseholdAggregate household);
 }

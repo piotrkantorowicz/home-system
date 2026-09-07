@@ -23,4 +23,7 @@ internal sealed class HouseholdRepository : IHouseholdRepository
 
     public async Task AddAsync(HouseholdAggregate household, CancellationToken ct = default)
         => await _dbContext.Households.AddAsync(household, ct);
+
+    public void Remove(HouseholdAggregate household)
+        => _dbContext.Households.Remove(household);
 }
