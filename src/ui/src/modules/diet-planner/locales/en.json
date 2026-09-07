@@ -124,6 +124,8 @@
     "only_mine": "My products",
     "incomplete_chip": "Incomplete · {{count}}",
     "incomplete_badge": "INCOMPLETE",
+    "incomplete_filter": "Incomplete",
+    "clear_filters": "Clear filters",
     "view_label": "View",
     "view_table": "Table",
     "view_cards": "Cards"

@@ -31,12 +31,13 @@ export function Pagination({
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-sm">{t('common.rows_per_page')}</span>
         <select
+          aria-label={t('common.rows_per_page')}
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange(Number(e.target.value));
             onPageChange(1);
           }}
-          className="border-input bg-background focus:ring-ring h-8 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
+          className="border-input bg-background focus:ring-ring h-11 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
         >
           {pageSizeOptions.map((opt) => (
             <option key={opt} value={opt}>
@@ -55,7 +56,7 @@ export function Pagination({
         <div className="flex gap-2">
           <Button
             variant="outline"
-            size="sm"
+            className="min-h-11"
             onClick={() => {
               onPageChange(Math.max(1, page - 1));
             }}
@@ -65,7 +66,7 @@ export function Pagination({
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            className="min-h-11"
             onClick={() => {
               onPageChange(page + 1);
             }}

@@ -51,7 +51,7 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
     <div
       role="listitem"
       aria-label={recipe.name}
-      className="border-border bg-card flex flex-col overflow-hidden rounded-[22px] border shadow-sm"
+      className="border-border bg-card hover:border-primary focus-within:ring-primary relative flex flex-col overflow-hidden rounded-[22px] border shadow-sm focus-within:ring-2"
     >
       <div
         className="relative h-[132px]"
@@ -65,13 +65,13 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
             {n(recipe.prepTimeMinutes)} {t('recipes.prep_time')}
           </span>
         ) : null}
-        <div className="absolute top-2.5 right-2.5">
+        <div className="absolute top-2.5 right-2.5 z-10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
                 aria-label={t('common.actions')}
-                className="bg-card grid size-7 place-items-center rounded-full shadow-sm"
+                className="bg-card grid size-11 place-items-center rounded-full shadow-sm"
               >
                 <MoreVertical className="size-4" />
               </button>
@@ -107,7 +107,7 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
         <div>
           <Link
             to={`/diet-planner/recipes/${recipe.id}`}
-            className="text-[14.5px] font-bold hover:underline"
+            className="text-[14.5px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
           >
             {recipe.name}
           </Link>

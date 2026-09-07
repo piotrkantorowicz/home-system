@@ -123,6 +123,8 @@
     "only_mine": "Moje produkty",
     "incomplete_chip": "Niekompletne · {{count}}",
     "incomplete_badge": "NIEKOMPLETNE",
+    "incomplete_filter": "Niekompletne",
+    "clear_filters": "Wyczyść filtry",
     "view_label": "Widok",
     "view_table": "Tabela",
     "view_cards": "Karty"

@@ -3,6 +3,7 @@ import {
   RecipeCard,
   type RecipeCardData,
 } from '@modules/diet-planner/components/recipes/RecipeCard';
+import { useListLocation } from '@modules/diet-planner/hooks/useListLocation';
 import {
   Banner,
   Button,
@@ -19,7 +20,7 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { BookOpen, Plus, Search } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -31,12 +32,27 @@ const n = (v: number | string | null | undefined): number =>
 export default function RecipeList() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [onlyMine, setOnlyMine] = useState(false);
-  const [filter, setFilter] = useState<Filter>('all');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const {
+    params,
+    search,
+    debouncedSearch,
+    page,
+    pageSize,
+    setPage,
+    setPageSize,
+    setSearch,
+    update,
+  } = useListLocation();
+  const onlyMine = params.get('mine') === 'true';
+  const filter: Filter =
+    params.get('filter') === 'high_protein'
+      ? 'high_protein'
+      : params.get('filter') === 'quick'
+        ? 'quick'
+        : 'all';
+  const setFilter = (filter: Filter) => {
+    update({ filter: filter === 'all' ? null : filter, page: null });
+  };
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, error } = useRecipes({
@@ -47,33 +63,14 @@ export default function RecipeList() {
   });
   const deleteMutation = useDeleteRecipe();
 
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(
-    () => () => {
-      clearTimeout(searchTimerRef.current);
-    },
-    [],
-  );
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1);
-    }, 300);
-  };
-
-  const items = useMemo(() => (data?.items ?? []) as RecipeCardData[], [data]);
-  const filtered = useMemo(() => {
-    if (filter === 'high_protein') {
-      return items.filter((r) => n(r.nutritionPerServing?.protein) >= 20);
-    }
-    if (filter === 'quick') {
-      return items.filter((r) => n(r.prepTimeMinutes) > 0 && n(r.prepTimeMinutes) <= 20);
-    }
-    return items;
-  }, [items, filter]);
+  const items = (data?.items ?? []) as RecipeCardData[];
+  const filtered =
+    filter === 'high_protein'
+      ? items.filter((recipe) => n(recipe.nutritionPerServing?.protein) >= 20)
+      : filter === 'quick'
+        ? items.filter((recipe) => n(recipe.prepTimeMinutes) > 0 && n(recipe.prepTimeMinutes) <= 20)
+        : items;
+  const hasFilters = !!search || onlyMine || filter !== 'all';
 
   const handleDelete = async () => {
     if (!toDelete) return;
@@ -106,7 +103,7 @@ export default function RecipeList() {
           <input
             value={search}
             onChange={(e) => {
-              handleSearchChange(e.target.value);
+              setSearch(e.target.value);
             }}
             placeholder={t('recipes.search_placeholder')}
             aria-label={t('recipes.search_placeholder')}
@@ -116,9 +113,9 @@ export default function RecipeList() {
 
         <button
           type="button"
+          aria-pressed={onlyMine}
           onClick={() => {
-            setOnlyMine((v) => !v);
-            setPage(1);
+            update({ mine: onlyMine ? null : 'true', page: null });
           }}
           className={
             onlyMine
@@ -155,10 +152,15 @@ export default function RecipeList() {
         <EmptyState
           icon={BookOpen}
           title={t('recipes.no_recipes_found')}
-          description={debouncedSearch ? t('products.adjust_search') : t('recipes.start_creating')}
+          description={hasFilters ? t('products.adjust_search') : t('recipes.start_creating')}
           action={
-            debouncedSearch
-              ? undefined
+            hasFilters
+              ? {
+                  label: t('products.clear_filters'),
+                  onClick: () => {
+                    update({ search: null, mine: null, filter: null, page: null });
+                  },
+                }
               : { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
           }
         />
