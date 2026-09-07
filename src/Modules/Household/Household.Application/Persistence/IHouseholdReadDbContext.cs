@@ -13,4 +13,6 @@ public interface IHouseholdReadDbContext
     DbSet<Person> Persons { get; }
 
     DbSet<HouseholdAggregate> Households { get; }
+
+    DbSet<HouseholdInvitation> HouseholdInvitations { get; }
 }

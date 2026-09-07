@@ -1,18 +1,24 @@
-namespace Household.UnitTests.Application;
+using Household.Application.Commands.SyncCurrentPerson;
+using Household.Application.Common;
+using Household.Domain.Abstractions;
+using Household.Domain.Aggregates;
+using Household.Domain.ValueObjects;
 
-using global::Household.Application.Commands.SyncCurrentPerson;
-using global::Household.Domain.Abstractions;
-using global::Household.Domain.Aggregates;
-using global::Household.Domain.ValueObjects;
+namespace Household.UnitTests.Application;
 
 public sealed class SyncCurrentPersonCommandHandlerTests
 {
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
+    private readonly IHouseholdInvitationRepository _invitations = Substitute.For<IHouseholdInvitationRepository>();
+    private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
     private readonly IHouseholdUnitOfWork _unitOfWork = Substitute.For<IHouseholdUnitOfWork>();
     private readonly SyncCurrentPersonCommandHandler _sut;
 
     public SyncCurrentPersonCommandHandlerTests()
-        => _sut = new SyncCurrentPersonCommandHandler(_persons, _unitOfWork);
+        => _sut = new SyncCurrentPersonCommandHandler(
+            _persons,
+            new InvitationResolver(_invitations, _households),
+            _unitOfWork);
 
     [Fact]
     public async Task Handle_WhenNoPersonForSubject_RegistersAndCommits()
