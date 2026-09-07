@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Domain;
+using Shared.Infrastructure.Messaging.Outbox;
 
 internal sealed class DomainEventDispatcherInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
 {
@@ -16,7 +17,20 @@ internal sealed class DomainEventDispatcherInterceptor(IServiceProvider serviceP
         CancellationToken ct = default)
     {
         if (eventData.Context is not null)
-            await DispatchDomainEventsAsync(eventData.Context, ct);
+        {
+            // Tell OutboxIntegrationEventBus which module's outbox store to write to —
+            // the one sharing this DbContext's transaction.
+            var previousKey = OutboxScope.CurrentKey;
+            OutboxScope.CurrentKey = eventData.Context.GetType();
+            try
+            {
+                await DispatchDomainEventsAsync(eventData.Context, ct);
+            }
+            finally
+            {
+                OutboxScope.CurrentKey = previousKey;
+            }
+        }
 
         return await base.SavingChangesAsync(eventData, result, ct);
     }

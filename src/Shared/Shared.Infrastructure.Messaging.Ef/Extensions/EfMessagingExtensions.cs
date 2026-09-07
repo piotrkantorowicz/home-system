@@ -2,6 +2,7 @@ namespace Shared.Infrastructure.Messaging.Ef.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
@@ -11,21 +12,30 @@ public static class EfMessagingExtensions
 {
     /// <summary>
     /// Registers the EF outbox store and a dedicated outbox worker for this DbContext.
-    /// Call once per publishing module.
+    /// Call once per publishing module. Any number of publishing modules can coexist —
+    /// each keeps its own keyed store, and the unkeyed <see cref="IOutboxStore"/> that
+    /// <c>OutboxIntegrationEventBus</c> resolves routes to the right one via
+    /// <see cref="OutboxScope.CurrentKey"/> (set by the domain-event dispatch boundary).
     /// </summary>
     public static IServiceCollection AddOutbox<TDbContext>(this IServiceCollection services)
         where TDbContext : DbContext
     {
         services.AddScoped<EfOutboxStore<TDbContext>>();
 
-        // Keyed registration: OutboxWorker<TDbContext> resolves this to get its module's store.
+        // Keyed registration: this module's store, sharing its DbContext transaction.
+        // OutboxWorker<TDbContext> and the routing resolver below both look it up by key.
         services.AddKeyedScoped<IOutboxStore>(typeof(TDbContext),
             (sp, _) => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
 
-        // Unkeyed registration: IIntegrationEventBus (OutboxIntegrationEventBus) resolves IOutboxStore.
-        // For v1 single-publisher this is fine; a future multi-publisher scenario would route
-        // via a per-bus keyed resolution instead.
-        services.AddScoped<IOutboxStore>(sp => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
+        // Unkeyed registration used by OutboxIntegrationEventBus. Registered once (TryAdd) —
+        // it routes to whichever module's keyed store OutboxScope names for the current
+        // operation. Falls back to typeof(TDbContext) for direct publishes outside a
+        // domain-event handler (single-module scenarios and tests).
+        services.TryAddScoped<IOutboxStore>(sp =>
+        {
+            var key = OutboxScope.CurrentKey ?? typeof(TDbContext);
+            return sp.GetRequiredKeyedService<IOutboxStore>(key);
+        });
 
         services.AddHostedService<OutboxWorker<TDbContext>>();
         return services;

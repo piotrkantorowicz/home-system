@@ -169,4 +169,20 @@ builder.Services
     .AddBudgetPlanModule(builder.Configuration)
     .AddUserPreferencesModule(builder.Configuration)
     .AddNotificationsModule(builder.Configuration);
+
+// After every module: register the shared CQRS dispatcher chain exactly once.
+builder.Services.AddCqrsDispatchers();
 ```
+
+**Multiple Style-1 (EF) modules.** The CQRS dispatcher chain and the integration-event bus
+are host-level singletons shared by every module:
+
+- A module's infrastructure DI calls `AddCqrsHandlers(...)` (handler scan only) — never a
+  per-module dispatcher registration.
+- `AddDomainEventDispatcher()` is idempotent; call it from every Style-1 module.
+- The **first** Style-1 module owns the global `IUnitOfWork` binding. A second+ Style-1
+  module must expose a **module-scoped** unit-of-work abstraction
+  (`I{Module}UnitOfWork : IUnitOfWork`, bound to its own `DbContext`) and have its handlers
+  depend on that — exactly as `Notifications` does with `INotificationsUnitOfWork`.
+- `AddOutbox<TDbContext>()` is multi-publisher safe: each module keeps its own keyed store,
+  and the bus routes to the right one via `OutboxScope` during domain-event dispatch.

@@ -48,7 +48,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
         services.AddScoped<WeightPredictionService>();
 
-        services.AddCqrs<DietPlannerDbContext>(AssemblyReference.Assembly);
+        services.AddCqrsHandlers(AssemblyReference.Assembly);
 
         // Meal-reminder ledger + read-side
         services.AddScoped<ISentMealReminderRepository, SentMealReminderRepository>();

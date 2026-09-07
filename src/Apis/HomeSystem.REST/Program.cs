@@ -17,6 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDietPlannerModule(builder.Configuration);
 builder.Services.AddNotificationsModule(builder.Configuration, builder.Environment);
 
+// CQRS dispatcher chain — registered once, shared by every module's handlers.
+builder.Services.AddCqrsDispatchers();
+
 // ==============================================
 // Messaging (integration-event bus + in-process transport)
 // ==============================================

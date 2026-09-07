@@ -153,7 +153,7 @@ Each decorator is registered in DI wrapping the previous one. Decorators are ord
 Endpoint call
   → LoggingCommandDispatcherDecorator    (outermost — logs start + end + duration)
       → ValidationCommandDispatcherDecorator  (validates before passing through)
-          → TransactionCommandDispatcherDecorator  (wraps commands in a DB transaction)
+          → TransactionCommandDispatcherDecorator  (wraps commands in an ambient TransactionScope)
               → CommandDispatcher              (innermost — resolves + calls handler)
 ```
 
@@ -300,39 +300,47 @@ public sealed class CommandValidationException : Exception
 
 ### Transaction Decorator
 
+The decorator is **module-agnostic** — it opens an ambient `System.Transactions.TransactionScope`
+rather than a transaction on a specific `DbContext`. Whatever connection the handler opens
+(EF `DbContext` or Dapper) enlists in the ambient transaction. A single command only ever
+touches one module's database (cross-module writes are forbidden), so the scope never
+promotes to a distributed transaction.
+
 ```csharp
 // Shared.Infrastructure.Cqrs/Decorators/TransactionCommandDispatcherDecorator.cs
-// Wraps each command in a DB transaction using the module's DbContext.
-// Register per-module with the correct TDbContext type parameter.
-internal sealed class TransactionCommandDispatcherDecorator<TDbContext> : ICommandDispatcher
-    where TDbContext : DbContext
+internal sealed class TransactionCommandDispatcherDecorator : ICommandDispatcher
 {
     private readonly ICommandDispatcher _inner;
-    private readonly TDbContext _dbContext;
 
-    public TransactionCommandDispatcherDecorator(
-        ICommandDispatcher inner,
-        TDbContext dbContext)
-        => (_inner, _dbContext) = (inner, dbContext);
+    public TransactionCommandDispatcherDecorator(ICommandDispatcher inner) => _inner = inner;
 
     public async Task SendAsync<TCommand>(TCommand command, CancellationToken ct = default)
         where TCommand : ICommand
     {
-        await using var tx = await _dbContext.Database.BeginTransactionAsync(ct);
+        using var scope = CreateScope();
         await _inner.SendAsync(command, ct);
-        await tx.CommitAsync(ct);
+        scope.Complete();
     }
 
     public async Task<TResult> SendAsync<TCommand, TResult>(TCommand command, CancellationToken ct = default)
         where TCommand : ICommand<TResult>
     {
-        await using var tx = await _dbContext.Database.BeginTransactionAsync(ct);
+        using var scope = CreateScope();
         var result = await _inner.SendAsync<TCommand, TResult>(command, ct);
-        await tx.CommitAsync(ct);
+        scope.Complete();
         return result;
     }
+
+    private static TransactionScope CreateScope() => new(
+        TransactionScopeOption.Required,
+        new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+        TransactionScopeAsyncFlowOption.Enabled);
 }
 ```
+
+> **Style-2 (Dapper) modules** build their `NpgsqlDataSource` with
+> `ConnectionStringBuilder.Enlist = false` so their explicit `DapperUnitOfWork` transaction
+> is not disturbed by the ambient scope.
 
 ---
 
@@ -340,67 +348,57 @@ internal sealed class TransactionCommandDispatcherDecorator<TDbContext> : IComma
 
 ### Shared.Infrastructure.Cqrs extension
 
+Two entry points, because the dispatcher chain is shared by every module:
+
+- **`AddCqrsHandlers(params Assembly[])`** — each module calls this in its own
+  infrastructure DI to scan its assemblies for handlers, validators and domain-event
+  handlers.
+- **`AddCqrsDispatchers()`** — the **host** calls this exactly once, after every module is
+  registered, to build the `ICommandDispatcher` / `IQueryDispatcher` decorator chain.
+
 ```csharp
 // Shared.Infrastructure.Cqrs/Extensions/CqrsExtensions.cs
 public static class CqrsExtensions
 {
-    /// <summary>
-    /// Registers the CQRS dispatcher stack for a given module assembly.
-    /// Call once per module in the module's DependencyInjection.cs.
-    /// </summary>
-    public static IServiceCollection AddCqrs<TDbContext>(
-        this IServiceCollection services,
-        Assembly handlersAssembly)
-        where TDbContext : DbContext
+    public static IServiceCollection AddCqrsDispatchers(this IServiceCollection services)
     {
-        // Register all handlers from the module's Application assembly
-        services.Scan(scan => scan
-            .FromAssemblies(handlersAssembly)
-            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(ICommandValidator<>)), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime());
-
-        // Command dispatcher — innermost first, outermost registered last (wraps previous)
         services.AddScoped<ICommandDispatcher>(sp =>
         {
-            ICommandDispatcher dispatcher = new CommandDispatcher(sp);
-
-            dispatcher = new TransactionCommandDispatcherDecorator<TDbContext>(
-                dispatcher,
-                sp.GetRequiredService<TDbContext>());
-
-            dispatcher = new ValidationCommandDispatcherDecorator(dispatcher, sp);
-
-            dispatcher = new LoggingCommandDispatcherDecorator(
-                dispatcher,
-                sp.GetRequiredService<ILogger<LoggingCommandDispatcherDecorator>>());
-
-            return dispatcher;
+            ICommandDispatcher d = new CommandDispatcher(sp);
+            d = new TransactionCommandDispatcherDecorator(d);
+            d = new ValidationCommandDispatcherDecorator(d, sp);
+            d = new LoggingCommandDispatcherDecorator(
+                d, sp.GetRequiredService<ILogger<LoggingCommandDispatcherDecorator>>());
+            return d;
         });
 
-        // Query dispatcher — logging only
         services.AddScoped<IQueryDispatcher>(sp =>
         {
-            IQueryDispatcher dispatcher = new QueryDispatcher(sp);
-
-            dispatcher = new LoggingQueryDispatcherDecorator(
-                dispatcher,
-                sp.GetRequiredService<ILogger<LoggingQueryDispatcherDecorator>>());
-
-            return dispatcher;
+            IQueryDispatcher d = new QueryDispatcher(sp);
+            d = new LoggingQueryDispatcherDecorator(
+                d, sp.GetRequiredService<ILogger<LoggingQueryDispatcherDecorator>>());
+            return d;
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCqrsHandlers(
+        this IServiceCollection services,
+        params Assembly[] handlersAssemblies)
+    {
+        services.Scan(scan => scan
+            .FromAssemblies(handlersAssemblies)
+            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces().WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces().WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces().WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(ICommandValidator<>)), publicOnly: false)
+                .AsImplementedInterfaces().WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces().WithScopedLifetime());
 
         return services;
     }
@@ -418,18 +416,31 @@ internal static IServiceCollection AddBudgetPlanInfrastructure(
     this IServiceCollection services,
     IConfiguration configuration)
 {
-    services.AddDbContext<BudgetPlanDbContext>(opts =>
-        opts.UseNpgsql(configuration.GetConnectionString("BudgetPlan")));
+    services.AddDbContext<BudgetPlanDbContext>((sp, opts) =>
+        opts.UseNpgsql(configuration.GetConnectionString("BudgetPlan"))
+            .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
 
-    // Registers all handlers + dispatchers for this module
-    services.AddCqrs<BudgetPlanDbContext>(
-        typeof(CreateBudgetPlanCommandHandler).Assembly);
+    services.AddDomainEventDispatcher();      // idempotent — safe from every Style-1 module
+    services.AddCqrsHandlers(typeof(CreateBudgetPlanCommandHandler).Assembly);
+    services.AddOutbox<BudgetPlanDbContext>();
 
     services.AddScoped<IBudgetPlanRepository, BudgetPlanRepository>();
+
+    // A second+ Style-1 module must NOT register the global IUnitOfWork (DietPlanner owns
+    // that binding). Expose a module-scoped abstraction instead, e.g.:
+    //   services.AddScoped<IBudgetPlanUnitOfWork>(sp => sp.GetRequiredService<BudgetPlanDbContext>());
     services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BudgetPlanDbContext>());
 
     return services;
 }
+```
+
+```csharp
+// HomeSystem.REST/Program.cs
+builder.Services.AddBudgetPlanModule(builder.Configuration);
+builder.Services.AddDietPlannerModule(builder.Configuration);
+// ... every other module ...
+builder.Services.AddCqrsDispatchers();   // once, after all modules
 ```
 
 ---
