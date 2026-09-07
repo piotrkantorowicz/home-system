@@ -1,8 +1,10 @@
 namespace Household.Infrastructure;
 
 using Household.Application;
+using Household.Application.Persistence;
 using Household.Domain.Abstractions;
 using Household.Infrastructure.Persistence;
+using Household.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -27,9 +29,12 @@ public static class InfrastructureDependencyInjection
 
         services.AddOutbox<HouseholdDbContext>();
 
-        // Module-scoped unit of work — never the global IUnitOfWork (owned by the first
-        // Style-1 module). See .claude/rules/backend-module-structure.md.
+        // Module-scoped unit of work + read context — never the global IUnitOfWork
+        // (owned by the first Style-1 module). See .claude/rules/backend-module-structure.md.
         services.AddScoped<IHouseholdUnitOfWork>(sp => sp.GetRequiredService<HouseholdDbContext>());
+        services.AddScoped<IHouseholdReadDbContext>(sp => sp.GetRequiredService<HouseholdDbContext>());
+
+        services.AddScoped<IPersonRepository, PersonRepository>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
