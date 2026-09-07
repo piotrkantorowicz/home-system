@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Household.Domain\Household.Domain.csproj" />
+    <ProjectReference Include="..\Household.Contracts\Household.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Core\Shared.Abstractions.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Cqrs\Shared.Abstractions.Cqrs.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Abstractions.Messaging\Shared.Abstractions.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>
