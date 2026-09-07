@@ -199,3 +199,21 @@ describe('nutrition summary cache invalidation', () => {
     });
   });
 });
+
+describe('nutrition summary failures', () => {
+  it('reports an API failure instead of an empty successful summary', async () => {
+    server.use(
+      http.get(`${BASE}/api/v1/meals/nutrition-summary`, () =>
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+    const { result } = renderHook(
+      () => useNutritionSummary({ from: '2024-01-15', to: '2024-01-15' }),
+      { wrapper: createWrapper() },
+    );
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+    expect(result.current.data).toBeUndefined();
+  });
+});

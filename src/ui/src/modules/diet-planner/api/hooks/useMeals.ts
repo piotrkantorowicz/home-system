@@ -104,10 +104,12 @@ export function useCompleteMeal() {
       });
       if (!response.response.ok) throw new Error('Failed to complete meal');
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() }),
+      ]);
     },
   });
 }
@@ -147,10 +149,12 @@ export function useResetMeal() {
       });
       if (!response.response.ok) throw new Error('Failed to reset meal');
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.meals.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.nutritionSummary.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.shoppingList.all() }),
+      ]);
     },
   });
 }
@@ -201,7 +205,7 @@ export function useNutritionSummary(params: { from: string; to: string }) {
       const response = (await (api as any).GET('/api/v1/meals/nutrition-summary', {
         params: { query: params },
       })) as { data?: DailyNutrition[]; error?: unknown };
-      if (response.error) return [];
+      if (response.error) throw new Error('Failed to fetch nutrition summary');
       return response.data ?? [];
     },
     placeholderData: keepPreviousData,

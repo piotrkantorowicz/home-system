@@ -9,7 +9,7 @@ import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, it, expect, vi } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 
 import { createWrapper } from '../../../test/utils/queryWrapper';
 
@@ -29,6 +29,17 @@ function todayStr() {
   const day = String(d.getDate()).padStart(2, '0');
   return `${String(year)}-${month}-${day}`;
 }
+
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn(() => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  });
+});
 
 // ── i18n stub ──────────────────────────────────────────────────────────────────
 vi.mock('react-i18next', () => ({

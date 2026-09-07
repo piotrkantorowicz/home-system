@@ -1,8 +1,13 @@
-import { useCompleteMeal, type MealEntryDto } from '@modules/diet-planner/api/hooks/useMeals';
+import {
+  useCompleteMeal,
+  useResetMeal,
+  type MealEntryDto,
+} from '@modules/diet-planner/api/hooks/useMeals';
+import { isConsumed } from '@modules/diet-planner/utils/consumedNutrition';
 import { Button, Card, Skeleton } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { cn, formatNumber } from '@shared/lib/utils';
-import { ArrowRight, Check, Plus, UtensilsCrossed } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -12,148 +17,148 @@ interface NextUpCardProps {
   onAddMeal: () => void;
 }
 
-const num = (v: number | string): number => (typeof v === 'number' ? v : Number(v));
-
 function mealTime(meal: MealEntryDto): string {
   return (meal.mealTime ?? meal.mealSlotDefaultTime).slice(0, 5);
-}
-
-function isDone(meal: MealEntryDto): boolean {
-  return meal.status === 'Done' || meal.status === 'Modified';
-}
-
-function sortMeals(a: MealEntryDto, b: MealEntryDto): number {
-  const t = mealTime(a).localeCompare(mealTime(b));
-  return t !== 0 ? t : num(a.mealSlotSortOrder) - num(b.mealSlotSortOrder);
 }
 
 export function NextUpCard({ meals, loading, onAddMeal }: NextUpCardProps) {
   const { t } = useTranslation();
   const toast = useToast();
-  const completeMeal = useCompleteMeal();
+  const complete = useCompleteMeal();
+  const reset = useResetMeal();
+  const pendingIds = useRef(new Set<string>());
+  const [pending, setPending] = useState(new Set<string>());
+  const latestMeals = useRef(meals);
+  latestMeals.current = meals;
+  const heading = useRef<HTMLHeadingElement>(null);
+  const ordered = [...meals].sort(
+    (a, b) =>
+      mealTime(a).localeCompare(mealTime(b)) ||
+      Number(a.mealSlotSortOrder) - Number(b.mealSlotSortOrder),
+  );
+  const upcoming = ordered.filter((meal) => !isConsumed(meal));
+  const logged = ordered.filter(isConsumed);
 
-  const ordered = [...meals].sort(sortMeals);
-  const featured = ordered.find((m) => !isDone(m));
-  const rest = ordered.filter((m) => m.id !== featured?.id);
-
-  const markEaten = async (id: string) => {
+  async function markEaten(meal: MealEntryDto) {
+    if (pendingIds.current.has(meal.id)) return;
+    pendingIds.current.add(meal.id);
+    setPending(new Set(pendingIds.current));
     try {
-      await completeMeal.mutateAsync(id);
-      toast.success(t('dashboard.meal_marked_eaten'));
+      await complete.mutateAsync(meal.id);
+      let available = true;
+      const expires = Date.now() + 6000;
+      toast.success(t('dashboard.meal_marked_eaten'), {
+        duration: 6000,
+        action: {
+          label: t('hydration.undo'),
+          onClick: () => {
+            const current = latestMeals.current.find((entry) => entry.id === meal.id);
+            if (
+              !available ||
+              Date.now() > expires ||
+              current?.status !== 'Done' ||
+              current.recipeId !== meal.recipeId ||
+              current.servings !== meal.servings
+            )
+              return;
+            available = false;
+            reset.mutate(meal.id, {
+              onError: () => {
+                toast.error(t('calendar.meal_action_error.reset'));
+              },
+            });
+          },
+        },
+      });
+      heading.current?.focus();
     } catch {
       toast.error(t('dashboard.meal_mark_error'));
+    } finally {
+      pendingIds.current.delete(meal.id);
+      setPending(new Set(pendingIds.current));
     }
-  };
+  }
 
   return (
-    <Card className="flex flex-col gap-4 p-[22px]">
-      <div className="flex items-center justify-between">
-        <div className="text-[15px] font-bold">{t('dashboard.next_up_title')}</div>
+    <Card className="flex min-w-0 flex-col gap-5 p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 ref={heading} tabIndex={-1} className="text-lg font-semibold">
+          {t('dashboard.next_up_title')}
+        </h2>
         <Link
           to="/diet-planner/calendar"
-          className="text-primary inline-flex items-center gap-1 text-[12.5px] font-semibold"
+          className="text-primary inline-flex min-h-11 items-center text-sm font-semibold"
         >
           {t('dashboard.full_plan')}
-          <ArrowRight className="size-3.5" />
         </Link>
       </div>
-
       {loading ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-24 w-full rounded-[16px]" />
-          <Skeleton className="h-10 w-full" />
-        </div>
+        <Skeleton className="h-40 w-full" />
       ) : ordered.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <div className="bg-muted grid size-11 place-items-center rounded-full">
-            <UtensilsCrossed className="text-muted-foreground size-5" />
-          </div>
-          <p className="text-muted-foreground text-[12.5px]">{t('dashboard.no_meals')}</p>
-          <Button size="xs" variant="outline" onClick={onAddMeal}>
-            <Plus className="size-4" />
+        <div className="flex flex-col items-start gap-4">
+          <p className="text-text-2 text-sm">{t('dashboard.no_meals')}</p>
+          <Button variant="outline" onClick={onAddMeal}>
             {t('dashboard.log_meal')}
           </Button>
         </div>
       ) : (
         <>
-          {featured ? (
-            <div className="border-accent-foreground/20 bg-accent flex gap-3.5 rounded-[16px] border p-3.5">
-              <div className="text-accent-foreground w-11 flex-none text-center">
-                <div className="text-[15px] leading-tight font-bold">{mealTime(featured)}</div>
-                <div className="text-[10px] font-semibold opacity-75">{featured.mealSlotName}</div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-semibold">{featured.recipeName}</div>
-                <div className="text-text-2 tnum mt-0.5 text-[12px]">
+          {upcoming.length === 0 && (
+            <p className="text-text-2 text-sm">{t('dashboard.all_logged')}</p>
+          )}
+          {upcoming.map((meal, index) => (
+            <article
+              key={meal.id}
+              className={cn(
+                'grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-3 border-t py-5',
+                index === 0 && 'bg-accent border-primary/40 rounded-2xl border p-4',
+              )}
+            >
+              <time className="text-text-2 text-sm">{mealTime(meal)}</time>
+              <div className="min-w-0">
+                <p className="text-text-2 text-sm">{meal.mealSlotName}</p>
+                <h3 className="mt-1 text-base font-semibold break-words">{meal.recipeName}</h3>
+                <p className="text-text-2 mt-2 text-sm">
                   {t('dashboard.meal_macros', {
-                    kcal: formatNumber(num(featured.calories)),
-                    protein: Math.round(num(featured.protein)),
-                    carbs: Math.round(num(featured.carbs)),
-                    fat: Math.round(num(featured.fat)),
+                    kcal: formatNumber(Number(meal.calories)),
+                    protein: Math.round(Number(meal.protein)),
+                    carbs: Math.round(Number(meal.carbs)),
+                    fat: Math.round(Number(meal.fat)),
                   })}
-                </div>
-                <div className="mt-2.5">
-                  <Button
-                    size="chip"
-                    onClick={() => {
-                      void markEaten(featured.id);
-                    }}
-                    disabled={completeMeal.isPending}
-                  >
-                    <Check className="size-3.5" />
-                    {t('dashboard.mark_eaten')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-col">
-            {rest.map((meal) => {
-              const done = isDone(meal);
-              return (
-                <div
-                  key={meal.id}
-                  className={cn(
-                    'border-border flex items-center gap-3.5 border-t py-2.5',
-                    done && 'opacity-60',
-                  )}
+                </p>
+                <Button
+                  className="mt-4"
+                  variant={index === 0 ? 'default' : 'outline'}
+                  disabled={pending.has(meal.id)}
+                  onClick={() => {
+                    void markEaten(meal);
+                  }}
                 >
-                  <div className="text-muted-foreground w-11 flex-none text-center">
-                    <div className="text-[13.5px] leading-tight font-semibold">
-                      {mealTime(meal)}
-                    </div>
-                    <div className="text-[10px] font-semibold">{meal.mealSlotName}</div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={cn('truncate text-[13.5px] font-semibold', done && 'line-through')}
-                    >
-                      {meal.recipeName}
-                    </div>
-                    <div className="text-muted-foreground text-[11.5px]">
-                      {done
-                        ? t('dashboard.kcal_logged', { kcal: formatNumber(num(meal.calories)) })
-                        : t('dashboard.kcal', { kcal: formatNumber(num(meal.calories)) })}
-                    </div>
-                  </div>
-                  {!done ? (
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => {
-                        void markEaten(meal.id);
-                      }}
-                      disabled={completeMeal.isPending}
-                      aria-label={t('dashboard.mark_eaten')}
-                    >
-                      <Check className="size-4" />
-                    </Button>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
+                  {t('dashboard.mark_eaten')}
+                </Button>
+              </div>
+            </article>
+          ))}
+          {logged.length > 0 && (
+            <details className="border-t">
+              <summary className="text-text-2 min-h-11 cursor-pointer py-3 text-sm">
+                {t('dashboard.logged_meals', { count: logged.length })}
+              </summary>
+              {logged.map((meal) => (
+                <article key={meal.id} className="border-t py-4">
+                  <p className="text-text-2 text-sm">
+                    {mealTime(meal)} · {meal.mealSlotName}
+                  </p>
+                  <h3 className="font-semibold break-words">
+                    {meal.actualRecipe?.name ?? meal.recipeName}
+                  </h3>
+                  <p className="text-text-2 text-sm">
+                    {t('dashboard.kcal_logged', { kcal: formatNumber(Number(meal.calories)) })}
+                  </p>
+                </article>
+              ))}
+            </details>
+          )}
         </>
       )}
     </Card>

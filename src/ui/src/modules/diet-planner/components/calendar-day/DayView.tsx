@@ -13,12 +13,9 @@ interface Slot {
 }
 
 export interface DayViewProps {
+  date: string;
   slots: Slot[];
-  // Caller is responsible for passing meals already scoped to the displayed day.
-  // We deliberately do NOT re-filter here: the parent fetches a single-day query,
-  // and TanStack Query's keepPreviousData would otherwise leave stale entries from
-  // the previous day flagged with the wrong date, causing the summary to flash to
-  // zero on every day change.
+  // Caller passes resolved meals for this date; placeholder data is hidden while loading.
   meals: MealEntryDto[];
   onAddMeal: (slotId: string) => void;
   onEditMeal: (meal: MealEntryDto) => void;
@@ -29,6 +26,7 @@ export interface DayViewProps {
 }
 
 export function DayView({
+  date,
   slots,
   meals,
   onAddMeal,
@@ -54,7 +52,7 @@ export function DayView({
           onOverrideMeal={onOverrideMeal}
         />
       </div>
-      <DaySummaryCard meals={meals} goals={goals ?? null} />
+      <DaySummaryCard date={date} meals={meals} goals={goals ?? null} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ vi.mock('@shared/context/ToastContext', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 vi.mock('@modules/diet-planner/api/hooks/useMeals', () => ({
+  useResetMeal: () => ({ mutate: vi.fn() }),
   useCompleteMeal: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
@@ -54,7 +55,7 @@ describe('NextUpCard', () => {
       meal({ id: 'c', recipeName: 'Salmon', mealSlotDefaultTime: '19:00:00' }),
     ]);
     // 'Chicken bowl' is the earliest pending meal → it is the featured block
-    const featured = screen.getByText('Chicken bowl').closest('div.bg-accent');
+    const featured = screen.getByText('Chicken bowl').closest('article.bg-accent');
     expect(featured).not.toBeNull();
     expect(screen.getByText('Salmon')).toBeInTheDocument();
   });
@@ -64,11 +65,11 @@ describe('NextUpCard', () => {
     expect(screen.getByText('dashboard.no_meals')).toBeInTheDocument();
   });
 
-  it('strikes through eaten meals', () => {
+  it('places eaten meals in a collapsed disclosure', () => {
     renderCard([
       meal({ id: 'a', recipeName: 'Eaten meal', status: 'Done' }),
       meal({ id: 'b', recipeName: 'Pending meal', mealSlotDefaultTime: '20:00:00' }),
     ]);
-    expect(screen.getByText('Eaten meal').className).toContain('line-through');
+    expect(screen.getByText('Eaten meal').closest('details')).not.toHaveAttribute('open');
   });
 });

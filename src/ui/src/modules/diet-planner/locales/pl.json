@@ -57,7 +57,17 @@
     "water_custom": "Własna",
     "week_review_title": "Ten tydzień",
     "week_avg_intake": "Śr. spożycie",
-    "week_days_logged": "Dni zapisane"
+    "week_days_logged": "Dni zapisane",
+    "nutrition_title": "Dzisiejsze odżywianie",
+    "nothing_logged": "Brak zapisanych posiłków",
+    "data_error": "Nie udało się wczytać danych. Spróbuj ponownie.",
+    "all_logged": "Wszystkie zaplanowane posiłki zostały zapisane.",
+    "logged_meals": "Zapisane posiłki ({{count}})",
+    "water_entries": "Dzisiejsze wpisy ({{count}})",
+    "water_settings": "Ustawienia śledzenia wody",
+    "remove_water_entry": "Usuń {{amount}} ml zapisane o {{time}}",
+    "week_partial": "Ostatnie siedem dni. Dzisiejszy dzień jeszcze trwa; puste dni nie mają wpisów.",
+    "retry": "Spróbuj ponownie"
   },
   "goals": {
     "nav": "Cele",
@@ -192,7 +202,10 @@
       "protein_led": "Białkowe",
       "veg_led": "Warzywne",
       "today": "dziś"
-    }
+    },
+    "choose_day": "Wybierz dzień",
+    "day_view": "Dzień",
+    "week_view": "Tydzień"
   },
   "override_dialog": {
     "title": "Co zjadłeś zamiast tego?",
@@ -419,7 +432,10 @@
     "method": "Sposób przygotowania",
     "servings_label": "Porcje",
     "scale_note": "Ilości składników skalują się automatycznie.",
-    "per_serving_note": "Na porcję przy bieżącej liczbie porcji."
+    "per_serving_note": "Wartości dla jednej porcji pozostają bez zmian przy skalowaniu składników.",
+    "decrease_servings": "Zmniejsz liczbę porcji",
+    "increase_servings": "Zwiększ liczbę porcji",
+    "total_calories": "Łącznie dla {{count}} porcji: {{calories}} kcal"
   },
   "day_view": {
     "summary": {
@@ -454,6 +470,9 @@
     }
   },
   "meal_form": {
+    "schedule_required": "Dodaj porę posiłku, zanim zaplanujesz posiłek.",
+    "configure_schedule": "Ustaw harmonogram posiłków",
+    "schedule_error": "Nie udało się wczytać harmonogramu posiłków.",
     "add_title": "Dodaj Posiłek",
     "edit_title": "Edytuj Posiłek",
     "date_label": "Data",

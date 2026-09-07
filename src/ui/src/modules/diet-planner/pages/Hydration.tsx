@@ -1,11 +1,7 @@
-import {
-  useHydrationConfig,
-  useWaterIntake,
-  useLogWaterIntake,
-  useDeleteWaterIntake,
-} from '@modules/diet-planner/api/hooks/useHydration';
+import { useHydrationConfig, useWaterIntake } from '@modules/diet-planner/api/hooks/useHydration';
 import { HydrationConfigForm } from '@modules/diet-planner/components/settings';
 import {
+  Banner,
   Button,
   Card,
   EmptyState,
@@ -16,12 +12,12 @@ import {
   SheetTitle,
   Skeleton,
 } from '@shared/components/ui';
-import { useToast } from '@shared/context/ToastContext';
 import { formatNumber } from '@shared/lib/utils';
 import { Droplet, Settings, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useWaterActions } from '../api/hooks/useWaterActions';
 import { DEFAULT_TARGET_ML, DEFAULT_GLASS_ML, GlassRow } from '../components/GlassRow';
 import { WaterCustomAmountPopover } from '../components/WaterCustomAmountPopover';
 
@@ -49,24 +45,15 @@ function mostUsedAmounts(entries: WaterIntakeEntryDto[], fallback: number[]): nu
   return result.slice(0, 3);
 }
 
-/** Newest entry by timestamp — what a tap on a filled glass removes. */
-function newestEntry(entries: WaterIntakeEntryDto[]): WaterIntakeEntryDto | undefined {
-  return [...entries].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  )[0];
-}
-
 export default function Hydration() {
   const { t } = useTranslation();
-  const toast = useToast();
   const date = today();
 
-  const { data: config, isLoading: configLoading } = useHydrationConfig();
-  const { data: intake, isLoading: intakeLoading } = useWaterIntake(date);
-  const logIntake = useLogWaterIntake();
-  const deleteIntake = useDeleteWaterIntake();
-
-  const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set());
+  const configQuery = useHydrationConfig();
+  const intakeQuery = useWaterIntake(date);
+  const { data: config, isLoading: configLoading } = configQuery;
+  const { data: intake, isLoading: intakeLoading } = intakeQuery;
+  const { add, remove, pendingKeys } = useWaterActions(date);
   const [configOpen, setConfigOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -79,89 +66,25 @@ export default function Hydration() {
   const toGoMl = Math.max(0, targetMl - totalMl);
   const presets = useMemo(() => mostUsedAmounts(entries, [glassMl, 500, 750]), [entries, glassMl]);
 
-  function withPending(key: string, fn: () => void) {
-    setPendingKeys((prev) => new Set(prev).add(key));
-    fn();
-  }
-
-  function clearPending(key: string) {
-    setPendingKeys((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
-  }
-
-  function add(amountMl: number, note?: string) {
-    const key = `add-${String(amountMl)}-${String(Date.now())}`;
-    withPending(key, () => {
-      logIntake.mutate(
-        { date, amountMl, ...(note ? { note } : {}) },
-        {
-          onSuccess: (newId) => {
-            toast.success(t('hydration.log_success', { amount: amountMl }), {
-              action: {
-                label: t('hydration.undo'),
-                onClick: () => {
-                  if (newId) void deleteIntake.mutateAsync({ id: newId, date });
-                },
-              },
-            });
-          },
-          onError: () => {
-            toast.error(t('hydration.log_error'));
-          },
-          onSettled: () => {
-            clearPending(key);
-          },
-        },
-      );
-    });
-  }
-
-  function removeNewest() {
-    const latest = newestEntry(entries);
-    if (!latest) return;
-    const key = `remove-${latest.id}`;
-    withPending(key, () => {
-      deleteIntake.mutate(
-        { id: latest.id, date },
-        {
-          onError: () => {
-            toast.error(t('hydration.delete_error'));
-          },
-          onSettled: () => {
-            clearPending(key);
-          },
-        },
-      );
-    });
-  }
-
   function confirmRemove(id: string) {
-    const key = `remove-${id}`;
-    withPending(key, () => {
-      deleteIntake.mutate(
-        { id, date },
-        {
-          onSuccess: () => {
-            toast.success(t('hydration.delete_success'));
-          },
-          onError: () => {
-            toast.error(t('hydration.delete_error'));
-          },
-          onSettled: () => {
-            clearPending(key);
-            setConfirmDeleteId(null);
-          },
-        },
-      );
+    void remove(id).then((removed) => {
+      if (removed) setConfirmDeleteId(null);
     });
   }
 
-  const anyGlassPending = [...pendingKeys].some(
-    (k) => k.startsWith('add-') || k.startsWith('remove-'),
-  );
+  if (configQuery.isError || intakeQuery.isError)
+    return (
+      <Banner
+        variant="error"
+        onRetry={() => {
+          void configQuery.refetch();
+          void intakeQuery.refetch();
+        }}
+        retryLabel={t('dashboard.retry')}
+      >
+        {t('dashboard.data_error')}
+      </Banner>
+    );
 
   if (configLoading || intakeLoading) {
     return (
@@ -235,9 +158,7 @@ export default function Hydration() {
             onAdd={() => {
               add(glassMl);
             }}
-            onRemoveNewest={removeNewest}
-            addDisabled={anyGlassPending}
-            removeDisabled={anyGlassPending}
+            informational
           />
 
           <div className="flex flex-wrap gap-2">
@@ -258,6 +179,7 @@ export default function Hydration() {
               onClick={() => {
                 add(500);
               }}
+              disabled={pendingKeys.has('add-500')}
             >
               + 500 ml
             </Button>
@@ -267,6 +189,7 @@ export default function Hydration() {
               onClick={() => {
                 add(750);
               }}
+              disabled={pendingKeys.has('add-750')}
             >
               + 750 ml
             </Button>

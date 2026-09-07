@@ -1,4 +1,6 @@
+import { useCreateMeal } from '@modules/diet-planner/api/hooks/useMeals';
 import { useRecipe, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
@@ -11,7 +13,9 @@ import {
   DialogTitle,
   Skeleton,
 } from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
 import { cn, formatNumber } from '@shared/lib/utils';
+import { format } from 'date-fns';
 import { ChevronRight, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +44,9 @@ export default function RecipeDetail() {
   const navigate = useNavigate();
   const { data: recipe, isLoading, error } = useRecipe(id ?? '');
   const deleteMutation = useDeleteRecipe();
+  const createMeal = useCreateMeal();
+  const toast = useToast();
+  const [planOpen, setPlanOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [servings, setServings] = useState<number | null>(null);
 
@@ -65,15 +72,23 @@ export default function RecipeDetail() {
   }
 
   const per = recipe.nutritionPerServing;
-  const perScaled = per
-    ? {
-        calories: n(per.calories) * ratio,
-        protein: n(per.protein) * ratio,
-        carbs: n(per.carbs) * ratio,
-        fat: n(per.fat) * ratio,
-        fiber: n(per.fiber) * ratio,
-      }
-    : null;
+
+  const handleAddToPlan = async (data: {
+    date: string;
+    mealSlotId: string;
+    recipeId: string;
+    servings: number;
+    notes: string;
+  }) => {
+    try {
+      await createMeal.mutateAsync({ ...data, mealTime: null, sequenceOrder: null });
+      toast.success(t('meal_form.add_success'));
+      setPlanOpen(false);
+      void navigate(`/diet-planner/calendar?view=day&date=${data.date}`);
+    } catch {
+      toast.error(t('meal_form.add_error'));
+    }
+  };
 
   const handleDelete = async () => {
     if (!id) return;
@@ -98,42 +113,43 @@ export default function RecipeDetail() {
             {recipe.prepTimeMinutes
               ? `${String(n(recipe.prepTimeMinutes))} ${t('recipes.prep_time')} · `
               : ''}
-            {t('recipes.servings', { count: baseServings })}
+            {t('recipes.servings', { count: shown })}
           </p>
         </div>
-        {recipe.isOwner ? (
-          <div className="flex flex-wrap gap-2.5">
-            <Button size="xl" asChild>
-              <Link to="/diet-planner/calendar">{t('recipe_detail.add_to_plan')}</Link>
-            </Button>
-            <Button size="xl" variant="outline" asChild>
-              <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
-                <Pencil className="size-4" />
-                {t('common.edit')}
-              </Link>
-            </Button>
-            <Button
-              size="xl"
-              variant="outline"
-              onClick={() => {
-                setDeleteOpen(true);
-              }}
-            >
-              <Trash2 className="text-destructive size-4" />
-            </Button>
-          </div>
-        ) : null}
+        <div className="flex flex-wrap gap-2.5">
+          <Button
+            size="xl"
+            onClick={() => {
+              setPlanOpen(true);
+            }}
+          >
+            {t('recipe_detail.add_to_plan')}
+          </Button>
+          {recipe.isOwner ? (
+            <>
+              <Button size="xl" variant="outline" asChild>
+                <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
+                  <Pencil className="size-4" />
+                  {t('common.edit')}
+                </Link>
+              </Button>
+              <Button
+                size="xl"
+                variant="outline"
+                aria-label={t('common.delete')}
+                onClick={() => {
+                  setDeleteOpen(true);
+                }}
+              >
+                <Trash2 className="text-destructive size-4" />
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
 
-      <div className="grid gap-[18px] lg:grid-cols-3">
+      <div className="grid items-start gap-[18px] lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
-          <div
-            className="h-[180px]"
-            style={{
-              background:
-                'linear-gradient(140deg, color-mix(in oklab, var(--color-primary) 40%, transparent), color-mix(in oklab, var(--color-water) 20%, transparent))',
-            }}
-          />
           <div className="flex flex-col gap-6 p-6">
             {recipe.description ? (
               <p className="text-text-2 text-[13px] leading-relaxed">{recipe.description}</p>
@@ -142,21 +158,19 @@ export default function RecipeDetail() {
             <div>
               <div className="mb-2 text-[15px] font-bold">{t('recipe_detail.ingredients')}</div>
               <div className="border-border overflow-hidden rounded-[16px] border">
-                <div className="bg-secondary text-muted-foreground grid grid-cols-[2fr_0.7fr_0.7fr] gap-2 px-3 py-2 text-[10.5px] font-semibold uppercase">
+                <div className="bg-secondary text-muted-foreground grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-3 py-2 text-[10.5px] font-semibold uppercase">
                   <span>{t('recipe_detail.table.product')}</span>
                   <span className="text-right">{t('recipe_detail.table.amount')}</span>
-                  <span className="text-right">kcal</span>
                 </div>
                 {recipe.ingredients.map((ing) => (
                   <div
                     key={ing.id}
-                    className="border-border grid grid-cols-[2fr_0.7fr_0.7fr] gap-2 border-t px-3 py-2 text-[12.5px]"
+                    className="border-border grid grid-cols-[minmax(0,1fr)_auto] gap-4 border-t px-3 py-2 text-[12.5px]"
                   >
-                    <span className="truncate font-semibold">{ing.productName}</span>
+                    <span className="font-semibold break-words">{ing.productName}</span>
                     <span className="tnum text-right">
                       {(n(ing.amount) * ratio).toFixed(1)} {unitLabel(ing.unit, t)}
                     </span>
-                    <span className="text-text-2 tnum text-right">—</span>
                   </div>
                 ))}
               </div>
@@ -183,35 +197,24 @@ export default function RecipeDetail() {
         </Card>
 
         <div className="flex flex-col gap-[18px]">
-          {perScaled ? (
+          {per ? (
             <Card className="flex flex-col gap-3 p-[22px]">
-              <div className="text-[15px] font-bold">
-                {t('recipe_detail.nutrition_per_serving')}
-              </div>
+              <h2 className="text-[15px] font-bold">{t('recipe_detail.nutrition_per_serving')}</h2>
               <div className="numeral text-[34px] leading-none font-bold">
-                {formatNumber(perScaled.calories)}
+                {formatNumber(n(per.calories))}
                 <span className="text-muted-foreground ml-1 text-[12px] font-medium">kcal</span>
               </div>
-              <div className="flex flex-col gap-2.5">
+              <dl className="divide-border divide-y">
                 {MACROS.map((m) => {
-                  const grams = perScaled[m];
-                  const pct = Math.min(100, (grams / Math.max(perScaled.calories / 4, 1)) * 100);
+                  const grams = per[m];
                   return (
-                    <div key={m} className="flex flex-col gap-1">
-                      <div className="flex justify-between text-[12px]">
-                        <span className="font-semibold capitalize">{m}</span>
-                        <span className="text-text-2 tnum">{grams.toFixed(1)} g</span>
-                      </div>
-                      <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${String(pct)}%`, background: `var(--color-${m})` }}
-                        />
-                      </div>
+                    <div key={m} className="flex justify-between gap-4 py-2.5 text-sm">
+                      <dt className="font-medium">{t(`nutrition_summary.${m}`)}</dt>
+                      <dd className="text-text-2 tnum">{n(grams).toFixed(1)} g</dd>
                     </div>
                   );
                 })}
-              </div>
+              </dl>
               <p className="text-muted-foreground text-[11px]">
                 {t('recipe_detail.per_serving_note')}
               </p>
@@ -223,12 +226,12 @@ export default function RecipeDetail() {
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                aria-label="decrease"
+                aria-label={t('recipe_detail.decrease_servings')}
                 onClick={() => {
                   setServings(Math.max(1, shown - 1));
                 }}
                 className={cn(
-                  'border-border grid size-10 place-items-center rounded-[12px] border',
+                  'border-border grid size-11 place-items-center rounded-[12px] border',
                   shown <= 1 && 'opacity-40',
                 )}
                 disabled={shown <= 1}
@@ -238,19 +241,49 @@ export default function RecipeDetail() {
               <span className="numeral text-[22px] font-bold">{shown}</span>
               <button
                 type="button"
-                aria-label="increase"
+                aria-label={t('recipe_detail.increase_servings')}
                 onClick={() => {
                   setServings(shown + 1);
                 }}
-                className="border-border grid size-10 place-items-center rounded-[12px] border"
+                className="border-border grid size-11 place-items-center rounded-[12px] border"
               >
                 <Plus className="size-4" />
               </button>
             </div>
             <p className="text-muted-foreground text-[11px]">{t('recipe_detail.scale_note')}</p>
+            {per && (
+              <p className="text-text-2 text-sm">
+                {t('recipe_detail.total_calories', {
+                  count: shown,
+                  calories: formatNumber(n(per.calories) * shown),
+                })}
+              </p>
+            )}
           </Card>
         </div>
       </div>
+
+      {planOpen && (
+        <MealForm
+          open
+          mode="create"
+          onClose={() => {
+            if (!createMeal.isPending) setPlanOpen(false);
+          }}
+          onSubmit={(data) => {
+            void handleAddToPlan(data);
+          }}
+          isSubmitting={createMeal.isPending}
+          initialValues={{
+            recipeId: recipe.id,
+            recipeName: recipe.name,
+            servings: shown,
+            notes: '',
+            mealSlotId: '',
+            date: format(new Date(), 'yyyy-MM-dd'),
+          }}
+        />
+      )}
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
