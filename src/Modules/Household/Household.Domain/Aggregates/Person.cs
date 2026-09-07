@@ -90,6 +90,25 @@ public sealed class Person : AggregateRoot<PersonId>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Records the email a managed person's future login will be matched against, so an
+    /// adult can hand a child (or anyone) a real account without losing history. The link
+    /// completes on that person's first sign-in — see <see cref="LinkAuthSubject"/>.
+    /// </summary>
+    public void MarkPendingAccountLink(PersonEmail email)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+
+        if (!IsManaged)
+            throw new HouseholdDomainException("Only a managed person can be converted to a real account.");
+
+        if (IsLinked)
+            throw new HouseholdDomainException("This person is already linked to an account.");
+
+        Email = email;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>Links a managed person to the Authentik account that just signed in as them.</summary>
     public void LinkAuthSubject(string authSubject)
     {

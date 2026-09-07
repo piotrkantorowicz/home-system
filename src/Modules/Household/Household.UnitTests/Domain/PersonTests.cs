@@ -89,4 +89,26 @@ public sealed class PersonTests
         Should.Throw<HouseholdDomainException>(() => person.LinkAuthSubject("auth|2"))
             .Message.ShouldContain("already linked");
     }
+
+    [Fact]
+    public void MarkPendingAccountLink_OnManagedPerson_SetsTheMatchEmail()
+    {
+        var person = Person.CreateManaged(PersonId.New(), "Kiddo", null);
+
+        person.MarkPendingAccountLink(PersonEmail.Create("kiddo@b.com"));
+
+        person.Email!.Value.ShouldBe("kiddo@b.com");
+        person.IsManaged.ShouldBeTrue();
+        person.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void MarkPendingAccountLink_OnLinkedPerson_Throws()
+    {
+        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "N", null, null);
+
+        Should.Throw<HouseholdDomainException>(
+            () => person.MarkPendingAccountLink(PersonEmail.Create("n@b.com")))
+            .Message.ShouldContain("Only a managed person");
+    }
 }
