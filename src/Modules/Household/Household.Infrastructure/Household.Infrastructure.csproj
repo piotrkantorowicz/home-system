@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Household.Domain\Household.Domain.csproj" />
     <ProjectReference Include="..\Household.Application\Household.Application.csproj" />
+    <ProjectReference Include="..\Household.Contracts\Household.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Persistence\Shared.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Messaging\Shared.Infrastructure.Messaging.csproj" />

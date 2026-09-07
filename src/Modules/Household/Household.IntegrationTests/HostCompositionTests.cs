@@ -2,7 +2,9 @@ namespace Household.IntegrationTests;
 
 using global::Household.Domain.Abstractions;
 using global::Household.Infrastructure.Persistence;
+using global::Household.Contracts.Interfaces;
 using Household.IntegrationTests.Infrastructure;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,5 +35,8 @@ public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixtur
         sp.GetService<IHouseholdUnitOfWork>().ShouldNotBeNull();
         sp.GetService<ICommandDispatcher>().ShouldNotBeNull();
         sp.GetService<IQueryDispatcher>().ShouldNotBeNull();
+        sp.GetService<IHouseholdQueryService>().ShouldNotBeNull();
+        sp.GetServices<IClaimsTransformation>()
+            .ShouldContain(t => t.GetType().Name == "HouseholdClaimsTransformation");
     }
 }

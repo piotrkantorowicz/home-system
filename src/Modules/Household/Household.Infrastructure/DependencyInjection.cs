@@ -3,9 +3,11 @@ namespace Household.Infrastructure;
 using Household.Application;
 using Household.Application.Common;
 using Household.Application.Persistence;
+using Household.Contracts.Interfaces;
 using Household.Domain.Abstractions;
 using Household.Infrastructure.Persistence;
 using Household.Infrastructure.Persistence.Repositories;
+using Household.Infrastructure.Query;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -38,6 +40,9 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IHouseholdRepository, HouseholdRepository>();
         services.AddScoped<HouseholdAccessService>();
+
+        // Read-side query surface for other modules + the host claims transformer.
+        services.AddScoped<IHouseholdQueryService, HouseholdQueryService>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
