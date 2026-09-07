@@ -454,7 +454,24 @@ public static class EfMessagingExtensions
     public static IServiceCollection AddOutbox<TDbContext>(this IServiceCollection services)
         where TDbContext : DbContext
     {
-        services.AddScoped<IOutboxStore, EfOutboxStore<TDbContext>>();
+        services.AddScoped<EfOutboxStore<TDbContext>>();
+
+        // This module's store, keyed by its DbContext type.
+        services.AddKeyedScoped<IOutboxStore>(typeof(TDbContext),
+            (sp, _) => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
+
+        // Unkeyed store used by OutboxIntegrationEventBus — registered once (TryAdd) and
+        // shared by all publishing modules. It routes to the keyed store named by
+        // OutboxScope.CurrentKey, which the DomainEventDispatcherInterceptor sets to the
+        // publishing module's DbContext type for the duration of domain-event dispatch.
+        // Falls back to typeof(TDbContext) for direct publishes (single-module / tests).
+        services.TryAddScoped<IOutboxStore>(sp =>
+        {
+            var key = OutboxScope.CurrentKey ?? typeof(TDbContext);
+            return sp.GetRequiredKeyedService<IOutboxStore>(key);
+        });
+
+        services.AddHostedService<OutboxWorker<TDbContext>>();
         return services;
     }
 
