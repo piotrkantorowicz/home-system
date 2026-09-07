@@ -1,6 +1,7 @@
 namespace Household.Infrastructure;
 
 using Household.Application;
+using Household.Application.Common;
 using Household.Application.Persistence;
 using Household.Domain.Abstractions;
 using Household.Infrastructure.Persistence;
@@ -36,6 +37,7 @@ public static class InfrastructureDependencyInjection
 
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IHouseholdRepository, HouseholdRepository>();
+        services.AddScoped<HouseholdAccessService>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
