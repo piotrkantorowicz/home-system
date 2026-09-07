@@ -121,6 +121,8 @@ builder.Services.AddOpenApi(options =>
             new() { Name = "Recipes", Description = "Recipes composed from products — create, search, update, and delete recipes with their ingredient lists." },
             new() { Name = "Meals", Description = "Daily meal log — record recipe servings against specific dates and meal types, and query aggregated nutrition summaries." },
             new() { Name = "Goals", Description = "Per-user daily nutrition targets — create or update calorie, protein, carbohydrate, fat, and fibre goals." },
+            new() { Name = "Households", Description = "Households — the sharing boundary that groups the people living together." },
+            new() { Name = "Persons", Description = "The local registry of people. Sync the signed-in account and read its Person record." },
             new() { Name = "Health", Description = "Service health check endpoint." }
         };
 
