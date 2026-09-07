@@ -12,7 +12,7 @@ import {
   Skeleton,
   StatusPill,
 } from '@shared/components/ui';
-import { formatNumber } from '@shared/lib/utils';
+import { cn, formatNumber } from '@shared/lib/utils';
 import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -54,12 +54,45 @@ export default function ProductDetail() {
     );
   }
 
+  const macros = [
+    {
+      key: 'protein',
+      label: t('products.table.protein'),
+      grams: product.proteinPer100g,
+      colorClass: 'bg-protein',
+    },
+    {
+      key: 'carbs',
+      label: t('product_detail.carbohydrates'),
+      grams: product.carbsPer100g,
+      colorClass: 'bg-carbs',
+    },
+    {
+      key: 'fat',
+      label: t('product_detail.fat'),
+      grams: product.fatPer100g,
+      colorClass: 'bg-fat',
+    },
+  ] as const;
+  const hasCompleteMacroData = macros.every((macro) => macro.grams !== null);
+  const totalMacroGrams = macros.reduce((total, macro) => total + (macro.grams ?? 0), 0);
+  const macroShare = (grams: number | null): number | null =>
+    hasCompleteMacroData && grams !== null
+      ? totalMacroGrams > 0
+        ? Math.round((grams / totalMacroGrams) * 100)
+        : 0
+      : null;
+
   const rows = [
-    { label: t('products.table.protein'), grams: product.proteinPer100g },
-    { label: t('product_detail.carbohydrates'), grams: product.carbsPer100g },
-    { label: t('product_detail.fat'), grams: product.fatPer100g },
-    { label: t('product_detail.fiber'), grams: product.fiberPer100g },
-  ];
+    ...macros.map((macro) => ({ ...macro, share: macroShare(macro.grams) })),
+    {
+      key: 'fiber',
+      label: t('product_detail.fiber'),
+      grams: product.fiberPer100g,
+      colorClass: 'bg-fiber',
+      share: null,
+    },
+  ] as const;
 
   return (
     <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:px-8">
@@ -106,7 +139,12 @@ export default function ProductDetail() {
 
       <div className="grid items-start gap-[18px] lg:grid-cols-3">
         <Card className="flex flex-col gap-5 p-[22px] lg:col-span-2">
-          <h2 className="text-[15px] font-bold">{t('product_detail.nutrition_facts')}</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[15px] font-bold">{t('product_detail.nutrition_facts')}</h2>
+            <span className="bg-secondary text-text-2 rounded-full px-2.5 py-1 text-[11px] font-semibold">
+              {t('product_detail.per_100g')}
+            </span>
+          </div>
 
           <div className="border-border flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-4">
             <span className="text-[15px] font-semibold">{t('products.table.calories')}</span>
@@ -114,24 +152,69 @@ export default function ProductDetail() {
               <span className="tnum">
                 {product.caloriesPer100g === null ? '—' : formatNumber(product.caloriesPer100g)}
               </span>
-              <span className="text-muted-foreground ml-1 text-[12px] font-medium">
-                kcal / 100 g
-              </span>
+              <span className="text-muted-foreground ml-1 text-[12px] font-medium">kcal</span>
             </span>
           </div>
+
+          {hasCompleteMacroData ? (
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[12.5px] font-semibold">
+                  {t('product_detail.macro_balance')}
+                </span>
+                <span className="text-muted-foreground text-[11px]">
+                  {t('product_detail.share_by_weight')}
+                </span>
+              </div>
+              <div
+                role="img"
+                aria-label={t('product_detail.macro_balance_description', {
+                  protein: macroShare(product.proteinPer100g),
+                  carbs: macroShare(product.carbsPer100g),
+                  fat: macroShare(product.fatPer100g),
+                })}
+                className="bg-muted flex h-3 overflow-hidden rounded-full"
+              >
+                {totalMacroGrams > 0
+                  ? macros.map((macro) => (
+                      <span
+                        key={macro.key}
+                        aria-hidden="true"
+                        className={macro.colorClass}
+                        style={{ flexGrow: macro.grams ?? 0 }}
+                      />
+                    ))
+                  : null}
+              </div>
+            </div>
+          ) : null}
 
           <dl className="divide-border divide-y">
             {rows.map((row) => (
               <div key={row.label} className="flex justify-between gap-4 py-3 text-sm">
-                <dt className="font-medium">{row.label}</dt>
-                <dd className="text-text-2 tnum">
+                <dt className="inline-flex items-center gap-2 font-medium">
+                  <span aria-hidden="true" className={cn('size-2 rounded-full', row.colorClass)} />
+                  {row.label}
+                </dt>
+                <dd className="text-text-2 tnum text-right">
                   {row.grams === null || row.grams === undefined
                     ? '—'
                     : `${row.grams.toFixed(1)} g`}
+                  {row.share !== null ? (
+                    <span className="text-muted-foreground ml-2 text-[12px]">
+                      ({row.share.toFixed(0)}%)
+                    </span>
+                  ) : null}
                 </dd>
               </div>
             ))}
           </dl>
+
+          {hasCompleteMacroData ? (
+            <p className="text-muted-foreground text-[11px] leading-relaxed">
+              {t('product_detail.macro_balance_note')}
+            </p>
+          ) : null}
         </Card>
 
         <Card className="flex flex-col gap-4 p-[22px]">
