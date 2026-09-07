@@ -18,6 +18,7 @@ public static class HouseholdModule
     public static IEndpointRouteBuilder MapHouseholdEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapHouseholdEndpointsGroup();
+        app.MapPersonEndpoints();
         return app;
     }
 }
