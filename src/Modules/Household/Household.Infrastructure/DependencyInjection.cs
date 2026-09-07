@@ -35,6 +35,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IHouseholdReadDbContext>(sp => sp.GetRequiredService<HouseholdDbContext>());
 
         services.AddScoped<IPersonRepository, PersonRepository>();
+        services.AddScoped<IHouseholdRepository, HouseholdRepository>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 

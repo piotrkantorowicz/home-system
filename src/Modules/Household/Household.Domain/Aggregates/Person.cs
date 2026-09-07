@@ -1,9 +1,9 @@
-namespace Household.Domain.Aggregates;
-
 using Household.Domain.Events;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
+
+namespace Household.Domain.Aggregates;
 
 /// <summary>
 /// A human known to the system. Either linked to an Authentik account
