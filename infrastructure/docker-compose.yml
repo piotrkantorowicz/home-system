@@ -165,6 +165,33 @@ services:
     networks:
       - home-system-shared
 
+  # ============================================
+  # PostgreSQL for Household API
+  # Use: docker compose --profile household up
+  # ============================================
+  household-db:
+    image: postgres:16-alpine
+    container_name: household-db
+    restart: unless-stopped
+    profiles: ["household"]
+    ports:
+      - "5434:5432"
+    volumes:
+      - household_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: household
+      POSTGRES_USER: household
+      POSTGRES_PASSWORD: ${HOUSEHOLD_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U household"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+    networks:
+      - home-system-shared
+
 networks:
   home-system-shared:
     driver: bridge
@@ -176,3 +203,4 @@ volumes:
   authentik_templates:
   dietplanner_db_data:
   notifications_db_data:
+  household_db_data:

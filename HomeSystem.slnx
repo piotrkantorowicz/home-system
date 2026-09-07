@@ -25,6 +25,13 @@
     <Project Path="src/Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
     <Project Path="src/Modules/Notifications/Notifications.Api/Notifications.Api.csproj" />
   </Folder>
+  <Folder Name="/Modules/Household/">
+    <Project Path="src/Modules/Household/Household.Domain/Household.Domain.csproj" />
+    <Project Path="src/Modules/Household/Household.Application/Household.Application.csproj" />
+    <Project Path="src/Modules/Household/Household.Contracts/Household.Contracts.csproj" />
+    <Project Path="src/Modules/Household/Household.Infrastructure/Household.Infrastructure.csproj" />
+    <Project Path="src/Modules/Household/Household.Api/Household.Api.csproj" />
+  </Folder>
   <Folder Name="/Host/">
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
   </Folder>
@@ -33,6 +40,8 @@
     <Project Path="src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" />
     <Project Path="src/Modules/Notifications/Notifications.IntegrationTests/Notifications.IntegrationTests.csproj" />
     <Project Path="src/Modules/Notifications/Notifications.UnitTests/Notifications.UnitTests.csproj" />
+    <Project Path="src/Modules/Household/Household.IntegrationTests/Household.IntegrationTests.csproj" />
+    <Project Path="src/Modules/Household/Household.UnitTests/Household.UnitTests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
   </Folder>
