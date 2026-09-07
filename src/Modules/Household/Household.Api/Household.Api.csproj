@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Household.Application\Household.Application.csproj" />
+    <ProjectReference Include="..\Household.Contracts\Household.Contracts.csproj" />
+    <ProjectReference Include="..\Household.Infrastructure\Household.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
