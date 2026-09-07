@@ -41,6 +41,15 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
                 Detail = ex.Message
             });
         }
+        catch (ForbiddenException ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Title = "Forbidden",
+                Detail = ex.Message
+            });
+        }
         catch (DomainException ex)
         {
             context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
