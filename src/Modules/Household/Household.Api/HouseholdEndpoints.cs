@@ -5,11 +5,14 @@ using Household.Application.Commands.ChangeMemberRole;
 using Household.Application.Commands.CreateHousehold;
 using Household.Application.Commands.CreateManagedMember;
 using Household.Application.Commands.DeleteHousehold;
+using Household.Application.Commands.InvitePersonByEmail;
 using Household.Application.Commands.LeaveHousehold;
 using Household.Application.Commands.RemoveMember;
 using Household.Application.Commands.RenameHousehold;
+using Household.Application.Commands.RevokeInvitation;
 using Household.Application.Queries.GetMyHousehold;
 using Household.Application.Queries.ListHouseholdMembers;
+using Household.Application.Queries.ListPendingInvitations;
 using Household.Application.Queries.ListPickablePersons;
 using Household.Application.Queries.Projections;
 using Household.Domain.ValueObjects;
@@ -40,6 +43,9 @@ internal static class HouseholdEndpoints
         group.MapPost("/{id:guid}/managed-members", AddManagedMember).WithName("CreateManagedMember");
         group.MapDelete("/{id:guid}/members/{personId:guid}", RemoveMember).WithName("RemoveHouseholdMember");
         group.MapPut("/{id:guid}/members/{personId:guid}/role", ChangeRole).WithName("ChangeHouseholdMemberRole");
+        group.MapGet("/{id:guid}/invitations", ListInvitations).WithName("ListPendingInvitations");
+        group.MapPost("/{id:guid}/invitations", Invite).WithName("InvitePersonByEmail");
+        group.MapDelete("/{id:guid}/invitations/{invitationId:guid}", RevokeInvitation).WithName("RevokeInvitation");
 
         return app;
     }
@@ -128,6 +134,27 @@ internal static class HouseholdEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<Ok<IReadOnlyList<InvitationDto>>> ListInvitations(
+        Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListPendingInvitationsQuery, IReadOnlyList<InvitationDto>>(
+            new ListPendingInvitationsQuery(Sub(user), id), ct));
+
+    private static async Task<Ok<InvitePersonByEmailResult>> Invite(
+        Guid id, InviteRequest request, ClaimsPrincipal user,
+        ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<InvitePersonByEmailCommand, InvitePersonByEmailResult>(
+            new InvitePersonByEmailCommand(Sub(user), id, request.Email, ParseRole(request.Role)), ct);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<NoContent> RevokeInvitation(
+        Guid id, Guid invitationId, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new RevokeInvitationCommand(Sub(user), id, invitationId), ct);
+        return TypedResults.NoContent();
+    }
+
     private static string Sub(ClaimsPrincipal user)
         => user.GetAuthSubject() ?? throw new UnauthorizedAccessException("Missing subject claim.");
 
@@ -144,3 +171,4 @@ internal sealed record RenameHouseholdRequest(string Name);
 internal sealed record AddMemberRequest(Guid PersonId, string Role, string? Nickname);
 internal sealed record CreateManagedMemberRequest(string DisplayName, string? Email, string Role, string? Nickname);
 internal sealed record ChangeRoleRequest(string Role);
+internal sealed record InviteRequest(string Email, string Role);
