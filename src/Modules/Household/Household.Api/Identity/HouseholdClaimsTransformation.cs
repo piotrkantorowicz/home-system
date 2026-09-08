@@ -3,6 +3,7 @@ namespace Household.Api.Identity;
 using System.Security.Claims;
 using Household.Contracts.Interfaces;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Attaches <c>person_id</c>, <c>household_id</c> and <c>household_role</c> claims to every
@@ -13,14 +14,19 @@ using Microsoft.AspNetCore.Authentication;
 /// <remarks>
 /// ASP.NET may invoke <see cref="TransformAsync"/> more than once per request, so it is
 /// idempotent — it no-ops once the claims are present. A caller with no <c>Person</c> or no
-/// household simply keeps the un-augmented principal.
+/// household simply keeps the un-augmented principal, and so does the request if the
+/// Household store is unreachable — this runs on every authenticated request in every
+/// module, so it must never turn a transient Household outage into a 500 elsewhere.
 /// </remarks>
 internal sealed class HouseholdClaimsTransformation : IClaimsTransformation
 {
     private readonly IHouseholdQueryService _households;
+    private readonly ILogger<HouseholdClaimsTransformation> _logger;
 
-    public HouseholdClaimsTransformation(IHouseholdQueryService households)
-        => _households = households;
+    public HouseholdClaimsTransformation(
+        IHouseholdQueryService households,
+        ILogger<HouseholdClaimsTransformation> logger)
+        => (_households, _logger) = (households, logger);
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -34,7 +40,19 @@ internal sealed class HouseholdClaimsTransformation : IClaimsTransformation
         if (string.IsNullOrWhiteSpace(authSubject))
             return principal;
 
-        var context = await _households.GetHouseholdContextForUserAsync(authSubject);
+        HouseholdContext? context;
+        try
+        {
+            context = await _households.GetHouseholdContextForUserAsync(authSubject);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Could not resolve household context for the current principal; "
+                + "proceeding without household claims.");
+            return principal;
+        }
+
         if (context is null)
             return principal;
 
