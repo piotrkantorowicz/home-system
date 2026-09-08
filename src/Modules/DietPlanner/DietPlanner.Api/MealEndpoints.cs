@@ -43,8 +43,8 @@ public static class MealEndpoints
 
         group.MapGet("/shopping-list", GetShoppingList)
             .WithName("GetShoppingList")
-            .WithSummary("Get aggregated shopping list for planned meals in a date range")
-            .WithDescription("Aggregates the ingredients of each planned meal's recipe (scaled by servings) across the date range and groups them by product and unit. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.")
+            .WithSummary("Get the household's aggregated shopping list for planned meals in a date range")
+            .WithDescription("Aggregates the ingredients of every household member's planned meals (each recipe scaled by servings) across the date range and groups them by product and unit. Falls back to the caller's own meals when they have no household. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.")
             .Produces<IReadOnlyList<ShoppingListItemDto>>()
             .Produces(StatusCodes.Status401Unauthorized);
 

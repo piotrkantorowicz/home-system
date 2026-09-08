@@ -2,23 +2,32 @@ namespace DietPlanner.Application.Queries.GetShoppingList;
 
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.ValueObjects;
+using Household.Contracts.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class GetShoppingListQueryHandler
     : IQueryHandler<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
+    private readonly IHouseholdQueryService _households;
+    private readonly ILogger<GetShoppingListQueryHandler> _logger;
 
-    public GetShoppingListQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
+    public GetShoppingListQueryHandler(
+        IDietPlannerReadDbContext dbContext,
+        IHouseholdQueryService households,
+        ILogger<GetShoppingListQueryHandler> logger)
+        => (_dbContext, _households, _logger) = (dbContext, households, logger);
 
     public async Task<IReadOnlyList<ShoppingListItemDto>> HandleAsync(
         GetShoppingListQuery query, CancellationToken ct = default)
     {
+        var userIds = await ResolveHouseholdUserIdsAsync(query.UserId, ct);
+
         var entries = await _dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => me.UserId == query.UserId
+            .Where(me => userIds.Contains(me.UserId)
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Select(me => new EntryProjection
@@ -99,6 +108,40 @@ internal sealed class GetShoppingListQueryHandler
             .OrderBy(item => item.ProductName)
             .ThenBy(item => item.Unit)
             .ToList();
+    }
+
+    /// <summary>
+    /// The shopping list is a shared household resource (#223): it aggregates the planned
+    /// meals of every member. Resolves the caller's household and returns every member's
+    /// auth subject (meal entries are still keyed by subject in v1) plus the caller's own.
+    /// Falls back to the caller alone when they have no household or the Household module
+    /// is unavailable — the list must never fail because of a household lookup.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> ResolveHouseholdUserIdsAsync(
+        string callerUserId, CancellationToken ct)
+    {
+        try
+        {
+            var context = await _households.GetHouseholdContextForUserAsync(callerUserId, ct);
+            if (context is null)
+                return [callerUserId];
+
+            var subjects = context.Members
+                .Select(m => m.AuthSubject)
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Select(s => s!)
+                .Append(callerUserId)
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
+            return subjects;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Could not resolve the household for the shopping list; using the caller's own meals only.");
+            return [callerUserId];
+        }
     }
 
     private sealed class EntryProjection
