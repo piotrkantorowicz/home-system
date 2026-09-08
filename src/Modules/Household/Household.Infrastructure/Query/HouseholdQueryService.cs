@@ -40,7 +40,7 @@ internal sealed class HouseholdQueryService : IHouseholdQueryService
 
         var persons = await _db.Persons.AsNoTracking()
             .Where(p => personIds.Contains(p.Id))
-            .Select(p => new { p.Id, p.DisplayName, p.IsManaged })
+            .Select(p => new { p.Id, p.DisplayName, p.IsManaged, p.AuthSubject })
             .ToDictionaryAsync(p => p.Id, ct);
 
         var members = household.Members
@@ -51,7 +51,8 @@ internal sealed class HouseholdQueryService : IHouseholdQueryService
                     m.PersonId.Value,
                     person?.DisplayName ?? "Unknown",
                     m.Role.ToString(),
-                    person?.IsManaged ?? false);
+                    person?.IsManaged ?? false,
+                    person?.AuthSubject);
             })
             .OrderByDescending(m => m.Role == nameof(Domain.ValueObjects.HouseholdRole.Owner))
             .ThenBy(m => m.DisplayName)
