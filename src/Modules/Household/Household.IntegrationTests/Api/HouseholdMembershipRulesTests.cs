@@ -1,0 +1,118 @@
+using System.Net;
+using System.Net.Http.Json;
+using Household.IntegrationTests.Infrastructure;
+
+namespace Household.IntegrationTests.Api;
+
+/// <summary>
+/// #226 — the membership invariants enforced end-to-end through the HTTP surface:
+/// last-owner rule, one active household per person, and leaving.
+/// </summary>
+public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatabaseFixture>
+{
+    private readonly HouseholdApiFactory _factory;
+
+    public HouseholdMembershipRulesTests(HouseholdDatabaseFixture fixture)
+        => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    private async Task<HttpClient> SignedInAsync(string name)
+    {
+        var client = _factory.CreateClientFor(
+            $"auth|{Guid.NewGuid():N}", email: $"{Guid.NewGuid():N}@x.com", name: name);
+        (await client.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
+        return client;
+    }
+
+    private static async Task<Guid> PersonIdAsync(HttpClient client)
+        => (await client.GetFromJsonAsync<Body>("/api/persons/me"))!.Id;
+
+    private static async Task<Household> CreateHouseholdAsync(HttpClient client, string name)
+    {
+        (await client.PostAsJsonAsync("/api/households", new { name })).EnsureSuccessStatusCode();
+        return (await client.GetFromJsonAsync<Household>("/api/households/me"))!;
+    }
+
+    private async Task<(HttpClient Owner, Household Household, HttpClient Adult, Guid AdultId)> HouseholdWithAdultAsync()
+    {
+        var owner = await SignedInAsync("Owner");
+        var household = await CreateHouseholdAsync(owner, "The House");
+
+        var adult = await SignedInAsync("Adult");
+        var adultId = await PersonIdAsync(adult);
+        (await owner.PostAsJsonAsync($"/api/households/{household.Id}/members",
+            new { personId = adultId, role = "Adult", nickname = (string?)null }))
+            .EnsureSuccessStatusCode();
+
+        return (owner, household, adult, adultId);
+    }
+
+    [Fact]
+    public async Task DemotingTheOnlyOwner_Returns422()
+    {
+        var (owner, household, _, _) = await HouseholdWithAdultAsync();
+        var ownerId = await PersonIdAsync(owner);
+
+        var demote = await owner.PutAsJsonAsync(
+            $"/api/households/{household.Id}/members/{ownerId}/role", new { role = "Adult" });
+
+        demote.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task RemovingTheOnlyOwner_Returns422()
+    {
+        var (owner, household, _, _) = await HouseholdWithAdultAsync();
+        var ownerId = await PersonIdAsync(owner);
+
+        var remove = await owner.DeleteAsync($"/api/households/{household.Id}/members/{ownerId}");
+
+        remove.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task TheOnlyOwner_CannotLeave_Returns422()
+    {
+        var owner = await SignedInAsync("Solo Owner");
+        var household = await CreateHouseholdAsync(owner, "Solo");
+
+        var leave = await owner.PostAsync($"/api/households/{household.Id}/leave", null);
+
+        leave.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task AddingAPersonWhoAlreadyHasAHousehold_Returns422()
+    {
+        var owner = await SignedInAsync("Owner");
+        var household = await CreateHouseholdAsync(owner, "First House");
+
+        var other = await SignedInAsync("Other");
+        var otherId = await PersonIdAsync(other);
+        await CreateHouseholdAsync(other, "Other House");
+
+        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/members",
+            new { personId = otherId, role = "Adult", nickname = (string?)null });
+
+        add.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task AnAdultMember_CanLeave_AndThenHasNoHousehold()
+    {
+        var (owner, household, adult, adultId) = await HouseholdWithAdultAsync();
+
+        var leave = await adult.PostAsync($"/api/households/{household.Id}/leave", null);
+        leave.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await adult.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var members = await owner.GetFromJsonAsync<List<Member>>($"/api/households/{household.Id}/members");
+        members!.ShouldHaveSingleItem().PersonId.ShouldNotBe(adultId);
+    }
+
+    private sealed record Body(Guid Id);
+
+    private sealed record Household(Guid Id, string Name, string MyRole, List<Member> Members);
+
+    private sealed record Member(Guid PersonId, string DisplayName, string Role, bool IsManaged);
+}
