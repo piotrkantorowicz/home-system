@@ -207,6 +207,15 @@ Personal }` flag.
 - Personal DietPlanner queries switch from "current sub" to "current `person_id`"
   (from the new claim).
 
+> **Pre-release note (#221).** The app has no production users, so there is no
+> historical data to back-fill. #221 ships nothing. A fresh account gets a `Person`
+> on login (`SyncCurrentPerson`) but **not** a `Household` — the frontend onboarding
+> (§7) catches `GET /api/households/me → 404` and drives the user through
+> `POST /api/households` to name their home. `AddExistingPersonAsMember`,
+> `ListPickablePersons` and invitation resolution all rely on people existing
+> without a household until they act, so auto-provisioning one on login is
+> deliberately avoided.
+
 ## 7. Frontend (`src/modules/household`)
 
 Follows the module-registry pattern (`shared/lib/module-registry.ts`).
