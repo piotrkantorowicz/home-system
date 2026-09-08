@@ -26,7 +26,7 @@ function last7Dates(): string[] {
 }
 
 export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dates = last7Dates();
   const byDate = new Map(week.map((d) => [d.date.slice(0, 10), d]));
 
@@ -34,19 +34,19 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
     date,
     calories: Math.round(byDate.get(date)?.calories ?? 0),
     isToday: index === dates.length - 1,
-    weekday: new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' }),
+    weekday: new Date(`${date}T00:00:00`).toLocaleDateString(i18n.language, { weekday: 'short' }),
   }));
 
-  const logged = days.filter((d) => d.calories > 0);
+  const logged = days.filter((d) => byDate.has(d.date));
   const avg =
     logged.length > 0 ? Math.round(logged.reduce((s, d) => s + d.calories, 0) / logged.length) : 0;
   const scaleMax = Math.max(target ?? 0, ...days.map((d) => d.calories), 1);
 
   return (
-    <Card className="col-span-full flex flex-col gap-5 p-[22px] xl:col-span-2">
+    <Card className="flex min-w-0 flex-col gap-5 p-6">
       <div className="text-[15px] font-bold">{t('dashboard.week_review_title')}</div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
         <MetricTile label={t('dashboard.week_avg_intake')} value={formatNumber(avg)} hint="kcal" />
         <MetricTile
           label={t('dashboard.week_days_logged')}
@@ -59,22 +59,26 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
         />
       </div>
 
-      <div className="flex h-[132px] items-end gap-2.5 border-b pb-0">
+      <p className="text-text-2 text-sm">{t('dashboard.week_partial')}</p>
+      <div aria-hidden="true" className="flex h-[132px] items-end gap-2.5 border-b pb-0">
         {days.map((day) => {
-          const heightPct = day.calories > 0 ? Math.max(6, (day.calories / scaleMax) * 100) : 30;
+          const heightPct = day.calories > 0 ? Math.max(6, (day.calories / scaleMax) * 100) : 0;
           return (
-            <div key={day.date} className="flex flex-1 flex-col items-center gap-1.5">
-              <div className="flex w-full flex-1 items-end justify-center">
+            <div
+              key={day.date}
+              className="flex h-full min-w-0 flex-1 flex-col items-center gap-1.5"
+            >
+              <div className="flex min-h-0 w-full flex-1 items-end justify-center">
                 <div
                   className={cn(
                     'w-full max-w-[46px] rounded-t-[10px] rounded-b-[3px]',
                     day.calories === 0 && 'border-border-strong border border-dashed',
                   )}
                   style={{
-                    height: `${String(heightPct)}%`,
+                    height: day.calories === 0 ? '2px' : `${String(heightPct)}%`,
                     background:
                       day.calories === 0
-                        ? 'transparent'
+                        ? 'var(--color-border)'
                         : day.isToday
                           ? 'var(--color-primary)'
                           : 'color-mix(in oklab, var(--color-primary) 32%, transparent)',
@@ -83,7 +87,7 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
               </div>
               <span
                 className={cn(
-                  'text-[10.5px]',
+                  'text-xs',
                   day.isToday ? 'text-foreground font-bold' : 'text-muted-foreground',
                 )}
               >
@@ -93,6 +97,16 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
           );
         })}
       </div>
+      <ul className="sr-only">
+        {days.map((day) => (
+          <li key={day.date}>
+            {day.date}:{' '}
+            {byDate.has(day.date)
+              ? `${formatNumber(day.calories)} kcal`
+              : t('dashboard.nothing_logged')}
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

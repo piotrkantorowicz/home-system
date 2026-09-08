@@ -15,7 +15,8 @@ export interface GlassRowProps {
   /** Tap an empty glass — adds one `glassMl`. */
   onAdd: () => void;
   /** Tap a filled glass — removes the newest logged entry. */
-  onRemoveNewest: () => void;
+  onRemoveNewest?: () => void;
+  informational?: boolean;
   addDisabled?: boolean;
   removeDisabled?: boolean;
   className?: string;
@@ -30,6 +31,7 @@ export interface GlassRowProps {
  */
 export function GlassRow({
   totalMl,
+  informational = false,
   targetMl,
   glassMl,
   size = 'lg',
@@ -40,6 +42,25 @@ export function GlassRow({
   className,
 }: GlassRowProps) {
   const { t } = useTranslation();
+
+  if (informational) {
+    const percent = targetMl > 0 ? Math.min(100, Math.max(0, (totalMl / targetMl) * 100)) : 0;
+    return (
+      <div
+        role="progressbar"
+        aria-label={t('dashboard.water_title')}
+        aria-valuemin={0}
+        aria-valuemax={targetMl}
+        aria-valuenow={Math.min(totalMl, targetMl)}
+        className="bg-muted h-2 overflow-hidden rounded-full"
+      >
+        <div
+          className="h-full rounded-full bg-[var(--color-water)]"
+          style={{ width: `${String(percent)}%` }}
+        />
+      </div>
+    );
+  }
 
   const targetGlasses = Math.min(
     MAX_GLASSES,

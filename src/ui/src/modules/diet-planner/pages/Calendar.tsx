@@ -1,4 +1,6 @@
 import {
+  Banner,
+  Skeleton,
   Button,
   Card,
   CardContent,
@@ -18,7 +20,15 @@ import { useToast } from '@shared/context/ToastContext';
 import { usePreferences } from '@shared/hooks/usePreferences';
 import { cn } from '@shared/lib/utils';
 import { ArrowRight, ChevronLeft, ChevronRight, Target } from 'lucide-react';
-import { lazy, Suspense, useCallback, useState, useMemo } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useState,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -75,6 +85,18 @@ function parseLocalDate(value: string | null): Date | null {
   return d;
 }
 
+const narrowQuery = '(max-width: 767px)';
+function subscribeViewport(callback: () => void) {
+  const query = window.matchMedia(narrowQuery);
+  query.addEventListener('change', callback);
+  return () => {
+    query.removeEventListener('change', callback);
+  };
+}
+function isNarrowViewport() {
+  return window.matchMedia(narrowQuery).matches;
+}
+
 type CalendarView = 'week' | 'day';
 
 interface Meal {
@@ -97,8 +119,12 @@ export default function Calendar() {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<CalendarTab>('calendar');
   const [searchParams, setSearchParams] = useSearchParams();
+  const dateHeadingRef = useRef<HTMLHeadingElement>(null);
 
-  const view: CalendarView = searchParams.get('view') === 'day' ? 'day' : 'week';
+  const narrow = useSyncExternalStore(subscribeViewport, isNarrowViewport, () => false);
+  const explicitView = searchParams.get('view');
+  const view: CalendarView =
+    explicitView === 'day' || explicitView === 'week' ? explicitView : narrow ? 'day' : 'week';
 
   // Single shared anchor — interpreted as the selected day in day view, or any
   // day within the shown week in week view. Toggling views keeps you on the
@@ -304,12 +330,15 @@ export default function Calendar() {
     shiftDate(1);
   };
   const goToToday = () => {
-    updateParams({ date: null });
+    updateParams({ date: null, view: 'day' }, { replace: false });
+    dateHeadingRef.current?.focus();
+    dateHeadingRef.current?.scrollIntoView({ block: 'nearest' });
   };
 
   const dayDateStr = formatLocalDate(selectedDay);
   const dayRange = view === 'day' ? { from: dayDateStr, to: dayDateStr } : weekRange;
-  const { data: dayMeals } = useMeals({ from: dayRange.from, to: dayRange.to });
+  const dayQuery = useMeals({ from: dayRange.from, to: dayRange.to });
+  const dayMeals = dayQuery.data;
 
   return (
     <div
@@ -332,7 +361,7 @@ export default function Calendar() {
           {/* Navigator */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold">
+              <h2 ref={dateHeadingRef} tabIndex={-1} className="text-xl font-semibold">
                 {view === 'week'
                   ? t('diet_plan_detail.week_of', {
                       date:
@@ -354,18 +383,18 @@ export default function Calendar() {
                 value={view}
                 onChange={setView}
                 options={[
-                  { value: 'day', label: t('calendar.view.day') },
-                  { value: 'week', label: t('calendar.view.week') },
+                  { value: 'day', label: t('calendar.day_view') },
+                  { value: 'week', label: t('calendar.week_view') },
                 ]}
               />
-              <Button variant="outline" size="sm" onClick={goToToday}>
+              <Button variant="outline" className="min-h-11" onClick={goToToday}>
                 {t('calendar.today')}
               </Button>
               <button
                 type="button"
                 onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
                 aria-label={t('common.previous')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-[38px] place-items-center rounded-[12px] border transition-colors"
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-11 place-items-center rounded-[12px] border transition-colors"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -373,7 +402,7 @@ export default function Calendar() {
                 type="button"
                 onClick={view === 'week' ? goToNextWeek : goToNextDay}
                 aria-label={t('common.next')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-[38px] place-items-center rounded-[12px] border transition-colors"
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-11 place-items-center rounded-[12px] border transition-colors"
               >
                 <ChevronRight className="size-4" />
               </button>
@@ -381,30 +410,73 @@ export default function Calendar() {
           </div>
 
           {view === 'day' && (
-            <DayView
-              slots={slots.map((s) => ({
-                id: s.id,
-                name: s.name,
-                defaultTime: s.defaultTime,
-                sortOrder: s.sortOrder,
-              }))}
-              meals={dayMeals ?? []}
-              onAddMeal={(slotId) => {
-                openCreateForm(dayDateStr, slotId);
-              }}
-              onEditMeal={(meal) => {
-                openEditForm(meal as unknown as Meal);
-              }}
-              onDeleteMeal={(meal) => {
-                setDeletingMeal(meal as unknown as Meal);
-              }}
-              onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
-              onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
-              onOverrideMeal={(mealId) => {
-                setOverrideMealId(mealId);
-              }}
-            />
+            <div
+              className="mb-5 grid grid-cols-7 gap-1"
+              role="group"
+              aria-label={t('calendar.choose_day')}
+            >
+              {weekDays.map((day) => (
+                <Button
+                  key={formatLocalDate(day)}
+                  variant={formatLocalDate(day) === dayDateStr ? 'default' : 'outline'}
+                  className="h-auto min-h-14 min-w-0 flex-col px-1"
+                  aria-pressed={formatLocalDate(day) === dayDateStr}
+                  aria-label={day.toLocaleDateString(i18n.language, {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                  onClick={() => {
+                    updateParams({ date: formatLocalDate(day) }, { replace: false });
+                  }}
+                >
+                  <span className="text-xs">
+                    {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
+                  </span>
+                  <span>{day.getDate()}</span>
+                </Button>
+              ))}
+            </div>
           )}
+          {view === 'day' &&
+            (dayQuery.isError ? (
+              <Banner
+                variant="error"
+                onRetry={() => {
+                  void dayQuery.refetch();
+                }}
+                retryLabel={t('dashboard.retry')}
+              >
+                {t('dashboard.data_error')}
+              </Banner>
+            ) : dayQuery.isPending || dayQuery.isPlaceholderData ? (
+              <Skeleton className="h-72 w-full" />
+            ) : (
+              <DayView
+                date={dayDateStr}
+                slots={slots.map((s) => ({
+                  id: s.id,
+                  name: s.name,
+                  defaultTime: s.defaultTime,
+                  sortOrder: s.sortOrder,
+                }))}
+                meals={dayMeals ?? []}
+                onAddMeal={(slotId) => {
+                  openCreateForm(dayDateStr, slotId);
+                }}
+                onEditMeal={(meal) => {
+                  openEditForm(meal as unknown as Meal);
+                }}
+                onDeleteMeal={(meal) => {
+                  setDeletingMeal(meal as unknown as Meal);
+                }}
+                onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
+                onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
+                onOverrideMeal={(mealId) => {
+                  setOverrideMealId(mealId);
+                }}
+              />
+            ))}
 
           {view === 'week' ? (
             <WeekGrid

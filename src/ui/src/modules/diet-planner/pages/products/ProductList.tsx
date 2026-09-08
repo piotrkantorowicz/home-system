@@ -1,4 +1,5 @@
 import { useProducts, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { useListLocation } from '@modules/diet-planner/hooks/useListLocation';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Banner,
@@ -22,7 +23,7 @@ import {
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
 import { MoreVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -56,18 +57,39 @@ function isIncomplete(p: Row): boolean {
   );
 }
 
-const fmt = (v: number | null | undefined): string => (v ?? 0).toFixed(1);
+const fmt = (v: number | null | undefined): string =>
+  v === null || v === undefined ? '—' : v.toFixed(1);
 
 export default function ProductList() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [onlyMine, setOnlyMine] = useState(false);
-  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
-  const [view, setView] = useState<ViewMode>('table');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const {
+    params,
+    search,
+    debouncedSearch,
+    page,
+    pageSize,
+    setPage,
+    setPageSize,
+    setSearch,
+    update,
+  } = useListLocation();
+  const onlyMine = params.get('mine') === 'true';
+  const onlyIncomplete = params.get('incomplete') === 'true';
+  const [defaultView] = useState<ViewMode>(() =>
+    typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches
+      ? 'cards'
+      : 'table',
+  );
+  const view =
+    params.get('view') === 'cards'
+      ? 'cards'
+      : params.get('view') === 'table'
+        ? 'table'
+        : defaultView;
+  const setView = (view: ViewMode) => {
+    update({ view });
+  };
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useProducts({
@@ -78,26 +100,10 @@ export default function ProductList() {
   });
   const deleteMutation = useDeleteProduct();
 
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(
-    () => () => {
-      clearTimeout(searchTimerRef.current);
-    },
-    [],
-  );
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1);
-    }, 300);
-  };
-
   const items = useMemo(() => (data?.items ?? []) as Row[], [data]);
   const incompleteCount = useMemo(() => items.filter(isIncomplete).length, [items]);
   const rows = onlyIncomplete ? items.filter(isIncomplete) : items;
+  const hasFilters = !!search || onlyMine || onlyIncomplete;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -133,7 +139,7 @@ export default function ProductList() {
           <input
             value={search}
             onChange={(e) => {
-              handleSearchChange(e.target.value);
+              setSearch(e.target.value);
             }}
             placeholder={t('products.search_placeholder')}
             aria-label={t('products.search_placeholder')}
@@ -144,8 +150,7 @@ export default function ProductList() {
         <FilterChip
           active={onlyMine}
           onClick={() => {
-            setOnlyMine((v) => !v);
-            setPage(1);
+            update({ mine: onlyMine ? null : 'true', page: null });
           }}
         >
           {t('products.only_mine')}
@@ -154,7 +159,7 @@ export default function ProductList() {
           <FilterChip
             active={onlyIncomplete}
             onClick={() => {
-              setOnlyIncomplete((v) => !v);
+              update({ incomplete: onlyIncomplete ? null : 'true', page: null });
             }}
           >
             {t('products.incomplete_chip', { count: incompleteCount })}
@@ -181,10 +186,15 @@ export default function ProductList() {
         <EmptyState
           icon={Package}
           title={t('products.no_products_found')}
-          description={debouncedSearch ? t('products.adjust_search') : t('products.start_creating')}
+          description={hasFilters ? t('products.adjust_search') : t('products.start_creating')}
           action={
-            debouncedSearch
-              ? undefined
+            hasFilters
+              ? {
+                  label: t('products.clear_filters'),
+                  onClick: () => {
+                    update({ search: null, mine: null, incomplete: null, page: null });
+                  },
+                }
               : { label: t('products.add_first_product'), href: '/diet-planner/products/new' }
           }
         />
@@ -222,7 +232,7 @@ export default function ProductList() {
                   role="row"
                   aria-label={p.name}
                   className={cn(
-                    'border-border grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 text-[13px]',
+                    'border-border hover:bg-secondary focus-within:ring-primary relative grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 text-[13px] focus-within:ring-2 focus-within:ring-inset',
                   )}
                   style={
                     incomplete
@@ -235,7 +245,7 @@ export default function ProductList() {
                   <span className="flex min-w-0 items-center gap-2">
                     <Link
                       to={`/diet-planner/products/${p.id}`}
-                      className="truncate font-semibold hover:underline"
+                      className="truncate font-semibold after:absolute after:inset-0 focus:outline-none"
                     >
                       {p.name}
                     </Link>
@@ -337,9 +347,10 @@ function FilterChip({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-colors',
+        'inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-colors',
         active
           ? 'bg-accent text-accent-foreground'
           : 'bg-secondary border-border text-text-2 hover:text-foreground border',
@@ -388,7 +399,7 @@ function RowMenu({ product, onDelete }: { product: Row; onDelete: () => void }) 
         <button
           type="button"
           aria-label={t('common.actions')}
-          className="text-muted-foreground hover:text-foreground grid size-8 place-items-center rounded-[10px]"
+          className="text-muted-foreground hover:text-foreground relative z-10 grid size-11 place-items-center rounded-[10px]"
         >
           <MoreVertical className="size-4" />
         </button>
@@ -438,12 +449,12 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
     <div
       role="listitem"
       aria-label={product.name}
-      className="border-border bg-card flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm"
+      className="border-border bg-card hover:border-primary focus-within:ring-primary relative flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm focus-within:ring-2"
     >
       <div className="flex items-start justify-between gap-2">
         <Link
           to={`/diet-planner/products/${product.id}`}
-          className="text-[14px] font-bold hover:underline"
+          className="text-[14px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
         >
           {product.name}
         </Link>

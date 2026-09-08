@@ -60,14 +60,11 @@ export function useCreateGoals() {
         throw new Error('Failed to create goals');
       }
 
-      if (!response.data) {
-        throw new Error('Failed to create goals');
-      }
-
-      return response.data;
+      // POST returns 201 Created with a Location header and no response body.
+      return response.data ?? null;
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
     },
   });
 }
@@ -90,8 +87,8 @@ export function useUpdateGoals() {
       // PUT returns 204 No Content — no body is a success
       return response.data ?? null;
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.goals.detail() });
     },
   });
 }

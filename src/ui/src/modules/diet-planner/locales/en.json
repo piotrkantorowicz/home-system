@@ -57,7 +57,17 @@
     "water_custom": "Custom",
     "week_review_title": "This week",
     "week_avg_intake": "Avg intake",
-    "week_days_logged": "Days logged"
+    "week_days_logged": "Days logged",
+    "nutrition_title": "Today's nutrition",
+    "nothing_logged": "Nothing logged",
+    "data_error": "Could not load your data. Try again.",
+    "all_logged": "All planned meals are logged.",
+    "logged_meals": "Logged meals ({{count}})",
+    "water_entries": "Today's entries ({{count}})",
+    "water_settings": "Water tracking settings",
+    "remove_water_entry": "Remove {{amount}} ml logged at {{time}}",
+    "week_partial": "Last seven days. Today is still in progress; blank days have no logs.",
+    "retry": "Retry"
   },
   "goals": {
     "nav": "Goals",
@@ -114,6 +124,8 @@
     "only_mine": "My products",
     "incomplete_chip": "Incomplete · {{count}}",
     "incomplete_badge": "INCOMPLETE",
+    "incomplete_filter": "Incomplete",
+    "clear_filters": "Clear filters",
     "view_label": "View",
     "view_table": "Table",
     "view_cards": "Cards"
@@ -188,7 +200,10 @@
       "protein_led": "Protein-led",
       "veg_led": "Veg-led",
       "today": "today"
-    }
+    },
+    "choose_day": "Choose a day",
+    "day_view": "Day",
+    "week_view": "Week"
   },
   "override_dialog": {
     "title": "What did you eat instead?",
@@ -377,7 +392,12 @@
     "back": "Back to Products",
     "loading": "Loading product...",
     "not_found": "Product not found",
-    "nutrition_facts": "Nutrition Facts (per 100g)",
+    "nutrition_facts": "Nutrition Facts",
+    "per_100g": "Per 100 g",
+    "macro_balance": "Macro balance",
+    "share_by_weight": "Share by weight",
+    "macro_balance_description": "Macro balance by weight: protein {{protein}}%, carbohydrates {{carbs}}%, fat {{fat}}%",
+    "macro_balance_note": "Fiber is shown separately because it can already be included in carbohydrates.",
     "carbohydrates": "Carbohydrates",
     "fat": "Fat",
     "fiber": "Fiber",
@@ -416,7 +436,10 @@
     "method": "Method",
     "servings_label": "Servings",
     "scale_note": "Ingredient amounts scale automatically.",
-    "per_serving_note": "Per serving at the current servings count."
+    "per_serving_note": "Nutrition for one serving stays the same when scaling ingredients.",
+    "decrease_servings": "Decrease servings",
+    "increase_servings": "Increase servings",
+    "total_calories": "Total for {{count}} servings: {{calories}} kcal"
   },
   "day_view": {
     "summary": {
@@ -451,6 +474,9 @@
     }
   },
   "meal_form": {
+    "schedule_required": "Add a meal slot before planning a meal.",
+    "configure_schedule": "Set up meal schedule",
+    "schedule_error": "Could not load your meal schedule.",
     "add_title": "Add Meal",
     "edit_title": "Edit Meal",
     "date_label": "Date",

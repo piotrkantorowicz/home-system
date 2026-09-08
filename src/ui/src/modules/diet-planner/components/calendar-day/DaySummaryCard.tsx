@@ -4,6 +4,7 @@ import { cn } from '@shared/lib/utils';
 import { Droplets } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { consumedNutrition } from '../../utils/consumedNutrition';
 import { MacroProgressBar } from '../MacroProgressBar';
 
 import type { MealEntryDto } from '@modules/diet-planner/api/hooks/useMeals';
@@ -17,6 +18,7 @@ interface Goals {
 }
 
 export interface DaySummaryCardProps {
+  date: string;
   meals: MealEntryDto[];
   goals: Goals | null | undefined;
   className?: string;
@@ -24,31 +26,18 @@ export interface DaySummaryCardProps {
 
 const DEFAULT_DAILY_TARGET_ML = 2500;
 
-function num(v: number | string | null | undefined): number {
-  if (v === null || v === undefined) return 0;
-  return typeof v === 'number' ? v : Number(v);
-}
-
-function formatToday(): string {
-  const d = new Date();
-  return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export function DaySummaryCard({ meals, goals, className }: DaySummaryCardProps) {
+export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCardProps) {
   const { t } = useTranslation();
   const { data: hydrationConfig } = useHydrationConfig();
-  const { data: hydration } = useWaterIntake(formatToday());
+  const { data: hydration } = useWaterIntake(date);
 
-  const totals = meals.reduce(
-    (acc, m) => ({
-      calories: acc.calories + num(m.calories),
-      protein: acc.protein + num(m.protein),
-      carbs: acc.carbs + num(m.carbs),
-      fat: acc.fat + num(m.fat),
-      fiber: acc.fiber + num(m.fiber),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
-  );
+  const totals = consumedNutrition(meals)[0] ?? {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0,
+  };
 
   const target = goals?.dailyCalorieTarget ?? null;
   const pct = target && target > 0 ? Math.min((totals.calories / target) * 100, 100) : null;
@@ -66,7 +55,7 @@ export function DaySummaryCard({ meals, goals, className }: DaySummaryCardProps)
         {/* Calories */}
         <section className="text-center">
           <p className="text-muted-foreground text-[0.7rem] font-semibold tracking-widest uppercase">
-            {t('day_view.summary.calories')}
+            {t('dashboard.hero_eaten')}
           </p>
           <p className="mt-1 text-4xl font-bold tracking-tight tabular-nums">
             {Math.round(totals.calories)}

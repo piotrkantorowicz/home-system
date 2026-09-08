@@ -51,7 +51,7 @@ test.describe('Recipes CRUD', () => {
 
     // Redirects to detail page
     await page.waitForURL(/\/diet-planner\/recipes\/.+/);
-    await expect(page.getByText(/4 serving/i)).toBeVisible();
+    await expect(page.getByText(/4 servings$/i)).toBeVisible();
   });
 
   test('user can delete a recipe and it disappears from the list', async ({ page }) => {

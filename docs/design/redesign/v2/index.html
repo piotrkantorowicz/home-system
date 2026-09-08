@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HomeSystem · Redesign v2</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="#today"><span class="brand-mark">H</span> HomeSystem</a>
+    <div class="module-name">Diet planner</div>
+    <nav aria-label="Prototype pages">
+      <a href="#today" data-page="today" aria-current="page"><span aria-hidden="true">◷</span> Today</a>
+      <a href="#plan" data-page="plan"><span aria-hidden="true">▦</span> Meal plan</a>
+    </nav>
+    <div class="sidebar-note">A little planning.<br>A simpler day.</div>
+    <div class="sidebar-footer"><span class="avatar">PK</span><div>Piotr<small>Personal workspace</small></div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>Diet planner <span class="divider">/</span> <span id="breadcrumb">Today</span></span><button id="theme" class="quiet" aria-pressed="false">Dark mode</button></header>
+    <main id="main" tabindex="-1">
+      <div class="page-heading"><div><p class="date">Thursday, 3 September 2026</p><h1 id="page-title">Make room for your day.</h1><p id="page-description">Your meals, your progress, one place.</p></div><span class="demo-tag">V2 · Sample data</span></div>
+      <section id="today-view" aria-label="Today">
+        <section class="energy-panel" aria-labelledby="energy-heading">
+          <div class="energy-title"><h2 id="energy-heading">Today's nutrition</h2><span id="meal-count" class="muted">2 of 5 meals logged</span></div>
+          <div class="energy-layout"><div class="energy-total"><div><strong id="remaining">910</strong><span id="remaining-label">kcal remaining</span></div><p><b id="eaten">1,240</b> logged <span class="divider">/</span> 2,150 target</p><progress id="energy-progress" max="2150" value="1240" aria-label="Calories logged"></progress></div><div class="macros" id="macros"></div></div>
+        </section>
+        <div class="today-grid">
+          <section class="schedule" aria-labelledby="schedule-heading"><div class="section-heading"><div><h2 id="schedule-heading">On your menu</h2><p>Planned for today. Log as you go.</p></div><a href="#plan">View plan</a></div><div id="meal-list"></div><div class="schedule-footer"><span class="status-dot"></span> Planned meals and logged meals stay separate.</div></section>
+          <div class="side-stack">
+            <section class="water-panel" aria-labelledby="water-heading"><div class="section-heading"><h2 id="water-heading">Water</h2><span aria-hidden="true" class="water-symbol">◡</span></div><div class="water-total"><strong id="water-total">1,400</strong><span> / 2,500 ml</span></div><progress id="water-progress" max="2500" value="1400" aria-label="Water logged"></progress><p id="water-remaining">1,100 ml to your daily target</p><div class="water-actions"><button data-water="250">+ 250 ml</button><button data-water="500">+ 500 ml</button><button id="custom-water" class="quiet">Custom amount</button></div><details><summary>Today's entries <span id="water-count">4</span></summary><ul id="water-log"></ul></details></section>
+            <section class="week-note"><h2>A week in perspective</h2><p>Daily intake varies. Review the whole week alongside your target.</p><div class="week-bars" role="img" aria-label="Calories logged: Monday 2,030; Tuesday 2,180; Wednesday 2,010; Thursday 1,240 so far. Friday to Sunday have no entries."><div><i style="--bar:81%"></i><span>M</span></div><div><i style="--bar:87%"></i><span>T</span></div><div><i style="--bar:80%"></i><span>W</span></div><div class="current"><i id="today-bar" style="--bar:50%"></i><span>T</span></div><div><i class="future"></i><span>F</span></div><div><i class="future"></i><span>S</span></div><div><i class="future"></i><span>S</span></div></div><small>Today is still in progress. Blank days have no logs.</small></section>
+          </div>
+        </div>
+      </section>
+      <section id="plan-view" aria-label="Meal plan" hidden><div class="section-heading plan-heading"><div><h2>Your week, at a glance</h2><p>31 August – 6 September</p></div><span class="muted">Select a day to see its meals</span></div><div id="day-picker" class="day-picker" aria-label="Choose a day"></div><section class="plan-detail"><div class="section-heading"><h2 id="selected-day">Thursday, 3 September</h2><span id="planned-total" class="muted"></span></div><div id="plan-meals"></div></section><p class="plan-note">Planning reference only. Meal editing, library, import, and other destinations remain in the existing app.</p></section>
+      <footer class="prototype-footer">Design exploration · Local demo; changes reset on reload.</footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" hidden><span id="announcement" role="status"></span><button id="undo">Undo</button><button id="dismiss" aria-label="Dismiss notification">×</button></div>
+  <dialog id="water-dialog" aria-labelledby="dialog-title"><form id="water-form"><h2 id="dialog-title">Log water</h2><p>Add the amount you drank.</p><label for="amount">Amount in millilitres</label><input id="amount" name="amount" type="number" min="1" max="5000" step="1" value="350" required><div class="dialog-actions"><button id="cancel" type="button" class="quiet">Cancel</button><button type="submit" class="primary">Add water</button></div></form></dialog>
+</body>
+</html>

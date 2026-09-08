@@ -1,5 +1,6 @@
 import { useMealSchedule } from '@modules/diet-planner/api/hooks/useMealSchedule';
 import { useRecipes } from '@modules/diet-planner/api/hooks/useRecipes';
+import { Banner } from '@shared/components/ui';
 import { Button } from '@shared/components/ui/Button';
 import { DatePicker } from '@shared/components/ui/DatePicker';
 import {
@@ -14,6 +15,7 @@ import { Input } from '@shared/components/ui/Input';
 import { Label } from '@shared/components/ui/Label';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 interface MealFormData {
   date: string;
@@ -55,7 +57,8 @@ export function MealForm({
   mode,
 }: MealFormProps) {
   const { t } = useTranslation();
-  const { data: schedule } = useMealSchedule();
+  const scheduleQuery = useMealSchedule();
+  const schedule = scheduleQuery.data;
   const slots = schedule?.slots ?? [];
   const [recipeSearch, setRecipeSearch] = useState(initialValues?.recipeName ?? '');
   const [showRecipeList, setShowRecipeList] = useState(false);
@@ -110,6 +113,31 @@ export function MealForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {scheduleQuery.isPending ? (
+            <p role="status" className="text-muted-foreground text-sm">
+              {t('common.loading')}
+            </p>
+          ) : scheduleQuery.isError ? (
+            <Banner
+              variant="error"
+              onRetry={() => {
+                void scheduleQuery.refetch();
+              }}
+              retryLabel={t('dashboard.retry')}
+            >
+              {t('meal_form.schedule_error')}
+            </Banner>
+          ) : slots.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              {t('meal_form.schedule_required')}{' '}
+              <Link
+                className="text-primary underline"
+                to="/diet-planner/profile?section=meal-schedule"
+              >
+                {t('meal_form.configure_schedule')}
+              </Link>
+            </p>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>{t('meal_form.date_label')}</Label>

@@ -1,6 +1,8 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
 using DietPlanner.Application.Persistence;
+using DietPlanner.Domain.Aggregates;
+using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
@@ -34,36 +36,46 @@ internal sealed class SearchRecipesQueryHandler
             .Include(r => r.Ingredients)
             .ToListAsync(ct);
 
-        // Batch-resolve product names in a single query
+        // Batch-resolve products so list nutrition uses same conversion rules as detail.
         var allProductIds = recipes
             .SelectMany(r => r.Ingredients.Select(i => i.ProductId))
             .Distinct()
             .ToList();
 
-        var productNames = await _dbContext.Products
+        var products = await _dbContext.Products
             .AsNoTracking()
             .Where(p => allProductIds.Contains(p.Id))
-            .Select(p => new { p.Id, p.Name })
-            .ToDictionaryAsync(p => p.Id, p => p.Name, ct);
+            .ToDictionaryAsync(p => p.Id, ct);
 
-        var items = recipes.Select(r => new RecipeDto(
-            r.Id.Value,
-            r.Name,
-            r.Description,
-            r.Instructions,
-            r.Servings,
-            r.PrepTimeMinutes,
-            r.CreatedByUserId,
-            r.CreatedAt,
-            r.UpdatedAt,
-            r.CreatedByUserId == query.UserId,
-            r.Ingredients.Select(i => new RecipeIngredientDto(
-                i.Id.Value,
-                i.ProductId.Value,
-                productNames.GetValueOrDefault(i.ProductId, "Unknown"),
-                i.Amount,
-                i.Unit)).ToList())).ToList();
+        var items = recipes.Select(recipe => ToDto(recipe, products, query.UserId)).ToList();
 
         return new PagedList<RecipeDto>(items, totalCount, query.Page, query.PageSize);
+    }
+
+    private static RecipeDto ToDto(Recipe recipe, IReadOnlyDictionary<ProductId, Product> products, string userId)
+    {
+        decimal calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
+        foreach (var ingredient in recipe.Ingredients)
+        {
+            if (!products.TryGetValue(ingredient.ProductId, out var product)) continue;
+            var factor = UnitConverter.ConvertToGrams(
+                ingredient.Amount, ingredient.Unit, product.DensityGramsPerMl, product.GramPerPiece) / 100m;
+            calories += (product.Nutrition.Calories ?? 0) * factor;
+            protein += (product.Nutrition.Protein ?? 0) * factor;
+            carbs += (product.Nutrition.Carbs ?? 0) * factor;
+            fat += (product.Nutrition.Fat ?? 0) * factor;
+            fiber += (product.Nutrition.Fiber ?? 0) * factor;
+        }
+
+        var servings = Math.Max(recipe.Servings, 1);
+        return new RecipeDto(
+            recipe.Id.Value, recipe.Name, recipe.Description, recipe.Instructions,
+            recipe.Servings, recipe.PrepTimeMinutes, recipe.CreatedByUserId, recipe.CreatedAt,
+            recipe.UpdatedAt, recipe.CreatedByUserId == userId,
+            recipe.Ingredients.Select(i => new RecipeIngredientDto(
+                i.Id.Value, i.ProductId.Value,
+                products.GetValueOrDefault(i.ProductId)?.Name ?? "Unknown", i.Amount, i.Unit)).ToList(),
+            new NutritionDto(calories / servings, protein / servings, carbs / servings, fat / servings, fiber / servings),
+            new NutritionDto(calories, protein, carbs, fat, fiber));
     }
 }

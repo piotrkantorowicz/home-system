@@ -1,4 +1,4 @@
-import { Button, Card, MacroBar, Ring, StatusPill, type Macro } from '@shared/components/ui';
+import { Button, Card, MacroBar, StatusPill, type Macro } from '@shared/components/ui';
 import { cn, formatNumber } from '@shared/lib/utils';
 import { Check, Target, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -45,8 +45,8 @@ export function TodayHero({ goals, nutrition, onSetGoals }: TodayHeroProps) {
   }
 
   const remaining = target - eaten;
-  const pct = target > 0 ? (eaten / target) * 100 : 0;
   const over = eaten > target;
+  const caloriePercent = target > 0 ? Math.min(100, Math.max(0, (eaten / target) * 100)) : 0;
 
   const macros: MacroRow[] = [
     {
@@ -76,86 +76,59 @@ export function TodayHero({ goals, nutrition, onSetGoals }: TodayHeroProps) {
   ];
 
   return (
-    <Card className="col-span-full flex flex-col gap-6 p-6 xl:col-span-2">
+    <Card className="col-span-full flex flex-col gap-5 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-[15px] font-bold">
-            {over ? t('dashboard.hero_over_title') : t('dashboard.hero_on_track_title')}
-          </div>
-          <div className="text-muted-foreground text-[12.5px]">
-            {t('dashboard.hero_progress', { percent: Math.round(pct) })}
-          </div>
-        </div>
-        {over ? (
-          <StatusPill variant="over" icon={TriangleAlert}>
-            {t('dashboard.hero_over_budget')}
-          </StatusPill>
+        <h2 className="text-lg font-semibold">{t('dashboard.nutrition_title')}</h2>
+        {!nutrition ? (
+          <span className="text-text-2 text-sm">{t('dashboard.nothing_logged')}</span>
         ) : (
-          <StatusPill variant="good" icon={Check}>
-            {t('dashboard.hero_within_budget')}
+          <StatusPill variant={over ? 'over' : 'good'} icon={over ? TriangleAlert : Check}>
+            {t(over ? 'dashboard.hero_over_budget' : 'dashboard.hero_within_budget')}
           </StatusPill>
         )}
       </div>
-
-      <div className="flex flex-wrap items-center gap-8">
-        <Ring percent={pct} color={over ? 'fat' : 'primary'}>
-          <div className="numeral text-[34px] leading-none font-bold">
-            {formatNumber(Math.abs(remaining))}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-baseline gap-3">
+            <strong className="numeral text-5xl font-semibold">
+              {formatNumber(Math.abs(remaining))}
+            </strong>
+            <span className="text-text-2 text-sm">
+              {t(over ? 'dashboard.hero_over_label' : 'dashboard.hero_left_label')}
+            </span>
           </div>
-          <div className="text-muted-foreground mt-1 text-[11.5px] leading-tight">
-            {over ? t('dashboard.hero_over_label') : t('dashboard.hero_left_label')}
-          </div>
-        </Ring>
-
-        <div className="flex min-w-[260px] flex-1 flex-col gap-4">
-          <div className="flex gap-6">
-            <Stat label={t('dashboard.hero_eaten')} value={eaten} />
-            <div className="bg-border w-px" />
-            <Stat label={t('dashboard.hero_target')} value={target} />
-            <div className="bg-border w-px" />
-            <Stat
-              label={t('dashboard.hero_remaining')}
-              value={remaining}
-              negative={remaining < 0}
+          <p className="text-text-2 mt-3 text-sm">
+            {t('dashboard.hero_eaten')}: {formatNumber(eaten)} / {t('dashboard.hero_target')}:{' '}
+            {formatNumber(target)}
+          </p>
+          <div
+            role="progressbar"
+            aria-label={t('dashboard.hero_eaten')}
+            aria-valuemin={0}
+            aria-valuemax={target}
+            aria-valuenow={Math.min(eaten, target)}
+            className="bg-muted mt-4 h-2 overflow-hidden rounded-full"
+          >
+            <div
+              className={cn('h-full rounded-full', over ? 'bg-fat' : 'bg-primary')}
+              style={{ width: `${String(caloriePercent)}%` }}
             />
           </div>
-
-          <div className="flex flex-col gap-3">
-            {macros.map((macro) =>
-              macro.target === null ? null : (
-                <MacroBar
-                  key={macro.key}
-                  macro={macro.key}
-                  label={macro.label}
-                  value={macro.value}
-                  target={macro.target}
-                />
-              ),
-            )}
-          </div>
+        </div>
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+          {macros.map((macro) =>
+            macro.target === null ? null : (
+              <MacroBar
+                key={macro.key}
+                macro={macro.key}
+                label={macro.label}
+                value={macro.value}
+                target={macro.target}
+              />
+            ),
+          )}
         </div>
       </div>
     </Card>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  negative = false,
-}: {
-  label: string;
-  value: number;
-  negative?: boolean;
-}) {
-  return (
-    <div>
-      <div className="text-muted-foreground text-[11px] font-semibold tracking-[0.06em] uppercase">
-        {label}
-      </div>
-      <div className={cn('numeral text-[19px] font-bold', negative && 'text-destructive')}>
-        {formatNumber(value)}
-      </div>
-    </div>
   );
 }

@@ -11,6 +11,12 @@ vi.mock('react-i18next', () => ({
       opts ? `${key} ${JSON.stringify(opts)}` : key,
   }),
 }));
+vi.mock('@modules/diet-planner/api/hooks/useMeals', () => ({
+  useCreateMeal: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock('@shared/context/ToastContext', () => ({
+  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+}));
 vi.mock('@modules/diet-planner/unitLabel', () => ({ unitLabel: (u: string) => u }));
 vi.mock('react-router-dom', async (orig) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- importOriginal generic needs the import() type
@@ -56,7 +62,7 @@ describe('RecipeDetail', () => {
 
   it('rescales ingredient amounts when servings change', async () => {
     renderDetail();
-    await userEvent.click(screen.getByRole('button', { name: 'increase' }));
+    await userEvent.click(screen.getByRole('button', { name: 'recipe_detail.increase_servings' }));
     // 2 -> 3 servings, ratio 1.5
     expect(screen.getByText('450.0 g')).toBeInTheDocument();
     expect(screen.getByText('225.0 g')).toBeInTheDocument();
