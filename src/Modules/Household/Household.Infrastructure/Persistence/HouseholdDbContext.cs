@@ -14,6 +14,7 @@ internal sealed class HouseholdDbContext : DbContext, IHouseholdUnitOfWork, IHou
 
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<HouseholdAggregate> Households => Set<HouseholdAggregate>();
+    public DbSet<HouseholdInvitation> HouseholdInvitations => Set<HouseholdInvitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

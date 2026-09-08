@@ -37,7 +37,9 @@ public static class InfrastructureDependencyInjection
 
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IHouseholdRepository, HouseholdRepository>();
+        services.AddScoped<IHouseholdInvitationRepository, HouseholdInvitationRepository>();
         services.AddScoped<HouseholdAccessService>();
+        services.AddScoped<InvitationResolver>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
