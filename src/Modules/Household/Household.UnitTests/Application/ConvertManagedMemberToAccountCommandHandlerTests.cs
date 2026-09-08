@@ -1,0 +1,87 @@
+using Household.Application.Commands.ConvertManagedMemberToAccount;
+using Household.Application.Common;
+using Household.Domain.Abstractions;
+using Household.Domain.Aggregates;
+using Household.Domain.Exceptions;
+using Household.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
+using HouseholdAggregate = Household.Domain.Aggregates.Household;
+
+namespace Household.UnitTests.Application;
+
+public sealed class ConvertManagedMemberToAccountCommandHandlerTests
+{
+    private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
+    private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
+    private readonly IHouseholdUnitOfWork _uow = Substitute.For<IHouseholdUnitOfWork>();
+    private readonly ConvertManagedMemberToAccountCommandHandler _sut;
+
+    private readonly Person _owner = Person.RegisterFromLogin(PersonId.New(), "auth|owner", "Owner", null, null);
+    private readonly HouseholdAggregate _household;
+
+    public ConvertManagedMemberToAccountCommandHandlerTests()
+    {
+        _household = HouseholdAggregate.Create(HouseholdId.New(), "Home", _owner.Id);
+        _sut = new ConvertManagedMemberToAccountCommandHandler(
+            new HouseholdAccessService(_persons, _households), _persons, _uow);
+
+        _persons.GetByAuthSubjectAsync("auth|owner", Arg.Any<CancellationToken>()).Returns(_owner);
+        _households.GetByIdAsync(_household.Id, Arg.Any<CancellationToken>()).Returns(_household);
+    }
+
+    private ConvertManagedMemberToAccountCommand Command(Guid personId, string email = "kiddo@x.com")
+        => new("auth|owner", _household.Id.Value, personId, email);
+
+    [Fact]
+    public async Task Handle_MarksThePendingLink_AndCommits()
+    {
+        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null);
+        _household.AddMember(managed.Id, HouseholdRole.Child);
+        _persons.GetByIdAsync(managed.Id, Arg.Any<CancellationToken>()).Returns(managed);
+
+        await _sut.HandleAsync(Command(managed.Id.Value), CancellationToken.None);
+
+        managed.Email!.Value.ShouldBe("kiddo@x.com");
+        await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenPersonIsNotAMemberOfTheHousehold_Throws()
+    {
+        var stranger = Person.CreateManaged(PersonId.New(), "Stranger", null);
+        _persons.GetByIdAsync(stranger.Id, Arg.Any<CancellationToken>()).Returns(stranger);
+
+        await Should.ThrowAsync<ForbiddenException>(() =>
+            _sut.HandleAsync(Command(stranger.Id.Value), CancellationToken.None));
+
+        await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenPersonIsAlreadyLinked_Throws()
+    {
+        var linked = Person.RegisterFromLogin(PersonId.New(), "auth|kid", "Kid", null, null);
+        _household.AddMember(linked.Id, HouseholdRole.Adult);
+        _persons.GetByIdAsync(linked.Id, Arg.Any<CancellationToken>()).Returns(linked);
+
+        await Should.ThrowAsync<HouseholdDomainException>(() =>
+            _sut.HandleAsync(Command(linked.Id.Value), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WhenCallerIsNotOwner_Throws()
+    {
+        var adult = Person.RegisterFromLogin(PersonId.New(), "auth|adult", "Adult", null, null);
+        _household.AddMember(adult.Id, HouseholdRole.Adult);
+        _persons.GetByAuthSubjectAsync("auth|adult", Arg.Any<CancellationToken>()).Returns(adult);
+
+        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null);
+        _household.AddMember(managed.Id, HouseholdRole.Child);
+        _persons.GetByIdAsync(managed.Id, Arg.Any<CancellationToken>()).Returns(managed);
+
+        await Should.ThrowAsync<ForbiddenException>(() => _sut.HandleAsync(
+            new ConvertManagedMemberToAccountCommand(
+                "auth|adult", _household.Id.Value, managed.Id.Value, "k@x.com"),
+            CancellationToken.None));
+    }
+}

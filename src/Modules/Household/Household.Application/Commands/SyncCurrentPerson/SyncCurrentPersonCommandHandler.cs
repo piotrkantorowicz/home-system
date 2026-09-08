@@ -23,7 +23,9 @@ internal sealed class SyncCurrentPersonCommandHandler
     {
         var email = PersonEmail.CreateOrNull(command.Email);
 
-        var person = await _persons.GetByAuthSubjectAsync(command.AuthSubject, ct);
+        var person = await _persons.GetByAuthSubjectAsync(command.AuthSubject, ct)
+                     ?? await TryLinkManagedPersonAsync(command.AuthSubject, email, ct);
+
         if (person is not null)
         {
             person.RefreshProfile(command.DisplayName, email, command.AvatarUrl);
@@ -39,5 +41,24 @@ internal sealed class SyncCurrentPersonCommandHandler
         await _unitOfWork.CommitAsync(ct);
 
         return person.Id.Value;
+    }
+
+    /// <summary>
+    /// First login of someone an adult set up as a managed member and converted to an
+    /// account (#220): match the login email to a managed, unlinked <c>Person</c> and link
+    /// it, so their personal data — keyed on <c>PersonId</c> — carries over untouched.
+    /// </summary>
+    private async Task<Person?> TryLinkManagedPersonAsync(
+        string authSubject, PersonEmail? email, CancellationToken ct)
+    {
+        if (email is null)
+            return null;
+
+        var candidate = await _persons.GetByEmailAsync(email, ct);
+        if (candidate is not { IsManaged: true, IsLinked: false })
+            return null;
+
+        candidate.LinkAuthSubject(authSubject);
+        return candidate;
     }
 }

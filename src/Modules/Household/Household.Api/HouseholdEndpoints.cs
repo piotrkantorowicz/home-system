@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Household.Api.Identity;
 using Household.Application.Commands.AddExistingPersonAsMember;
 using Household.Application.Commands.ChangeMemberRole;
+using Household.Application.Commands.ConvertManagedMemberToAccount;
 using Household.Application.Commands.CreateHousehold;
 using Household.Application.Commands.CreateManagedMember;
 using Household.Application.Commands.DeleteHousehold;
@@ -43,6 +44,8 @@ internal static class HouseholdEndpoints
         group.MapPost("/{id:guid}/managed-members", AddManagedMember).WithName("CreateManagedMember");
         group.MapDelete("/{id:guid}/members/{personId:guid}", RemoveMember).WithName("RemoveHouseholdMember");
         group.MapPut("/{id:guid}/members/{personId:guid}/role", ChangeRole).WithName("ChangeHouseholdMemberRole");
+        group.MapPost("/{id:guid}/members/{personId:guid}/convert-to-account", ConvertToAccount)
+            .WithName("ConvertManagedMemberToAccount");
         group.MapGet("/{id:guid}/invitations", ListInvitations).WithName("ListPendingInvitations");
         group.MapPost("/{id:guid}/invitations", Invite).WithName("InvitePersonByEmail");
         group.MapDelete("/{id:guid}/invitations/{invitationId:guid}", RevokeInvitation).WithName("RevokeInvitation");
@@ -155,6 +158,15 @@ internal static class HouseholdEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<NoContent> ConvertToAccount(
+        Guid id, Guid personId, ConvertToAccountRequest request, ClaimsPrincipal user,
+        ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(
+            new ConvertManagedMemberToAccountCommand(Sub(user), id, personId, request.Email), ct);
+        return TypedResults.NoContent();
+    }
+
     private static string Sub(ClaimsPrincipal user)
         => user.GetAuthSubject() ?? throw new UnauthorizedAccessException("Missing subject claim.");
 
@@ -172,3 +184,4 @@ internal sealed record AddMemberRequest(Guid PersonId, string Role, string? Nick
 internal sealed record CreateManagedMemberRequest(string DisplayName, string? Email, string Role, string? Nickname);
 internal sealed record ChangeRoleRequest(string Role);
 internal sealed record InviteRequest(string Email, string Role);
+internal sealed record ConvertToAccountRequest(string Email);
