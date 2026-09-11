@@ -1,4 +1,6 @@
 import { UserProfileDropdown } from '@shared/components/ui';
+import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
+import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { useTheme } from '@shared/context/ThemeContext';
 import { cn } from '@shared/lib/utils';
 import { Moon, Sun } from 'lucide-react';
@@ -20,8 +22,9 @@ export function ModuleRail() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const access = useNavigationAccess();
 
-  const tiles = getModuleTiles(t);
+  const tiles = getModuleTiles(t, useModuleLabels());
   const profile = auth.user?.profile;
   const displayName = profile?.name ?? profile?.preferred_username ?? profile?.email ?? 'User';
 
@@ -52,14 +55,15 @@ export function ModuleRail() {
           <button
             key={tile.name}
             type="button"
-            title={tile.label}
+            title={access.canNavigate(tile.basePath) ? tile.label : access.reason}
+            disabled={!access.canNavigate(tile.basePath)}
             aria-label={tile.label}
             aria-current={isActive ? 'page' : undefined}
             onClick={() => {
               void navigate(tile.basePath);
             }}
             className={cn(
-              'relative grid size-[42px] flex-none place-items-center rounded-[13px] transition-colors duration-150',
+              'relative grid size-[42px] flex-none place-items-center rounded-[13px] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40',
               isActive
                 ? 'bg-card border-border-strong text-primary border shadow-sm'
                 : 'text-text-2 hover:bg-card/60',
