@@ -66,6 +66,7 @@
   "ready_title": "Twój dom jest gotowy",
   "ready_description": "Możesz już zacząć korzystać z domu. Dodawanie innych osób jest opcjonalne — zaprosisz je później.",
   "add_someone": "Dodaj kogoś",
+  "continue_diet_planner": "Przejdź do Planera diety",
   "members_one": "{{count}} domownik",
   "members_few": "{{count}} domowników",
   "members_many": "{{count}} domowników",

@@ -22,7 +22,12 @@ export function useHouseholdQuery() {
       if (result.response.status === 404) return { household: null, joined: false };
       checkResponse(result);
       if (!result.data) throw new Error('Missing household response');
-      return { household: result.data, joined: false };
+
+      // Detect if person just joined via sync
+      // This happens when syncing resolved a pending invitation
+      const joined =
+        sync.data?.personId === auth.user?.profile.sub && result.data.myRole !== 'Owner';
+      return { household: result.data, joined };
     },
   });
 }

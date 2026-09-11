@@ -66,6 +66,7 @@
   "ready_title": "Your home is ready",
   "ready_description": "You can start using it now. Adding other people is optional, and you can invite them later.",
   "add_someone": "Add someone",
+  "continue_diet_planner": "Continue to Diet Planner",
   "members_one": "{{count}} member",
   "members_other": "{{count}} members",
   "settings": "Household settings",

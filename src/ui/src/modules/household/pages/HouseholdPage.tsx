@@ -2,6 +2,7 @@ import { Banner, Button } from '@shared/components/ui';
 import { House, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { AddMemberDialog } from '../components/AddMemberDialog';
 import { ConfirmHouseholdAction } from '../components/ConfirmHouseholdAction';
@@ -67,6 +68,9 @@ export default function HouseholdPage() {
                   }}
                 >
                   {t('add_someone')}
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/diet-planner">{t('continue_diet_planner')}</Link>
                 </Button>
               </div>
             </section>
