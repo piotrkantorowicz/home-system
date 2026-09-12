@@ -10,7 +10,7 @@
     "install:browsers": "playwright install --with-deps chromium"
   },
   "dependencies": {
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.4.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
