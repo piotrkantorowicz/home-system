@@ -12,7 +12,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const auth = useAuth();
 
   useEffect(() => {
-    if (!auth.isLoading && !auth.isAuthenticated) {
+    if (!auth.isLoading && !auth.isAuthenticated && !auth.activeNavigator) {
       // Only save if not already saved (the 401 handler may have saved a better URL)
       if (!sessionStorage.getItem('returnUrl')) {
         const pathname = window.location.pathname;

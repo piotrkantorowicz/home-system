@@ -218,6 +218,10 @@ What the #208 audit changed, and what it surfaced.
 
 ## Known coverage gaps (cross-cutting)
 
+`diet-planner/logout.spec.ts` covers real menu logout: access/refresh revocation,
+rejection of refresh-token reuse, cleared browser tokens, and Authentik's logout
+confirmation. Run with `npm test -- diet-planner/logout.spec.ts` from `e2e/`.
+
 Features that have no e2e coverage today:
 
 - **Two-tier nav** — `ModuleRail` / `SectionPanel` grouping + collapse,
@@ -229,7 +233,7 @@ Features that have no e2e coverage today:
 - **Calendar** — day view (`view: 'day'`), the meal-chip dropdown's other
   actions (Mark done / Record actual / Revert / bulk-complete), drag-to-move.
 - **Weight-prediction** — the interactive calculator (removed; nothing to test).
-- **User profile dropdown** — language switcher, settings deep-links, logout.
+- **User profile dropdown** — language switcher and settings deep-links.
 - **`notifications/` specs run fully mocked** — no real-backend inbox / channel path.
 - **Authentication failure paths** — invalid credentials, locked account, password reset.
 - **i18n parity** — every text selector hard-codes English; no Polish coverage.

@@ -46,6 +46,15 @@ export const oidcConfig: UserManagerSettings = {
 
   // Revoke refresh token on logout for security
   revokeTokensOnSignout: true,
+  // Authentik's revocation endpoint does not return CORS headers. For the
+  // local stack, use the existing same-origin Vite proxy for this endpoint.
+  ...(import.meta.env.DEV && AUTHENTIK_DOMAIN === 'http://localhost:9000'
+    ? {
+        metadataSeed: {
+          revocation_endpoint: `${window.location.origin}/authentik/application/o/revoke/`,
+        },
+      }
+    : {}),
 
   // Token settings
   loadUserInfo: true,
