@@ -70,7 +70,7 @@ async function loginOnce(page: Page, username: string, password: string) {
   await page.waitForURL('http://localhost:5173/**', { timeout: 30000 });
   await page.waitForLoadState('networkidle');
 
-  await expect(page.getByText('Dashboard', { exact: false }).first()).toBeVisible({
+  await expect(page.getByRole('button', { name: /user menu/i })).toBeVisible({
     timeout: 10000,
   });
 }

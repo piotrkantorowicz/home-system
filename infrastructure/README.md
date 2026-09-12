@@ -6,13 +6,20 @@ Docker Compose setup for shared services used across all home-system modules.
 
 | Service | Image | Port | Profile |
 |---|---|---|---|
-| Authentik (server) | `goauthentik/server:2024.12.3` | 9000 (HTTP), 9443 (HTTPS) | always |
-| Authentik (worker) | `goauthentik/server:2024.12.3` | — | always |
+| Authentik (server) | `goauthentik/server:2025.2.4` | 9000 (HTTP), 9443 (HTTPS) | always |
+| Authentik (worker) | `goauthentik/server:2025.2.4` | — | always |
 | Authentik DB | `postgres:16-alpine` | internal | always |
 | Redis | `redis:7-alpine` | internal | always |
 | Diet Planner DB | `postgres:16-alpine` | 5432 | `diet-planner` |
 
 All services share the `home-system-shared` bridge network.
+
+Authentik 2025.2 added public-client token revocation, required by the SPA's
+logout flow. Server and worker must run the same version. Before upgrading an
+existing installation, back up the Authentik database with `pg_dump -Fc` and
+retain the previous Compose configuration. A rollback requires restoring that
+database backup together with the previous image version; do not run an older
+image against a migrated database. See the [upgrade guide](https://docs.goauthentik.io/install-config/upgrade).
 
 ## Setup
 
@@ -61,14 +68,21 @@ Then open http://localhost:9000/if/admin/ to complete configuration.
 
 ### OIDC Setup for Diet Planner
 
-After Authentik is running you need to create an application and OAuth2 provider in the Authentik admin UI:
+The blueprint in `authentik/blueprints/home-system.yaml` configures the application
+and OAuth2 provider for the SPA:
 
 - **Provider type**: OAuth2/OIDC
-- **Client type**: Confidential
-- **Redirect URIs**: `http://localhost:5173/callback`, `http://localhost:5173/silent-renew`
-- **Scopes**: `openid`, `profile`, `email`
+- **Client type**: Public (PKCE)
+- **Redirect URIs**: `http://localhost:5173/callback`, `http://localhost:5173/silent-renew`, `http://localhost:5173`
+- **Scopes**: `openid`, `profile`, `email`, `offline_access`
 
-Copy the generated client ID and secret into `appsettings.Development.json` and `src/ui/.env`.
+The SPA client ID must match the blueprint. Do not put a client secret in frontend
+configuration. Logout revokes tokens before redirecting to Authentik's end-session
+endpoint.
+
+In local development, revocation uses Vite's `/authentik` proxy because Authentik's
+revocation endpoint does not return CORS headers. Other deployments need a
+same-origin revocation proxy or appropriate CORS headers at their reverse proxy.
 
 ## Ports
 

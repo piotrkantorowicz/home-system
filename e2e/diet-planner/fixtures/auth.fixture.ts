@@ -173,7 +173,7 @@ async function performLogin(
 
   await page.waitForURL(`${APP_ORIGIN}/**`, { timeout: 30000 });
   await page.waitForLoadState('networkidle');
-  await expect(page.getByText('Dashboard', { exact: false }).first()).toBeVisible({
+  await expect(page.getByRole('button', { name: /user menu/i })).toBeVisible({
     timeout: 10000,
   });
 
@@ -215,6 +215,18 @@ export const test = base.extend({
     } else {
       console.warn(
         `[auth][worker ${testInfo.parallelIndex}] Token refresh failed — falling back to full login`,
+      );
+      // A logout test can revoke the stored refresh token while its access
+      // token still looks valid locally. Start the fallback with a clean login.
+      await page.context().clearCookies();
+      await page.addInitScript(
+        ({ origin, key }) => {
+          if (window.location.origin === origin && !sessionStorage.getItem('e2e-auth-reset')) {
+            localStorage.removeItem(key);
+            sessionStorage.setItem('e2e-auth-reset', 'done');
+          }
+        },
+        { origin: APP_ORIGIN, key: STORAGE_KEY },
       );
       await performLogin(page, authFile, testInfo.parallelIndex);
     }
