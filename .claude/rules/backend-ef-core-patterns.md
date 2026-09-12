@@ -128,26 +128,21 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ```csharp
 // BudgetPlan.Infrastructure/Persistence/Repositories/BudgetPlanRepository.cs
-internal sealed class BudgetPlanRepository : IBudgetPlanRepository
+internal sealed class BudgetPlanRepository(BudgetPlanDbContext dbContext) : IBudgetPlanRepository
 {
-    private readonly BudgetPlanDbContext _dbContext;
-
-    public BudgetPlanRepository(BudgetPlanDbContext dbContext)
-        => _dbContext = dbContext;
-
     public async Task<BudgetPlan?> GetByIdAsync(BudgetPlanId id, CancellationToken ct = default)
-        => await _dbContext.BudgetPlans
+        => await dbContext.BudgetPlans
             .Include("_entries")   // load private backing field
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task AddAsync(BudgetPlan plan, CancellationToken ct = default)
-        => await _dbContext.BudgetPlans.AddAsync(plan, ct);
+        => await dbContext.BudgetPlans.AddAsync(plan, ct);
 
     public void Update(BudgetPlan plan)
-        => _dbContext.BudgetPlans.Update(plan);
+        => dbContext.BudgetPlans.Update(plan);
 
     public void Delete(BudgetPlan plan)
-        => _dbContext.BudgetPlans.Remove(plan);
+        => dbContext.BudgetPlans.Remove(plan);
 }
 ```
 
@@ -157,6 +152,9 @@ internal sealed class BudgetPlanRepository : IBudgetPlanRepository
 - Create migration: `dotnet ef migrations add <Name> --project BudgetPlan.Infrastructure --startup-project Api`
 - Apply migration: `dotnet ef database update --project BudgetPlan.Infrastructure --startup-project Api`
 - Migration files are **committed to source control** — never auto-migrate in production startup.
+- Migrations are generated code: `.editorconfig` marks `**/Migrations/*.cs` as such, analyzers skip them.
+- Bulk updates that need no aggregate logic: `ExecuteUpdateAsync` / `ExecuteDeleteAsync` (EF 7+),
+  never load-modify-save loops.
 - Never edit a migration that has been deployed. Add a new one instead.
 
 ## Outbox / Inbox Table Configuration

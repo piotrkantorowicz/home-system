@@ -1,165 +1,85 @@
-# ESLint + Prettier Setup
+# Frontend — ESLint, Prettier, Husky
 
-## `eslint.config.ts`
+Source of truth is the config in `src/ui/`. This page explains the intent; do not copy the
+snippets back into the repo — edit the real files.
 
-```ts
-import js from "@eslint/js";
-import ts from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import jsxA11y from "eslint-plugin-jsx-a11y";
-import importPlugin from "eslint-plugin-import";
-import { globalIgnores } from "eslint/config";
+## ESLint (`src/ui/eslint.config.ts`, flat config, ESLint 9)
 
-export default ts.config(
-  globalIgnores(["dist", "coverage", ".storybook"]),
-
-  // Base JS rules
-  js.configs.recommended,
-
-  // TypeScript
-  ...ts.configs.strictTypeChecked,
-  ...ts.configs.stylisticTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-
-  // React
-  {
-    plugins: {
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
-      "jsx-a11y": jsxA11y,
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
-      ...jsxA11y.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-    },
-  },
-
-  // Imports
-  {
-    plugins: { import: importPlugin },
-    rules: {
-      "import/no-default-export": "error",         // enforce named exports
-      "import/no-cycle": "error",                   // catch circular deps
-      "import/no-duplicates": "error",
-      "import/order": [
-        "warn",
-        {
-          groups: ["builtin", "external", "internal", "parent", "sibling", "index", "type"],
-          "newlines-between": "always",
-          alphabetize: { order: "asc" },
-        },
-      ],
-    },
-  },
-
-  // Custom project rules
-  {
-    rules: {
-      // TypeScript strictness
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-non-null-assertion": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
-      "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/await-thenable": "error",
-
-      // React
-      "react-hooks/exhaustive-deps": "error",      // warn is too quiet — error
-
-      // General
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "prefer-const": "error",
-      "no-var": "error",
-      eqeqeq: ["error", "always"],
-    },
-  },
-
-  // Relax default-export rule for route/page files only
-  {
-    files: ["src/pages/**/*.tsx", "src/app/App.tsx"],
-    rules: { "import/no-default-export": "off" },
-  },
-);
+```
+js.configs.recommended
+typescript-eslint  strictTypeChecked + stylisticTypeChecked   (projectService: true)
+react-hooks v7     recommended  + exhaustive-deps: error      (includes React Compiler rules)
+react-refresh      only-export-components: warn (allowConstantExport)
+jsx-a11y           recommended
+import             no-cycle: error, no-duplicates: error, order: warn (alphabetised, groups, newlines)
+project rules      no-explicit-any, consistent-type-imports, no-non-null-assertion,
+                   prefer-nullish-coalescing, prefer-optional-chain, no-floating-promises,
+                   await-thenable, no-unused-vars (^_ ignored), no-console (warn/error allowed),
+                   prefer-const, no-var, eqeqeq
+e2e override       relaxes unsafe-* / floating-promises for Playwright specs
+eslint-config-prettier last — formatting is Prettier's job
 ```
 
----
+Rules that bite most often and how to satisfy them:
 
-## `.prettierrc`
+| Rule | Do |
+|---|---|
+| `consistent-type-imports` (+ `verbatimModuleSyntax`) | `import type { X }` for types; `import { type X, y }` when mixed |
+| `no-floating-promises` | `await`, `void promise`, or return it |
+| `no-non-null-assertion` | narrow with a guard; never `!` |
+| `no-explicit-any` | `unknown` + guard; if truly unavoidable, `// REASON: …` on the same line |
+| `import/order` | external → `@shared` → `@modules` → parent → sibling → `import type` (auto-fixable) |
+| `react-hooks/exhaustive-deps` | fix the deps; move the callback inside the effect; never disable |
+| `react-refresh/only-export-components` | keep non-component exports (schemas, constants) in separate files |
+
+`eslint-disable` is allowed only with `// REASON:` on the same or previous line. Existing
+disables without a reason are cleaned up when a file is touched.
+
+## Prettier (`src/ui/.prettierrc`)
 
 ```json
-{
-  "semi": true,
-  "singleQuote": false,
-  "trailingComma": "all",
-  "printWidth": 100,
-  "tabWidth": 2,
-  "useTabs": false,
-  "bracketSameLine": false,
-  "arrowParens": "always",
-  "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"]
-}
+{ "semi": true, "singleQuote": true, "trailingComma": "all", "printWidth": 100,
+  "tabWidth": 2, "arrowParens": "always", "endOfLine": "lf",
+  "plugins": ["prettier-plugin-tailwindcss"] }
 ```
 
-## `.prettierignore`
+Single quotes. Tailwind classes are sorted by the plugin — never hand-order them. The
+`format-on-edit.sh` hook runs Prettier on every file an agent writes under `src/ui` and `e2e`.
 
-```
-dist
-coverage
-*.min.js
-public
-```
+## TypeScript
 
----
+`tsconfig.app.json` is strict (see `frontend-react-typescript.md`). `npm run type-check` is
+`tsc --noEmit`; `npm run build` is `tsc -b && vite build`, so a type error fails the build.
 
-## Package.json scripts
+## Scripts (`src/ui/package.json`)
 
-```json
-{
-  "scripts": {
-    "dev":          "vite",
-    "build":        "tsc -b && vite build",
-    "preview":      "vite preview",
-    "lint":         "eslint .",
-    "lint:fix":     "eslint . --fix",
-    "format":       "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck":    "tsc --noEmit",
-    "test":         "vitest",
-    "test:ui":      "vitest --ui",
-    "test:coverage":"vitest run --coverage",
-    "test:e2e":     "playwright test",
-    "check":        "npm run typecheck && npm run lint && npm run test:coverage"
-  }
-}
-```
+| Script | Purpose |
+|---|---|
+| `dev` | Vite dev server on `:5173`, proxies `/authentik` to `:9000` |
+| `build` | `tsc -b && vite build` |
+| `lint` / `lint:fix` | ESLint |
+| `format` / `format:check` | Prettier over `src/**/*.{ts,tsx,css,json}` |
+| `type-check` | `tsc --noEmit` |
+| `test` / `test:ui` / `test:coverage` | Vitest watch / UI / single run + v8 coverage |
+| `check` | type-check + lint + test:coverage — what CI runs |
+| `generate:api:<module>` | `openapi-typescript` from the running backend → `modules/<module>/api/generated/schema.ts` |
+| `prepare` | points `core.hooksPath` at `.husky` |
 
----
+## Git hooks (`.husky/`, repo root — POSIX `sh`, not bash)
 
-## Pre-commit hooks (lint-staged + husky)
+| Hook | What it does |
+|---|---|
+| `pre-commit` | `lint-staged` in `src/ui` (ESLint `--fix` + Prettier on staged `ts/tsx`, Prettier on `json/css/md`), then `scripts/verify.sh --staged` — path-aware backend/frontend/e2e checks |
+| `commit-msg` | `commitlint` (`@commitlint/config-conventional`, lower-case subject, header ≤ 72) |
+| `pre-push` | branch name must match `<type>/<issue>-<kebab-slug>` |
 
-```json
-// package.json
-{
-  "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{json,css,md}": ["prettier --write"]
-  }
-}
-```
+Hooks need `src/ui/node_modules` — a fresh clone or a new git worktree must run
+`cd src/ui && npm ci` before the first commit.
 
-```sh
-# .husky/pre-commit
-npx lint-staged
-```
+## CI (`.github/workflows/`)
+
+- `frontend-ci.yml` — type-check, lint, format:check, test:coverage, build (on `src/ui/**` changes)
+- `backend-ci.yml` — restore, `dotnet format --verify-no-changes`, build, `dotnet test` on the whole solution
+- `pr-hygiene.yml` — every PR: commitlint on commits + PR title, branch name, linked issue, `CLAUDE.md` ↔ `AGENTS.md` sync
+
+Anything green locally via `scripts/verify.sh --branch` is green in CI; the two run the same commands.

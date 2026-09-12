@@ -13,7 +13,8 @@ public sealed class BudgetPlan : AggregateRoot<BudgetPlanId>
     private BudgetPlan() { }   // Required by EF Core — keep private
 
     // Factory method is the only public creation path
-    public static BudgetPlan Create(BudgetPlanId id, Money limit, DateRange period)
+    // Time is a parameter — aggregates never read the ambient clock (see coding standards)
+    public static BudgetPlan Create(BudgetPlanId id, Money limit, DateRange period, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(limit);
         ArgumentNullException.ThrowIfNull(period);
@@ -23,7 +24,8 @@ public sealed class BudgetPlan : AggregateRoot<BudgetPlanId>
             Id = id,
             Limit = limit,
             Period = period,
-            Status = BudgetPlanStatus.Active
+            Status = BudgetPlanStatus.Active,
+            CreatedAt = now,
         };
 
         plan.RaiseDomainEvent(new BudgetPlanCreatedDomainEvent(id));
@@ -33,6 +35,7 @@ public sealed class BudgetPlan : AggregateRoot<BudgetPlanId>
     public Money Limit { get; private set; } = default!;
     public DateRange Period { get; private set; } = default!;
     public BudgetPlanStatus Status { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
     public IReadOnlyCollection<BudgetEntry> Entries => _entries.AsReadOnly();
 
     public void AddEntry(Money amount, string description)
@@ -67,6 +70,7 @@ public sealed class BudgetPlan : AggregateRoot<BudgetPlanId>
 - **No public setters** — ever.
 - **Private parameterless constructor** required for EF Core; keep it private.
 - **Static `Create()` factory method** is the only way to construct a valid aggregate.
+- **Time comes in as a parameter** (`DateTimeOffset now`). No `DateTime.UtcNow` inside the Domain project.
 - **Raise domain events** inside mutation methods — never publish to the bus directly.
 - Keep aggregates **small**. More than ~4 child collection types = wrong boundary.
 - Aggregates should be **loadable without joins** where possible; avoid deep object graphs.
@@ -110,11 +114,11 @@ public sealed record Money(decimal Value, string Currency)
 
 public sealed record DateRange(DateOnly Start, DateOnly End)
 {
-    public static DateRange CurrentMonth()
+    public static DateRange MonthOf(DateTimeOffset now)
     {
-        var now = DateOnly.FromDateTime(DateTime.UtcNow);
-        return new DateRange(new DateOnly(now.Year, now.Month, 1),
-                             new DateOnly(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)));
+        var date = DateOnly.FromDateTime(now.UtcDateTime);
+        return new DateRange(new DateOnly(date.Year, date.Month, 1),
+                             new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)));
     }
 
     public bool Contains(DateOnly date) => date >= Start && date <= End;
@@ -133,19 +137,21 @@ public sealed record DateRange(DateOnly Start, DateOnly End)
 // Every aggregate root gets a typed ID record — never a raw Guid
 public sealed record BudgetPlanId(Guid Value)
 {
-    public static BudgetPlanId New() => new(Guid.NewGuid());
+    public static BudgetPlanId New() => new(Guid.CreateVersion7());   // time-ordered — index-friendly
     public static BudgetPlanId From(Guid value) => new(value);
     public override string ToString() => Value.ToString();
 }
 
 public sealed record BudgetEntryId(Guid Value)
 {
-    public static BudgetEntryId New() => new(Guid.NewGuid());
+    public static BudgetEntryId New() => new(Guid.CreateVersion7());
     public static BudgetEntryId From(Guid value) => new(value);
 }
 ```
 
 Typed IDs prevent `(Guid budgetPlanId, Guid userId)` parameter swaps at compile time.
+`Guid.CreateVersion7()` (.NET 9+) yields time-ordered values so PostgreSQL b-tree inserts append
+instead of splitting pages; `Guid.NewGuid()` is for unpredictable tokens only.
 
 ## Domain Events
 
@@ -221,17 +227,11 @@ public interface IBudgetPlanRepository
 ## Domain Exceptions
 
 ```csharp
-// Base domain exception — in Shared.Abstractions.Core or module Domain
-public class DomainException : Exception
-{
-    public DomainException(string message) : base(message) { }
-}
+// Base — Shared.Abstractions.Core. Also NotFoundException (→ 404) and ForbiddenException (→ 403).
+public class DomainException(string message) : Exception(message);
 
 // Module-specific — in BudgetPlan.Domain
-public sealed class BudgetPlanDomainException : DomainException
-{
-    public BudgetPlanDomainException(string message) : base(message) { }
-}
+public sealed class BudgetPlanDomainException(string message) : DomainException(message);
 ```
 
 - Domain exceptions carry **business language** — no stack traces, no EF/SQL detail.

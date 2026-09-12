@@ -1,219 +1,194 @@
 # Backend — Testing Standards
 
-> **Assertion library:** Shouldly only. Project tech stack: xUnit + Shouldly + NSubstitute.
-> FluentAssertions is intentionally not on the package list — do not add it.
+> **Stack:** xUnit 2.9 (migration to xunit.v3 tracked in #269), Shouldly,
+> NSubstitute, Testcontainers.PostgreSql, `FakeTimeProvider`.
+> FluentAssertions is deliberately absent — do not add it.
 
 ## Test Project Layout
 
+Tests are **co-located with the module**, one unit and one integration project each:
+
 ```
-tests/
-  BudgetPlan.UnitTests/
-    Domain/
-      BudgetPlanTests.cs
-      BudgetEntryTests.cs
-      MoneyTests.cs
-    Application/
-      Commands/
-        CreateBudgetPlanCommandHandlerTests.cs
-      Queries/
-        GetBudgetPlanQueryHandlerTests.cs
-  BudgetPlan.IntegrationTests/
-    Api/
-      BudgetPlanEndpointsTests.cs
-    Persistence/
-      BudgetPlanRepositoryTests.cs
+src/Modules/Household/
+  Household.UnitTests/
+    Domain/                     HouseholdTests.cs, HouseholdMemberTests.cs, …
+    Application/                CreateHouseholdCommandHandlerTests.cs, …
+      EventHandlers/
+    Builders/                   HouseholdBuilder.cs
+  Household.IntegrationTests/
+    Api/                        HouseholdEndpointsTests.cs  (HTTP → handler → real DB)
+    Persistence/                repository round-trips
+    Fixtures/                   HouseholdWebApplicationFactory.cs
+src/Shared/
+  Shared.Messaging.Tests/       unit tests for the bus / outbox / decorators
+  Shared.Messaging.IntegrationTests/
 ```
 
-## Unit Tests — Domain Layer
+Every `*Tests.csproj` under `src/` is picked up by `dotnet test HomeSystem.slnx` in CI and by
+`scripts/verify.sh` for the touched module.
+
+## Unit Tests — Domain
 
 Test domain logic through aggregate methods. No infrastructure, no mocks of your own domain.
+Time is a parameter, so tests pass a fixed value.
 
 ```csharp
-public sealed class BudgetPlanTests
+public sealed class HouseholdTests
 {
-    // Naming: MethodName_StateUnderTest_ExpectedBehavior
+    private static readonly DateTimeOffset Now = new(2026, 9, 12, 10, 0, 0, TimeSpan.Zero);
+
     [Fact]
-    public void AddEntry_WhenAmountExceedsLimit_ThrowsDomainException()
+    public void RemoveMember_WhenLastOwner_ThrowsDomainException()
     {
-        // Arrange
-        var plan = BudgetPlan.Create(
-            BudgetPlanId.New(),
-            new Money(100, "PLN"),
-            DateRange.CurrentMonth());
+        var household = new HouseholdBuilder().WithOwner(PersonId.New()).Build();
+        var owner = household.Members.Single();
 
-        // Act
-        var act = () => plan.AddEntry(new Money(150, "PLN"), "Over-limit expense");
+        var act = () => household.RemoveMember(owner.PersonId, Now);
 
-        // Assert
-        act.ShouldThrow<BudgetPlanDomainException>()
-           .Message.ShouldContain("limit");
+        act.ShouldThrow<HouseholdDomainException>().Message.ShouldContain("owner");
     }
 
     [Fact]
-    public void AddEntry_WhenAmountIsWithinLimit_RaisesBudgetEntryAddedDomainEvent()
+    public void Create_Always_RaisesHouseholdCreatedDomainEvent()
     {
-        // Arrange
-        var plan = BudgetPlan.Create(
-            BudgetPlanId.New(),
-            new Money(500, "PLN"),
-            DateRange.CurrentMonth());
+        var household = Household.Create(HouseholdId.New(), "Home", PersonId.New(), Now);
 
-        // Act
-        plan.AddEntry(new Money(100, "PLN"), "Coffee");
-
-        // Assert
-        plan.DomainEvents.ShouldHaveSingleItem()
-            .ShouldBeOfType<BudgetEntryAddedDomainEvent>();
-        plan.Entries.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Create_Always_RaisesBudgetPlanCreatedDomainEvent()
-    {
-        // Act
-        var plan = BudgetPlan.Create(BudgetPlanId.New(), new Money(1000, "PLN"), DateRange.CurrentMonth());
-
-        // Assert
-        plan.DomainEvents.ShouldHaveSingleItem()
-            .ShouldBeOfType<BudgetPlanCreatedDomainEvent>();
+        household.DomainEvents.ShouldContain(e => e is HouseholdCreatedDomainEvent);
     }
 }
 ```
 
-## Unit Tests — Application Layer (Handlers)
+## Unit Tests — Application (handlers)
 
-Mock only infrastructure boundaries (repository, unit of work, external services).
+Mock only the boundaries: repositories, unit of work, `IIntegrationEventBus`, external services.
+Inject `FakeTimeProvider` where the handler reads the clock.
 
 ```csharp
-public sealed class CreateBudgetPlanCommandHandlerTests
+public sealed class CreateHouseholdCommandHandlerTests
 {
-    private readonly IBudgetPlanRepository _repository = Substitute.For<IBudgetPlanRepository>();
-    private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly CreateBudgetPlanCommandHandler _sut;
+    private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
+    private readonly IHouseholdUnitOfWork _unitOfWork = Substitute.For<IHouseholdUnitOfWork>();
+    private readonly FakeTimeProvider _clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
+    private readonly CreateHouseholdCommandHandler _sut;
 
-    public CreateBudgetPlanCommandHandlerTests()
-        => _sut = new CreateBudgetPlanCommandHandler(_repository, _unitOfWork);
+    public CreateHouseholdCommandHandlerTests()
+        => _sut = new CreateHouseholdCommandHandler(_households, _unitOfWork, _clock);
 
     [Fact]
-    public async Task Handle_WithValidCommand_AddsPlanAndCommits()
+    public async Task Handle_WithValidCommand_AddsHouseholdAndCommits()
     {
-        // Arrange
-        var command = new CreateBudgetPlanCommand(Guid.NewGuid(), 500m, "PLN");
+        var command = new CreateHouseholdCommand("sub-1", "Home");
 
-        // Act
         await _sut.HandleAsync(command, CancellationToken.None);
 
-        // Assert
-        await _repository.Received(1).AddAsync(
-            Arg.Is<BudgetPlan>(p => p.Limit == new Money(500m, "PLN")),
+        await _households.Received(1).AddAsync(
+            Arg.Is<Household>(h => h.Name == "Home" && h.CreatedAt == _clock.GetUtcNow()),
             Arg.Any<CancellationToken>());
-
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 }
 ```
 
-### Unit Test Rules
-- No database, no filesystem, no network — everything outside the unit under test is mocked.
-- Use NSubstitute for mocks (`Substitute.For<T>()`).
-- Use **Shouldly** for readable assertions (`.ShouldBe`, `.ShouldThrow<T>`, `.ShouldNotBeNull`, `.ShouldHaveSingleItem`, `.ShouldBeOfType<T>`) — no plain `Assert.Equal`, no FluentAssertions.
-- Test **one behaviour** per test method.
-- Parameterize with `[Theory] + [InlineData]` for value variations, not for different scenarios.
+### Unit test rules
 
-## Integration Tests — API Layer
+- No database, filesystem, network, or real clock.
+- `Substitute.For<T>()` for mocks; `FakeTimeProvider` for time; `_clock.Advance(...)` to move it.
+- Shouldly only: `.ShouldBe`, `.ShouldThrow<T>`, `.ShouldNotBeNull`, `.ShouldHaveSingleItem`,
+  `.ShouldBeOfType<T>`, `.ShouldContain(predicate)`. No `Assert.*`.
+- One behaviour per test. `[Theory]` + `[InlineData]` for value variations only.
+- Test names: `Method_State_Expected`. No `Async` suffix on test methods.
+- Test classes are `sealed`; test project namespaces mirror the module (`Household.UnitTests.Domain`).
 
-Test the full vertical slice: HTTP request → endpoint → handler → real database → response.
+## Integration Tests — API
+
+Full vertical slice: HTTP request → endpoint → dispatcher → handler → real PostgreSQL → response.
 
 ```csharp
-// Uses WebApplicationFactory + TestContainers for PostgreSQL
-public sealed class BudgetPlanEndpointsTests : IClassFixture<BudgetPlanWebApplicationFactory>
+public sealed class HouseholdEndpointsTests(HouseholdWebApplicationFactory factory)
+    : IClassFixture<HouseholdWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-    private readonly BudgetPlanWebApplicationFactory _factory;
-
-    public BudgetPlanEndpointsTests(BudgetPlanWebApplicationFactory factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClientAs("sub-owner");
 
     [Fact]
-    public async Task POST_BudgetPlans_WithValidRequest_Returns201()
+    public async Task POST_Households_WithValidRequest_Returns201()
     {
-        // Arrange
-        var request = new CreateBudgetPlanRequest(Guid.NewGuid(), 500m, "PLN");
+        var response = await _client.PostAsJsonAsync("/api/households", new CreateHouseholdRequest("Home"));
 
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/budget-plans", request);
-
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         response.Headers.Location.ShouldNotBeNull();
     }
 
     [Fact]
-    public async Task GET_BudgetPlan_WhenNotFound_Returns404()
+    public async Task GET_MyHousehold_WhenNone_Returns404()
     {
-        // Act
-        var response = await _client.GetAsync($"/api/budget-plans/{Guid.NewGuid()}");
+        var response = await factory.CreateClientAs("sub-nobody").GetAsync("/api/households/me");
 
-        // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 }
 ```
 
 ```csharp
-// Shared test infrastructure
-public sealed class BudgetPlanWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public sealed class HouseholdWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithDatabase("budgetplan_test")
-        .Build();
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder().WithDatabase("household_test").Build();
+    public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
 
-    public async Task InitializeAsync() => await _postgres.StartAsync();
-    public async Task DisposeAsync() => await _postgres.DisposeAsync();
+    public Task InitializeAsync() => _postgres.StartAsync();
+    public new Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            // Replace the real connection string with the test container's
-            services.RemoveAll<DbContextOptions<BudgetPlanDbContext>>();
-            services.AddDbContext<BudgetPlanDbContext>(opts =>
-                opts.UseNpgsql(_postgres.GetConnectionString()));
+            services.RemoveAll<DbContextOptions<HouseholdDbContext>>();
+            services.AddDbContext<HouseholdDbContext>(o => o.UseNpgsql(_postgres.GetConnectionString()));
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(Clock);
+            services.AddTestAuthentication();          // header-driven ClaimsPrincipal, no Authentik
         });
     }
 }
 ```
 
-### Integration Test Rules
-- Use a **real PostgreSQL database** via TestContainers — never mock your own database.
-- Mock only **external services** (HTTP clients, email senders, payment gateways).
-- Reset database state between tests: either use a transaction-per-test that's rolled back, or
-  truncate affected tables in a fixture's `InitializeAsync`.
-- Never assert on exact SQL queries — assert on observable behavior (HTTP response, returned DTO).
+### Integration test rules
+
+- Real PostgreSQL via Testcontainers. Never mock your own database. Never mock the dispatcher.
+- Mock only external services (SMTP, Authentik admin API, HTTP clients).
+- Auth: a test authentication handler that reads the subject from a header; each test creates
+  the client for the identity it needs. Never share one "current user" across tests.
+- Isolation: unique subjects / IDs per test. Truncate tables in the fixture when a test needs an
+  empty world.
+- Assert observable behaviour (status, body, DB row via a query), never SQL text or log output.
+- Cross-module tests (e.g. shopping list + household) spin up **one container per module DB**.
+- Locally, `WebApplicationFactory` opens file watchers; `scripts/verify.sh` sets
+  `DOTNET_USE_POLLING_FILE_WATCHER=1` so the inotify limit is not hit.
 
 ## Test Data Builders
 
-Use the builder pattern for complex aggregates instead of repeating construction:
-
 ```csharp
-internal sealed class BudgetPlanBuilder
+internal sealed class HouseholdBuilder
 {
-    private BudgetPlanId _id = BudgetPlanId.New();
-    private Money _limit = new(1000m, "PLN");
-    private DateRange _period = DateRange.CurrentMonth();
+    private HouseholdId _id = HouseholdId.New();
+    private string _name = "Home";
+    private PersonId _owner = PersonId.New();
+    private DateTimeOffset _now = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-    public BudgetPlanBuilder WithId(BudgetPlanId id) { _id = id; return this; }
-    public BudgetPlanBuilder WithLimit(decimal value, string currency) { _limit = new(value, currency); return this; }
-    public BudgetPlanBuilder WithPeriod(DateRange period) { _period = period; return this; }
+    public HouseholdBuilder WithId(HouseholdId id) { _id = id; return this; }
+    public HouseholdBuilder WithName(string name) { _name = name; return this; }
+    public HouseholdBuilder WithOwner(PersonId owner) { _owner = owner; return this; }
+    public HouseholdBuilder At(DateTimeOffset now) { _now = now; return this; }
 
-    public BudgetPlan Build() => BudgetPlan.Create(_id, _limit, _period);
+    public Household Build() => Household.Create(_id, _name, _owner, _now);
 }
-
-// Usage in tests
-var plan = new BudgetPlanBuilder()
-    .WithLimit(200m, "PLN")
-    .Build();
 ```
+
+Builders live in `<Module>.UnitTests/Builders/` and are shared with the integration project
+via `InternalsVisibleTo` or a linked file — never duplicated.
+
+## What is not a test
+
+- A test that only checks a mock was called with anything (`Arg.Any` everywhere).
+- A `[Fact]` with `Skip` to get CI green.
+- `Task.Delay` / `Thread.Sleep` to wait for a worker — drive the worker directly
+  (`RunOnceAsync`) or advance `FakeTimeProvider`.

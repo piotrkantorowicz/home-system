@@ -1,191 +1,98 @@
 # Styling — Tailwind CSS v4
 
-## Setup (Tailwind v4 / Vite)
+## Setup that exists
 
-```ts
-// vite.config.ts
-import tailwindcss from "@tailwindcss/vite";
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-});
-```
+Tailwind v4 via `@tailwindcss/postcss` (`postcss.config.js`). **No `tailwind.config.js`** —
+v4 is CSS-first; the theme lives in `src/ui/src/index.css` under `@theme`. Classes are sorted
+by `prettier-plugin-tailwindcss`.
 
 ```css
-/* src/app/globals.css */
-@import "tailwindcss";
+/* src/index.css */
+@import 'tailwindcss';
 
 @theme {
-  /* Design tokens — single source of truth */
-  --color-primary:      oklch(55% 0.22 260);
-  --color-primary-fg:   oklch(98% 0.01 260);
-  --color-surface:      oklch(98% 0.005 260);
-  --color-surface-alt:  oklch(94% 0.01 260);
-  --color-border:       oklch(85% 0.01 260);
-  --color-text:         oklch(20% 0.01 260);
-  --color-text-muted:   oklch(50% 0.01 260);
-  --color-error:        oklch(55% 0.22 30);
-  --color-success:      oklch(55% 0.18 150);
-  --color-warning:      oklch(70% 0.18 80);
-
-  --font-sans:   "Geist", ui-sans-serif, system-ui;
-  --font-mono:   "Geist Mono", ui-monospace;
-
-  --radius-sm:   0.25rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   0.75rem;
-  --radius-xl:   1rem;
-
-  --shadow-sm:   0 1px 2px oklch(0% 0 0 / 0.05);
-  --shadow-md:   0 4px 6px oklch(0% 0 0 / 0.07), 0 1px 3px oklch(0% 0 0 / 0.06);
-  --shadow-lg:   0 10px 15px oklch(0% 0 0 / 0.1), 0 4px 6px oklch(0% 0 0 / 0.05);
+  --color-background: hsl(260 20% 97%);
+  --color-foreground: hsl(264 12% 15%);
+  --color-card: …;  --color-popover: …;
+  --color-primary: hsl(261 75% 54%);   --color-primary-foreground: …;
+  --color-secondary / --color-muted / --color-accent (+ -foreground)
+  --color-destructive, --color-border, --color-input, --color-ring
+  --color-success, --color-warning
+  /* redesign additions */
+  --color-text-2, --color-border-strong, --color-primary-soft, --color-primary-ink
+  --color-protein, --color-carbs, --color-fat, --color-fiber, --color-water, --color-good
+  --radius-xl: 1.375rem;  --radius-lg: 0.8125rem;  --radius-md: 0.6875rem;  --radius-sm: 0.5rem;
 }
+[data-theme='dark'] { /* same tokens, dark values */ }
 ```
 
----
+- Tokens are declared as full `hsl(...)` values. Consume them as `bg-primary`,
+  `text-muted-foreground`, or in custom CSS as `var(--color-primary)` — **never**
+  `hsl(var(--color-primary))` (double-wrapping breaks the colour).
+- Dark mode is the `data-theme` attribute on `<html>` (`ThemeContext`), plus a
+  `prefers-color-scheme` fallback for the `system` preference. Use the `dark:` variant only
+  when a token cannot express the difference.
 
-## Class composition with `cva` (class-variance-authority)
-
-Always use `cva` for variant-driven components. Never build variant logic with string interpolation.
+## Component variants — `cva`
 
 ```tsx
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/utils/cn";
-
 const buttonVariants = cva(
-  // base classes
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50",
+  'inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
-      variant: {
-        primary:   "bg-primary text-primary-fg hover:bg-primary/90",
-        secondary: "bg-surface-alt text-text border border-border hover:bg-surface",
-        ghost:     "hover:bg-surface-alt text-text",
-        danger:    "bg-error text-white hover:bg-error/90",
-      },
-      size: {
-        sm:  "h-8 px-3 text-sm",
-        md:  "h-10 px-4 text-sm",
-        lg:  "h-12 px-6 text-base",
-        icon:"size-10",
-      },
+      variant: { default: 'bg-primary text-primary-foreground …', outline: '…', ghost: '…', destructive: '…' },
+      size: { default: 'h-11 px-5', sm: 'h-9 px-3.5 text-sm', icon: 'size-10' },
     },
-    defaultVariants: {
-      variant: "primary",
-      size: "md",
-    },
-  }
+    defaultVariants: { variant: 'default', size: 'default' },
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
-
-export function Button({ className, variant, size, ...props }: ButtonProps) {
-  return (
-    <button className={cn(buttonVariants({ variant, size }), className)} {...props} />
-  );
+  extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
 }
 ```
 
-```ts
-// utils/cn.ts
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-```
-
----
+- Any component with more than one look uses `cva` + `cn()` (`@shared/lib/utils`, clsx + tailwind-merge).
+- Callers pass `className` for layout (margins, grid placement) — never to restyle the
+  component's own look. If a caller needs a new look, add a variant.
 
 ## Rules
 
-### Do
+**Do**
+- Tokens for every colour, radius and shadow. `bg-card`, `rounded-lg`, `text-text-2`.
+- Group classes logically; the Prettier plugin fixes the order.
+- Mobile-first breakpoints: base → `sm:` → `md:` → `lg:` → `xl:`. The shell switches rail →
+  bottom tab bar below `md`.
+- `size-*` for square boxes, `gap-*` over margins between siblings, logical properties
+  (`ps-`, `pe-`, `ms-`) where RTL could matter.
 
-- Use `cn()` for all conditional/merged class strings.
-- Use `cva` for any component with more than one visual variant.
-- Use design tokens (`--color-*`, `--radius-*`) defined in `@theme` — never hardcode hex/rgb values.
-- Group Tailwind classes: layout → box model → typography → colors → effects → states.
-- Use `@layer components` sparingly — prefer utility classes.
-- Dark mode via `dark:` variant and a `data-theme` attribute on `<html>`.
+**Don't**
+- `style={{}}` for anything a utility expresses. Inline style is acceptable only for values
+  computed at runtime (chart geometry, progress widths, CSS variables from data).
+- `!important` utilities (`!text-…`). Fix specificity or the variant.
+- String-built class names (`text-${color}-500`) — Tailwind cannot see them. Map to full
+  class strings.
+- New arbitrary values (`rounded-[13px]`, `text-[13.5px]`). The redesign introduced ~300 of
+  them; promoting that scale into `@theme` (`--text-*`, `--radius-*`, `--spacing-*`) is
+  tracked in #269. Until then: reuse an existing arbitrary value from a
+  neighbouring component rather than inventing a new one, and never add one where a token
+  already fits.
+- CSS modules or styled-components. Global CSS is `index.css` only.
 
-### Don't
+## Animation
 
-- No inline `style={{ }}` for anything expressible as a utility class.
-- No Tailwind `arbitrary values` (`[color:#abc]`) for anything that should be a design token.
-- No `!important` utilities (`!text-red-500`) — fix specificity instead.
-- No CSS modules mixed with Tailwind on the same element.
-- No string interpolation for class names — Tailwind can't statically analyse them:
+- Transitions on state changes via utilities (`transition-all duration-200 ease-out`,
+  `active:scale-[0.97]` is the sanctioned press feedback in `Button`).
+- Keyframes go into `index.css` and are exposed through `@theme { --animate-*: … }`, used as
+  `animate-fade-in`.
+- No animation library. Radix handles enter/exit for dialogs, sheets, popovers via
+  `data-[state=open]:` variants.
+- Respect `motion-reduce:` — any non-trivial animation gets a `motion-reduce:transition-none`.
 
-```tsx
-// ❌ Tailwind cannot detect this at build time
-const color = isError ? "red" : "green";
-<p className={`text-${color}-500`}>…</p>
+## Accessibility of styles
 
-// ✅ Full class names only
-const className = isError ? "text-error" : "text-success";
-<p className={className}>…</p>
-```
-
----
-
-## Responsive design
-
-Use mobile-first breakpoints. Order: base → `sm:` → `md:` → `lg:` → `xl:`.
-
-```tsx
-<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-```
-
----
-
-## Animations
-
-Prefer CSS transitions for simple state changes. Use `tailwindcss-animate` or custom keyframes for complex ones.
-
-```css
-/* globals.css */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@theme {
-  --animate-fade-in: fade-in 200ms ease-out both;
-}
-```
-
-```tsx
-<div className="animate-fade-in">…</div>
-```
-
-For orchestrated animations, use **Motion** (`motion/react`):
-
-```tsx
-import { motion } from "motion/react";
-
-<motion.div
-  initial={{ opacity: 0, y: 8 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.2 }}
->
-```
-
----
-
-## Dark mode
-
-```css
-/* globals.css */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface:   oklch(15% 0.005 260);
-    --color-text:      oklch(95% 0.005 260);
-    /* … override all tokens … */
-  }
-}
-/* Or via class for user-toggle: */
-[data-theme="dark"] { … }
-```
+- Never remove `focus-visible:ring-*` from primitives.
+- Colour is never the only signal — pair macro colours (`protein`, `carbs`, `fat`) with a label
+  or icon.
+- Minimum tap target 44 px on touch layouts (`h-11` default button, `size-10` icon minimum).

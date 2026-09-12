@@ -1,234 +1,123 @@
-# Testing Standards
+# Frontend — Testing (Vitest + Testing Library + MSW)
 
 ## Stack
 
 | Layer | Tool |
 |---|---|
-| Unit / integration | Vitest + `@testing-library/react` |
+| Unit / component / hook | Vitest 4 (`globals: true`, jsdom) + `@testing-library/react` 16 |
 | User events | `@testing-library/user-event` |
-| E2E | Playwright |
-| API mocking | MSW v2 (Mock Service Worker) |
-| Assertions | `@testing-library/jest-dom` (auto-imported) |
+| DOM matchers | `@testing-library/jest-dom/vitest` (imported in `src/test/setup.ts`) |
+| API mocking | MSW 2 — `src/test/mocks/{handlers,server}.ts` |
+| E2E | Playwright — see `frontend-playwright.md` |
 
----
+Config: `src/ui/vitest.config.ts`. `testTimeout: 15000` (lazy page imports), `e2e/**` excluded,
+aliases mirror `vite.config.ts`. Coverage is reported (v8) but not thresholded — new code is
+expected to arrive with tests per `definition-of-done.md`, not to chase a percentage.
 
-## Vitest config
-
-```ts
-// vitest.config.ts
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import path from "path";
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./src/test/setup.ts"],
-    coverage: {
-      provider: "v8",
-      thresholds: { lines: 80, functions: 80, branches: 70 },
-    },
-  },
-  resolve: {
-    alias: { "@": path.resolve(__dirname, "src") },
-  },
-});
-```
+## Setup (`src/test/setup.ts`)
 
 ```ts
-// src/test/setup.ts
-import "@testing-library/jest-dom";
-import { server } from "./mocks/server";
+import '@testing-library/jest-dom/vitest';
+import { server } from './mocks/server';
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+server.listen({ onUnhandledRequest: 'warn' });   // top level: patches fetch before any client module captures it
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 ```
 
----
+MSW handlers match the **absolute** API URL (`http://localhost:5050/api/v1/…`) because the
+`openapi-fetch` clients are created with a base URL. A test that needs a different response
+calls `server.use(http.get(...))` inline — it is reset after each test.
 
-## MSW handlers
+## Where tests live
 
-```ts
-// src/test/mocks/handlers.ts
-import { http, HttpResponse } from "msw";
-import { userFactory } from "../factories/user";
-
-export const handlers = [
-  http.get("/api/users/:id", ({ params }) => {
-    return HttpResponse.json(userFactory({ id: String(params.id) }));
-  }),
-
-  http.post("/api/users", async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json(userFactory(body as Partial<User>), { status: 201 });
-  }),
-];
-```
-
-```ts
-// src/test/mocks/server.ts
-import { setupServer } from "msw/node";
-import { handlers } from "./handlers";
-
-export const server = setupServer(...handlers);
-```
-
----
-
-## Test factories
-
-```ts
-// src/test/factories/user.ts
-import type { User } from "@/modules/auth";
-
-let idCounter = 0;
-
-export function userFactory(overrides: Partial<User> = {}): User {
-  return {
-    id: String(++idCounter),
-    name: "Test User",
-    email: "test@example.com",
-    role: "viewer",
-    ...overrides,
-  };
-}
-```
-
----
+Co-located: `Component.test.tsx` next to `Component.tsx`, `useGoals.test.ts` next to
+`useGoals.ts`. No `__tests__` folders. Shared fixtures in `src/test/`.
 
 ## Component tests
 
 ```tsx
-// UserCard.test.tsx
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { UserCard } from "./UserCard";
-import { userFactory } from "@/test/factories/user";
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-describe("UserCard", () => {
-  it("renders the user's name and email", () => {
-    const user = userFactory({ name: "Ada Lovelace", email: "ada@example.com" });
-    render(<UserCard user={user} onSelect={vi.fn()} />);
+import { productFactory } from '@/test/factories/product';
 
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+import { ProductCard } from './ProductCard';
+
+describe('ProductCard', () => {
+  it('shows the product name', () => {
+    render(<ProductCard product={productFactory({ name: 'Oats' })} />);
+    expect(screen.getByRole('heading', { name: 'Oats' })).toBeInTheDocument();
   });
 
-  it("calls onSelect with the user id when clicked", async () => {
-    const user = userFactory({ id: "u_123" });
+  it('calls onSelect with the id when the select button is clicked', async () => {
     const onSelect = vi.fn();
-    render(<UserCard user={user} onSelect={onSelect} />);
+    render(<ProductCard product={productFactory({ id: 'p1' })} onSelect={onSelect} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /select/i }));
+    await userEvent.click(screen.getByRole('button', { name: /select/i }));
 
-    expect(onSelect).toHaveBeenCalledOnce();
-    expect(onSelect).toHaveBeenCalledWith("u_123");
-  });
-
-  it("shows a loading skeleton while data is pending", () => {
-    render(<UserCard user={undefined} isLoading onSelect={vi.fn()} />);
-    expect(screen.getByTestId("skeleton")).toBeInTheDocument();
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('p1');
   });
 });
 ```
 
-### Query priorities (use in this order)
+- Components that use `useTranslation` render under the real i18n instance (initialised in
+  setup) — assert on English text, or on roles/labels, not on keys.
+- Components that use queries render inside `createWrapper()` from `src/test/utils/queryWrapper.tsx`
+  (fresh `QueryClient`, `retry: false`).
+- Components that use router hooks render inside `createMemoryRouter` / `RouterProvider`.
 
-1. `getByRole` — most resilient to implementation changes
-2. `getByLabelText` — for form fields
-3. `getByPlaceholderText`
-4. `getByText`
-5. `getByDisplayValue`
-6. `getByAltText`, `getByTitle`
-7. `getByTestId` — last resort; add `data-testid` only when nothing else works
+### Query priority
 
----
+1. `getByRole` (with `name`) — resilient, checks accessibility for free
+2. `getByLabelText` — form fields
+3. `getByPlaceholderText`, `getByText`, `getByDisplayValue`
+4. `getByTestId` — last resort; add `data-testid` only for elements with no accessible identity
+   (the e2e suite shares the same ids)
+
+`findBy*` for anything that appears after an await; never `waitFor` around a `getBy` that could
+simply be a `findBy`.
 
 ## Hook tests
 
-```tsx
-import { renderHook, waitFor } from "@testing-library/react";
-import { createWrapper } from "@/test/utils/queryWrapper";
-import { useUser } from "./useUser";
+```ts
+import { renderHook, waitFor } from '@testing-library/react';
 
-describe("useUser", () => {
-  it("returns user data after successful fetch", async () => {
-    const { result } = renderHook(() => useUser("u_1"), {
-      wrapper: createWrapper(),
-    });
+import { createWrapper } from '@/test/utils/queryWrapper';
 
-    expect(result.current.isLoading).toBe(true);
+import { useGoals } from './useGoals';
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+it('maps the DTO into the view model', async () => {
+  const { result } = renderHook(() => useGoals(), { wrapper: createWrapper() });
 
-    expect(result.current.user?.name).toBe("Test User");
-  });
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+  expect(result.current.data?.calories).toBe(2200);
 });
 ```
 
-```tsx
-// src/test/utils/queryWrapper.tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+## Factories
 
-export function createWrapper() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  };
-}
-```
-
----
+`src/test/factories/<entity>.ts` — plain functions with overrides, deterministic ids
+(`String(++counter)`), no faker. Keep the wire shape (the generated DTO), not the view model,
+unless the factory is explicitly for a mapped type.
 
 ## What to test
 
-| Worth testing | Skip / trust the library |
+| Worth it | Skip |
 |---|---|
-| User interactions & flows | Implementation details |
-| Business logic in utils/hooks | Styling classes |
-| Error states & edge cases | Library internals (React Query cache) |
-| Accessibility attributes | Exact HTML structure |
-| Data transformations | `console.log` calls |
+| User interactions and visible outcomes | Tailwind classes, exact DOM structure |
+| Mapping / formatting logic in hooks and utils | TanStack Query internals |
+| Error, empty and loading states | Third-party primitives (Radix) |
+| a11y attributes on custom widgets | `console.*` calls |
+| i18n: both languages produce a label | Snapshot tests of whole pages |
 
----
+## Rules
 
-## E2E — Playwright
-
-```ts
-// e2e/auth.spec.ts
-import { test, expect } from "@playwright/test";
-
-test.describe("Authentication", () => {
-  test("user can log in with valid credentials", async ({ page }) => {
-    await page.goto("/login");
-
-    await page.getByLabel("Email").fill("user@example.com");
-    await page.getByLabel("Password").fill("password123");
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await expect(page).toHaveURL("/dashboard");
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  });
-
-  test("shows validation errors for empty form", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await expect(page.getByRole("alert")).toContainText("Invalid email");
-  });
-});
-```
-
-```ts
-// playwright.config.ts
-export default defineConfig({
-  testDir: "./e2e",
-  use: { baseURL: "http://localhost:5173", trace: "on-first-retry" },
-  webServer: { command: "vite", port: 5173, reuseExistingServer: true },
-});
-```
+- No `test.skip` / `it.only` in committed code (`forbidOnly` is on in CI for Playwright; for
+  Vitest the reviewer rejects it).
+- No fixed `setTimeout` waits; use `findBy*` / `waitFor` with a real condition, or
+  `vi.useFakeTimers()` + `vi.advanceTimersByTime()` for time-based logic.
+- Mock at the network boundary (MSW), not by `vi.mock`-ing your own hooks — except for
+  infrastructure singletons (`userManager`, `ToastContext`) where a light stub is fine.
+- One behaviour per `it`. Test names read as sentences.

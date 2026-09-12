@@ -41,28 +41,25 @@ Use `ICommand` (no result) for mutations where the caller needs nothing back.
 
 ```csharp
 // Application/Commands/CreateBudgetPlan/CreateBudgetPlanCommandHandler.cs
-internal sealed class CreateBudgetPlanCommandHandler
-    : ICommandHandler<CreateBudgetPlanCommand, Guid>
+// Primary constructor — no fields, no tuple assignment (see coding standards)
+internal sealed class CreateBudgetPlanCommandHandler(
+    IBudgetPlanRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<CreateBudgetPlanCommand, Guid>
 {
-    private readonly IBudgetPlanRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CreateBudgetPlanCommandHandler(
-        IBudgetPlanRepository repository,
-        IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task<Guid> HandleAsync(CreateBudgetPlanCommand command, CancellationToken ct)
     {
         var id = BudgetPlanId.New();
+        var now = clock.GetUtcNow();
 
         var plan = BudgetPlan.Create(
             id,
             new Money(command.LimitValue, command.LimitCurrency),
-            DateRange.CurrentMonth());
+            DateRange.MonthOf(now),
+            now);
 
-        await _repository.AddAsync(plan, ct);
-        await _unitOfWork.CommitAsync(ct);
+        await repository.AddAsync(plan, ct);
+        await unitOfWork.CommitAsync(ct);
 
         return id.Value;
     }
@@ -120,16 +117,11 @@ public sealed record BudgetPlanDto(
 
 ```csharp
 // Application/Queries/GetBudgetPlan/GetBudgetPlanQueryHandler.cs
-internal sealed class GetBudgetPlanQueryHandler
+internal sealed class GetBudgetPlanQueryHandler(BudgetPlanDbContext dbContext)
     : IQueryHandler<GetBudgetPlanQuery, BudgetPlanDto?>
 {
-    private readonly BudgetPlanDbContext _dbContext;
-
-    public GetBudgetPlanQueryHandler(BudgetPlanDbContext dbContext)
-        => _dbContext = dbContext;
-
     public async Task<BudgetPlanDto?> HandleAsync(GetBudgetPlanQuery query, CancellationToken ct)
-        => await _dbContext.BudgetPlans
+        => await dbContext.BudgetPlans
             .AsNoTracking()
             .Where(x => x.Id == BudgetPlanId.From(query.BudgetPlanId))
             .Select(x => new BudgetPlanDto(
@@ -154,10 +146,11 @@ internal static class BudgetPlanMapper
 {
     // Domain event → integration event (used in domain event handler)
     internal static BudgetPlanCreatedIntegrationEvent ToIntegrationEvent(
-        this BudgetPlanCreatedDomainEvent @event)
+        this BudgetPlanCreatedDomainEvent @event, DateTimeOffset now)
         => new(
-            BudgetPlanId: @event.BudgetPlanId.Value,
-            OccurredAt: DateTime.UtcNow);
+            EventId: Guid.CreateVersion7(),
+            OccurredAt: now.UtcDateTime,
+            BudgetPlanId: @event.BudgetPlanId.Value);
 
     // Aggregate → summary DTO (only add when projection is complex or reused across queries)
     internal static BudgetPlanDto ToDto(this BudgetPlan plan)
@@ -190,16 +183,11 @@ writes to the module's outbox in the same EF Core transaction.
 
 ```csharp
 // Application/EventHandlers/BudgetPlanCreatedDomainEventHandler.cs
-internal sealed class BudgetPlanCreatedDomainEventHandler
+internal sealed class BudgetPlanCreatedDomainEventHandler(IIntegrationEventBus bus, TimeProvider clock)
     : IDomainEventHandler<BudgetPlanCreatedDomainEvent>
 {
-    private readonly IIntegrationEventBus _bus;
-
-    public BudgetPlanCreatedDomainEventHandler(IIntegrationEventBus bus)
-        => _bus = bus;
-
     public Task HandleAsync(BudgetPlanCreatedDomainEvent domainEvent, CancellationToken ct)
-        => _bus.PublishAsync(domainEvent.ToIntegrationEvent(), ct);
+        => bus.PublishAsync(domainEvent.ToIntegrationEvent(clock.GetUtcNow()), ct);
 }
 ```
 
@@ -212,7 +200,8 @@ RabbitMQ transports.
 
 ```csharp
 // BudgetPlan.Api/BudgetPlanEndpoints.cs
-private static async Task<IResult> CreateBudgetPlan(
+// Typed results — OpenAPI is inferred from the signature (see backend-api-patterns.md)
+private static async Task<Created> CreateBudgetPlan(
     CreateBudgetPlanRequest request,
     ICommandDispatcher dispatcher,
     CancellationToken ct)
@@ -224,7 +213,7 @@ private static async Task<IResult> CreateBudgetPlan(
     return TypedResults.Created($"/api/budget-plans/{id}");
 }
 
-private static async Task<IResult> GetBudgetPlan(
+private static async Task<Results<Ok<BudgetPlanDto>, NotFound>> GetBudgetPlan(
     Guid id,
     IQueryDispatcher dispatcher,
     CancellationToken ct)
@@ -243,7 +232,8 @@ private static async Task<IResult> GetBudgetPlan(
 
 | Rule | Detail |
 |---|---|
-| Handlers are `internal sealed` | Never public, never inherited |
+| Handlers are `internal sealed` with a primary constructor | Never public, never inherited, no `_field` boilerplate |
+| Time via `TimeProvider` | Never `DateTime.UtcNow` in a handler |
 | Commands own one `CommitAsync` | Never commit multiple times in one handler |
 | Queries use `AsNoTracking()` + `Select()` | Never load a full aggregate for a read |
 | No AutoMapper | Map explicitly with static methods or inline `Select()` |
