@@ -1,8 +1,8 @@
+namespace Household.Application.Queries.ListPickablePersons;
+
 using Household.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Queries.ListPickablePersons;
 
 internal sealed class ListPickablePersonsQueryHandler
     : IQueryHandler<ListPickablePersonsQuery, IReadOnlyList<PickablePersonDto>>

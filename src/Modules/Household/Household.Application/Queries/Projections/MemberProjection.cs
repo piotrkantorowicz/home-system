@@ -1,9 +1,9 @@
+namespace Household.Application.Queries.Projections;
+
 using Household.Application.Persistence;
 using Household.Domain.Entities;
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-
-namespace Household.Application.Queries.Projections;
 
 /// <summary>
 /// Joins a household's members to their <c>Person</c> records for display. Kept in one place

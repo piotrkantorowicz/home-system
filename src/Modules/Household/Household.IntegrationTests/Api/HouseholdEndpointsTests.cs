@@ -1,8 +1,8 @@
+namespace Household.IntegrationTests.Api;
+
 using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
-
-namespace Household.IntegrationTests.Api;
 
 public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFixture>
 {

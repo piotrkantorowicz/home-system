@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Commands.RenameHousehold;
+
+using Shared.Abstractions.Cqrs;
 
 internal sealed class RenameHouseholdCommandValidator : ICommandValidator<RenameHouseholdCommand>
 {

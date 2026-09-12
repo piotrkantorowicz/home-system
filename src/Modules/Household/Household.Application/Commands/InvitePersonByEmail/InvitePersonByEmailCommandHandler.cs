@@ -1,11 +1,11 @@
+namespace Household.Application.Commands.InvitePersonByEmail;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.InvitePersonByEmail;
 
 internal sealed class InvitePersonByEmailCommandHandler
     : ICommandHandler<InvitePersonByEmailCommand, InvitePersonByEmailResult>

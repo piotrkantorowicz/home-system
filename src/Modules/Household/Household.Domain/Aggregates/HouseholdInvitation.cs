@@ -1,9 +1,9 @@
-using Household.Domain.Events;
-using Household.Domain.Exceptions;
-using Household.Domain.ValueObjects;
-using Shared.Abstractions.Core.Domain;
-
 namespace Household.Domain.Aggregates;
+
+using global::Household.Domain.Events;
+using global::Household.Domain.Exceptions;
+using global::Household.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 /// <summary>
 /// A pending household membership addressed by email. In v1 no email is sent — the

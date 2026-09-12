@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Commands.RemoveMember;
+
+using Shared.Abstractions.Cqrs;
 
 public sealed record RemoveMemberCommand(
     string RequestingAuthSubject,

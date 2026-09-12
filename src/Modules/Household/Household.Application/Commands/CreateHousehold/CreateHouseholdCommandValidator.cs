@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Commands.CreateHousehold;
+
+using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateHouseholdCommandValidator : ICommandValidator<CreateHouseholdCommand>
 {

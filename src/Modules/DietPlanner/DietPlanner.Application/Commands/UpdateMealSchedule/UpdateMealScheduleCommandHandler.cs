@@ -4,8 +4,8 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Domain;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateMealScheduleCommand>
 {

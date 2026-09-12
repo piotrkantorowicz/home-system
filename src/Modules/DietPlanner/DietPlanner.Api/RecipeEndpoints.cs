@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Pagination;
+using Shared.Abstractions.Cqrs;
 
 public static class RecipeEndpoints
 {

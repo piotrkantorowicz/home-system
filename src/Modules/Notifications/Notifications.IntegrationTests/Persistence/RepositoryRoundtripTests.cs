@@ -2,9 +2,9 @@ namespace Notifications.IntegrationTests.Persistence;
 
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
-using Notifications.IntegrationTests.Infrastructure;
 using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Repositories;
+using Notifications.IntegrationTests.Infrastructure;
 
 [Collection(NotificationsDatabaseCollection.Name)]
 public sealed class RepositoryRoundtripTests
@@ -25,7 +25,7 @@ public sealed class RepositoryRoundtripTests
     public async Task Notification_InsertAndRead_RoundTrips()
     {
         var (_, uow) = CreateScope();
-        await using var _u = uow;
+        await using var disposeUow = uow;
         var repo = new NotificationRepository(uow);
         var id = NotificationId.New();
         var notification = Notification.Create(
@@ -36,7 +36,7 @@ public sealed class RepositoryRoundtripTests
         await uow.CommitAsync(CancellationToken.None);
 
         var (_, uow2) = CreateScope();
-        await using var _u2 = uow2;
+        await using var disposeUow2 = uow2;
         var roundtrip = await new NotificationRepository(uow2).GetByIdAsync(id, CancellationToken.None);
 
         roundtrip.ShouldNotBeNull();
@@ -49,7 +49,7 @@ public sealed class RepositoryRoundtripTests
     public async Task NotificationDelivery_InsertAndRead_RoundTrips()
     {
         var (_, uow) = CreateScope();
-        await using var _u = uow;
+        await using var disposeUow = uow;
         var repo = new NotificationRepository(uow);
 
         var notificationId = NotificationId.New();
@@ -64,7 +64,7 @@ public sealed class RepositoryRoundtripTests
         await uow.CommitAsync(CancellationToken.None);
 
         var (_, uow2) = CreateScope();
-        await using var _u2 = uow2;
+        await using var disposeUow2 = uow2;
         var roundtrip = await new NotificationRepository(uow2).GetDeliveryAsync(deliveryId, CancellationToken.None);
 
         roundtrip.ShouldNotBeNull();
@@ -78,7 +78,7 @@ public sealed class RepositoryRoundtripTests
     {
         var userId = $"user-{Guid.NewGuid():N}";
         var (_, uow) = CreateScope();
-        await using var _u = uow;
+        await using var disposeUow = uow;
         var repo = new NotificationChannelPreferencesRepository(uow);
 
         var prefs = NotificationChannelPreferences.CreateDefault(
@@ -87,7 +87,7 @@ public sealed class RepositoryRoundtripTests
         await uow.CommitAsync(CancellationToken.None);
 
         var (_, uow2) = CreateScope();
-        await using var _u2 = uow2;
+        await using var disposeUow2 = uow2;
         var loaded = await new NotificationChannelPreferencesRepository(uow2)
             .GetByUserIdAsync(userId, CancellationToken.None);
         loaded.ShouldNotBeNull();
@@ -97,13 +97,13 @@ public sealed class RepositoryRoundtripTests
         loaded.Update(consoleEnabled: false, emailEnabled: true, webSocketEnabled: false, updatedAt: DateTime.UtcNow);
 
         var (_, uow3) = CreateScope();
-        await using var _u3 = uow3;
+        await using var disposeUow3 = uow3;
         var updateRepo = new NotificationChannelPreferencesRepository(uow3);
         await updateRepo.UpdateAsync(loaded, CancellationToken.None);
         await uow3.CommitAsync(CancellationToken.None);
 
         var (_, uow4) = CreateScope();
-        await using var _u4 = uow4;
+        await using var disposeUow4 = uow4;
         var refetched = await new NotificationChannelPreferencesRepository(uow4)
             .GetByUserIdAsync(userId, CancellationToken.None);
         refetched.ShouldNotBeNull();

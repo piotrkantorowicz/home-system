@@ -1,7 +1,7 @@
+namespace Household.Application.Commands.AddExistingPersonAsMember;
+
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.AddExistingPersonAsMember;
 
 public sealed record AddExistingPersonAsMemberCommand(
     string RequestingAuthSubject,

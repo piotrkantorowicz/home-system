@@ -1,10 +1,10 @@
+namespace Household.Application.Common;
+
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.Application.Common;
 
 /// <summary>
 /// Resolves the calling <see cref="Person"/> from its Authentik subject and enforces the

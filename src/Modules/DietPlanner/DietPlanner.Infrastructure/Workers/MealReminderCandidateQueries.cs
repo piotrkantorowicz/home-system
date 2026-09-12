@@ -1,9 +1,6 @@
 namespace DietPlanner.Infrastructure.Workers;
 
 using DietPlanner.Application.Workers;
-using DietPlanner.Domain.Aggregates;
-using DietPlanner.Domain.Entities;
-using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

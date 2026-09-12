@@ -1,6 +1,6 @@
-using DietPlanner.Domain.Ledgers;
-
 namespace DietPlanner.Domain.Repositories;
+
+using DietPlanner.Domain.Ledgers;
 
 public interface IWaterReminderStateRepository
 {

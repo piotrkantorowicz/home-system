@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Commands.RevokeInvitation;
+
+using Shared.Abstractions.Cqrs;
 
 public sealed record RevokeInvitationCommand(
     string RequestingAuthSubject,

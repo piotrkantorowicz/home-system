@@ -1,3 +1,5 @@
+namespace Household.IntegrationTests.Api;
+
 using System.Net.Http.Json;
 using Household.Contracts.Interfaces;
 using Household.IntegrationTests.Infrastructure;
@@ -5,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using HouseholdDb = Household.Infrastructure.Persistence.HouseholdDbContext;
-
-namespace Household.IntegrationTests.Api;
 
 /// <summary>
 /// #219 — proves the Contracts query surface resolves a caller's household and that the

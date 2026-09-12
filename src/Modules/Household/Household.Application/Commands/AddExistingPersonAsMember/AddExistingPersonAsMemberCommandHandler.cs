@@ -1,11 +1,11 @@
+namespace Household.Application.Commands.AddExistingPersonAsMember;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.AddExistingPersonAsMember;
 
 internal sealed class AddExistingPersonAsMemberCommandHandler
     : ICommandHandler<AddExistingPersonAsMemberCommand>

@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Pagination;
+using Shared.Abstractions.Cqrs;
 
 public sealed record SearchRecipesQuery(
     string? Search,

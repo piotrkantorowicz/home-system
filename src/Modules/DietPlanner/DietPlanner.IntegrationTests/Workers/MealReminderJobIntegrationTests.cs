@@ -2,7 +2,6 @@ namespace DietPlanner.IntegrationTests.Workers;
 
 using DietPlanner.Application.Workers;
 using DietPlanner.Domain.Aggregates;
-using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.IntegrationTests.Infrastructure;

@@ -1,8 +1,8 @@
+namespace Household.Application.Commands.DeleteHousehold;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.DeleteHousehold;
 
 internal sealed class DeleteHouseholdCommandHandler : ICommandHandler<DeleteHouseholdCommand>
 {

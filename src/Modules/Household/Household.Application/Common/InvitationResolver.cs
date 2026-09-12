@@ -1,7 +1,7 @@
+namespace Household.Application.Common;
+
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
-
-namespace Household.Application.Common;
 
 /// <summary>
 /// Resolves a pending email invitation for a person the moment they become reachable —

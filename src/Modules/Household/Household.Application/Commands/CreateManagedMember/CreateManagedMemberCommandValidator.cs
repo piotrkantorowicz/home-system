@@ -1,7 +1,7 @@
+namespace Household.Application.Commands.CreateManagedMember;
+
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.CreateManagedMember;
 
 internal sealed class CreateManagedMemberCommandValidator : ICommandValidator<CreateManagedMemberCommand>
 {

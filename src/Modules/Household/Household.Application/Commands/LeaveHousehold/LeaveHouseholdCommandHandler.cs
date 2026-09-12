@@ -1,8 +1,8 @@
+namespace Household.Application.Commands.LeaveHousehold;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.LeaveHousehold;
 
 internal sealed class LeaveHouseholdCommandHandler : ICommandHandler<LeaveHouseholdCommand>
 {

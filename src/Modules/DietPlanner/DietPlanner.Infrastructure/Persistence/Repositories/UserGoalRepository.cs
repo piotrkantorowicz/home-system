@@ -2,7 +2,6 @@ namespace DietPlanner.Infrastructure.Persistence.Repositories;
 
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
-using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 internal sealed class UserGoalRepository : IUserGoalRepository

@@ -1,10 +1,10 @@
+namespace Household.Application.Commands.ChangeMemberRole;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.ChangeMemberRole;
 
 internal sealed class ChangeMemberRoleCommandHandler : ICommandHandler<ChangeMemberRoleCommand>
 {

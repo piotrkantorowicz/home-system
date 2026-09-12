@@ -1,10 +1,10 @@
+namespace Household.Application.Commands.SyncCurrentPerson;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.SyncCurrentPerson;
 
 internal sealed class SyncCurrentPersonCommandHandler
     : ICommandHandler<SyncCurrentPersonCommand, Guid>

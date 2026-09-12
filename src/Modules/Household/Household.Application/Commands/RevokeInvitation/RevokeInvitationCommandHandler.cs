@@ -1,10 +1,10 @@
+namespace Household.Application.Commands.RevokeInvitation;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.RevokeInvitation;
 
 internal sealed class RevokeInvitationCommandHandler : ICommandHandler<RevokeInvitationCommand>
 {

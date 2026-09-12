@@ -3,7 +3,6 @@ namespace DietPlanner.IntegrationTests.Api;
 using System.Net;
 using System.Net.Http.Json;
 using DietPlanner.Api;
-using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Persistence;
