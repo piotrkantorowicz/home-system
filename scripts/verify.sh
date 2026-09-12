@@ -34,7 +34,7 @@ for arg in "$@"; do
 done
 
 case "$MODE" in
-  staged) FILES=$(git diff --cached --name-only --diff-filter=ACMR) ;;
+  staged) FILES=$(git diff --cached --name-only --diff-filter=ACDMR) ;;
   branch)
     BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
     FILES=$( { git diff --name-only "$BASE"...HEAD; git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u ) ;;
