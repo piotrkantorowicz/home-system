@@ -1,0 +1,78 @@
+# Runs on EVERY pull request regardless of which paths changed.
+# Commit messages, PR title and branch name are the squash-merge inputs, so they are
+# validated here rather than inside the path-filtered CI workflows.
+name: PR Hygiene
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr-hygiene-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    name: Lint commits & PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: src/ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: src/ui
+
+      - name: Lint commit messages
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        working-directory: src/ui
+
+      # Squash-merge uses the PR title as the commit subject — it must be conventional too.
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | npx commitlint --verbose
+        working-directory: src/ui
+
+  branch-name:
+    name: Branch name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check naming convention
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          pattern='^(feat|fix|hotfix|chore|refactor|docs|test)/[0-9]+-[a-z0-9-]+$'
+          if ! [[ "$BRANCH" =~ $pattern ]]; then
+            echo "::error::Branch '$BRANCH' does not match <type>/<issue-number>-kebab-description"
+            exit 1
+          fi
+
+  linked-issue:
+    name: Linked issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require "Closes #N" / "Refs #N" in PR body
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! grep -Eiq '(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?|part of)[[:space:]]+#[0-9]+' <<< "$BODY"; then
+            echo "::error::PR body must reference its issue (e.g. 'Closes #142' or 'Refs #142')."
+            exit 1
+          fi
+
+  agent-config-sync:
+    name: CLAUDE.md ↔ AGENTS.md in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-agent-config-sync.sh

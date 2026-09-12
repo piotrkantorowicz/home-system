@@ -1,28 +1,6 @@
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
-cd "$REPO_ROOT/src/ui" && npx lint-staged
+(cd "$REPO_ROOT/src/ui" && npx lint-staged)
 
-FRONTEND_CHANGED=$(git -C "$REPO_ROOT" diff --cached --name-only | grep -E '^src/ui/' | head -1)
-
-if [ -n "$FRONTEND_CHANGED" ]; then
-  echo "🔍 Frontend changes detected — running full lint, format check and typecheck..."
-  cd "$REPO_ROOT/src/ui"
-  npm run format:check || exit 1
-  npm run lint || exit 1
-  npm run build || exit 1
-fi
-
-BACKEND_CHANGED=$(git -C "$REPO_ROOT" diff --cached --name-only | grep -E '^(src/(Apis|Modules|Shared)|tests/DietPlanner\.(UnitTests|IntegrationTests))/' | head -1)
-
-if [ -n "$BACKEND_CHANGED" ]; then
-  echo "🔨 Backend changes detected — building and running tests..."
-  dotnet build "$REPO_ROOT/HomeSystem.slnx" --configuration Debug --verbosity minimal || exit 1
-  dotnet test "$REPO_ROOT/src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj" \
-    --no-build \
-    --configuration Debug \
-    --logger "console;verbosity=minimal" || exit 1
-  dotnet test "$REPO_ROOT/src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj" \
-    --no-build \
-    --configuration Debug \
-    --logger "console;verbosity=minimal" || exit 1
-fi
+# Path-aware checks for whatever is staged — same script the `verify` skill and CI use.
+"$REPO_ROOT/scripts/verify.sh" --staged
