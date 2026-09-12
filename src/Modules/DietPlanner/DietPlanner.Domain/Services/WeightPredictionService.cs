@@ -25,9 +25,9 @@ public sealed class WeightPredictionService
 
         return gender switch
         {
-            Gender.Male   => base_ + 5m,
+            Gender.Male => base_ + 5m,
             Gender.Female => base_ - 161m,
-            _             => base_ - 78m   // average of +5 and -161
+            _ => base_ - 78m   // average of +5 and -161
         };
     }
 
@@ -74,7 +74,7 @@ public sealed class WeightPredictionService
             return null;
 
         bool wantToLose = weightDelta < 0;
-        bool isLosing   = weeklyWeightChangeKg < 0;
+        bool isLosing = weeklyWeightChangeKg < 0;
 
         if (wantToLose != isLosing)
             return null;

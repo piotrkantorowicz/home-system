@@ -109,7 +109,7 @@ public sealed class WeeklySummaryJobTests
 
         await _sut.RunAsync(Now, CancellationToken.None);
 
-        var expectedWeekEnd   = DateOnly.FromDateTime(Now).AddDays(-1); // 2026-04-25
+        var expectedWeekEnd = DateOnly.FromDateTime(Now).AddDays(-1); // 2026-04-25
         var expectedWeekStart = expectedWeekEnd.AddDays(-6);            // 2026-04-19
 
         await _bus.Received(1).PublishAsync(
