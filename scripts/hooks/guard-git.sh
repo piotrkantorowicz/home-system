@@ -20,8 +20,11 @@ if grep -Eq 'git[[:space:]]+push' <<< "$cmd"; then
   if grep -Eq -- '(^|[[:space:]])(-f|--force)([[:space:]]|$)|[[:space:]]\+[[:alnum:]]' <<< "$cmd"; then
     block "force push is not allowed. Use --force-with-lease on a feature branch if you must rewrite it."
   fi
-  if grep -Eq -- '--force-with-lease' <<< "$cmd" && { [[ "$branch" == "main" ]] || grep -Eq '[[:space:]]main([[:space:]]|$)' <<< "$cmd"; }; then
-    block "never rewrite 'main'."
+  # A refspec's destination follows ':'; a bare ref is also its destination.
+  # Include full refs, deletion refspecs and quoted arguments, but not main:feature.
+  main_destination="(^|[[:space:]])[\"']?([^[:space:]:]*:)?(refs/heads/)?main[\"']?([[:space:];&|]|$)"
+  if grep -Eq "$main_destination" <<< "$cmd"; then
+    block "never push directly to 'main'. Push a feature branch and open a PR."
   fi
 fi
 
