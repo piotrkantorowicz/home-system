@@ -43,7 +43,6 @@ import {
   useCompleteMeal,
   useResetMeal,
   useBulkCompleteMeals,
-  type MealEntryDto,
   type DailyNutrition,
 } from '../api/hooks/useMeals';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
@@ -482,7 +481,7 @@ export default function Calendar() {
             <WeekGrid
               weekDays={weekDays}
               slots={slots.map((s) => ({ id: s.id, name: s.name, sortOrder: s.sortOrder }))}
-              meals={meals ? (meals as unknown as MealEntryDto[]) : []}
+              meals={meals ?? []}
               nutritionByDate={nutritionByDate}
               calorieTarget={goals?.dailyCalorieTarget ?? null}
               loading={mealsLoading}
