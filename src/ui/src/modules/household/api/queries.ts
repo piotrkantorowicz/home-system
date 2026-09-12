@@ -13,7 +13,11 @@ export function useHouseholdQuery() {
     queryKey: [...householdKeys.all, 'me', auth.user?.profile.sub],
     enabled: auth.isAuthenticated,
     queryFn: async ({ signal }) => {
-      // Sync person first to ensure they exist
+      // A missing person also returns 404; this lookup is only a membership snapshot.
+      const beforeSync = await api.GET('/api/households/me', { signal });
+      if (beforeSync.response.status !== 404) checkResponse(beforeSync);
+
+      // Sync before loading the authoritative household state and admitting feature routes.
       const sync = await api.POST('/api/persons/me/sync', { signal });
       checkResponse(sync);
 
@@ -23,10 +27,7 @@ export function useHouseholdQuery() {
       checkResponse(result);
       if (!result.data) throw new Error('Missing household response');
 
-      // Detect if person just joined via sync
-      // This happens when syncing resolved a pending invitation
-      const joined =
-        sync.data?.personId === auth.user?.profile.sub && result.data.myRole !== 'Owner';
+      const joined = beforeSync.response.status === 404;
       return { household: result.data, joined };
     },
   });

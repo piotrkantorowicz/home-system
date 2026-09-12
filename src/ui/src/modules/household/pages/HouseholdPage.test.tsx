@@ -162,7 +162,7 @@ describe('Household UI', () => {
       http.post(`${BASE}/api/persons/me/sync`, async () => {
         await delay(40);
         household = { ...fixture, myRole: 'Adult' };
-        return HttpResponse.json({ personId: 'owner' });
+        return HttpResponse.json({ personId: 'person-123' });
       }),
       http.post(`${BASE}/api/households`, create),
     );
@@ -322,7 +322,7 @@ describe('Household UI', () => {
     server.use(
       http.post(`${BASE}/api/persons/me/sync`, () => {
         household = { ...fixture, myRole: 'Adult' };
-        return HttpResponse.json({ personId: 'owner' });
+        return HttpResponse.json({ personId: 'person-123' });
       }),
     );
     renderPage();
@@ -330,10 +330,24 @@ describe('Household UI', () => {
     expect(screen.getAllByText("You've joined the Our home household.")).toHaveLength(1);
   });
 
-  it('does not announce existing membership as a new invitation', async () => {
-    renderPage();
-    await screen.findByRole('heading', { name: 'Our home' });
-    expect(screen.queryByText(/You've joined/)).not.toBeInTheDocument();
+  it.each(['Owner', 'Adult', 'Child', 'Guest'])(
+    'does not announce existing %s membership as a new invitation',
+    async (role) => {
+      household = { ...fixture, myRole: role };
+      renderPage();
+      await screen.findByRole('heading', { name: 'Our home' });
+      expect(screen.queryByText(/You've joined/)).not.toBeInTheDocument();
+    },
+  );
+
+  it('blocks feature access when person sync fails', async () => {
+    server.use(
+      http.post(`${BASE}/api/persons/me/sync`, () => new HttpResponse(null, { status: 500 })),
+    );
+    renderPage('/diet-planner');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load your household');
+    expect(screen.queryByText('Diet planner')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Get started' })).not.toBeInTheDocument();
   });
 
   it('renames the household and reports success', async () => {
