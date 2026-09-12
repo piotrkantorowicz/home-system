@@ -1,5 +1,6 @@
+# POSIX sh — husky runs hooks with /bin/sh (dash), so no bash [[ ]] here.
 branch=$(git rev-parse --abbrev-ref HEAD)
-pattern="^(feat|fix|hotfix|chore|refactor|docs|test)\/[0-9]+-[a-z0-9-]+$"
+pattern='^(feat|fix|hotfix|chore|refactor|docs|test)/[0-9]+-[a-z0-9-]+$'
 
 if [ "$branch" = "main" ]; then
   exit 0

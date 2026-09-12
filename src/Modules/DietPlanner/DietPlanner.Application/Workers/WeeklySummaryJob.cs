@@ -32,7 +32,7 @@ internal sealed class WeeklySummaryJob(
             if (!IsWeekElapsed(nowUtc, c.LastWeeklySummaryAt))
                 continue;
 
-            var weekEnd   = DateOnly.FromDateTime(nowUtc).AddDays(-1);
+            var weekEnd = DateOnly.FromDateTime(nowUtc).AddDays(-1);
             var weekStart = weekEnd.AddDays(-6);
 
             WeeklyStats stats = await queries.GetStatsAsync(c.UserId, weekStart, weekEnd, ct);
@@ -44,18 +44,18 @@ internal sealed class WeeklySummaryJob(
                 existing.UpdateLastSummaryAt(nowUtc);
 
             await bus.PublishAsync(new WeeklySummaryDueIntegrationEvent(
-                EventId:        Guid.NewGuid(),
-                OccurredAt:     nowUtc,
-                UserId:         c.UserId,
-                Locale:         c.Locale,
-                WeekStart:      weekStart,
-                WeekEnd:        weekEnd,
-                TotalKcal:      stats.TotalKcal,
-                TargetKcal:     stats.TargetKcal,
+                EventId: Guid.NewGuid(),
+                OccurredAt: nowUtc,
+                UserId: c.UserId,
+                Locale: c.Locale,
+                WeekStart: weekStart,
+                WeekEnd: weekEnd,
+                TotalKcal: stats.TotalKcal,
+                TargetKcal: stats.TargetKcal,
                 AvgWaterLiters: stats.AvgWaterLiters,
-                WeightDeltaKg:  stats.WeightDeltaKg,
+                WeightDeltaKg: stats.WeightDeltaKg,
                 MealsCompleted: stats.MealsCompleted,
-                MealsPlanned:   stats.MealsPlanned), ct);
+                MealsPlanned: stats.MealsPlanned), ct);
 
             publishedAny = true;
         }

@@ -1,0 +1,30 @@
+name: Bug
+description: Something behaves differently from what the code or docs promise.
+title: "fix(<module>): <short description>"
+labels: [bug]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed
+      description: What happens. Exact error text, status code, screenshot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro
+      description: Minimal steps. Which user / role / household state.
+    validations:
+      required: true
+  - type: textarea
+    id: suspect
+    attributes:
+      label: Suspected cause / location
+      description: Optional. file:line, handler, component.

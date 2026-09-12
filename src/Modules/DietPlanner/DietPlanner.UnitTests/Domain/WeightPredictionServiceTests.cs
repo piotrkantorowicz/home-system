@@ -37,7 +37,7 @@ public sealed class WeightPredictionServiceTests
 
     [Theory]
     [InlineData(2000, 1500, -0.455)]  // 500 deficit × 7 / 7700
-    [InlineData(2000, 2500,  0.455)]  // 500 surplus × 7 / 7700
+    [InlineData(2000, 2500, 0.455)]  // 500 surplus × 7 / 7700
     [InlineData(2000, 1000, -0.909)]  // 1000 deficit × 7 / 7700
     public void CalculateWeeklyWeightChange_MatchesFormula(
         decimal tdee, decimal target, decimal expected)
@@ -110,7 +110,7 @@ public sealed class WeightPredictionServiceTests
     // ── CalculateBmr ────────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(80, 180, 30, Gender.Male,   1780.0)]  // 10*80 + 6.25*180 - 5*30 + 5
+    [InlineData(80, 180, 30, Gender.Male, 1780.0)]  // 10*80 + 6.25*180 - 5*30 + 5
     [InlineData(60, 165, 25, Gender.Female, 1345.25)] // 10*60 + 6.25*165 - 5*25 - 161
     public void CalculateBmr_ReturnsExpectedValue(
         decimal weight, decimal height, int age, Gender gender, double expected)

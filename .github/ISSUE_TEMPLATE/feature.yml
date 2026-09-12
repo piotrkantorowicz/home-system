@@ -1,0 +1,45 @@
+name: Feature / task
+description: A vertical slice of work that will become exactly one PR.
+title: "feat(<module>): <short description>"
+labels: [enhancement]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this exists. Link the epic and the design-doc section.
+      placeholder: "Part of #213. Design: docs/design/household/README.md §6."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What this issue delivers, as bullets. Backend / frontend / tests.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What is deliberately deferred and to which issue.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkable statements. Each one maps to a test or a manual check.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Likely files / layers touched
+      description: Helps the implementer (human or agent) start in the right place.
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test plan
+      description: Unit / integration / e2e specs expected in the PR.

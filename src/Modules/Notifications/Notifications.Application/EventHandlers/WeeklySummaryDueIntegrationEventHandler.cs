@@ -27,10 +27,10 @@ internal sealed class WeeklySummaryDueIntegrationEventHandler(INotificationDispa
 
         var placeholders = new Dictionary<string, string>
         {
-            ["TotalKcal"]      = @event.TotalKcal.ToString(),
-            ["TargetKcal"]     = @event.TargetKcal.ToString(),
+            ["TotalKcal"] = @event.TotalKcal.ToString(),
+            ["TargetKcal"] = @event.TargetKcal.ToString(),
             ["MealsCompleted"] = @event.MealsCompleted.ToString(),
-            ["MealsPlanned"]   = @event.MealsPlanned.ToString(),
+            ["MealsPlanned"] = @event.MealsPlanned.ToString(),
         };
 
         return dispatcher.DispatchAsync(

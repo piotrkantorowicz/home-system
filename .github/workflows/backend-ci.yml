@@ -4,23 +4,29 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/Apis/HomeSystem.REST/**'
+      - 'src/Apis/**'
       - 'src/Modules/**'
       - 'src/Shared/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'HomeSystem.slnx'
+      - '.editorconfig'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'src/Apis/HomeSystem.REST/**'
+      - 'src/Apis/**'
       - 'src/Modules/**'
       - 'src/Shared/**'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'HomeSystem.slnx'
+      - '.editorconfig'
       - '.github/workflows/backend-ci.yml'
+
+concurrency:
+  group: backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -38,19 +44,27 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore HomeSystem.slnx
 
+      - name: Format check
+        run: dotnet format HomeSystem.slnx --no-restore --verify-no-changes --verbosity minimal
+
       - name: Build
         run: dotnet build HomeSystem.slnx --no-restore --configuration Release
 
-      - name: Run unit tests
+      # Every *.UnitTests / *.Tests / *.IntegrationTests project in the solution.
+      # Integration tests use Testcontainers — Docker is available on ubuntu-latest.
+      - name: Run all tests
         run: |
-          dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj \
+          dotnet test HomeSystem.slnx \
             --no-build \
             --configuration Release \
-            --logger "console;verbosity=minimal"
+            --logger "console;verbosity=minimal" \
+            --logger trx \
+            --results-directory TestResults
 
-      - name: Run integration tests
-        run: |
-          dotnet test src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj \
-            --no-build \
-            --configuration Release \
-            --logger "console;verbosity=minimal"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: TestResults/**/*.trx
+          retention-days: 7
