@@ -165,6 +165,8 @@ editing code in that area** — Codex does not load them automatically.
 | Frontend performance | `.claude/rules/frontend-performance.md` |
 | ESLint + Prettier + Husky | `.claude/rules/frontend-tooling.md` |
 | Git workflow, branching, commits | `.claude/rules/git-workflow.md` |
+| Issue → PR → review → merge loop, skills per stage, guard hooks | `.claude/rules/agent-workflow.md` |
+| What must be true before a PR is opened | `.claude/rules/definition-of-done.md` |
 | CQRS dispatcher full source | `.claude/skills/backend-cqrs.md` |
 | Messaging (bus, outbox/inbox, transports) full source | `.claude/skills/backend-messaging.md` |
 
@@ -172,11 +174,39 @@ editing code in that area** — Codex does not load them automatically.
 
 ## Skills
 
-Repo skills live in `.agents/skills/`. Codex auto-discovers them; invoke explicitly with
-`$<name>` or `/skills`, or let Codex pick one implicitly by task match.
+Repo skills live in `.agents/skills/` (single source, shared with Claude Code). Codex
+auto-discovers them; invoke explicitly with `$<name>` or `/skills`, or let Codex pick one
+implicitly by task match.
+
+**Delivery loop** (see `.claude/rules/agent-workflow.md`):
 
 | Skill | What it does |
 |---|---|
+| `$plan-issue` | Turn an epic / design-doc section into one issue per vertical slice |
+| `$start-issue` | Branch `<type>/<n>-<slug>` off fresh `origin/main`, assign, read the rule docs for the labels |
+| `$verify` | Run `scripts/verify.sh --branch` — path-aware build, format, tests |
+| `$ship` | Clean commits, push, open the PR from the template with `Closes #n` |
+| `$review-pr` | Review a PR (arch + correctness + tests + security), post inline comments — run in the *other* tool |
+| `$address-review` | Fix unresolved review threads, reply per thread, resolve what changed |
+| `$babysit-pr` | Loop: watch CI + review threads on a PR until green and approved |
+
+**Scaffolding & local stack:**
+
+| Skill | What it does |
+|---|---|
+| `$scaffold-module` | Scaffold a new backend module (DDD or CRUD) |
+| `$scaffold-aggregate` | Add a new aggregate root to an existing DDD module |
+| `$scaffold-endpoint` | Add a new API endpoint with command or query |
+| `$scaffold-feature` | Scaffold a new frontend feature module |
+| `$scaffold-component` | Create a new shared UI component with tests |
+| `$review-arch` | Review file(s) for architecture rule violations |
+| `$run-project` | Bring the full stack up locally (Docker infra + backend + frontend) |
+| `$stop-project` | Stop the local stack and free the ports |
+| `$run-e2e` | Run the Playwright E2E suite against the real stack |
+| `$branch-summary` | Commit-body-style summary of unmerged commits on the branch |
+| `$pr-summary` | Concise PR body summary from the diff vs `main` |
+
+---|---|
 | `$scaffold-module` | Scaffold a new backend module (DDD or CRUD) |
 | `$scaffold-aggregate` | Add a new aggregate root to an existing DDD module |
 | `$scaffold-endpoint` | Add a new API endpoint with command or query |
@@ -233,6 +263,8 @@ see the Quick Reference table above for which. Full list:
 .claude/rules/frontend-performance.md
 .claude/rules/frontend-tooling.md
 .claude/rules/git-workflow.md
+.claude/rules/agent-workflow.md
+.claude/rules/definition-of-done.md
 .claude/skills/backend-cqrs.md      # CQRS dispatcher full source
 .claude/skills/backend-messaging.md # messaging stack full source
 ```
