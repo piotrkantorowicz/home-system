@@ -58,7 +58,7 @@ jobs:
             --no-build \
             --configuration Release \
             --logger "console;verbosity=minimal" \
-            --logger "trx;LogFileName=results.trx" \
+            --logger trx \
             --results-directory TestResults
 
       - name: Upload test results
