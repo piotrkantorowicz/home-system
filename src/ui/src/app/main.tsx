@@ -1,4 +1,5 @@
 import { dietPlannerModule } from '@modules/diet-planner';
+import { householdModule } from '@modules/household';
 import { notificationsModule } from '@modules/notifications';
 import { queryClient } from '@shared/api/queryClient';
 import { AuthProvider } from '@shared/auth/AuthProvider';
@@ -16,6 +17,7 @@ import { createRouter } from './router';
 import '../index.css';
 
 // 1. Register all modules
+registerModule(householdModule);
 registerModule(dietPlannerModule);
 registerModule(notificationsModule);
 

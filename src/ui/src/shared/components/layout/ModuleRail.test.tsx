@@ -1,5 +1,7 @@
+import { NavigationAccessContext } from '@shared/context/NavigationAccessContext';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import { ModuleRail } from './ModuleRail';
@@ -38,15 +40,49 @@ vi.mock('react-oidc-context', () => ({
   }),
 }));
 
-function renderRail(pathname = '/diet-planner') {
+function LocationProbe() {
+  return <output aria-label="Current path">{useLocation().pathname}</output>;
+}
+
+function renderRail(pathname = '/diet-planner', restricted = false) {
   return render(
     <MemoryRouter initialEntries={[pathname]}>
-      <ModuleRail />
+      <NavigationAccessContext
+        value={restricted ? { allowedPath: '/household', reason: 'Create your home first' } : null}
+      >
+        <ModuleRail />
+        <LocationProbe />
+      </NavigationAccessContext>
     </MemoryRouter>,
   );
 }
 
 describe('ModuleRail', () => {
+  it('does not navigate to another module before household setup', async () => {
+    renderRail('/household', true);
+    const tile = screen.getByRole('button', { name: 'common.diet_planner' });
+    expect(tile).toBeDisabled();
+    expect(tile).toHaveAttribute('title', 'Create your home first');
+    await userEvent.click(tile);
+    expect(screen.getByLabelText('Current path')).toHaveTextContent('/household');
+    expect(tile).not.toHaveAttribute('aria-current');
+  });
+
+  it('disables module switcher destinations during setup', async () => {
+    renderRail('/household', true);
+    await userEvent.click(screen.getByRole('button', { name: 'common.switch_module' }));
+    expect(await screen.findByRole('menuitem', { name: 'common.diet_planner' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(screen.getByText('Create your home first')).toBeInTheDocument();
+  });
+
+  it('allows module navigation once setup is complete', async () => {
+    renderRail('/household');
+    await userEvent.click(screen.getByRole('button', { name: 'common.diet_planner' }));
+    expect(screen.getByLabelText('Current path')).toHaveTextContent('/diet-planner');
+  });
   it('renders a tile for every registered module', () => {
     renderRail();
     expect(screen.getByRole('button', { name: 'common.diet_planner' })).toBeInTheDocument();

@@ -226,6 +226,13 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
   - `AddMemberDialog` — tabbed: pick existing person · invite by email · create
     managed member.
   - Accept-invitation toast handled globally (not a page).
+- **Onboarding** — after person sync and invitation resolution, a person without
+  a household must explicitly create one before entering feature pages. Prefill
+  the editable name with “My home” / “Mój dom”; “Get started” / “Rozpocznij”
+  creates the single-member household with the caller as owner. There is no skip.
+  Adding other people is optional after creation. Keep the app shell visible
+  during loading and errors, with retry; errors must not be treated as absence
+  of a household. Existing members go directly to their requested page.
 - **State**
   - `HouseholdProvider` mounted in the app shell; `useHousehold()` exported from
     the module `index.ts` returning `{ household, myRole, members, isLoading }`.

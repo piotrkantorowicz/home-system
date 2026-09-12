@@ -1,4 +1,5 @@
 import { NotificationsPanel } from '@modules/notifications/components/NotificationsPanel';
+import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
@@ -11,6 +12,7 @@ import { getActiveModule } from './navModel';
 export function Header() {
   const auth = useAuth();
   const { t } = useTranslation();
+  const labels = useModuleLabels();
   const location = useLocation();
 
   if (!auth.isAuthenticated || !auth.user) {
@@ -32,7 +34,9 @@ export function Header() {
         >
           <span className="text-[17px] font-bold tracking-tight">HomeSystem</span>
           <span className="text-muted-foreground hidden text-xs sm:inline">
-            {activeModule ? t(activeModule.translationKey) : t('common.app_tagline')}
+            {activeModule
+              ? (labels[activeModule.name] ?? t(activeModule.translationKey))
+              : t('common.app_tagline')}
           </span>
         </button>
       </ModuleSwitcher>
