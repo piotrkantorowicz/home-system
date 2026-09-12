@@ -1,11 +1,11 @@
 branch=$(git rev-parse --abbrev-ref HEAD)
 pattern="^(feat|fix|hotfix|chore|refactor|docs|test)\/[0-9]+-[a-z0-9-]+$"
 
-if [[ "$branch" == "main" ]]; then
+if [ "$branch" = "main" ]; then
   exit 0
 fi
 
-if ! [[ "$branch" =~ $pattern ]]; then
+if ! printf '%s\n' "$branch" | grep -Eq "$pattern"; then
   echo "❌ Branch name '$branch' does not follow naming convention."
   echo "   Expected: <type>/<issue-number>-short-description"
   echo "   Example:  feat/142-user-authentication"
