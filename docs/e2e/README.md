@@ -46,6 +46,7 @@ This directory is the human-readable reference. Each spec has its own page below
 | Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh and per-worker `storageState` resolution |
 | Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), password sourced from `TEST_USER_PASSWORD` in `e2e/.env` (must match `E2E_USER_PASSWORD` in `infrastructure/.env`). Per-worker overrides available via `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` |
 | Auth state | `playwright/.auth/user-${workerIndex}.json` — one file per worker, saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
+| Household seed | `shared/household-seed.ts` — after each worker logs in, `auth.setup.ts` ensures the user belongs to a household (`GET /api/households/me` → on 404 `POST /api/persons/me/sync` + `POST /api/households`). Without it `HouseholdRequired` redirects every module route to `/household`. Idempotent; the household is not purged by teardown |
 | Workers | `4` — each worker owns a distinct Authentik user so tests run in parallel without cross-worker data contention |
 | Web server | Auto-starts Vite via `npm --prefix ../src/ui run dev`; reuses an existing server on `:5173` |
 | Cleanup | `shared/global-teardown.ts` calls `DELETE /api/v1/test-support/purge-my-data` once per worker (in parallel) — a single hard-purge of all owned rows across every DietPlanner aggregate |
@@ -56,6 +57,8 @@ This directory is the human-readable reference. Each spec has its own page below
 ## Auth fixture behaviour
 
 Each worker runs as a dedicated Authentik user. `shared/auth.setup.ts` logs in all four users sequentially at the start of the suite and writes one storage-state file per worker (`playwright/.auth/user-0.json` … `user-3.json`). The auth fixture picks the right file via `testInfo.workerIndex` and overrides the default `storageState` fixture accordingly.
+
+Right after each login the setup project seeds a household for that user (see `shared/household-seed.ts`). The SPA's `HouseholdRequired` gate redirects household-less users to the onboarding page, so this must happen before any spec navigates. The household persists across runs — teardown only purges DietPlanner data.
 
 Before each test the fixture tries to refresh the stored OIDC tokens via the refresh-token grant. On success it injects fresh tokens into `localStorage` before navigation (~200 ms). On failure (token revoked / Authentik restart), it falls back to a full interactive login through the Authentik UI and rewrites the worker's auth file for subsequent tests.
 

@@ -1,6 +1,7 @@
 import { test as setup, expect } from '@playwright/test';
 
 import { authStatePath, credentialsFor } from './auth-paths';
+import { ensureHousehold } from './household-seed';
 
 import type { Page } from '@playwright/test';
 
@@ -88,5 +89,9 @@ for (let workerIndex = 0; workerIndex < WORKER_COUNT; workerIndex++) {
 
     await context.storageState({ path: authStatePath(workerIndex) });
     await context.close();
+
+    // The SPA gates every module route behind household membership — seed one
+    // per worker so specs land on the page they navigate to.
+    await ensureHousehold(workerIndex);
   });
 }
