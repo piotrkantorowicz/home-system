@@ -27,19 +27,35 @@ path + section (`docs/design/household/README.md §8`), or a free-text descripti
    - **Acceptance criteria** — checkable statements; each maps to a test or a manual check.
    - **Likely files / layers** — where to start.
    - **Test plan** — which unit / integration / e2e specs the PR must add.
-   - **Labels** — module label (`household`, `notifications`, …), `backend` / `frontend`,
-     `priority:*`, plus `enhancement` or `bug`.
+   - **Labels** — exactly one type, at least one area or module, one priority
+     (`.github/labels.json` is the source of truth, `scripts/sync-labels.sh` applies it):
+
+     | Group | Labels |
+     |---|---|
+     | Type (one) | `enhancement` (feat), `bug` (fix), `tech-debt` (refactor/perf), `chore` (chore/ci), `documentation` (docs), `epic` |
+     | Area | `backend`, `frontend`, `e2e`, `infra`, `ci` |
+     | Module | `diet-planner`, `household`, `notifications`, `shared`, `ui-shell` |
+     | Cross-cutting | `ux`, `accessibility` |
+     | Priority (one) | `priority:high`, `priority:medium`, `priority:low` |
+     | Flow | `blocked`, `needs-decision`, `hotfix` |
+
+     The type label decides the issue template and the PR's Conventional Commits type;
+     the release bump follows from that (see `agent-workflow.md` § Releases).
 5. **Show the full list to the user and stop.** Titles, one-line scope each, dependency
    order. Wait for approval — this is a human gate.
 6. **On approval**, create them in dependency order:
    ```bash
    gh issue create --title "<title>" --label "<a>,<b>" --body-file <tmpfile>
    ```
-   Then append a `- [ ] #<n> <title>` line per issue to the epic's body checklist
-   (`gh issue view <epic> --json body`, edit, `gh issue edit <epic> --body-file`).
-7. **Board.** Put every created issue (and the epic, if new) on the project board:
+   Then make each one a **sub-issue** of the epic — the board groups by parent issue and
+   shows *Sub-issues progress*; no body checklist to maintain:
+   ```bash
+   scripts/board.sh link <epic> <n>
+   ```
+7. **Board.** Approved slices are `Todo`; the epic moves from `Backlog` to `Todo`:
    ```bash
    scripts/board.sh add <n> Todo
+   scripts/board.sh add <epic> Todo
    ```
    See § Project board below.
 8. **Epic lane?** If the slices only make sense together (main would be inconsistent
@@ -55,15 +71,15 @@ the Status column through `scripts/board.sh` (field ids resolved at run time):
 
 | Moment | Skill | Status |
 |---|---|---|
-| Issue created | `plan-issue` | `Todo` |
+| Epic / idea filed, not planned | template + board auto-add | `Backlog` |
+| Slice approved and created | `plan-issue` | `Todo` |
 | Branch created | `start-issue` / `start-epic` | `In Progress` |
 | PR opened | `ship` / `ship-epic` | `In Review` |
 | PR merged / issue closed | board built-in workflow | `Done` |
 
-`scripts/board.sh statuses` lists the column names the board actually has (today: `Todo`,
-`In Progress`, `Done`). If a target column is missing the script exits 1 and names the
-existing ones — `ship` then leaves the item in `In Progress` and says so; add the column on
-the board rather than renaming it here. The script uses
+`scripts/board.sh statuses` lists the column names the board actually has (`Backlog`,
+`Todo`, `In Progress`, `In Review`, `Done`). If a target column is missing the script exits 1
+and names the existing ones — add the column on the board rather than renaming it here. The script uses
 its own classic token (scopes `repo` + `project`) from `BOARD_TOKEN` or
 `~/.config/home-system/board-token` — fine-grained PATs cannot reach user projects. Without
 it, it warns and does nothing.

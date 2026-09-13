@@ -12,10 +12,12 @@ description: "Close the epic lane: check every child is merged, rebase epic/<n>-
 Preconditions — stop at the first that fails:
 
 1. The epic issue lists an `Epic branch:` line and `origin/epic/<n>-<slug>` exists.
-2. Every child in the epic's checklist is **closed** and its PR **merged**:
+2. Every sub-issue of the epic is **closed** and its PR **merged**:
    ```bash
-   gh issue view <n> --json body -q .body | grep -Eo '#[0-9]+' | sort -u   # children
-   gh issue view <child> --json state,closedByPullRequestsReferences
+   gh api graphql -F owner=:owner -F name=:repo -F n=<n> -f query='query($owner:String!,$name:String!,$n:Int!){
+     repository(owner:$owner,name:$name){ issue(number:$n){ subIssues(first:50){ nodes{ number state } } } } }' \
+     -q '.data.repository.issue.subIssues.nodes[] | "\(.number) \(.state)"'
+   gh issue view <child> --json closedByPullRequestsReferences
    ```
    An open child means the epic is not done — say which, stop.
 3. No open PR targets the epic branch: `gh pr list --base epic/<n>-<slug>`.
@@ -55,7 +57,7 @@ Preconditions — stop at the first that fails:
    ```bash
    gh pr create --base main --head epic/<n>-<slug> --title "<subject>" --body-file <tmp> --label epic
    ```
-6. **Board:** move the epic to `In Review`. Print the PR URL and the cross-review hint
+6. **Board:** `scripts/board.sh status <n> "In Review"`. Print the PR URL and the cross-review hint
    (`$review-pr` in Codex / `/review-pr` in Claude Code — review the integration, the
    children were already reviewed).
 

@@ -32,7 +32,7 @@ children keep going straight to `main` — do not open an epic lane for those.
    Epic branch: `epic/<n>-<slug>`. Children target it; it rebase-merges into `main` via `ship-epic`.
    ```
    (`gh issue view <n> --json body`, append, `gh issue edit <n> --body-file`).
-5. **Board:** move the epic to `In Progress` (see `plan-issue` § Project board).
+5. **Board:** `scripts/board.sh add <n> "In Progress"`.
 6. Print the branch and the next step: `/start-issue <child>` — it detects the epic branch
    from `Part of #<n>` in the child's body and branches off it.
 

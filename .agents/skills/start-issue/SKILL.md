@@ -21,10 +21,12 @@ description: "Start work on a GitHub issue: create the correctly named branch of
      `refactor`, `docs`, `test`). `hotfix` only when the issue carries the `hotfix` label.
    - `slug` = title without the `type(scope):` prefix, lower-cased, kebab-case, ASCII only,
      ≤ 5 words. Must match `^(feat|fix|hotfix|chore|refactor|docs|test)/[0-9]+-[a-z0-9-]+$`.
-3. **Pick the base.** Default `origin/main`. If the issue body says `Part of #<epic>`
-   and that epic has an epic lane, base on it instead:
+3. **Pick the base.** Default `origin/main`. If the issue is a sub-issue of an epic (or
+   its body says `Part of #<epic>`) and that epic has an epic lane, base on it instead:
    ```bash
-   epic=$(gh issue view <n> --json body -q .body | grep -Eo 'Part of #[0-9]+' | grep -Eo '[0-9]+' | head -1)
+   epic=$(gh api graphql -F owner=:owner -F name=:repo -F n=<n> -f query='query($owner:String!,$name:String!,$n:Int!){
+     repository(owner:$owner,name:$name){ issue(number:$n){ parent{ number } } } }' -q '.data.repository.issue.parent.number // empty')
+   [[ -n "$epic" ]] || epic=$(gh issue view <n> --json body -q .body | grep -Eo 'Part of #[0-9]+' | grep -Eo '[0-9]+' | head -1)
    base=$(gh issue view "$epic" --json body -q .body | grep -Eo 'Epic branch: `epic/[0-9]+-[a-z0-9-]+`' | tr -d '`' | cut -d' ' -f3)
    base=${base:-main}
    ```

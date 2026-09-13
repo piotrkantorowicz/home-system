@@ -21,6 +21,17 @@ the skills move its Status column via `scripts/board.sh` — see `plan-issue` §
 The script reads a classic PAT (`repo` + `project`) from `BOARD_TOKEN` or
 `~/.config/home-system/board-token`; gh's own login stays a repo-scoped fine-grained PAT.
 
+## Issues, labels, board
+
+| Thing | Rule |
+|---|---|
+| Templates | `epic` (goal + done-when + epic-lane choice), `feature` (one PR), `bug`, `tech-debt`. Title is the Conventional Commits subject of the eventual PR. |
+| Epic ↔ children | Children are **sub-issues** of the epic (`scripts/board.sh link <epic> <child>`), not a body checklist. The board groups by *Parent issue* and shows *Sub-issues progress*. |
+| Labels | Source of truth `.github/labels.json`, applied by `scripts/sync-labels.sh` (`--prune` deletes unused extras). Exactly one **type** (`epic` / `enhancement` / `bug` / `tech-debt` / `chore` / `documentation`), ≥ 1 **area or module** (`backend` `frontend` `e2e` `infra` `ci` / `diet-planner` `household` `notifications` `shared` `ui-shell`), one **priority**, optional `ux` `accessibility`, flow `blocked` `needs-decision` `hotfix`. |
+| Board Status | `Backlog` (filed, not planned) → `Todo` (approved by the plan gate) → `In Progress` (branch) → `In Review` (PR) → `Done` (merged / closed). |
+| Board automation | Built-in workflows (set once in the board UI): *Item added → Backlog*, *Item reopened → Todo*, *Item closed → Done*, *Pull request merged → Done*, *Auto-add from repo: is:issue*. Everything else is `scripts/board.sh` from the skills. |
+| Views | *Board* (by Status), *Epics* (table, `label:epic`, Sub-issues progress), *By epic* (board grouped by Parent issue), *Now* (Status in Todo/In Progress/In Review, sorted by priority). |
+
 ## Stages
 
 | Stage | Skill | Output | Gate |

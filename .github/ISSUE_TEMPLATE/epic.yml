@@ -1,0 +1,42 @@
+name: Epic
+description: A goal that needs several one-PR issues. Children are added as sub-issues by plan-issue.
+title: "[Epic] <goal>"
+labels: [epic]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What is true when this epic is done, in one paragraph. Who benefits.
+    validations:
+      required: true
+  - type: input
+    id: design
+    attributes:
+      label: Design doc
+      description: Path and section, if one exists.
+      placeholder: "docs/design/household/README.md §8"
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: Checkable end-state statements — the acceptance criteria of the whole epic.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Epic branch
+      description: Do the children need to ship together (main inconsistent halfway, feature unusable until the last slice)? Then `start-epic` opens an `epic/` branch and children merge into it.
+      options:
+        - "No — children merge straight to main"
+        - "Yes — children merge into epic/<n>-<slug>, rebase-merged to main at the end"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Children** are sub-issues of this epic (created by `plan-issue` after you approve the slice list). The board's *Sub-issues progress* column tracks them.

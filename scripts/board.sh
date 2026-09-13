@@ -4,6 +4,7 @@
 #   scripts/board.sh add <issue-number> [<Status>]   add the issue to the board (optionally set Status)
 #   scripts/board.sh status <issue-number> <Status>  move an item already on the board
 #   scripts/board.sh statuses                        list the Status options the board has
+#   scripts/board.sh link <epic-number> <issue-number>  make the issue a sub-issue of the epic
 #
 # Board: https://github.com/users/piotrkantorowicz/projects/3 (BOARD_OWNER / BOARD_NUMBER
 # override it). Field and option ids are resolved at run time, so renaming a column on the
@@ -28,7 +29,7 @@ number=${BOARD_NUMBER:-3}
 repo=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "piotrkantorowicz/home-system")
 repo_owner=${repo%/*}; repo_name=${repo#*/}
 
-usage() { sed -n '2,7p' "$0" >&2; exit 64; }
+usage() { sed -n '2,8p' "$0" >&2; exit 64; }
 warn_skip() { echo "board: $1 — skipping (set BOARD_TOKEN or write a classic PAT with scopes repo+project to $token_file)" >&2; exit 0; }
 gql() { gh api graphql "$@" 2>&1; }
 
@@ -86,5 +87,15 @@ case "${1:-}" in
     set_status "$item" "$3" "$2"
     ;;
   statuses) status_names ;;
+  link)
+    [[ -n "${2:-}" && -n "${3:-}" ]] || usage
+    epic=$(issue_json "$2" | jq -r '.content // empty'); child=$(issue_json "$3" | jq -r '.content // empty')
+    [[ -n "$epic" && -n "$child" ]] || { echo "board: issue #$2 or #$3 not found in $repo" >&2; exit 1; }
+    out=$(gql -F epic="$epic" -F child="$child" -f query='
+      mutation($epic:ID!,$child:ID!){ addSubIssue(input:{issueId:$epic,subIssueId:$child}){ subIssue{ number } } }')
+    if jq -e '.data.addSubIssue.subIssue.number' <<< "$out" >/dev/null 2>&1; then echo "board: #$3 is a sub-issue of #$2"
+    elif grep -qi 'duplicate' <<< "$out"; then echo "board: #$3 already a sub-issue of #$2"
+    else echo "board: link failed: $(head -c 200 <<< "$out")" >&2; exit 1; fi
+    ;;
   *) usage ;;
 esac
