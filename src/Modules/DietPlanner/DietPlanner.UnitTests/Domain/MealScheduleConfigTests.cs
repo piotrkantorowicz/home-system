@@ -13,7 +13,7 @@ public sealed class MealScheduleConfigTests
         ("Dinner", new TimeOnly(18, 0))
     ];
 
-    private static IReadOnlyList<MealSlotUpsert> Upserts(params (MealSlotId? Id, string Name, TimeOnly Time)[] items)
+    private static List<MealSlotUpsert> Upserts(params (MealSlotId? Id, string Name, TimeOnly Time)[] items)
         => items.Select(i => new MealSlotUpsert(i.Id, i.Name, i.Time)).ToList();
 
     [Fact]

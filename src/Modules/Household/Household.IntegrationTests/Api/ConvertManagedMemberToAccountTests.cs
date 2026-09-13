@@ -8,12 +8,14 @@ using Household.IntegrationTests.Infrastructure;
 /// #220 — a managed member converted to an account keeps the same <c>PersonId</c> (and so
 /// all personal data) when they first sign in.
 /// </summary>
-public sealed class ConvertManagedMemberToAccountTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class ConvertManagedMemberToAccountTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public ConvertManagedMemberToAccountTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     private async Task<HttpClient> OwnerWithHouseholdAsync()
     {

@@ -149,7 +149,7 @@ internal sealed class GetMealEntriesQueryHandler
 
     private static MealEntryDto BuildDto(
         RowProjection row,
-        IReadOnlyDictionary<RecipeId, string> actualRecipeNames,
+        Dictionary<RecipeId, string> actualRecipeNames,
         IReadOnlyDictionary<RecipeId, RecipeMacrosSource> recipes,
         IReadOnlyDictionary<ProductId, ProductMacrosSource> products)
     {

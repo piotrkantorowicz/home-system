@@ -4,12 +4,14 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
-public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public HouseholdInvitationTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     private async Task<(HttpClient Client, Guid HouseholdId)> OwnerWithHouseholdAsync()
     {

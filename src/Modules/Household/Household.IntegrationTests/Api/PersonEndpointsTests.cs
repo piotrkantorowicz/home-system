@@ -4,12 +4,14 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
-public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public PersonEndpointsTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     [Fact]
     public async Task Sync_ForANewSubject_CreatesThePerson_AndGetMeReturnsIt()
