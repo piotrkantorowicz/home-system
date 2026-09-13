@@ -261,7 +261,10 @@ export default function ShoppingList() {
               pageSize={tablePageSize}
               totalCount={items.length}
               onPageChange={setTablePage}
-              onPageSizeChange={setTablePageSize}
+              onPageSizeChange={(size) => {
+                setTablePageSize(size);
+                setTablePage(1);
+              }}
             />
           </div>
         </Card>

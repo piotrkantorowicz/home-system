@@ -4,7 +4,8 @@ import { describe, it, expect, vi } from 'vitest';
 
 import NutritionSummary from './NutritionSummary';
 
-const useNutritionSummary = vi.fn<() => { data: unknown[]; isLoading: boolean }>();
+const useNutritionSummary =
+  vi.fn<() => { data: unknown[]; isLoading: boolean; isError?: boolean; refetch?: () => void }>();
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -30,6 +31,18 @@ describe('NutritionSummary', () => {
     useNutritionSummary.mockReturnValue({ data: [], isLoading: false });
     render(<NutritionSummary />);
     expect(screen.getByText('nutrition_page.no_data')).toBeInTheDocument();
+  });
+
+  it('shows an error banner instead of the empty state when the request fails', async () => {
+    const refetch = vi.fn();
+    useNutritionSummary.mockReturnValue({ data: [], isLoading: false, isError: true, refetch });
+    render(<NutritionSummary />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('dashboard.data_error');
+    expect(screen.queryByText('nutrition_page.no_data')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'dashboard.retry' }));
+    expect(refetch).toHaveBeenCalledOnce();
   });
 
   it('renders the KPI row and flags over-target days', () => {
