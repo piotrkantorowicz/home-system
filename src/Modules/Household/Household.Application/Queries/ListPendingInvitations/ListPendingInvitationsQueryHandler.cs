@@ -1,10 +1,10 @@
+namespace Household.Application.Queries.ListPendingInvitations;
+
 using Household.Application.Persistence;
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Queries.ListPendingInvitations;
 
 internal sealed class ListPendingInvitationsQueryHandler
     : IQueryHandler<ListPendingInvitationsQuery, IReadOnlyList<InvitationDto>>

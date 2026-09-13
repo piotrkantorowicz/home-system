@@ -1,8 +1,8 @@
 namespace Household.IntegrationTests;
 
+using global::Household.Contracts.Interfaces;
 using global::Household.Domain.Abstractions;
 using global::Household.Infrastructure.Persistence;
-using global::Household.Contracts.Interfaces;
 using Household.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;

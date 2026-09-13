@@ -1,7 +1,7 @@
 namespace DietPlanner.Domain.Entities;
 
-using Shared.Abstractions.Core.Domain;
 using DietPlanner.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 public sealed class RecipeIngredient : Entity<RecipeIngredientId>
 {

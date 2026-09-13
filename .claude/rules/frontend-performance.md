@@ -1,174 +1,71 @@
-# Performance
+# Frontend — Performance
 
-## Rendering
+## Rendering — let the compiler do it
 
-### Memoisation — only when measured
+The React Compiler (`babel-plugin-react-compiler`) memoises components and hooks automatically
+when they follow the Rules of React. Enablement is tracked in #269; write code
+as if it is on:
 
-```tsx
-// ✅ memo: only for components that re-render often with same props
-const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
-  return …;
-});
+- **No hand memoisation by default.** `useMemo` / `useCallback` / `React.memo` only after
+  profiling shows a specific re-render the compiler cannot prevent, with a comment stating the
+  measurement. Today's 24 `useMemo` / 6 `useCallback` are removed opportunistically.
+- **Keep components compilable:** no prop/state mutation, no `ref.current` reads during render,
+  hooks unconditional, no side effects in render. `eslint-plugin-react-hooks` v7 flags what the
+  compiler would skip.
+- Stable references still matter for **third-party** children that compare by identity
+  (Radix `onOpenChange`, chart libraries). Define constants outside the component; for
+  callbacks the compiler handles it.
 
-// ✅ useMemo: only for expensive pure computations
-const sortedItems = useMemo(
-  () => [...items].sort(compareByDate),
-  [items]
-);
-
-// ✅ useCallback: only for stable references passed to memo'd children
-const handleSelect = useCallback((id: string) => {
-  dispatch({ type: "select", id });
-}, [dispatch]);
-
-// ❌ Premature: don't memo trivial renders — profiler first
-const Label = memo(({ text }: { text: string }) => <span>{text}</span>);
-```
-
-### Avoid unnecessary re-renders
+## Avoid the classic re-render traps
 
 ```tsx
-// ❌ Object / array created in render → new reference every time
-<List config={{ sort: "asc", filter: "active" }} />
-
-// ✅ Stable reference
-const LIST_CONFIG = { sort: "asc", filter: "active" } as const;
-<List config={LIST_CONFIG} />
-
-// ❌ Inline function prop recreated on every parent render
-<Button onClick={() => doSomething(id)} />
-
-// ✅ Stable via useCallback (only if Button is memo'd)
-const handleClick = useCallback(() => doSomething(id), [id]);
-<Button onClick={handleClick} />
+// ❌ new object every render, defeats any memoisation
+<MacroBar config={{ showLabels: true }} />
+// ✅
+const MACRO_BAR_CONFIG = { showLabels: true } as const;
+<MacroBar config={MACRO_BAR_CONFIG} />
 ```
 
-### Context performance
-
-```tsx
-// ❌ Single context for everything = entire tree re-renders on any change
-const AppContext = createContext<AppState>(…);
-
-// ✅ Split contexts by update frequency
-const UserContext  = createContext<User | null>(null);    // rarely changes
-const ThemeContext = createContext<Theme>("light");         // occasionally
-const FilterContext = createContext<Filters>(…);           // often
-```
-
----
+- Split contexts by update frequency (`ThemeContext` rarely, `ToastContext` often). A component
+  that only needs `theme` must not re-render on every toast.
+- Lift expensive derived data into the query layer (`select` on `queryOptions`) so it is computed
+  once per fetch, not once per render.
 
 ## Code splitting
 
-```tsx
-// Lazy-load route-level components
-const SettingsPage = lazy(() => import("@/pages/settings/SettingsPage"));
-const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
-
-// Wrap with Suspense at the router level
-<Suspense fallback={<PageSkeleton />}>
-  <Routes>…</Routes>
-</Suspense>
-
-// Lazy-load heavy feature components
-const RichTextEditor = lazy(() =>
-  import("@/modules/editor/components/RichTextEditor")
-);
-```
-
----
+- Every page is `React.lazy` in the module's `index.ts`; the router wraps it in
+  `SuspenseWrapper`. Nothing else needs manual splitting unless a dependency is heavy
+  (`recharts` already sits behind the pages that use it).
+- `vite.config.ts` splits `react`, `@tanstack/react-query`, `react-router-dom` into vendor chunks.
+  Add a chunk only when the bundle visualiser shows a >100 kB dependency shared by few routes.
 
 ## Data fetching
 
 ```ts
-// Prefetch on hover / intent
-function ProductLink({ id }: { id: string }) {
-  const queryClient = useQueryClient();
+// prefetch on intent
+const queryClient = useQueryClient();
+<Link to={`/diet-planner/products/${id}`} onMouseEnter={() => void queryClient.prefetchQuery(productOptions(id))} />
 
-  function prefetch() {
-    queryClient.prefetchQuery({
-      queryKey: productKeys.detail(id),
-      queryFn: () => getProduct(id),
-    });
-  }
-
-  return (
-    <Link to={`/products/${id}`} onMouseEnter={prefetch}>
-      View product
-    </Link>
-  );
-}
-
-// Parallel queries instead of waterfall
-const [user, permissions] = await Promise.all([
-  getUser(id),
-  getPermissions(id),
-]);
-
-// Appropriate stale times
-useQuery({
-  queryKey: ["config"],
-  queryFn: fetchConfig,
-  staleTime: Infinity,     // config rarely changes
-});
-
-useQuery({
-  queryKey: ["notifications"],
-  queryFn: fetchNotifications,
-  staleTime: 1000 * 30,   // 30 s
-  refetchInterval: 1000 * 60, // poll every 60 s
-});
+// parallel, not waterfall
+const [goals, schedule] = useQueries({ queries: [goalsOptions(), mealScheduleOptions()] });
 ```
 
----
+- `staleTime` defaults to 5 min (`shared/api/queryClient.ts`); `refetchOnWindowFocus` is off.
+  Override per query only for data that must be fresh (notifications: 30 s + SignalR push).
+- `placeholderData: keepPreviousData` on paginated lists — no flash of empty table.
+- Mutations invalidate by key prefix (`queryKeys.products.all()`), never `queryClient.clear()`.
+- Lists are paged server-side (`PagedList<T>`); never fetch "all" and filter in the client.
 
-## Bundle
+## Assets
 
-```ts
-// vite.config.ts — manual chunk splitting
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        "react-vendor": ["react", "react-dom"],
-        "query-vendor": ["@tanstack/react-query"],
-        "router-vendor": ["@tanstack/react-router"],
-      },
-    },
-  },
-},
-```
+- `<img loading="lazy" decoding="async" width height>` — dimensions always, to avoid layout shift.
+- Icons: `lucide-react` named imports only (tree-shakeable); no icon fonts.
 
-### Image optimisation
+## Measuring before optimising
 
-```tsx
-// Use native lazy loading
-<img src={src} alt={alt} loading="lazy" decoding="async" />
+1. React DevTools Profiler — find the wasted render first.
+2. Lighthouse / Web Vitals targets: LCP < 2.5 s, INP < 200 ms, CLS < 0.1.
+3. `npx vite-bundle-visualizer` — what is in each chunk.
+4. TanStack Query DevTools — cache hits, refetch storms.
 
-// Provide dimensions to avoid layout shift
-<img src={src} alt={alt} width={800} height={600} loading="lazy" />
-
-// Prefer <picture> for art direction or format switching
-<picture>
-  <source srcSet="hero.avif" type="image/avif" />
-  <source srcSet="hero.webp" type="image/webp" />
-  <img src="hero.jpg" alt="Hero" width={1920} height={1080} />
-</picture>
-```
-
----
-
-## Measuring
-
-1. **React DevTools Profiler** — identify wasted renders before optimising.
-2. **Lighthouse / Web Vitals** — LCP < 2.5 s, INP < 200 ms, CLS < 0.1.
-3. **`vite-bundle-visualizer`** — understand what is in each chunk.
-4. **TanStack Query DevTools** — cache state and refetch behaviour.
-
-```ts
-// Track Core Web Vitals
-import { onCLS, onINP, onLCP } from "web-vitals";
-
-onCLS(console.log);
-onINP(console.log);
-onLCP(console.log);
-```
+An optimisation PR includes the before/after numbers from one of these.

@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Commands.RenameHousehold;
+
+using Shared.Abstractions.Cqrs;
 
 public sealed record RenameHouseholdCommand(
     string RequestingAuthSubject,

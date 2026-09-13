@@ -2,198 +2,200 @@
 
 ## Endpoint Organization
 
-```csharp
-// BudgetPlan.Api/BudgetPlanEndpoints.cs
-public static class BudgetPlanEndpoints
-{
-    public static IEndpointRouteBuilder MapBudgetPlanEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/api/budget-plans")
-            .RequireAuthorization()
-            .WithTags("BudgetPlans");
+One `internal static class {Aggregate}Endpoints` per resource, one `Map…Endpoints` extension,
+one private static method per operation. The module's `Api/DependencyInjection.cs` exposes a
+single public `Map{Module}Endpoints(this IEndpointRouteBuilder app)` that calls them all.
 
-        group.MapPost("/", CreateBudgetPlan);
-        group.MapGet("/{id:guid}", GetBudgetPlan);
-        group.MapGet("/", ListBudgetPlans);
-        group.MapPost("/{id:guid}/entries", AddEntry);
-        group.MapDelete("/{id:guid}", CloseBudgetPlan);
+```csharp
+namespace Household.Api;
+
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Shared.Abstractions.Cqrs;
+
+internal static class HouseholdEndpoints
+{
+    internal static IEndpointRouteBuilder MapHouseholdEndpointsGroup(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/households")
+            .RequireAuthorization()
+            .WithTags("Households");
+
+        group.MapPost("/", Create).WithName("CreateHousehold");
+        group.MapGet("/me", GetMine).WithName("GetMyHousehold");
+        group.MapPut("/{id:guid}", Rename).WithName("RenameHousehold");
+        group.MapDelete("/{id:guid}", Delete).WithName("DeleteHousehold");
 
         return app;
     }
 
-    // Each endpoint is a private static method in the same class.
-    // Inject ICommandDispatcher for writes and IQueryDispatcher for reads — never inject
-    // ICommandHandler<,> / IQueryHandler<,> directly.
-    private static async Task<IResult> CreateBudgetPlan(
-        CreateBudgetPlanRequest request,
-        ICommandDispatcher dispatcher,
-        CancellationToken ct)
+    private static async Task<Created> Create(
+        CreateHouseholdRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
     {
-        var id = await dispatcher.SendAsync<CreateBudgetPlanCommand, Guid>(
-            new CreateBudgetPlanCommand(request.UserId, request.LimitValue, request.LimitCurrency), ct);
-        return TypedResults.Created($"/api/budget-plans/{id}");
+        var id = await dispatcher.SendAsync<CreateHouseholdCommand, Guid>(
+            new CreateHouseholdCommand(user.Subject(), request.Name), ct);
+        return TypedResults.Created($"/api/households/{id}");
     }
 
-    private static async Task<IResult> GetBudgetPlan(
-        Guid id,
-        IQueryDispatcher dispatcher,
-        CancellationToken ct)
+    private static async Task<Results<Ok<MyHouseholdDto>, NotFound>> GetMine(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
     {
-        var result = await dispatcher.SendAsync<GetBudgetPlanQuery, BudgetPlanDto?>(
-            new GetBudgetPlanQuery(id), ct);
+        var result = await dispatcher.SendAsync<GetMyHouseholdQuery, MyHouseholdDto?>(
+            new GetMyHouseholdQuery(user.Subject()), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> ListBudgetPlans(
-        [AsParameters] ListBudgetPlansParams @params,
-        IQueryDispatcher dispatcher,
-        CancellationToken ct)
+    private static async Task<NoContent> Rename(
+        Guid id, RenameHouseholdRequest request, ClaimsPrincipal user,
+        ICommandDispatcher dispatcher, CancellationToken ct)
     {
-        var result = await dispatcher.SendAsync<ListBudgetPlansQuery, PagedList<BudgetPlanSummaryDto>>(
-            new ListBudgetPlansQuery(@params.UserId, @params.Page, @params.PageSize), ct);
-        return TypedResults.Ok(result);
-    }
-
-    private static async Task<IResult> AddEntry(
-        Guid id,
-        AddBudgetEntryRequest request,
-        ICommandDispatcher dispatcher,
-        CancellationToken ct)
-    {
-        await dispatcher.SendAsync(
-            new AddBudgetEntryCommand(id, request.AmountValue, request.AmountCurrency, request.Description), ct);
-        return TypedResults.NoContent();
-    }
-
-    private static async Task<IResult> CloseBudgetPlan(
-        Guid id,
-        ICommandDispatcher dispatcher,
-        CancellationToken ct)
-    {
-        await dispatcher.SendAsync(new CloseBudgetPlanCommand(id), ct);
+        await dispatcher.SendAsync(new RenameHouseholdCommand(user.Subject(), id, request.Name), ct);
         return TypedResults.NoContent();
     }
 }
 ```
+
+### Typed results, not `IResult`
+
+Return types are the concrete `Microsoft.AspNetCore.Http.HttpResults` types
+(`Ok<T>`, `Created`, `NoContent`, `NotFound`, …) or `Results<A, B, …>` when more than one is
+possible. The OpenAPI document is **inferred from the signature**, so:
+
+- No `.Produces<T>()` / `.Produces(404)` / `.ProducesValidationProblem()` chains — they are
+  redundant with typed results and drift from the code.
+- The compiler rejects an endpoint that returns a result type it did not declare.
+- Legacy `Task<IResult>` + `.Produces` endpoints (DietPlanner, Notifications) are being migrated
+  under #269; new endpoints never use `IResult`.
+
+Status codes produced by middleware (400 validation, 403, 404 from `NotFoundException`, 422
+domain, 401) are documented once via the global `ProblemDetails` OpenAPI transformer in the host,
+not per endpoint.
+
+### Metadata that still belongs on the endpoint
+
+```csharp
+group.MapPost("/", Create)
+     .WithName("CreateHousehold")                       // operationId → generated TS client method name
+     .WithSummary("Create a household owned by the caller");
+```
+
+`.WithName` is mandatory (the frontend generator keys on it). `.WithSummary` when the route
+alone does not explain the operation. Never `.WithOpenApi()` — obsolete since .NET 9; the
+document comes from `AddOpenApi()` + transformers.
 
 ## Request / Response Records
 
+Requests live in the Api project as `sealed record`s. Query strings bind through
+`[AsParameters]` records with defaults.
+
 ```csharp
-// Requests live in the Api project (or Contracts if shared between modules)
-public sealed record CreateBudgetPlanRequest(
-    Guid UserId,
-    decimal LimitValue,
-    string LimitCurrency);
+public sealed record CreateHouseholdRequest(string Name);
 
-public sealed record AddBudgetEntryRequest(
-    decimal AmountValue,
-    string AmountCurrency,
-    string Description);
-
-// Query parameters as struct with [AsParameters]
-public sealed record ListBudgetPlansParams(
-    Guid UserId,
-    [property: FromQuery] int Page = 1,
-    [property: FromQuery] int PageSize = 20);
+public sealed record ListProductsParams(
+    string? Search = null,
+    bool OnlyMine = false,
+    int Page = 1,
+    int PageSize = 20);
 ```
+
+Request shape validation (required, ranges) can use the built-in minimal-API validation
+(`builder.Services.AddValidation()` + `DataAnnotations`, .NET 10). Business validation stays in
+`ICommandValidator<T>` — the dispatcher runs it regardless of the entry point.
 
 ## HTTP Status Code Rules
 
-| Scenario | Status Code | Method |
+| Scenario | Status | Typed result |
 |---|---|---|
-| Resource created | 201 Created | `TypedResults.Created(location)` |
-| Action succeeded, no body | 204 No Content | `TypedResults.NoContent()` |
-| Resource found | 200 OK | `TypedResults.Ok(dto)` |
-| Resource not found | 404 Not Found | `TypedResults.NotFound()` |
-| Validation failure | 400 Bad Request | handled by middleware |
-| Business rule violation | 422 Unprocessable Entity | handled by middleware |
-| Unauthenticated | 401 Unauthorized | handled by auth middleware |
-| Unauthorized | 403 Forbidden | `TypedResults.Forbid()` |
+| Resource created | 201 | `TypedResults.Created(location)` / `Created<T>` |
+| Action succeeded, no body | 204 | `TypedResults.NoContent()` |
+| Resource found | 200 | `TypedResults.Ok(dto)` |
+| Resource not found (query) | 404 | `TypedResults.NotFound()` |
+| Resource not found (command) | 404 | throw `NotFoundException` in the handler |
+| Validation failure | 400 | `CommandValidationException` → handler |
+| Business rule violation | 422 | `DomainException` → handler |
+| Not allowed for this user | 403 | `ForbiddenException` → handler |
+| Unauthenticated | 401 | auth middleware |
 
-Always use `TypedResults.*` — not `Results.*` — so OpenAPI schema is inferred automatically.
+Always `TypedResults.*`, never `Results.*`.
 
-## Error Handling Middleware
+## Error Handling — `IExceptionHandler`
+
+Exception → HTTP mapping lives in **one** `IExceptionHandler` in `Shared.Infrastructure.Web`,
+registered with the framework's `AddProblemDetails()` / `UseExceptionHandler()`. This is the
+.NET 8+ standard: content-negotiated `application/problem+json`, `traceId` included, works with
+the OpenAPI `ProblemDetails` schema.
 
 ```csharp
-// Shared.Infrastructure.Web/ExceptionHandlingMiddleware.cs
-public sealed class ExceptionHandlingMiddleware : IMiddleware
+namespace Shared.Infrastructure.Web;
+
+using Microsoft.AspNetCore.Diagnostics;
+
+public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
 {
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-    public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger)
-        => _logger = logger;
-
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    public async ValueTask<bool> TryHandleAsync(HttpContext http, Exception exception, CancellationToken ct)
     {
-        try
+        (int status, string title) = exception switch
         {
-            await next(context);
-        }
-        catch (ValidationException ex)
+            CommandValidationException => (StatusCodes.Status400BadRequest, "Validation failed"),
+            NotFoundException          => (StatusCodes.Status404NotFound, "Not found"),
+            ForbiddenException         => (StatusCodes.Status403Forbidden, "Forbidden"),
+            DomainException            => (StatusCodes.Status422UnprocessableEntity, "Business rule violation"),
+            _                          => (StatusCodes.Status500InternalServerError, "Internal server error"),
+        };
+
+        http.Response.StatusCode = status;
+        return await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsJsonAsync(
-                new ProblemDetails { Title = "Validation failed", Detail = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)) });
-        }
-        catch (DomainException ex)
-        {
-            context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
-            await context.Response.WriteAsJsonAsync(
-                new ProblemDetails { Title = "Business rule violation", Detail = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unhandled exception");
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(
-                new ProblemDetails { Title = "Internal server error" });
-        }
+            HttpContext = http,
+            Exception = exception,
+            ProblemDetails = new() { Status = status, Title = title, Detail = status == 500 ? null : exception.Message },
+        });
     }
 }
+
+// Program.cs
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApplicationExceptionHandler>();
+app.UseExceptionHandler();
 ```
+
+Validation errors go into `ProblemDetails.Extensions["errors"]` grouped by property, matching
+`ValidationProblemDetails`. Unhandled exceptions are logged by the framework's exception handler
+middleware with the request path and trace id — do not log them again in the handler.
+
+The current `ExceptionHandlingMiddleware : IMiddleware` does the same mapping by hand and is
+scheduled for replacement under #269.
 
 ## Authorization
 
-- **All endpoints require authorization by default** via `.RequireAuthorization()` on the group.
-- Add `[AllowAnonymous]` (or `.AllowAnonymous()`) only explicitly and with a comment explaining why.
-- Extract the current user ID from the JWT claims in the endpoint, not in the handler:
-  ```csharp
-  private static async Task<IResult> CreateBudgetPlan(
-      CreateBudgetPlanRequest request,
-      ClaimsPrincipal user,
-      ICommandDispatcher dispatcher,
-      CancellationToken ct)
-  {
-      var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-      await dispatcher.SendAsync(new CreateBudgetPlanCommand(userId, request.LimitValue, request.LimitCurrency), ct);
-      return TypedResults.Created();
-  }
-  ```
+- `.RequireAuthorization()` on every group. `.AllowAnonymous()` only with a comment saying why
+  (`/health` is the only case today).
+- The caller's identity comes from `ClaimsPrincipal` in the endpoint, through a small extension
+  (`user.Subject()` → Authentik `sub`), and is passed **into** the command/query. Handlers never
+  touch `HttpContext`.
+- Household / role rules are enforced in the application layer (`HouseholdAccessService`),
+  never by comparing IDs in the endpoint.
 
-## OpenAPI / Swagger
+## OpenAPI
 
 ```csharp
-group.MapPost("/", CreateBudgetPlan)
-     .WithName("CreateBudgetPlan")
-     .WithSummary("Create a new budget plan for the current month")
-     .Produces<Guid>(StatusCodes.Status201Created)
-     .ProducesValidationProblem()
-     .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+// Program.cs
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<HomeSystemDocumentTransformer>());
+app.MapOpenApi();                                   // /openapi/v1.json — consumed by openapi-typescript
+if (app.Environment.IsDevelopment()) app.MapScalarApiReference();
 ```
 
-Add `.WithOpenApi()` at the group level. Describe each endpoint's responses explicitly.
+- One document for the whole host; each module contributes tags via `.WithTags`.
+- Document-level info, tags, bearer security scheme and the shared `ProblemDetails` responses
+  live in a single `IOpenApiDocumentTransformer` class, not inline in `Program.cs`.
+- Frontend types are generated from `/openapi/v1.json` (`npm run generate:api:<module>`). Any
+  change to a request/response record must be followed by regenerating and committing the schema.
 
 ## Pagination
 
-Use a consistent pagination wrapper for list endpoints:
-
 ```csharp
 // Shared.Abstractions.Core/Pagination/PagedList.cs
-public sealed record PagedList<T>(
-    IReadOnlyList<T> Items,
-    int TotalCount,
-    int Page,
-    int PageSize)
+public sealed record PagedList<T>(IReadOnlyList<T> Items, int TotalCount, int Page, int PageSize)
 {
     public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
     public bool HasNextPage => Page < TotalPages;
@@ -201,4 +203,5 @@ public sealed record PagedList<T>(
 }
 ```
 
-All list query handlers return `PagedList<TDto>`. Never return unlimited lists.
+All list queries return `PagedList<TDto>`. Never an unbounded list. `PageSize` is clamped in
+the query validator (max 100).

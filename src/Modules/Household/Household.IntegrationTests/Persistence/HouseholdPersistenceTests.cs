@@ -1,10 +1,10 @@
+namespace Household.IntegrationTests.Persistence;
+
 using Household.Domain.ValueObjects;
 using Household.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 using HouseholdDb = Household.Infrastructure.Persistence.HouseholdDbContext;
-
-namespace Household.IntegrationTests.Persistence;
 
 public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseFixture>
 {

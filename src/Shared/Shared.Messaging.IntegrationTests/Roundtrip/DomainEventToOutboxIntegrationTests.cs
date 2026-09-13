@@ -1,7 +1,6 @@
 namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;

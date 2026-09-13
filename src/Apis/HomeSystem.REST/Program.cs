@@ -2,10 +2,10 @@ using DietPlanner.Api;
 using DietPlanner.Infrastructure;
 using Household.Api;
 using Household.Infrastructure;
-using Notifications.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
+using Notifications.Api;
 using Scalar.AspNetCore;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
@@ -208,7 +208,7 @@ if (app.Environment.IsDevelopment())
     await app.Services.MigrateHouseholdDatabaseAsync(app.Logger);
 }
 
-app.Run();
+await app.RunAsync();
 
 public partial class Program { }
 

@@ -48,6 +48,10 @@ Claude and Codex can work different issues at the same time without sharing an i
 | Hook | Blocks |
 |---|---|
 | `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` |
+
+`guard-git.sh` checks the branch of the checkout the command targets: `git -C <dir>` wins, then a
+leading `cd <dir>` (literal path — shell variables defined inside the same command are not
+expanded), then the hook's cwd. In a worktree session, `cd` with the literal worktree path.
 | `format-on-edit.sh` (PostToolUse Edit/Write) | nothing — runs Prettier on touched `src/ui` / `e2e` files so format checks never fail on style |
 
 **Codex:** register the same scripts in `~/.codex/hooks.json` (`PreToolUse` / `PostToolUse`,

@@ -1,9 +1,9 @@
+namespace Household.UnitTests.Domain;
+
 using Household.Domain.Aggregates;
 using Household.Domain.Events;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
-
-namespace Household.UnitTests.Domain;
 
 public sealed class HouseholdInvitationTests
 {

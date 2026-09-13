@@ -4,7 +4,6 @@ namespace DietPlanner.UnitTests.Application.Commands;
 using DietPlanner.Application.Commands.DeleteWaterIntake;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
-using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;

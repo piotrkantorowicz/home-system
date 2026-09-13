@@ -1,7 +1,7 @@
+namespace Household.Application.Commands.InvitePersonByEmail;
+
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.InvitePersonByEmail;
 
 internal sealed class InvitePersonByEmailCommandValidator : ICommandValidator<InvitePersonByEmailCommand>
 {

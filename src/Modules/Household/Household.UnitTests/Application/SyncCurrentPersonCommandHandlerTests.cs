@@ -1,10 +1,10 @@
+namespace Household.UnitTests.Application;
+
 using Household.Application.Commands.SyncCurrentPerson;
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
-
-namespace Household.UnitTests.Application;
 
 public sealed class SyncCurrentPersonCommandHandlerTests
 {

@@ -1,11 +1,11 @@
+namespace Household.Application.Queries.ListHouseholdMembers;
+
 using Household.Application.Persistence;
 using Household.Application.Queries.Projections;
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Queries.ListHouseholdMembers;
 
 internal sealed class ListHouseholdMembersQueryHandler
     : IQueryHandler<ListHouseholdMembersQuery, IReadOnlyList<HouseholdMemberDto>>

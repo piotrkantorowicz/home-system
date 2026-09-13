@@ -37,7 +37,6 @@
     <PackageVersion Include="Scalar.AspNetCore" Version="2.13.1" />
 
     <!-- Validation (legacy — used by existing DietPlanner.Api) -->
-    <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
 
     <!-- Transitive override: pin to patched version per NU1903 advisories
          GHSA-37gx-xxp4-5rgx and GHSA-w3x6-4m5h-cxqf -->

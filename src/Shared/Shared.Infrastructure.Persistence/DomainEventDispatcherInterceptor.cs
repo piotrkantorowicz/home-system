@@ -2,8 +2,8 @@ namespace Shared.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Domain;
+using Shared.Abstractions.Cqrs;
 using Shared.Infrastructure.Messaging.Outbox;
 
 internal sealed class DomainEventDispatcherInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor

@@ -1,10 +1,10 @@
+namespace Household.UnitTests.Application.EventHandlers;
+
 using Household.Application.EventHandlers;
 using Household.Contracts.Events;
 using Household.Domain.Events;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Messaging;
-
-namespace Household.UnitTests.Application.EventHandlers;
 
 public sealed class HouseholdIntegrationEventPublishingTests
 {

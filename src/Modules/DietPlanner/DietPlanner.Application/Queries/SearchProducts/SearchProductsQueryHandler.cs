@@ -2,8 +2,8 @@ namespace DietPlanner.Application.Queries.SearchProducts;
 
 using DietPlanner.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Pagination;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class SearchProductsQueryHandler
     : IQueryHandler<SearchProductsQuery, PagedList<ProductDto>>

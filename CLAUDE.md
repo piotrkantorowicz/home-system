@@ -26,7 +26,7 @@ src/
     Shared.Infrastructure.Messaging.Dapper/  # Dapper inbox executor (parameterised on INpgsqlConnectionFactory)
     Shared.Infrastructure.Persistence/       # EF Core interceptors (DomainEventDispatcherInterceptor)
     Shared.Infrastructure.Web/               # Cross-cutting web middleware (ExceptionHandlingMiddleware)
-  ui/                         # React 19 + TypeScript SPA (Vite, TanStack Router/Query, Tailwind v4)
+  ui/                         # React 19 + TypeScript SPA (Vite, React Router 7, TanStack Query, Tailwind v4)
 infrastructure/
   docker-compose.yml          # Authentik (OIDC), Redis, PostgreSQL per module (profiles)
   authentik/blueprints/       # Declarative Authentik config applied on first run
@@ -196,17 +196,6 @@ Claude Code through symlinks in `.claude/skills/`. Invoke with `/<name>`.
 | `/branch-summary` | Commit-body-style summary of unmerged commits on the branch |
 | `/pr-summary` | Concise PR body summary from the diff vs `main` |
 
----|---|
-| `/scaffold-module` | Scaffold a new backend module (DDD or CRUD) |
-| `/scaffold-aggregate` | Add a new aggregate root to an existing DDD module |
-| `/scaffold-endpoint` | Add a new API endpoint with command or query |
-| `/scaffold-feature` | Scaffold a new frontend feature module |
-| `/scaffold-component` | Create a new shared UI component with tests |
-| `/review-arch` | Review file(s) for architecture rule violations |
-| `/run-project` | Bring the full stack up locally (Docker infra + backend + frontend) |
-| `/stop-project` | Stop the local stack and free the ports |
-| `/run-e2e` | Run the Playwright E2E suite against the real stack |
-
 ---
 
 ## Non-negotiable Rules (Always Apply)
@@ -224,6 +213,9 @@ Claude Code through symlinks in `.claude/skills/`. Invoke with `/<name>`.
 11. **Named exports only** in frontend (exception: lazy-loaded page components).
 12. **Conventional Commits** for all commit messages. Enforced by Husky + commitlint.
 13. **Trunk-based workflow.** All branches merge to `main` via PR. No `develop` branch.
+14. **`TimeProvider` and `Guid.CreateVersion7()`.** No `DateTime.UtcNow` / `Guid.NewGuid()` in new backend code; aggregates take `now` as a parameter.
+15. **Typed endpoint results.** New endpoints return `Ok<T>` / `Results<…>` — never `Task<IResult>` + `.Produces()`.
+16. **React 19 idioms.** `ref` is a prop (no `forwardRef`), no hand memoisation (React Compiler), `queryOptions()` for every query.
 
 ---
 

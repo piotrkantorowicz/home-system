@@ -1,3 +1,5 @@
+namespace Household.UnitTests.Application;
+
 using Household.Application.Commands.CreateHousehold;
 using Household.Application.Common;
 using Household.Domain.Abstractions;
@@ -5,8 +7,6 @@ using Household.Domain.Aggregates;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.UnitTests.Application;
 
 public sealed class CreateHouseholdCommandHandlerTests
 {

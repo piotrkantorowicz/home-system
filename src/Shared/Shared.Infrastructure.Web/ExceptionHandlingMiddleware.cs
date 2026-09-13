@@ -3,8 +3,8 @@ namespace Shared.Infrastructure.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Domain;
+using Shared.Abstractions.Cqrs;
 
 public sealed class ExceptionHandlingMiddleware : IMiddleware
 {

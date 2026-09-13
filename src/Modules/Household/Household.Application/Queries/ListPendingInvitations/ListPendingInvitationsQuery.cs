@@ -1,6 +1,6 @@
-using Shared.Abstractions.Cqrs;
-
 namespace Household.Application.Queries.ListPendingInvitations;
+
+using Shared.Abstractions.Cqrs;
 
 public sealed record ListPendingInvitationsQuery(string AuthSubject, Guid HouseholdId)
     : IQuery<IReadOnlyList<InvitationDto>>;
