@@ -2,7 +2,9 @@ namespace Shared.Messaging.Tests.Outbox;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Transport;
@@ -30,10 +32,13 @@ public sealed class OutboxWorkerTests
         return sp.GetRequiredService<IServiceScopeFactory>();
     }
 
-    private static OutboxWorker<TestDbContext> SutWith(IOutboxStore? store, IIntegrationEventTransport? transport) =>
+    private static OutboxWorker<TestDbContext> SutWith(
+        IOutboxStore? store,
+        IIntegrationEventTransport? transport,
+        ILogger<OutboxWorker<TestDbContext>>? logger = null) =>
         new(ScopeFactory(store, transport),
             Options.Create(new OutboxWorkerOptions()),
-            NullLogger<OutboxWorker<TestDbContext>>.Instance);
+            logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance);
 
     [Fact]
     public async Task RunOnceAsync_WithPendingMessages_DispatchesAndMarksProcessed()
@@ -66,6 +71,28 @@ public sealed class OutboxWorkerTests
         await store.DidNotReceive().MarkProcessedAsync(m1.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
         await transport.Received(1).DispatchAsync(m2, Arg.Any<CancellationToken>());
         await store.Received(1).MarkProcessedAsync(m2.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunOnceAsync_WhenTransportThrows_LogsOneErrorWithExceptionAndMessageId()
+    {
+        var msg = MakePending(Guid.NewGuid());
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        var transport = Substitute.For<IIntegrationEventTransport>();
+        var boom = new InvalidOperationException("boom");
+        transport.When(t => t.DispatchAsync(msg, Arg.Any<CancellationToken>())).Throw(boom);
+        var logger = new FakeLogger<OutboxWorker<TestDbContext>>();
+
+        await SutWith(store, transport, logger).RunOnceAsync(CancellationToken.None);
+
+        var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Error);
+        record.Exception.ShouldBeSameAs(boom);
+        record.Message.ShouldContain(msg.Id.ToString());
+        record.Message.ShouldContain(nameof(TestDbContext));
+        record.StructuredState.ShouldNotBeNull()
+            .ShouldContain(kv => kv.Key == "MessageId" && kv.Value == msg.Id.ToString());
     }
 
     [Fact]
