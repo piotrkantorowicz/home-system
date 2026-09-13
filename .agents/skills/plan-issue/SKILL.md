@@ -37,7 +37,31 @@ path + section (`docs/design/household/README.md §8`), or a free-text descripti
    ```
    Then append a `- [ ] #<n> <title>` line per issue to the epic's body checklist
    (`gh issue view <epic> --json body`, edit, `gh issue edit <epic> --body-file`).
-7. Print the created issue numbers with titles.
+7. **Board.** Put every created issue (and the epic, if new) on the project board:
+   ```bash
+   scripts/board.sh add <n> Backlog
+   ```
+   See § Project board below.
+8. **Epic lane?** If the slices only make sense together (main would be inconsistent
+   after a partial merge, or the feature is unusable until the last slice), say so and
+   recommend `/start-epic <epic>`; the children then target `epic/<epic>-<slug>` instead
+   of `main`. Independent slices go straight to `main` — the default.
+9. Print the created issue numbers with titles.
+
+## Project board
+
+Issues are tracked on https://github.com/users/piotrkantorowicz/projects/3. The skills move
+the Status column through `scripts/board.sh` (field ids resolved at run time):
+
+| Moment | Skill | Status |
+|---|---|---|
+| Issue created | `plan-issue` | `Backlog` |
+| Branch created | `start-issue` / `start-epic` | `In Progress` |
+| PR opened | `ship` / `ship-epic` | `In Review` |
+| PR merged / issue closed | board built-in workflow | `Done` |
+
+`scripts/board.sh statuses` lists the column names the board actually has. The script
+needs a gh token with the `project` scope; without it, it warns and does nothing.
 
 ## Rules
 

@@ -188,6 +188,8 @@ implicitly by task match.
 | `$ship` | Clean commits, push, open the PR from the template with `Closes #n` |
 | `$review-pr` | Review a PR (arch + correctness + tests + security), post inline comments — run in the *other* tool |
 | `$address-review` | Fix unresolved review threads, reply per thread, resolve what changed |
+| `$start-epic` | Open an epic lane: `epic/<n>-<slug>` on origin, children PR into it instead of `main` |
+| `$ship-epic` | All children merged → rebase the epic onto `main`, open the epic → main PR (rebase-merged) |
 | `$babysit-pr` | Loop: watch CI + review threads on a PR until green and approved |
 
 **Scaffolding & local stack:**
