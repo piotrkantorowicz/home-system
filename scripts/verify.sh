@@ -10,6 +10,10 @@
 #   --no-integration  skip *.IntegrationTests (no Docker / fast loop)
 #   --no-build        skip `dotnet build`, assume it is fresh
 #
+# Backend scope: Shared/, Apis/, props, slnx or .editorconfig touched → whole solution.
+# Otherwise only the touched modules — their test projects are built (deps come along) and
+# `dotnet format` sees only the changed .cs files.
+#
 # Exit 0 = everything selected passed. Prints a summary table at the end.
 set -uo pipefail
 
@@ -63,26 +67,73 @@ export DOTNET_USE_POLLING_FILE_WATCHER=1
 
 # ── Backend ──────────────────────────────────────────────────────────────────
 if matches "$BACKEND_RE"; then
-  (( RUN_BUILD )) && step "dotnet build" dotnet build HomeSystem.slnx --configuration Debug --verbosity minimal --nologo
-  step "dotnet format" dotnet format HomeSystem.slnx --verify-no-changes --no-restore --verbosity minimal
-
-  # Which test projects? Shared/ or props touched → all. Otherwise only the touched modules.
-  if [[ "$MODE" == all ]] || grep -Eq '^(src/(Apis|Shared)/|Directory\.|HomeSystem\.slnx)' <<< "$FILES"; then
+  # Shared/, Apis/, props, slnx or .editorconfig touched → whole solution. Otherwise only the
+  # touched modules: build their test projects (deps build transitively) and format only the
+  # changed .cs files.
+  if [[ "$MODE" == all ]] || grep -Eq '^(src/(Apis|Shared)/|Directory\.|HomeSystem\.slnx|\.editorconfig)' <<< "$FILES"; then
+    FULL_BACKEND=1
     TEST_PROJECTS=$(find src -name '*Tests.csproj' | sort)
   else
+    FULL_BACKEND=0
     MODULES=$(grep -Eo '^src/Modules/[^/]+' <<< "$FILES" | sort -u)
     TEST_PROJECTS=""
     for m in $MODULES; do
       TEST_PROJECTS+=$(find "$m" -name '*Tests.csproj' | sort)$'\n'
     done
+    # A module without test projects has nothing to narrow to — compile the lot instead.
+    if [[ -z "${TEST_PROJECTS//[[:space:]]/}" ]]; then FULL_BACKEND=1; fi
+  fi
+
+  # Integration tests need Docker; decide once so the build step can skip them too.
+  DOCKER_OK=0; docker info >/dev/null 2>&1 && DOCKER_OK=1
+  skip_integration() {           # skip_integration <project> → prints reason or nothing
+    [[ "$1" == *IntegrationTests* ]] || return 0
+    if (( ! RUN_INTEGRATION )); then echo "--no-integration"; return 0; fi
+    if (( ! DOCKER_OK )); then echo "no Docker"; fi
+  }
+
+  if (( RUN_BUILD )); then
+    if (( FULL_BACKEND )); then
+      step "dotnet build" dotnet build HomeSystem.slnx --configuration Debug --verbosity minimal --nologo
+    else
+      # One build over a solution filter: every project of the touched modules (so the Api /
+      # Infrastructure projects compile even when the unit tests don't reference them), minus
+      # integration-test projects that won't run anyway. Referenced projects build transitively.
+      SLNF=$(mktemp --suffix=.slnf)
+      {
+        printf '{ "solution": { "path": "%s/HomeSystem.slnx", "projects": [' "$ROOT"
+        sep=""
+        for m in $MODULES; do
+          for proj in $(find "$m" -name '*.csproj' | sort); do
+            [[ -n "$(skip_integration "$proj")" ]] && continue
+            printf '%s"%s"' "$sep" "$proj"; sep=", "
+          done
+        done
+        printf '] } }\n'
+      } > "$SLNF"
+      step "dotnet build ($(tr '\n' ' ' <<< "$MODULES" | sed 's#src/Modules/##g; s/ $//'))" \
+        dotnet build "$SLNF" --configuration Debug --verbosity minimal --nologo
+      rm -f "$SLNF"
+    fi
+  fi
+
+  if (( FULL_BACKEND )); then
+    step "dotnet format" dotnet format HomeSystem.slnx --verify-no-changes --no-restore --verbosity minimal
+  else
+    # Only files that still exist — deleted ones make `--include` fail.
+    CS_FILES=$(grep -E '\.cs$' <<< "$FILES" | while read -r f; do [[ -f "$f" ]] && echo "$f"; done)
+    if [[ -n "$CS_FILES" ]]; then
+      # shellcheck disable=SC2086  # REASON: word-splitting the file list is the point
+      step "dotnet format" dotnet format HomeSystem.slnx --verify-no-changes --no-restore --verbosity minimal --include $CS_FILES
+    else
+      record "dotnet format" "⏭ skipped (no .cs changes)"
+    fi
   fi
 
   for proj in $TEST_PROJECTS; do
     [[ -z "$proj" ]] && continue
-    if [[ "$proj" == *IntegrationTests* ]]; then
-      if (( ! RUN_INTEGRATION )); then record "$(basename "$proj" .csproj)" "⏭ skipped (--no-integration)"; continue; fi
-      if ! docker info >/dev/null 2>&1; then record "$(basename "$proj" .csproj)" "⏭ skipped (no Docker)"; continue; fi
-    fi
+    reason=$(skip_integration "$proj")
+    if [[ -n "$reason" ]]; then record "$(basename "$proj" .csproj)" "⏭ skipped ($reason)"; continue; fi
     step "$(basename "$proj" .csproj)" dotnet test "$proj" --no-build --configuration Debug --logger "console;verbosity=minimal" --nologo
   done
 fi

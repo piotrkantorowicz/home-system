@@ -32,3 +32,6 @@ description: "Run the path-aware verification (build, dotnet format, module test
   runs them anyway.
 - `dotnet format` failures: run `dotnet format HomeSystem.slnx` and commit the result as
   its own `style(...)` commit.
+- Module-only backend changes build and format only that module. Touching `Shared/`,
+  `Apis/`, `Directory.*.props`, `HomeSystem.slnx` or `.editorconfig` widens to the whole
+  solution — so does `--all`.
