@@ -10,7 +10,7 @@ import {
 } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
 import { Activity, Loader2, TrendingDown, TrendingUp, Minus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 function WeightTrendIcon({ weeklyChange }: { weeklyChange: number }) {
@@ -60,8 +60,11 @@ export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredict
     goalCalories !== null && goalCalories !== undefined && goalCalories > 0 ? goalCalories : null,
   );
 
-  // Sync when goals load for the first time (only if the user hasn't typed anything yet)
-  useEffect(() => {
+  // Sync when goals load for the first time (only if the user hasn't typed anything yet).
+  // Adjusting state during render avoids an extra effect-driven re-render.
+  const [syncedGoalCalories, setSyncedGoalCalories] = useState(goalCalories);
+  if (goalCalories !== syncedGoalCalories) {
+    setSyncedGoalCalories(goalCalories);
     if (
       goalCalories !== null &&
       goalCalories !== undefined &&
@@ -71,7 +74,7 @@ export function WeightPredictionCard({ hasProfile, goalCalories }: WeightPredict
       setCalorieInput(String(goalCalories));
       setDebouncedCalories(goalCalories);
     }
-  }, [goalCalories]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const handleCalorieChange = (value: string) => {
     setCalorieInput(value);

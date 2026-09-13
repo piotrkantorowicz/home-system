@@ -7,7 +7,7 @@ import { isConsumed } from '@modules/diet-planner/utils/consumedNutrition';
 import { Button, Card, Skeleton } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { cn, formatNumber } from '@shared/lib/utils';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,8 @@ interface NextUpCardProps {
   loading: boolean;
   onAddMeal: () => void;
 }
+
+const UNDO_WINDOW_MS = 6000;
 
 function mealTime(meal: MealEntryDto): string {
   return (meal.mealTime ?? meal.mealSlotDefaultTime).slice(0, 5);
@@ -29,7 +31,9 @@ export function NextUpCard({ meals, loading, onAddMeal }: NextUpCardProps) {
   const pendingIds = useRef(new Set<string>());
   const [pending, setPending] = useState(new Set<string>());
   const latestMeals = useRef(meals);
-  latestMeals.current = meals;
+  useEffect(() => {
+    latestMeals.current = meals;
+  });
   const heading = useRef<HTMLHeadingElement>(null);
   const ordered = [...meals].sort(
     (a, b) =>
@@ -39,29 +43,31 @@ export function NextUpCard({ meals, loading, onAddMeal }: NextUpCardProps) {
   const upcoming = ordered.filter((meal) => !isConsumed(meal));
   const logged = ordered.filter(isConsumed);
 
-  async function markEaten(meal: MealEntryDto) {
+  const markEaten = async (meal: MealEntryDto) => {
     if (pendingIds.current.has(meal.id)) return;
     pendingIds.current.add(meal.id);
     setPending(new Set(pendingIds.current));
     try {
       await complete.mutateAsync(meal.id);
       let available = true;
-      const expires = Date.now() + 6000;
+      const closeUndoWindow = setTimeout(() => {
+        available = false;
+      }, UNDO_WINDOW_MS);
       toast.success(t('dashboard.meal_marked_eaten'), {
-        duration: 6000,
+        duration: UNDO_WINDOW_MS,
         action: {
           label: t('hydration.undo'),
           onClick: () => {
             const current = latestMeals.current.find((entry) => entry.id === meal.id);
             if (
               !available ||
-              Date.now() > expires ||
               current?.status !== 'Done' ||
               current.recipeId !== meal.recipeId ||
               current.servings !== meal.servings
             )
               return;
             available = false;
+            clearTimeout(closeUndoWindow);
             reset.mutate(meal.id, {
               onError: () => {
                 toast.error(t('calendar.meal_action_error.reset'));
@@ -77,7 +83,7 @@ export function NextUpCard({ meals, loading, onAddMeal }: NextUpCardProps) {
       pendingIds.current.delete(meal.id);
       setPending(new Set(pendingIds.current));
     }
-  }
+  };
 
   return (
     <Card className="flex min-w-0 flex-col gap-5 p-5 sm:p-6">

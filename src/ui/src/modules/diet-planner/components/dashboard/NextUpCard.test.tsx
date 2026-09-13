@@ -1,21 +1,38 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 
 import { NextUpCard } from './NextUpCard';
 
 import type { MealEntryDto } from '@modules/diet-planner/api/hooks/useMeals';
 
+const mocks = vi.hoisted(() => ({
+  toastSuccess: vi.fn(),
+  resetMutate: vi.fn(),
+  completeMutateAsync: vi.fn(),
+}));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@shared/context/ToastContext', () => ({
-  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
+  useToast: () => ({ success: mocks.toastSuccess, error: vi.fn() }),
 }));
 vi.mock('@modules/diet-planner/api/hooks/useMeals', () => ({
-  useResetMeal: () => ({ mutate: vi.fn() }),
-  useCompleteMeal: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useResetMeal: () => ({ mutate: mocks.resetMutate }),
+  useCompleteMeal: () => ({ mutateAsync: mocks.completeMutateAsync, isPending: false }),
 }));
+
+interface ToastAction {
+  action: { onClick: () => void };
+}
+
+function lastToastAction(): ToastAction['action'] {
+  const options = mocks.toastSuccess.mock.calls.at(-1)?.[1] as ToastAction | undefined;
+  if (!options) throw new Error('toast.success was not called');
+  return options.action;
+}
 
 const meal = (over: Partial<MealEntryDto>): MealEntryDto =>
   ({
@@ -43,6 +60,11 @@ function renderCard(meals: MealEntryDto[]) {
 }
 
 describe('NextUpCard', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
   it('features the earliest meal that is not eaten', () => {
     renderCard([
       meal({
@@ -71,5 +93,50 @@ describe('NextUpCard', () => {
       meal({ id: 'b', recipeName: 'Pending meal', mealSlotDefaultTime: '20:00:00' }),
     ]);
     expect(screen.getByText('Eaten meal').closest('details')).not.toHaveAttribute('open');
+  });
+
+  it('undoes a marked meal while the undo window is open', async () => {
+    mocks.completeMutateAsync.mockResolvedValue(undefined);
+    const { rerender } = renderCard([meal({ id: 'a', recipeName: 'Chicken bowl' })]);
+
+    await userEvent.click(screen.getByRole('button', { name: 'dashboard.mark_eaten' }));
+    rerender(
+      <MemoryRouter>
+        <NextUpCard
+          meals={[meal({ id: 'a', recipeName: 'Chicken bowl', status: 'Done' })]}
+          loading={false}
+          onAddMeal={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    lastToastAction().onClick();
+
+    expect(mocks.resetMutate).toHaveBeenCalledWith('a', expect.anything());
+  });
+
+  it('ignores undo once the undo window has closed', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mocks.completeMutateAsync.mockResolvedValue(undefined);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { rerender } = renderCard([meal({ id: 'a', recipeName: 'Chicken bowl' })]);
+
+    await user.click(screen.getByRole('button', { name: 'dashboard.mark_eaten' }));
+    rerender(
+      <MemoryRouter>
+        <NextUpCard
+          meals={[meal({ id: 'a', recipeName: 'Chicken bowl', status: 'Done' })]}
+          loading={false}
+          onAddMeal={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(6001);
+    });
+    lastToastAction().onClick();
+
+    expect(mocks.resetMutate).not.toHaveBeenCalled();
   });
 });
