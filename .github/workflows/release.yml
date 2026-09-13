@@ -1,0 +1,45 @@
+# Tags and publishes a GitHub Release from the Conventional Commits on main.
+# Config: release.config.js (root). No files are committed back — the version is the tag.
+#
+# Runs after every push to main. main only receives squash-merged feature PRs and
+# rebase-merged epic PRs, both CI-checked on the PR, so the release job does not re-run
+# the test suites.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write        # tags + releases
+  issues: write          # "released in vX.Y.Z" comments
+  pull-requests: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: semantic-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install release tooling
+        run: npm ci
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

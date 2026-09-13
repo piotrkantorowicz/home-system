@@ -5,7 +5,7 @@ name: PR Hygiene
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'epic/**']
     types: [opened, edited, synchronize, reopened]
 
 concurrency:
@@ -53,11 +53,24 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
-          pattern='^(feat|fix|hotfix|chore|refactor|docs|test)/[0-9]+-[a-z0-9-]+$'
+          pattern='^(feat|fix|hotfix|chore|refactor|docs|test|epic)/[0-9]+-[a-z0-9-]+$'
           if ! [[ "$BRANCH" =~ $pattern ]]; then
             echo "::error::Branch '$BRANCH' does not match <type>/<issue-number>-kebab-description"
             exit 1
           fi
+
+      # An epic branch is rebase-merged into main; a feature branch is squash-merged
+      # into main or into its epic. Anything else lands commits the release tooling
+      # cannot attribute.
+      - name: Check base branch
+        env:
+          HEAD: ${{ github.head_ref }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          case "$HEAD" in
+            epic/*) [[ "$BASE" == "main" ]] || { echo "::error::Epic branch '$HEAD' must target main, not '$BASE'"; exit 1; } ;;
+            *)      [[ "$BASE" == "main" || "$BASE" == epic/* ]] || { echo "::error::'$HEAD' must target main or an epic/* branch, not '$BASE'"; exit 1; } ;;
+          esac
 
   linked-issue:
     name: Linked issue
