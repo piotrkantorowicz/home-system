@@ -2,6 +2,11 @@ namespace DietPlanner.Domain.Services;
 
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>
+/// Pure arithmetic behind the weight prediction screen: Mifflin-St Jeor BMR, activity-adjusted
+/// TDEE, BMI, the weekly change implied by a calorie target and the resulting goal date. A static class;
+/// inputs come from <see cref="Aggregates.UserProfile"/> and <see cref="Aggregates.UserGoal"/>.
+/// </summary>
 public static class WeightPredictionService
 {
     private static readonly Dictionary<ActivityLevel, decimal> ActivityMultipliers = new()
