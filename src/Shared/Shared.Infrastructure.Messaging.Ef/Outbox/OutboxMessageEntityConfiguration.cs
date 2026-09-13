@@ -3,8 +3,14 @@ namespace Shared.Infrastructure.Messaging.Ef.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+/// <summary>
+/// Maps <see cref="OutboxMessageEntity"/> to the <c>outbox_messages</c> table, including the partial
+/// index the worker polls on. A publishing Style-1 module applies it in <c>OnModelCreating</c> so the
+/// table lives in that module's schema and migrations.
+/// </summary>
 public sealed class OutboxMessageEntityConfiguration : IEntityTypeConfiguration<OutboxMessageEntity>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<OutboxMessageEntity> builder)
     {
         builder.ToTable("outbox_messages");

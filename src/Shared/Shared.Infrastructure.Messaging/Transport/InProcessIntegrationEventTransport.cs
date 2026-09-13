@@ -5,13 +5,23 @@ using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
 
+/// <summary>
+/// v1 transport: deserialises the outbox message and invokes every registered
+/// <see cref="IIntegrationEventHandler{TEvent}"/> for its type in a fresh DI scope, sequentially.
+/// Handlers are already wrapped in the consuming module's inbox executor at registration time, so a
+/// handler that throws leaves no inbox row and the message is retried on the next worker tick.
+/// </summary>
 public sealed class InProcessIntegrationEventTransport : IIntegrationEventTransport
 {
     private readonly IServiceProvider _rootProvider;
 
+    /// <summary>Creates the transport over the root provider used to open a scope per dispatch.</summary>
+    /// <param name="rootProvider">The host's root service provider.</param>
     public InProcessIntegrationEventTransport(IServiceProvider rootProvider)
         => _rootProvider = rootProvider;
 
+    /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">The message's event type cannot be resolved or deserialised.</exception>
     public async Task DispatchAsync(OutboxMessage message, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(message);

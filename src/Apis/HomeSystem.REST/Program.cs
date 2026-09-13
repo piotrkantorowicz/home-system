@@ -210,6 +210,10 @@ if (app.Environment.IsDevelopment())
 
 await app.RunAsync();
 
+/// <summary>
+/// Host entry point, exposed as a partial class so integration tests can bind
+/// <c>WebApplicationFactory&lt;Program&gt;</c> to the real pipeline.
+/// </summary>
 public partial class Program { }
 
 internal sealed record HealthResponse(string Status, DateTime Timestamp, string Version);

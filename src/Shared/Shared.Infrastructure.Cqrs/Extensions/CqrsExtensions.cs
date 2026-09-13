@@ -7,6 +7,11 @@ using Shared.Abstractions.Cqrs;
 using Shared.Infrastructure.Cqrs;
 using Shared.Infrastructure.Cqrs.Decorators;
 
+/// <summary>
+/// DI registration for the custom CQRS stack: modules register their handlers with
+/// <see cref="AddCqrsHandlers"/>, the host builds the shared dispatcher chain once with
+/// <see cref="AddCqrsDispatchers"/>.
+/// </summary>
 public static class CqrsExtensions
 {
     /// <summary>

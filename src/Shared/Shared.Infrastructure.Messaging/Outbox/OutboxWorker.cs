@@ -7,6 +7,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Infrastructure.Messaging.Transport;
 
+/// <summary>
+/// Hosted service that drains one publishing module's outbox: every <see cref="OutboxWorkerOptions.PollIntervalMs"/>
+/// it reads a batch of pending rows from the module's keyed <see cref="IOutboxStore"/>, hands each to
+/// the <see cref="Transport.IIntegrationEventTransport"/> and marks it processed or records the
+/// failure. Registered per module by <c>AddOutbox&lt;TDbContext&gt;()</c>; a tick that throws is
+/// logged and the loop continues.
+/// </summary>
+/// <typeparam name="TDbContext">The publishing module's <c>DbContext</c>, which keys its outbox store.</typeparam>
 public sealed partial class OutboxWorker<TDbContext> : BackgroundService
     where TDbContext : DbContext
 {
@@ -16,12 +24,17 @@ public sealed partial class OutboxWorker<TDbContext> : BackgroundService
     private readonly OutboxWorkerOptions _options;
     private readonly ILogger<OutboxWorker<TDbContext>> _logger;
 
+    /// <summary>Creates the worker.</summary>
+    /// <param name="scopeFactory">Opens a DI scope per tick so the store uses a fresh <c>DbContext</c>.</param>
+    /// <param name="options">Batch size and poll interval.</param>
+    /// <param name="logger">Receives tick and dispatch failures.</param>
     public OutboxWorker(
         IServiceScopeFactory scopeFactory,
         IOptions<OutboxWorkerOptions> options,
         ILogger<OutboxWorker<TDbContext>> logger)
         => (_scopeFactory, _options, _logger) = (scopeFactory, options.Value, logger);
 
+    /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -46,6 +59,12 @@ public sealed partial class OutboxWorker<TDbContext> : BackgroundService
         }
     }
 
+    /// <summary>
+    /// Performs a single tick: dispatches up to <see cref="OutboxWorkerOptions.BatchSize"/> pending
+    /// messages. Public so tests drive the worker deterministically instead of waiting on the timer.
+    /// A no-op until the module has registered a store and the host a transport.
+    /// </summary>
+    /// <param name="ct">Propagates cancellation to the store and transport.</param>
     public async Task RunOnceAsync(CancellationToken ct)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();

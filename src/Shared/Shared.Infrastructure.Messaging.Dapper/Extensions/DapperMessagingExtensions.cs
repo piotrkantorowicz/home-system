@@ -5,6 +5,10 @@ using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Dapper.Inbox;
 using Shared.Infrastructure.Messaging.Outbox;
 
+/// <summary>
+/// DI registration for the Dapper-backed inbox used by Style-2 modules that consume integration
+/// events. The inbox table (<c>inbox_messages</c>) is owned and migrated by the consuming module.
+/// </summary>
 public static class DapperMessagingExtensions
 {
     /// <summary>
