@@ -7,7 +7,7 @@ using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.Application.Queries.GetWeightEntries;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class WeightEntryEndpointsTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);

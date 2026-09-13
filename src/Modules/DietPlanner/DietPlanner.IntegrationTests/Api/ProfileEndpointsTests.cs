@@ -6,7 +6,7 @@ using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class ProfileEndpointsTests
 {
     private readonly HttpClient _client;

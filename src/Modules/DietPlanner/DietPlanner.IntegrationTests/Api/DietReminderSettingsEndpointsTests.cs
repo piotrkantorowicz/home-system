@@ -6,7 +6,7 @@ using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetDietReminderSettings;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class DietReminderSettingsEndpointsTests
 {
     private const string Path = "/api/v1/diet-reminder-settings";

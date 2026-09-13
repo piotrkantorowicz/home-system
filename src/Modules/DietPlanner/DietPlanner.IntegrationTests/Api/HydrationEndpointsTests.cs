@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using DietPlanner.Api;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class HydrationEndpointsTests
 {
     private readonly HttpClient _client;

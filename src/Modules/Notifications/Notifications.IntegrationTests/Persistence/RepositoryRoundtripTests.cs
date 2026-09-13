@@ -6,7 +6,7 @@ using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Repositories;
 using Notifications.IntegrationTests.Infrastructure;
 
-[Collection(NotificationsDatabaseCollection.Name)]
+[Collection(NotificationsDatabaseCollectionDefinition.Name)]
 public sealed class RepositoryRoundtripTests
 {
     private readonly NotificationsPostgresFixture _fixture;

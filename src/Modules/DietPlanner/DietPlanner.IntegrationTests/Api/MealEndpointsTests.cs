@@ -8,7 +8,7 @@ using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetShoppingList;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealEndpointsTests
 {
     private readonly DatabaseFixture _db;

@@ -6,7 +6,7 @@ using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
 
-[Collection(nameof(PostgresCollection))]
+[Collection(nameof(PostgresCollectionDefinition))]
 public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime
 {
     private readonly PostgresContainerFixture _fixture;
