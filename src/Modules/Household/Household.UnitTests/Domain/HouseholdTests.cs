@@ -1,9 +1,9 @@
+namespace Household.UnitTests.Domain;
+
 using Household.Domain.Events;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.UnitTests.Domain;
 
 public sealed class HouseholdTests
 {

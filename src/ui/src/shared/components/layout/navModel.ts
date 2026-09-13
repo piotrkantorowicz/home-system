@@ -49,12 +49,15 @@ function toRailNavItem(
 }
 
 /** One tile per registered module, for the 64px module rail. */
-export function getModuleTiles(t: TFunction): ModuleTile[] {
+export function getModuleTiles(
+  t: TFunction,
+  labels: Readonly<Record<string, string>> = {},
+): ModuleTile[] {
   return getModules().map((mod) => ({
     name: mod.name,
     basePath: mod.basePath,
     icon: mod.icon,
-    label: t(mod.translationKey),
+    label: labels[mod.name] ?? t(mod.translationKey),
   }));
 }
 

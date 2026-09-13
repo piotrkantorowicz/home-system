@@ -74,6 +74,11 @@ vi.mock('@shared/lib/module-registry', async (orig) => {
 const t = ((key: string) => key) as unknown as TFunction;
 
 describe('getModuleTiles', () => {
+  it('uses live module labels and preserves translated fallbacks', () => {
+    const tiles = getModuleTiles(t, { 'diet-planner': 'My label' });
+    expect(tiles[0]?.label).toBe('My label');
+    expect(tiles[1]?.label).toBe('common.notifications');
+  });
   it('returns one tile per registered module', () => {
     const tiles = getModuleTiles(t);
     expect(tiles.map((m) => m.name)).toEqual(['diet-planner', 'notifications']);

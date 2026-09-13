@@ -1,10 +1,10 @@
+namespace DietPlanner.Application.Workers;
+
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
-
-namespace DietPlanner.Application.Workers;
 
 internal sealed class WaterReminderJob(
     IWaterReminderCandidateQueries queries,

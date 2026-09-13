@@ -2,8 +2,8 @@ namespace DietPlanner.Application.Commands.ResetMealEntry;
 
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Domain;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class ResetMealEntryCommandHandler : ICommandHandler<ResetMealEntryCommand>
 {

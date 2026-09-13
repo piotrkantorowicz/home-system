@@ -1,385 +1,210 @@
-# React 19 + TypeScript 5 — Core Rules
+# React 19 + TypeScript 5.9 — Core Rules
 
 ## TypeScript
 
-### Config baseline (`tsconfig.json`)
+Baseline is `tsconfig.app.json`. Do not weaken any of these:
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "bundler",
-    "module": "ESNext",
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  }
-}
+```jsonc
+"strict": true,
+"exactOptionalPropertyTypes": true,     // `foo?: string` ≠ `foo: string | undefined`
+"noUncheckedIndexedAccess": true,       // arr[i] is T | undefined
+"noImplicitReturns": true,
+"noUnusedLocals": true, "noUnusedParameters": true,
+"noFallthroughCasesInSwitch": true,
+"noUncheckedSideEffectImports": true,
+"verbatimModuleSyntax": true,           // `import type` is mandatory for types
+"erasableSyntaxOnly": true,             // no enums, no namespaces, no parameter properties
+"moduleResolution": "bundler", "module": "ESNext", "target": "ES2022", "jsx": "react-jsx"
+```
+
+Consequences worth knowing:
+
+```ts
+// ❌ enum — not erasable. Use a const object + derived union.
+enum Role { Owner, Adult }
+// ✅
+export const ROLES = { owner: 'Owner', adult: 'Adult', child: 'Child', guest: 'Guest' } as const;
+export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+// ✅ `import type` for anything only used as a type (verbatimModuleSyntax)
+import type { Page, Locator } from '@playwright/test';
+
+// ✅ optional prop means "may be absent", not "may be undefined"
+interface Props { onClose?: () => void }
+<Dialog {...(onClose ? { onClose } : {})} />        // not onClose={maybeUndefined}
 ```
 
 ### Types
 
-```ts
-// ✅ Use `type` for data shapes, `interface` for extensible contracts
-type User = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-interface Repository<T> {
-  findById(id: string): Promise<T | null>;
-  save(entity: T): Promise<T>;
-}
-
-// ✅ Prefer discriminated unions over optional properties
-type Result<T> =
-  | { status: "success"; data: T }
-  | { status: "error"; error: Error }
-  | { status: "loading" };
-
-// ❌ Avoid
-type Result<T> = {
-  data?: T;
-  error?: Error;
-  isLoading?: boolean;
-};
-
-// ✅ Use `satisfies` to validate shape without widening
-const config = {
-  apiUrl: "https://api.example.com",
-  timeout: 5000,
-} satisfies AppConfig;
-
-// ✅ Use `unknown` + type guards instead of `any`
-function parseJson(raw: unknown): User {
-  if (!isUser(raw)) throw new TypeError("Invalid user payload");
-  return raw;
-}
-
-function isUser(value: unknown): value is User {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    "name" in value
-  );
-}
-
-// ✅ Const assertions for literal inference
-const ROUTES = {
-  home: "/",
-  profile: "/profile",
-  settings: "/settings",
-} as const;
-
-type Route = (typeof ROUTES)[keyof typeof ROUTES];
-```
-
----
+- `interface` for props and object shapes that may be extended; `type` for unions, tuples,
+  mapped types. Either is fine for plain shapes — be consistent within a file.
+- Discriminated unions over optional-property soup for state (`{ status: 'success'; data }`).
+- `unknown` + a type guard instead of `any`. `any` needs a `// REASON:` comment on the same line
+  and is the only way past `@typescript-eslint/no-explicit-any`.
+- `satisfies` to validate a literal against a type without widening.
+- `as const` for lookup tables and route maps.
+- No non-null assertions (`!`) — lint error. Narrow, or throw with a message.
 
 ## React
 
-### Component authoring
+### Components
 
 ```tsx
-// ✅ Function components only (no class components)
-// ✅ Named exports only (exception: page-level route components)
-// ✅ Props interface above the component
-
-export interface ButtonProps {
-  label: string;
-  variant?: "primary" | "secondary" | "ghost";
-  isLoading?: boolean;
-  onClick?: () => void;
+export interface ProductCardProps {
+  product: Product;
+  onSelect?: (id: string) => void;
 }
 
-export function Button({
-  label,
-  variant = "primary",
-  isLoading = false,
-  onClick,
-}: ButtonProps) {
+export function ProductCard({ product, onSelect }: ProductCardProps) {
+  const { t } = useTranslation('diet-planner');
   return (
-    <button
-      className={buttonVariants({ variant })}
-      disabled={isLoading}
-      onClick={onClick}
-      type="button"
-    >
-      {isLoading ? <Spinner aria-hidden /> : null}
-      {label}
-    </button>
+    <Card>
+      <CardTitle>{product.name}</CardTitle>
+      {onSelect && (
+        <Button size="sm" onClick={() => onSelect(product.id)}>{t('products.select')}</Button>
+      )}
+    </Card>
   );
 }
 ```
 
-### React 19 features — use them
+- Function components, named exports. `export default` **only** for `pages/*` consumed by
+  `React.lazy`.
+- No `React.FC`. Props interface named `<Component>Props`, exported when reused.
+- One component per file, except tiny private subcomponents used only there.
+- Hooks first, derived values next, handlers, early returns, render.
 
-> This is a Vite SPA — no RSC, no Server Actions. The features below are the ones that
-> apply on the client.
+### React 19 — ref is a prop
+
+`forwardRef` is deprecated in React 19. Components accept `ref` like any other prop.
 
 ```tsx
-// ✅ use() hook for async resources and context
-import { use } from "react";
-
-function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
-  const user = use(userPromise); // suspends automatically
-  return <h1>{user.name}</h1>;
+// ✅
+export function Input({ ref, className, ...props }: React.ComponentProps<'input'>) {
+  return <input ref={ref} className={cn(inputVariants(), className)} {...props} />;
 }
 
-// ✅ useOptimistic for immediate UI feedback
-import { useOptimistic } from "react";
-
-function TodoList({ todos }: { todos: Todo[] }) {
-  const [optimisticTodos, addOptimistic] = useOptimistic(todos);
-
-  async function addTodo(text: string) {
-    addOptimistic([...optimisticTodos, { id: "temp", text, done: false }]);
-    await api.addTodo(text);
-  }
-  // ...
-}
-
-// ✅ useTransition for non-urgent state updates
-import { useTransition } from "react";
-
-function SearchBar() {
-  const [isPending, startTransition] = useTransition();
-  const [query, setQuery] = useState("");
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    startTransition(() => setQuery(e.target.value));
-  }
-  // ...
-}
-
-// ✅ ref as prop (React 19 — no forwardRef needed)
-export function Input({ ref, ...props }: React.ComponentProps<"input">) {
-  return <input ref={ref} {...props} />;
-}
+// ❌ legacy (still present in shared/components/ui — migration tracked in #269)
+export const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => …);
+Input.displayName = 'Input';
 ```
 
-### Hooks rules
+Radix `asChild` composition works unchanged with ref-as-prop.
 
-```tsx
-// ✅ Custom hooks: single responsibility, typed return
-export function useUser(userId: string) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["user", userId],
-    queryFn: () => api.getUser(userId),
-  });
+### React 19 — other features to use
 
-  return { user: data, isLoading, error } as const;
-}
+| Need | Use |
+|---|---|
+| Read a promise or context in render | `use(promise)` / `use(Context)` inside `Suspense` |
+| Instant feedback before a mutation resolves | `useOptimistic` |
+| Form submit state without hand-rolled `isSubmitting` | `useActionState` (only for simple forms; react-hook-form forms already expose `formState`) |
+| Non-urgent updates (search filter, tab switch) | `useTransition` |
+| Document title / meta | render `<title>` / `<meta>` in the page component — React 19 hoists them |
 
-// ✅ useCallback only when passing to memoised children or in dep arrays
-// ✅ useMemo only for expensive computations (benchmark first!)
-// ❌ Don't wrap everything in useCallback/useMemo by default
+### React Compiler — no hand memoisation
 
-// ✅ Stable references via useRef for callbacks that don't need re-render
-function useStableCallback<T extends (...args: unknown[]) => unknown>(fn: T) {
-  const ref = useRef(fn);
-  useEffect(() => { ref.current = fn; });
-  return useCallback((...args: Parameters<T>) => ref.current(...args), []);
-}
-```
+The project targets the React Compiler (`babel-plugin-react-compiler` via
+`@vitejs/plugin-react`; enablement is tracked in #269, the lint rules from
+`eslint-plugin-react-hooks` v7 are already active). Write components as plain functions and let
+the compiler memoise:
 
-### State management
+- No `useMemo` / `useCallback` / `React.memo` **unless** profiling shows a specific problem the
+  compiler cannot solve (a genuinely expensive pure computation, a third-party child that
+  requires referential stability). Leave a comment with the measured reason.
+- Follow the Rules of React strictly — the compiler skips components that break them:
+  no mutation of props/state, no reading refs during render, no conditional hooks.
+- Existing `useMemo` for cheap derived values is removed opportunistically when a file is touched.
 
-```tsx
-// Local: useState / useReducer
-// Complex local: useReducer with discriminated union actions
-type Action =
-  | { type: "increment" }
-  | { type: "decrement" }
-  | { type: "reset"; payload: number };
+### Hooks
 
-function reducer(state: number, action: Action): number {
-  switch (action.type) {
-    case "increment": return state + 1;
-    case "decrement": return state - 1;
-    case "reset":     return action.payload;
-  }
-}
-
-// Global/shared: Zustand
-import { create } from "zustand";
-import { immer } from "zustand/middleware/immer";
-
-interface CartStore {
-  items: CartItem[];
-  addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-}
-
-export const useCartStore = create<CartStore>()(
-  immer((set) => ({
-    items: [],
-    addItem: (item) =>
-      set((state) => { state.items.push(item); }),
-    removeItem: (id) =>
-      set((state) => {
-        state.items = state.items.filter((i) => i.id !== id);
-      }),
-  }))
-);
-
-// Server state: TanStack Query
-export function useProducts(filters: ProductFilters) {
+```ts
+export function useProducts(params: ProductListParams) {
   return useQuery({
-    queryKey: ["products", filters],
-    queryFn: () => api.getProducts(filters),
-    staleTime: 1000 * 60 * 5, // 5 min
+    ...productListOptions(params),
     placeholderData: keepPreviousData,
   });
 }
-
-// Mutations
-export function useCreateProduct() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.createProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-  });
-}
 ```
 
-### Forms
+- Custom hooks: single responsibility, typed return, `use` prefix.
+- `useEffect` is for synchronising with something outside React (subscriptions, the OIDC
+  manager, a DOM API). Not for deriving state, not for "run on mount" data loading — that is a
+  query.
+- `react-hooks/exhaustive-deps` is an error. Fix the dependency, do not disable the rule.
+
+### State
+
+| Kind | Where |
+|---|---|
+| Server state | TanStack Query — `queryOptions` + `useQuery` / `useSuspenseQuery` / `useMutation` |
+| Global UI state (theme, toasts, current household) | React Context in `shared/context` or a module's provider; split contexts by update frequency |
+| Local | `useState`; `useReducer` with a discriminated-union action for multi-field state |
+| URL state (filters, page, tab) | search params via React Router — not `useState` |
+| Persisted preferences | `usePreferences` (localStorage-backed) |
+
+No Zustand / Redux. If a context re-renders too much, split it — do not add a store.
+
+### Forms — react-hook-form + Zod 4
 
 ```tsx
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Min 8 characters"),
+const schema = z.object({
+  name: z.string().trim().min(1, t('validation.required')),
+  email: z.email(t('validation.email')),          // Zod 4: top-level validators, not z.string().email()
+  targetMl: z.coerce.number().int().min(500).max(6000),
 });
+type FormValues = z.infer<typeof schema>;
 
-type LoginFormValues = z.infer<typeof loginSchema>;
-
-export function LoginForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormValues) => {
-    await auth.login(data);
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <input {...register("email")} type="email" aria-invalid={!!errors.email} />
-      {errors.email && <p role="alert">{errors.email.message}</p>}
-
-      <input {...register("password")} type="password" />
-      {errors.password && <p role="alert">{errors.password.message}</p>}
-
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in…" : "Sign in"}
-      </button>
-    </form>
-  );
-}
+const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues });
 ```
 
-### Error boundaries
+- Schema per form, co-located with the form component. Messages via `t()`.
+- Use the shared `Field` component for label + input + error wiring (`aria-invalid`,
+  `aria-describedby`, `role="alert"` on the message).
+- Submit handlers `async`, errors surfaced through `ToastContext`, never `alert()`.
 
-```tsx
-// Use react-error-boundary — don't write custom class components
-import { ErrorBoundary } from "react-error-boundary";
+### Suspense & errors
 
-function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  return (
-    <div role="alert">
-      <p>Something went wrong: {error.message}</p>
-      <button onClick={resetErrorBoundary}>Retry</button>
-    </div>
-  );
-}
+- Every lazy page is wrapped in `SuspenseWrapper`; data-heavy sections may use
+  `useSuspenseQuery` inside their own `<Suspense fallback={<Skeleton />}>`.
+- `react-error-boundary` (`shared/components/ErrorBoundary`) around each module route tree.
+  No custom class boundaries.
 
-// Wrap data-fetching subtrees
-<ErrorBoundary FallbackComponent={ErrorFallback} onReset={reset}>
-  <Suspense fallback={<Skeleton />}>
-    <ProductList />
-  </Suspense>
-</ErrorBoundary>
-```
+### Events
 
-### Events & callbacks
-
-```tsx
-// ✅ Always type event handlers explicitly
-function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-  setValue(event.target.value);
-}
-
-// ✅ Prefer callback naming: onXxx (props), handleXxx (implementations)
-interface FormProps {
-  onSubmit: (data: FormData) => void; // prop: onXxx
-}
-
-function Form({ onSubmit }: FormProps) {
-  function handleSubmit(e: React.FormEvent) { // impl: handleXxx
-    e.preventDefault();
-    onSubmit(new FormData(e.currentTarget as HTMLFormElement));
-  }
-  return <form onSubmit={handleSubmit}>…</form>;
-}
-```
+- Handler props are `onXxx`; implementations are `handleXxx`.
+- Type events explicitly: `React.ChangeEvent<HTMLInputElement>`.
 
 ### Accessibility
 
-- Every interactive element must be keyboard-reachable.
-- Use semantic HTML first (`<button>`, `<nav>`, `<main>`, `<dialog>`).
-- Add `aria-*` only when semantic HTML isn't sufficient.
-- Every image needs `alt`; decorative images get `alt=""`.
-- Use `role="alert"` for dynamic error messages.
-- Use `aria-live="polite"` for non-critical updates.
-- Maintain visible focus indicators — never `outline: none` without replacement.
+- Semantic elements first (`button`, `nav`, `main`, `dialog`); Radix for anything with focus
+  management. `aria-*` only when semantics are insufficient.
+- Every interactive element reachable by keyboard with a visible focus ring
+  (`focus-visible:ring-2` is in the primitives — do not remove it).
+- Dynamic error text: `role="alert"`; polite updates: `aria-live="polite"`.
+- `eslint-plugin-jsx-a11y` recommended rules are errors.
 
----
+## i18n
 
-## Async patterns
+- All user-visible text through `useTranslation('<namespace>')` — no literals in JSX.
+- Add both `en` and `pl` keys in the same commit. Missing-key warnings fail the Vitest run
+  when `i18n.ts` runs in test mode.
+- One label per element in the active language — never render both languages.
+
+## Async
 
 ```ts
-// ✅ Never swallow errors silently
-async function fetchUser(id: string): Promise<User> {
-  const response = await fetch(`/api/users/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user ${id}: ${response.statusText}`);
-  }
-  return response.json() as Promise<User>;
-}
+// ✅ typed error from openapi-fetch — throw so TanStack Query sees it
+const { data, error } = await api.GET('/api/v1/goals');
+if (error) throw error;
 
-// ✅ Use AbortController for cancellable fetches
-function useUserData(id: string) {
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch(`/api/users/${id}`, { signal: controller.signal })
-      .then((r) => r.json())
-      .then(setUser)
-      .catch((e) => {
-        if (e.name !== "AbortError") setError(e);
-      });
-
-    return () => controller.abort();
-  }, [id]);
-}
+// ✅ AbortController for anything outside TanStack Query (rare)
+useEffect(() => {
+  const controller = new AbortController();
+  void subscribe(controller.signal);
+  return () => controller.abort();
+}, []);
 ```
+
+- No floating promises (lint error) — `await`, `void`, or return them.
+- Never swallow errors; log with `console.error` only in infrastructure code (`client.ts`,
+  `tokenInterceptor.ts`). Components surface errors through UI.

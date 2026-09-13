@@ -1,9 +1,9 @@
+namespace Household.Application.Commands.RemoveMember;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.RemoveMember;
 
 internal sealed class RemoveMemberCommandHandler : ICommandHandler<RemoveMemberCommand>
 {

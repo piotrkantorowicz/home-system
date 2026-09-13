@@ -1,7 +1,6 @@
 namespace DietPlanner.Infrastructure.Persistence.Configurations;
 
 using DietPlanner.Domain.Aggregates;
-using DietPlanner.Domain.Entities;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

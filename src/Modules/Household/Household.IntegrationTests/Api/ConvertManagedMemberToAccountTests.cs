@@ -1,8 +1,8 @@
+namespace Household.IntegrationTests.Api;
+
 using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
-
-namespace Household.IntegrationTests.Api;
 
 /// <summary>
 /// #220 — a managed member converted to an account keeps the same <c>PersonId</c> (and so

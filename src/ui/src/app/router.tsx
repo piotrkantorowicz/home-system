@@ -1,3 +1,4 @@
+import { HouseholdProvider, HouseholdRequired } from '@modules/household';
 import { AuthCallback } from '@shared/auth/AuthCallback';
 import { ProtectedRoute } from '@shared/auth/ProtectedRoute';
 import { SilentRenew } from '@shared/auth/SilentRenew';
@@ -13,7 +14,11 @@ import type { RouteObject } from 'react-router-dom';
 function buildModuleRoutes(): RouteObject[] {
   return getModules().map((mod) => ({
     path: mod.basePath.replace(/^\//, ''),
-    element: <Outlet />,
+    element: (
+      <HouseholdRequired>
+        <Outlet />
+      </HouseholdRequired>
+    ),
     children: mod.routes.map((route) => ({
       ...route,
       element: route.Component ? (
@@ -43,13 +48,19 @@ export function createRouter() {
     {
       element: (
         <ProtectedRoute>
-          <AppShell />
+          <HouseholdProvider>
+            <AppShell />
+          </HouseholdProvider>
         </ProtectedRoute>
       ),
       children: [
         {
           path: '/',
-          element: <RootRedirect />,
+          element: (
+            <HouseholdRequired>
+              <RootRedirect />
+            </HouseholdRequired>
+          ),
         },
         ...buildModuleRoutes(),
       ],

@@ -1,7 +1,7 @@
+namespace Household.Domain.Abstractions;
+
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
-
-namespace Household.Domain.Abstractions;
 
 public interface IHouseholdInvitationRepository
 {

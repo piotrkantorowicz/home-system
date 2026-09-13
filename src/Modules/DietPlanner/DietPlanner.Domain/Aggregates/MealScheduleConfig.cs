@@ -1,9 +1,9 @@
 namespace DietPlanner.Domain.Aggregates;
 
-using Shared.Abstractions.Core.Domain;
 using DietPlanner.Domain.Entities;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 public sealed record MealSlotUpsert(MealSlotId? Id, string Name, TimeOnly DefaultTime);
 

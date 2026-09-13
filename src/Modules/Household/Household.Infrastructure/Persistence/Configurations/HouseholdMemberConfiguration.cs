@@ -1,9 +1,9 @@
+namespace Household.Infrastructure.Persistence.Configurations;
+
 using Household.Domain.Entities;
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Household.Infrastructure.Persistence.Configurations;
 
 internal sealed class HouseholdMemberConfiguration : IEntityTypeConfiguration<HouseholdMember>
 {

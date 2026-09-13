@@ -1,18 +1,16 @@
 namespace Notifications.Api;
 
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-
+using Notifications.Api.SignalR;
 using Notifications.Application.Commands.BulkMarkNotificationsRead;
 using Notifications.Application.Commands.MarkNotificationRead;
 using Notifications.Application.Queries.GetUnreadCount;
 using Notifications.Application.Queries.ListNotifications;
-using Notifications.Api.SignalR;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 

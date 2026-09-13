@@ -1,3 +1,4 @@
+import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { cn } from '@shared/lib/utils';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -24,6 +25,7 @@ function readCollapsed(): boolean {
  */
 export function SectionPanel() {
   const { t } = useTranslation();
+  const labels = useModuleLabels();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
@@ -66,7 +68,7 @@ export function SectionPanel() {
             <Icon className="size-[15px]" />
           </span>
           <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold">
-            {t(mod.translationKey)}
+            {labels[mod.name] ?? t(mod.translationKey)}
           </span>
           <button
             type="button"
@@ -83,7 +85,7 @@ export function SectionPanel() {
       )}
 
       <nav
-        aria-label={t(mod.translationKey)}
+        aria-label={labels[mod.name] ?? t(mod.translationKey)}
         className="flex flex-1 flex-col gap-0.5 overflow-y-auto"
       >
         {groups.map((group, gi) => (

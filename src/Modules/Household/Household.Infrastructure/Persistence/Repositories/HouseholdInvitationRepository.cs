@@ -1,9 +1,9 @@
+namespace Household.Infrastructure.Persistence.Repositories;
+
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-
-namespace Household.Infrastructure.Persistence.Repositories;
 
 internal sealed class HouseholdInvitationRepository : IHouseholdInvitationRepository
 {

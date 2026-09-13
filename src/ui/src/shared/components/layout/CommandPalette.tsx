@@ -4,6 +4,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@shared/components/ui/Dialog';
+import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
+import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { getModules } from '@shared/lib/module-registry';
 import { Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -29,6 +31,8 @@ interface Destination {
  */
 export function CommandPalette() {
   const { t } = useTranslation();
+  const labels = useModuleLabels();
+  const access = useNavigationAccess();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -59,13 +63,13 @@ export function CommandPalette() {
   const destinations = useMemo(() => {
     const out: Destination[] = [];
     for (const mod of getModules()) {
-      const moduleLabel = t(mod.translationKey);
+      const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
       for (const nav of mod.navItems) {
         out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
       }
     }
     return out;
-  }, [t]);
+  }, [t, labels]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -76,6 +80,7 @@ export function CommandPalette() {
   }, [destinations, query]);
 
   function go(href: string) {
+    if (!access.canNavigate(href)) return;
     setOpen(false);
     void navigate(href);
   }
@@ -102,6 +107,9 @@ export function CommandPalette() {
           />
         </div>
 
+        {access.reason && (
+          <p className="text-muted-foreground px-4 pt-3 text-sm">{access.reason}</p>
+        )}
         <ul role="listbox" className="max-h-[360px] overflow-y-auto p-2">
           {filtered.length === 0 ? (
             <li className="text-muted-foreground px-3 py-6 text-center text-[13px]">
@@ -113,11 +121,12 @@ export function CommandPalette() {
                 <button
                   type="button"
                   role="option"
+                  disabled={!access.canNavigate(d.href)}
                   aria-selected={false}
                   onClick={() => {
                     go(d.href);
                   }}
-                  className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-semibold outline-none"
+                  className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <d.Icon className="text-muted-foreground size-4 shrink-0" strokeWidth={1.9} />
                   <span className="min-w-0 flex-1 truncate">{d.label}</span>

@@ -36,5 +36,10 @@ for d in .agents/skills/*/; do
   [[ -L ".claude/skills/$name" ]] || { echo "::error::.claude/skills/$name is not a symlink to .agents/skills/$name"; fail=1; }
 done
 
+# Tripwire: a markdown table separator that lost its leading "|" is a botched edit.
+for doc in CLAUDE.md AGENTS.md; do
+  if grep -nE '^-{3}\|' "$doc"; then echo "::error::$doc has a dangling table fragment (see line above)"; fail=1; fi
+done
+
 (( fail == 0 )) && echo "CLAUDE.md ↔ AGENTS.md ↔ .agents/skills in sync"
 exit $fail

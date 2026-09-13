@@ -1,7 +1,7 @@
+namespace Household.Application.Queries.GetMyHousehold;
+
 using Household.Application.Queries.Projections;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Queries.GetMyHousehold;
 
 public sealed record GetMyHouseholdQuery(string AuthSubject) : IQuery<MyHouseholdDto?>;
 

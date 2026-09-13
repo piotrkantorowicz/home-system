@@ -1,3 +1,4 @@
+import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { cn, getInitials } from '@shared/lib/utils';
 import { User, Bell, LogOut, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +48,7 @@ export function UserProfileDropdown({
   compact = false,
 }: UserProfileDropdownProps) {
   const { t } = useTranslation();
+  const access = useNavigationAccess();
 
   return (
     <DropdownMenu>
@@ -98,8 +100,15 @@ export function UserProfileDropdown({
           {dietPlannerLinks.map((link) => {
             const Icon = link.icon;
             return (
-              <DropdownMenuItem key={link.to} asChild>
-                <Link to={link.to} className={cn('flex items-center gap-2')}>
+              <DropdownMenuItem key={link.to} asChild disabled={!access.canNavigate(link.to)}>
+                <Link
+                  to={link.to}
+                  onClick={(event) => {
+                    if (!access.canNavigate(link.to)) event.preventDefault();
+                  }}
+                  title={access.canNavigate(link.to) ? undefined : access.reason}
+                  className={cn('flex items-center gap-2')}
+                >
                   <Icon className="h-4 w-4" />
                   {t(link.translationKey)}
                 </Link>
@@ -118,8 +127,15 @@ export function UserProfileDropdown({
           {settingsLinks.map((link) => {
             const Icon = link.icon;
             return (
-              <DropdownMenuItem key={link.to} asChild>
-                <Link to={link.to} className={cn('flex items-center gap-2')}>
+              <DropdownMenuItem key={link.to} asChild disabled={!access.canNavigate(link.to)}>
+                <Link
+                  to={link.to}
+                  onClick={(event) => {
+                    if (!access.canNavigate(link.to)) event.preventDefault();
+                  }}
+                  title={access.canNavigate(link.to) ? undefined : access.reason}
+                  className={cn('flex items-center gap-2')}
+                >
                   <Icon className="h-4 w-4" />
                   {t(link.translationKey)}
                 </Link>

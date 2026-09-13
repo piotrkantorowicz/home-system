@@ -1,8 +1,8 @@
+namespace Household.Application.Commands.RenameHousehold;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Commands.RenameHousehold;
 
 internal sealed class RenameHouseholdCommandHandler : ICommandHandler<RenameHouseholdCommand>
 {

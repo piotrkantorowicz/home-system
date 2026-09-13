@@ -1,3 +1,5 @@
+namespace Household.UnitTests.Application;
+
 using Household.Application.Commands.ConvertManagedMemberToAccount;
 using Household.Application.Common;
 using Household.Domain.Abstractions;
@@ -6,8 +8,6 @@ using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.UnitTests.Application;
 
 public sealed class ConvertManagedMemberToAccountCommandHandlerTests
 {

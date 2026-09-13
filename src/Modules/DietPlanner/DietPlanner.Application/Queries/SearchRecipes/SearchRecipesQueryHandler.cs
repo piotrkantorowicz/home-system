@@ -5,8 +5,8 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Core.Pagination;
+using Shared.Abstractions.Cqrs;
 
 internal sealed class SearchRecipesQueryHandler
     : IQueryHandler<SearchRecipesQuery, PagedList<RecipeDto>>

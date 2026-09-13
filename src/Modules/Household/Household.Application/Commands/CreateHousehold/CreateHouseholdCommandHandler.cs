@@ -1,11 +1,11 @@
+namespace Household.Application.Commands.CreateHousehold;
+
 using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.Application.Commands.CreateHousehold;
 
 internal sealed class CreateHouseholdCommandHandler : ICommandHandler<CreateHouseholdCommand, Guid>
 {

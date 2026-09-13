@@ -1,3 +1,5 @@
+namespace Household.Infrastructure.Persistence;
+
 using Household.Application.Persistence;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
@@ -5,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.Infrastructure.Persistence;
 
 internal sealed class HouseholdDbContext : DbContext, IHouseholdUnitOfWork, IHouseholdReadDbContext
 {

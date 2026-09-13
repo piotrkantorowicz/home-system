@@ -1,9 +1,9 @@
+namespace Household.Infrastructure.Persistence.Configurations;
+
 using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
-
-namespace Household.Infrastructure.Persistence.Configurations;
 
 internal sealed class HouseholdConfiguration : IEntityTypeConfiguration<HouseholdAggregate>
 {

@@ -1,10 +1,9 @@
+namespace Household.Application.Queries.GetMyHousehold;
+
 using Household.Application.Persistence;
 using Household.Application.Queries.Projections;
-using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Application.Queries.GetMyHousehold;
 
 internal sealed class GetMyHouseholdQueryHandler : IQueryHandler<GetMyHouseholdQuery, MyHouseholdDto?>
 {

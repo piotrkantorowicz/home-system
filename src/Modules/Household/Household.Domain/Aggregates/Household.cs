@@ -1,10 +1,10 @@
-using Household.Domain.Entities;
-using Household.Domain.Events;
-using Household.Domain.Exceptions;
-using Household.Domain.ValueObjects;
-using Shared.Abstractions.Core.Domain;
-
 namespace Household.Domain.Aggregates;
+
+using global::Household.Domain.Entities;
+using global::Household.Domain.Events;
+using global::Household.Domain.Exceptions;
+using global::Household.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 /// <summary>
 /// The sharing boundary: the people who live together and the resources they share.

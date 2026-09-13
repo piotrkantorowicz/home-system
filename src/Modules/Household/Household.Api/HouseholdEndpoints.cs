@@ -1,3 +1,5 @@
+namespace Household.Api;
+
 using System.Security.Claims;
 using Household.Api.Identity;
 using Household.Application.Commands.AddExistingPersonAsMember;
@@ -22,8 +24,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
-
-namespace Household.Api;
 
 internal static class HouseholdEndpoints
 {

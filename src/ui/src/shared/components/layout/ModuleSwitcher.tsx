@@ -6,6 +6,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@shared/components/ui';
+import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
+import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -27,7 +29,8 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const tiles = getModuleTiles(t);
+  const tiles = getModuleTiles(t, useModuleLabels());
+  const access = useNavigationAccess();
 
   return (
     <DropdownMenu>
@@ -36,6 +39,9 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
         <DropdownMenuLabel className="text-muted-foreground text-[10px] font-bold tracking-wide uppercase">
           {t('common.modules')}
         </DropdownMenuLabel>
+        {access.reason && (
+          <p className="text-muted-foreground px-2 pb-2 text-xs">{access.reason}</p>
+        )}
         {tiles.map((tile) => {
           const Icon = tile.icon;
           const isActive =
@@ -44,6 +50,7 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
           return (
             <DropdownMenuItem
               key={tile.name}
+              disabled={!access.canNavigate(tile.basePath)}
               onSelect={() => {
                 void navigate(tile.basePath);
               }}

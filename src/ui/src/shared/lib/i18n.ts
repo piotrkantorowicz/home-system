@@ -66,7 +66,7 @@ export function initI18n(modules: readonly AppModule[]) {
 
   void i18n.use(initReactI18next).init({
     lng: defaultLang,
-    initImmediate: false,
+    initAsync: false,
     resources: {
       en: { translation: enTranslation, ...enResources },
       pl: { translation: plTranslation, ...plResources },
