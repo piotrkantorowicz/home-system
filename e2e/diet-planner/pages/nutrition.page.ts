@@ -31,8 +31,11 @@ export class NutritionPage extends BasePage {
   }
 
   async goto() {
+    // Require a successful summary — a failed request renders the error
+    // banner, which would otherwise be mistaken for "no data" downstream.
     const responsePromise = this.page.waitForResponse(
-      (resp) => resp.url().includes('/nutrition-summary') && resp.request().method() === 'GET',
+      (resp) =>
+        resp.url().includes('/nutrition-summary') && resp.request().method() === 'GET' && resp.ok(),
       { timeout: 10000 },
     );
     await this.page.goto('/diet-planner/nutrition');
@@ -40,13 +43,20 @@ export class NutritionPage extends BasePage {
   }
 
   rangeOption(range: NutritionRange): Locator {
-    const labels: Record<NutritionRange, string> = { '7': '7 days', '30': '30 days', '90': '90 days' };
+    const labels: Record<NutritionRange, string> = {
+      '7': '7 days',
+      '30': '30 days',
+      '90': '90 days',
+    };
     return this.rangeGroup.getByRole('radio', { name: labels[range] });
   }
 
   async selectRange(range: NutritionRange) {
+    // Require a successful summary — a failed request renders the error
+    // banner, which would otherwise be mistaken for "no data" downstream.
     const responsePromise = this.page.waitForResponse(
-      (resp) => resp.url().includes('/nutrition-summary') && resp.request().method() === 'GET',
+      (resp) =>
+        resp.url().includes('/nutrition-summary') && resp.request().method() === 'GET' && resp.ok(),
       { timeout: 10000 },
     );
     await this.rangeOption(range).click();

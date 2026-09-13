@@ -9,6 +9,12 @@ interface PaginationProps {
   pageSize: number;
   totalCount: number;
   onPageChange: (page: number) => void;
+  /**
+   * Called once per change. Consumers reset the page themselves — issuing a
+   * second `onPageChange(1)` here made URL-backed lists lose the new size
+   * (two `setSearchParams` updates in one event both start from the same
+   * stale `prev`, so the last one wins).
+   */
   onPageSizeChange: (pageSize: number) => void;
   pageSizeOptions?: number[];
 }
@@ -35,7 +41,6 @@ export function Pagination({
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange(Number(e.target.value));
-            onPageChange(1);
           }}
           className="border-input bg-background focus:ring-ring h-11 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
         >

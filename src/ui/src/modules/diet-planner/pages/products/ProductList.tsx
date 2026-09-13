@@ -290,10 +290,7 @@ export default function ProductList() {
           pageSize={pageSize}
           totalCount={data.totalCount}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          onPageSizeChange={setPageSize}
         />
       ) : null}
 

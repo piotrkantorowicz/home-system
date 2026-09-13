@@ -1,6 +1,7 @@
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
 import { useNutritionSummary } from '@modules/diet-planner/api/hooks/useMeals';
 import {
+  Banner,
   Card,
   EmptyState,
   MetricTile,
@@ -33,7 +34,7 @@ export default function NutritionSummary() {
     return { from: toDateStr(start), to: toDateStr(now) };
   }, [range]);
 
-  const { data, isLoading } = useNutritionSummary({ from, to });
+  const { data, isLoading, isError, refetch } = useNutritionSummary({ from, to });
   const { data: goals } = useGoals();
 
   const days = useMemo(() => data ?? [], [data]);
@@ -102,7 +103,17 @@ export default function NutritionSummary() {
         />
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <Banner
+          variant="error"
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel={t('dashboard.retry')}
+        >
+          {t('dashboard.data_error')}
+        </Banner>
+      ) : isLoading ? (
         <Skeleton className="h-[420px] w-full rounded-[22px]" />
       ) : days.length === 0 ? (
         <EmptyState
@@ -238,7 +249,10 @@ export default function NutritionSummary() {
             pageSize={tablePageSize}
             totalCount={days.length}
             onPageChange={setTablePage}
-            onPageSizeChange={setTablePageSize}
+            onPageSizeChange={(size) => {
+              setTablePageSize(size);
+              setTablePage(1);
+            }}
           />
         </>
       )}

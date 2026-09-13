@@ -54,9 +54,7 @@ test.describe('Nutrition Summary — with meal data', () => {
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);
   });
 
-  test('metric tiles and the intake chart appear for the default 7-day range', async ({
-    page,
-  }) => {
+  test('metric tiles and the intake chart appear for the default 7-day range', async ({ page }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
@@ -108,16 +106,28 @@ test.describe('Nutrition Summary — with meal data', () => {
 
     const submitBtn = page.getByRole('button', { name: /save goals/i });
     await expect(submitBtn).toBeEnabled({ timeout: 8000 });
+
+    // Wait for the save to land before leaving the page — navigating while the
+    // mutation is in flight left the nutrition page without a goal under load.
+    const goalsSaved = page.waitForResponse(
+      (resp) =>
+        resp.url().includes('/api/v1/goals') &&
+        ['POST', 'PUT'].includes(resp.request().method()) &&
+        resp.ok(),
+      { timeout: 10000 },
+    );
     await submitBtn.click();
+    await goalsSaved;
 
     // Once a calorie goal exists, the "Avg intake" tile's hint switches from
-    // the generic "kcal" unit to a signed delta against the goal.
+    // the generic "kcal" unit to a signed delta against the goal ("+123", "−45" or "0").
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
     const tile = page.getByText('Avg intake', { exact: true }).locator('xpath=..');
+    await expect(tile).toBeVisible({ timeout: 10000 });
     const hint = tile.locator('> div').nth(2);
-    await expect(hint).not.toHaveText('kcal');
+    await expect(hint).toHaveText(/^(0|[+\u2212-]\d[\d\s.,]*)$/);
   });
 
   test('pagination defaults to page size 25', async ({ page }) => {

@@ -1,6 +1,9 @@
+import { format, startOfWeek } from 'date-fns';
+
 import { test, expect } from './fixtures';
 import { CalendarPage, ImportPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
+import { clearMealsInSlot, seedMealSchedule } from './utils/seed';
 
 test.describe.configure({ mode: 'serial', timeout: 180000 });
 
@@ -11,8 +14,20 @@ test.describe('Calendar CRUD & Navigation', () => {
   // ── Setup ────────────────────────────────────────────────────────────────────
 
   test('setup: import a weekly meal plan', async ({ page }) => {
+    // Slot names are worker-shared state; make sure the Breakfast/Lunch/Snack/
+    // Dinner slots the tests below click on exist before the import maps
+    // meals onto them (unmatched types would otherwise land in "Other").
     const importPage = new ImportPage(page);
     await importPage.goto();
+    await seedMealSchedule(page);
+    // The add-meal test below needs an empty "Mon / Snack" cell — the week grid
+    // only offers "Add meal" on empty cells, and an earlier spec on this worker
+    // may have imported a full week into it.
+    await clearMealsInSlot(
+      page,
+      format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+      'Snack',
+    );
     await importPage.runImportWizard(planData);
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);
   });
@@ -42,9 +57,11 @@ test.describe('Calendar CRUD & Navigation', () => {
     const currentWeekText = await weekHeader.textContent();
 
     // Navigate to next week
-    await page.getByRole('button', { name: /next/i }).or(
-      page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }),
-    ).last().click();
+    await page
+      .getByRole('button', { name: /next/i })
+      .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
+      .last()
+      .click();
     await page.waitForLoadState('networkidle');
 
     // Week header should change
@@ -52,23 +69,36 @@ test.describe('Calendar CRUD & Navigation', () => {
     const nextWeekText = await weekHeader.textContent();
 
     // Navigate back with previous button
-    await page.getByRole('button', { name: /previous/i }).or(
-      page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }),
-    ).last().click();
+    await page
+      .getByRole('button', { name: /previous/i })
+      .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }))
+      .last()
+      .click();
     await page.waitForLoadState('networkidle');
 
     // Should be back to original week
     await expect(weekHeader).toHaveText(currentWeekText ?? '', { timeout: 5000 });
 
     // Navigate forward again then use Today button to snap back
-    await page.getByRole('button', { name: /next/i }).or(
-      page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }),
-    ).last().click();
+    await page
+      .getByRole('button', { name: /next/i })
+      .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
+      .last()
+      .click();
     await page.waitForLoadState('networkidle');
     await expect(weekHeader).toHaveText(nextWeekText ?? '');
 
+    // "Today" snaps to the day view for the current date (#241); switching
+    // back to the week view must land on the week we started from.
     await page.getByRole('button', { name: /today/i }).click();
-    await page.waitForLoadState('networkidle');
+    const todayHeading = new Date().toLocaleDateString('en', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+    await expect(page.getByRole('heading', { name: todayHeading, exact: true })).toBeVisible();
+
+    await page.getByRole('radio', { name: /^week$/i }).click();
     await expect(weekHeader).toHaveText(currentWeekText ?? '', { timeout: 5000 });
   });
 

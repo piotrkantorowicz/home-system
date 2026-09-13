@@ -6,7 +6,7 @@ export class DetailReviewPage {
   async openProduct(name: string) {
     await this.page.getByRole("link", { name, exact: true }).click();
     await expect(
-      this.page.getByRole("heading", { name: "Nutrition Facts (per 100g)" }),
+      this.page.getByRole("heading", { name: "Nutrition Facts" }),
     ).toBeVisible();
     await expect(this.page.getByText("Protein", { exact: true })).toHaveCount(
       1,

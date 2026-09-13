@@ -196,10 +196,7 @@ export default function RecipeList() {
           pageSize={pageSize}
           totalCount={n(data.totalCount)}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
+          onPageSizeChange={setPageSize}
         />
       ) : null}
 
