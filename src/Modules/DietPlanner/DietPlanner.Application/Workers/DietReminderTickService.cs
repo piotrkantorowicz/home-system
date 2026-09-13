@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-internal sealed class DietReminderTickService(
+internal sealed partial class DietReminderTickService(
     IServiceScopeFactory scopeFactory,
     IOptions<DietReminderTickServiceOptions> options,
     ILogger<DietReminderTickService> logger) : BackgroundService
@@ -16,7 +16,7 @@ internal sealed class DietReminderTickService(
     {
         if (!_options.Enabled)
         {
-            logger.LogInformation("DietReminderTickService disabled via configuration; not ticking.");
+            LogDisabled();
             return;
         }
 
@@ -30,7 +30,7 @@ internal sealed class DietReminderTickService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "DietReminderTickService tick failed");
+                LogTickFailed(ex);
             }
 
             try { await Task.Delay(interval, stoppingToken).ConfigureAwait(false); }
@@ -54,8 +54,17 @@ internal sealed class DietReminderTickService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "DietReminderJob {JobName} failed", job.Name);
+                LogJobFailed(ex, job.Name);
             }
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "DietReminderTickService disabled via configuration; not ticking.")]
+    private partial void LogDisabled();
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "DietReminderTickService tick failed")]
+    private partial void LogTickFailed(Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "DietReminderJob {JobName} failed")]
+    private partial void LogJobFailed(Exception exception, string jobName);
 }

@@ -9,7 +9,7 @@ using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 using Notifications.Infrastructure.Persistence;
 
-internal sealed class NotificationDispatcher(
+internal sealed partial class NotificationDispatcher(
     INotificationRepository notificationRepository,
     INotificationChannelPreferencesRepository preferencesRepository,
     INotificationTemplateRegistry templates,
@@ -88,9 +88,7 @@ internal sealed class NotificationDispatcher(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex,
-                    "Notification delivery {DeliveryId} via {Channel} failed",
-                    delivery.Id, delivery.Channel);
+                LogDeliveryFailed(ex, delivery.Id, delivery.Channel);
                 delivery.MarkFailed(DateTime.UtcNow, ex.Message);
             }
 
@@ -99,4 +97,7 @@ internal sealed class NotificationDispatcher(
 
         await unitOfWork.CommitAsync(ct);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Notification delivery {DeliveryId} via {Channel} failed")]
+    private partial void LogDeliveryFailed(Exception exception, NotificationDeliveryId deliveryId, NotificationChannel channel);
 }

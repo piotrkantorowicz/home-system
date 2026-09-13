@@ -17,7 +17,7 @@ using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Persistence.Extensions;
 
-public static class InfrastructureDependencyInjection
+public static partial class InfrastructureDependencyInjection
 {
     public static IServiceCollection AddHouseholdInfrastructure(
         this IServiceCollection services,
@@ -60,11 +60,17 @@ public static class InfrastructureDependencyInjection
         try
         {
             await dbContext.Database.MigrateAsync();
-            logger.LogInformation("Household database migrations applied successfully");
+            LogMigrationsApplied(logger);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while applying Household database migrations");
+            LogMigrationsFailed(logger, ex);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Household database migrations applied successfully")]
+    private static partial void LogMigrationsApplied(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "An error occurred while applying Household database migrations")]
+    private static partial void LogMigrationsFailed(ILogger logger, Exception exception);
 }
