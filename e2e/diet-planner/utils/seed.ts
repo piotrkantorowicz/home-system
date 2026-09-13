@@ -12,9 +12,7 @@ const API_BASE_URL = process.env['API_BASE_URL'] ?? 'http://localhost:5050';
  */
 async function getAccessToken(page: Page): Promise<string> {
   const token = await page.evaluate(() => {
-    const entry = Object.entries(localStorage).find(([key]) =>
-      key.startsWith('oidc.user:'),
-    );
+    const entry = Object.entries(localStorage).find(([key]) => key.startsWith('oidc.user:'));
     if (!entry) return null;
     try {
       return (JSON.parse(entry[1]) as { access_token?: string }).access_token ?? null;
@@ -52,12 +50,7 @@ export interface ProfileSeed {
   heightCm?: number;
   currentWeightKg?: number;
   targetWeightKg?: number;
-  activityLevel?:
-    | 'Sedentary'
-    | 'LightlyActive'
-    | 'ModeratelyActive'
-    | 'VeryActive'
-    | 'ExtraActive';
+  activityLevel?: 'Sedentary' | 'LightlyActive' | 'ModeratelyActive' | 'VeryActive' | 'ExtraActive';
 }
 
 const DEFAULT_PROFILE: Required<ProfileSeed> = {
@@ -86,6 +79,80 @@ export async function seedProfile(page: Page, overrides: ProfileSeed = {}): Prom
       throw new Error(
         `seedProfile: unable to upsert profile (POST ${createRes.status()}, PUT ${updateRes.status()})`,
       );
+    }
+  } finally {
+    await api.dispose();
+  }
+}
+
+// ── Goals ────────────────────────────────────────────────────────────────────
+
+export interface GoalsSeed {
+  dailyCalorieTarget?: number;
+  proteinGrams?: number;
+  carbsGrams?: number;
+  fatGrams?: number;
+  fiberGrams?: number;
+}
+
+const DEFAULT_GOALS: Required<GoalsSeed> = {
+  dailyCalorieTarget: 2150,
+  proteinGrams: 140,
+  carbsGrams: 240,
+  fatGrams: 70,
+  fiberGrams: 30,
+};
+
+/**
+ * Ensures nutrition goals exist for the current user. Upserts via POST then
+ * PUT so the call is idempotent whether or not goals were set by an earlier
+ * spec on the same worker.
+ */
+export async function seedGoals(page: Page, overrides: GoalsSeed = {}): Promise<void> {
+  const body = { ...DEFAULT_GOALS, ...overrides };
+  const api = await createApiContext(page);
+  try {
+    const createRes = await api.post('/api/v1/goals', { data: body });
+    if (createRes.ok()) return;
+
+    const updateRes = await api.put('/api/v1/goals', { data: body });
+    if (!updateRes.ok()) {
+      throw new Error(
+        `seedGoals: unable to upsert goals (POST ${createRes.status()}, PUT ${updateRes.status()})`,
+      );
+    }
+  } finally {
+    await api.dispose();
+  }
+}
+
+// ── Meals ────────────────────────────────────────────────────────────────────
+
+interface MealEntryDto {
+  id: string;
+  mealSlotName: string;
+}
+
+/**
+ * Deletes every meal logged on `date` (yyyy-MM-dd) in the slot called
+ * `slotName`. The week grid only offers "Add meal" on an empty cell, so a spec
+ * that adds through the grid must start from one — regardless of which other
+ * specs on the worker imported plans into it earlier.
+ */
+export async function clearMealsInSlot(page: Page, date: string, slotName: string): Promise<void> {
+  const api = await createApiContext(page);
+  try {
+    const res = await api.get('/api/v1/meals', { params: { from: date, to: date } });
+    if (!res.ok()) {
+      throw new Error(`clearMealsInSlot: GET returned ${res.status()}: ${await res.text()}`);
+    }
+    const meals = (await res.json()) as MealEntryDto[];
+    for (const meal of meals) {
+      if (meal.mealSlotName.toLowerCase() !== slotName.toLowerCase()) continue;
+      const del = await api.delete(`/api/v1/meals/${meal.id}`);
+      if (!del.ok()) {
+        throw new Error(`clearMealsInSlot: DELETE ${meal.id} returned ${del.status()}`);
+      }
     }
   } finally {
     await api.dispose();
@@ -154,17 +221,43 @@ const DEFAULT_MEAL_SCHEDULE: MealSlotSeed[] = [
   { name: 'Dinner', defaultTime: '19:00' },
 ];
 
+interface MealSlotDto {
+  id: string;
+  name: string;
+  defaultTime: string;
+}
+
+/**
+ * Seeds the meal schedule without ever deleting a slot. The backend refuses to
+ * remove a slot that has logged entries, and other specs on the same worker
+ * may already have planned meals into the existing slots — so existing slots
+ * are renamed/retimed in place (ids preserved) and any surplus ones are kept.
+ */
 export async function seedMealSchedule(
   page: Page,
   slots: MealSlotSeed[] = DEFAULT_MEAL_SCHEDULE,
 ): Promise<void> {
   const api = await createApiContext(page);
   try {
-    const res = await api.put('/api/v1/meal-schedule', { data: { slots } });
+    // GET returns a 200 with an empty / `null` body when nothing is configured.
+    const current = await api.get('/api/v1/meal-schedule');
+    const currentBody = current.ok() ? (await current.text()).trim() : '';
+    const existing: MealSlotDto[] =
+      currentBody === '' || currentBody === 'null'
+        ? []
+        : (JSON.parse(currentBody) as { slots: MealSlotDto[] }).slots;
+
+    const upserts = slots.map((slot, index) => ({
+      id: existing[index]?.id ?? null,
+      ...slot,
+    }));
+    for (const extra of existing.slice(slots.length)) {
+      upserts.push({ id: extra.id, name: extra.name, defaultTime: extra.defaultTime });
+    }
+
+    const res = await api.put('/api/v1/meal-schedule', { data: { slots: upserts } });
     if (!res.ok()) {
-      throw new Error(
-        `seedMealSchedule: PUT returned ${res.status()}: ${await res.text()}`,
-      );
+      throw new Error(`seedMealSchedule: PUT returned ${res.status()}: ${await res.text()}`);
     }
   } finally {
     await api.dispose();

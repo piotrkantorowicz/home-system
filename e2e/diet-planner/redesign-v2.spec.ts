@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures";
 import { ImportPage } from "./pages";
 import { generateWeeklyPlan } from "./utils/data-generator";
+import { seedGoals } from "./utils/seed";
 
 test("consumed nutrition, undo, and responsive agenda work with real meals", async ({
   page,
@@ -9,15 +10,11 @@ test("consumed nutrition, undo, and responsive agenda work with real meals", asy
   const importer = new ImportPage(page);
   await importer.goto();
   await importer.runImportWizard(generateWeeklyPlan(new Date()));
+  // Goals are worker-shared state: another spec may already have set them, in
+  // which case the dashboard's "Set up goals" CTA is gone. Seed via the API so
+  // the hero renders the nutrition view regardless of ordering.
+  await seedGoals(page);
   await page.goto("/diet-planner");
-  await page.getByRole("button", { name: "Set up goals", exact: true }).click();
-  await page.getByLabel("Daily Calorie Target (kcal)").fill("2150");
-  await page.getByLabel("Protein (g)", { exact: true }).fill("140");
-  await page.getByLabel("Carbohydrates (g)", { exact: true }).fill("240");
-  await page.getByLabel("Fat (g)", { exact: true }).fill("70");
-  await page.getByLabel("Fiber (g)", { exact: true }).fill("30");
-  await page.getByRole("button", { name: "Save Goals", exact: true }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
   await expect(page.getByText("Nothing logged", { exact: true })).toBeVisible();
   const mealActions = page.getByRole("button", {
     name: "Mark eaten",
