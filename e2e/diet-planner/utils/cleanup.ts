@@ -1,47 +1,8 @@
-import fs from 'fs';
 import path from 'path';
 
 import { request } from '@playwright/test';
 
-interface OidcUser {
-  access_token: string;
-}
-
-interface StorageState {
-  origins?: Array<{
-    origin: string;
-    localStorage?: Array<{ name: string; value: string }>;
-  }>;
-}
-
-function extractAccessToken(authStatePath: string): string | null {
-  if (!fs.existsSync(authStatePath)) return null;
-
-  let authState: StorageState;
-  try {
-    authState = JSON.parse(fs.readFileSync(authStatePath, 'utf-8')) as StorageState;
-  } catch {
-    return null;
-  }
-
-  // Search all origins — the app origin must come before Authentik in the
-  // match, so we scan every origin rather than stopping at the first
-  // localhost hit (which may be http://localhost:9000).
-  for (const origin of authState.origins ?? []) {
-    const storageItem = (origin.localStorage ?? []).find((i) =>
-      i.name.startsWith('oidc.user:'),
-    );
-    if (storageItem) {
-      try {
-        return (JSON.parse(storageItem.value) as OidcUser).access_token;
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  return null;
-}
+import { extractAccessToken } from '../../shared/auth-state';
 
 export async function cleanupWorker(workerIndex: number): Promise<void> {
   const authStatePath = path.resolve(`playwright/.auth/user-${workerIndex}.json`);
