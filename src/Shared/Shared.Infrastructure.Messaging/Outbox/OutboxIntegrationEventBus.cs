@@ -11,17 +11,17 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
     public OutboxIntegrationEventBus(IOutboxStore store, IIntegrationEventSerializer serializer)
         => (_store, _serializer) = (store, serializer);
 
-    public Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default)
+    public Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct = default)
         where TEvent : IIntegrationEvent
     {
-        ArgumentNullException.ThrowIfNull(@event);
+        ArgumentNullException.ThrowIfNull(integrationEvent);
 
         var message = new OutboxMessage(
             Id: Guid.NewGuid(),
-            EventId: @event.EventId,
-            EventType: @event.GetType().AssemblyQualifiedName!,
-            Payload: _serializer.Serialize(@event),
-            OccurredAt: @event.OccurredAt,
+            EventId: integrationEvent.EventId,
+            EventType: integrationEvent.GetType().AssemblyQualifiedName!,
+            Payload: _serializer.Serialize(integrationEvent),
+            OccurredAt: integrationEvent.OccurredAt,
             ProcessedAt: null,
             AttemptCount: 0,
             LastError: null);

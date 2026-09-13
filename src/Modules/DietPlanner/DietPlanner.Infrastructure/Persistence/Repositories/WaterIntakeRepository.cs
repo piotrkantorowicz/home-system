@@ -15,9 +15,9 @@ internal sealed class WaterIntakeRepository : IWaterIntakeRepository
     public async Task<WaterIntake?> GetByIdAsync(WaterIntakeId id, CancellationToken ct = default)
         => await _dbContext.WaterIntakes.FirstOrDefaultAsync(x => x.Id == id, ct);
 
-    public async Task<IReadOnlyList<WaterIntake>> GetByUserAndDateAsync(string userId, DateOnly date, CancellationToken ct = default)
+    public async Task<IReadOnlyList<WaterIntake>> GetByUserAndDateAsync(string userId, DateOnly day, CancellationToken ct = default)
         => await _dbContext.WaterIntakes
-            .Where(x => x.UserId == userId && x.Date == date)
+            .Where(x => x.UserId == userId && x.Date == day)
             .OrderByDescending(x => x.Timestamp)
             .ToListAsync(ct);
 

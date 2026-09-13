@@ -15,16 +15,16 @@ internal sealed class WeightEntryRepository : IWeightEntryRepository
     public async Task<WeightEntry?> GetByIdAsync(WeightEntryId id, CancellationToken ct = default)
         => await _dbContext.WeightEntries.FirstOrDefaultAsync(x => x.Id == id, ct);
 
-    public async Task<WeightEntry?> GetByUserAndDateAsync(string userId, DateOnly date, CancellationToken ct = default)
+    public async Task<WeightEntry?> GetByUserAndDateAsync(string userId, DateOnly day, CancellationToken ct = default)
         => await _dbContext.WeightEntries
-            .FirstOrDefaultAsync(x => x.UserId == userId && x.Date == date, ct);
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.Date == day, ct);
 
     public async Task<List<WeightEntry>> GetByUserAsync(
-        string userId, DateOnly? from, DateOnly? to, CancellationToken ct = default)
+        string userId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
         => await _dbContext.WeightEntries
             .Where(x => x.UserId == userId
-                && (from == null || x.Date >= from)
-                && (to == null || x.Date <= to))
+                && (fromDate == null || x.Date >= fromDate)
+                && (toDate == null || x.Date <= toDate))
             .OrderBy(x => x.Date)
             .ToListAsync(ct);
 
