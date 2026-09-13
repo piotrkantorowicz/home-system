@@ -6,8 +6,7 @@ using Testcontainers.PostgreSql;
 
 public sealed class HouseholdDatabaseFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("household_test")
         .WithUsername("test")
         .WithPassword("test")
