@@ -18,6 +18,8 @@ skills from `.agents/skills/`. The human owns two gates: **approving the issue p
 
 Every issue lives on the project board (https://github.com/users/piotrkantorowicz/projects/3);
 the skills move its Status column via `scripts/board.sh` — see `plan-issue` § Project board.
+The script reads a classic PAT (`repo` + `project`) from `BOARD_TOKEN` or
+`~/.config/home-system/board-token`; gh's own login stays a repo-scoped fine-grained PAT.
 
 ## Stages
 

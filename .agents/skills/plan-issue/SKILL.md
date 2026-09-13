@@ -60,8 +60,10 @@ the Status column through `scripts/board.sh` (field ids resolved at run time):
 | PR opened | `ship` / `ship-epic` | `In Review` |
 | PR merged / issue closed | board built-in workflow | `Done` |
 
-`scripts/board.sh statuses` lists the column names the board actually has. The script
-needs a gh token with the `project` scope; without it, it warns and does nothing.
+`scripts/board.sh statuses` lists the column names the board actually has. The script uses
+its own classic token (scopes `repo` + `project`) from `BOARD_TOKEN` or
+`~/.config/home-system/board-token` — fine-grained PATs cannot reach user projects. Without
+it, it warns and does nothing.
 
 ## Rules
 

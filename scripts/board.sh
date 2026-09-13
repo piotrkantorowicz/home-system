@@ -7,16 +7,27 @@
 #
 # Board: https://github.com/users/piotrkantorowicz/projects/3 (BOARD_OWNER / BOARD_NUMBER
 # override it). Field and option ids are resolved at run time, so renaming a column on the
-# board needs no change here. Needs a gh token with the `project` scope — without it the
-# script prints a warning and exits 0 so the skill flow is not blocked.
+# board needs no change here.
+#
+# Token: user-owned projects are not reachable with a fine-grained PAT, so the board uses
+# its own classic token (scopes `repo` + `project`, nothing else) instead of gh's login:
+#   BOARD_TOKEN env var, or one line in ${XDG_CONFIG_HOME:-~/.config}/home-system/board-token
+# Only this script's gh calls see it. Without a usable token the script prints a warning
+# and exits 0 so the skill flow is not blocked.
 set -uo pipefail
+
+token_file="${XDG_CONFIG_HOME:-$HOME/.config}/home-system/board-token"
+if [[ -z "${BOARD_TOKEN:-}" && -r "$token_file" ]]; then
+  BOARD_TOKEN=$(head -n1 "$token_file" | tr -d '[:space:]')
+fi
+[[ -n "${BOARD_TOKEN:-}" ]] && export GH_TOKEN="$BOARD_TOKEN"
 
 owner=${BOARD_OWNER:-piotrkantorowicz}
 number=${BOARD_NUMBER:-3}
 repo=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "piotrkantorowicz/home-system")
 
 usage() { sed -n '2,10p' "$0" >&2; exit 64; }
-warn_skip() { echo "board: $1 — skipping (grant the token the 'project' scope: gh auth refresh -s project)" >&2; exit 0; }
+warn_skip() { echo "board: $1 — skipping (set BOARD_TOKEN or write a classic PAT with scopes repo+project to $token_file)" >&2; exit 0; }
 
 project_json=$(gh project view "$number" --owner "$owner" --format json 2>/dev/null) || warn_skip "cannot read project $number of $owner"
 project_id=$(jq -r .id <<< "$project_json")
