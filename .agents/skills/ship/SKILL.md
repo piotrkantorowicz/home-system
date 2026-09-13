@@ -46,7 +46,7 @@ Preconditions, in order — stop at the first that fails:
    ```bash
    gh pr create --base <base> --title "<type>(<scope>): <subject>" --body-file <tmp> \
      --label "<module>,<backend|frontend>"
-   scripts/board.sh status <n> "In Review"
+   scripts/board.sh status <n> "In Review"     # no such column yet → stays In Progress, say so
    ```
 6. Print the PR URL and the next step: *"Review with the other tool: `$review-pr <pr>` in
    Codex / `/review-pr <pr>` in Claude Code."*

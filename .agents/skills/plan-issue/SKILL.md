@@ -39,7 +39,7 @@ path + section (`docs/design/household/README.md §8`), or a free-text descripti
    (`gh issue view <epic> --json body`, edit, `gh issue edit <epic> --body-file`).
 7. **Board.** Put every created issue (and the epic, if new) on the project board:
    ```bash
-   scripts/board.sh add <n> Backlog
+   scripts/board.sh add <n> Todo
    ```
    See § Project board below.
 8. **Epic lane?** If the slices only make sense together (main would be inconsistent
@@ -55,12 +55,15 @@ the Status column through `scripts/board.sh` (field ids resolved at run time):
 
 | Moment | Skill | Status |
 |---|---|---|
-| Issue created | `plan-issue` | `Backlog` |
+| Issue created | `plan-issue` | `Todo` |
 | Branch created | `start-issue` / `start-epic` | `In Progress` |
 | PR opened | `ship` / `ship-epic` | `In Review` |
 | PR merged / issue closed | board built-in workflow | `Done` |
 
-`scripts/board.sh statuses` lists the column names the board actually has. The script uses
+`scripts/board.sh statuses` lists the column names the board actually has (today: `Todo`,
+`In Progress`, `Done`). If a target column is missing the script exits 1 and names the
+existing ones — `ship` then leaves the item in `In Progress` and says so; add the column on
+the board rather than renaming it here. The script uses
 its own classic token (scopes `repo` + `project`) from `BOARD_TOKEN` or
 `~/.config/home-system/board-token` — fine-grained PATs cannot reach user projects. Without
 it, it warns and does nothing.
