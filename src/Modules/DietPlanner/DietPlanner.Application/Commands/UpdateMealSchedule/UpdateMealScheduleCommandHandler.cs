@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateMealSchedule;
 
+using System.Globalization;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
@@ -28,7 +29,7 @@ internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateM
         {
             // First-time creation — all inputs must be brand new (no ids yet).
             var newSlots = command.Slots
-                .Select(s => (s.Name, TimeOnly.Parse(s.DefaultTime)))
+                .Select(s => (s.Name, TimeOnly.Parse(s.DefaultTime, CultureInfo.InvariantCulture)))
                 .ToList();
 
             config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.UserId, newSlots);
@@ -40,7 +41,7 @@ internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateM
                 .Select(s => new MealSlotUpsert(
                     s.Id is null ? null : MealSlotId.From(s.Id.Value),
                     s.Name,
-                    TimeOnly.Parse(s.DefaultTime)))
+                    TimeOnly.Parse(s.DefaultTime, CultureInfo.InvariantCulture)))
                 .ToList();
 
             // Block deletion of slots that have entries.

@@ -1,5 +1,6 @@
 namespace Notifications.UnitTests.EventHandlers;
 
+using System.Globalization;
 using DietPlanner.Contracts.Events;
 #pragma warning disable IDE0005
 using Notifications.Application.Dispatching;
@@ -33,6 +34,37 @@ public sealed class MealMissedIntegrationEventHandlerTests
             Arg.Any<string>(),
             Arg.Is<IReadOnlyDictionary<string, string>>(d =>
                 d["MealSlotName"] == "Breakfast" && d["PlannedAt"] == "08:00"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnderCultureWithDotTimeSeparator_KeepsColonInPlannedAt()
+    {
+        // fi-FI formats "HH:mm" as "08.00" when the culture is applied; the placeholder must
+        // stay invariant because the template wording expects "08:00".
+        var planned = new DateTime(2026, 4, 28, 8, 0, 0, DateTimeKind.Utc);
+        var @event = new MealMissedIntegrationEvent(
+            EventId: Guid.NewGuid(), OccurredAt: planned.AddHours(1),
+            UserId: "u2", Locale: "fi",
+            MealEntryId: Guid.NewGuid(), MealSlotName: "Aamiainen", PlannedAt: planned);
+
+        var previous = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new CultureInfo("fi-FI");
+        try
+        {
+            await _sut.HandleAsync(@event, CancellationToken.None);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
+
+        await _dispatcher.Received(1).DispatchAsync(
+            NotificationType.MealMissed,
+            "u2",
+            "fi",
+            Arg.Any<string>(),
+            Arg.Is<IReadOnlyDictionary<string, string>>(d => d["PlannedAt"] == "08:00"),
             Arg.Any<CancellationToken>());
     }
 }

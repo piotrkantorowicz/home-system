@@ -22,7 +22,15 @@ internal sealed class SearchRecipesQueryHandler
         var q = _dbContext.Recipes.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(query.Search))
-            q = q.Where(r => r.Name.ToLower().Contains(query.Search.ToLower()));
+        {
+            var term = query.Search.ToLowerInvariant();
+            // REASON: this lambda is an EF Core expression tree — ToLower()/Contains() translate to
+            // SQL lower()/LIKE on the server; ToLowerInvariant and the StringComparison overload
+            // have no translation and would throw at runtime.
+#pragma warning disable CA1304, CA1311, CA1862
+            q = q.Where(r => r.Name.ToLower().Contains(term));
+#pragma warning restore CA1304, CA1311, CA1862
+        }
 
         if (query.OnlyMine)
             q = q.Where(r => r.CreatedByUserId == query.UserId);
@@ -52,7 +60,7 @@ internal sealed class SearchRecipesQueryHandler
         return new PagedList<RecipeDto>(items, totalCount, query.Page, query.PageSize);
     }
 
-    private static RecipeDto ToDto(Recipe recipe, IReadOnlyDictionary<ProductId, Product> products, string userId)
+    private static RecipeDto ToDto(Recipe recipe, Dictionary<ProductId, Product> products, string userId)
     {
         decimal calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
         foreach (var ingredient in recipe.Ingredients)

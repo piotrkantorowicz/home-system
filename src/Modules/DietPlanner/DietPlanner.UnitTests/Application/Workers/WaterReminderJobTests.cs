@@ -1,8 +1,9 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
 #pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
-using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
+using System.Globalization;
+using DietPlanner.Application.Workers;
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
@@ -29,7 +30,7 @@ public sealed class WaterReminderJobTests
         string windowEnd = "22:00",
         DateTime? lastAt = null)
         => new(userId, "en", intervalMinutes,
-            TimeOnly.Parse(windowStart), TimeOnly.Parse(windowEnd), lastAt);
+            TimeOnly.Parse(windowStart, CultureInfo.InvariantCulture), TimeOnly.Parse(windowEnd, CultureInfo.InvariantCulture), lastAt);
 
     public WaterReminderJobTests()
         => _sut = new WaterReminderJob(_queries, _stateRepo, _bus, _uow);

@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Queries.GetMealSchedule;
 
+using System.Globalization;
 using DietPlanner.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
@@ -23,7 +24,7 @@ internal sealed class GetMealScheduleQueryHandler : IQueryHandler<GetMealSchedul
                     .Select(s => new MealSlotDto(
                         s.Id.Value,
                         s.Name,
-                        s.DefaultTime.ToString("HH:mm"),
+                        s.DefaultTime.ToString("HH:mm", CultureInfo.InvariantCulture),
                         s.SortOrder))
                     .ToList(),
                 c.CreatedAt,
