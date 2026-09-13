@@ -9,8 +9,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for the caller's nutrition goal (<c>/api/v1/goals</c>).
+/// </summary>
 public static class GoalEndpoints
 {
+    /// <summary>Maps goal create, read and update; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapGoalEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/goals")
@@ -89,6 +95,14 @@ public static class GoalEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Body of goal create and update; any target may be left unset.
+/// </summary>
+/// <param name="DailyCalorieTarget">Daily energy target in kcal, or <see langword="null"/>.</param>
+/// <param name="ProteinGrams">Daily protein target in grams, or <see langword="null"/>.</param>
+/// <param name="CarbsGrams">Daily carbohydrate target in grams, or <see langword="null"/>.</param>
+/// <param name="FatGrams">Daily fat target in grams, or <see langword="null"/>.</param>
+/// <param name="FiberGrams">Daily fibre target in grams, or <see langword="null"/>.</param>
 public sealed record GoalRequest(
     int? DailyCalorieTarget,
     decimal? ProteinGrams,

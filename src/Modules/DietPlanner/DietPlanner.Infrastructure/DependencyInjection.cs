@@ -18,8 +18,16 @@ using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Persistence.Extensions;
 
+/// <summary>
+/// Wires the Diet Planner persistence, handlers, outbox, integration-event consumers and background
+/// jobs. Called through <c>AddDietPlannerModule</c>; never directly by the host.
+/// </summary>
 public static partial class InfrastructureDependencyInjection
 {
+    /// <summary>Registers the module's <c>DbContext</c>, repositories, unit of work, CQRS handlers, outbox/inbox and reminder jobs.</summary>
+    /// <param name="services">The host service collection.</param>
+    /// <param name="configuration">Provides the <c>DietPlanner</c> connection string and worker options.</param>
+    /// <returns><paramref name="services"/> for chaining.</returns>
     public static IServiceCollection AddDietPlannerInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -74,6 +82,12 @@ public static partial class InfrastructureDependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Applies pending EF Core migrations to the Diet Planner database. Called by the host at startup in
+    /// Development only; failures are logged, not thrown, so a missing database does not stop the host.
+    /// </summary>
+    /// <param name="serviceProvider">The built host provider; a scope is created from it.</param>
+    /// <param name="logger">Receives the outcome.</param>
     public static async Task MigrateDietPlannerDatabaseAsync(
         this IServiceProvider serviceProvider,
         ILogger logger)
