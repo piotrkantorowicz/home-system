@@ -11,11 +11,9 @@ using Testcontainers.PostgreSql;
 /// </summary>
 public sealed class HouseholdShoppingListFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dietPlanner = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine").WithDatabase("dp_hh_test").WithUsername("test").WithPassword("test").Build();
+    private readonly PostgreSqlContainer _dietPlanner = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("dp_hh_test").WithUsername("test").WithPassword("test").Build();
 
-    private readonly PostgreSqlContainer _household = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine").WithDatabase("hh_test").WithUsername("test").WithPassword("test").Build();
+    private readonly PostgreSqlContainer _household = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("hh_test").WithUsername("test").WithPassword("test").Build();
 
     public string DietPlannerConnectionString => _dietPlanner.GetConnectionString();
 

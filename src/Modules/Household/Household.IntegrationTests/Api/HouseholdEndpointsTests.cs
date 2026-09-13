@@ -128,7 +128,8 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
 
         var pickable = await owner.GetFromJsonAsync<List<PickableBody>>("/api/households/pickable-persons");
 
-        pickable!.ShouldContain(p => p.PersonId == freeId);
+        pickable.ShouldNotBeNull();
+        pickable.ShouldContain(p => p.PersonId == freeId);
         pickable.ShouldNotContain(p => p.DisplayName == "Owner");
     }
 

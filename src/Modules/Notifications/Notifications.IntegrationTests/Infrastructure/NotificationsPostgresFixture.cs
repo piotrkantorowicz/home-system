@@ -5,7 +5,7 @@ using Testcontainers.PostgreSql;
 
 public sealed class NotificationsPostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("notifications_test")
         .WithUsername("notifications")
         .WithPassword("notifications")

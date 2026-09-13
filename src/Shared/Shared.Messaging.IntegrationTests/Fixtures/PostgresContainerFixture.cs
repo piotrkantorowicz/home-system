@@ -5,8 +5,7 @@ using Xunit;
 
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
-    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
+    public PostgreSqlContainer Container { get; } = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("messaging_tests")
         .Build();
 
