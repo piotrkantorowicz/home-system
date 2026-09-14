@@ -3,8 +3,14 @@ namespace DietPlanner.Domain.Services;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>
+/// Default <see cref="INutritionCalculator"/>: converts each ingredient to grams with
+/// <see cref="UnitConverter"/>, scales the product's per-100 g values and sums them. Unknown
+/// nutrition components count as zero.
+/// </summary>
 public sealed class NutritionCalculator : INutritionCalculator
 {
+    /// <inheritdoc />
     public NutritionInfo CalculateTotalNutrition(Recipe recipe, Func<ProductId, Product?> productLookup)
     {
         decimal totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, totalFiber = 0;
@@ -33,6 +39,7 @@ public sealed class NutritionCalculator : INutritionCalculator
             Math.Round(totalFiber, 1));
     }
 
+    /// <inheritdoc />
     public NutritionInfo CalculateNutritionPerServing(Recipe recipe, Func<ProductId, Product?> productLookup)
     {
         var total = CalculateTotalNutrition(recipe, productLookup);
@@ -46,6 +53,7 @@ public sealed class NutritionCalculator : INutritionCalculator
             Math.Round(total.Fiber / servings, 1));
     }
 
+    /// <inheritdoc />
     public NutritionInfo CalculateNutritionForServings(Recipe recipe, decimal servings, Func<ProductId, Product?> productLookup)
     {
         var perServing = CalculateNutritionPerServing(recipe, productLookup);

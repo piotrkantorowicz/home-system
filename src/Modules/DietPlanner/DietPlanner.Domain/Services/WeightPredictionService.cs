@@ -2,6 +2,11 @@ namespace DietPlanner.Domain.Services;
 
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>
+/// Pure arithmetic behind the weight prediction screen: Mifflin-St Jeor BMR, activity-adjusted
+/// TDEE, BMI, the weekly change implied by a calorie target and the resulting goal date. Static — its
+/// inputs come from <see cref="Aggregates.UserProfile"/> and <see cref="Aggregates.UserGoal"/>.
+/// </summary>
 public static class WeightPredictionService
 {
     private static readonly Dictionary<ActivityLevel, decimal> ActivityMultipliers = new()
@@ -55,8 +60,9 @@ public static class WeightPredictionService
     }
 
     /// <summary>
-    /// Estimates the date when the target weight will be reached.
-    /// Returns null when no weekly change occurs or if already at target.
+    /// Estimates the date when the target weight will be reached. Returns today (UTC) when the
+    /// current and target weight already differ by less than 0.01 kg, and null when the weekly
+    /// change is zero or moves away from the target.
     /// </summary>
     public static DateOnly? EstimateGoalDate(
         decimal currentWeightKg,
