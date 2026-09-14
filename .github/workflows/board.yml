@@ -1,0 +1,76 @@
+# Keeps the project board (https://github.com/users/piotrkantorowicz/projects/3) in step
+# with issue and PR events, using the same scripts/board.sh the skills use:
+#
+#   issue opened             → added, Backlog
+#   issue reopened           → Todo
+#   issue closed             → Done            (covers "PR merged", which closes the issue)
+#   PR opened / ready        → every issue it closes or refs → In Review
+#   PR closed without merge  → those issues → Todo
+#
+# Needs the BOARD_TOKEN secret: a classic PAT with scopes repo + project (GITHUB_TOKEN
+# cannot reach user-owned projects). Without it the script warns and exits 0.
+name: Board
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, reopened, ready_for_review, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: board-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync status
+    runs-on: ubuntu-latest
+    # Dependabot PRs reference no issue; skip the checkout for them.
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/board.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Issue event
+        if: github.event_name == 'issues'
+        env:
+          BOARD_TOKEN: ${{ secrets.BOARD_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          ACTION: ${{ github.event.action }}
+        run: |
+          case "$ACTION" in
+            opened)   bash scripts/board.sh add "$NUMBER" Backlog ;;
+            reopened) bash scripts/board.sh add "$NUMBER" Todo || true
+                      bash scripts/board.sh status "$NUMBER" Todo ;;
+            closed)   bash scripts/board.sh add "$NUMBER" Done || true
+                      bash scripts/board.sh status "$NUMBER" Done ;;
+          esac
+
+      - name: Pull request event
+        if: github.event_name == 'pull_request'
+        env:
+          BOARD_TOKEN: ${{ secrets.BOARD_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          BODY: ${{ github.event.pull_request.body }}
+          ACTION: ${{ github.event.action }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          issues=$(grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?|part of)[[:space:]]+#[0-9]+' <<< "$BODY" \
+                   | grep -oE '[0-9]+' | sort -un)
+          [[ -n "$issues" ]] || { echo "no issue referenced in the PR body"; exit 0; }
+          case "$ACTION" in
+            opened|reopened|ready_for_review)
+              [[ "$DRAFT" == "true" ]] && { echo "draft — leaving status"; exit 0; }
+              for n in $issues; do bash scripts/board.sh add "$n" "In Review" || true; bash scripts/board.sh status "$n" "In Review"; done ;;
+            closed)
+              # Merged PRs close their issues → the issues.closed event moves them to Done.
+              [[ "$MERGED" == "true" ]] && exit 0
+              for n in $issues; do bash scripts/board.sh status "$n" Todo || true; done ;;
+          esac

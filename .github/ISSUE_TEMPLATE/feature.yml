@@ -1,5 +1,5 @@
 name: Feature / task
-description: A vertical slice of work that will become exactly one PR.
+description: A vertical slice of work that will become exactly one PR. Add the module and area labels.
 title: "feat(<module>): <short description>"
 labels: [enhancement]
 body:

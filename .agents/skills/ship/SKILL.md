@@ -14,17 +14,20 @@ Preconditions, in order — stop at the first that fails:
 
 ## Steps
 
-1. **Rebase on fresh main** if behind:
+1. **Rebase on the fresh base** if behind. The base is what `start-issue` chose:
+   `main`, or `epic/<epic>-<slug>` when the issue is `Part of #<epic>` with an epic lane
+   (`git log --oneline origin/main..HEAD` shows epic commits you did not write → the
+   base is the epic branch).
    ```bash
-   git fetch origin main
-   git rebase origin/main
+   git fetch origin <base>
+   git rebase origin/<base>
    ```
    Resolve conflicts, re-run `/verify` if anything changed.
 2. **Tidy commits.** Every commit must pass commitlint (`type(scope): subject`, lower-case
    subject, ≤ 72 chars, no trailing period). If the branch is a pile of WIP commits, squash
    to logical commits:
    ```bash
-   git reset --soft $(git merge-base HEAD origin/main)
+   git reset --soft $(git merge-base HEAD origin/<base>)
    git commit -m "feat(household): …"     # one per logical change
    ```
    Never do this after the branch has been reviewed — reviewers lose their anchors.
@@ -41,13 +44,15 @@ Preconditions, in order — stop at the first that fails:
    - **No AI attribution** of any kind — see Git Commit Policy in `CLAUDE.md`.
 5. **Open the PR.** Title = Conventional Commits subject (it becomes the squash commit).
    ```bash
-   gh pr create --base main --title "<type>(<scope>): <subject>" --body-file <tmp> \
+   gh pr create --base <base> --title "<type>(<scope>): <subject>" --body-file <tmp> \
      --label "<module>,<backend|frontend>"
+   scripts/board.sh status <n> "In Review"
    ```
 6. Print the PR URL and the next step: *"Review with the other tool: `$review-pr <pr>` in
    Codex / `/review-pr <pr>` in Claude Code."*
 
 ## Rules
 
-- Do not merge. Do not approve. The owner does both.
+- Do not merge. Do not approve. The owner does both. A feature PR is squash-merged
+  (`--squash`); only an epic PR is rebase-merged — see `ship-epic`.
 - Do not open a Draft unless the user asked; the PR is opened when the work is done.

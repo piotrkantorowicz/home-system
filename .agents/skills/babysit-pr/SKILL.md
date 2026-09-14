@@ -16,13 +16,13 @@ cheapest thing that moves the PR forward, then stop.
 
 1. **Status snapshot.**
    ```bash
-   gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,headRefName
+   gh pr view <n> --json state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,headRefName,baseRefName
    gh pr checks <n>
    ```
    If `state` is `MERGED` or `CLOSED`: say so and end the loop (`ScheduleWakeup stop` /
    tell the user to stop the loop).
-2. **Conflicts** (`mergeable == CONFLICTING`): `git fetch origin main && git rebase origin/main`
-   on the PR branch, resolve, `/verify`, `git push --force-with-lease`. (Force-with-lease is
+2. **Conflicts** (`mergeable == CONFLICTING`): `git fetch origin <base> && git rebase origin/<base>`
+   (`baseRefName` from `gh pr view`) on the PR branch, resolve, `/verify`, `git push --force-with-lease`. (Force-with-lease is
    allowed on a feature branch only; the guard hook blocks anything else.) Note this in a
    PR comment since it moves review anchors.
 3. **CI red**: find the failing job and read only the failed step:
@@ -35,7 +35,8 @@ cheapest thing that moves the PR forward, then stop.
 4. **New unresolved review threads** since the last tick → run `/address-review <n>`.
 5. **Green + approved** (`reviewDecision == APPROVED`, all checks pass, no unresolved
    threads): report *"ready to merge"* and end the loop. Do **not** merge — the owner does,
-   or explicitly asks for `gh pr merge --squash --delete-branch`.
+   or explicitly asks for `gh pr merge --squash --delete-branch` (`--rebase` when
+   `headRefName` is `epic/*` — the guard hook enforces the strategy).
 6. Otherwise print one status line — `checks: 3/4 ✅ · threads: 2 open · review: pending` —
    and end the tick.
 

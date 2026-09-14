@@ -1,0 +1,35 @@
+name: Tech debt
+description: Modernisation or paying down deferred work. No behaviour change for the user.
+title: "refactor(<module>): <short description>"
+labels: [tech-debt]
+body:
+  - type: textarea
+    id: current
+    attributes:
+      label: Current state
+      description: What the code does today and which rule doc it violates (link the section).
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: Target state
+      description: What it should look like. Reference the idiom in the rule doc, not a rewrite of it.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Files / projects touched. Split into several issues if it is more than one PR.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Existing tests pass unchanged (behaviour-preserving)
+        - [ ]
+    validations:
+      required: true

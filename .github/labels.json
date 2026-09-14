@@ -1,0 +1,38 @@
+[
+  { "name": "epic",          "color": "8b5cf6", "description": "Type: parent of several one-PR issues (sub-issues); may get an epic/ branch" },
+  { "name": "enhancement",   "color": "a2eeef", "description": "Type: new feature or behaviour — feat PR" },
+  { "name": "bug",           "color": "d73a4a", "description": "Type: something behaves differently from what code or docs promise — fix PR" },
+  { "name": "tech-debt",     "color": "5319e7", "description": "Type: modernisation / paying down deferred work — refactor or perf PR" },
+  { "name": "chore",         "color": "6b7280", "description": "Type: tooling, config, dependencies, CI — chore or ci PR" },
+  { "name": "documentation", "color": "0075ca", "description": "Type: docs, rule docs, design docs — docs PR" },
+
+  { "name": "backend",  "color": "1d4ed8", "description": "Area: .NET modules, shared libraries, API host" },
+  { "name": "frontend", "color": "2563eb", "description": "Area: React SPA under src/ui" },
+  { "name": "e2e",      "color": "3b82f6", "description": "Area: Playwright suite under e2e/" },
+  { "name": "infra",    "color": "60a5fa", "description": "Area: docker-compose, Authentik, databases, local stack" },
+  { "name": "ci",       "color": "0052cc", "description": "Area: GitHub Actions, hooks, agent skills and workflow tooling" },
+
+  { "name": "diet-planner",  "color": "15803d", "description": "Module: Diet Planner (products, recipes, plans, goals)" },
+  { "name": "household",     "color": "16a34a", "description": "Module: Household — people, membership, shared-resource scoping" },
+  { "name": "notifications", "color": "22c55e", "description": "Module: Notifications (deliveries, channels, preferences)" },
+  { "name": "shared",        "color": "4ade80", "description": "Module: Shared.* — CQRS, messaging, outbox/inbox, web middleware" },
+  { "name": "ui-shell",      "color": "86efac", "description": "Module: app shell — navigation, rail, command palette, dashboard" },
+
+  { "name": "ux",            "color": "f59e0b", "description": "Cross-cutting: UX, visual polish, feedback (toasts, errors, loading)" },
+  { "name": "accessibility", "color": "0ea5e9", "description": "Cross-cutting: a11y" },
+
+  { "name": "priority:high",   "color": "b60205", "description": "Next up" },
+  { "name": "priority:medium", "color": "fbca04", "description": "Planned" },
+  { "name": "priority:low",    "color": "1d76db", "description": "When convenient" },
+
+  { "name": "blocked",        "color": "000000", "description": "Flow: cannot proceed — say why in the last comment" },
+  { "name": "needs-decision", "color": "fde047", "description": "Flow: waiting on the owner at a human gate (plan approval, design choice)" },
+  { "name": "hotfix",         "color": "e11d48", "description": "Flow: temporary production mitigation; a tech-debt follow-up must exist" },
+
+  { "name": "dependencies",   "color": "0366d6", "description": "Bot: Dependabot dependency update" },
+  { "name": "github_actions", "color": "000000", "description": "Bot: Dependabot — GitHub Actions" },
+  { "name": "javascript",     "color": "168700", "description": "Bot: Dependabot — npm" },
+  { "name": ".NET",           "color": "7121c6", "description": "Bot: Dependabot — NuGet" },
+  { "name": "duplicate",      "color": "cfd3d7", "description": "Triage: already tracked elsewhere" },
+  { "name": "wontfix",        "color": "ffffff", "description": "Triage: will not be worked on" }
+]

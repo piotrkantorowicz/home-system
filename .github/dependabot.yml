@@ -12,6 +12,13 @@ updates:
       prefix: "chore(deps)"
 
   - package-ecosystem: npm
+    directory: /            # release tooling only (semantic-release)
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci(deps)"
+
+  - package-ecosystem: npm
     directory: /src/ui
     schedule:
       interval: weekly

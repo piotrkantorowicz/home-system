@@ -43,6 +43,7 @@ Every branch must correspond to a **GitHub Issue** (ticket). Branch names follow
 | `refactor` | Code restructuring without behavior change |
 | `docs` | Documentation only |
 | `test` | Adding or updating tests |
+| `epic` | Integration branch for a multi-PR epic — created by `start-epic`, never committed to directly (see `agent-workflow.md` § Epic lane) |
 
 ### Examples
 
@@ -161,7 +162,13 @@ Split into multiple independent PRs:
 
 ### Merge strategy
 
-Use **Squash and Merge** for feature branches unless individual commits are meaningful and well-structured — then **Merge Commit** is acceptable. Never use Rebase and Merge on shared branches.
+- **Feature branches → `main` or → `epic/*`:** **Squash and Merge.** One Conventional
+  Commit per PR; the PR title is the subject.
+- **`epic/*` → `main`:** **Rebase and Merge.** The epic branch already holds one squashed
+  commit per child PR; rebasing replays them onto `main` unchanged, so history stays linear
+  and the release tooling sees every child. Never squash an epic PR.
+- Merge commits are disabled in the repository settings. Rebase and merge is enabled
+  only for the epic case — `guard-git.sh` refuses it for any other head.
 
 > **Squash + commit body:** When a branch is squashed, GitHub builds the squashed commit
 > message from the PR title (subject) and PR description (body). Per-commit conventional
@@ -173,7 +180,8 @@ Use **Squash and Merge** for feature branches unless individual commits are mean
 
 ## Release Workflow
 
-Releases are **tags on `main`**, not branch merges.
+Releases are **tags on `main`**, created automatically by `.github/workflows/release.yml`
+(semantic-release, config in `release.config.js`) after every push to `main`.
 
 ```
 main  ──●──────●──────●──────●──────►
@@ -181,28 +189,28 @@ main  ──●──────●──────●──────●�
        v1.0   v1.1   v1.2   v2.0
 ```
 
-### Steps
+The bump is computed from the Conventional Commits since the previous tag:
 
-1. Ensure all intended PRs are merged into `main` and CI is green
-2. Create a Git tag following [Semantic Versioning](https://semver.org/):
+| Commit type | Version bump |
+|---|---|
+| `feat` | Minor (`v1.3.0`) |
+| `fix`, `perf`, `refactor`, `hotfix`, `revert` | Patch (`v1.2.1`) |
+| `type!` or `BREAKING CHANGE:` footer | Major (`v2.0.0`) |
+| `docs`, `style`, `test`, `chore`, `ci`, `build` | none — no release |
+
+What a release produces: the tag `vX.Y.Z`, a GitHub Release with generated notes grouped
+by type, and a "released in vX.Y.Z" comment on each closed issue / merged PR. Nothing is
+committed back to the repository — no `CHANGELOG.md`, no version bump in `package.json`
+or `Directory.Build.props`. The tag is the version; a deploy pipeline reads it.
+
+Because the squash commit's subject is the PR title, **the PR title decides the bump**.
+`feat(x): …` on a PR that only refactors ships a minor release; label the work honestly.
+
+Preview the next version locally:
 
 ```bash
-git tag -a v1.2.0 -m "Release v1.2.0"
-git push origin v1.2.0
+GITHUB_TOKEN=$(gh auth token) npm run release:preview
 ```
-
-3. Create a **GitHub Release** from the tag with a changelog
-4. Deploy from the tag
-
-### Versioning rules (SemVer)
-
-| Change type | Version bump |
-|---|---|
-| Breaking change | Major (`v2.0.0`) |
-| New feature, backwards-compatible | Minor (`v1.3.0`) |
-| Bug fix, patch | Patch (`v1.2.1`) |
-
----
 
 ## Hotfix Workflow
 
@@ -253,12 +261,7 @@ This is a mitigation only. It does not address the root cause.
 Follow-up: #210
 ```
 
-5. After merge, tag a new patch release:
-
-```bash
-git tag -a v1.2.1 -m "Hotfix v1.2.1 - token expiry crash (#201)"
-git push origin v1.2.1
-```
+5. After merge, `release.yml` tags the patch release (`hotfix` → patch) — no manual tag.
 
 6. Deploy from the tag.
 
