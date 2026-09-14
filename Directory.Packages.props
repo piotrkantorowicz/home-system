@@ -19,7 +19,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.3" />
 
     <!-- DbUp (Style-2 module migrations) -->
-    <PackageVersion Include="dbup-postgresql" Version="6.1.5" />
+    <PackageVersion Include="dbup-postgresql" Version="7.0.1" />
 
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
 
