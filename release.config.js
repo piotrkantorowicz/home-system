@@ -4,6 +4,11 @@
 // package.json bump), so the bot never commits to main. Release notes live on the GitHub
 // Release; the backend can take `-p:Version=` from the tag when a deploy pipeline exists.
 //
+// conventional-changelog-conventionalcommits@10 renders through conventional-changelog-writer@9
+// (render functions instead of Handlebars) and marks hidden types with `effect: 'hidden'`.
+// semantic-release's release-notes-generator still pins writer ^8, so package.json
+// overrides the writer to 9 until upstream catches up.
+//
 // Bump rules (Conventional Commits, one commit per squash-merged PR; epic branches are
 // rebase-merged so every child commit is analysed on its own):
 //   feat                                  → minor
@@ -37,12 +42,12 @@ export default {
             { type: 'perf', section: 'Performance' },
             { type: 'refactor', section: 'Refactoring' },
             { type: 'revert', section: 'Reverts' },
-            { type: 'docs', hidden: true },
-            { type: 'style', hidden: true },
-            { type: 'test', hidden: true },
-            { type: 'chore', hidden: true },
-            { type: 'ci', hidden: true },
-            { type: 'build', hidden: true },
+            { type: 'docs', effect: 'hidden' },
+            { type: 'style', effect: 'hidden' },
+            { type: 'test', effect: 'hidden' },
+            { type: 'chore', effect: 'hidden' },
+            { type: 'ci', effect: 'hidden' },
+            { type: 'build', effect: 'hidden' },
           ],
         },
       },
