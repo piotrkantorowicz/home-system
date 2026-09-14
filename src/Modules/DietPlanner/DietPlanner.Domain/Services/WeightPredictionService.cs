@@ -60,8 +60,9 @@ public static class WeightPredictionService
     }
 
     /// <summary>
-    /// Estimates the date when the target weight will be reached.
-    /// Returns null when no weekly change occurs or if already at target.
+    /// Estimates the date when the target weight will be reached. Returns today (UTC) when the
+    /// current and target weight already differ by less than 0.01 kg, and null when the weekly
+    /// change is zero or moves away from the target.
     /// </summary>
     public static DateOnly? EstimateGoalDate(
         decimal currentWeightKg,
