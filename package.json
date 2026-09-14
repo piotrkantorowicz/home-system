@@ -9,7 +9,7 @@
     "release:preview": "semantic-release --dry-run --no-ci"
   },
   "devDependencies": {
-    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "conventional-changelog-conventionalcommits": "^10.4.0",
     "semantic-release": "^25.0.2"
   },
   "engines": {
