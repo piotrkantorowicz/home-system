@@ -28,6 +28,12 @@ updates:
         update-types: [minor, patch]
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # @eslint/js majors track eslint majors. eslint-plugin-import and
+      # eslint-plugin-jsx-a11y still peer on eslint ^9, so @eslint/js 10 cannot be
+      # installed next to them — drop this once both support eslint 10 (#328).
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /e2e
