@@ -14,8 +14,12 @@ using Notifications.Application.Queries.ListNotifications;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>Endpoints for the notification inbox (<c>/api/notifications</c>) and the SignalR hub (<c>/hubs/notifications</c>).</summary>
 public static class NotificationsEndpoints
 {
+    /// <summary>Maps list, unread count, mark-read (single and bulk) and the hub; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapNotificationsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/notifications")
@@ -44,6 +48,10 @@ public static class NotificationsEndpoints
         return app;
     }
 
+    /// <summary>
+    /// Body of bulk mark-read.
+    /// </summary>
+    /// <param name="Ids">The notifications to mark read.</param>
     public sealed record BulkMarkReadRequest(IReadOnlyCollection<Guid> Ids);
 
     private static async Task<Ok<PagedList<NotificationDto>>> ListNotifications(

@@ -9,6 +9,15 @@ using Notifications.Application.Commands.AckNotificationDelivery;
 using Notifications.Application.Queries.ReplayPendingDeliveries;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// SignalR hub behind the WebSocket channel. Tracks who is online, replays unacknowledged deliveries
+/// on connect, and receives acknowledgements. Clients receive pushes on the <c>notification</c>
+/// method with a <see cref="NotificationPayload"/>.
+/// </summary>
+/// <param name="registry">Tracks which users have open connections.</param>
+/// <param name="queryDispatcher">Runs the pending-delivery replay query.</param>
+/// <param name="commandDispatcher">Runs the acknowledge command.</param>
+/// <param name="logger">Receives connection lifecycle events.</param>
 [Authorize]
 public sealed partial class NotificationsHub(
     INotificationConnectionRegistry registry,
@@ -18,6 +27,7 @@ public sealed partial class NotificationsHub(
 {
     private const string ClientMethod = "notification";
 
+    /// <summary>Registers the connection, then replays every pending delivery to the caller. Aborts connections without a user identifier.</summary>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.UserIdentifier;
@@ -35,6 +45,8 @@ public sealed partial class NotificationsHub(
         await ReplayPendingAsync(userId);
     }
 
+    /// <summary>Unregisters the connection.</summary>
+    /// <param name="exception">The reason the connection closed, if abnormal.</param>
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.UserIdentifier;
@@ -47,6 +59,8 @@ public sealed partial class NotificationsHub(
         return base.OnDisconnectedAsync(exception);
     }
 
+    /// <summary>Client-invoked: confirms a pushed delivery was displayed so it is marked sent.</summary>
+    /// <param name="deliveryId">The <see cref="NotificationPayload.DeliveryId"/> that was displayed.</param>
     public Task Acknowledge(Guid deliveryId)
     {
         var userId = Context.UserIdentifier;

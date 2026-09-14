@@ -17,8 +17,16 @@ using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Persistence.Extensions;
 
+/// <summary>
+/// Wires the Household persistence, handlers and outbox. Called through <c>AddHouseholdModule</c>;
+/// never directly by the host.
+/// </summary>
 public static partial class InfrastructureDependencyInjection
 {
+    /// <summary>Registers the module's <c>DbContext</c>, repositories, module-scoped unit of work, CQRS handlers and outbox.</summary>
+    /// <param name="services">The host service collection.</param>
+    /// <param name="configuration">Provides the <c>Household</c> connection string.</param>
+    /// <returns><paramref name="services"/> for chaining.</returns>
     public static IServiceCollection AddHouseholdInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -51,6 +59,12 @@ public static partial class InfrastructureDependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Applies pending EF Core migrations to the Household database. Called by the host at startup in
+    /// Development only; failures are logged, not thrown, so a missing database does not stop the host.
+    /// </summary>
+    /// <param name="serviceProvider">The built host provider; a scope is created from it.</param>
+    /// <param name="logger">Receives the outcome.</param>
     public static async Task MigrateHouseholdDatabaseAsync(
         this IServiceProvider serviceProvider,
         ILogger logger)
