@@ -7,7 +7,7 @@ namespace DietPlanner.Application.Queries.GetWeightPrediction;
 /// <param name="Tdee">Total daily energy expenditure, kcal/day (BMR × activity multiplier).</param>
 /// <param name="DailyDeficit">TDEE minus the requested intake, kcal/day; negative means a surplus.</param>
 /// <param name="WeeklyWeightChange">Expected change per week, kilograms; negative means loss.</param>
-/// <param name="EstimatedGoalDate">When the target weight would be reached at that rate; <see langword="null"/> if unreachable, already reached, or no target is set.</param>
+/// <param name="EstimatedGoalDate">When the target weight would be reached at that rate. Today (UTC) when current and target weight already differ by less than 0.01 kg; <see langword="null"/> when no target is set, or the target is unreachable because the weekly change is zero or in the wrong direction.</param>
 /// <param name="CurrentBmi">Body mass index at the current weight.</param>
 /// <param name="TargetBmi">Body mass index at the target weight, if a target is set.</param>
 public sealed record WeightPredictionDto(
