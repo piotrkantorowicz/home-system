@@ -49,7 +49,7 @@ Single quotes. Tailwind classes are sorted by the plugin — never hand-order th
 ## TypeScript
 
 `tsconfig.app.json` is strict (see `frontend-react-typescript.md`). `npm run type-check` is
-`tsc --noEmit`; `npm run build` is `tsc -b && vite build`, so a type error fails the build.
+`tsc -b` over the project references (`tsconfig.app.json` + `tsconfig.node.json`, both `noEmit`); `npm run build` is `tsc -b && vite build`, so a type error fails both.
 
 ## Scripts (`src/ui/package.json`)
 
@@ -59,7 +59,7 @@ Single quotes. Tailwind classes are sorted by the plugin — never hand-order th
 | `build` | `tsc -b && vite build` |
 | `lint` / `lint:fix` | ESLint |
 | `format` / `format:check` | Prettier over `src/**/*.{ts,tsx,css,json}` |
-| `type-check` | `tsc --noEmit` |
+| `type-check` | `tsc -b` — the root `tsconfig.json` is references-only, so `tsc --noEmit` on it checks nothing |
 | `test` / `test:ui` / `test:coverage` | Vitest watch / UI / single run + v8 coverage |
 | `check` | type-check + lint + test:coverage — what CI runs |
 | `generate:api:<module>` | `openapi-typescript` from the running backend → `modules/<module>/api/generated/schema.ts` |
