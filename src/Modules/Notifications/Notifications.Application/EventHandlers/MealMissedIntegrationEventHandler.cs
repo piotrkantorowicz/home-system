@@ -1,5 +1,6 @@
 namespace Notifications.Application.EventHandlers;
 
+using System.Globalization;
 using System.Text.Json;
 using DietPlanner.Contracts.Events;
 using Notifications.Application.Dispatching;
@@ -16,7 +17,7 @@ internal sealed class MealMissedIntegrationEventHandler(INotificationDispatcher 
         var placeholders = new Dictionary<string, string>
         {
             ["MealSlotName"] = @event.MealSlotName,
-            ["PlannedAt"] = @event.PlannedAt.ToString("HH:mm")
+            ["PlannedAt"] = @event.PlannedAt.ToString("HH:mm", CultureInfo.InvariantCulture)
         };
 
         var payload = JsonSerializer.Serialize(new

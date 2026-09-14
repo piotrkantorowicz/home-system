@@ -4,12 +4,14 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
-public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public HouseholdEndpointsTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     private async Task<HttpClient> SignedInClientAsync(string? name = null)
     {

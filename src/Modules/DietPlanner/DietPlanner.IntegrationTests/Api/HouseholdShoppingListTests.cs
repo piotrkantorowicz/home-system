@@ -66,7 +66,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
             "/api/v1/meal-schedule",
             new UpdateMealScheduleRequest([new MealSlotRequest(null, $"{label} Breakfast", "07:00")]));
         slot.EnsureSuccessStatusCode();
-        var slotId = (await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule"))!.Slots.First().Id;
+        var slotId = (await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule"))!.Slots[0].Id;
 
         var productResp = await client.PostAsJsonAsync(
             "/api/v1/products",

@@ -19,7 +19,15 @@ internal sealed class SearchProductsQueryHandler
         var q = _dbContext.Products.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(query.Search))
-            q = q.Where(p => p.Name.ToLower().Contains(query.Search.ToLower()));
+        {
+            var term = query.Search.ToLowerInvariant();
+            // REASON: this lambda is an EF Core expression tree — ToLower()/Contains() translate to
+            // SQL lower()/LIKE on the server; ToLowerInvariant and the StringComparison overload
+            // have no translation and would throw at runtime.
+#pragma warning disable CA1304, CA1311, CA1862
+            q = q.Where(p => p.Name.ToLower().Contains(term));
+#pragma warning restore CA1304, CA1311, CA1862
+        }
 
         if (query.OnlyMine)
             q = q.Where(p => p.CreatedByUserId == query.UserId);

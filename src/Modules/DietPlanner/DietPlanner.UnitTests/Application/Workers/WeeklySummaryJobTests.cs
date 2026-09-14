@@ -1,8 +1,9 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
 #pragma warning disable IDE0005
-using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
+using System.Globalization;
+using DietPlanner.Application.Workers;
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
@@ -35,7 +36,7 @@ public sealed class WeeklySummaryJobTests
         DayOfWeek day = DayOfWeek.Sunday,
         string time = "08:00",
         DateTime? lastAt = null)
-        => new(userId, "en", day, TimeOnly.Parse(time), lastAt);
+        => new(userId, "en", day, TimeOnly.Parse(time, CultureInfo.InvariantCulture), lastAt);
 
     public WeeklySummaryJobTests()
         => _sut = new WeeklySummaryJob(_queries, _stateRepo, _bus, _uow);

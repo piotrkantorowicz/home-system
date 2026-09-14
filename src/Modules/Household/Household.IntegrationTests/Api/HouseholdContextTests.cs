@@ -12,12 +12,14 @@ using HouseholdDb = Household.Infrastructure.Persistence.HouseholdDbContext;
 /// #219 — proves the Contracts query surface resolves a caller's household and that the
 /// membership domain events land in the module outbox for other modules to consume.
 /// </summary>
-public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public HouseholdContextTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     private async Task<(string Sub, Guid PersonId)> SignedInPersonAsync()
     {

@@ -8,12 +8,14 @@ using Household.IntegrationTests.Infrastructure;
 /// #226 — the membership invariants enforced end-to-end through the HTTP surface:
 /// last-owner rule, one active household per person, and leaving.
 /// </summary>
-public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
     public HouseholdMembershipRulesTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
+
+    public void Dispose() => _factory.Dispose();
 
     private async Task<HttpClient> SignedInAsync(string name)
     {

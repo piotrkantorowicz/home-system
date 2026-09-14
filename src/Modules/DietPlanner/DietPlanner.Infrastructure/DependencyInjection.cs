@@ -46,7 +46,6 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
-        services.AddScoped<WeightPredictionService>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 

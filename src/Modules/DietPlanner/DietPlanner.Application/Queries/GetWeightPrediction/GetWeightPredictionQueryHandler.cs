@@ -10,15 +10,9 @@ internal sealed class GetWeightPredictionQueryHandler
     : IQueryHandler<GetWeightPredictionQuery, WeightPredictionDto?>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
-    private readonly WeightPredictionService _predictionService;
 
-    public GetWeightPredictionQueryHandler(
-        IDietPlannerReadDbContext dbContext,
-        WeightPredictionService predictionService)
-    {
-        _dbContext = dbContext;
-        _predictionService = predictionService;
-    }
+    public GetWeightPredictionQueryHandler(IDietPlannerReadDbContext dbContext)
+        => _dbContext = dbContext;
 
     public async Task<WeightPredictionDto?> HandleAsync(
         GetWeightPredictionQuery query,
@@ -54,23 +48,23 @@ internal sealed class GetWeightPredictionQueryHandler
         decimal heightCm = profile.HeightCm.Value;
         decimal currentWeightKg = profile.CurrentWeightKg.Value;
 
-        decimal bmr = _predictionService.CalculateBmr(currentWeightKg, heightCm, ageYears, gender);
-        decimal tdee = _predictionService.CalculateTdee(bmr, profile.ActivityLevel.Value);
+        decimal bmr = WeightPredictionService.CalculateBmr(currentWeightKg, heightCm, ageYears, gender);
+        decimal tdee = WeightPredictionService.CalculateTdee(bmr, profile.ActivityLevel.Value);
         decimal dailyDeficit = tdee - query.DailyCalorieTarget;
-        decimal weeklyWeightChange = _predictionService.CalculateWeeklyWeightChange(tdee, query.DailyCalorieTarget);
-        decimal currentBmi = _predictionService.CalculateBmi(currentWeightKg, heightCm);
+        decimal weeklyWeightChange = WeightPredictionService.CalculateWeeklyWeightChange(tdee, query.DailyCalorieTarget);
+        decimal currentBmi = WeightPredictionService.CalculateBmi(currentWeightKg, heightCm);
 
         DateOnly? estimatedGoalDate = null;
         decimal? targetBmi = null;
 
         if (profile.TargetWeightKg.HasValue)
         {
-            estimatedGoalDate = _predictionService.EstimateGoalDate(
+            estimatedGoalDate = WeightPredictionService.EstimateGoalDate(
                 currentWeightKg,
                 profile.TargetWeightKg.Value,
                 weeklyWeightChange);
 
-            targetBmi = _predictionService.CalculateBmi(profile.TargetWeightKg.Value, heightCm);
+            targetBmi = WeightPredictionService.CalculateBmi(profile.TargetWeightKg.Value, heightCm);
         }
 
         return new WeightPredictionDto(

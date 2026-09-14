@@ -8,7 +8,7 @@ using Shouldly;
 using Xunit;
 
 [Collection(nameof(PostgresCollectionDefinition))]
-public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime
+public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
 {
     private readonly PostgresContainerFixture _fixture;
     private MessagingTestDbContext _dbContext = default!;
@@ -25,7 +25,9 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime
         await _dbContext.Database.EnsureCreatedAsync();
     }
 
-    public async Task DisposeAsync() => await _dbContext.DisposeAsync();
+    Task IAsyncLifetime.DisposeAsync() => DisposeAsync().AsTask();
+
+    public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
 
     [Fact]
     public async Task ExecuteAsync_FirstCall_InvokesHandlerAndInsertsRow()

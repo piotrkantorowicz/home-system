@@ -7,7 +7,7 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
     private const string FallbackLocale = "en";
 
     // v1 placeholder templates per spec; final wording lands with N7-N9.
-    private static readonly IReadOnlyDictionary<(NotificationType, string), NotificationTemplate> Templates =
+    private static readonly Dictionary<(NotificationType, string), NotificationTemplate> Templates =
         new Dictionary<(NotificationType, string), NotificationTemplate>
         {
             [(NotificationType.MealReminder, "en")] =

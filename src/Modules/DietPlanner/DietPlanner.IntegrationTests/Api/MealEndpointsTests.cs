@@ -31,7 +31,7 @@ public sealed class MealEndpointsTests
         put.EnsureSuccessStatusCode();
 
         var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule");
-        return schedule!.Slots.First().Id;
+        return schedule!.Slots[0].Id;
     }
 
     private static async Task<Guid> CreateRecipeAsync(HttpClient client, string name)

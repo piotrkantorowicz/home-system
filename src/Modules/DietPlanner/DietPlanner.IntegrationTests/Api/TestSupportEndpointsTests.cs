@@ -27,7 +27,7 @@ public sealed class TestSupportEndpointsTests
         put.EnsureSuccessStatusCode();
 
         var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule");
-        return schedule!.Slots.First().Id;
+        return schedule!.Slots[0].Id;
     }
 
     [Fact]

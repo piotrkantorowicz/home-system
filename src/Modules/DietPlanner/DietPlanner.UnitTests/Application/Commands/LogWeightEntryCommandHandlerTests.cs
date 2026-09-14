@@ -20,7 +20,7 @@ public sealed class LogWeightEntryCommandHandlerTests
     public LogWeightEntryCommandHandlerTests()
         => _sut = new LogWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork);
 
-    private UserProfile CreateProfile(string userId, decimal? currentWeight = 80m)
+    private static UserProfile CreateProfile(string userId, decimal? currentWeight = 80m)
         => UserProfile.Create(UserProfileId.New(), userId, null, null, null, currentWeight, null, null);
 
     [Fact]

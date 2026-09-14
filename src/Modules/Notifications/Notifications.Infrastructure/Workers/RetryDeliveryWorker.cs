@@ -66,7 +66,7 @@ internal sealed partial class RetryDeliveryWorker(
         NotificationDelivery delivery,
         INotificationRepository repository,
         DapperUnitOfWork unitOfWork,
-        IDictionary<NotificationChannel, INotificationChannelSender> senders,
+        Dictionary<NotificationChannel, INotificationChannelSender> senders,
         CancellationToken ct)
     {
         var notification = await repository.GetByIdAsync(delivery.NotificationId, ct).ConfigureAwait(false);

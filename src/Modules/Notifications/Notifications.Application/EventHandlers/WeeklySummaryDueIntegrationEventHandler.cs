@@ -1,5 +1,6 @@
 namespace Notifications.Application.EventHandlers;
 
+using System.Globalization;
 using System.Text.Json;
 using DietPlanner.Contracts.Events;
 using Notifications.Application.Dispatching;
@@ -27,10 +28,10 @@ internal sealed class WeeklySummaryDueIntegrationEventHandler(INotificationDispa
 
         var placeholders = new Dictionary<string, string>
         {
-            ["TotalKcal"] = @event.TotalKcal.ToString(),
-            ["TargetKcal"] = @event.TargetKcal.ToString(),
-            ["MealsCompleted"] = @event.MealsCompleted.ToString(),
-            ["MealsPlanned"] = @event.MealsPlanned.ToString(),
+            ["TotalKcal"] = @event.TotalKcal.ToString(CultureInfo.InvariantCulture),
+            ["TargetKcal"] = @event.TargetKcal.ToString(CultureInfo.InvariantCulture),
+            ["MealsCompleted"] = @event.MealsCompleted.ToString(CultureInfo.InvariantCulture),
+            ["MealsPlanned"] = @event.MealsPlanned.ToString(CultureInfo.InvariantCulture),
         };
 
         return dispatcher.DispatchAsync(
