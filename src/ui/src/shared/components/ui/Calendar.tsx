@@ -27,8 +27,8 @@ export function Calendar({
         dropdowns: 'flex flex-1 items-center justify-center gap-1',
         dropdown:
           'relative inline-flex items-center rounded-md border px-2 py-1 text-sm font-medium focus-within:ring-1 focus-within:outline-none',
-        dropdown_month: 'h-7 appearance-none bg-transparent pr-4 focus:outline-none',
-        dropdown_year: 'h-7 appearance-none bg-transparent pr-4 focus:outline-none',
+        months_dropdown: 'h-7 appearance-none bg-transparent pr-4 focus:outline-none',
+        years_dropdown: 'h-7 appearance-none bg-transparent pr-4 focus:outline-none',
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',
         weekday: 'text-muted-foreground w-9 rounded-md text-center text-[0.8rem] font-normal',
