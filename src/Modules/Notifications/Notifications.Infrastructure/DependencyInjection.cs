@@ -20,8 +20,16 @@ using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Dapper;
 using Shared.Infrastructure.Messaging.Dapper.Extensions;
 
+/// <summary>
+/// Wires the Notifications Dapper persistence, inbox executor, integration-event consumers,
+/// dispatcher and retry worker. Called through <c>AddNotificationsModule</c>; never directly by the host.
+/// </summary>
 public static class InfrastructureDependencyInjection
 {
+    /// <summary>Registers the module's data source, unit of work, repositories, consumers and workers.</summary>
+    /// <param name="services">The host service collection.</param>
+    /// <param name="configuration">Provides the <c>Notifications</c> connection string and worker options.</param>
+    /// <returns><paramref name="services"/> for chaining.</returns>
     public static IServiceCollection AddNotificationsInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -84,6 +92,9 @@ public static class InfrastructureDependencyInjection
         return services;
     }
 
+    /// <summary>Runs the embedded DbUp scripts against the Notifications database; throws when a script fails.</summary>
+    /// <param name="services">The built host provider, used to read configuration.</param>
+    /// <exception cref="InvalidOperationException">The <c>Notifications</c> connection string is missing.</exception>
     public static void MigrateNotifications(this IServiceProvider services)
     {
         var configuration = services.GetRequiredService<IConfiguration>();

@@ -10,9 +10,12 @@ using HouseholdAggregate = Household.Domain.Aggregates.Household;
 /// </summary>
 public interface IHouseholdReadDbContext
 {
+    /// <summary>Every person, linked or managed.</summary>
     DbSet<Person> Persons { get; }
 
+    /// <summary>Households with their members.</summary>
     DbSet<HouseholdAggregate> Households { get; }
 
+    /// <summary>Invitations in every status.</summary>
     DbSet<HouseholdInvitation> HouseholdInvitations { get; }
 }

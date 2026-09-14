@@ -11,8 +11,12 @@ using Notifications.Application.Commands.UpdateChannelPreferences;
 using Notifications.Application.Queries.GetChannelPreferences;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>Endpoints for the caller's channel switches (<c>/api/notification-preferences</c>).</summary>
 public static class NotificationChannelPreferencesEndpoints
 {
+    /// <summary>Maps the preferences read and update operations; both require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapNotificationChannelPreferencesEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/notification-preferences")
@@ -64,6 +68,12 @@ public static class NotificationChannelPreferencesEndpoints
     }
 }
 
+/// <summary>
+/// Body of the preferences update; all three switches are sent.
+/// </summary>
+/// <param name="ConsoleEnabled">Whether the console channel is on.</param>
+/// <param name="EmailEnabled">Whether the email channel is on.</param>
+/// <param name="WebSocketEnabled">Whether the WebSocket channel is on.</param>
 public sealed record UpdateChannelPreferencesRequest(
     bool ConsoleEnabled,
     bool EmailEnabled,
