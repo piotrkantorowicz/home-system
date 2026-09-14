@@ -88,7 +88,7 @@ cd src/ui
 npm run dev           # dev server
 npm run build         # type-check + Vite build
 npm run lint          # ESLint
-npm run type-check    # tsc --noEmit
+npm run type-check    # tsc -b (project references, noEmit)
 npm run test          # Vitest (watch)
 npm run test:coverage # Vitest (single run + coverage)
 

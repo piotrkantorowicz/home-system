@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -b",
     "preview": "vite preview",
     "generate:api:diet-planner": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/diet-planner/api/generated/schema.ts",
     "generate:api:notifications": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/notifications/api/generated/schema.ts",
