@@ -7,21 +7,23 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'query-vendor': ['@tanstack/react-query'],
-          'router-vendor': ['react-router-dom'],
+        codeSplitting: {
+          groups: [
+            { name: 'react-vendor', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            { name: 'query-vendor', test: /node_modules[\\/]@tanstack[\\/](react-)?query-core[\\/]|node_modules[\\/]@tanstack[\\/]react-query[\\/]/ },
+            { name: 'router-vendor', test: /node_modules[\\/]react-router(-dom)?[\\/]/ },
+          ],
         },
       },
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@shared': path.resolve(__dirname, './src/shared'),
-      '@modules': path.resolve(__dirname, './src/modules'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@shared': path.resolve(import.meta.dirname, './src/shared'),
+      '@modules': path.resolve(import.meta.dirname, './src/modules'),
     },
   },
   server: {
