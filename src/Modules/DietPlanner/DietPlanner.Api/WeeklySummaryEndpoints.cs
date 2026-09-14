@@ -7,8 +7,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoint for an on-demand weekly summary (<c>/api/v1/weekly-summary</c>).
+/// </summary>
 public static class WeeklySummaryEndpoints
 {
+    /// <summary>Maps the weekly summary query; requires an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapWeeklySummaryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/weekly-summary")

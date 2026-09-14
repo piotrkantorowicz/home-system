@@ -8,8 +8,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for the caller's meal schedule (<c>/api/v1/meal-schedule</c>).
+/// </summary>
 public static class MealScheduleEndpoints
 {
+    /// <summary>Maps the schedule read and replace operations; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapMealScheduleEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/meal-schedule")
@@ -67,5 +73,15 @@ public static class MealScheduleEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// One desired slot in a schedule replace.
+/// </summary>
+/// <param name="Id">Identifier of an existing slot to keep, or <see langword="null"/> for a new slot.</param>
+/// <param name="Name">Display name; required.</param>
+/// <param name="DefaultTime">Default time of day as <c>HH:mm</c>.</param>
 public sealed record MealSlotRequest(Guid? Id, string Name, string DefaultTime);
+/// <summary>
+/// Body of the schedule replace; slots omitted from the list are removed.
+/// </summary>
+/// <param name="Slots">The desired slots in display order; 1 to 8.</param>
 public sealed record UpdateMealScheduleRequest(IReadOnlyList<MealSlotRequest> Slots);

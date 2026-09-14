@@ -19,8 +19,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for planned meals, their completion, nutrition summaries, the shopping list and bulk import (<c>/api/v1/meals</c>).
+/// </summary>
 public static class MealEndpoints
 {
+    /// <summary>Maps every meal-related operation; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapMealEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/meals")
@@ -284,10 +290,25 @@ public static class MealEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Query-string date range shared by the meal list, nutrition summary and shopping list.
+/// </summary>
+/// <param name="From">First day to include, or omitted for no lower bound.</param>
+/// <param name="To">Last day to include, or omitted for no upper bound.</param>
 public sealed record MealDateRangeParams(
     [property: FromQuery] DateOnly? From,
     [property: FromQuery] DateOnly? To);
 
+/// <summary>
+/// Body of meal entry creation.
+/// </summary>
+/// <param name="Date">Calendar day of the meal.</param>
+/// <param name="MealSlotId">Slot of the caller's meal schedule.</param>
+/// <param name="RecipeId">Recipe to plan.</param>
+/// <param name="Servings">Servings of the recipe; positive.</param>
+/// <param name="Notes">Optional free-text note.</param>
+/// <param name="MealTime">Optional time overriding the slot's default.</param>
+/// <param name="SequenceOrder">Optional ordering among entries in the same slot.</param>
 public sealed record CreateMealEntryRequest(
     DateOnly Date,
     Guid MealSlotId,
@@ -297,6 +318,16 @@ public sealed record CreateMealEntryRequest(
     TimeOnly? MealTime,
     int? SequenceOrder);
 
+/// <summary>
+/// Body of meal entry update; every field is replaced.
+/// </summary>
+/// <param name="Date">Calendar day of the meal.</param>
+/// <param name="MealSlotId">Slot of the caller's meal schedule.</param>
+/// <param name="RecipeId">Recipe to plan.</param>
+/// <param name="Servings">Servings of the recipe; positive.</param>
+/// <param name="Notes">Optional free-text note.</param>
+/// <param name="MealTime">Optional time overriding the slot's default.</param>
+/// <param name="SequenceOrder">Optional ordering among entries in the same slot.</param>
 public sealed record UpdateMealEntryRequest(
     DateOnly Date,
     Guid MealSlotId,
@@ -306,12 +337,31 @@ public sealed record UpdateMealEntryRequest(
     TimeOnly? MealTime,
     int? SequenceOrder);
 
+/// <summary>
+/// Body of a meal override: a replacement recipe, individual products, or both — not neither.
+/// </summary>
+/// <param name="ActualRecipeId">Recipe eaten instead of the planned one, or <see langword="null"/>.</param>
+/// <param name="ActualProducts">Products eaten; may be empty when a recipe is given.</param>
 public sealed record OverrideMealEntryRequest(
     Guid? ActualRecipeId,
     IReadOnlyList<ActualProductRequest> ActualProducts);
 
+/// <summary>
+/// A product actually eaten, in a meal override.
+/// </summary>
+/// <param name="ProductId">The product eaten.</param>
+/// <param name="Amount">Quantity; positive.</param>
+/// <param name="Unit">Unit of the amount.</param>
 public sealed record ActualProductRequest(Guid ProductId, decimal Amount, string Unit);
 
+/// <summary>
+/// Body of bulk completion.
+/// </summary>
+/// <param name="Date">The day whose planned meals are marked done.</param>
 public sealed record BulkCompleteMealsRequest(DateOnly Date);
 
+/// <summary>
+/// Result of bulk completion.
+/// </summary>
+/// <param name="Completed">How many entries changed from planned to done.</param>
 public sealed record BulkCompleteMealsResponse(int Completed);

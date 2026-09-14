@@ -11,8 +11,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for hydration preferences and water logging (<c>/api/v1/hydration</c>).
+/// </summary>
 public static class HydrationEndpoints
 {
+    /// <summary>Maps the hydration config read/upsert and the water intake log/list/delete operations; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapHydrationEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/hydration")
@@ -125,11 +131,23 @@ public static class HydrationEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Body of the hydration config upsert.
+/// </summary>
+/// <param name="DailyWaterTargetMl">Daily target in millilitres; positive.</param>
+/// <param name="GlassSizeMl">Volume one "glass" tap logs, in millilitres; positive.</param>
+/// <param name="TrackWaterIntake">Whether water tracking and its reminders are enabled.</param>
 public sealed record UpdateHydrationConfigRequest(
     int DailyWaterTargetMl,
     int GlassSizeMl,
     bool TrackWaterIntake);
 
+/// <summary>
+/// Body of the water intake log.
+/// </summary>
+/// <param name="Date">The calendar day the drink counts towards.</param>
+/// <param name="AmountMl">Volume in millilitres; positive.</param>
+/// <param name="Note">Optional free-text note.</param>
 public sealed record LogWaterIntakeRequest(
     DateOnly Date,
     int AmountMl,

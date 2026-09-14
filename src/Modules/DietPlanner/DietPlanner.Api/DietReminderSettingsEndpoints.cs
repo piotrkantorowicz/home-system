@@ -8,8 +8,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for the caller's notification preferences (<c>/api/v1/diet-reminder-settings</c>).
+/// </summary>
 public static class DietReminderSettingsEndpoints
 {
+    /// <summary>Maps the reminder-settings read and upsert operations; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapDietReminderSettingsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/diet-reminder-settings")
@@ -76,6 +82,20 @@ public static class DietReminderSettingsEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Body of the reminder-settings upsert; every preference is sent, none is optional. Times are UTC.
+/// </summary>
+/// <param name="MealRemindersEnabled">Whether meal notifications fire.</param>
+/// <param name="MealReminderLeadTimeMinutes">Minutes before the planned time to remind; positive.</param>
+/// <param name="MealMissedGraceMinutes">Minutes after the planned time before a meal counts as missed; positive.</param>
+/// <param name="WaterRemindersEnabled">Whether water reminders fire.</param>
+/// <param name="WaterReminderIntervalMinutes">Minimum minutes between water reminders; positive.</param>
+/// <param name="WaterWindowStartUtc">Earliest UTC time of day a water reminder may fire.</param>
+/// <param name="WaterWindowEndUtc">Latest UTC time of day a water reminder may fire; after the start.</param>
+/// <param name="WeeklySummaryEnabled">Whether the weekly summary is sent.</param>
+/// <param name="WeeklySummaryDayOfWeekUtc">UTC weekday the summary is sent on.</param>
+/// <param name="WeeklySummaryTimeOfDayUtc">UTC time of day the summary is sent at.</param>
+/// <param name="GoalAlertsEnabled">Whether goal milestone notifications fire.</param>
 public sealed record DietReminderSettingsRequest(
     bool MealRemindersEnabled,
     int MealReminderLeadTimeMinutes,

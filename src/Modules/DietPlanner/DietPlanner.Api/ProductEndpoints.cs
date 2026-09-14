@@ -13,8 +13,14 @@ using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for products (<c>/api/v1/products</c>).
+/// </summary>
 public static class ProductEndpoints
 {
+    /// <summary>Maps product search, detail, create, update and delete; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapProductEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/products")
@@ -137,12 +143,31 @@ public static class ProductEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Query-string parameters of the product search.
+/// </summary>
+/// <param name="Search">Case-insensitive substring to match against the name.</param>
+/// <param name="OnlyMine">When true, only items the caller created.</param>
+/// <param name="Page">1-based page number.</param>
+/// <param name="PageSize">Items per page.</param>
 public sealed record ListProductsParams(
     [property: FromQuery] string? Search,
     [property: FromQuery] bool OnlyMine = false,
     [property: FromQuery] int Page = 1,
     [property: FromQuery] int PageSize = 50);
 
+/// <summary>
+/// Body of product creation; nutrition is per 100 g.
+/// </summary>
+/// <param name="Name">Display name; required.</param>
+/// <param name="Calories">Energy per 100 g in kcal, if known.</param>
+/// <param name="Protein">Protein per 100 g in grams, if known.</param>
+/// <param name="Carbs">Carbohydrates per 100 g in grams, if known.</param>
+/// <param name="Fat">Fat per 100 g in grams, if known.</param>
+/// <param name="Fiber">Fibre per 100 g in grams, if known.</param>
+/// <param name="DefaultUnit">Unit proposed when the product is used: <c>g</c>, <c>ml</c> or <c>piece</c>.</param>
+/// <param name="DensityGramsPerMl">Grams per millilitre, needed for volume units.</param>
+/// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
 public sealed record CreateProductRequest(
     string Name,
     decimal? Calories,
@@ -154,6 +179,18 @@ public sealed record CreateProductRequest(
     decimal? DensityGramsPerMl,
     decimal? GramPerPiece);
 
+/// <summary>
+/// Body of product update; every field is replaced.
+/// </summary>
+/// <param name="Name">Display name; required.</param>
+/// <param name="Calories">Energy per 100 g in kcal, if known.</param>
+/// <param name="Protein">Protein per 100 g in grams, if known.</param>
+/// <param name="Carbs">Carbohydrates per 100 g in grams, if known.</param>
+/// <param name="Fat">Fat per 100 g in grams, if known.</param>
+/// <param name="Fiber">Fibre per 100 g in grams, if known.</param>
+/// <param name="DefaultUnit">Unit proposed when the product is used: <c>g</c>, <c>ml</c> or <c>piece</c>.</param>
+/// <param name="DensityGramsPerMl">Grams per millilitre, needed for volume units.</param>
+/// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
 public sealed record UpdateProductRequest(
     string Name,
     decimal? Calories,

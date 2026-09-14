@@ -13,8 +13,14 @@ using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for recipes (<c>/api/v1/recipes</c>).
+/// </summary>
 public static class RecipeEndpoints
 {
+    /// <summary>Maps recipe search, detail, create, update and delete; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapRecipeEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/recipes")
@@ -141,17 +147,39 @@ public static class RecipeEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Query-string parameters of the recipe search.
+/// </summary>
+/// <param name="Search">Case-insensitive substring to match against the name.</param>
+/// <param name="OnlyMine">When true, only items the caller created.</param>
+/// <param name="Page">1-based page number.</param>
+/// <param name="PageSize">Items per page.</param>
 public sealed record ListRecipesParams(
     [property: FromQuery] string? Search,
     [property: FromQuery] bool OnlyMine = false,
     [property: FromQuery] int Page = 1,
     [property: FromQuery] int PageSize = 50);
 
+/// <summary>
+/// One ingredient line in a recipe create or update.
+/// </summary>
+/// <param name="ProductId">The product used.</param>
+/// <param name="Amount">Quantity for the full recipe; positive.</param>
+/// <param name="Unit">Unit of the amount, e.g. <c>g</c>, <c>ml</c>, <c>cup</c>, <c>piece</c>.</param>
 public sealed record RecipeIngredientRequest(
     Guid ProductId,
     decimal Amount,
     string Unit);
 
+/// <summary>
+/// Body of recipe creation.
+/// </summary>
+/// <param name="Name">Display name; required and unique per user.</param>
+/// <param name="Description">Optional description.</param>
+/// <param name="Instructions">Optional preparation steps.</param>
+/// <param name="Servings">Portions the ingredient amounts yield; positive.</param>
+/// <param name="PrepTimeMinutes">Optional preparation time.</param>
+/// <param name="Ingredients">The complete ingredient list.</param>
 public sealed record CreateRecipeRequest(
     string Name,
     string? Description,
@@ -160,6 +188,15 @@ public sealed record CreateRecipeRequest(
     int? PrepTimeMinutes,
     IReadOnlyList<RecipeIngredientRequest> Ingredients);
 
+/// <summary>
+/// Body of recipe update; header fields and the whole ingredient list are replaced.
+/// </summary>
+/// <param name="Name">Display name; required and unique per user.</param>
+/// <param name="Description">Optional description.</param>
+/// <param name="Instructions">Optional preparation steps.</param>
+/// <param name="Servings">Portions the ingredient amounts yield; positive.</param>
+/// <param name="PrepTimeMinutes">Optional preparation time.</param>
+/// <param name="Ingredients">The complete ingredient list.</param>
 public sealed record UpdateRecipeRequest(
     string Name,
     string? Description,

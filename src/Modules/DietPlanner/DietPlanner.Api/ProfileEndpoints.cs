@@ -10,8 +10,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for the caller's body profile and weight prediction (<c>/api/v1/profile</c>).
+/// </summary>
 public static class ProfileEndpoints
 {
+    /// <summary>Maps profile create, read, update and the prediction query; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapProfileEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/profile")
@@ -112,6 +118,15 @@ public static class ProfileEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Body of profile create and update; every field is optional.
+/// </summary>
+/// <param name="DateOfBirth">Date of birth, used to derive age.</param>
+/// <param name="Gender"><c>Male</c>, <c>Female</c> or <c>Other</c>.</param>
+/// <param name="HeightCm">Height in centimetres.</param>
+/// <param name="CurrentWeightKg">Current weight in kilograms.</param>
+/// <param name="TargetWeightKg">Target weight in kilograms.</param>
+/// <param name="ActivityLevel">One of <c>Sedentary</c>, <c>LightlyActive</c>, <c>ModeratelyActive</c>, <c>VeryActive</c>, <c>ExtraActive</c>.</param>
 public sealed record ProfileRequest(
     DateOnly? DateOfBirth,
     string? Gender,

@@ -9,8 +9,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Endpoints for weigh-ins (<c>/api/v1/weight-entries</c>).
+/// </summary>
 public static class WeightEntryEndpoints
 {
+    /// <summary>Maps weight entry list, log and delete; all require an authenticated user.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapWeightEntryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/weight-entries")
@@ -95,6 +101,16 @@ public static class WeightEntryEndpoints
            ?? throw new UnauthorizedAccessException("User ID not found in token");
 }
 
+/// <summary>
+/// Body of a weigh-in.
+/// </summary>
+/// <param name="Date">The day of the weigh-in; today or earlier.</param>
+/// <param name="WeightKg">Weight in kilograms, 0.1–999.</param>
 public sealed record LogWeightEntryRequest(DateOnly Date, decimal WeightKg);
 
+/// <summary>
+/// Result of a weigh-in.
+/// </summary>
+/// <param name="Id">Identifier of the entry that now holds the weight.</param>
+/// <param name="Created">True when a new entry was created, false when the day's existing entry was corrected.</param>
 public sealed record LogWeightEntryResponse(Guid Id, bool Created);

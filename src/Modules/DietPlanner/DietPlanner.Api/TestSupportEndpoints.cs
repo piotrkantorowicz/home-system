@@ -7,8 +7,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Test-only endpoints (<c>/api/v1/test-support</c>), mapped only in Development or when <c>E2ETestSupport:Enabled</c> is set, so E2E workers can reset their own data.
+/// </summary>
 public static class TestSupportEndpoints
 {
+    /// <summary>Maps the purge-my-data operation; requires an authenticated user and only ever touches that user's rows.</summary>
+    /// <param name="app">The host route builder.</param>
+    /// <returns><paramref name="app"/> for chaining.</returns>
     public static IEndpointRouteBuilder MapTestSupportEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/test-support")
