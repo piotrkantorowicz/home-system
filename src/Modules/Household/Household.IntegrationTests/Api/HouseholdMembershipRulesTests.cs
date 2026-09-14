@@ -12,6 +12,8 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdMembershipRulesTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
@@ -48,6 +50,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         return (owner, household, adult, adultId);
     }
 
+    /// <summary>Demoting the only owner returns 422.</summary>
     [Fact]
     public async Task DemotingTheOnlyOwner_Returns422()
     {
@@ -60,6 +63,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         demote.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>Removing the only owner returns 422.</summary>
     [Fact]
     public async Task RemovingTheOnlyOwner_Returns422()
     {
@@ -71,6 +75,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         remove.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>Cannot leave: <c>TheOnlyOwner</c> returns 422.</summary>
     [Fact]
     public async Task TheOnlyOwner_CannotLeave_Returns422()
     {
@@ -82,6 +87,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         leave.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>Adding a person who already has a household returns 422.</summary>
     [Fact]
     public async Task AddingAPersonWhoAlreadyHasAHousehold_Returns422()
     {
@@ -98,6 +104,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         add.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>Can leave: <c>AnAdultMember</c> then has no household.</summary>
     [Fact]
     public async Task AnAdultMember_CanLeave_AndThenHasNoHousehold()
     {

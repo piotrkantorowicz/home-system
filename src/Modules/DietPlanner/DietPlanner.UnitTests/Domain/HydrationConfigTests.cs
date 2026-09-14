@@ -3,8 +3,10 @@ namespace DietPlanner.UnitTests.Domain;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>HydrationConfig</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class HydrationConfigTests
 {
+    /// <summary>With valid data: <c>Create</c> creates config with defaults.</summary>
     [Fact]
     public void Create_WithValidData_CreatesConfigWithDefaults()
     {
@@ -19,6 +21,7 @@ public sealed class HydrationConfigTests
         config.TrackWaterIntake.ShouldBeTrue();
     }
 
+    /// <summary>With custom values: <c>Create</c> creates config.</summary>
     [Fact]
     public void Create_WithCustomValues_CreatesConfig()
     {
@@ -29,6 +32,7 @@ public sealed class HydrationConfigTests
         config.TrackWaterIntake.ShouldBeFalse();
     }
 
+    /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
@@ -37,6 +41,7 @@ public sealed class HydrationConfigTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With new values: <c>Update</c> updates config.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesConfig()
     {

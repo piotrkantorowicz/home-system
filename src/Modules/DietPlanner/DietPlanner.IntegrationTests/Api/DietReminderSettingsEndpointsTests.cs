@@ -6,6 +6,7 @@ using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetDietReminderSettings;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>DietReminderSettings</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class DietReminderSettingsEndpointsTests
 {
@@ -14,6 +15,8 @@ public sealed class DietReminderSettingsEndpointsTests
     private readonly HttpClient _client;
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public DietReminderSettingsEndpointsTests(DatabaseFixture db)
     {
         _db = db;
@@ -33,6 +36,7 @@ public sealed class DietReminderSettingsEndpointsTests
         WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
         GoalAlertsEnabled: true);
 
+    /// <summary><c>GET</c> when no settings exist returns 404.</summary>
     [Fact]
     public async Task GET_WhenNoSettingsExist_Returns404()
     {
@@ -44,6 +48,7 @@ public sealed class DietReminderSettingsEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary><c>PUT</c> with valid request returns 204.</summary>
     [Fact]
     public async Task PUT_WithValidRequest_Returns204()
     {
@@ -52,6 +57,7 @@ public sealed class DietReminderSettingsEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    /// <summary><c>GET</c> after put returns stored settings.</summary>
     [Fact]
     public async Task GET_AfterPut_ReturnsStoredSettings()
     {
@@ -86,6 +92,7 @@ public sealed class DietReminderSettingsEndpointsTests
         dto.GoalAlertsEnabled.ShouldBeFalse();
     }
 
+    /// <summary><c>PUT</c> called twice updates existing settings.</summary>
     [Fact]
     public async Task PUT_CalledTwice_UpdatesExistingSettings()
     {
@@ -106,6 +113,7 @@ public sealed class DietReminderSettingsEndpointsTests
         dto.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary><c>PUT</c> with invalid meal lead time minutes returns 400.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(121)]
@@ -118,6 +126,7 @@ public sealed class DietReminderSettingsEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>PUT</c> with invalid water reminder interval minutes returns 400.</summary>
     [Theory]
     [InlineData(14)]
     [InlineData(481)]
@@ -130,6 +139,7 @@ public sealed class DietReminderSettingsEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>PUT</c> with water window end before start returns 400.</summary>
     [Fact]
     public async Task PUT_WithWaterWindowEndBeforeStart_Returns400()
     {
@@ -144,6 +154,7 @@ public sealed class DietReminderSettingsEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>GET</c>: user id is read from claims principal.</summary>
     [Fact]
     public async Task GET_UserIdIsReadFromClaimsPrincipal()
     {

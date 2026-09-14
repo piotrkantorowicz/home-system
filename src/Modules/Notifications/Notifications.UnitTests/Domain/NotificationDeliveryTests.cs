@@ -3,8 +3,10 @@ namespace Notifications.UnitTests.Domain;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>NotificationDelivery</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class NotificationDeliveryTests
 {
+    /// <summary><c>Create</c> starts pending with zero attempts.</summary>
     [Fact]
     public void Create_StartsPendingWithZeroAttempts()
     {
@@ -20,6 +22,7 @@ public sealed class NotificationDeliveryTests
         delivery.FailureReason.ShouldBeNull();
     }
 
+    /// <summary><c>MarkSent</c> transitions to sent and increments attempts.</summary>
     [Fact]
     public void MarkSent_TransitionsToSentAndIncrementsAttempts()
     {
@@ -34,6 +37,7 @@ public sealed class NotificationDeliveryTests
         delivery.AttemptCount.ShouldBe(1);
     }
 
+    /// <summary><c>MarkFailed</c> transitions to failed with reason.</summary>
     [Fact]
     public void MarkFailed_TransitionsToFailedWithReason()
     {
@@ -48,6 +52,7 @@ public sealed class NotificationDeliveryTests
         delivery.AttemptCount.ShouldBe(1);
     }
 
+    /// <summary>With blank reason: <c>MarkFailed</c> throws.</summary>
     [Fact]
     public void MarkFailed_WithBlankReason_Throws()
     {
@@ -58,6 +63,7 @@ public sealed class NotificationDeliveryTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary><c>RecordPendingAttempt</c> leaves status pending and increments attempts.</summary>
     [Fact]
     public void RecordPendingAttempt_LeavesStatusPendingAndIncrementsAttempts()
     {
@@ -72,6 +78,7 @@ public sealed class NotificationDeliveryTests
         delivery.SentAt.ShouldBeNull();
     }
 
+    /// <summary>After pending attempt: <c>MarkSent</c> transitions to sent.</summary>
     [Fact]
     public void MarkSent_AfterPendingAttempt_TransitionsToSent()
     {
@@ -86,6 +93,7 @@ public sealed class NotificationDeliveryTests
         delivery.AttemptCount.ShouldBe(2);
     }
 
+    /// <summary>When already sent: <c>MarkSent</c> is no op.</summary>
     [Fact]
     public void MarkSent_WhenAlreadySent_IsNoOp()
     {
@@ -100,6 +108,7 @@ public sealed class NotificationDeliveryTests
         delivery.AttemptCount.ShouldBe(1);
     }
 
+    /// <summary><c>MarkSkipped</c> transitions to skipped without incrementing.</summary>
     [Fact]
     public void MarkSkipped_TransitionsToSkippedWithoutIncrementing()
     {

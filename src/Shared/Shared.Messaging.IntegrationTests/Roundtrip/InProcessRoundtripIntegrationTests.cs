@@ -12,28 +12,41 @@ using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
 
+/// <summary>Integration tests for <c>InProcessRoundtrip</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
 {
     private readonly PostgresContainerFixture _fixture;
     private ServiceProvider _sp = default!;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public InProcessRoundtripIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
+    /// <summary>Integration event pushed through outbox → worker → transport → inbox in the round-trip test.</summary>
+    /// <param name="EventId">Unique identity of the event.</param>
+    /// <param name="OccurredAt">When it was published, UTC.</param>
+    /// <param name="Greeting">Payload asserted on the receiving side.</param>
     public sealed record HelloIntegrationEvent(Guid EventId, DateTime OccurredAt, string Greeting)
         : IIntegrationEvent;
 
+    /// <summary>Singleton sink the handler appends to, so the test can observe deliveries.</summary>
     public sealed class HelloReceiver
     {
+        /// <summary>Every event the handler was invoked with, in order.</summary>
         public List<HelloIntegrationEvent> Received { get; } = new();
     }
 
+    /// <summary>Consumer that records each delivery in <see cref="HelloReceiver"/>.</summary>
     public sealed class HelloHandler : IIntegrationEventHandler<HelloIntegrationEvent>
     {
         private readonly HelloReceiver _receiver;
 
+        /// <summary>Creates the handler.</summary>
+        /// <param name="receiver">The shared sink to record into.</param>
         public HelloHandler(HelloReceiver receiver) => _receiver = receiver;
 
+        /// <inheritdoc />
         public Task HandleAsync(HelloIntegrationEvent @event, CancellationToken ct = default)
         {
             _receiver.Received.Add(@event);
@@ -41,6 +54,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>Builds a service provider with the full in-process messaging stack against a fresh schema.</summary>
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
@@ -62,8 +76,10 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
     }
 
+    /// <summary>Disposes the service provider and its <c>DbContext</c>.</summary>
     public async Task DisposeAsync() => await _sp.DisposeAsync();
 
+    /// <summary><c>Publish</c> then run once and handler receives event.</summary>
     [Fact]
     public async Task Publish_ThenRunOnce_HandlerReceivesEvent()
     {
@@ -90,6 +106,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         receiver.Received[0].Greeting.ShouldBe("hi");
     }
 
+    /// <summary>Same event id twice: <c>Publish</c> handler only receives once.</summary>
     [Fact]
     public async Task Publish_SameEventIdTwice_HandlerOnlyReceivesOnce()
     {

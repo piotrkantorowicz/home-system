@@ -10,11 +10,15 @@ using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Transport;
 using Shouldly;
 
+/// <summary>Unit tests for <c>OutboxWorker</c>: the store and transport are substituted and the worker is driven through <c>RunOnceAsync</c>.</summary>
 public sealed class OutboxWorkerTests
 {
     // A dummy DbContext type to satisfy the generic constraint of OutboxWorker<TDbContext>.
+    /// <summary>Placeholder <c>DbContext</c> that only satisfies the worker's generic constraint; never opened.</summary>
     public sealed class TestDbContext : DbContext
     {
+        /// <summary>Creates the context.</summary>
+        /// <param name="options">Options supplied by the test.</param>
         public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
     }
 
@@ -40,6 +44,7 @@ public sealed class OutboxWorkerTests
             Options.Create(new OutboxWorkerOptions()),
             logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance);
 
+    /// <summary>With pending messages: <c>RunOnceAsync</c> dispatches and marks processed.</summary>
     [Fact]
     public async Task RunOnceAsync_WithPendingMessages_DispatchesAndMarksProcessed()
     {
@@ -54,6 +59,7 @@ public sealed class OutboxWorkerTests
         await store.Received(1).MarkProcessedAsync(msg.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When transport throws: <c>RunOnceAsync</c> records failure and continues.</summary>
     [Fact]
     public async Task RunOnceAsync_WhenTransportThrows_RecordsFailureAndContinues()
     {
@@ -73,6 +79,7 @@ public sealed class OutboxWorkerTests
         await store.Received(1).MarkProcessedAsync(m2.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With no pending messages: <c>RunOnceAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunOnceAsync_WhenTransportThrows_LogsOneErrorWithExceptionAndMessageId()
     {
@@ -108,6 +115,7 @@ public sealed class OutboxWorkerTests
         await transport.DidNotReceive().DispatchAsync(Arg.Any<OutboxMessage>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With no store registered: <c>RunOnceAsync</c> returns without throwing.</summary>
     [Fact]
     public async Task RunOnceAsync_WithNoStoreRegistered_ReturnsWithoutThrowing()
     {

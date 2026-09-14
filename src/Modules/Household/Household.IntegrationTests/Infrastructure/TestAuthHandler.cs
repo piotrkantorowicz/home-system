@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 /// </summary>
 internal sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
+    /// <summary>Name the scheme is registered under.</summary>
     public const string SchemeName = "Test";
 
     public TestAuthHandler(

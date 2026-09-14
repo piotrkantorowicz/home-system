@@ -3,8 +3,10 @@ namespace DietPlanner.UnitTests.Domain;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>MealEntry</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class MealEntryTests
 {
+    /// <summary>With valid data: <c>Create</c> creates meal entry.</summary>
     [Fact]
     public void Create_WithValidData_CreatesMealEntry()
     {
@@ -24,6 +26,7 @@ public sealed class MealEntryTests
         entry.Notes.ShouldBe("Notes");
     }
 
+    /// <summary>With new values: <c>Update</c> updates entry.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesEntry()
     {

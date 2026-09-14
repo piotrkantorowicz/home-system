@@ -3,8 +3,10 @@ namespace DietPlanner.UnitTests.Domain;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>UserProfile</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class UserProfileTests
 {
+    /// <summary>With valid data: <c>Create</c> creates profile.</summary>
     [Fact]
     public void Create_WithValidData_CreatesProfile()
     {
@@ -26,6 +28,7 @@ public sealed class UserProfileTests
         profile.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary>With all nullable fields null: <c>Create</c> creates profile.</summary>
     [Fact]
     public void Create_WithAllNullableFieldsNull_CreatesProfile()
     {
@@ -43,6 +46,7 @@ public sealed class UserProfileTests
         profile.ActivityLevel.ShouldBeNull();
     }
 
+    /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
@@ -51,6 +55,7 @@ public sealed class UserProfileTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With empty user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithEmptyUserId_ThrowsArgumentException()
     {
@@ -59,6 +64,7 @@ public sealed class UserProfileTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With new values: <c>Update</c> updates profile.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesProfile()
     {
@@ -79,6 +85,7 @@ public sealed class UserProfileTests
         profile.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With value: <c>UpdateCurrentWeight</c> sets weight and stamps updated at.</summary>
     [Fact]
     public void UpdateCurrentWeight_WithValue_SetsWeightAndStampsUpdatedAt()
     {
@@ -91,6 +98,7 @@ public sealed class UserProfileTests
         profile.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With null: <c>UpdateCurrentWeight</c> clears weight.</summary>
     [Fact]
     public void UpdateCurrentWeight_WithNull_ClearsWeight()
     {
@@ -103,6 +111,7 @@ public sealed class UserProfileTests
         profile.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With null values: <c>Update</c> clears fields.</summary>
     [Fact]
     public void Update_WithNullValues_ClearsFields()
     {

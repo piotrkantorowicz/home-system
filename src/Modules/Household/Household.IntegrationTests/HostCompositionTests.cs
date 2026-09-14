@@ -18,6 +18,8 @@ public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixtur
 {
     private readonly WebApplicationFactory<Program> _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HostCompositionTests(HouseholdDatabaseFixture fixture)
         => _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
@@ -25,6 +27,7 @@ public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixtur
             builder.UseSetting("ConnectionStrings:Household", fixture.ConnectionString);
         });
 
+    /// <summary><c>HouseholdModule</c> resolves its scoped services and from the host.</summary>
     [Fact]
     public void HouseholdModule_ResolvesItsScopedServices_FromTheHost()
     {

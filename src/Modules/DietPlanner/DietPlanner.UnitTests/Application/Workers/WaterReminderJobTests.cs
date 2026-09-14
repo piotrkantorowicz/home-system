@@ -10,6 +10,7 @@ using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
+/// <summary>Unit tests for <c>WaterReminderJob</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class WaterReminderJobTests
 {
     private readonly IWaterReminderCandidateQueries _queries =
@@ -32,12 +33,15 @@ public sealed class WaterReminderJobTests
         => new(userId, "en", intervalMinutes,
             TimeOnly.Parse(windowStart, CultureInfo.InvariantCulture), TimeOnly.Parse(windowEnd, CultureInfo.InvariantCulture), lastAt);
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WaterReminderJobTests()
         => _sut = new WaterReminderJob(_queries, _stateRepo, _bus, _uow);
 
+    /// <summary><c>Name</c> is stable.</summary>
     [Fact]
     public void Name_IsStable() => _sut.Name.ShouldBe("WaterReminderJob");
 
+    /// <summary>When no candidates: <c>RunAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunAsync_WhenNoCandidates_DoesNothing()
     {
@@ -50,6 +54,7 @@ public sealed class WaterReminderJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When outside time window: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenOutsideTimeWindow_SkipsCandidate()
     {
@@ -64,6 +69,7 @@ public sealed class WaterReminderJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When interval not yet passed: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenIntervalNotYetPassed_SkipsCandidate()
     {
@@ -78,6 +84,7 @@ public sealed class WaterReminderJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When first reminder ever: <c>RunAsync</c> publishes and creates new state.</summary>
     [Fact]
     public async Task RunAsync_WhenFirstReminderEver_PublishesAndCreatesNewState()
     {
@@ -99,6 +106,7 @@ public sealed class WaterReminderJobTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When interval passed: <c>RunAsync</c> publishes and updates existing state.</summary>
     [Fact]
     public async Task RunAsync_WhenIntervalPassed_PublishesAndUpdatesExistingState()
     {
@@ -121,6 +129,7 @@ public sealed class WaterReminderJobTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Exactly at interval boundary: <c>RunAsync</c> is eligible.</summary>
     [Fact]
     public async Task RunAsync_ExactlyAtIntervalBoundary_IsEligible()
     {
@@ -136,6 +145,7 @@ public sealed class WaterReminderJobTests
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Multiple eligible users: <c>RunAsync</c> commits once.</summary>
     [Fact]
     public async Task RunAsync_MultipleEligibleUsers_CommitsOnce()
     {

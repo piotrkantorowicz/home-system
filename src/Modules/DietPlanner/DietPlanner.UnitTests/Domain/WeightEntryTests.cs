@@ -5,10 +5,12 @@ using DietPlanner.Domain.Events;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>WeightEntry</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class WeightEntryTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+    /// <summary>With valid input: <c>Create</c> creates entry.</summary>
     [Fact]
     public void Create_WithValidInput_CreatesEntry()
     {
@@ -25,6 +27,7 @@ public sealed class WeightEntryTests
         entry.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary>With empty user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithEmptyUserId_ThrowsArgumentException()
     {
@@ -33,6 +36,7 @@ public sealed class WeightEntryTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With non positive weight: <c>Create</c> throws domain exception.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -44,6 +48,7 @@ public sealed class WeightEntryTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With excessive weight: <c>Create</c> throws domain exception.</summary>
     [Theory]
     [InlineData(1000)]
     [InlineData(1500)]
@@ -54,6 +59,7 @@ public sealed class WeightEntryTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With future date: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithFutureDate_ThrowsDomainException()
     {
@@ -64,6 +70,7 @@ public sealed class WeightEntryTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With valid weight: <c>ChangeWeight</c> updates value and stamps updated at.</summary>
     [Fact]
     public void ChangeWeight_WithValidWeight_UpdatesValueAndStampsUpdatedAt()
     {
@@ -75,6 +82,7 @@ public sealed class WeightEntryTests
         entry.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With invalid weight: <c>ChangeWeight</c> throws domain exception.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
@@ -89,10 +97,12 @@ public sealed class WeightEntryTests
     }
 }
 
+/// <summary>Unit tests for <c>WeightEntryDomainEvent</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class WeightEntryDomainEventTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+    /// <summary><c>Create</c> raises weight entry added domain event.</summary>
     [Fact]
     public void Create_RaisesWeightEntryAddedDomainEvent()
     {
@@ -104,6 +114,7 @@ public sealed class WeightEntryDomainEventTests
         domainEvent.Date.ShouldBe(Today);
     }
 
+    /// <summary><c>ChangeWeight</c> raises weight entry added domain event.</summary>
     [Fact]
     public void ChangeWeight_RaisesWeightEntryAddedDomainEvent()
     {

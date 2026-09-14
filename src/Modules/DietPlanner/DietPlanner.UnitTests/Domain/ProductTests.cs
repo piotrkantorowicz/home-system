@@ -4,8 +4,10 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>Product</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class ProductTests
 {
+    /// <summary>With valid data: <c>Create</c> creates product.</summary>
     [Fact]
     public void Create_WithValidData_CreatesProduct()
     {
@@ -22,6 +24,7 @@ public sealed class ProductTests
         product.IsDeleted.ShouldBeFalse();
     }
 
+    /// <summary>With empty name: <c>Create</c> throws argument exception.</summary>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -33,6 +36,7 @@ public sealed class ProductTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With valid data: <c>Update</c> updates product.</summary>
     [Fact]
     public void Update_WithValidData_UpdatesProduct()
     {
@@ -48,6 +52,7 @@ public sealed class ProductTests
         product.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When not deleted: <c>SoftDelete</c> sets deleted at.</summary>
     [Fact]
     public void SoftDelete_WhenNotDeleted_SetsDeletedAt()
     {
@@ -59,6 +64,7 @@ public sealed class ProductTests
         product.DeletedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When already deleted: <c>SoftDelete</c> throws domain exception.</summary>
     [Fact]
     public void SoftDelete_WhenAlreadyDeleted_ThrowsDomainException()
     {
@@ -70,6 +76,7 @@ public sealed class ProductTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>When deleted: <c>Restore</c> clears deleted at.</summary>
     [Fact]
     public void Restore_WhenDeleted_ClearsDeletedAt()
     {

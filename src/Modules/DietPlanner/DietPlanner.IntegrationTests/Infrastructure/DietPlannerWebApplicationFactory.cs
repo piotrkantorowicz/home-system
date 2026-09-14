@@ -8,12 +8,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+/// <summary>
+/// Boots the real host in the <c>Testing</c> environment with the DietPlanner <c>DbContext</c> pointed
+/// at a Testcontainers database and JWT auth replaced by <see cref="TestAuthHandler"/>. Background
+/// reminder ticking is disabled so tests drive jobs directly.
+/// </summary>
+/// <param name="connectionString">Connection string of the test database.</param>
+/// <param name="userId">Identity every request is authenticated as; <see cref="TestAuthHandler.TestUserId"/> when omitted.</param>
+/// <param name="settings">Extra configuration overrides applied before the host builds.</param>
 public sealed class DietPlannerWebApplicationFactory(
     string connectionString,
     string? userId = null,
     IReadOnlyDictionary<string, string?>? settings = null)
     : WebApplicationFactory<Program>
 {
+    /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");

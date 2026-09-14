@@ -8,14 +8,17 @@ using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>MealMissedIntegrationEventHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class MealMissedIntegrationEventHandlerTests
 {
     private readonly INotificationDispatcher _dispatcher = Substitute.For<INotificationDispatcher>();
     private readonly MealMissedIntegrationEventHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public MealMissedIntegrationEventHandlerTests()
         => _sut = new MealMissedIntegrationEventHandler(_dispatcher);
 
+    /// <summary><c>HandleAsync</c> dispatches meal missed with formatted placeholders.</summary>
     [Fact]
     public async Task HandleAsync_DispatchesMealMissedWithFormattedPlaceholders()
     {

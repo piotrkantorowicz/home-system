@@ -7,14 +7,17 @@ using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>MealReminderDueIntegrationEventHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class MealReminderDueIntegrationEventHandlerTests
 {
     private readonly INotificationDispatcher _dispatcher = Substitute.For<INotificationDispatcher>();
     private readonly MealReminderDueIntegrationEventHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public MealReminderDueIntegrationEventHandlerTests()
         => _sut = new MealReminderDueIntegrationEventHandler(_dispatcher);
 
+    /// <summary><c>HandleAsync</c> dispatches meal reminder with formatted placeholders.</summary>
     [Fact]
     public async Task HandleAsync_DispatchesMealReminderWithFormattedPlaceholders()
     {

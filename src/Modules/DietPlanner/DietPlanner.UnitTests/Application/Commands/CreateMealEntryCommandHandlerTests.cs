@@ -6,6 +6,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>CreateMealEntryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class CreateMealEntryCommandHandlerTests
 {
     private readonly IMealEntryRepository _repository = Substitute.For<IMealEntryRepository>();
@@ -14,9 +15,11 @@ public sealed class CreateMealEntryCommandHandlerTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly CreateMealEntryCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateMealEntryCommandHandlerTests()
         => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork);
 
+    /// <summary>With valid command: <c>HandleAsync</c> adds meal entry and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsMealEntryAndCommits()
     {
@@ -41,6 +44,7 @@ public sealed class CreateMealEntryCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When slot does not exist: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenSlotDoesNotExist_ThrowsNotFoundException()
     {
@@ -57,6 +61,7 @@ public sealed class CreateMealEntryCommandHandlerTests
             () => _sut.HandleAsync(command, CancellationToken.None));
     }
 
+    /// <summary>When schedule missing: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenScheduleMissing_ThrowsNotFoundException()
     {

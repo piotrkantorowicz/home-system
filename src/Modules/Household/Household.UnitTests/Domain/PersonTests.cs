@@ -5,8 +5,10 @@ using global::Household.Domain.Events;
 using global::Household.Domain.Exceptions;
 using global::Household.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>Person</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class PersonTests
 {
+    /// <summary><c>RegisterFromLogin</c> sets linked profile and raises registered event.</summary>
     [Fact]
     public void RegisterFromLogin_SetsLinkedProfile_AndRaisesRegisteredEvent()
     {
@@ -22,6 +24,7 @@ public sealed class PersonTests
         person.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<PersonRegisteredDomainEvent>();
     }
 
+    /// <summary>With blank display name: <c>RegisterFromLogin</c> falls back to subject.</summary>
     [Fact]
     public void RegisterFromLogin_WithBlankDisplayName_FallsBackToSubject()
     {
@@ -30,6 +33,7 @@ public sealed class PersonTests
         person.DisplayName.ShouldBe("auth|123");
     }
 
+    /// <summary><c>CreateManaged</c> is unlinked and managed.</summary>
     [Fact]
     public void CreateManaged_IsUnlinkedAndManaged()
     {
@@ -40,10 +44,12 @@ public sealed class PersonTests
         person.IsManaged.ShouldBeTrue();
     }
 
+    /// <summary>With no name: <c>CreateManaged</c> throws.</summary>
     [Fact]
     public void CreateManaged_WithNoName_Throws()
         => Should.Throw<HouseholdDomainException>(() => Person.CreateManaged(PersonId.New(), " ", null));
 
+    /// <summary>When nothing changed: <c>RefreshProfile</c> does not stamp updated at.</summary>
     [Fact]
     public void RefreshProfile_WhenNothingChanged_DoesNotStampUpdatedAt()
     {
@@ -55,6 +61,7 @@ public sealed class PersonTests
         person.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary>When changed: <c>RefreshProfile</c> updates and stamps updated at.</summary>
     [Fact]
     public void RefreshProfile_WhenChanged_UpdatesAndStampsUpdatedAt()
     {
@@ -67,6 +74,7 @@ public sealed class PersonTests
         person.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>On managed person: <c>LinkAuthSubject</c> links and raises event.</summary>
     [Fact]
     public void LinkAuthSubject_OnManagedPerson_LinksAndRaisesEvent()
     {
@@ -81,6 +89,7 @@ public sealed class PersonTests
         person.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<PersonLinkedToAccountDomainEvent>();
     }
 
+    /// <summary>On already linked person: <c>LinkAuthSubject</c> throws.</summary>
     [Fact]
     public void LinkAuthSubject_OnAlreadyLinkedPerson_Throws()
     {
@@ -90,6 +99,7 @@ public sealed class PersonTests
             .Message.ShouldContain("already linked");
     }
 
+    /// <summary>On managed person: mark pending account link sets the match email.</summary>
     [Fact]
     public void MarkPendingAccountLink_OnManagedPerson_SetsTheMatchEmail()
     {
@@ -102,6 +112,7 @@ public sealed class PersonTests
         person.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>On linked person: mark pending account link throws.</summary>
     [Fact]
     public void MarkPendingAccountLink_OnLinkedPerson_Throws()
     {

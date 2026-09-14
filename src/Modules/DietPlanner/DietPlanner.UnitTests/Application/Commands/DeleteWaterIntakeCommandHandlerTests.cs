@@ -8,15 +8,18 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>DeleteWaterIntakeCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class DeleteWaterIntakeCommandHandlerTests
 {
     private readonly IWaterIntakeRepository _repository = Substitute.For<IWaterIntakeRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly DeleteWaterIntakeCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public DeleteWaterIntakeCommandHandlerTests()
         => _sut = new DeleteWaterIntakeCommandHandler(_repository, _unitOfWork);
 
+    /// <summary>When entry exists: <c>HandleAsync</c> deletes and commits.</summary>
     [Fact]
     public async Task HandleAsync_WhenEntryExists_DeletesAndCommits()
     {
@@ -37,6 +40,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When entry not found: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenEntryNotFound_ThrowsNotFoundException()
     {

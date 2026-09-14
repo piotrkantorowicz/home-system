@@ -16,6 +16,8 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
 {
     private readonly HouseholdShoppingListFixture _fx;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fx">The shared fixture.</param>
     public HouseholdShoppingListTests(HouseholdShoppingListFixture fx) => _fx = fx;
 
     private DietPlannerWebApplicationFactory FactoryFor(string subject)
@@ -24,6 +26,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
             subject,
             new Dictionary<string, string?> { ["ConnectionStrings:Household"] = _fx.HouseholdConnectionString });
 
+    /// <summary><c>ShoppingList</c> aggregates every household members planned meals.</summary>
     [Fact]
     public async Task ShoppingList_AggregatesEveryHouseholdMembersPlannedMeals()
     {

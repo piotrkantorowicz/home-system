@@ -4,10 +4,13 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Household</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdEndpointsTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
@@ -24,6 +27,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
     private static async Task<Guid> PersonIdAsync(HttpClient client)
         => (await client.GetFromJsonAsync<MeBody>("/api/persons/me"))!.Id;
 
+    /// <summary><c>Owner</c> can run the full member lifecycle.</summary>
     [Fact]
     public async Task Owner_CanRunTheFullMemberLifecycle()
     {
@@ -71,6 +75,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         (await owner.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary><c>AddExistingPerson</c> then that person sees the household.</summary>
     [Fact]
     public async Task AddExistingPerson_ThenThatPersonSeesTheHousehold()
     {
@@ -91,6 +96,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         inviteeView.MyRole.ShouldBe("Adult");
     }
 
+    /// <summary>Cannot rename: <c>NonOwner</c> returns 403.</summary>
     [Fact]
     public async Task NonOwner_CannotRename_Returns403()
     {
@@ -108,6 +114,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         rename.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    /// <summary>When already in one: <c>CreateHousehold</c> returns 422.</summary>
     [Fact]
     public async Task CreateHousehold_WhenAlreadyInOne_Returns422()
     {
@@ -119,6 +126,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         second.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary><c>PickablePersons</c> lists people not yet in a household.</summary>
     [Fact]
     public async Task PickablePersons_ListsPeopleNotYetInAHousehold()
     {

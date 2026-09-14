@@ -4,8 +4,10 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>WaterIntake</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class WaterIntakeTests
 {
+    /// <summary>With valid data: <c>Create</c> creates entry.</summary>
     [Fact]
     public void Create_WithValidData_CreatesEntry()
     {
@@ -21,6 +23,7 @@ public sealed class WaterIntakeTests
         intake.Note.ShouldBe("Morning glass");
     }
 
+    /// <summary>With null note: <c>Create</c> creates entry.</summary>
     [Fact]
     public void Create_WithNullNote_CreatesEntry()
     {
@@ -29,6 +32,7 @@ public sealed class WaterIntakeTests
         intake.Note.ShouldBeNull();
     }
 
+    /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
@@ -37,6 +41,7 @@ public sealed class WaterIntakeTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With zero amount: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithZeroAmount_ThrowsDomainException()
     {
@@ -46,6 +51,7 @@ public sealed class WaterIntakeTests
            .Message.ShouldContain("greater than zero");
     }
 
+    /// <summary>With negative amount: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithNegativeAmount_ThrowsDomainException()
     {

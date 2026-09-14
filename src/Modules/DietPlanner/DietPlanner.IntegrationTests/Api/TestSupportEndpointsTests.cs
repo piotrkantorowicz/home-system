@@ -9,6 +9,7 @@ using DietPlanner.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
+/// <summary>HTTP integration tests for the <c>TestSupport</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class TestSupportEndpointsTests
 {
@@ -17,6 +18,8 @@ public sealed class TestSupportEndpointsTests
 
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public TestSupportEndpointsTests(DatabaseFixture db) => _db = db;
 
     private static async Task<Guid> EnsureBreakfastSlotAsync(HttpClient client)
@@ -30,6 +33,7 @@ public sealed class TestSupportEndpointsTests
         return schedule!.Slots[0].Id;
     }
 
+    /// <summary>When disabled: <c>DELETE</c> purge my data returns 404.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_WhenDisabled_Returns404()
     {
@@ -42,6 +46,7 @@ public sealed class TestSupportEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>When enabled: <c>DELETE</c> purge my data returns 204.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_WhenEnabled_Returns204()
     {
@@ -56,6 +61,7 @@ public sealed class TestSupportEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    /// <summary>When enabled: <c>DELETE</c> purge my data removes owned rows across all aggregates.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_WhenEnabled_RemovesOwnedRowsAcrossAllAggregates()
     {
@@ -106,6 +112,7 @@ public sealed class TestSupportEndpointsTests
         }
     }
 
+    /// <summary>With full fk chain: <c>DELETE</c> purge my data succeeds.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_WithFullFkChain_Succeeds()
     {
@@ -162,6 +169,7 @@ public sealed class TestSupportEndpointsTests
         (await db.Products.AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
     }
 
+    /// <summary><c>DELETE</c> purge my data also removes soft deleted rows and their dependencies.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_AlsoRemovesSoftDeletedRowsAndTheirDependencies()
     {
@@ -210,6 +218,7 @@ public sealed class TestSupportEndpointsTests
         (await db.Recipes.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == userId)).ShouldBeFalse();
     }
 
+    /// <summary><c>DELETE</c> purge my data also removes orphans from previous sub hashes.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_AlsoRemovesOrphansFromPreviousSubHashes()
     {
@@ -280,6 +289,7 @@ public sealed class TestSupportEndpointsTests
         (await db.MealEntries.IgnoreQueryFilters().AnyAsync(x => x.UserId == staleUserId)).ShouldBeFalse();
     }
 
+    /// <summary>When user has no data: <c>DELETE</c> purge my data returns 204.</summary>
     [Fact]
     public async Task DELETE_PurgeMyData_WhenUserHasNoData_Returns204()
     {

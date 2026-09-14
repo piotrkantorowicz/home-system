@@ -6,14 +6,18 @@ using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Profile</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class ProfileEndpointsTests
 {
     private readonly HttpClient _client;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public ProfileEndpointsTests(DatabaseFixture db)
         => _client = new DietPlannerWebApplicationFactory(db.ConnectionString).CreateClient();
 
+    /// <summary><c>GET</c> profile returns ok or not found.</summary>
     [Fact]
     public async Task GET_Profile_ReturnsOkOrNotFound()
     {
@@ -22,6 +26,7 @@ public sealed class ProfileEndpointsTests
         response.StatusCode.ShouldBeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
     }
 
+    /// <summary>With valid request: <c>POST</c> profile returns 201.</summary>
     [Fact]
     public async Task POST_Profile_WithValidRequest_Returns201()
     {
@@ -39,6 +44,7 @@ public sealed class ProfileEndpointsTests
         response.Headers.Location.ShouldNotBeNull();
     }
 
+    /// <summary>With invalid gender: <c>POST</c> profile returns 400.</summary>
     [Fact]
     public async Task POST_Profile_WithInvalidGender_Returns400()
     {
@@ -49,6 +55,7 @@ public sealed class ProfileEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With invalid activity level: <c>POST</c> profile returns 400.</summary>
     [Fact]
     public async Task POST_Profile_WithInvalidActivityLevel_Returns400()
     {
@@ -59,6 +66,7 @@ public sealed class ProfileEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With negative height: <c>POST</c> profile returns 400.</summary>
     [Fact]
     public async Task POST_Profile_WithNegativeHeight_Returns400()
     {
@@ -69,6 +77,7 @@ public sealed class ProfileEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With invalid gender: <c>PUT</c> profile returns 400.</summary>
     [Fact]
     public async Task PUT_Profile_WithInvalidGender_Returns400()
     {
@@ -79,6 +88,7 @@ public sealed class ProfileEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>POST</c> then GET then PUT and profile round trip.</summary>
     [Fact]
     public async Task POST_ThenGET_ThenPUT_ProfileRoundTrip()
     {

@@ -9,6 +9,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>UpdateMealScheduleCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class UpdateMealScheduleCommandHandlerTests
 {
     private readonly IMealScheduleConfigRepository _repository =
@@ -18,12 +19,14 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly UpdateMealScheduleCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public UpdateMealScheduleCommandHandlerTests()
         => _sut = new UpdateMealScheduleCommandHandler(_repository, _mealEntryRepository, _unitOfWork);
 
     private static UpdateMealScheduleCommand NewCommand(params MealSlotInput[] slots)
         => new("user-1", slots);
 
+    /// <summary>When no existing config: <c>HandleAsync</c> creates new and commits.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingConfig_CreatesNewAndCommits()
     {
@@ -43,6 +46,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>HandleAsync</c> preserves ids for kept slots.</summary>
     [Fact]
     public async Task HandleAsync_PreservesIdsForKeptSlots()
     {
@@ -66,6 +70,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>HandleAsync</c> blocks deletion of slot with entries.</summary>
     [Fact]
     public async Task HandleAsync_BlocksDeletionOfSlotWithEntries()
     {
@@ -87,6 +92,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>HandleAsync</c> allows deletion of unused slot.</summary>
     [Fact]
     public async Task HandleAsync_AllowsDeletionOfUnusedSlot()
     {
@@ -109,6 +115,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     }
 }
 
+/// <summary>Unit tests for <c>UpdateMealScheduleCommandValidator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class UpdateMealScheduleCommandValidatorTests
 {
     private readonly UpdateMealScheduleCommandValidator _sut = new();
@@ -120,6 +127,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
                 .Select(i => new MealSlotInput(null, $"Slot {i}", "08:00"))
                 .ToList());
 
+    /// <summary>With valid command: <c>Validate</c> returns no errors.</summary>
     [Fact]
     public void Validate_WithValidCommand_ReturnsNoErrors()
     {
@@ -128,6 +136,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldBeEmpty();
     }
 
+    /// <summary>With empty user id: <c>Validate</c> returns error.</summary>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -141,6 +150,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
     }
 
+    /// <summary>With zero slots: <c>Validate</c> returns error.</summary>
     [Fact]
     public void Validate_WithZeroSlots_ReturnsError()
     {
@@ -151,6 +161,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.Slots));
     }
 
+    /// <summary>With nine slots: <c>Validate</c> returns error.</summary>
     [Fact]
     public void Validate_WithNineSlots_ReturnsError()
     {
@@ -165,6 +176,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.Slots));
     }
 
+    /// <summary>With empty slot name: <c>Validate</c> returns error.</summary>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -178,6 +190,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == "Slots[0].Name");
     }
 
+    /// <summary>With invalid slot time: <c>Validate</c> returns error.</summary>
     [Theory]
     [InlineData("not-a-time")]
     [InlineData("25:00")]

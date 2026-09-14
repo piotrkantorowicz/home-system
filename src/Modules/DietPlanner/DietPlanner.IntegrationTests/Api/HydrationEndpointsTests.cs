@@ -5,14 +5,18 @@ using System.Net.Http.Json;
 using DietPlanner.Api;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Hydration</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class HydrationEndpointsTests
 {
     private readonly HttpClient _client;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public HydrationEndpointsTests(DatabaseFixture db)
         => _client = new DietPlannerWebApplicationFactory(db.ConnectionString).CreateClient();
 
+    /// <summary><c>GET</c> hydration config returns ok.</summary>
     [Fact]
     public async Task GET_HydrationConfig_ReturnsOk()
     {
@@ -21,6 +25,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    /// <summary>With valid request: <c>PUT</c> hydration config returns 204.</summary>
     [Fact]
     public async Task PUT_HydrationConfig_WithValidRequest_Returns204()
     {
@@ -31,6 +36,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    /// <summary>With target below minimum: <c>PUT</c> hydration config returns 400.</summary>
     [Fact]
     public async Task PUT_HydrationConfig_WithTargetBelowMinimum_Returns400()
     {
@@ -41,6 +47,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With glass size below minimum: <c>PUT</c> hydration config returns 400.</summary>
     [Fact]
     public async Task PUT_HydrationConfig_WithGlassSizeBelowMinimum_Returns400()
     {
@@ -51,6 +58,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>GET</c> water intake returns ok.</summary>
     [Fact]
     public async Task GET_WaterIntake_ReturnsOk()
     {
@@ -59,6 +67,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    /// <summary>With valid request: <c>POST</c> water intake returns 201.</summary>
     [Fact]
     public async Task POST_WaterIntake_WithValidRequest_Returns201()
     {
@@ -69,6 +78,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
+    /// <summary>With zero amount: <c>POST</c> water intake returns 400.</summary>
     [Fact]
     public async Task POST_WaterIntake_WithZeroAmount_Returns400()
     {
@@ -79,6 +89,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>When entry does not exist: <c>DELETE</c> water intake returns 404.</summary>
     [Fact]
     public async Task DELETE_WaterIntake_WhenEntryDoesNotExist_Returns404()
     {
@@ -87,6 +98,7 @@ public sealed class HydrationEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary><c>PUT</c> then GET hydration config round trip.</summary>
     [Fact]
     public async Task PUT_ThenGET_HydrationConfigRoundTrip()
     {

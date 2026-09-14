@@ -6,15 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 using HouseholdDb = Household.Infrastructure.Persistence.HouseholdDbContext;
 
+/// <summary>Integration tests for <c>HouseholdPersistence</c> against a real PostgreSQL container.</summary>
 public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseFixture>
 {
     private readonly HouseholdDatabaseFixture _fixture;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdPersistenceTests(HouseholdDatabaseFixture fixture) => _fixture = fixture;
 
     private HouseholdDb NewContext()
         => new(new DbContextOptionsBuilder<HouseholdDb>().UseNpgsql(_fixture.ConnectionString).Options);
 
+    /// <summary>With members, round trips: <c>Household</c> through ef configuration.</summary>
     [Fact]
     public async Task Household_WithMembers_RoundTrips_ThroughEfConfiguration()
     {
@@ -44,6 +48,7 @@ public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseF
         }
     }
 
+    /// <summary><c>HouseholdMembers</c> are deleted and when the household is deleted.</summary>
     [Fact]
     public async Task HouseholdMembers_AreDeleted_WhenTheHouseholdIsDeleted()
     {
