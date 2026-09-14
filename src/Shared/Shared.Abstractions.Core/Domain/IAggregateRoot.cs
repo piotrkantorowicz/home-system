@@ -9,6 +9,6 @@ public interface IAggregateRoot
     /// <summary>Domain events raised on this aggregate that have not been dispatched yet.</summary>
     IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
 
-    /// <summary>Drops all pending domain events after they have been dispatched.</summary>
+    /// <summary>Drops all pending domain events; called by the dispatcher once it has captured them, before handlers run.</summary>
     void ClearDomainEvents();
 }
