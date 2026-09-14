@@ -18,8 +18,8 @@ public sealed class Product : AggregateRoot<ProductId>
     /// <param name="name">Display name; required.</param>
     /// <param name="nutrition">Nutrition per 100 g; components may be unknown.</param>
     /// <param name="defaultUnit">Unit the UI proposes when this product is added (<c>g</c>, <c>ml</c>, <c>piece</c>).</param>
-    /// <param name="densityGramsPerMl">Grams per millilitre, needed to convert <c>ml</c> amounts to grams.</param>
-    /// <param name="gramPerPiece">Grams per piece, needed to convert <c>piece</c> amounts to grams.</param>
+    /// <param name="densityGramsPerMl">Grams per millilitre for converting volume amounts; 1 g/ml is assumed when <see langword="null"/>.</param>
+    /// <param name="gramPerPiece">Grams per piece for converting <c>piece</c> amounts; 100 g is assumed when <see langword="null"/>.</param>
     /// <param name="createdByUserId">Auth subject of the creating user; required.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> or <paramref name="createdByUserId"/> is blank.</exception>
     public static Product Create(
@@ -53,9 +53,9 @@ public sealed class Product : AggregateRoot<ProductId>
     public NutritionPer100g Nutrition { get; private set; } = default!;
     /// <summary>Unit proposed by default when the product is used; <c>g</c> unless set otherwise.</summary>
     public string DefaultUnit { get; private set; } = "g";
-    /// <summary>Grams per millilitre; <see langword="null"/> means <c>ml</c> amounts cannot be converted.</summary>
+    /// <summary>Grams per millilitre used to convert volume amounts; when <see langword="null"/> <c>UnitConverter</c> assumes water density (1 g/ml).</summary>
     public decimal? DensityGramsPerMl { get; private set; }
-    /// <summary>Grams per piece; <see langword="null"/> means <c>piece</c> amounts cannot be converted.</summary>
+    /// <summary>Grams per piece used to convert <c>piece</c> amounts; when <see langword="null"/> <c>UnitConverter</c> assumes 100 g per piece.</summary>
     public decimal? GramPerPiece { get; private set; }
     /// <summary>Auth subject of the user who created the product.</summary>
     public string CreatedByUserId { get; private set; } = default!;
