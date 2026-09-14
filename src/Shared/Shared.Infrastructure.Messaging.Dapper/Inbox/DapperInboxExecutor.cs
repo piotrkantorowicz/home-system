@@ -3,20 +3,16 @@ namespace Shared.Infrastructure.Messaging.Dapper.Inbox;
 using global::Dapper;
 using Shared.Abstractions.Messaging;
 
-internal sealed class DapperInboxExecutor<TFactory> : IInboxExecutor
+internal sealed class DapperInboxExecutor<TFactory>(TFactory factory, TimeProvider clock) : IInboxExecutor
     where TFactory : INpgsqlConnectionFactory
 {
-    private readonly TFactory _factory;
-
-    public DapperInboxExecutor(TFactory factory) => _factory = factory;
-
     public async Task ExecuteAsync(
         Guid eventId,
         string eventType,
         Func<CancellationToken, Task> handlerInvocation,
         CancellationToken ct = default)
     {
-        await using var connection = await _factory.OpenAsync(ct).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(ct).ConfigureAwait(false);
         await using var transaction = await connection.BeginTransactionAsync(ct).ConfigureAwait(false);
 
         var exists = await connection.ExecuteScalarAsync<bool>(
@@ -34,7 +30,7 @@ internal sealed class DapperInboxExecutor<TFactory> : IInboxExecutor
 
         await connection.ExecuteAsync(
             new CommandDefinition(InboxSql.Insert,
-                new { EventId = eventId, EventType = eventType, ConsumedAt = DateTime.UtcNow },
+                new { EventId = eventId, EventType = eventType, ConsumedAt = clock.GetUtcNow().UtcDateTime },
                 transaction: transaction, cancellationToken: ct))
             .ConfigureAwait(false);
 
