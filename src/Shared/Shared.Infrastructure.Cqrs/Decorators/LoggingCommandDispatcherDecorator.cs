@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class LoggingCommandDispatcherDecorator : ICommandDispatcher
+internal sealed partial class LoggingCommandDispatcherDecorator : ICommandDispatcher
 {
     private readonly ICommandDispatcher _inner;
     private readonly ILogger<LoggingCommandDispatcherDecorator> _logger;
@@ -18,16 +18,16 @@ internal sealed class LoggingCommandDispatcherDecorator : ICommandDispatcher
         where TCommand : ICommand
     {
         var name = typeof(TCommand).Name;
-        _logger.LogInformation("Executing command {CommandName}", name);
+        LogExecuting(name);
         var sw = Stopwatch.StartNew();
         try
         {
             await _inner.SendAsync(command, ct);
-            _logger.LogInformation("Command {CommandName} executed in {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogExecuted(name, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Command {CommandName} failed after {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogFailed(ex, name, sw.ElapsedMilliseconds);
             throw;
         }
     }
@@ -36,18 +36,27 @@ internal sealed class LoggingCommandDispatcherDecorator : ICommandDispatcher
         where TCommand : ICommand<TResult>
     {
         var name = typeof(TCommand).Name;
-        _logger.LogInformation("Executing command {CommandName}", name);
+        LogExecuting(name);
         var sw = Stopwatch.StartNew();
         try
         {
             var result = await _inner.SendAsync<TCommand, TResult>(command, ct);
-            _logger.LogInformation("Command {CommandName} executed in {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogExecuted(name, sw.ElapsedMilliseconds);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Command {CommandName} failed after {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogFailed(ex, name, sw.ElapsedMilliseconds);
             throw;
         }
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Executing command {CommandName}")]
+    private partial void LogExecuting(string commandName);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Command {CommandName} executed in {ElapsedMs}ms")]
+    private partial void LogExecuted(string commandName, long elapsedMs);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Command {CommandName} failed after {ElapsedMs}ms")]
+    private partial void LogFailed(Exception exception, string commandName, long elapsedMs);
 }

@@ -7,7 +7,7 @@ using Notifications.Api.SignalR;
 using Notifications.Application.Channels;
 using Notifications.Domain.ValueObjects;
 
-internal sealed class WebSocketNotificationChannelSender(
+internal sealed partial class WebSocketNotificationChannelSender(
     IHubContext<NotificationsHub> hubContext,
     INotificationConnectionRegistry registry,
     ILogger<WebSocketNotificationChannelSender> logger)
@@ -23,9 +23,7 @@ internal sealed class WebSocketNotificationChannelSender(
 
         if (!registry.IsOnline(context.UserId))
         {
-            logger.LogDebug(
-                "WebSocket sender: user {UserId} offline, leaving delivery {DeliveryId} pending",
-                context.UserId, context.DeliveryId);
+            LogUserOffline(context.UserId, context.DeliveryId);
             return DeliveryOutcome.Pending;
         }
 
@@ -41,10 +39,20 @@ internal sealed class WebSocketNotificationChannelSender(
             .SendAsync(ClientMethod, payload, ct)
             .ConfigureAwait(false);
 
-        logger.LogInformation(
-            "WebSocket sender: pushed delivery {DeliveryId} to user {UserId}, awaiting ACK",
-            context.DeliveryId, context.UserId);
+        LogPushed(context.DeliveryId, context.UserId);
 
         return DeliveryOutcome.Pending;
     }
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Debug,
+        Message = "WebSocket sender: user {UserId} offline, leaving delivery {DeliveryId} pending")]
+    private partial void LogUserOffline(string userId, Guid deliveryId);
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Information,
+        Message = "WebSocket sender: pushed delivery {DeliveryId} to user {UserId}, awaiting ACK")]
+    private partial void LogPushed(Guid deliveryId, string userId);
 }

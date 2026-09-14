@@ -11,7 +11,7 @@ using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 using Notifications.Infrastructure.Persistence;
 
-internal sealed class RetryDeliveryWorker(
+internal sealed partial class RetryDeliveryWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<RetryDeliveryWorkerOptions> options,
     ILogger<RetryDeliveryWorker> logger) : BackgroundService
@@ -28,7 +28,7 @@ internal sealed class RetryDeliveryWorker(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Retry delivery worker tick failed");
+                LogTickFailed(ex);
             }
 
             try
@@ -72,9 +72,7 @@ internal sealed class RetryDeliveryWorker(
         var notification = await repository.GetByIdAsync(delivery.NotificationId, ct).ConfigureAwait(false);
         if (notification is null)
         {
-            logger.LogWarning(
-                "Skipping retry for delivery {DeliveryId}: parent notification {NotificationId} missing",
-                delivery.Id, delivery.NotificationId);
+            LogParentMissing(delivery.Id, delivery.NotificationId);
             return;
         }
 
@@ -101,13 +99,27 @@ internal sealed class RetryDeliveryWorker(
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex,
-                "Retry of delivery {DeliveryId} via {Channel} failed (attempt {AttemptCount})",
-                delivery.Id, delivery.Channel, delivery.AttemptCount + 1);
+            LogRetryFailed(ex, delivery.Id, delivery.Channel, delivery.AttemptCount + 1);
             delivery.MarkFailed(DateTime.UtcNow, ex.Message);
         }
 
         await repository.UpdateDeliveryAsync(delivery, ct).ConfigureAwait(false);
         await unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Retry delivery worker tick failed")]
+    private partial void LogTickFailed(Exception exception);
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Warning,
+        Message = "Skipping retry for delivery {DeliveryId}: parent notification {NotificationId} missing")]
+    private partial void LogParentMissing(NotificationDeliveryId deliveryId, NotificationId notificationId);
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Error,
+        Message = "Retry of delivery {DeliveryId} via {Channel} failed (attempt {AttemptCount})")]
+    private partial void LogRetryFailed(
+        Exception exception, NotificationDeliveryId deliveryId, NotificationChannel channel, int attemptCount);
 }

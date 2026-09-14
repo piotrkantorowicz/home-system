@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class LoggingQueryDispatcherDecorator : IQueryDispatcher
+internal sealed partial class LoggingQueryDispatcherDecorator : IQueryDispatcher
 {
     private readonly IQueryDispatcher _inner;
     private readonly ILogger<LoggingQueryDispatcherDecorator> _logger;
@@ -18,18 +18,27 @@ internal sealed class LoggingQueryDispatcherDecorator : IQueryDispatcher
         where TQuery : IQuery<TResult>
     {
         var name = typeof(TQuery).Name;
-        _logger.LogInformation("Executing query {QueryName}", name);
+        LogExecuting(name);
         var sw = Stopwatch.StartNew();
         try
         {
             var result = await _inner.SendAsync<TQuery, TResult>(query, ct);
-            _logger.LogInformation("Query {QueryName} executed in {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogExecuted(name, sw.ElapsedMilliseconds);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Query {QueryName} failed after {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
+            LogFailed(ex, name, sw.ElapsedMilliseconds);
             throw;
         }
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Executing query {QueryName}")]
+    private partial void LogExecuting(string queryName);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Query {QueryName} executed in {ElapsedMs}ms")]
+    private partial void LogExecuted(string queryName, long elapsedMs);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Query {QueryName} failed after {ElapsedMs}ms")]
+    private partial void LogFailed(Exception exception, string queryName, long elapsedMs);
 }

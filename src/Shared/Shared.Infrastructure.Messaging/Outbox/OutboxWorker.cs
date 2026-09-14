@@ -7,9 +7,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Infrastructure.Messaging.Transport;
 
-public sealed class OutboxWorker<TDbContext> : BackgroundService
+public sealed partial class OutboxWorker<TDbContext> : BackgroundService
     where TDbContext : DbContext
 {
+    private static readonly string DbContextName = typeof(TDbContext).Name;
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly OutboxWorkerOptions _options;
     private readonly ILogger<OutboxWorker<TDbContext>> _logger;
@@ -30,7 +32,7 @@ public sealed class OutboxWorker<TDbContext> : BackgroundService
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogError(ex, "Outbox worker [{DbContext}] tick failed", typeof(TDbContext).Name);
+                LogTickFailed(ex, DbContextName);
             }
 
             try
@@ -53,18 +55,14 @@ public sealed class OutboxWorker<TDbContext> : BackgroundService
         var store = sp.GetKeyedService<IOutboxStore>(typeof(TDbContext));
         if (store is null)
         {
-            _logger.LogDebug(
-                "Outbox worker [{DbContext}] no-op: no outbox store registered",
-                typeof(TDbContext).Name);
+            LogNoStore(DbContextName);
             return;
         }
 
         var transport = sp.GetService<IIntegrationEventTransport>();
         if (transport is null)
         {
-            _logger.LogDebug(
-                "Outbox worker [{DbContext}] no-op: no transport registered",
-                typeof(TDbContext).Name);
+            LogNoTransport(DbContextName);
             return;
         }
 
@@ -81,11 +79,24 @@ public sealed class OutboxWorker<TDbContext> : BackgroundService
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogError(ex,
-                    "Failed to dispatch outbox message {MessageId} ({EventType}) [{DbContext}]",
-                    message.Id, message.EventType, typeof(TDbContext).Name);
+                LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
                 await store.RecordFailureAsync(message.Id, ex.Message, ct).ConfigureAwait(false);
             }
         }
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
+    private partial void LogTickFailed(Exception exception, string dbContext);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no outbox store registered")]
+    private partial void LogNoStore(string dbContext);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no transport registered")]
+    private partial void LogNoTransport(string dbContext);
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Error,
+        Message = "Failed to dispatch outbox message {MessageId} ({EventType}) [{DbContext}]")]
+    private partial void LogDispatchFailed(Exception exception, Guid messageId, string eventType, string dbContext);
 }

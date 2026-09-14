@@ -18,7 +18,7 @@ using Microsoft.Extensions.Logging;
 /// Household store is unreachable — this runs on every authenticated request in every
 /// module, so it must never turn a transient Household outage into a 500 elsewhere.
 /// </remarks>
-internal sealed class HouseholdClaimsTransformation : IClaimsTransformation
+internal sealed partial class HouseholdClaimsTransformation : IClaimsTransformation
 {
     private readonly IHouseholdQueryService _households;
     private readonly ILogger<HouseholdClaimsTransformation> _logger;
@@ -47,9 +47,7 @@ internal sealed class HouseholdClaimsTransformation : IClaimsTransformation
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
-                "Could not resolve household context for the current principal; "
-                + "proceeding without household claims.");
+            LogContextUnresolved(ex);
             return principal;
         }
 
@@ -62,4 +60,10 @@ internal sealed class HouseholdClaimsTransformation : IClaimsTransformation
 
         return principal;
     }
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Warning,
+        Message = "Could not resolve household context for the current principal; proceeding without household claims.")]
+    private partial void LogContextUnresolved(Exception exception);
 }

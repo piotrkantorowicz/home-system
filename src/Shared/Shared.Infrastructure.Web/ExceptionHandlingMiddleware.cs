@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-public sealed class ExceptionHandlingMiddleware : IMiddleware
+public sealed partial class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -66,7 +66,7 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception");
+            LogUnhandled(ex);
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             await context.Response.WriteAsJsonAsync(new ProblemDetails
             {
@@ -74,4 +74,7 @@ public sealed class ExceptionHandlingMiddleware : IMiddleware
             });
         }
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Unhandled exception")]
+    private partial void LogUnhandled(Exception exception);
 }

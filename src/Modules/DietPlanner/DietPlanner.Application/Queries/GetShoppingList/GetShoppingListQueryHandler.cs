@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class GetShoppingListQueryHandler
+internal sealed partial class GetShoppingListQueryHandler
     : IQueryHandler<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
@@ -138,8 +138,7 @@ internal sealed class GetShoppingListQueryHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
-                "Could not resolve the household for the shopping list; using the caller's own meals only.");
+            LogHouseholdUnresolved(ex);
             return [callerUserId];
         }
     }
@@ -169,4 +168,10 @@ internal sealed class GetShoppingListQueryHandler
         public ProductId Id { get; init; } = default!;
         public string Name { get; init; } = default!;
     }
+
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Warning,
+        Message = "Could not resolve the household for the shopping list; using the caller's own meals only.")]
+    private partial void LogHouseholdUnresolved(Exception exception);
 }

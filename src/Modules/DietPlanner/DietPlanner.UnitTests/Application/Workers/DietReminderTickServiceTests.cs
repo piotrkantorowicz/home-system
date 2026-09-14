@@ -4,7 +4,9 @@ namespace DietPlanner.UnitTests.Application.Workers;
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 
 public sealed class DietReminderTickServiceTests
@@ -51,6 +53,30 @@ public sealed class DietReminderTickServiceTests
         await sut.RunOnceAsync(CancellationToken.None);
 
         ok.Calls.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RunOnceAsync_OneJobThrows_LogsOneErrorNamingTheJob()
+    {
+        var failing = new ThrowingJob();
+        var services = new ServiceCollection();
+        services.AddScoped<IDietReminderJob>(_ => failing);
+        var sp = services.BuildServiceProvider();
+        var logger = new FakeLogger<DietReminderTickService>();
+
+        var sut = new DietReminderTickService(
+            sp.GetRequiredService<IServiceScopeFactory>(),
+            Options.Create(new DietReminderTickServiceOptions()),
+            logger);
+
+        await sut.RunOnceAsync(CancellationToken.None);
+
+        var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Error);
+        record.Id.Id.ShouldBe(0);
+        record.Exception.ShouldBeOfType<InvalidOperationException>();
+        record.StructuredState.ShouldNotBeNull()
+            .ShouldContain(kv => kv.Key == "JobName" && kv.Value == failing.Name);
     }
 
     [Fact]

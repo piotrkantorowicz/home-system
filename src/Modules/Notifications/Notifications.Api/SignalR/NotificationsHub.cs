@@ -10,7 +10,7 @@ using Notifications.Application.Queries.ReplayPendingDeliveries;
 using Shared.Abstractions.Cqrs;
 
 [Authorize]
-public sealed class NotificationsHub(
+public sealed partial class NotificationsHub(
     INotificationConnectionRegistry registry,
     IQueryDispatcher queryDispatcher,
     ICommandDispatcher commandDispatcher,
@@ -23,14 +23,13 @@ public sealed class NotificationsHub(
         var userId = Context.UserIdentifier;
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Notifications hub connection rejected: no user identifier");
+            LogConnectionRejected();
             Context.Abort();
             return;
         }
 
         registry.Track(userId);
-        logger.LogInformation("Notifications hub: user {UserId} connected ({ConnectionId})",
-            userId, Context.ConnectionId);
+        LogConnected(userId, Context.ConnectionId);
 
         await base.OnConnectedAsync();
         await ReplayPendingAsync(userId);
@@ -42,8 +41,7 @@ public sealed class NotificationsHub(
         if (!string.IsNullOrWhiteSpace(userId))
         {
             registry.Untrack(userId);
-            logger.LogInformation("Notifications hub: user {UserId} disconnected ({ConnectionId})",
-                userId, Context.ConnectionId);
+            LogDisconnected(userId, Context.ConnectionId);
         }
 
         return base.OnDisconnectedAsync(exception);
@@ -82,8 +80,18 @@ public sealed class NotificationsHub(
             await Clients.Caller.SendAsync(ClientMethod, payload, Context.ConnectionAborted);
         }
 
-        logger.LogInformation(
-            "Notifications hub: replayed {Count} pending deliveries to user {UserId}",
-            pending.Count, userId);
+        LogReplayed(pending.Count, userId);
     }
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "Notifications hub connection rejected: no user identifier")]
+    private partial void LogConnectionRejected();
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: user {UserId} connected ({ConnectionId})")]
+    private partial void LogConnected(string userId, string connectionId);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: user {UserId} disconnected ({ConnectionId})")]
+    private partial void LogDisconnected(string userId, string connectionId);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: replayed {Count} pending deliveries to user {UserId}")]
+    private partial void LogReplayed(int count, string userId);
 }
