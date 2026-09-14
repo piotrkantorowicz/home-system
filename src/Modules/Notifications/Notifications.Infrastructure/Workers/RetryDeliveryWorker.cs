@@ -107,15 +107,17 @@ internal sealed partial class RetryDeliveryWorker(
         await unitOfWork.CommitAsync(ct).ConfigureAwait(false);
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Retry delivery worker tick failed")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Retry delivery worker tick failed")]
     private partial void LogTickFailed(Exception exception);
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Warning,
         Message = "Skipping retry for delivery {DeliveryId}: parent notification {NotificationId} missing")]
     private partial void LogParentMissing(NotificationDeliveryId deliveryId, NotificationId notificationId);
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Error,
         Message = "Retry of delivery {DeliveryId} via {Channel} failed (attempt {AttemptCount})")]
     private partial void LogRetryFailed(

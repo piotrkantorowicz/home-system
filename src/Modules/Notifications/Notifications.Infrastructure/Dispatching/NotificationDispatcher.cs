@@ -98,6 +98,6 @@ internal sealed partial class NotificationDispatcher(
         await unitOfWork.CommitAsync(ct);
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Notification delivery {DeliveryId} via {Channel} failed")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Notification delivery {DeliveryId} via {Channel} failed")]
     private partial void LogDeliveryFailed(Exception exception, NotificationDeliveryId deliveryId, NotificationChannel channel);
 }

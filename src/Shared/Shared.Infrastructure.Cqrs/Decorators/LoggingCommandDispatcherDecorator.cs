@@ -51,12 +51,12 @@ internal sealed partial class LoggingCommandDispatcherDecorator : ICommandDispat
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Executing command {CommandName}")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Executing command {CommandName}")]
     private partial void LogExecuting(string commandName);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Command {CommandName} executed in {ElapsedMs}ms")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Command {CommandName} executed in {ElapsedMs}ms")]
     private partial void LogExecuted(string commandName, long elapsedMs);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Command {CommandName} failed after {ElapsedMs}ms")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Command {CommandName} failed after {ElapsedMs}ms")]
     private partial void LogFailed(Exception exception, string commandName, long elapsedMs);
 }

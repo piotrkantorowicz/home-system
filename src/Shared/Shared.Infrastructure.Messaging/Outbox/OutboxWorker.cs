@@ -85,16 +85,17 @@ public sealed partial class OutboxWorker<TDbContext> : BackgroundService
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
     private partial void LogTickFailed(Exception exception, string dbContext);
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no outbox store registered")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no outbox store registered")]
     private partial void LogNoStore(string dbContext);
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no transport registered")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no transport registered")]
     private partial void LogNoTransport(string dbContext);
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Error,
         Message = "Failed to dispatch outbox message {MessageId} ({EventType}) [{DbContext}]")]
     private partial void LogDispatchFailed(Exception exception, Guid messageId, string eventType, string dbContext);

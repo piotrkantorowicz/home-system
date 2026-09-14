@@ -59,12 +59,12 @@ internal sealed partial class DietReminderTickService(
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "DietReminderTickService disabled via configuration; not ticking.")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "DietReminderTickService disabled via configuration; not ticking.")]
     private partial void LogDisabled();
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "DietReminderTickService tick failed")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "DietReminderTickService tick failed")]
     private partial void LogTickFailed(Exception exception);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "DietReminderJob {JobName} failed")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "DietReminderJob {JobName} failed")]
     private partial void LogJobFailed(Exception exception, string jobName);
 }

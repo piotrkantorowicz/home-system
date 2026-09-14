@@ -75,6 +75,6 @@ public sealed partial class ExceptionHandlingMiddleware : IMiddleware
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Unhandled exception")]
     private partial void LogUnhandled(Exception exception);
 }

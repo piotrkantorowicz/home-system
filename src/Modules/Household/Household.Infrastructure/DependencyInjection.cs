@@ -68,9 +68,9 @@ public static partial class InfrastructureDependencyInjection
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Household database migrations applied successfully")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Household database migrations applied successfully")]
     private static partial void LogMigrationsApplied(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "An error occurred while applying Household database migrations")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "An error occurred while applying Household database migrations")]
     private static partial void LogMigrationsFailed(ILogger logger, Exception exception);
 }

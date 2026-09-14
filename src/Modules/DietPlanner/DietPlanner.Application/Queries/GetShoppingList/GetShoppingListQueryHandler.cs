@@ -170,6 +170,7 @@ internal sealed partial class GetShoppingListQueryHandler
     }
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Warning,
         Message = "Could not resolve the household for the shopping list; using the caller's own meals only.")]
     private partial void LogHouseholdUnresolved(Exception exception);

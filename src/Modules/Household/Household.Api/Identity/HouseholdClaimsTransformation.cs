@@ -62,6 +62,7 @@ internal sealed partial class HouseholdClaimsTransformation : IClaimsTransformat
     }
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Warning,
         Message = "Could not resolve household context for the current principal; proceeding without household claims.")]
     private partial void LogContextUnresolved(Exception exception);

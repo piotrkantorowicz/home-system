@@ -19,6 +19,7 @@ internal sealed partial class ConsoleNotificationChannelSender(
     }
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Information,
         Message = "[Notification] user={UserId} delivery={DeliveryId} channel=Console title=\"{Title}\" body=\"{Body}\"")]
     private partial void LogNotification(string userId, Guid deliveryId, string title, string body);

@@ -45,11 +45,13 @@ internal sealed partial class WebSocketNotificationChannelSender(
     }
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Debug,
         Message = "WebSocket sender: user {UserId} offline, leaving delivery {DeliveryId} pending")]
     private partial void LogUserOffline(string userId, Guid deliveryId);
 
     [LoggerMessage(
+        EventId = 0,
         Level = LogLevel.Information,
         Message = "WebSocket sender: pushed delivery {DeliveryId} to user {UserId}, awaiting ACK")]
     private partial void LogPushed(Guid deliveryId, string userId);

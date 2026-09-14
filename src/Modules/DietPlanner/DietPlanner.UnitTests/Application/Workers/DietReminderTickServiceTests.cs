@@ -73,6 +73,7 @@ public sealed class DietReminderTickServiceTests
 
         var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Error);
+        record.Id.Id.ShouldBe(0);
         record.Exception.ShouldBeOfType<InvalidOperationException>();
         record.StructuredState.ShouldNotBeNull()
             .ShouldContain(kv => kv.Key == "JobName" && kv.Value == failing.Name);

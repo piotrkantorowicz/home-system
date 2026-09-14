@@ -88,6 +88,7 @@ public sealed class OutboxWorkerTests
 
         var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Error);
+        record.Id.Id.ShouldBe(0);
         record.Exception.ShouldBeSameAs(boom);
         record.Message.ShouldContain(msg.Id.ToString());
         record.Message.ShouldContain(nameof(TestDbContext));

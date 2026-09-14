@@ -83,15 +83,15 @@ public sealed partial class NotificationsHub(
         LogReplayed(pending.Count, userId);
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Notifications hub connection rejected: no user identifier")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "Notifications hub connection rejected: no user identifier")]
     private partial void LogConnectionRejected();
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Notifications hub: user {UserId} connected ({ConnectionId})")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: user {UserId} connected ({ConnectionId})")]
     private partial void LogConnected(string userId, string connectionId);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Notifications hub: user {UserId} disconnected ({ConnectionId})")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: user {UserId} disconnected ({ConnectionId})")]
     private partial void LogDisconnected(string userId, string connectionId);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Notifications hub: replayed {Count} pending deliveries to user {UserId}")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Notifications hub: replayed {Count} pending deliveries to user {UserId}")]
     private partial void LogReplayed(int count, string userId);
 }

@@ -33,12 +33,12 @@ internal sealed partial class LoggingQueryDispatcherDecorator : IQueryDispatcher
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Executing query {QueryName}")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Executing query {QueryName}")]
     private partial void LogExecuting(string queryName);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Query {QueryName} executed in {ElapsedMs}ms")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Information, Message = "Query {QueryName} executed in {ElapsedMs}ms")]
     private partial void LogExecuted(string queryName, long elapsedMs);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Query {QueryName} failed after {ElapsedMs}ms")]
+    [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Query {QueryName} failed after {ElapsedMs}ms")]
     private partial void LogFailed(Exception exception, string queryName, long elapsedMs);
 }
