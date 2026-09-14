@@ -5,6 +5,7 @@ using Household.Domain.Events;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>HouseholdInvitation</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class HouseholdInvitationTests
 {
     private static HouseholdInvitation NewInvitation(HouseholdRole role = HouseholdRole.Adult)
@@ -15,6 +16,7 @@ public sealed class HouseholdInvitationTests
             role,
             PersonId.New());
 
+    /// <summary><c>Create</c> is pending and expires in 30 days and raises created event.</summary>
     [Fact]
     public void Create_IsPending_ExpiresIn30Days_AndRaisesCreatedEvent()
     {
@@ -25,10 +27,12 @@ public sealed class HouseholdInvitationTests
         invitation.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<HouseholdInvitationCreatedDomainEvent>();
     }
 
+    /// <summary>For owner role: <c>Create</c> throws.</summary>
     [Fact]
     public void Create_ForOwnerRole_Throws()
         => Should.Throw<HouseholdDomainException>(() => NewInvitation(HouseholdRole.Owner));
 
+    /// <summary>When pending and fresh: <c>Accept</c> marks accepted.</summary>
     [Fact]
     public void Accept_WhenPendingAndFresh_MarksAccepted()
     {
@@ -40,6 +44,7 @@ public sealed class HouseholdInvitationTests
         invitation.ResolvedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When expired: <c>Accept</c> marks expired and throws.</summary>
     [Fact]
     public void Accept_WhenExpired_MarksExpired_AndThrows()
     {
@@ -51,6 +56,7 @@ public sealed class HouseholdInvitationTests
         invitation.Status.ShouldBe(InvitationStatus.Expired);
     }
 
+    /// <summary>When pending: <c>Revoke</c> marks revoked.</summary>
     [Fact]
     public void Revoke_WhenPending_MarksRevoked()
     {
@@ -61,6 +67,7 @@ public sealed class HouseholdInvitationTests
         invitation.Status.ShouldBe(InvitationStatus.Revoked);
     }
 
+    /// <summary>After revoke: <c>Accept</c> throws.</summary>
     [Fact]
     public void Accept_AfterRevoke_Throws()
     {

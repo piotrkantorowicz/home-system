@@ -14,22 +14,30 @@ using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
 
+/// <summary>Integration tests for <c>DomainEventToOutbox</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
 {
     private readonly PostgresContainerFixture _fixture;
     private ServiceProvider _sp = default!;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public DomainEventToOutboxIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     // ---- domain types ----
 
+    /// <summary>Domain event raised by <see cref="TestAggregate.Create"/>.</summary>
+    /// <param name="AggregateId">The aggregate that was created.</param>
     public sealed record TestAggregateCreatedDomainEvent(Guid AggregateId) : IDomainEvent;
 
+    /// <summary>Minimal aggregate whose creation raises a domain event, to drive the interceptor → handler → outbox path.</summary>
     public sealed class TestAggregate : AggregateRoot<Guid>
     {
         private TestAggregate() { }
 
+        /// <summary>Creates the aggregate and raises <see cref="TestAggregateCreatedDomainEvent"/>.</summary>
+        /// <param name="id">Identifier for the new aggregate.</param>
         public static TestAggregate Create(Guid id)
         {
             var a = new TestAggregate { Id = id };
@@ -38,6 +46,10 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>Integration event the test domain-event handler publishes to the outbox.</summary>
+    /// <param name="EventId">Unique identity of the event.</param>
+    /// <param name="OccurredAt">When it was published, UTC.</param>
+    /// <param name="AggregateId">The aggregate it describes.</param>
     public sealed record TestCreatedIntegrationEvent(Guid EventId, DateTime OccurredAt, Guid AggregateId)
         : IIntegrationEvent;
 
@@ -76,6 +88,7 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>Builds a service provider with the outbox, dispatcher interceptor and test handler wired to a fresh schema.</summary>
     public async Task InitializeAsync()
     {
         var services = new ServiceCollection();
@@ -100,8 +113,10 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
     }
 
+    /// <summary>Disposes the service provider and its <c>DbContext</c>.</summary>
     public async Task DisposeAsync() => await _sp.DisposeAsync();
 
+    /// <summary>When aggregate raises domain event: <c>SaveChanges</c> persists outbox row atomically.</summary>
     [Fact]
     public async Task SaveChanges_WhenAggregateRaisesDomainEvent_PersistsOutboxRowAtomically()
     {

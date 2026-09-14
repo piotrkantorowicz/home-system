@@ -4,13 +4,17 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
+/// <summary>Integration tests for <c>HouseholdInvitation</c> against a real PostgreSQL container.</summary>
 public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdInvitationTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
 
     private async Task<(HttpClient Client, Guid HouseholdId)> OwnerWithHouseholdAsync()
@@ -23,6 +27,7 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         return (client, id);
     }
 
+    /// <summary>Unknown email: <c>Invite</c> creates pending and then resolves when that user logs in.</summary>
     [Fact]
     public async Task Invite_UnknownEmail_CreatesPending_ThenResolvesWhenThatUserLogsIn()
     {
@@ -55,6 +60,7 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         afterResolve!.ShouldBeEmpty();
     }
 
+    /// <summary>Existing person not in a household: <c>Invite</c> adds them immediately.</summary>
     [Fact]
     public async Task Invite_ExistingPersonNotInAHousehold_AddsThemImmediately()
     {
@@ -74,6 +80,7 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         (await other.GetFromJsonAsync<Mine>("/api/households/me"))!.Id.ShouldBe(householdId);
     }
 
+    /// <summary><c>RevokedInvitation</c> does not resolve on login.</summary>
     [Fact]
     public async Task RevokedInvitation_DoesNotResolveOnLogin()
     {
@@ -93,6 +100,7 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         (await invitee.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Duplicate pending email: <c>Invite</c> returns 422.</summary>
     [Fact]
     public async Task Invite_DuplicatePendingEmail_Returns422()
     {

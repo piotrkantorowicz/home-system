@@ -5,12 +5,14 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>CreateProductCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class CreateProductCommandHandlerTests
 {
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly CreateProductCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateProductCommandHandlerTests()
     {
         _repository.GetByNameAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -18,6 +20,7 @@ public sealed class CreateProductCommandHandlerTests
         _sut = new CreateProductCommandHandler(_repository, _unitOfWork);
     }
 
+    /// <summary>With valid command: <c>HandleAsync</c> adds product and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsProductAndCommits()
     {
@@ -32,6 +35,7 @@ public sealed class CreateProductCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>HandleAsync</c> created product has correct nutrition.</summary>
     [Fact]
     public async Task HandleAsync_CreatedProductHasCorrectNutrition()
     {

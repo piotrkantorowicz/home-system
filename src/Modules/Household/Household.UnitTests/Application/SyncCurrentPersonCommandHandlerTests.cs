@@ -6,6 +6,7 @@ using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>SyncCurrentPersonCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class SyncCurrentPersonCommandHandlerTests
 {
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
@@ -14,12 +15,14 @@ public sealed class SyncCurrentPersonCommandHandlerTests
     private readonly IHouseholdUnitOfWork _unitOfWork = Substitute.For<IHouseholdUnitOfWork>();
     private readonly SyncCurrentPersonCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public SyncCurrentPersonCommandHandlerTests()
         => _sut = new SyncCurrentPersonCommandHandler(
             _persons,
             new InvitationResolver(_invitations, _households),
             _unitOfWork);
 
+    /// <summary>When no person for subject: <c>Handle</c> registers and commits.</summary>
     [Fact]
     public async Task Handle_WhenNoPersonForSubject_RegistersAndCommits()
     {
@@ -37,6 +40,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When person exists: <c>Handle</c> refreshes profile and commits and without adding.</summary>
     [Fact]
     public async Task Handle_WhenPersonExists_RefreshesProfileAndCommits_WithoutAdding()
     {
@@ -54,6 +58,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When login email matches a managed person: <c>Handle</c> links it instead of creating.</summary>
     [Fact]
     public async Task Handle_WhenLoginEmailMatchesAManagedPerson_LinksItInsteadOfCreating()
     {
@@ -74,6 +79,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When email matches an already linked person: <c>Handle</c> registers a new person.</summary>
     [Fact]
     public async Task Handle_WhenEmailMatchesAnAlreadyLinkedPerson_RegistersANewPerson()
     {

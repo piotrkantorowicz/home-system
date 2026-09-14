@@ -12,9 +12,12 @@ public sealed class ConvertManagedMemberToAccountTests : IClassFixture<Household
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public ConvertManagedMemberToAccountTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
 
     private async Task<HttpClient> OwnerWithHouseholdAsync()
@@ -26,6 +29,7 @@ public sealed class ConvertManagedMemberToAccountTests : IClassFixture<Household
         return client;
     }
 
+    /// <summary><c>ConvertedManagedMember</c> keeps its person id and when it first signs in.</summary>
     [Fact]
     public async Task ConvertedManagedMember_KeepsItsPersonId_WhenItFirstSignsIn()
     {
@@ -61,6 +65,7 @@ public sealed class ConvertManagedMemberToAccountTests : IClassFixture<Household
         kiddo.IsManaged.ShouldBeFalse();
     }
 
+    /// <summary>By a non owner: <c>ConvertToAccount</c> is forbidden.</summary>
     [Fact]
     public async Task ConvertToAccount_ByANonOwner_IsForbidden()
     {

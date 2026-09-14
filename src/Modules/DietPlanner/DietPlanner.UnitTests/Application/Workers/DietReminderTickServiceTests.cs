@@ -9,8 +9,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 
+/// <summary>Unit tests for <c>DietReminderTickService</c>: jobs are in-memory fakes resolved from a real <c>ServiceCollection</c>.</summary>
 public sealed class DietReminderTickServiceTests
 {
+    /// <summary><c>RunOnceAsync</c> invokes each registered job and with utc now approximately.</summary>
     [Fact]
     public async Task RunOnceAsync_InvokesEachRegisteredJob_WithUtcNowApproximately()
     {
@@ -35,6 +37,7 @@ public sealed class DietReminderTickServiceTests
         jobA.Calls[0].ShouldBeInRange(before, after);
     }
 
+    /// <summary>One job throws: <c>RunOnceAsync</c> other still runs.</summary>
     [Fact]
     public async Task RunOnceAsync_OneJobThrows_OtherStillRuns()
     {
@@ -55,6 +58,7 @@ public sealed class DietReminderTickServiceTests
         ok.Calls.Count.ShouldBe(1);
     }
 
+    /// <summary>When disabled: <c>RunOnceAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunOnceAsync_OneJobThrows_LogsOneErrorNamingTheJob()
     {
@@ -79,6 +83,7 @@ public sealed class DietReminderTickServiceTests
             .ShouldContain(kv => kv.Key == "JobName" && kv.Value == failing.Name);
     }
 
+    /// <summary>When disabled: <c>RunOnceAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunOnceAsync_WhenDisabled_DoesNothing()
     {

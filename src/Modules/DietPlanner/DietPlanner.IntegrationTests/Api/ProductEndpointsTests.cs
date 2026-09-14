@@ -5,14 +5,18 @@ using System.Net.Http.Json;
 using DietPlanner.Api;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Product</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class ProductEndpointsTests
 {
     private readonly HttpClient _client;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public ProductEndpointsTests(DatabaseFixture db)
         => _client = new DietPlannerWebApplicationFactory(db.ConnectionString).CreateClient();
 
+    /// <summary><c>GET</c> products returns ok.</summary>
     [Fact]
     public async Task GET_Products_ReturnsOk()
     {
@@ -21,6 +25,7 @@ public sealed class ProductEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    /// <summary>With valid request: <c>POST</c> product returns 201.</summary>
     [Fact]
     public async Task POST_Product_WithValidRequest_Returns201()
     {
@@ -31,6 +36,7 @@ public sealed class ProductEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
+    /// <summary>When not found: <c>GET</c> product by id returns 404.</summary>
     [Fact]
     public async Task GET_ProductById_WhenNotFound_Returns404()
     {
@@ -40,6 +46,7 @@ public sealed class ProductEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound, body);
     }
 
+    /// <summary>When exists: <c>DELETE</c> product returns 204.</summary>
     [Fact]
     public async Task DELETE_Product_WhenExists_Returns204()
     {

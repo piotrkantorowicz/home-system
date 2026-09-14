@@ -6,10 +6,12 @@ using Household.Domain.Events;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Messaging;
 
+/// <summary>Unit tests for <c>HouseholdIntegrationEventPublishing</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class HouseholdIntegrationEventPublishingTests
 {
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
 
+    /// <summary><c>HouseholdCreated</c> publishes integration event and with ids.</summary>
     [Fact]
     public async Task HouseholdCreated_PublishesIntegrationEvent_WithIds()
     {
@@ -27,6 +29,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>MemberJoined</c> publishes integration event and with role as string.</summary>
     [Fact]
     public async Task MemberJoined_PublishesIntegrationEvent_WithRoleAsString()
     {
@@ -46,6 +49,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>MemberLeft</c> publishes integration event.</summary>
     [Fact]
     public async Task MemberLeft_PublishesIntegrationEvent()
     {
@@ -61,6 +65,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>MemberRoleChanged</c> publishes integration event and with both roles.</summary>
     [Fact]
     public async Task MemberRoleChanged_PublishesIntegrationEvent_WithBothRoles()
     {

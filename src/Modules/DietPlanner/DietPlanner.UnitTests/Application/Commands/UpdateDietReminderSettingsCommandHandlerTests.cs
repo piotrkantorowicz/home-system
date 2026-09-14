@@ -8,6 +8,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>UpdateDietReminderSettingsCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class UpdateDietReminderSettingsCommandHandlerTests
 {
     private readonly IDietReminderSettingsRepository _repository =
@@ -15,6 +16,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly UpdateDietReminderSettingsCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public UpdateDietReminderSettingsCommandHandlerTests()
         => _sut = new UpdateDietReminderSettingsCommandHandler(_repository, _unitOfWork);
 
@@ -33,6 +35,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
             WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
             GoalAlertsEnabled: true);
 
+    /// <summary>When no existing settings: <c>HandleAsync</c> creates new and commits.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingSettings_CreatesNewAndCommits()
     {
@@ -57,6 +60,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When existing settings: <c>HandleAsync</c> updates and commits.</summary>
     [Fact]
     public async Task HandleAsync_WhenExistingSettings_UpdatesAndCommits()
     {
@@ -86,6 +90,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     }
 }
 
+/// <summary>Unit tests for <c>UpdateDietReminderSettingsCommandValidator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class UpdateDietReminderSettingsCommandValidatorTests
 {
     private readonly UpdateDietReminderSettingsCommandValidator _sut = new();
@@ -105,6 +110,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
             WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
             GoalAlertsEnabled: true);
 
+    /// <summary>With valid command: <c>Validate</c> returns no errors.</summary>
     [Fact]
     public void Validate_WithValidCommand_ReturnsNoErrors()
     {
@@ -112,6 +118,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
         errors.ShouldBeEmpty();
     }
 
+    /// <summary>With empty user id: <c>Validate</c> returns validation error.</summary>
     [Fact]
     public void Validate_WithEmptyUserId_ReturnsValidationError()
     {
@@ -120,6 +127,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
     }
 
+    /// <summary>With invalid meal lead time minutes: <c>Validate</c> returns validation error.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -131,6 +139,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.MealReminderLeadTimeMinutes));
     }
 
+    /// <summary>With invalid grace minutes: <c>Validate</c> returns validation error.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(241)]
@@ -141,6 +150,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.MealMissedGraceMinutes));
     }
 
+    /// <summary>With invalid water reminder interval minutes: <c>Validate</c> returns validation error.</summary>
     [Theory]
     [InlineData(14)]
     [InlineData(481)]
@@ -151,6 +161,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.WaterReminderIntervalMinutes));
     }
 
+    /// <summary>When water window end not after start: <c>Validate</c> returns validation error.</summary>
     [Fact]
     public void Validate_WhenWaterWindowEndNotAfterStart_ReturnsValidationError()
     {

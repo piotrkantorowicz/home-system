@@ -7,6 +7,7 @@ using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.Application.Queries.GetWeightEntries;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>WeightEntry</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class WeightEntryEndpointsTests
 {
@@ -14,6 +15,8 @@ public sealed class WeightEntryEndpointsTests
 
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public WeightEntryEndpointsTests(DatabaseFixture db) => _db = db;
 
     private HttpClient CreateClient(string userId)
@@ -30,6 +33,7 @@ public sealed class WeightEntryEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
+    /// <summary>With valid request: <c>POST</c> weight entry returns 201.</summary>
     [Fact]
     public async Task POST_WeightEntry_WithValidRequest_Returns201()
     {
@@ -46,6 +50,7 @@ public sealed class WeightEntryEndpointsTests
         body.Created.ShouldBeTrue();
     }
 
+    /// <summary>Same date twice: <c>POST</c> weight entry updates existing.</summary>
     [Fact]
     public async Task POST_WeightEntry_SameDateTwice_UpdatesExisting()
     {
@@ -67,6 +72,7 @@ public sealed class WeightEntryEndpointsTests
         secondBody.Id.ShouldBe(firstBody!.Id);
     }
 
+    /// <summary><c>POST</c> weight entry updates profile current weight.</summary>
     [Fact]
     public async Task POST_WeightEntry_UpdatesProfileCurrentWeight()
     {
@@ -83,6 +89,7 @@ public sealed class WeightEntryEndpointsTests
         profile!.CurrentWeightKg.ShouldBe(72.5m);
     }
 
+    /// <summary>With invalid weight: <c>POST</c> weight entry returns 400.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -98,6 +105,7 @@ public sealed class WeightEntryEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With future date: <c>POST</c> weight entry returns 400.</summary>
     [Fact]
     public async Task POST_WeightEntry_WithFutureDate_Returns400()
     {
@@ -110,6 +118,7 @@ public sealed class WeightEntryEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>GET</c> weight entries returns ordered by date ascending.</summary>
     [Fact]
     public async Task GET_WeightEntries_ReturnsOrderedByDateAscending()
     {
@@ -134,6 +143,7 @@ public sealed class WeightEntryEndpointsTests
         entries[2].Date.ShouldBe(Today);
     }
 
+    /// <summary>With from greater than to: <c>GET</c> weight entries returns 400.</summary>
     [Fact]
     public async Task GET_WeightEntries_WithFromGreaterThanTo_Returns400()
     {
@@ -146,6 +156,7 @@ public sealed class WeightEntryEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>DELETE</c> weight entry returns 204 and recomputes profile current weight.</summary>
     [Fact]
     public async Task DELETE_WeightEntry_Returns204AndRecomputesProfileCurrentWeight()
     {
@@ -165,6 +176,7 @@ public sealed class WeightEntryEndpointsTests
         profile!.CurrentWeightKg.ShouldBe(81m);
     }
 
+    /// <summary>Non existent: <c>DELETE</c> weight entry returns 404.</summary>
     [Fact]
     public async Task DELETE_WeightEntry_NonExistent_Returns404()
     {
@@ -176,6 +188,7 @@ public sealed class WeightEntryEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Other user entry: <c>DELETE</c> weight entry returns 404.</summary>
     [Fact]
     public async Task DELETE_WeightEntry_OtherUserEntry_Returns404()
     {

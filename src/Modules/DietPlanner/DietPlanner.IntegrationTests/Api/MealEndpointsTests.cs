@@ -8,12 +8,15 @@ using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetShoppingList;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Meal</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealEndpointsTests
 {
     private readonly DatabaseFixture _db;
     private readonly HttpClient _client;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public MealEndpointsTests(DatabaseFixture db)
     {
         _db = db;
@@ -55,6 +58,7 @@ public sealed class MealEndpointsTests
         return Guid.Parse((await recipeResp.Content.ReadAsStringAsync()).Trim('"'));
     }
 
+    /// <summary><c>GET</c> meals returns ok.</summary>
     [Fact]
     public async Task GET_Meals_ReturnsOk()
     {
@@ -64,6 +68,7 @@ public sealed class MealEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
 
+    /// <summary><c>GET</c> nutrition summary returns ok.</summary>
     [Fact]
     public async Task GET_NutritionSummary_ReturnsOk()
     {
@@ -73,6 +78,7 @@ public sealed class MealEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
 
+    /// <summary>With unknown slot id: <c>POST</c> meal entry returns 404.</summary>
     [Fact]
     public async Task POST_MealEntry_WithUnknownSlotId_Returns404()
     {
@@ -94,6 +100,7 @@ public sealed class MealEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Deleting slot with entries: <c>PUT</c> meal schedule returns 422.</summary>
     [Fact]
     public async Task PUT_MealSchedule_DeletingSlotWithEntries_Returns422()
     {
@@ -122,6 +129,7 @@ public sealed class MealEndpointsTests
         deleteResp.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary><c>GET</c> meals computes non zero nutrition from recipe ingredients.</summary>
     [Fact]
     public async Task GET_Meals_ComputesNonZeroNutritionFromRecipeIngredients()
     {
@@ -150,6 +158,7 @@ public sealed class MealEndpointsTests
         meal.Calories.ShouldBe(80m);
     }
 
+    /// <summary><c>GET</c> shopping list returns ok.</summary>
     [Fact]
     public async Task GET_ShoppingList_ReturnsOk()
     {
@@ -159,6 +168,7 @@ public sealed class MealEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
 
+    /// <summary><c>GET</c> shopping list aggregates planned ingredients across entries.</summary>
     [Fact]
     public async Task GET_ShoppingList_AggregatesPlannedIngredientsAcrossEntries()
     {
@@ -191,6 +201,7 @@ public sealed class MealEndpointsTests
         item.ProductName.ShouldNotBeNullOrWhiteSpace();
     }
 
+    /// <summary><c>GET</c> shopping list ignores overrides and uses planned recipe.</summary>
     [Fact]
     public async Task GET_ShoppingList_IgnoresOverridesAndUsesPlannedRecipe()
     {
@@ -221,6 +232,7 @@ public sealed class MealEndpointsTests
         items.Single().TotalAmount.ShouldBe(80m);
     }
 
+    /// <summary><c>GET</c> shopping list empty range and returns empty.</summary>
     [Fact]
     public async Task GET_ShoppingList_EmptyRange_ReturnsEmpty()
     {
@@ -234,6 +246,7 @@ public sealed class MealEndpointsTests
         items!.ShouldBeEmpty();
     }
 
+    /// <summary>Renaming slot in place: <c>PUT</c> meal schedule preserves entries.</summary>
     [Fact]
     public async Task PUT_MealSchedule_RenamingSlotInPlace_PreservesEntries()
     {

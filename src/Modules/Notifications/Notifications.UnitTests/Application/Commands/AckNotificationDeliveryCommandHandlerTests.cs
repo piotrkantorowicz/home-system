@@ -6,15 +6,18 @@ using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>AckNotificationDeliveryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class AckNotificationDeliveryCommandHandlerTests
 {
     private readonly INotificationRepository _repository = Substitute.For<INotificationRepository>();
     private readonly INotificationsUnitOfWork _uow = Substitute.For<INotificationsUnitOfWork>();
     private readonly AckNotificationDeliveryCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public AckNotificationDeliveryCommandHandlerTests()
         => _sut = new AckNotificationDeliveryCommandHandler(_repository, _uow);
 
+    /// <summary>When owned by user: <c>Handle</c> marks sent and commits.</summary>
     [Fact]
     public async Task Handle_WhenOwnedByUser_MarksSentAndCommits()
     {
@@ -40,6 +43,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When foreign owner: <c>Handle</c> throws and does not mutate.</summary>
     [Fact]
     public async Task Handle_WhenForeignOwner_ThrowsAndDoesNotMutate()
     {
@@ -62,6 +66,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When already sent: <c>Handle</c> is no op.</summary>
     [Fact]
     public async Task Handle_WhenAlreadySent_IsNoOp()
     {
@@ -84,6 +89,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When delivery missing: <c>Handle</c> throws.</summary>
     [Fact]
     public async Task Handle_WhenDeliveryMissing_Throws()
     {

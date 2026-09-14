@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 /// </summary>
 public sealed class HouseholdApiFactory(string connectionString) : WebApplicationFactory<Program>
 {
+    /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -24,6 +25,10 @@ public sealed class HouseholdApiFactory(string connectionString) : WebApplicatio
         });
     }
 
+    /// <summary>Creates a client whose every request authenticates as the given identity via the test headers.</summary>
+    /// <param name="sub">The Authentik subject to impersonate; unique per test to keep data isolated.</param>
+    /// <param name="email">Optional email claim, used by invitation and account-link scenarios.</param>
+    /// <param name="name">Optional display name claim.</param>
     public HttpClient CreateClientFor(string sub, string? email = null, string? name = null)
     {
         var client = CreateClient();

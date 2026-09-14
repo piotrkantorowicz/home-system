@@ -3,8 +3,10 @@ namespace Notifications.UnitTests.Domain;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>Notification</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class NotificationTests
 {
+    /// <summary>With valid data: <c>Create</c> populates properties.</summary>
     [Fact]
     public void Create_WithValidData_PopulatesProperties()
     {
@@ -25,6 +27,7 @@ public sealed class NotificationTests
         notification.ReadAt.ShouldBeNull();
     }
 
+    /// <summary>With blank user id: <c>Create</c> throws.</summary>
     [Fact]
     public void Create_WithBlankUserId_Throws()
     {
@@ -35,6 +38,7 @@ public sealed class NotificationTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>First time: <c>MarkRead</c> sets read at.</summary>
     [Fact]
     public void MarkRead_FirstTime_SetsReadAt()
     {
@@ -46,6 +50,7 @@ public sealed class NotificationTests
         notification.ReadAt.ShouldBe(readAt);
     }
 
+    /// <summary>When already read: <c>MarkRead</c> does not overwrite.</summary>
     [Fact]
     public void MarkRead_WhenAlreadyRead_DoesNotOverwrite()
     {

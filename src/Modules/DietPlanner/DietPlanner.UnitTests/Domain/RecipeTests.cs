@@ -4,8 +4,10 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>Recipe</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class RecipeTests
 {
+    /// <summary>With valid data: <c>Create</c> creates recipe.</summary>
     [Fact]
     public void Create_WithValidData_CreatesRecipe()
     {
@@ -22,6 +24,7 @@ public sealed class RecipeTests
         recipe.IsDeleted.ShouldBeFalse();
     }
 
+    /// <summary><c>AddIngredient</c> adds to collection.</summary>
     [Fact]
     public void AddIngredient_AddsToCollection()
     {
@@ -35,6 +38,7 @@ public sealed class RecipeTests
         recipe.Ingredients.First().Amount.ShouldBe(200m);
     }
 
+    /// <summary><c>ClearIngredients</c> removes all.</summary>
     [Fact]
     public void ClearIngredients_RemovesAll()
     {
@@ -47,6 +51,7 @@ public sealed class RecipeTests
         recipe.Ingredients.ShouldBeEmpty();
     }
 
+    /// <summary>With valid data: <c>Update</c> updates recipe.</summary>
     [Fact]
     public void Update_WithValidData_UpdatesRecipe()
     {
@@ -61,6 +66,7 @@ public sealed class RecipeTests
         recipe.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When not deleted: <c>SoftDelete</c> sets deleted at.</summary>
     [Fact]
     public void SoftDelete_WhenNotDeleted_SetsDeletedAt()
     {
@@ -71,6 +77,7 @@ public sealed class RecipeTests
         recipe.IsDeleted.ShouldBeTrue();
     }
 
+    /// <summary>When already deleted: <c>SoftDelete</c> throws domain exception.</summary>
     [Fact]
     public void SoftDelete_WhenAlreadyDeleted_ThrowsDomainException()
     {

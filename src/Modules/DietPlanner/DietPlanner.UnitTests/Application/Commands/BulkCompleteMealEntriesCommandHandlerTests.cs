@@ -8,6 +8,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>BulkCompleteMealEntriesCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class BulkCompleteMealEntriesCommandHandlerTests
 {
     private readonly IMealEntryRepository _repository = Substitute.For<IMealEntryRepository>();
@@ -15,6 +16,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
     private readonly BulkCompleteMealEntriesCommandHandler _sut;
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public BulkCompleteMealEntriesCommandHandlerTests()
         => _sut = new BulkCompleteMealEntriesCommandHandler(_repository, _unitOfWork);
 
@@ -30,6 +32,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
         return entry;
     }
 
+    /// <summary><c>HandleAsync</c> completes only planned entries and returns count.</summary>
     [Fact]
     public async Task HandleAsync_CompletesOnlyPlannedEntriesAndReturnsCount()
     {
@@ -51,6 +54,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With no planned entries: <c>HandleAsync</c> returns zero and does not commit.</summary>
     [Fact]
     public async Task HandleAsync_WithNoPlannedEntries_ReturnsZeroAndDoesNotCommit()
     {
@@ -65,10 +69,12 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
     }
 }
 
+/// <summary>Unit tests for <c>BulkCompleteMealEntriesCommandValidator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class BulkCompleteMealEntriesCommandValidatorTests
 {
     private readonly BulkCompleteMealEntriesCommandValidator _sut = new();
 
+    /// <summary>With empty user id: <c>Validate</c> returns error.</summary>
     [Fact]
     public void Validate_WithEmptyUserId_ReturnsError()
     {
@@ -79,6 +85,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(BulkCompleteMealEntriesCommand.UserId));
     }
 
+    /// <summary><c>Validate</c> allows any date including future and avoids timezone false positives.</summary>
     [Fact]
     public void Validate_AllowsAnyDateIncludingFuture_AvoidsTimezoneFalsePositives()
     {

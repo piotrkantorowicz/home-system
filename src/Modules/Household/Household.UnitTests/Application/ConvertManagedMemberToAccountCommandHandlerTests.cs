@@ -9,6 +9,7 @@ using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 
+/// <summary>Unit tests for <c>ConvertManagedMemberToAccountCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class ConvertManagedMemberToAccountCommandHandlerTests
 {
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
@@ -19,6 +20,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     private readonly Person _owner = Person.RegisterFromLogin(PersonId.New(), "auth|owner", "Owner", null, null);
     private readonly HouseholdAggregate _household;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public ConvertManagedMemberToAccountCommandHandlerTests()
     {
         _household = HouseholdAggregate.Create(HouseholdId.New(), "Home", _owner.Id);
@@ -32,6 +34,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     private ConvertManagedMemberToAccountCommand Command(Guid personId, string email = "kiddo@x.com")
         => new("auth|owner", _household.Id.Value, personId, email);
 
+    /// <summary><c>Handle</c> marks the pending link and commits.</summary>
     [Fact]
     public async Task Handle_MarksThePendingLink_AndCommits()
     {
@@ -45,6 +48,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When person is not a member of the household: <c>Handle</c> throws.</summary>
     [Fact]
     public async Task Handle_WhenPersonIsNotAMemberOfTheHousehold_Throws()
     {
@@ -57,6 +61,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When person is already linked: <c>Handle</c> throws.</summary>
     [Fact]
     public async Task Handle_WhenPersonIsAlreadyLinked_Throws()
     {
@@ -68,6 +73,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
             _sut.HandleAsync(Command(linked.Id.Value), CancellationToken.None));
     }
 
+    /// <summary>When caller is not owner: <c>Handle</c> throws.</summary>
     [Fact]
     public async Task Handle_WhenCallerIsNotOwner_Throws()
     {

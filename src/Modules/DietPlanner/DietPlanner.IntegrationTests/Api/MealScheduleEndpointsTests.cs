@@ -6,18 +6,22 @@ using DietPlanner.Api;
 using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>MealSchedule</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealScheduleEndpointsTests
 {
     private readonly HttpClient _client;
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public MealScheduleEndpointsTests(DatabaseFixture db)
     {
         _db = db;
         _client = new DietPlannerWebApplicationFactory(db.ConnectionString).CreateClient();
     }
 
+    /// <summary><c>GET</c> when no schedule exists returns 200 with null body.</summary>
     [Fact]
     public async Task GET_WhenNoScheduleExists_Returns200WithNullBody()
     {
@@ -33,6 +37,7 @@ public sealed class MealScheduleEndpointsTests
         body.ShouldBeOneOf("null", string.Empty);
     }
 
+    /// <summary><c>PUT</c> with valid slots returns 204.</summary>
     [Fact]
     public async Task PUT_WithValidSlots_Returns204()
     {
@@ -48,6 +53,7 @@ public sealed class MealScheduleEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    /// <summary><c>GET</c> after put returns stored schedule.</summary>
     [Fact]
     public async Task GET_AfterPut_ReturnsStoredSchedule()
     {
@@ -73,6 +79,7 @@ public sealed class MealScheduleEndpointsTests
         dto.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary><c>PUT</c> called twice updates existing schedule.</summary>
     [Fact]
     public async Task PUT_CalledTwice_UpdatesExistingSchedule()
     {
@@ -97,6 +104,7 @@ public sealed class MealScheduleEndpointsTests
         dto.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary><c>PUT</c> with zero slots returns 400.</summary>
     [Fact]
     public async Task PUT_WithZeroSlots_Returns400()
     {
@@ -107,6 +115,7 @@ public sealed class MealScheduleEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>PUT</c> with too many slots returns 400.</summary>
     [Theory]
     [InlineData(9)]
     public async Task PUT_WithTooManySlots_Returns400(int slotCount)
@@ -120,6 +129,7 @@ public sealed class MealScheduleEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>PUT</c> with empty slot name returns 400.</summary>
     [Fact]
     public async Task PUT_WithEmptySlotName_Returns400()
     {
@@ -130,6 +140,7 @@ public sealed class MealScheduleEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>PUT</c> with invalid slot time returns 400.</summary>
     [Fact]
     public async Task PUT_WithInvalidSlotTime_Returns400()
     {
@@ -140,6 +151,7 @@ public sealed class MealScheduleEndpointsTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary><c>GET</c>: user id is read from claims principal.</summary>
     [Fact]
     public async Task GET_UserIdIsReadFromClaimsPrincipal()
     {

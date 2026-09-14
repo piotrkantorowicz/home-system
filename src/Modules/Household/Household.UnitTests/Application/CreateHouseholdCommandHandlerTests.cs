@@ -8,6 +8,7 @@ using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 
+/// <summary>Unit tests for <c>CreateHouseholdCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class CreateHouseholdCommandHandlerTests
 {
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
@@ -15,6 +16,7 @@ public sealed class CreateHouseholdCommandHandlerTests
     private readonly IHouseholdUnitOfWork _uow = Substitute.For<IHouseholdUnitOfWork>();
     private readonly CreateHouseholdCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateHouseholdCommandHandlerTests()
         => _sut = new CreateHouseholdCommandHandler(
             new HouseholdAccessService(_persons, _households), _households, _uow);
@@ -26,6 +28,7 @@ public sealed class CreateHouseholdCommandHandlerTests
         return person;
     }
 
+    /// <summary>Creates household, with the caller as owner: <c>Handle</c> commits.</summary>
     [Fact]
     public async Task Handle_CreatesHousehold_WithTheCallerAsOwner_AndCommits()
     {
@@ -43,6 +46,7 @@ public sealed class CreateHouseholdCommandHandlerTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When caller already in a household: <c>Handle</c> throws and does not commit.</summary>
     [Fact]
     public async Task Handle_WhenCallerAlreadyInAHousehold_Throws_AndDoesNotCommit()
     {
@@ -56,6 +60,7 @@ public sealed class CreateHouseholdCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When no person for subject: <c>Handle</c> throws not found.</summary>
     [Fact]
     public async Task Handle_WhenNoPersonForSubject_ThrowsNotFound()
     {

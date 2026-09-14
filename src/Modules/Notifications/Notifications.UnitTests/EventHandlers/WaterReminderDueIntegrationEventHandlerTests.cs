@@ -7,14 +7,17 @@ using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>WaterReminderDueIntegrationEventHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class WaterReminderDueIntegrationEventHandlerTests
 {
     private readonly INotificationDispatcher _dispatcher = Substitute.For<INotificationDispatcher>();
     private readonly WaterReminderDueIntegrationEventHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WaterReminderDueIntegrationEventHandlerTests()
         => _sut = new WaterReminderDueIntegrationEventHandler(_dispatcher);
 
+    /// <summary><c>HandleAsync</c> dispatches water reminder type with correct user and locale.</summary>
     [Fact]
     public async Task HandleAsync_DispatchesWaterReminderTypeWithCorrectUserAndLocale()
     {
@@ -35,6 +38,7 @@ public sealed class WaterReminderDueIntegrationEventHandlerTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When event is null: <c>HandleAsync</c> throws.</summary>
     [Fact]
     public async Task HandleAsync_WhenEventIsNull_Throws()
     {

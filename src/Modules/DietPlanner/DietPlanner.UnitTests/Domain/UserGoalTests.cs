@@ -3,8 +3,10 @@ namespace DietPlanner.UnitTests.Domain;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>UserGoal</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class UserGoalTests
 {
+    /// <summary>With valid data: <c>Create</c> creates goal.</summary>
     [Fact]
     public void Create_WithValidData_CreatesGoal()
     {
@@ -22,6 +24,7 @@ public sealed class UserGoalTests
         goal.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary>With new values: <c>Update</c> updates goal.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesGoal()
     {
@@ -37,6 +40,7 @@ public sealed class UserGoalTests
         goal.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
@@ -46,8 +50,10 @@ public sealed class UserGoalTests
     }
 }
 
+/// <summary>Unit tests for <c>UserGoalMilestone</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class UserGoalMilestoneTests
 {
+    /// <summary>When no target: should emit weight milestone returns false.</summary>
     [Fact]
     public void ShouldEmitWeightMilestone_WhenNoTarget_ReturnsFalse()
     {
@@ -56,6 +62,7 @@ public sealed class UserGoalMilestoneTests
         goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
     }
 
+    /// <summary>When above target: should emit weight milestone returns false.</summary>
     [Fact]
     public void ShouldEmitWeightMilestone_WhenAboveTarget_ReturnsFalse()
     {
@@ -66,6 +73,7 @@ public sealed class UserGoalMilestoneTests
         goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
     }
 
+    /// <summary>When at or below target: should emit weight milestone returns true.</summary>
     [Fact]
     public void ShouldEmitWeightMilestone_WhenAtOrBelowTarget_ReturnsTrue()
     {
@@ -77,6 +85,7 @@ public sealed class UserGoalMilestoneTests
         goal.ShouldEmitWeightMilestone(69.5m).ShouldBeTrue();
     }
 
+    /// <summary>After mark achieved: should emit weight milestone returns false.</summary>
     [Fact]
     public void ShouldEmitWeightMilestone_AfterMarkAchieved_ReturnsFalse()
     {
@@ -89,6 +98,7 @@ public sealed class UserGoalMilestoneTests
         goal.ShouldEmitWeightMilestone(65m).ShouldBeFalse();
     }
 
+    /// <summary>First call: <c>MarkMilestoneAchieved</c> sets timestamp.</summary>
     [Fact]
     public void MarkMilestoneAchieved_FirstCall_SetsTimestamp()
     {
@@ -102,6 +112,7 @@ public sealed class UserGoalMilestoneTests
         goal.MilestoneAchievedAt.ShouldBe(now);
     }
 
+    /// <summary>Second call: <c>MarkMilestoneAchieved</c> is no op.</summary>
     [Fact]
     public void MarkMilestoneAchieved_SecondCall_IsNoOp()
     {

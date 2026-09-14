@@ -4,6 +4,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>MealEntryCompletion</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class MealEntryCompletionTests
 {
     private static MealEntry NewEntry()
@@ -11,6 +12,7 @@ public sealed class MealEntryCompletionTests
             MealEntryId.New(), "user-1", new DateOnly(2026, 1, 15),
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
 
+    /// <summary><c>Create</c> defaults status to planned.</summary>
     [Fact]
     public void Create_DefaultsStatusToPlanned()
     {
@@ -21,6 +23,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.ShouldBeEmpty();
     }
 
+    /// <summary>From planned: <c>MarkDone</c> sets status to done.</summary>
     [Fact]
     public void MarkDone_FromPlanned_SetsStatusToDone()
     {
@@ -31,6 +34,7 @@ public sealed class MealEntryCompletionTests
         entry.Status.ShouldBe(MealEntryStatus.Done);
     }
 
+    /// <summary>Already done: <c>MarkDone</c> is idempotent.</summary>
     [Fact]
     public void MarkDone_AlreadyDone_IsIdempotent()
     {
@@ -42,6 +46,7 @@ public sealed class MealEntryCompletionTests
         entry.Status.ShouldBe(MealEntryStatus.Done);
     }
 
+    /// <summary>When modified: <c>MarkDone</c> throws domain exception.</summary>
     [Fact]
     public void MarkDone_WhenModified_ThrowsDomainException()
     {
@@ -53,6 +58,7 @@ public sealed class MealEntryCompletionTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With recipe only: <c>ApplyOverride</c> sets actual recipe and status.</summary>
     [Fact]
     public void ApplyOverride_WithRecipeOnly_SetsActualRecipeAndStatus()
     {
@@ -66,6 +72,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.ShouldBeEmpty();
     }
 
+    /// <summary>With products only: <c>ApplyOverride</c> sets actual products and status.</summary>
     [Fact]
     public void ApplyOverride_WithProductsOnly_SetsActualProductsAndStatus()
     {
@@ -82,6 +89,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.Single().Unit.ShouldBe("g");
     }
 
+    /// <summary>With both recipe and products: <c>ApplyOverride</c> sets both.</summary>
     [Fact]
     public void ApplyOverride_WithBothRecipeAndProducts_SetsBoth()
     {
@@ -96,6 +104,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.Count.ShouldBe(1);
     }
 
+    /// <summary>With empty recipe and products: <c>ApplyOverride</c> throws domain exception.</summary>
     [Fact]
     public void ApplyOverride_WithEmptyRecipeAndProducts_ThrowsDomainException()
     {
@@ -106,6 +115,7 @@ public sealed class MealEntryCompletionTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary><c>ApplyOverride</c> twice replaces previous override.</summary>
     [Fact]
     public void ApplyOverride_TwiceReplacesPreviousOverride()
     {
@@ -119,6 +129,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.ShouldBeEmpty();
     }
 
+    /// <summary>On done entry: <c>ApplyOverride</c> transitions to modified.</summary>
     [Fact]
     public void ApplyOverride_OnDoneEntry_TransitionsToModified()
     {
@@ -130,6 +141,7 @@ public sealed class MealEntryCompletionTests
         entry.Status.ShouldBe(MealEntryStatus.Modified);
     }
 
+    /// <summary><c>Reset</c> clears override and status.</summary>
     [Fact]
     public void Reset_ClearsOverrideAndStatus()
     {
@@ -143,6 +155,7 @@ public sealed class MealEntryCompletionTests
         entry.ActualProducts.ShouldBeEmpty();
     }
 
+    /// <summary>On planned entry: <c>Reset</c> is idempotent.</summary>
     [Fact]
     public void Reset_OnPlannedEntry_IsIdempotent()
     {

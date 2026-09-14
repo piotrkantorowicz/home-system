@@ -6,11 +6,14 @@ using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Repositories;
 using Notifications.IntegrationTests.Infrastructure;
 
+/// <summary>Integration tests for <c>Repository</c> against a real PostgreSQL container.</summary>
 [Collection(NotificationsDatabaseCollectionDefinition.Name)]
 public sealed class RepositoryRoundtripTests
 {
     private readonly NotificationsPostgresFixture _fixture;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public RepositoryRoundtripTests(NotificationsPostgresFixture fixture)
         => _fixture = fixture;
 
@@ -21,6 +24,7 @@ public sealed class RepositoryRoundtripTests
         return (factory, uow);
     }
 
+    /// <summary>Insert and read: <c>Notification</c> round trips.</summary>
     [Fact]
     public async Task Notification_InsertAndRead_RoundTrips()
     {
@@ -45,6 +49,7 @@ public sealed class RepositoryRoundtripTests
         roundtrip.Title.ShouldBe("Lunch");
     }
 
+    /// <summary>Insert and read: <c>NotificationDelivery</c> round trips.</summary>
     [Fact]
     public async Task NotificationDelivery_InsertAndRead_RoundTrips()
     {
@@ -73,6 +78,7 @@ public sealed class RepositoryRoundtripTests
         roundtrip.NotificationId.ShouldBe(notificationId);
     }
 
+    /// <summary>Insert update read: <c>ChannelPreferences</c> round trips.</summary>
     [Fact]
     public async Task ChannelPreferences_InsertUpdateRead_RoundTrips()
     {
@@ -112,6 +118,7 @@ public sealed class RepositoryRoundtripTests
         refetched.WebSocketEnabled.ShouldBeFalse();
     }
 
+    /// <summary><c>InboxStore</c> records and detects duplicates.</summary>
     [Fact]
     public async Task InboxStore_RecordsAndDetectsDuplicates()
     {
@@ -126,6 +133,7 @@ public sealed class RepositoryRoundtripTests
         (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeTrue();
     }
 
+    /// <summary><c>DbUp</c> is idempotent.</summary>
     [Fact]
     public async Task DbUp_IsIdempotent()
     {

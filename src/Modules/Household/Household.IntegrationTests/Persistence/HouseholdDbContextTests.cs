@@ -4,12 +4,16 @@ using global::Household.Infrastructure.Persistence;
 using Household.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
+/// <summary>Integration tests for <c>HouseholdDbContext</c> against a real PostgreSQL container.</summary>
 public sealed class HouseholdDbContextTests : IClassFixture<HouseholdDatabaseFixture>
 {
     private readonly HouseholdDatabaseFixture _fixture;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdDbContextTests(HouseholdDatabaseFixture fixture) => _fixture = fixture;
 
+    /// <summary>Apply: <c>Migrations</c> create the outbox and inbox tables.</summary>
     [Fact]
     public async Task Migrations_Apply_AndCreateTheOutboxAndInboxTables()
     {

@@ -7,15 +7,18 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>LogWaterIntakeCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class LogWaterIntakeCommandHandlerTests
 {
     private readonly IWaterIntakeRepository _repository = Substitute.For<IWaterIntakeRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly LogWaterIntakeCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public LogWaterIntakeCommandHandlerTests()
         => _sut = new LogWaterIntakeCommandHandler(_repository, _unitOfWork);
 
+    /// <summary>With valid command: <c>HandleAsync</c> adds entry and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsEntryAndCommits()
     {
@@ -34,6 +37,7 @@ public sealed class LogWaterIntakeCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With null note: <c>HandleAsync</c> adds entry and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithNullNote_AddsEntryAndCommits()
     {

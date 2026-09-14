@@ -8,15 +8,18 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>UpdateHydrationConfigCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class UpdateHydrationConfigCommandHandlerTests
 {
     private readonly IHydrationConfigRepository _repository = Substitute.For<IHydrationConfigRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly UpdateHydrationConfigCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public UpdateHydrationConfigCommandHandlerTests()
         => _sut = new UpdateHydrationConfigCommandHandler(_repository, _unitOfWork);
 
+    /// <summary>When no existing config: <c>HandleAsync</c> creates new config.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingConfig_CreatesNewConfig()
     {
@@ -37,6 +40,7 @@ public sealed class UpdateHydrationConfigCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When config exists: <c>HandleAsync</c> updates existing config.</summary>
     [Fact]
     public async Task HandleAsync_WhenConfigExists_UpdatesExistingConfig()
     {

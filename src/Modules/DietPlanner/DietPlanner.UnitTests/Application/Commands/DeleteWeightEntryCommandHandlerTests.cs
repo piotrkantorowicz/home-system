@@ -8,6 +8,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>DeleteWeightEntryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class DeleteWeightEntryCommandHandlerTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -17,9 +18,11 @@ public sealed class DeleteWeightEntryCommandHandlerTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly DeleteWeightEntryCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public DeleteWeightEntryCommandHandlerTests()
         => _sut = new DeleteWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork);
 
+    /// <summary><c>HandleAsync</c> deletes entry and recomputes profile current weight.</summary>
     [Fact]
     public async Task HandleAsync_DeletesEntryAndRecomputesProfileCurrentWeight()
     {
@@ -38,6 +41,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When last entry deleted: <c>HandleAsync</c> sets profile current weight to null.</summary>
     [Fact]
     public async Task HandleAsync_WhenLastEntryDeleted_SetsProfileCurrentWeightToNull()
     {
@@ -53,6 +57,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         profile.CurrentWeightKg.ShouldBeNull();
     }
 
+    /// <summary>When entry not found: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenEntryNotFound_ThrowsNotFoundException()
     {
@@ -66,6 +71,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         await act.ShouldThrowAsync<NotFoundException>();
     }
 
+    /// <summary>When entry belongs to other user: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenEntryBelongsToOtherUser_ThrowsNotFoundException()
     {

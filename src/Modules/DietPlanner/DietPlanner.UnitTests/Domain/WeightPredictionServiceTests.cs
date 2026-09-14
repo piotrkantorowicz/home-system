@@ -3,10 +3,12 @@ namespace DietPlanner.UnitTests.Domain;
 using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>WeightPredictionService</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class WeightPredictionServiceTests
 {
     // ── CalculateWeeklyWeightChange ──────────────────────────────────────────
 
+    /// <summary>When calories below tdee: calculate weekly weight change returns negative.</summary>
     [Fact]
     public void CalculateWeeklyWeightChange_WhenCaloriesBelowTdee_ReturnsNegative()
     {
@@ -16,6 +18,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldBeLessThan(0);
     }
 
+    /// <summary>When calories above tdee: calculate weekly weight change returns positive.</summary>
     [Fact]
     public void CalculateWeeklyWeightChange_WhenCaloriesAboveTdee_ReturnsPositive()
     {
@@ -25,6 +28,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldBeGreaterThan(0);
     }
 
+    /// <summary>When calories equal tdee: calculate weekly weight change returns zero.</summary>
     [Fact]
     public void CalculateWeeklyWeightChange_WhenCaloriesEqualTdee_ReturnsZero()
     {
@@ -33,6 +37,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldBe(0m);
     }
 
+    /// <summary>Calculate weekly weight change matches formula.</summary>
     [Theory]
     [InlineData(2000, 1500, -0.455)]  // 500 deficit × 7 / 7700
     [InlineData(2000, 2500, 0.455)]  // 500 surplus × 7 / 7700
@@ -47,6 +52,7 @@ public sealed class WeightPredictionServiceTests
 
     // ── EstimateGoalDate ─────────────────────────────────────────────────────
 
+    /// <summary>When losing towards lower target: <c>EstimateGoalDate</c> returns date.</summary>
     [Fact]
     public void EstimateGoalDate_WhenLosingTowardsLowerTarget_ReturnsDate()
     {
@@ -60,6 +66,7 @@ public sealed class WeightPredictionServiceTests
         result!.Value.ShouldBeGreaterThan(DateOnly.FromDateTime(DateTime.UtcNow));
     }
 
+    /// <summary>When gaining towards higher target: <c>EstimateGoalDate</c> returns date.</summary>
     [Fact]
     public void EstimateGoalDate_WhenGainingTowardsHigherTarget_ReturnsDate()
     {
@@ -71,6 +78,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldNotBeNull();
     }
 
+    /// <summary>When change is in wrong direction: <c>EstimateGoalDate</c> returns null.</summary>
     [Fact]
     public void EstimateGoalDate_WhenChangeIsInWrongDirection_ReturnsNull()
     {
@@ -83,6 +91,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldBeNull();
     }
 
+    /// <summary>When weekly change is zero: <c>EstimateGoalDate</c> returns null.</summary>
     [Fact]
     public void EstimateGoalDate_WhenWeeklyChangeIsZero_ReturnsNull()
     {
@@ -94,6 +103,7 @@ public sealed class WeightPredictionServiceTests
         result.ShouldBeNull();
     }
 
+    /// <summary>When already at target: <c>EstimateGoalDate</c> returns today date.</summary>
     [Fact]
     public void EstimateGoalDate_WhenAlreadyAtTarget_ReturnsTodayDate()
     {
@@ -107,6 +117,7 @@ public sealed class WeightPredictionServiceTests
 
     // ── CalculateBmr ────────────────────────────────────────────────────────
 
+    /// <summary><c>CalculateBmr</c> returns expected value.</summary>
     [Theory]
     [InlineData(80, 180, 30, Gender.Male, 1780.0)]  // 10*80 + 6.25*180 - 5*30 + 5
     [InlineData(60, 165, 25, Gender.Female, 1345.25)] // 10*60 + 6.25*165 - 5*25 - 161

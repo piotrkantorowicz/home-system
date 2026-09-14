@@ -7,8 +7,13 @@ using Shared.Infrastructure.Messaging.Serialization;
 using Shared.Infrastructure.Messaging.Transport;
 using Shouldly;
 
+/// <summary>Unit tests for <c>InProcessIntegrationEventTransport</c>: substituted handlers are registered in a real <c>ServiceCollection</c> and invoked through the transport.</summary>
 public sealed class InProcessIntegrationEventTransportTests
 {
+    /// <summary>Event type the transport is exercised with.</summary>
+    /// <param name="EventId">Unique identity of the event.</param>
+    /// <param name="OccurredAt">When it was published, UTC.</param>
+    /// <param name="Payload">Arbitrary content round-tripped through the serializer.</param>
     public sealed record TestEvent(Guid EventId, DateTime OccurredAt, string Payload) : IIntegrationEvent;
 
     private static OutboxMessage MakeMessage<TEvent>(TEvent @event, IIntegrationEventSerializer serializer)
@@ -23,6 +28,7 @@ public sealed class InProcessIntegrationEventTransportTests
             AttemptCount: 0,
             LastError: null);
 
+    /// <summary>With registered handler: <c>DispatchAsync</c> invokes handler.</summary>
     [Fact]
     public async Task DispatchAsync_WithRegisteredHandler_InvokesHandler()
     {
@@ -46,6 +52,7 @@ public sealed class InProcessIntegrationEventTransportTests
         captured!.Payload.ShouldBe("x");
     }
 
+    /// <summary>With no handler registered: <c>DispatchAsync</c> does not throw.</summary>
     [Fact]
     public async Task DispatchAsync_WithNoHandlerRegistered_DoesNotThrow()
     {
@@ -62,6 +69,7 @@ public sealed class InProcessIntegrationEventTransportTests
         await act.ShouldNotThrowAsync();
     }
 
+    /// <summary>With multiple handlers: <c>DispatchAsync</c> invokes all.</summary>
     [Fact]
     public async Task DispatchAsync_WithMultipleHandlers_InvokesAll()
     {

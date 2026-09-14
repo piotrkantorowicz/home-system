@@ -10,15 +10,18 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Messaging;
 
+/// <summary>Unit tests for <c>GoalMilestoneEvaluator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class GoalMilestoneEvaluatorTests
 {
     private readonly IUserGoalRepository _userGoalRepository = Substitute.For<IUserGoalRepository>();
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
     private readonly GoalMilestoneEvaluator _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public GoalMilestoneEvaluatorTests()
         => _sut = new GoalMilestoneEvaluator(_userGoalRepository, _bus);
 
+    /// <summary>When no goal exists: <c>HandleAsync</c> does nothing.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoGoalExists_DoesNothing()
     {
@@ -33,6 +36,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.DidNotReceive().Update(Arg.Any<UserGoal>());
     }
 
+    /// <summary>When goal has no target: <c>HandleAsync</c> does nothing.</summary>
     [Fact]
     public async Task HandleAsync_WhenGoalHasNoTarget_DoesNothing()
     {
@@ -47,6 +51,7 @@ public sealed class GoalMilestoneEvaluatorTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When weight above target: <c>HandleAsync</c> does not emit.</summary>
     [Fact]
     public async Task HandleAsync_WhenWeightAboveTarget_DoesNotEmit()
     {
@@ -63,6 +68,7 @@ public sealed class GoalMilestoneEvaluatorTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When target crossed: <c>HandleAsync</c> publishes event and marks achieved.</summary>
     [Fact]
     public async Task HandleAsync_WhenTargetCrossed_PublishesEventAndMarksAchieved()
     {
@@ -86,6 +92,7 @@ public sealed class GoalMilestoneEvaluatorTests
         goal.MilestoneAchievedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When target already achieved: <c>HandleAsync</c> does not emit again.</summary>
     [Fact]
     public async Task HandleAsync_WhenTargetAlreadyAchieved_DoesNotEmitAgain()
     {

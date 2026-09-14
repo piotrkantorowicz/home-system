@@ -8,6 +8,7 @@ using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetNutritionSummary;
 using DietPlanner.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>MealEntryCompletion</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealEntryCompletionEndpointsTests
 {
@@ -15,6 +16,8 @@ public sealed class MealEntryCompletionEndpointsTests
 
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public MealEntryCompletionEndpointsTests(DatabaseFixture db) => _db = db;
 
     private HttpClient FreshClient(string userId)
@@ -78,6 +81,7 @@ public sealed class MealEntryCompletionEndpointsTests
         return Guid.Parse(body.Trim('"'));
     }
 
+    /// <summary><c>GET</c> meals includes per entry macros.</summary>
     [Fact]
     public async Task GET_Meals_IncludesPerEntryMacros()
     {
@@ -98,6 +102,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entry.Fiber.ShouldBe(0.8m);
     }
 
+    /// <summary>Modified entry: <c>GET</c> meals uses actual macros.</summary>
     [Fact]
     public async Task GET_Meals_ModifiedEntry_UsesActualMacros()
     {
@@ -120,6 +125,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entry.Calories.ShouldBe(100m);
     }
 
+    /// <summary>Happy path: <c>PATCH</c> complete returns 204 and marks done.</summary>
     [Fact]
     public async Task PATCH_Complete_HappyPath_Returns204AndMarksDone()
     {
@@ -135,6 +141,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entries!.Single(e => e.Id == mealId).Status.ShouldBe("Done");
     }
 
+    /// <summary>On unknown entry: <c>PATCH</c> complete returns 404.</summary>
     [Fact]
     public async Task PATCH_Complete_OnUnknownEntry_Returns404()
     {
@@ -145,6 +152,7 @@ public sealed class MealEntryCompletionEndpointsTests
         resp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>On modified entry: <c>PATCH</c> complete returns 422.</summary>
     [Fact]
     public async Task PATCH_Complete_OnModifiedEntry_Returns422()
     {
@@ -163,6 +171,7 @@ public sealed class MealEntryCompletionEndpointsTests
         resp.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
+    /// <summary>With recipe only: <c>PATCH</c> override returns 204 and modifies entry.</summary>
     [Fact]
     public async Task PATCH_Override_WithRecipeOnly_Returns204AndModifiesEntry()
     {
@@ -183,6 +192,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entry.ActualRecipe!.Id.ShouldBe(actualRecipe);
     }
 
+    /// <summary>With products only: <c>PATCH</c> override returns 204 and stores products.</summary>
     [Fact]
     public async Task PATCH_Override_WithProductsOnly_Returns204AndStoresProducts()
     {
@@ -204,6 +214,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entry.ActualProducts.Single().ProductId.ShouldBe(snackId);
     }
 
+    /// <summary>With empty body: <c>PATCH</c> override returns 400.</summary>
     [Fact]
     public async Task PATCH_Override_WithEmptyBody_Returns400()
     {
@@ -219,6 +230,7 @@ public sealed class MealEntryCompletionEndpointsTests
         resp.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>With foreign product: <c>PATCH</c> override returns 404.</summary>
     [Fact]
     public async Task PATCH_Override_WithForeignProduct_Returns404()
     {
@@ -237,6 +249,7 @@ public sealed class MealEntryCompletionEndpointsTests
         resp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary><c>PATCH</c> reset clears override and status.</summary>
     [Fact]
     public async Task PATCH_Reset_ClearsOverrideAndStatus()
     {
@@ -260,6 +273,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entry.ActualProducts.ShouldBeEmpty();
     }
 
+    /// <summary><c>POST</c> bulk complete only transitions planned entries.</summary>
     [Fact]
     public async Task POST_BulkComplete_OnlyTransitionsPlannedEntries()
     {
@@ -288,6 +302,7 @@ public sealed class MealEntryCompletionEndpointsTests
         entries.Single(e => e.Id == modifiedMeal).Status.ShouldBe("Modified");
     }
 
+    /// <summary>With future date: <c>POST</c> bulk complete allowed to tolerate timezone skew.</summary>
     [Fact]
     public async Task POST_BulkComplete_WithFutureDate_AllowedToTolerateTimezoneSkew()
     {
@@ -304,6 +319,7 @@ public sealed class MealEntryCompletionEndpointsTests
         body!.Completed.ShouldBe(0);
     }
 
+    /// <summary><c>GET</c> nutrition summary uses actual macros for modified entries.</summary>
     [Fact]
     public async Task GET_NutritionSummary_UsesActualMacrosForModifiedEntries()
     {

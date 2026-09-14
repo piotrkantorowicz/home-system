@@ -3,8 +3,10 @@ namespace Notifications.UnitTests.Domain;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>NotificationChannelPreferences</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class NotificationChannelPreferencesTests
 {
+    /// <summary><c>CreateDefault</c> all channels enabled.</summary>
     [Fact]
     public void CreateDefault_AllChannelsEnabled()
     {
@@ -18,6 +20,7 @@ public sealed class NotificationChannelPreferencesTests
         prefs.WebSocketEnabled.ShouldBeTrue();
     }
 
+    /// <summary><c>Update</c> applies new values and updated at.</summary>
     [Fact]
     public void Update_AppliesNewValuesAndUpdatedAt()
     {
@@ -33,6 +36,7 @@ public sealed class NotificationChannelPreferencesTests
         prefs.UpdatedAt.ShouldBe(newAt);
     }
 
+    /// <summary><c>IsEnabled</c> returns corresponding flag.</summary>
     [Theory]
     [InlineData(NotificationChannel.Console, true, false, false, true)]
     [InlineData(NotificationChannel.Email, false, true, false, true)]

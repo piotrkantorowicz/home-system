@@ -10,6 +10,7 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
+/// <summary>Unit tests for <c>MealReminderJob</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class MealReminderJobTests
 {
     private readonly IMealReminderCandidateQueries _queries = Substitute.For<IMealReminderCandidateQueries>();
@@ -19,12 +20,15 @@ public sealed class MealReminderJobTests
     private readonly MealReminderJob _sut;
     private static readonly DateTime Now = new(2026, 4, 28, 11, 30, 0, DateTimeKind.Utc);
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public MealReminderJobTests()
         => _sut = new MealReminderJob(_queries, _ledger, _bus, _uow);
 
+    /// <summary><c>Name</c> is stable.</summary>
     [Fact]
     public void Name_IsStable() => _sut.Name.ShouldBe("MealReminderJob");
 
+    /// <summary>When no candidates: <c>RunAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunAsync_WhenNoCandidates_DoesNothing()
     {
@@ -39,6 +43,7 @@ public sealed class MealReminderJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>RunAsync</c> publishes reminder event and writes ledger and per due candidate.</summary>
     [Fact]
     public async Task RunAsync_PublishesReminderEventAndWritesLedger_PerDueCandidate()
     {
@@ -67,6 +72,7 @@ public sealed class MealReminderJobTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary><c>RunAsync</c> publishes missed event and writes ledger and per missed candidate.</summary>
     [Fact]
     public async Task RunAsync_PublishesMissedEventAndWritesLedger_PerMissedCandidate()
     {
@@ -90,6 +96,7 @@ public sealed class MealReminderJobTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When ledger already has entry: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenLedgerAlreadyHasEntry_SkipsCandidate()
     {
@@ -108,6 +115,7 @@ public sealed class MealReminderJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Mixed candidates: <c>RunAsync</c> publishes only for unseen and commits once.</summary>
     [Fact]
     public async Task RunAsync_MixedCandidates_PublishesOnlyForUnseenAndCommitsOnce()
     {

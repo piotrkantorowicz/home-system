@@ -7,14 +7,17 @@ using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
 using Notifications.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>WeeklySummaryDueIntegrationEventHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class WeeklySummaryDueIntegrationEventHandlerTests
 {
     private readonly INotificationDispatcher _dispatcher = Substitute.For<INotificationDispatcher>();
     private readonly WeeklySummaryDueIntegrationEventHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WeeklySummaryDueIntegrationEventHandlerTests()
         => _sut = new WeeklySummaryDueIntegrationEventHandler(_dispatcher);
 
+    /// <summary>With valid event: <c>HandleAsync</c> dispatches weekly summary notification.</summary>
     [Fact]
     public async Task HandleAsync_WithValidEvent_DispatchesWeeklySummaryNotification()
     {
@@ -50,6 +53,7 @@ public sealed class WeeklySummaryDueIntegrationEventHandlerTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With null event: <c>HandleAsync</c> throws.</summary>
     [Fact]
     public async Task HandleAsync_WithNullEvent_Throws()
     {
@@ -57,6 +61,7 @@ public sealed class WeeklySummaryDueIntegrationEventHandlerTests
         await act.ShouldThrowAsync<ArgumentNullException>();
     }
 
+    /// <summary>With null event: <c>HandleAsync</c> does not call dispatcher.</summary>
     [Fact]
     public async Task HandleAsync_WithNullEvent_DoesNotCallDispatcher()
     {

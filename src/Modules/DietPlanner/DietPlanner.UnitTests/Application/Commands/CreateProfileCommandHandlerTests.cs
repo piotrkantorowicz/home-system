@@ -7,15 +7,18 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>CreateProfileCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class CreateProfileCommandHandlerTests
 {
     private readonly IUserProfileRepository _repository = Substitute.For<IUserProfileRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly CreateProfileCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateProfileCommandHandlerTests()
         => _sut = new CreateProfileCommandHandler(_repository, _unitOfWork);
 
+    /// <summary>With valid command: <c>HandleAsync</c> adds profile and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsProfileAndCommits()
     {
@@ -40,6 +43,7 @@ public sealed class CreateProfileCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With all nullable fields null: <c>HandleAsync</c> adds profile and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithAllNullableFieldsNull_AddsProfileAndCommits()
     {

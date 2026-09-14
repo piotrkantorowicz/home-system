@@ -8,6 +8,7 @@ using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 
+/// <summary>Unit tests for <c>LogWeightEntryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class LogWeightEntryCommandHandlerTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -17,12 +18,14 @@ public sealed class LogWeightEntryCommandHandlerTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly LogWeightEntryCommandHandler _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public LogWeightEntryCommandHandlerTests()
         => _sut = new LogWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork);
 
     private static UserProfile CreateProfile(string userId, decimal? currentWeight = 80m)
         => UserProfile.Create(UserProfileId.New(), userId, null, null, null, currentWeight, null, null);
 
+    /// <summary>When no existing entry: <c>HandleAsync</c> creates new entry and updates profile.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingEntry_CreatesNewEntryAndUpdatesProfile()
     {
@@ -42,6 +45,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When entry for date exists: <c>HandleAsync</c> updates existing entry.</summary>
     [Fact]
     public async Task HandleAsync_WhenEntryForDateExists_UpdatesExistingEntry()
     {
@@ -62,6 +66,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Always updates profile current weight: <c>HandleAsync</c> even for retroactive entries.</summary>
     [Fact]
     public async Task HandleAsync_AlwaysUpdatesProfileCurrentWeight_EvenForRetroactiveEntries()
     {
@@ -77,6 +82,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         profile.CurrentWeightKg.ShouldBe(90m);
     }
 
+    /// <summary>When profile missing: <c>HandleAsync</c> throws not found exception.</summary>
     [Fact]
     public async Task HandleAsync_WhenProfileMissing_ThrowsNotFoundException()
     {
@@ -92,12 +98,14 @@ public sealed class LogWeightEntryCommandHandlerTests
     }
 }
 
+/// <summary>Unit tests for <c>LogWeightEntryCommandValidator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class LogWeightEntryCommandValidatorTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
     private readonly LogWeightEntryCommandValidator _sut = new();
 
+    /// <summary>With valid command: <c>Validate</c> returns no errors.</summary>
     [Fact]
     public void Validate_WithValidCommand_ReturnsNoErrors()
     {
@@ -108,6 +116,7 @@ public sealed class LogWeightEntryCommandValidatorTests
         errors.ShouldBeEmpty();
     }
 
+    /// <summary>With empty user id: <c>Validate</c> returns validation error.</summary>
     [Fact]
     public void Validate_WithEmptyUserId_ReturnsValidationError()
     {
@@ -118,6 +127,7 @@ public sealed class LogWeightEntryCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
     }
 
+    /// <summary>With invalid weight: <c>Validate</c> returns validation error.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
@@ -131,6 +141,7 @@ public sealed class LogWeightEntryCommandValidatorTests
         errors.ShouldContain(e => e.PropertyName == nameof(command.WeightKg));
     }
 
+    /// <summary>With future date: <c>Validate</c> returns validation error.</summary>
     [Fact]
     public void Validate_WithFutureDate_ReturnsValidationError()
     {

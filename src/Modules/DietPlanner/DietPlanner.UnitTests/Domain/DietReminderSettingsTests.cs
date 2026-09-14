@@ -4,8 +4,10 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>DietReminderSettings</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class DietReminderSettingsTests
 {
+    /// <summary>With defaults: <c>Create</c> applies expected values.</summary>
     [Fact]
     public void Create_WithDefaults_AppliesExpectedValues()
     {
@@ -29,6 +31,7 @@ public sealed class DietReminderSettingsTests
         settings.UpdatedAt.ShouldBeNull();
     }
 
+    /// <summary>With custom values: <c>Create</c> applies all settings.</summary>
     [Fact]
     public void Create_WithCustomValues_AppliesAllSettings()
     {
@@ -60,6 +63,7 @@ public sealed class DietReminderSettingsTests
         settings.GoalAlertsEnabled.ShouldBeFalse();
     }
 
+    /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
@@ -68,6 +72,7 @@ public sealed class DietReminderSettingsTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With whitespace user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
     public void Create_WithWhitespaceUserId_ThrowsArgumentException()
     {
@@ -76,6 +81,7 @@ public sealed class DietReminderSettingsTests
         act.ShouldThrow<ArgumentException>();
     }
 
+    /// <summary>With non positive lead time: <c>Create</c> throws domain exception.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -88,6 +94,7 @@ public sealed class DietReminderSettingsTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With non positive grace minutes: <c>Create</c> throws domain exception.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
@@ -100,6 +107,7 @@ public sealed class DietReminderSettingsTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>When water window end not after start: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WhenWaterWindowEndNotAfterStart_ThrowsDomainException()
     {
@@ -112,6 +120,7 @@ public sealed class DietReminderSettingsTests
            .Message.ShouldContain("WaterWindowEndUtc");
     }
 
+    /// <summary>With new values: <c>Update</c> updates all properties.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesAllProperties()
     {
@@ -142,6 +151,7 @@ public sealed class DietReminderSettingsTests
         settings.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When water window end not after start: <c>Update</c> throws domain exception.</summary>
     [Fact]
     public void Update_WhenWaterWindowEndNotAfterStart_ThrowsDomainException()
     {

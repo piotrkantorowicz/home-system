@@ -10,6 +10,7 @@ using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
+/// <summary>Unit tests for <c>WeeklySummaryJob</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class WeeklySummaryJobTests
 {
     private readonly IWeeklySummaryCandidateQueries _queries =
@@ -38,12 +39,15 @@ public sealed class WeeklySummaryJobTests
         DateTime? lastAt = null)
         => new(userId, "en", day, TimeOnly.Parse(time, CultureInfo.InvariantCulture), lastAt);
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WeeklySummaryJobTests()
         => _sut = new WeeklySummaryJob(_queries, _stateRepo, _bus, _uow);
 
+    /// <summary><c>Name</c> is stable.</summary>
     [Fact]
     public void Name_IsStable() => _sut.Name.ShouldBe("WeeklySummaryJob");
 
+    /// <summary>When no candidates: <c>RunAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunAsync_WhenNoCandidates_DoesNothing()
     {
@@ -56,6 +60,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When wrong day of week: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenWrongDayOfWeek_SkipsCandidate()
     {
@@ -70,6 +75,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When time not yet reached: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenTimeNotYetReached_SkipsCandidate()
     {
@@ -84,6 +90,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When sent within last 7 days: <c>RunAsync</c> skips candidate.</summary>
     [Fact]
     public async Task RunAsync_WhenSentWithinLast7Days_SkipsCandidate()
     {
@@ -98,6 +105,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When first summary ever: <c>RunAsync</c> publishes and creates new state.</summary>
     [Fact]
     public async Task RunAsync_WhenFirstSummaryEver_PublishesAndCreatesNewState()
     {
@@ -132,6 +140,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When seven days elapsed: <c>RunAsync</c> publishes and updates existing state.</summary>
     [Fact]
     public async Task RunAsync_WhenSevenDaysElapsed_PublishesAndUpdatesExistingState()
     {
@@ -153,6 +162,7 @@ public sealed class WeeklySummaryJobTests
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Exactly at 7 day boundary: <c>RunAsync</c> is eligible.</summary>
     [Fact]
     public async Task RunAsync_ExactlyAt7DayBoundary_IsEligible()
     {
@@ -170,6 +180,7 @@ public sealed class WeeklySummaryJobTests
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Exactly at configured time: <c>RunAsync</c> is eligible.</summary>
     [Fact]
     public async Task RunAsync_ExactlyAtConfiguredTime_IsEligible()
     {
@@ -188,6 +199,7 @@ public sealed class WeeklySummaryJobTests
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Multiple eligible users: <c>RunAsync</c> commits once.</summary>
     [Fact]
     public async Task RunAsync_MultipleEligibleUsers_CommitsOnce()
     {

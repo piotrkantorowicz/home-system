@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 
+/// <summary>Integration tests for <c>GoalMilestoneEvaluator</c> against a real PostgreSQL container.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class GoalMilestoneEvaluatorTests
 {
@@ -18,8 +19,11 @@ public sealed class GoalMilestoneEvaluatorTests
 
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public GoalMilestoneEvaluatorTests(DatabaseFixture db) => _db = db;
 
+    /// <summary>When crosses target: <c>POST</c> weight entry writes outbox row and marks milestone.</summary>
     [Fact]
     public async Task POST_WeightEntry_WhenCrossesTarget_WritesOutboxRowAndMarksMilestone()
     {
@@ -55,6 +59,7 @@ public sealed class GoalMilestoneEvaluatorTests
         goal.MilestoneAchievedAt.ShouldNotBeNull();
     }
 
+    /// <summary>When above target: <c>POST</c> weight entry does not write outbox row.</summary>
     [Fact]
     public async Task POST_WeightEntry_WhenAboveTarget_DoesNotWriteOutboxRow()
     {

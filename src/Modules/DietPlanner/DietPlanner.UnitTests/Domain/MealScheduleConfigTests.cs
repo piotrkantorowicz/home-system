@@ -4,6 +4,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.ValueObjects;
 
+/// <summary>Unit tests for <c>MealScheduleConfig</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class MealScheduleConfigTests
 {
     private static readonly IReadOnlyList<(string Name, TimeOnly DefaultTime)> DefaultSlots =
@@ -16,6 +17,7 @@ public sealed class MealScheduleConfigTests
     private static List<MealSlotUpsert> Upserts(params (MealSlotId? Id, string Name, TimeOnly Time)[] items)
         => items.Select(i => new MealSlotUpsert(i.Id, i.Name, i.Time)).ToList();
 
+    /// <summary>With valid data: <c>Create</c> creates config.</summary>
     [Fact]
     public void Create_WithValidData_CreatesConfig()
     {
@@ -30,6 +32,7 @@ public sealed class MealScheduleConfigTests
         config.CreatedAt.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-5), DateTime.UtcNow.AddSeconds(1));
     }
 
+    /// <summary>With valid data: <c>Create</c> slots have correct names and times.</summary>
     [Fact]
     public void Create_WithValidData_SlotsHaveCorrectNamesAndTimes()
     {
@@ -42,6 +45,7 @@ public sealed class MealScheduleConfigTests
         slots[2].Name.ShouldBe("Dinner");
     }
 
+    /// <summary>With eight slots: <c>Create</c> succeeds.</summary>
     [Fact]
     public void Create_WithEightSlots_Succeeds()
     {
@@ -54,6 +58,7 @@ public sealed class MealScheduleConfigTests
         config.Slots.Count.ShouldBe(8);
     }
 
+    /// <summary>With null user id: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithNullUserId_ThrowsDomainException()
     {
@@ -62,6 +67,7 @@ public sealed class MealScheduleConfigTests
         act.ShouldThrow<DietPlannerDomainException>();
     }
 
+    /// <summary>With zero slots: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithZeroSlots_ThrowsDomainException()
     {
@@ -70,6 +76,7 @@ public sealed class MealScheduleConfigTests
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("at least 1 slot");
     }
 
+    /// <summary>With nine slots: <c>Create</c> throws domain exception.</summary>
     [Fact]
     public void Create_WithNineSlots_ThrowsDomainException()
     {
@@ -82,6 +89,7 @@ public sealed class MealScheduleConfigTests
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("more than 8 slots");
     }
 
+    /// <summary>Keeping same slots: <c>ApplyUpdate</c> preserves ids and updates fields.</summary>
     [Fact]
     public void ApplyUpdate_KeepingSameSlots_PreservesIdsAndUpdatesFields()
     {
@@ -100,6 +108,7 @@ public sealed class MealScheduleConfigTests
         updated[2].DefaultTime.ShouldBe(new TimeOnly(19, 0));
     }
 
+    /// <summary>Adding new slot: <c>ApplyUpdate</c> assigns fresh id.</summary>
     [Fact]
     public void ApplyUpdate_AddingNewSlot_AssignsFreshId()
     {
@@ -118,6 +127,7 @@ public sealed class MealScheduleConfigTests
         newSlot.SortOrder.ShouldBe(3);
     }
 
+    /// <summary>Omitting slot: <c>ApplyUpdate</c> removes it.</summary>
     [Fact]
     public void ApplyUpdate_OmittingSlot_RemovesIt()
     {
@@ -132,6 +142,7 @@ public sealed class MealScheduleConfigTests
         config.Slots.Any(s => s.Id == existing[1].Id).ShouldBeFalse();
     }
 
+    /// <summary><c>ComputeRemovedSlots</c> returns only absent ids.</summary>
     [Fact]
     public void ComputeRemovedSlots_ReturnsOnlyAbsentIds()
     {
@@ -146,6 +157,7 @@ public sealed class MealScheduleConfigTests
         removed[0].ShouldBe(existing[1].Id);
     }
 
+    /// <summary>With unknown id: <c>ApplyUpdate</c> throws domain exception.</summary>
     [Fact]
     public void ApplyUpdate_WithUnknownId_ThrowsDomainException()
     {
@@ -156,6 +168,7 @@ public sealed class MealScheduleConfigTests
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("Unknown meal slot");
     }
 
+    /// <summary><c>ApplyUpdate</c> sets updated at.</summary>
     [Fact]
     public void ApplyUpdate_SetsUpdatedAt()
     {
@@ -166,6 +179,7 @@ public sealed class MealScheduleConfigTests
         config.UpdatedAt.ShouldNotBeNull();
     }
 
+    /// <summary>With zero slots: <c>ApplyUpdate</c> throws domain exception.</summary>
     [Fact]
     public void ApplyUpdate_WithZeroSlots_ThrowsDomainException()
     {
@@ -176,6 +190,7 @@ public sealed class MealScheduleConfigTests
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("at least 1 slot");
     }
 
+    /// <summary>With nine slots: <c>ApplyUpdate</c> throws domain exception.</summary>
     [Fact]
     public void ApplyUpdate_WithNineSlots_ThrowsDomainException()
     {

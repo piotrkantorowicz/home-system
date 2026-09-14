@@ -7,14 +7,18 @@ using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
 
+/// <summary>Integration tests for <c>DapperInboxExecutor</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
 {
     private readonly PostgresContainerFixture _fixture;
     private MessagingTestDbContext _dbContext = default!;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public DapperInboxExecutorIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
+    /// <summary>Recreates the database schema through an EF <c>DbContext</c> that creates the messaging tables, so every test starts from empty tables.</summary>
     public async Task InitializeAsync()
     {
         var options = new DbContextOptionsBuilder<MessagingTestDbContext>()
@@ -27,8 +31,10 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
 
     Task IAsyncLifetime.DisposeAsync() => DisposeAsync().AsTask();
 
+    /// <summary>Disposes the test <c>DbContext</c>.</summary>
     public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
 
+    /// <summary>First call: <c>ExecuteAsync</c> invokes handler and inserts row.</summary>
     [Fact]
     public async Task ExecuteAsync_FirstCall_InvokesHandlerAndInsertsRow()
     {
@@ -46,6 +52,7 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
         count.ShouldBe(1);
     }
 
+    /// <summary>Second call same event id: <c>ExecuteAsync</c> skips handler.</summary>
     [Fact]
     public async Task ExecuteAsync_SecondCallSameEventId_SkipsHandler()
     {

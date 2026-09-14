@@ -4,15 +4,20 @@ using System.Net;
 using System.Net.Http.Json;
 using Household.IntegrationTests.Infrastructure;
 
+/// <summary>HTTP integration tests for the <c>Person</c> endpoints: request → dispatcher → handler → PostgreSQL (Testcontainers) → response.</summary>
 public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public PersonEndpointsTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
 
+    /// <summary>For a new subject: <c>Sync</c> creates the person and get me returns it.</summary>
     [Fact]
     public async Task Sync_ForANewSubject_CreatesThePerson_AndGetMeReturnsIt()
     {
@@ -31,6 +36,7 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
         me.IsManaged.ShouldBeFalse();
     }
 
+    /// <summary><c>Sync</c> is idempotent and refreshes the profile.</summary>
     [Fact]
     public async Task Sync_IsIdempotent_AndRefreshesTheProfile()
     {
@@ -50,6 +56,7 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
         me!.DisplayName.ShouldBe("Renamed");
     }
 
+    /// <summary>Before any sync: <c>GetMe</c> returns 404.</summary>
     [Fact]
     public async Task GetMe_BeforeAnySync_Returns404()
     {
@@ -60,6 +67,7 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Without authentication: <c>Sync</c> returns 401.</summary>
     [Fact]
     public async Task Sync_WithoutAuthentication_Returns401()
     {

@@ -6,15 +6,18 @@ using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
 using Shouldly;
 
+/// <summary>Unit tests for <c>OutboxIntegrationEventBus</c>: the outbox store is substituted to capture what is published.</summary>
 public sealed class OutboxIntegrationEventBusTests
 {
     private readonly IOutboxStore _store = Substitute.For<IOutboxStore>();
     private readonly IIntegrationEventSerializer _serializer = Substitute.For<IIntegrationEventSerializer>();
     private readonly OutboxIntegrationEventBus _sut;
 
+    /// <summary>Builds the system under test with substituted collaborators.</summary>
     public OutboxIntegrationEventBusTests()
         => _sut = new OutboxIntegrationEventBus(_store, _serializer);
 
+    /// <summary>With event: <c>PublishAsync</c> adds serialized outbox message.</summary>
     [Fact]
     public async Task PublishAsync_WithEvent_AddsSerializedOutboxMessage()
     {
@@ -38,6 +41,7 @@ public sealed class OutboxIntegrationEventBusTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With base reference: <c>PublishAsync</c> records runtime type.</summary>
     [Fact]
     public async Task PublishAsync_WithBaseReference_RecordsRuntimeType()
     {
@@ -52,6 +56,7 @@ public sealed class OutboxIntegrationEventBusTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>With null event: <c>PublishAsync</c> throws.</summary>
     [Fact]
     public async Task PublishAsync_WithNullEvent_Throws()
     {

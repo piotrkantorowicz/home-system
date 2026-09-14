@@ -9,13 +9,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 
+/// <summary>Integration tests for <c>MealReminderJob</c> against a real PostgreSQL container.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealReminderJobIntegrationTests
 {
     private readonly DatabaseFixture _db;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="db">The shared database container fixture.</param>
     public MealReminderJobIntegrationTests(DatabaseFixture db) => _db = db;
 
+    /// <summary><c>RunAsync</c> publishes outbox row and writes ledger and is idempotent on second run.</summary>
     [Fact]
     public async Task RunAsync_PublishesOutboxRowAndWritesLedger_AndIsIdempotentOnSecondRun()
     {

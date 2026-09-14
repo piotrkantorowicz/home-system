@@ -16,9 +16,12 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
 {
     private readonly HouseholdApiFactory _factory;
 
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared fixture for this collection.</param>
     public HouseholdContextTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
 
     private async Task<(string Sub, Guid PersonId)> SignedInPersonAsync()
@@ -38,6 +41,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
         return await act(scope.ServiceProvider);
     }
 
+    /// <summary>Get household context for user returns null and when the caller has no household.</summary>
     [Fact]
     public async Task GetHouseholdContextForUser_ReturnsNull_WhenTheCallerHasNoHousehold()
     {
@@ -49,6 +53,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
         context.ShouldBeNull();
     }
 
+    /// <summary>Get household context for user returns null and for an unknown subject.</summary>
     [Fact]
     public async Task GetHouseholdContextForUser_ReturnsNull_ForAnUnknownSubject()
     {
@@ -59,6 +64,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
         context.ShouldBeNull();
     }
 
+    /// <summary>Get household context for user resolves the household and role.</summary>
     [Fact]
     public async Task GetHouseholdContextForUser_ResolvesTheHousehold_AndRole()
     {
@@ -77,6 +83,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
         context.Members.ShouldHaveSingleItem().PersonId.ShouldBe(personId);
     }
 
+    /// <summary><c>CreatingAHousehold</c> writes the membership events and to the outbox.</summary>
     [Fact]
     public async Task CreatingAHousehold_WritesTheMembershipEvents_ToTheOutbox()
     {
