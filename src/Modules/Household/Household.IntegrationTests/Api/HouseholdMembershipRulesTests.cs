@@ -17,6 +17,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
     public HouseholdMembershipRulesTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
 
     private async Task<HttpClient> SignedInAsync(string name)

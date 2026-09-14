@@ -14,8 +14,10 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
     public PersonEndpointsTests(HouseholdDatabaseFixture fixture)
         => _factory = new HouseholdApiFactory(fixture.ConnectionString);
 
-    /// <summary>For a new subject: <c>Sync</c> creates the person and get me returns it.</summary>
+    /// <summary>Disposes the application factory created for this test instance.</summary>
     public void Dispose() => _factory.Dispose();
+
+    /// <summary>For a new subject: <c>Sync</c> creates the person and get me returns it.</summary>
     [Fact]
     public async Task Sync_ForANewSubject_CreatesThePerson_AndGetMeReturnsIt()
     {

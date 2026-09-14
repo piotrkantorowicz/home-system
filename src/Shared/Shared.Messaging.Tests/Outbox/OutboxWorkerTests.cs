@@ -103,6 +103,7 @@ public sealed class OutboxWorkerTests
             .ShouldContain(kv => kv.Key == "MessageId" && kv.Value == msg.Id.ToString());
     }
 
+    /// <summary>With no pending messages: <c>RunOnceAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunOnceAsync_WithNoPendingMessages_DoesNothing()
     {

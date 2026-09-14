@@ -40,6 +40,7 @@ public sealed class MealMissedIntegrationEventHandlerTests
             Arg.Any<CancellationToken>());
     }
 
+    /// <summary>Under culture with dot time separator: <c>HandleAsync</c> keeps colon in planned at.</summary>
     [Fact]
     public async Task HandleAsync_UnderCultureWithDotTimeSeparator_KeepsColonInPlannedAt()
     {

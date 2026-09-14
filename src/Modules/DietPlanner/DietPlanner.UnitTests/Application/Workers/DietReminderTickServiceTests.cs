@@ -83,6 +83,7 @@ public sealed class DietReminderTickServiceTests
             .ShouldContain(kv => kv.Key == "JobName" && kv.Value == failing.Name);
     }
 
+    /// <summary>When disabled: <c>RunOnceAsync</c> does nothing.</summary>
     [Fact]
     public async Task RunOnceAsync_WhenDisabled_DoesNothing()
     {
