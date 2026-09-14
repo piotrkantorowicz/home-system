@@ -9,7 +9,7 @@ using DietPlanner.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class TestSupportEndpointsTests
 {
     private static readonly IReadOnlyDictionary<string, string?> TestSupportEnabled

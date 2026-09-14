@@ -23,8 +23,8 @@ public sealed class NotificationsPostgresFixture : IAsyncLifetime
         => await _container.DisposeAsync();
 }
 
-[CollectionDefinition(NotificationsDatabaseCollection.Name)]
-public sealed class NotificationsDatabaseCollection : ICollectionFixture<NotificationsPostgresFixture>
+[CollectionDefinition(NotificationsDatabaseCollectionDefinition.Name)]
+public sealed class NotificationsDatabaseCollectionDefinition : ICollectionFixture<NotificationsPostgresFixture>
 {
     public const string Name = "Notifications-Postgres";
 }

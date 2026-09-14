@@ -16,5 +16,5 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     public async Task DisposeAsync() => await Container.DisposeAsync();
 }
 
-[CollectionDefinition(nameof(PostgresCollection))]
-public sealed class PostgresCollection : ICollectionFixture<PostgresContainerFixture> { }
+[CollectionDefinition(nameof(PostgresCollectionDefinition))]
+public sealed class PostgresCollectionDefinition : ICollectionFixture<PostgresContainerFixture> { }

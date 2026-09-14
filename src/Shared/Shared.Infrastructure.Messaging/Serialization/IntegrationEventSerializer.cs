@@ -5,7 +5,7 @@ using Shared.Abstractions.Messaging;
 
 public interface IIntegrationEventSerializer
 {
-    string Serialize(IIntegrationEvent @event);
+    string Serialize(IIntegrationEvent integrationEvent);
     IIntegrationEvent Deserialize(string payload, string eventType);
 }
 
@@ -35,8 +35,8 @@ public sealed class IntegrationEventSerializer : IIntegrationEventSerializer
     public IntegrationEventSerializer(IReadOnlyCollection<string> allowedTypePrefixes)
         => _allowedTypePrefixes = allowedTypePrefixes;
 
-    public string Serialize(IIntegrationEvent @event)
-        => JsonSerializer.Serialize(@event, @event.GetType(), Options);
+    public string Serialize(IIntegrationEvent integrationEvent)
+        => JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), Options);
 
     public IIntegrationEvent Deserialize(string payload, string eventType)
     {

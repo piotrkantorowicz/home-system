@@ -32,12 +32,12 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.ProcessedAt, processedAt), ct);
     }
 
-    public async Task RecordFailureAsync(Guid messageId, string error, CancellationToken ct)
+    public async Task RecordFailureAsync(Guid messageId, string errorMessage, CancellationToken ct)
     {
         await _dbContext.Set<OutboxMessageEntity>()
             .Where(x => x.Id == messageId)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.LastError, error)
+                .SetProperty(x => x.LastError, errorMessage)
                 .SetProperty(x => x.AttemptCount, x => x.AttemptCount + 1), ct);
     }
 

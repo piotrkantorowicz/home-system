@@ -176,6 +176,12 @@ dotnet_diagnostic.IDE0005.severity = warning  # unnecessary using
 dotnet_diagnostic.IDE0055.severity = warning  # formatting
 dotnet_diagnostic.IDE0161.severity = warning  # file-scoped namespace
 
+# Test projects: the required Method_State_Expected test-method convention
+# (backend-testing-standards.md) contains underscores by design, so CA1707 is
+# switched off for test code only. Every other analyzer keeps its severity here.
+[**/*Tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+
 # Generated EF migrations: leave alone
 [**/Migrations/*.cs]
 generated_code = true

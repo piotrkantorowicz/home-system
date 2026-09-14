@@ -8,7 +8,7 @@ using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetNutritionSummary;
 using DietPlanner.IntegrationTests.Infrastructure;
 
-[Collection(DatabaseCollection.Name)]
+[Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealEntryCompletionEndpointsTests
 {
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);

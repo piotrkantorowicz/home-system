@@ -18,12 +18,12 @@ internal sealed class MealEntryRepository : IMealEntryRepository
             .FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<List<MealEntry>> GetByUserAndDateRangeAsync(
-        string userId, DateOnly? from, DateOnly? to, CancellationToken ct = default)
+        string userId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
         => await _dbContext.MealEntries
             .Include(x => x.ActualProducts)
             .Where(x => x.UserId == userId
-                && (from == null || x.Date >= from)
-                && (to == null || x.Date <= to))
+                && (fromDate == null || x.Date >= fromDate)
+                && (toDate == null || x.Date <= toDate))
             .OrderBy(x => x.Date)
             .ThenBy(x => x.SequenceOrder)
             .ToListAsync(ct);
