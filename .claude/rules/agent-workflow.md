@@ -29,7 +29,7 @@ The script reads a classic PAT (`repo` + `project`) from `BOARD_TOKEN` or
 | Epic ↔ children | Children are **sub-issues** of the epic (`scripts/board.sh link <epic> <child>`), not a body checklist. The board groups by *Parent issue* and shows *Sub-issues progress*. |
 | Labels | Source of truth `.github/labels.json`, applied by `scripts/sync-labels.sh` (`--prune` deletes unused extras). Exactly one **type** (`epic` / `enhancement` / `bug` / `tech-debt` / `chore` / `documentation`), ≥ 1 **area or module** (`backend` `frontend` `e2e` `infra` `ci` / `diet-planner` `household` `notifications` `shared` `ui-shell`), one **priority**, optional `ux` `accessibility`, flow `blocked` `needs-decision` `hotfix`. |
 | Board Status | `Backlog` (filed, not planned) → `Todo` (approved by the plan gate) → `In Progress` (branch) → `In Review` (PR) → `Done` (merged / closed). |
-| Board automation | Built-in workflows (set once in the board UI): *Item added → Backlog*, *Item reopened → Todo*, *Item closed → Done*, *Pull request merged → Done*, *Auto-add from repo: is:issue*. Everything else is `scripts/board.sh` from the skills. |
+| Board automation | `.github/workflows/board.yml` runs `scripts/board.sh` on events: issue opened → added as `Backlog`; reopened → `Todo`; closed → `Done` (a merged PR closes its issue); PR opened / ready → its `Closes` / `Refs` issues → `In Review`; PR closed unmerged → `Todo`. Needs the `BOARD_TOKEN` repo secret (same classic PAT). The skills move `Todo` → `In Progress` themselves. |
 | Views | *Board* (by Status), *Epics* (table, `label:epic`, Sub-issues progress), *By epic* (board grouped by Parent issue), *Now* (Status in Todo/In Progress/In Review, sorted by priority). |
 
 ## Stages

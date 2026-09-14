@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Project-board helper for the delivery-loop skills (plan-issue, start-issue, ship, …).
 #
-#   scripts/board.sh add <issue-number> [<Status>]   add the issue to the board (optionally set Status)
-#   scripts/board.sh status <issue-number> <Status>  move an item already on the board
+#   scripts/board.sh add <issue-number> [<Status>]   add the issue to the board; Status applies only when newly added
+#   scripts/board.sh status <issue-number> <Status>  move an item already on the board (always applies)
 #   scripts/board.sh statuses                        list the Status options the board has
 #   scripts/board.sh link <epic-number> <issue-number>  make the issue a sub-issue of the epic
 #
@@ -71,13 +71,14 @@ case "${1:-}" in
     [[ -n "${2:-}" ]] || usage
     info=$(issue_json "$2"); content=$(jq -r '.content // empty' <<< "$info"); item=$(jq -r '.item // empty' <<< "$info")
     [[ -n "$content" ]] || { echo "board: issue #$2 not found in $repo" >&2; exit 1; }
-    if [[ -z "$item" ]]; then
-      item=$(gql -F project="$project_id" -F content="$content" -f query='
-        mutation($project:ID!,$content:ID!){ addProjectV2ItemById(input:{projectId:$project,contentId:$content}){ item{ id } } }' \
-        | jq -r '.data.addProjectV2ItemById.item.id // empty')
-      [[ -n "$item" ]] || { echo "board: could not add #$2" >&2; exit 1; }
-      echo "board: added #$2"
+    if [[ -n "$item" ]]; then
+      echo "board: #$2 already on the board — use 'status' to move it"; exit 0
     fi
+    item=$(gql -F project="$project_id" -F content="$content" -f query='
+      mutation($project:ID!,$content:ID!){ addProjectV2ItemById(input:{projectId:$project,contentId:$content}){ item{ id } } }' \
+      | jq -r '.data.addProjectV2ItemById.item.id // empty')
+    [[ -n "$item" ]] || { echo "board: could not add #$2" >&2; exit 1; }
+    echo "board: added #$2"
     [[ -n "${3:-}" ]] && set_status "$item" "$3" "$2"
     ;;
   status)

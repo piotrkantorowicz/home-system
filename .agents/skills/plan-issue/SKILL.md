@@ -71,11 +71,12 @@ the Status column through `scripts/board.sh` (field ids resolved at run time):
 
 | Moment | Skill | Status |
 |---|---|---|
-| Epic / idea filed, not planned | template + board auto-add | `Backlog` |
+| Epic / idea filed, not planned | `board.yml` on issue opened | `Backlog` |
 | Slice approved and created | `plan-issue` | `Todo` |
 | Branch created | `start-issue` / `start-epic` | `In Progress` |
 | PR opened | `ship` / `ship-epic` | `In Review` |
-| PR merged / issue closed | board built-in workflow | `Done` |
+| PR opened | `board.yml` (from `Closes` / `Refs` in the body) | `In Review` |
+| PR merged / issue closed | `board.yml` on issue closed | `Done` |
 
 `scripts/board.sh statuses` lists the column names the board actually has (`Backlog`,
 `Todo`, `In Progress`, `In Review`, `Done`). If a target column is missing the script exits 1
