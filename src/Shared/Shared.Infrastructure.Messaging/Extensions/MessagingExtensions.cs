@@ -7,6 +7,10 @@ using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
 using Shared.Infrastructure.Messaging.Transport;
 
+/// <summary>
+/// Host-level DI registration for the integration-event bus. Called once in <c>Program.cs</c>; modules
+/// add their own outbox stores and consumers through the EF or Dapper extension packages.
+/// </summary>
 public static class MessagingExtensions
 {
     /// <summary>
@@ -24,6 +28,11 @@ public static class MessagingExtensions
         return new MessagingBuilder(services);
     }
 
+    /// <summary>
+    /// Selects the v1 transport: outbox messages are dispatched to handlers in the same process,
+    /// each inside a fresh DI scope and behind the consuming module's inbox executor. Replaced by a
+    /// broker transport with a single different call here — module code is unaffected.
+    /// </summary>
     public static MessagingBuilder UseInProcessTransport(this MessagingBuilder builder)
     {
         builder.Services.TryAddSingleton<IIntegrationEventTransport, InProcessIntegrationEventTransport>();

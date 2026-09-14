@@ -8,6 +8,11 @@ using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
 
+/// <summary>
+/// DI registration for the EF Core-backed outbox and inbox used by Style-1 modules. The module's
+/// <c>DbContext</c> must apply <see cref="OutboxMessageEntityConfiguration"/> and/or
+/// <see cref="InboxMessageEntityConfiguration"/> so the tables are part of its migrations.
+/// </summary>
 public static class EfMessagingExtensions
 {
     /// <summary>

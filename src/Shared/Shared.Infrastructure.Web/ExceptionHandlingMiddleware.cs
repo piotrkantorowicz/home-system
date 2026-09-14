@@ -6,13 +6,23 @@ using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
+/// <summary>
+/// Maps the exceptions defined in <c>Shared.Abstractions</c> to HTTP problem responses in one place:
+/// <see cref="CommandValidationException"/> → 400, <see cref="NotFoundException"/> → 404,
+/// <see cref="ForbiddenException"/> → 403, <see cref="DomainException"/> → 422, cancellation → 499,
+/// anything else → 500 (logged). Endpoints and handlers never build problem details themselves.
+/// Scheduled for replacement by an <c>IExceptionHandler</c> under #273.
+/// </summary>
 public sealed partial class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
+    /// <summary>Creates the middleware.</summary>
+    /// <param name="logger">Receives unhandled (500) exceptions only.</param>
     public ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger)
         => _logger = logger;
 
+    /// <inheritdoc />
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try

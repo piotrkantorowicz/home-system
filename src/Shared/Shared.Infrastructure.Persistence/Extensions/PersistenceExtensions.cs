@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+/// <summary>
+/// DI registration for the EF Core persistence cross-cuts shared by every Style-1 (DDD + EF) module.
+/// </summary>
 public static class PersistenceExtensions
 {
     /// <summary>
