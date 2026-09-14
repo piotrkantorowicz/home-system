@@ -173,6 +173,12 @@ jobs:
         run: npx playwright test --project=chromium
 
       # ── Diagnostics ─────────────────────────────────────────────────────────
+      # Uploaded only on failure, 14-day retention, repo-read visibility. GitHub masks
+      # secrets in step logs but NOT inside artifacts: a retry trace holds the login
+      # POST body and the stack logs hold whatever the containers printed, so both can
+      # expose TEST_USER_PASSWORD — which is why that secret must be a throwaway value
+      # used only by E2eWorker0..3 (docs/e2e/README.md § Nightly CI). Every other
+      # credential in the run is generated above and dies with the runner.
       - name: Collect stack logs
         if: failure()
         run: |

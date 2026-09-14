@@ -198,7 +198,11 @@ What the job does, in order:
    (`reuseExistingServer` is off on CI), retries twice, and `test.only` is an error.
 5. On failure: uploads `e2e/playwright-report` + `e2e/test-results` (artifact
    `playwright-report`) and `backend.log` + `docker compose logs` (artifact `stack-logs`),
-   14-day retention.
+   14-day retention. **These artifacts can contain the e2e password** — a retry trace
+   records the login form POST, and the stack logs echo whatever the containers print —
+   so `TEST_USER_PASSWORD` must be a throwaway value used only by `E2eWorker0..3`, never
+   a password reused anywhere else. Artifacts are visible to everyone with read access
+   to the repository.
 
 ### Failure notification
 
