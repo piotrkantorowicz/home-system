@@ -20,14 +20,11 @@ internal static class PersonEndpoints
 
         group.MapPost("/me/sync", SyncCurrentPerson)
             .WithName("SyncCurrentPerson")
-            .WithSummary("Ensure a Person exists for the signed-in account and refresh its profile")
-            .Produces<SyncCurrentPersonResponse>(StatusCodes.Status200OK);
+            .WithSummary("Ensure a Person exists for the signed-in account and refresh its profile");
 
         group.MapGet("/me", GetCurrentPerson)
             .WithName("GetCurrentPerson")
-            .WithSummary("Get the Person record for the signed-in account")
-            .Produces<CurrentPersonDto>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            .WithSummary("Get the Person record for the signed-in account");
 
         return app;
     }
@@ -51,7 +48,7 @@ internal static class PersonEndpoints
         return TypedResults.Ok(new SyncCurrentPersonResponse(personId));
     }
 
-    private static async Task<IResult> GetCurrentPerson(
+    private static async Task<Results<Ok<CurrentPersonDto>, NotFound>> GetCurrentPerson(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)

@@ -23,14 +23,8 @@ public static class NotificationChannelPreferencesEndpoints
             .RequireAuthorization()
             .WithTags("NotificationPreferences");
 
-        group.MapGet("/", Get)
-             .WithName("GetNotificationChannelPreferences")
-             .Produces<ChannelPreferencesDto>(StatusCodes.Status200OK);
-
-        group.MapPut("/", Update)
-             .WithName("UpdateNotificationChannelPreferences")
-             .Produces(StatusCodes.Status204NoContent)
-             .ProducesValidationProblem();
+        group.MapGet("/", Get).WithName("GetNotificationChannelPreferences");
+        group.MapPut("/", Update).WithName("UpdateNotificationChannelPreferences");
 
         return app;
     }

@@ -6,6 +6,7 @@ using DietPlanner.Application.Commands.LogWeightEntry;
 using DietPlanner.Application.Queries.GetWeightEntries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -26,32 +27,22 @@ public static class WeightEntryEndpoints
         group.MapPost("/", LogWeightEntry)
             .WithName("LogWeightEntry")
             .WithSummary("Log a weight entry for a specific date")
-            .WithDescription("Creates a new entry, or replaces the existing entry for the same date. Always updates the user's current weight.")
-            .Produces<LogWeightEntryResponse>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Creates a new entry, or replaces the existing entry for the same date. Always updates the user's current weight.");
 
         group.MapGet("/", GetWeightEntries)
             .WithName("GetWeightEntries")
             .WithSummary("Get the current user's weight history")
-            .WithDescription("Returns weight entries ordered by date ascending, optionally filtered by date range.")
-            .Produces<IReadOnlyList<WeightEntryDto>>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns weight entries ordered by date ascending, optionally filtered by date range.");
 
         group.MapDelete("/{id:guid}", DeleteWeightEntry)
             .WithName("DeleteWeightEntry")
             .WithSummary("Delete a weight entry")
-            .WithDescription("Deletes the entry and recomputes the user's current weight from the latest remaining entry (or null if none).")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Deletes the entry and recomputes the user's current weight from the latest remaining entry (or null if none).");
 
         return app;
     }
 
-    private static async Task<IResult> LogWeightEntry(
+    private static async Task<Created<LogWeightEntryResponse>> LogWeightEntry(
         LogWeightEntryRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -65,7 +56,7 @@ public static class WeightEntryEndpoints
             new LogWeightEntryResponse(result.Id, result.Created));
     }
 
-    private static async Task<IResult> GetWeightEntries(
+    private static async Task<Results<Ok<IReadOnlyList<WeightEntryDto>>, ValidationProblem>> GetWeightEntries(
         DateOnly? from,
         DateOnly? to,
         ClaimsPrincipal user,
@@ -84,7 +75,7 @@ public static class WeightEntryEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> DeleteWeightEntry(
+    private static async Task<NoContent> DeleteWeightEntry(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

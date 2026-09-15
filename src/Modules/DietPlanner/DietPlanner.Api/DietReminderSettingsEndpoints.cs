@@ -5,6 +5,7 @@ using DietPlanner.Application.Commands.UpdateDietReminderSettings;
 using DietPlanner.Application.Queries.GetDietReminderSettings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -25,23 +26,17 @@ public static class DietReminderSettingsEndpoints
         group.MapGet("/", GetDietReminderSettings)
             .WithName("GetDietReminderSettings")
             .WithSummary("Get the current user's diet reminder settings")
-            .WithDescription("Returns diet reminder settings for the current user. Returns 404 when no settings have been configured yet.")
-            .Produces<DietReminderSettingsDto>()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns diet reminder settings for the current user. Returns 404 when no settings have been configured yet.");
 
         group.MapPut("/", UpdateDietReminderSettings)
             .WithName("UpdateDietReminderSettings")
             .WithSummary("Update the current user's diet reminder settings")
-            .WithDescription("Creates or updates diet reminder settings for the current user. All times are UTC; the frontend converts from user-local time.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Creates or updates diet reminder settings for the current user. All times are UTC; the frontend converts from user-local time.");
 
         return app;
     }
 
-    private static async Task<IResult> GetDietReminderSettings(
+    private static async Task<Results<Ok<DietReminderSettingsDto>, NotFound>> GetDietReminderSettings(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
@@ -52,7 +47,7 @@ public static class DietReminderSettingsEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> UpdateDietReminderSettings(
+    private static async Task<NoContent> UpdateDietReminderSettings(
         DietReminderSettingsRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

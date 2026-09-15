@@ -4,6 +4,7 @@ using System.Security.Claims;
 using DietPlanner.Application.Commands.PurgeUserData;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -27,14 +28,12 @@ public static class TestSupportEndpoints
             .WithDescription(
                 "Test-only endpoint. Removes every row owned by the authenticated user across all DietPlanner aggregates " +
                 "(meals, recipes, products, goals, profile, hydration, notifications, schedules). " +
-                "Only registered when the environment is Development or E2ETestSupport:Enabled is true.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status401Unauthorized);
+                "Only registered when the environment is Development or E2ETestSupport:Enabled is true.");
 
         return app;
     }
 
-    private static async Task<IResult> PurgeMyData(
+    private static async Task<NoContent> PurgeMyData(
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
         CancellationToken ct)
