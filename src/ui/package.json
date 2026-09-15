@@ -51,6 +51,14 @@
     "tailwind-merge": "^3.6.0",
     "zod": "^4.6.2"
   },
+  "overrides": {
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    }
+  },
   "lint-staged": {
     "./src/**/*.{ts,tsx}": [
       "eslint --fix",
@@ -75,7 +83,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.0",
     "autoprefixer": "^10.5.6",
-    "eslint": "^9.39.1",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
