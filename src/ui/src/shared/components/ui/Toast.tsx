@@ -1,6 +1,6 @@
 import { cn } from '@shared/lib/utils';
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import type { ToastItem, ToastVariant } from '@shared/context/ToastContext';
@@ -72,16 +72,17 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
     }, EXIT_DURATION_MS);
   };
 
+  // Effect Event: the timer always calls the latest handleDismiss without the
+  // effect re-arming when the handler identity changes.
+  const dismissOnTimeout = useEffectEvent(handleDismiss);
+
   useEffect(() => {
     if (toast.duration <= 0) return;
-    const timer = setTimeout(handleDismiss, toast.duration);
+    const timer = setTimeout(dismissOnTimeout, toast.duration);
     return () => {
       clearTimeout(timer);
     };
-    // handleDismiss is stable for the toast lifetime; exhaustive-deps would
-    // cause false re-triggers if the function identity changed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast.id, toast.duration]);
+  }, [toast.duration]);
 
   return (
     <div

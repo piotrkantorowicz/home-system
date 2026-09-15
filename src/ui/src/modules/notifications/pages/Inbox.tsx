@@ -1,6 +1,6 @@
 import { Banner, Button, Checkbox, EmptyState } from '@shared/components/ui';
 import { Inbox as InboxIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -28,24 +28,21 @@ export default function Inbox() {
     };
   }, []);
 
-  const items = useMemo(() => data?.items ?? [], [data]);
+  const items = data?.items ?? [];
   const totalPages = Number(data?.totalPages ?? 0);
 
-  const unreadIdsOnPage = useMemo(() => items.filter((n) => !n.readAt).map((n) => n.id), [items]);
+  const unreadIdsOnPage = items.filter((n) => !n.readAt).map((n) => n.id);
 
   const [rawSelected, setSelected] = useState<Set<string>>(() => new Set());
 
   // Always mask selection by what's currently visible — drops ids removed by
   // pagination, refetch, or another tab marking the row read. Pure derived
   // state, no extra effect needed.
-  const selected = useMemo(() => {
-    const visible = new Set(unreadIdsOnPage);
-    const out = new Set<string>();
-    rawSelected.forEach((id) => {
-      if (visible.has(id)) out.add(id);
-    });
-    return out;
-  }, [rawSelected, unreadIdsOnPage]);
+  const visibleUnread = new Set(unreadIdsOnPage);
+  const selected = new Set<string>();
+  rawSelected.forEach((id) => {
+    if (visibleUnread.has(id)) selected.add(id);
+  });
 
   const allSelected = unreadIdsOnPage.length > 0 && selected.size === unreadIdsOnPage.length;
   const partiallySelected = selected.size > 0 && !allSelected;

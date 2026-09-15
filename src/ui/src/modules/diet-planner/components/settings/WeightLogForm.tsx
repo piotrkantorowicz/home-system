@@ -51,12 +51,13 @@ export function WeightLogForm({ onSuccess, defaultDate, className }: WeightLogFo
   const onSubmit = async (data: FormData) => {
     try {
       await mutation.mutateAsync({ date: data.date, weightKg: data.weightKg });
-      toast.success(t('weightHistory.log_success', 'Weight logged'));
-      reset({ date: defaultDate ?? todayIso(), weightKg: '' as unknown as number });
-      onSuccess?.();
     } catch {
       toast.error(t('weightHistory.log_error', 'Failed to log weight'));
+      return;
     }
+    toast.success(t('weightHistory.log_success', 'Weight logged'));
+    reset({ date: defaultDate ?? todayIso(), weightKg: '' as unknown as number });
+    onSuccess?.();
   };
 
   return (

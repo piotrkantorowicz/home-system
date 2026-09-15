@@ -23,7 +23,7 @@ import {
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
 import { MoreVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -100,8 +100,8 @@ export default function ProductList() {
   });
   const deleteMutation = useDeleteProduct();
 
-  const items = useMemo(() => (data?.items ?? []) as Row[], [data]);
-  const incompleteCount = useMemo(() => items.filter(isIncomplete).length, [items]);
+  const items = (data?.items ?? []) as Row[];
+  const incompleteCount = items.filter(isIncomplete).length;
   const rows = onlyIncomplete ? items.filter(isIncomplete) : items;
   const hasFilters = !!search || onlyMine || onlyIncomplete;
 

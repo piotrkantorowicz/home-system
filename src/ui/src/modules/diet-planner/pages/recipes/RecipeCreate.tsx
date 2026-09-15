@@ -6,6 +6,21 @@ import { useNavigate } from 'react-router-dom';
 
 import { RecipeForm, type RecipeFormData } from '../../components/recipes/RecipeForm';
 
+async function resolveIngredient(ing: RecipeFormData['ingredients'][number]) {
+  if (ing.productId) {
+    return { productId: ing.productId, amount: ing.amount, unit: ing.unit };
+  }
+  // Resolve product name → ID
+  const response = await api.GET('/api/v1/products', {
+    params: { query: { Search: ing.productName, PageSize: 10 } },
+  });
+  const items =
+    (response.data as { items: { id: string; name: string }[] } | undefined)?.items ?? [];
+  const product = items.find((p) => p.name === ing.productName);
+  if (!product) throw new Error(`Product "${ing.productName}" not found`);
+  return { productId: product.id, amount: ing.amount, unit: ing.unit };
+}
+
 export default function RecipeCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -13,37 +28,22 @@ export default function RecipeCreate() {
   const createMutation = useCreateRecipe();
 
   const handleSubmit = async (data: RecipeFormData) => {
+    const request = {
+      name: data.name,
+      description: data.description ?? null,
+      instructions: data.instructions ?? null,
+      servings: data.servings,
+      prepTimeMinutes: data.prepTimeMinutes ?? null,
+    };
     try {
-      const ingredients = await Promise.all(
-        data.ingredients.map(async (ing) => {
-          if (ing.productId) {
-            return { productId: ing.productId, amount: ing.amount, unit: ing.unit };
-          }
-          // Resolve product name → ID
-          const response = await api.GET('/api/v1/products', {
-            params: { query: { Search: ing.productName, PageSize: 10 } },
-          });
-          const items =
-            (response.data as { items: { id: string; name: string }[] } | undefined)?.items ?? [];
-          const product = items.find((p) => p.name === ing.productName);
-          if (!product) throw new Error(`Product "${ing.productName}" not found`);
-          return { productId: product.id, amount: ing.amount, unit: ing.unit };
-        }),
-      );
-
-      await createMutation.mutateAsync({
-        name: data.name,
-        description: data.description ?? null,
-        instructions: data.instructions ?? null,
-        servings: data.servings,
-        prepTimeMinutes: data.prepTimeMinutes ?? null,
-        ingredients,
-      });
-      toast.success(t('recipe_form.create_success'));
-      void navigate('/diet-planner/recipes');
+      const ingredients = await Promise.all(data.ingredients.map(resolveIngredient));
+      await createMutation.mutateAsync({ ...request, ingredients });
     } catch {
       toast.error(t('recipe_form.create_error'));
+      return;
     }
+    toast.success(t('recipe_form.create_success'));
+    void navigate('/diet-planner/recipes');
   };
 
   return (

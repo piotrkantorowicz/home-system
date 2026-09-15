@@ -11,7 +11,7 @@ import {
 } from '@shared/components/ui';
 import { cn, formatNumber, formatSigned } from '@shared/lib/utils';
 import { CalendarX } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Range = '7' | '30' | '90';
@@ -22,22 +22,35 @@ function toDateStr(date: Date): string {
   ).padStart(2, '0')}`;
 }
 
+const DAY_MS = 86400000;
+
+function rangeBounds(range: Range): { from: string; to: string } {
+  const now = new Date();
+  const start = new Date(now.getTime() - (Number(range) - 1) * DAY_MS);
+  return { from: toDateStr(start), to: toDateStr(now) };
+}
+
+function lastDates(range: Range): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = Number(range) - 1; i >= 0; i--) {
+    out.push(toDateStr(new Date(now.getTime() - i * DAY_MS)));
+  }
+  return out;
+}
+
 export default function NutritionSummary() {
   const { t } = useTranslation();
   const [range, setRange] = useState<Range>('7');
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(25);
 
-  const { from, to } = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now.getTime() - (Number(range) - 1) * 86400000);
-    return { from: toDateStr(start), to: toDateStr(now) };
-  }, [range]);
+  const { from, to } = rangeBounds(range);
 
   const { data, isLoading, isError, refetch } = useNutritionSummary({ from, to });
   const { data: goals } = useGoals();
 
-  const days = useMemo(() => data ?? [], [data]);
+  const days = data ?? [];
   const target = goals?.dailyCalorieTarget ?? null;
 
   const logged = days.filter((d) => d.calories > 0);
@@ -48,14 +61,7 @@ export default function NutritionSummary() {
   const avgProtein = avg((d) => d.protein);
   const overDays = target !== null ? days.filter((d) => d.calories > target).length : 0;
 
-  const dateList = useMemo(() => {
-    const out: string[] = [];
-    const now = new Date();
-    for (let i = Number(range) - 1; i >= 0; i--) {
-      out.push(toDateStr(new Date(now.getTime() - i * 86400000)));
-    }
-    return out;
-  }, [range]);
+  const dateList = lastDates(range);
   const byDate = new Map(days.map((d) => [d.date.slice(0, 10), d]));
   const todayStr = toDateStr(new Date());
 
@@ -79,10 +85,8 @@ export default function NutritionSummary() {
     ? macroSplit(goals.proteinGrams ?? 0, goals.carbsGrams ?? 0, goals.fatGrams ?? 0)
     : null;
 
-  const pagedDays = useMemo(() => {
-    const start = (tablePage - 1) * tablePageSize;
-    return days.slice(start, start + tablePageSize);
-  }, [days, tablePage, tablePageSize]);
+  const pageStart = (tablePage - 1) * tablePageSize;
+  const pagedDays = days.slice(pageStart, pageStart + tablePageSize);
 
   return (
     <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">

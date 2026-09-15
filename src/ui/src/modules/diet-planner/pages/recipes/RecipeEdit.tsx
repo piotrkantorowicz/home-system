@@ -14,24 +14,26 @@ export default function RecipeEdit() {
   const updateMutation = useUpdateRecipe(id ?? '');
 
   const handleSubmit = async (data: RecipeFormData) => {
+    const request = {
+      name: data.name,
+      description: data.description ?? null,
+      instructions: data.instructions ?? null,
+      servings: data.servings,
+      prepTimeMinutes: data.prepTimeMinutes ?? null,
+      ingredients: data.ingredients.map((ing) => ({
+        productId: ing.productId,
+        amount: ing.amount,
+        unit: ing.unit,
+      })),
+    };
     try {
-      await updateMutation.mutateAsync({
-        name: data.name,
-        description: data.description ?? null,
-        instructions: data.instructions ?? null,
-        servings: data.servings,
-        prepTimeMinutes: data.prepTimeMinutes ?? null,
-        ingredients: data.ingredients.map((ing) => ({
-          productId: ing.productId,
-          amount: ing.amount,
-          unit: ing.unit,
-        })),
-      });
-      toast.success(t('recipe_form.update_success'));
-      void navigate(`/diet-planner/recipes/${id ?? ''}`);
+      await updateMutation.mutateAsync(request);
     } catch {
       toast.error(t('recipe_form.update_error'));
+      return;
     }
+    toast.success(t('recipe_form.update_success'));
+    void navigate(`/diet-planner/recipes/${id ?? ''}`);
   };
 
   if (isLoading) {

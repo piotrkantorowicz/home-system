@@ -14,23 +14,25 @@ export default function ProductEdit() {
   const updateMutation = useUpdateProduct(id ?? '');
 
   const handleSubmit = async (data: ProductFormData) => {
+    const request = {
+      name: data.name,
+      calories: data.caloriesPer100g,
+      protein: data.proteinPer100g,
+      carbs: data.carbsPer100g,
+      fat: data.fatPer100g,
+      fiber: data.fiberPer100g ?? null,
+      defaultUnit: data.defaultUnit,
+      densityGramsPerMl: data.densityGramsPerMl ?? null,
+      gramPerPiece: data.gramPerPiece ?? null,
+    };
     try {
-      await updateMutation.mutateAsync({
-        name: data.name,
-        calories: data.caloriesPer100g,
-        protein: data.proteinPer100g,
-        carbs: data.carbsPer100g,
-        fat: data.fatPer100g,
-        fiber: data.fiberPer100g ?? null,
-        defaultUnit: data.defaultUnit,
-        densityGramsPerMl: data.densityGramsPerMl ?? null,
-        gramPerPiece: data.gramPerPiece ?? null,
-      });
-      toast.success(t('product_form.update_success'));
-      void navigate(`/diet-planner/products/${id ?? ''}`);
+      await updateMutation.mutateAsync(request);
     } catch {
       toast.error(t('product_form.update_error'));
+      return;
     }
+    toast.success(t('product_form.update_success'));
+    void navigate(`/diet-planner/products/${id ?? ''}`);
   };
 
   if (isLoading) {

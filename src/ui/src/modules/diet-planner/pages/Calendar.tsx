@@ -20,15 +20,7 @@ import { useToast } from '@shared/context/ToastContext';
 import { usePreferences } from '@shared/hooks/usePreferences';
 import { cn } from '@shared/lib/utils';
 import { ArrowRight, ChevronLeft, ChevronRight, Target } from 'lucide-react';
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useState,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-} from 'react';
+import { lazy, Suspense, useState, useRef, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -84,6 +76,30 @@ function parseLocalDate(value: string | null): Date | null {
   return d;
 }
 
+function resolveSelectedDay(dateParam: string | null): Date {
+  const parsed = parseLocalDate(dateParam);
+  if (parsed !== null) return parsed;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+const EMPTY_TOTALS = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+
+function sumWeeklyTotals(days: DailyNutrition[] | undefined) {
+  if (!days) return EMPTY_TOTALS;
+  return days.reduce(
+    (acc, day) => ({
+      calories: acc.calories + day.calories,
+      protein: acc.protein + day.protein,
+      carbs: acc.carbs + day.carbs,
+      fat: acc.fat + day.fat,
+      fiber: acc.fiber + day.fiber,
+    }),
+    EMPTY_TOTALS,
+  );
+}
+
 const narrowQuery = '(max-width: 767px)';
 function subscribeViewport(callback: () => void) {
   const query = window.matchMedia(narrowQuery);
@@ -128,44 +144,29 @@ export default function Calendar() {
   // Single shared anchor — interpreted as the selected day in day view, or any
   // day within the shown week in week view. Toggling views keeps you on the
   // same date so week ↔ day navigation feels continuous.
-  const selectedDay = useMemo(() => {
-    const parsed = parseLocalDate(searchParams.get('date'));
-    if (parsed !== null) return parsed;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  }, [searchParams]);
+  const selectedDay = resolveSelectedDay(searchParams.get('date'));
 
   const { prefs } = usePreferences();
-  const weekStart = useMemo(
-    () => getWeekStart(selectedDay, prefs.weekStart),
-    [selectedDay, prefs.weekStart],
-  );
+  const weekStart = getWeekStart(selectedDay, prefs.weekStart);
 
-  const updateParams = useCallback(
-    (patch: Record<string, string | null>, options: { replace?: boolean } = {}) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          for (const [key, value] of Object.entries(patch)) {
-            if (value === null) next.delete(key);
-            else next.set(key, value);
-          }
-          return next;
-        },
-        { replace: options.replace ?? true },
-      );
-    },
-    [setSearchParams],
-  );
+  function updateParams(patch: Record<string, string | null>, options: { replace?: boolean } = {}) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [key, value] of Object.entries(patch)) {
+          if (value === null) next.delete(key);
+          else next.set(key, value);
+        }
+        return next;
+      },
+      { replace: options.replace ?? true },
+    );
+  }
 
-  const setView = useCallback(
-    (next: CalendarView) => {
-      // View switch is a meaningful navigation step — push so back returns to the previous view.
-      updateParams({ view: next }, { replace: false });
-    },
-    [updateParams],
-  );
+  function setView(next: CalendarView) {
+    // View switch is a meaningful navigation step — push so back returns to the previous view.
+    updateParams({ view: next }, { replace: false });
+  }
 
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
@@ -174,9 +175,8 @@ export default function Calendar() {
   const [deletingMeal, setDeletingMeal] = useState<Meal | null>(null);
 
   const { data: schedule } = useMealSchedule();
-  const slots = useMemo(
-    () => [...(schedule?.slots ?? [])].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder)),
-    [schedule],
+  const slots = [...(schedule?.slots ?? [])].sort(
+    (a, b) => Number(a.sortOrder) - Number(b.sortOrder),
   );
 
   const createMeal = useCreateMeal();
@@ -201,25 +201,10 @@ export default function Calendar() {
   });
   const { data: goals } = useGoals();
 
-  const nutritionByDate = useMemo(() => {
-    const map = new Map<string, DailyNutrition>();
-    for (const day of nutritionSummary ?? []) map.set(day.date.slice(0, 10), day);
-    return map;
-  }, [nutritionSummary]);
+  const nutritionByDate = new Map<string, DailyNutrition>();
+  for (const day of nutritionSummary ?? []) nutritionByDate.set(day.date.slice(0, 10), day);
 
-  const weeklyTotals = useMemo(() => {
-    if (!nutritionSummary) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
-    return nutritionSummary.reduce(
-      (acc, day) => ({
-        calories: acc.calories + day.calories,
-        protein: acc.protein + day.protein,
-        carbs: acc.carbs + day.carbs,
-        fat: acc.fat + day.fat,
-        fiber: acc.fiber + day.fiber,
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
-    );
-  }, [nutritionSummary]);
+  const weeklyTotals = sumWeeklyTotals(nutritionSummary);
 
   const { data: meals, isLoading: mealsLoading } = useMeals({
     from: weekRange.from,
