@@ -83,8 +83,8 @@ export class ProductsPage extends BasePage {
 - Selectors live in POMs only. Specs read as user stories.
 - Readiness = a locator on the screen, not `waitForLoadState('networkidle')`. Playwright
   documents `networkidle` as discouraged; with SignalR + TanStack refetches the network never
-  idles. `BasePage.waitForPageReady` still uses it — replacing it is tracked in
-  #269; do not introduce new callers.
+  idles. Every `goto()` waits for the screen's primary locator (a form's submit button, the
+  week grid, the page heading); `grep -r networkidle e2e` must stay empty.
 
 ## Locators — priority
 

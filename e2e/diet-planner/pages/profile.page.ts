@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { BasePage } from './BasePage';
+import { gotoProfileSection } from './profile-hub.helper';
 
 import type { Page, Locator } from '@playwright/test';
 
@@ -27,8 +28,7 @@ export class ProfilePage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto('/diet-planner/profile?section=body-stats');
-    await this.waitForPageReady();
+    await gotoProfileSection(this.page, 'body-stats');
   }
 
   /**

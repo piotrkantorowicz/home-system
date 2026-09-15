@@ -28,7 +28,7 @@ export class ImportPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner/import');
-    await this.waitForPageReady();
+    await this.jsonInput.waitFor();
   }
 
   async loadSample() {
