@@ -1,4 +1,4 @@
-import { useProduct, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { productOptions, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
@@ -9,10 +9,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Skeleton,
   StatusPill,
 } from '@shared/components/ui';
 import { cn, formatNumber } from '@shared/lib/utils';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,7 @@ export default function ProductDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: product, isLoading, error } = useProduct(id ?? '');
+  const { data: product } = useSuspenseQuery(productOptions(id ?? ''));
   const deleteMutation = useDeleteProduct();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -33,20 +33,7 @@ export default function ProductDetail() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
-        <Skeleton className="mb-4 h-4 w-40" />
-        <Skeleton className="mb-6 h-9 w-64" />
-        <div className="grid gap-[18px] lg:grid-cols-3">
-          <Skeleton className="h-72 rounded-[22px] lg:col-span-2" />
-          <Skeleton className="h-72 rounded-[22px]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !product) {
+  if (!product) {
     return (
       <div className="px-4 py-6 md:px-8">
         <p className="text-destructive">{t('product_detail.not_found')}</p>

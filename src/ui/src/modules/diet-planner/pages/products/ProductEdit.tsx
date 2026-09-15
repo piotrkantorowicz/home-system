@@ -1,5 +1,6 @@
-import { useProduct, useUpdateProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { productOptions, useUpdateProduct } from '@modules/diet-planner/api/hooks/useProducts';
 import { useToast } from '@shared/context/ToastContext';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ export default function ProductEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  const { data: product, isLoading } = useProduct(id ?? '');
+  const { data: product } = useSuspenseQuery(productOptions(id ?? ''));
   const updateMutation = useUpdateProduct(id ?? '');
 
   const handleSubmit = async (data: ProductFormData) => {
@@ -32,14 +33,6 @@ export default function ProductEdit() {
       toast.error(t('product_form.update_error'));
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-8 lg:p-10">
-        <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
-      </div>
-    );
-  }
 
   if (!product) {
     return (
