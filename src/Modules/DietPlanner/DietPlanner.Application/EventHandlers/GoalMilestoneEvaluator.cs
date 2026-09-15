@@ -29,7 +29,7 @@ internal sealed class GoalMilestoneEvaluator(
         userGoalRepository.Update(goal);
 
         var integrationEvent = new GoalMilestoneReachedIntegrationEvent(
-            EventId: Guid.NewGuid(),
+            EventId: Guid.CreateVersion7(),
             OccurredAt: now,
             UserId: domainEvent.UserId,
             Locale: DefaultLocale,

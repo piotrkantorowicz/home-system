@@ -28,7 +28,7 @@ internal sealed class MealReminderJob(
             if (await ledger.ExistsAsync(id, MealReminderKind.Reminder, ct)) continue;
 
             await bus.PublishAsync(new MealReminderDueIntegrationEvent(
-                EventId: Guid.NewGuid(),
+                EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
                 UserId: c.UserId,
                 Locale: c.Locale,
@@ -46,7 +46,7 @@ internal sealed class MealReminderJob(
             if (await ledger.ExistsAsync(id, MealReminderKind.Missed, ct)) continue;
 
             await bus.PublishAsync(new MealMissedIntegrationEvent(
-                EventId: Guid.NewGuid(),
+                EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
                 UserId: c.UserId,
                 Locale: c.Locale,
