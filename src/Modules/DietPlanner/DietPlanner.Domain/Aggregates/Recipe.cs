@@ -24,6 +24,7 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     /// <param name="servings">How many portions the ingredient amounts yield.</param>
     /// <param name="prepTimeMinutes">Optional preparation time.</param>
     /// <param name="createdByUserId">Auth subject of the creating user; required.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> or <paramref name="createdByUserId"/> is blank.</exception>
     public static Recipe Create(
         RecipeId id,
@@ -32,7 +33,8 @@ public sealed class Recipe : AggregateRoot<RecipeId>
         string? instructions,
         int servings,
         int? prepTimeMinutes,
-        string createdByUserId)
+        string createdByUserId,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(createdByUserId);
@@ -46,7 +48,7 @@ public sealed class Recipe : AggregateRoot<RecipeId>
             Servings = servings,
             PrepTimeMinutes = prepTimeMinutes,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
     }
 
@@ -80,13 +82,15 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     /// <param name="instructions">New instructions, or <see langword="null"/> to clear them.</param>
     /// <param name="servings">New number of portions.</param>
     /// <param name="prepTimeMinutes">New preparation time, or <see langword="null"/> to clear it.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> is blank.</exception>
     public void Update(
         string name,
         string? description,
         string? instructions,
         int servings,
-        int? prepTimeMinutes)
+        int? prepTimeMinutes,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -95,7 +99,7 @@ public sealed class Recipe : AggregateRoot<RecipeId>
         Instructions = instructions;
         Servings = servings;
         PrepTimeMinutes = prepTimeMinutes;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Appends an ingredient line. Callers replacing the whole list call <see cref="ClearIngredients"/> first.</summary>
@@ -116,12 +120,13 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     }
 
     /// <summary>Hides the recipe from lists and searches without breaking meals that reference it.</summary>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="DietPlannerDomainException">The recipe is already deleted.</exception>
-    public void SoftDelete()
+    public void SoftDelete(DateTime now)
     {
         if (IsDeleted)
             throw new DietPlannerDomainException("Recipe is already deleted.");
 
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = now;
     }
 }

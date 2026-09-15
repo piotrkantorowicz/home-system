@@ -1,5 +1,6 @@
 namespace Notifications.UnitTests.Application.Commands;
 
+using Microsoft.Extensions.Time.Testing;
 using Notifications.Application.Commands.AckNotificationDelivery;
 using Notifications.Domain.Abstractions;
 using Notifications.Domain.Models;
@@ -11,11 +12,12 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
 {
     private readonly INotificationRepository _repository = Substitute.For<INotificationRepository>();
     private readonly INotificationsUnitOfWork _uow = Substitute.For<INotificationsUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly AckNotificationDeliveryCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public AckNotificationDeliveryCommandHandlerTests()
-        => _sut = new AckNotificationDeliveryCommandHandler(_repository, _uow);
+        => _sut = new AckNotificationDeliveryCommandHandler(_repository, _uow, _clock);
 
     /// <summary>When owned by user: <c>Handle</c> marks sent and commits.</summary>
     [Fact]
@@ -25,11 +27,11 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         var notificationId = NotificationId.New();
         var deliveryId = NotificationDeliveryId.New();
         var delivery = NotificationDelivery.Create(deliveryId, notificationId, NotificationChannel.WebSocket);
-        delivery.RecordPendingAttempt(DateTime.UtcNow.AddSeconds(-5));
+        delivery.RecordPendingAttempt(TestClock.UtcNow.AddSeconds(-5));
 
         var notification = Notification.Create(
             notificationId, userId, NotificationType.WaterReminder,
-            "title", "body", "{}", DateTime.UtcNow);
+            "title", "body", "{}", TestClock.UtcNow);
 
         _repository.GetDeliveryAsync(deliveryId, Arg.Any<CancellationToken>())
             .Returns(delivery);
@@ -52,7 +54,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         var delivery = NotificationDelivery.Create(deliveryId, notificationId, NotificationChannel.WebSocket);
         var notification = Notification.Create(
             notificationId, "owner", NotificationType.WaterReminder,
-            "t", "b", "{}", DateTime.UtcNow);
+            "t", "b", "{}", TestClock.UtcNow);
 
         _repository.GetDeliveryAsync(deliveryId, Arg.Any<CancellationToken>()).Returns(delivery);
         _repository.GetByIdAsync(notificationId, Arg.Any<CancellationToken>()).Returns(notification);
@@ -74,11 +76,11 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         var notificationId = NotificationId.New();
         var deliveryId = NotificationDeliveryId.New();
         var delivery = NotificationDelivery.Create(deliveryId, notificationId, NotificationChannel.WebSocket);
-        delivery.MarkSent(DateTime.UtcNow);
+        delivery.MarkSent(TestClock.UtcNow);
 
         var notification = Notification.Create(
             notificationId, userId, NotificationType.WaterReminder,
-            "t", "b", "{}", DateTime.UtcNow);
+            "t", "b", "{}", TestClock.UtcNow);
 
         _repository.GetDeliveryAsync(deliveryId, Arg.Any<CancellationToken>()).Returns(delivery);
         _repository.GetByIdAsync(notificationId, Arg.Any<CancellationToken>()).Returns(notification);

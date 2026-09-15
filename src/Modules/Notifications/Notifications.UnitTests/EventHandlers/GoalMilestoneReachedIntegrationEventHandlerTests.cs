@@ -22,7 +22,7 @@ public sealed class GoalMilestoneReachedIntegrationEventHandlerTests
     public async Task HandleAsync_DispatchesGoalMilestoneWithLabelPlaceholder()
     {
         var @event = new GoalMilestoneReachedIntegrationEvent(
-            EventId: Guid.NewGuid(), OccurredAt: DateTime.UtcNow,
+            EventId: Guid.NewGuid(), OccurredAt: TestClock.UtcNow,
             UserId: "u3", Locale: "en",
             GoalKind: "WeightTarget",
             MilestoneLabel: "Reached target weight of 70 kg",

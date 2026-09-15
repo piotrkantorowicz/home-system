@@ -6,6 +6,7 @@ using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 
 /// <summary>Unit tests for <c>CreateHouseholdCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -14,16 +15,17 @@ public sealed class CreateHouseholdCommandHandlerTests
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
     private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
     private readonly IHouseholdUnitOfWork _uow = Substitute.For<IHouseholdUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly CreateHouseholdCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateHouseholdCommandHandlerTests()
         => _sut = new CreateHouseholdCommandHandler(
-            new HouseholdAccessService(_persons, _households), _households, _uow);
+            new HouseholdAccessService(_persons, _households), _households, _uow, _clock);
 
     private Person GivenCaller()
     {
-        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "Caller", null, null);
+        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "Caller", null, null, TestClock.UtcNow);
         _persons.GetByAuthSubjectAsync("auth|1", Arg.Any<CancellationToken>()).Returns(person);
         return person;
     }
@@ -52,7 +54,7 @@ public sealed class CreateHouseholdCommandHandlerTests
     {
         var caller = GivenCaller();
         _households.GetByMemberPersonIdAsync(caller.Id, Arg.Any<CancellationToken>())
-            .Returns(HouseholdAggregate.Create(HouseholdId.New(), "Existing", caller.Id));
+            .Returns(HouseholdAggregate.Create(HouseholdId.New(), "Existing", caller.Id, TestClock.UtcNow));
 
         await Should.ThrowAsync<HouseholdDomainException>(() =>
             _sut.HandleAsync(new CreateHouseholdCommand("auth|1", "Another"), CancellationToken.None));

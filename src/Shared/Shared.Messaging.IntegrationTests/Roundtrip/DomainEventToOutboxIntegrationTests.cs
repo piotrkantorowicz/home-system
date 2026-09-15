@@ -2,6 +2,7 @@ namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Messaging;
@@ -18,6 +19,8 @@ using Xunit;
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
 {
+    private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
+
     private readonly PostgresContainerFixture _fixture;
     private ServiceProvider _sp = default!;
 
@@ -53,15 +56,12 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
     public sealed record TestCreatedIntegrationEvent(Guid EventId, DateTime OccurredAt, Guid AggregateId)
         : IIntegrationEvent;
 
-    internal sealed class CreatedDomainEventHandler : IDomainEventHandler<TestAggregateCreatedDomainEvent>
+    internal sealed class CreatedDomainEventHandler(IIntegrationEventBus bus, TimeProvider clock)
+        : IDomainEventHandler<TestAggregateCreatedDomainEvent>
     {
-        private readonly IIntegrationEventBus _bus;
-
-        public CreatedDomainEventHandler(IIntegrationEventBus bus) => _bus = bus;
-
         public Task HandleAsync(TestAggregateCreatedDomainEvent domainEvent, CancellationToken ct = default)
-            => _bus.PublishAsync(
-                new TestCreatedIntegrationEvent(Guid.NewGuid(), DateTime.UtcNow, domainEvent.AggregateId),
+            => bus.PublishAsync(
+                new TestCreatedIntegrationEvent(Guid.NewGuid(), clock.GetUtcNow().UtcDateTime, domainEvent.AggregateId),
                 ct);
     }
 
@@ -104,6 +104,7 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
         services.AddScoped<IDomainEventHandler<TestAggregateCreatedDomainEvent>, CreatedDomainEventHandler>();
 
         services.AddLogging();
+        services.AddSingleton<TimeProvider>(Clock);
 
         _sp = services.BuildServiceProvider();
 

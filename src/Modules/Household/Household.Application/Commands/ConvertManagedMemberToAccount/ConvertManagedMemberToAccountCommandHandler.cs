@@ -6,32 +6,27 @@ using Household.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class ConvertManagedMemberToAccountCommandHandler
+internal sealed class ConvertManagedMemberToAccountCommandHandler(
+    HouseholdAccessService access,
+    IPersonRepository persons,
+    IHouseholdUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<ConvertManagedMemberToAccountCommand>
 {
-    private readonly HouseholdAccessService _access;
-    private readonly IPersonRepository _persons;
-    private readonly IHouseholdUnitOfWork _unitOfWork;
-
-    public ConvertManagedMemberToAccountCommandHandler(
-        HouseholdAccessService access,
-        IPersonRepository persons,
-        IHouseholdUnitOfWork unitOfWork)
-        => (_access, _persons, _unitOfWork) = (access, persons, unitOfWork);
-
     public async Task HandleAsync(ConvertManagedMemberToAccountCommand command, CancellationToken ct)
     {
-        var (_, household) = await _access.RequireOwnerAsync(
+        var now = clock.GetUtcNow().UtcDateTime;
+        var (_, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
 
-        var person = await _persons.GetByIdAsync(PersonId.From(command.PersonId), ct)
+        var person = await persons.GetByIdAsync(PersonId.From(command.PersonId), ct)
             ?? throw new NotFoundException("Person", command.PersonId);
 
         if (!household.HasMember(person.Id))
             throw new ForbiddenException("That person is not a member of this household.");
 
-        person.MarkPendingAccountLink(PersonEmail.Create(command.Email));
+        person.MarkPendingAccountLink(PersonEmail.Create(command.Email), now);
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
     }
 }

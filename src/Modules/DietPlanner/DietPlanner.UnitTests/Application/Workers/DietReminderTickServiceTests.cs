@@ -14,7 +14,7 @@ public sealed class DietReminderTickServiceTests
 {
     /// <summary><c>RunOnceAsync</c> invokes each registered job and with utc now approximately.</summary>
     [Fact]
-    public async Task RunOnceAsync_InvokesEachRegisteredJob_WithUtcNowApproximately()
+    public async Task RunOnceAsync_InvokesEachRegisteredJob_WithClockUtcNow()
     {
         var jobA = new RecordingJob("A");
         var jobB = new RecordingJob("B");
@@ -26,15 +26,14 @@ public sealed class DietReminderTickServiceTests
         var sut = new DietReminderTickService(
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
-            NullLogger<DietReminderTickService>.Instance);
+            NullLogger<DietReminderTickService>.Instance,
+            TestClock.Create());
 
-        var before = DateTime.UtcNow;
         await sut.RunOnceAsync(CancellationToken.None);
-        var after = DateTime.UtcNow;
 
         jobA.Calls.Count.ShouldBe(1);
         jobB.Calls.Count.ShouldBe(1);
-        jobA.Calls[0].ShouldBeInRange(before, after);
+        jobA.Calls[0].ShouldBe(TestClock.UtcNow);
     }
 
     /// <summary>One job throws: <c>RunOnceAsync</c> other still runs.</summary>
@@ -51,7 +50,8 @@ public sealed class DietReminderTickServiceTests
         var sut = new DietReminderTickService(
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
-            NullLogger<DietReminderTickService>.Instance);
+            NullLogger<DietReminderTickService>.Instance,
+            TestClock.Create());
 
         await sut.RunOnceAsync(CancellationToken.None);
 
@@ -71,7 +71,8 @@ public sealed class DietReminderTickServiceTests
         var sut = new DietReminderTickService(
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
-            logger);
+            logger,
+            TestClock.Create());
 
         await sut.RunOnceAsync(CancellationToken.None);
 
@@ -95,7 +96,8 @@ public sealed class DietReminderTickServiceTests
         var sut = new DietReminderTickService(
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions { Enabled = false }),
-            NullLogger<DietReminderTickService>.Instance);
+            NullLogger<DietReminderTickService>.Instance,
+            TestClock.Create());
 
         await sut.RunOnceAsync(CancellationToken.None);
 

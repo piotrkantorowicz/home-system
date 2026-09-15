@@ -1,6 +1,7 @@
 namespace Shared.Messaging.IntegrationTests.Ef;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
@@ -10,6 +11,8 @@ using Xunit;
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
 {
+    private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
+
     private readonly PostgresContainerFixture _fixture;
     private MessagingTestDbContext _dbContext = default!;
 
@@ -37,7 +40,7 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
     [Fact]
     public async Task ExecuteAsync_FirstCall_InvokesHandlerAndPersistsInboxRow()
     {
-        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext);
+        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext, Clock);
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
@@ -52,7 +55,7 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
     [Fact]
     public async Task ExecuteAsync_SecondCallSameEventId_SkipsHandler()
     {
-        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext);
+        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext, Clock);
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
@@ -66,7 +69,7 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
     [Fact]
     public async Task ExecuteAsync_HandlerThrows_DoesNotPersistInboxRow()
     {
-        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext);
+        var sut = new EfInboxExecutor<MessagingTestDbContext>(_dbContext, Clock);
         var eventId = Guid.NewGuid();
 
         var act = () => sut.ExecuteAsync(

@@ -27,8 +27,8 @@ public sealed class MealReminderJobIntegrationTests
         var userId = $"meal-reminder-job-{Guid.NewGuid():N}";
         var factory = new DietPlannerWebApplicationFactory(_db.ConnectionString, userId);
 
-        // Capture today's date once to avoid midnight rollover issues
-        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow);
+        // The host clock is pinned by the factory, so "today" is deterministic
+        var todayUtc = TestClock.Today;
 
         // nowUtc is set to 11:50 UTC so that PlannedAt = 12:00 UTC falls in (nowUtc, nowUtc + 15min]
         var nowUtc = DateTime.SpecifyKind(todayUtc.ToDateTime(new TimeOnly(11, 50)), DateTimeKind.Utc);
@@ -46,7 +46,8 @@ public sealed class MealReminderJobIntegrationTests
             var config = MealScheduleConfig.Create(
                 MealScheduleConfigId.New(),
                 userId,
-                [("Lunch", new TimeOnly(12, 0))]);
+                [("Lunch", new TimeOnly(12, 0))],
+                TestClock.UtcNow);
 
             dbContext.MealScheduleConfigs.Add(config);
             await dbContext.SaveChangesAsync();
@@ -62,7 +63,8 @@ public sealed class MealReminderJobIntegrationTests
                 instructions: null,
                 servings: 1,
                 prepTimeMinutes: null,
-                createdByUserId: userId);
+                createdByUserId: userId,
+                TestClock.UtcNow);
 
             dbContext.Recipes.Add(recipe);
             await dbContext.SaveChangesAsync();
@@ -71,6 +73,7 @@ public sealed class MealReminderJobIntegrationTests
             var settings = DietReminderSettings.Create(
                 DietReminderSettingsId.New(),
                 userId,
+                TestClock.UtcNow,
                 mealRemindersEnabled: true,
                 mealReminderLeadTimeMinutes: 15);
 
@@ -88,7 +91,8 @@ public sealed class MealReminderJobIntegrationTests
                 servings: 1m,
                 notes: null,
                 mealTime: mealTime,
-                sequenceOrder: 1);
+                sequenceOrder: 1,
+                TestClock.UtcNow);
 
             dbContext.MealEntries.Add(entry);
             await dbContext.SaveChangesAsync();

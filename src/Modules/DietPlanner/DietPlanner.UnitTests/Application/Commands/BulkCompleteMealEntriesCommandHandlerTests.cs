@@ -14,7 +14,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
     private readonly IMealEntryRepository _repository = Substitute.For<IMealEntryRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly BulkCompleteMealEntriesCommandHandler _sut;
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = TestClock.Today;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public BulkCompleteMealEntriesCommandHandlerTests()
@@ -23,7 +23,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
     private static MealEntry NewEntry(MealEntryStatus status)
     {
         var entry = MealEntry.Create(MealEntryId.New(), "user-1", Today,
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         switch (status)
         {
             case MealEntryStatus.Done: entry.MarkDone(); break;
@@ -78,7 +78,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
     [Fact]
     public void Validate_WithEmptyUserId_ReturnsError()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = TestClock.Today;
 
         var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("", today)).ToList();
 
@@ -92,7 +92,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
         // The validator deliberately does not restrict the date — server UTC vs the
         // user's local "today" can disagree across midnight, and the handler is safe
         // because it only transitions Planned entries that already exist on that date.
-        var future = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
+        var future = TestClock.Today.AddDays(7);
 
         var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("user-1", future)).ToList();
 

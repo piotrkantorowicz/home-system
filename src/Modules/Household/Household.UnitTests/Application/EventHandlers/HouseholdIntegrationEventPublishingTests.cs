@@ -4,12 +4,14 @@ using Household.Application.EventHandlers;
 using Household.Contracts.Events;
 using Household.Domain.Events;
 using Household.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Messaging;
 
 /// <summary>Unit tests for <c>HouseholdIntegrationEventPublishing</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class HouseholdIntegrationEventPublishingTests
 {
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
 
     /// <summary><c>HouseholdCreated</c> publishes integration event and with ids.</summary>
     [Fact]
@@ -17,7 +19,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
     {
         var householdId = HouseholdId.New();
         var ownerId = PersonId.New();
-        var sut = new HouseholdCreatedDomainEventHandler(_bus);
+        var sut = new HouseholdCreatedDomainEventHandler(_bus, _clock);
 
         await sut.HandleAsync(new HouseholdCreatedDomainEvent(householdId, ownerId), CancellationToken.None);
 
@@ -35,7 +37,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
     {
         var householdId = HouseholdId.New();
         var personId = PersonId.New();
-        var sut = new MemberJoinedHouseholdDomainEventHandler(_bus);
+        var sut = new MemberJoinedHouseholdDomainEventHandler(_bus, _clock);
 
         await sut.HandleAsync(
             new MemberJoinedHouseholdDomainEvent(householdId, personId, HouseholdRole.Adult),
@@ -55,7 +57,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
     {
         var householdId = HouseholdId.New();
         var personId = PersonId.New();
-        var sut = new MemberLeftHouseholdDomainEventHandler(_bus);
+        var sut = new MemberLeftHouseholdDomainEventHandler(_bus, _clock);
 
         await sut.HandleAsync(new MemberLeftHouseholdDomainEvent(householdId, personId), CancellationToken.None);
 
@@ -71,7 +73,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
     {
         var householdId = HouseholdId.New();
         var personId = PersonId.New();
-        var sut = new MemberRoleChangedDomainEventHandler(_bus);
+        var sut = new MemberRoleChangedDomainEventHandler(_bus, _clock);
 
         await sut.HandleAsync(
             new MemberRoleChangedDomainEvent(householdId, personId, HouseholdRole.Child, HouseholdRole.Adult),

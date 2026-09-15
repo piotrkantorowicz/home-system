@@ -15,7 +15,7 @@ public sealed class MealEntryTests
         var recipeId = RecipeId.New();
         var date = new DateOnly(2024, 1, 15);
 
-        var entry = MealEntry.Create(id, "user-1", date, slotId, recipeId, 1.5m, "Notes", null, null);
+        var entry = MealEntry.Create(id, "user-1", date, slotId, recipeId, 1.5m, "Notes", null, null, TestClock.UtcNow);
 
         entry.Id.ShouldBe(id);
         entry.UserId.ShouldBe("user-1");
@@ -31,7 +31,7 @@ public sealed class MealEntryTests
     public void Update_WithNewValues_UpdatesEntry()
     {
         var entry = MealEntry.Create(MealEntryId.New(), "user-1", new DateOnly(2024, 1, 15),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         var newSlotId = MealSlotId.New();
         var newRecipeId = RecipeId.New();
         var newDate = new DateOnly(2024, 1, 16);

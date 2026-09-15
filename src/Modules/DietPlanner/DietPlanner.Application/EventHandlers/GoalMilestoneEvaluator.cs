@@ -8,7 +8,8 @@ using Shared.Abstractions.Messaging;
 
 internal sealed class GoalMilestoneEvaluator(
     IUserGoalRepository userGoalRepository,
-    IIntegrationEventBus integrationEventBus)
+    IIntegrationEventBus integrationEventBus,
+    TimeProvider clock)
     : IDomainEventHandler<WeightEntryAddedDomainEvent>
 {
     // v1 default — N7+ may pass per-user locale via DietReminderSettings or user profile.
@@ -24,7 +25,7 @@ internal sealed class GoalMilestoneEvaluator(
 
         if (!goal.ShouldEmitWeightMilestone(domainEvent.WeightKg)) return;
 
-        var now = DateTime.UtcNow;
+        var now = clock.GetUtcNow().UtcDateTime;
         goal.MarkMilestoneAchieved(now);
         userGoalRepository.Update(goal);
 

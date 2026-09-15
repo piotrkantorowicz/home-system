@@ -12,9 +12,9 @@ public sealed class WaterIntakeTests
     public void Create_WithValidData_CreatesEntry()
     {
         var id = WaterIntakeId.New();
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = TestClock.Today;
 
-        var intake = WaterIntake.Create(id, "user-1", date, 250, "Morning glass");
+        var intake = WaterIntake.Create(id, "user-1", date, 250, "Morning glass", TestClock.UtcNow);
 
         intake.Id.ShouldBe(id);
         intake.UserId.ShouldBe("user-1");
@@ -27,7 +27,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithNullNote_CreatesEntry()
     {
-        var intake = WaterIntake.Create(WaterIntakeId.New(), "user-1", DateOnly.FromDateTime(DateTime.UtcNow), 500, null);
+        var intake = WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, 500, null, TestClock.UtcNow);
 
         intake.Note.ShouldBeNull();
     }
@@ -36,7 +36,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), null!, DateOnly.FromDateTime(DateTime.UtcNow), 250, null);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), null!, TestClock.Today, 250, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -45,7 +45,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithZeroAmount_ThrowsDomainException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", DateOnly.FromDateTime(DateTime.UtcNow), 0, null);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, 0, null, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>()
            .Message.ShouldContain("greater than zero");
@@ -55,7 +55,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithNegativeAmount_ThrowsDomainException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", DateOnly.FromDateTime(DateTime.UtcNow), -100, null);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, -100, null, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>();
     }

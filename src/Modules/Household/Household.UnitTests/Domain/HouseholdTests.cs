@@ -16,7 +16,7 @@ public sealed class HouseholdTests
     {
         var owner = NewPerson();
 
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "  The Kowalskis  ", owner);
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "  The Kowalskis  ", owner, TestClock.UtcNow);
 
         household.Name.ShouldBe("The Kowalskis");
         household.Members.ShouldHaveSingleItem();
@@ -29,17 +29,17 @@ public sealed class HouseholdTests
     [Fact]
     public void Create_WithBlankName_Throws()
         => Should.Throw<HouseholdDomainException>(
-            () => HouseholdAggregate.Create(HouseholdId.New(), "   ", NewPerson()));
+            () => HouseholdAggregate.Create(HouseholdId.New(), "   ", NewPerson(), TestClock.UtcNow));
 
     /// <summary><c>AddMember</c> adds with role and raises joined.</summary>
     [Fact]
     public void AddMember_AddsWithRole_AndRaisesJoined()
     {
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", NewPerson());
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", NewPerson(), TestClock.UtcNow);
         household.ClearDomainEvents();
         var adam = NewPerson();
 
-        household.AddMember(adam, HouseholdRole.Child, "Adam");
+        household.AddMember(adam, HouseholdRole.Child, TestClock.UtcNow, "Adam");
 
         household.RoleOf(adam).ShouldBe(HouseholdRole.Child);
         household.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<MemberJoinedHouseholdDomainEvent>();
@@ -50,9 +50,9 @@ public sealed class HouseholdTests
     public void AddMember_WhenAlreadyAMember_Throws()
     {
         var owner = NewPerson();
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner);
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner, TestClock.UtcNow);
 
-        Should.Throw<HouseholdDomainException>(() => household.AddMember(owner, HouseholdRole.Adult));
+        Should.Throw<HouseholdDomainException>(() => household.AddMember(owner, HouseholdRole.Adult, TestClock.UtcNow));
     }
 
     /// <summary>The only owner: <c>RemoveMember</c> throws.</summary>
@@ -60,9 +60,9 @@ public sealed class HouseholdTests
     public void RemoveMember_TheOnlyOwner_Throws()
     {
         var owner = NewPerson();
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner);
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner, TestClock.UtcNow);
 
-        Should.Throw<HouseholdDomainException>(() => household.RemoveMember(owner))
+        Should.Throw<HouseholdDomainException>(() => household.RemoveMember(owner, TestClock.UtcNow))
             .Message.ShouldContain("at least one owner");
     }
 
@@ -70,12 +70,12 @@ public sealed class HouseholdTests
     [Fact]
     public void RemoveMember_ANonOwner_RemovesAndRaisesLeft()
     {
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", NewPerson());
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", NewPerson(), TestClock.UtcNow);
         var guest = NewPerson();
-        household.AddMember(guest, HouseholdRole.Guest);
+        household.AddMember(guest, HouseholdRole.Guest, TestClock.UtcNow);
         household.ClearDomainEvents();
 
-        household.RemoveMember(guest);
+        household.RemoveMember(guest, TestClock.UtcNow);
 
         household.HasMember(guest).ShouldBeFalse();
         household.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<MemberLeftHouseholdDomainEvent>();
@@ -86,10 +86,10 @@ public sealed class HouseholdTests
     public void ChangeMemberRole_DemotingTheOnlyOwner_Throws()
     {
         var owner = NewPerson();
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner);
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner, TestClock.UtcNow);
 
         Should.Throw<HouseholdDomainException>(
-            () => household.ChangeMemberRole(owner, HouseholdRole.Adult));
+            () => household.ChangeMemberRole(owner, HouseholdRole.Adult, TestClock.UtcNow));
     }
 
     /// <summary>With a second owner present: <c>ChangeMemberRole</c> allows demotion and raises role changed.</summary>
@@ -98,11 +98,11 @@ public sealed class HouseholdTests
     {
         var owner1 = NewPerson();
         var owner2 = NewPerson();
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner1);
-        household.AddMember(owner2, HouseholdRole.Owner);
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "H", owner1, TestClock.UtcNow);
+        household.AddMember(owner2, HouseholdRole.Owner, TestClock.UtcNow);
         household.ClearDomainEvents();
 
-        household.ChangeMemberRole(owner1, HouseholdRole.Adult);
+        household.ChangeMemberRole(owner1, HouseholdRole.Adult, TestClock.UtcNow);
 
         household.RoleOf(owner1).ShouldBe(HouseholdRole.Adult);
         var evt = household.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<MemberRoleChangedDomainEvent>();
@@ -114,9 +114,9 @@ public sealed class HouseholdTests
     [Fact]
     public void Rename_WhenUnchanged_DoesNotStampUpdatedAt()
     {
-        var household = HouseholdAggregate.Create(HouseholdId.New(), "Home", NewPerson());
+        var household = HouseholdAggregate.Create(HouseholdId.New(), "Home", NewPerson(), TestClock.UtcNow);
 
-        household.Rename("Home");
+        household.Rename("Home", TestClock.UtcNow);
 
         household.UpdatedAt.ShouldBeNull();
     }

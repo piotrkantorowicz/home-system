@@ -2,6 +2,7 @@ namespace Shared.Messaging.IntegrationTests.Dapper;
 
 using global::Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Infrastructure.Messaging.Dapper.Inbox;
 using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
@@ -11,6 +12,8 @@ using Xunit;
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
 {
+    private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
+
     private readonly PostgresContainerFixture _fixture;
     private MessagingTestDbContext _dbContext = default!;
 
@@ -39,7 +42,7 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
     public async Task ExecuteAsync_FirstCall_InvokesHandlerAndInsertsRow()
     {
         var factory = new TestNpgsqlConnectionFactory(_fixture.ConnectionString);
-        var sut = new DapperInboxExecutor<TestNpgsqlConnectionFactory>(factory);
+        var sut = new DapperInboxExecutor<TestNpgsqlConnectionFactory>(factory, Clock);
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
@@ -57,7 +60,7 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
     public async Task ExecuteAsync_SecondCallSameEventId_SkipsHandler()
     {
         var factory = new TestNpgsqlConnectionFactory(_fixture.ConnectionString);
-        var sut = new DapperInboxExecutor<TestNpgsqlConnectionFactory>(factory);
+        var sut = new DapperInboxExecutor<TestNpgsqlConnectionFactory>(factory, Clock);
         var eventId = Guid.NewGuid();
         var invocations = 0;
 

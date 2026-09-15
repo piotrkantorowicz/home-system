@@ -13,7 +13,7 @@ public sealed class NotificationChannelPreferencesTests
         var prefs = NotificationChannelPreferences.CreateDefault(
             NotificationChannelPreferencesId.New(),
             "user-1",
-            DateTime.UtcNow);
+            TestClock.UtcNow);
 
         prefs.ConsoleEnabled.ShouldBeTrue();
         prefs.EmailEnabled.ShouldBeTrue();
@@ -25,7 +25,7 @@ public sealed class NotificationChannelPreferencesTests
     public void Update_AppliesNewValuesAndUpdatedAt()
     {
         var prefs = NotificationChannelPreferences.CreateDefault(
-            NotificationChannelPreferencesId.New(), "user-1", DateTime.UtcNow);
+            NotificationChannelPreferencesId.New(), "user-1", TestClock.UtcNow);
         var newAt = new DateTime(2026, 5, 1, 10, 0, 0, DateTimeKind.Utc);
 
         prefs.Update(consoleEnabled: false, emailEnabled: false, webSocketEnabled: true, updatedAt: newAt);
@@ -46,8 +46,8 @@ public sealed class NotificationChannelPreferencesTests
         NotificationChannel channel, bool console, bool email, bool ws, bool expected)
     {
         var prefs = NotificationChannelPreferences.CreateDefault(
-            NotificationChannelPreferencesId.New(), "user-1", DateTime.UtcNow);
-        prefs.Update(console, email, ws, DateTime.UtcNow);
+            NotificationChannelPreferencesId.New(), "user-1", TestClock.UtcNow);
+        prefs.Update(console, email, ws, TestClock.UtcNow);
 
         prefs.IsEnabled(channel).ShouldBe(expected);
     }

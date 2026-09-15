@@ -6,25 +6,22 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateDietReminderSettingsCommandHandler : ICommandHandler<UpdateDietReminderSettingsCommand>
+internal sealed class UpdateDietReminderSettingsCommandHandler(
+    IDietReminderSettingsRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<UpdateDietReminderSettingsCommand>
 {
-    private readonly IDietReminderSettingsRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateDietReminderSettingsCommandHandler(
-        IDietReminderSettingsRepository repository,
-        IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task HandleAsync(UpdateDietReminderSettingsCommand command, CancellationToken ct = default)
     {
-        var settings = await _repository.GetByUserIdAsync(command.UserId, ct);
+        var now = clock.GetUtcNow().UtcDateTime;
+        var settings = await repository.GetByUserIdAsync(command.UserId, ct);
 
         if (settings is null)
         {
             settings = DietReminderSettings.Create(
                 DietReminderSettingsId.New(),
                 command.UserId,
+                now,
                 command.MealRemindersEnabled,
                 command.MealReminderLeadTimeMinutes,
                 command.MealMissedGraceMinutes,
@@ -37,7 +34,7 @@ internal sealed class UpdateDietReminderSettingsCommandHandler : ICommandHandler
                 command.WeeklySummaryTimeOfDayUtc,
                 command.GoalAlertsEnabled);
 
-            await _repository.AddAsync(settings, ct);
+            await repository.AddAsync(settings, ct);
         }
         else
         {
@@ -52,11 +49,12 @@ internal sealed class UpdateDietReminderSettingsCommandHandler : ICommandHandler
                 command.WeeklySummaryEnabled,
                 command.WeeklySummaryDayOfWeekUtc,
                 command.WeeklySummaryTimeOfDayUtc,
-                command.GoalAlertsEnabled);
+                command.GoalAlertsEnabled,
+                now);
 
-            _repository.Update(settings);
+            repository.Update(settings);
         }
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
     }
 }

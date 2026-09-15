@@ -6,32 +6,28 @@ using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class CreateManagedMemberCommandHandler
+internal sealed class CreateManagedMemberCommandHandler(
+    HouseholdAccessService access,
+    IPersonRepository persons,
+    IHouseholdUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<CreateManagedMemberCommand, Guid>
 {
-    private readonly HouseholdAccessService _access;
-    private readonly IPersonRepository _persons;
-    private readonly IHouseholdUnitOfWork _unitOfWork;
-
-    public CreateManagedMemberCommandHandler(
-        HouseholdAccessService access,
-        IPersonRepository persons,
-        IHouseholdUnitOfWork unitOfWork)
-        => (_access, _persons, _unitOfWork) = (access, persons, unitOfWork);
-
     public async Task<Guid> HandleAsync(CreateManagedMemberCommand command, CancellationToken ct)
     {
-        var (_, household) = await _access.RequireOwnerAsync(
+        var now = clock.GetUtcNow().UtcDateTime;
+        var (_, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
 
         var person = Person.CreateManaged(
             PersonId.New(),
             command.DisplayName,
-            PersonEmail.CreateOrNull(command.Email));
+            PersonEmail.CreateOrNull(command.Email),
+            now);
 
-        await _persons.AddAsync(person, ct);
-        household.AddMember(person.Id, command.Role, command.Nickname);
-        await _unitOfWork.CommitAsync(ct);
+        await persons.AddAsync(person, ct);
+        household.AddMember(person.Id, command.Role, now, command.Nickname);
+        await unitOfWork.CommitAsync(ct);
 
         return person.Id.Value;
     }

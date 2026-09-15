@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
@@ -16,6 +17,8 @@ using Xunit;
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
 {
+    private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
+
     private readonly PostgresContainerFixture _fixture;
     private ServiceProvider _sp = default!;
 
@@ -67,6 +70,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         services.AddIntegrationEventConsumer<HelloIntegrationEvent, HelloHandler, MessagingTestDbContext>();
 
         services.AddLogging();
+        services.AddSingleton<TimeProvider>(Clock);
 
         _sp = services.BuildServiceProvider();
 
@@ -89,7 +93,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
 
             await bus.PublishAsync(
-                new HelloIntegrationEvent(Guid.NewGuid(), DateTime.UtcNow, "hi"),
+                new HelloIntegrationEvent(Guid.NewGuid(), Clock.GetUtcNow().UtcDateTime, "hi"),
                 default);
             await db.SaveChangesAsync();
         }
@@ -97,7 +101,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         var worker = new OutboxWorker<MessagingTestDbContext>(
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
-            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance);
+            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
+            Clock);
 
         await worker.RunOnceAsync(default);
 
@@ -117,7 +122,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             await using var scope = _sp.CreateAsyncScope();
             var bus = scope.ServiceProvider.GetRequiredService<IIntegrationEventBus>();
             var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
-            await bus.PublishAsync(new HelloIntegrationEvent(eventId, DateTime.UtcNow, "hi"), default);
+            await bus.PublishAsync(new HelloIntegrationEvent(eventId, Clock.GetUtcNow().UtcDateTime, "hi"), default);
             await db.SaveChangesAsync();
         }
 
@@ -127,7 +132,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         var worker = new OutboxWorker<MessagingTestDbContext>(
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
-            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance);
+            NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
+            Clock);
         await worker.RunOnceAsync(default);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();

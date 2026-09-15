@@ -8,22 +8,16 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateMealScheduleCommand>
+internal sealed class UpdateMealScheduleCommandHandler(
+    IMealScheduleConfigRepository repository,
+    IMealEntryRepository mealEntryRepository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<UpdateMealScheduleCommand>
 {
-    private readonly IMealScheduleConfigRepository _repository;
-    private readonly IMealEntryRepository _mealEntryRepository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateMealScheduleCommandHandler(
-        IMealScheduleConfigRepository repository,
-        IMealEntryRepository mealEntryRepository,
-        IUnitOfWork unitOfWork)
-        => (_repository, _mealEntryRepository, _unitOfWork)
-            = (repository, mealEntryRepository, unitOfWork);
-
     public async Task HandleAsync(UpdateMealScheduleCommand command, CancellationToken ct = default)
     {
-        MealScheduleConfig? config = await _repository.GetByUserIdAsync(command.UserId, ct);
+        var now = clock.GetUtcNow().UtcDateTime;
+        MealScheduleConfig? config = await repository.GetByUserIdAsync(command.UserId, ct);
 
         if (config is null)
         {
@@ -32,8 +26,8 @@ internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateM
                 .Select(s => (s.Name, TimeOnly.Parse(s.DefaultTime, CultureInfo.InvariantCulture)))
                 .ToList();
 
-            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.UserId, newSlots);
-            await _repository.AddAsync(config, ct);
+            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.UserId, newSlots, now);
+            await repository.AddAsync(config, ct);
         }
         else
         {
@@ -48,15 +42,15 @@ internal sealed class UpdateMealScheduleCommandHandler : ICommandHandler<UpdateM
             var removedIds = config.ComputeRemovedSlots(upserts);
             foreach (var slotId in removedIds)
             {
-                if (await _mealEntryRepository.AnyForSlotAsync(slotId, ct))
+                if (await mealEntryRepository.AnyForSlotAsync(slotId, ct))
                     throw new DietPlannerDomainException(
                         "Cannot delete a meal slot that has logged entries. Remove or reassign the entries first.");
             }
 
-            config.ApplyUpdate(upserts);
-            _repository.Update(config);
+            config.ApplyUpdate(upserts, now);
+            repository.Update(config);
         }
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
     }
 }

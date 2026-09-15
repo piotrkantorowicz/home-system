@@ -15,7 +15,7 @@ public sealed class UserProfileTests
         UserProfile profile = UserProfile.Create(
             id, "user-1",
             new DateOnly(1990, 5, 15), Gender.Male,
-            180m, 80m, 75m, ActivityLevel.ModeratelyActive);
+            180m, 80m, 75m, ActivityLevel.ModeratelyActive, TestClock.UtcNow);
 
         profile.Id.ShouldBe(id);
         profile.UserId.ShouldBe("user-1");
@@ -34,7 +34,7 @@ public sealed class UserProfileTests
     {
         var id = UserProfileId.New();
 
-        UserProfile profile = UserProfile.Create(id, "user-1", null, null, null, null, null, null);
+        UserProfile profile = UserProfile.Create(id, "user-1", null, null, null, null, null, null, TestClock.UtcNow);
 
         profile.Id.ShouldBe(id);
         profile.UserId.ShouldBe("user-1");
@@ -50,7 +50,7 @@ public sealed class UserProfileTests
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
-        var act = () => UserProfile.Create(UserProfileId.New(), null!, null, null, null, null, null, null);
+        var act = () => UserProfile.Create(UserProfileId.New(), null!, null, null, null, null, null, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -59,7 +59,7 @@ public sealed class UserProfileTests
     [Fact]
     public void Create_WithEmptyUserId_ThrowsArgumentException()
     {
-        var act = () => UserProfile.Create(UserProfileId.New(), string.Empty, null, null, null, null, null, null);
+        var act = () => UserProfile.Create(UserProfileId.New(), string.Empty, null, null, null, null, null, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -71,11 +71,11 @@ public sealed class UserProfileTests
         UserProfile profile = UserProfile.Create(
             UserProfileId.New(), "user-1",
             new DateOnly(1990, 5, 15), Gender.Male,
-            180m, 80m, 75m, ActivityLevel.Sedentary);
+            180m, 80m, 75m, ActivityLevel.Sedentary, TestClock.UtcNow);
 
         profile.Update(
             new DateOnly(1990, 5, 15), Gender.Female,
-            175m, 70m, 65m, ActivityLevel.VeryActive);
+            175m, 70m, 65m, ActivityLevel.VeryActive, TestClock.UtcNow);
 
         profile.Gender.ShouldBe(Gender.Female);
         profile.HeightCm.ShouldBe(175m);
@@ -90,9 +90,9 @@ public sealed class UserProfileTests
     public void UpdateCurrentWeight_WithValue_SetsWeightAndStampsUpdatedAt()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1", null, null, null, 80m, null, null);
+            UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
 
-        profile.UpdateCurrentWeight(82.5m);
+        profile.UpdateCurrentWeight(82.5m, TestClock.UtcNow);
 
         profile.CurrentWeightKg.ShouldBe(82.5m);
         profile.UpdatedAt.ShouldNotBeNull();
@@ -103,9 +103,9 @@ public sealed class UserProfileTests
     public void UpdateCurrentWeight_WithNull_ClearsWeight()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1", null, null, null, 80m, null, null);
+            UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
 
-        profile.UpdateCurrentWeight(null);
+        profile.UpdateCurrentWeight(null, TestClock.UtcNow);
 
         profile.CurrentWeightKg.ShouldBeNull();
         profile.UpdatedAt.ShouldNotBeNull();
@@ -118,9 +118,9 @@ public sealed class UserProfileTests
         UserProfile profile = UserProfile.Create(
             UserProfileId.New(), "user-1",
             new DateOnly(1990, 5, 15), Gender.Male,
-            180m, 80m, 75m, ActivityLevel.LightlyActive);
+            180m, 80m, 75m, ActivityLevel.LightlyActive, TestClock.UtcNow);
 
-        profile.Update(null, null, null, null, null, null);
+        profile.Update(null, null, null, null, null, null, TestClock.UtcNow);
 
         profile.DateOfBirth.ShouldBeNull();
         profile.Gender.ShouldBeNull();

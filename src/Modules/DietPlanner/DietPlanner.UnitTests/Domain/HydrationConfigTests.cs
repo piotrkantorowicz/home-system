@@ -12,7 +12,7 @@ public sealed class HydrationConfigTests
     {
         var id = HydrationConfigId.New();
 
-        var config = HydrationConfig.Create(id, "user-1");
+        var config = HydrationConfig.Create(id, "user-1", TestClock.UtcNow);
 
         config.Id.ShouldBe(id);
         config.UserId.ShouldBe("user-1");
@@ -25,7 +25,7 @@ public sealed class HydrationConfigTests
     [Fact]
     public void Create_WithCustomValues_CreatesConfig()
     {
-        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1", 3000, 300, false);
+        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1", TestClock.UtcNow, 3000, 300, false);
 
         config.DailyWaterTargetMl.ShouldBe(3000);
         config.GlassSizeMl.ShouldBe(300);
@@ -36,7 +36,7 @@ public sealed class HydrationConfigTests
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
-        var act = () => HydrationConfig.Create(HydrationConfigId.New(), null!);
+        var act = () => HydrationConfig.Create(HydrationConfigId.New(), null!, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -45,9 +45,9 @@ public sealed class HydrationConfigTests
     [Fact]
     public void Update_WithNewValues_UpdatesConfig()
     {
-        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1");
+        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1", TestClock.UtcNow);
 
-        config.Update(3000, 300, false);
+        config.Update(3000, 300, false, TestClock.UtcNow);
 
         config.DailyWaterTargetMl.ShouldBe(3000);
         config.GlassSizeMl.ShouldBe(300);

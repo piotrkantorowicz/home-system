@@ -24,7 +24,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
 
     private static MealEntry NewEntry(string userId = "user-1")
         => MealEntry.Create(MealEntryId.New(), userId, new DateOnly(2026, 1, 1),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
 
     /// <summary>With recipe only: <c>HandleAsync</c> overrides entry and commits.</summary>
     [Fact]
@@ -33,7 +33,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         var entry = NewEntry();
         var recipeIdGuid = Guid.NewGuid();
         var recipeId = RecipeId.From(recipeIdGuid);
-        var recipe = Recipe.Create(recipeId, "Pizza", null, null, 1, null, "user-1");
+        var recipe = Recipe.Create(recipeId, "Pizza", null, null, 1, null, "user-1", TestClock.UtcNow);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _recipeRepository.GetByIdAsync(recipeId, Arg.Any<CancellationToken>()).Returns(recipe);
@@ -56,7 +56,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         var product = Product.Create(
             productId, "Chocolate Bar",
             new NutritionPer100g(500m, 5m, 60m, 30m, 2m),
-            "g", null, null, "user-1");
+            "g", null, null, "user-1", TestClock.UtcNow);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _productRepository.GetByIdsAsync(
@@ -83,7 +83,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         var entry = NewEntry();
         var recipeIdGuid = Guid.NewGuid();
         var recipeId = RecipeId.From(recipeIdGuid);
-        var foreignRecipe = Recipe.Create(recipeId, "Foreign", null, null, 1, null, "other-user");
+        var foreignRecipe = Recipe.Create(recipeId, "Foreign", null, null, 1, null, "other-user", TestClock.UtcNow);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _recipeRepository.GetByIdAsync(recipeId, Arg.Any<CancellationToken>()).Returns(foreignRecipe);
@@ -104,7 +104,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         var foreignProduct = Product.Create(
             productId, "Foreign Product",
             new NutritionPer100g(100m, 5m, 10m, 2m, 1m),
-            "g", null, null, "other-user");
+            "g", null, null, "other-user", TestClock.UtcNow);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _productRepository.GetByIdsAsync(

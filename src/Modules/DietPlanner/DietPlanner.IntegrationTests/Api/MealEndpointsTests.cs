@@ -89,7 +89,7 @@ public sealed class MealEndpointsTests
         var response = await client.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
-                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                Date: TestClock.Today,
                 MealSlotId: Guid.NewGuid(),
                 RecipeId: recipeId,
                 Servings: 1m,
@@ -111,7 +111,7 @@ public sealed class MealEndpointsTests
         var mealResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
-                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                Date: TestClock.Today,
                 MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
@@ -141,7 +141,7 @@ public sealed class MealEndpointsTests
         var client = FreshClient($"meal-{Guid.NewGuid():N}");
         var slotId = await EnsureBreakfastSlotAsync(client);
         var recipeId = await CreateRecipeAsync(client, $"NutritionRecipe-{Guid.NewGuid():N}");
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = TestClock.Today;
 
         var createResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
@@ -175,7 +175,7 @@ public sealed class MealEndpointsTests
         var client = FreshClient($"meal-{Guid.NewGuid():N}");
         var slotId = await EnsureBreakfastSlotAsync(client);
         var recipeId = await CreateRecipeAsync(client, $"ShoppingRecipe-{Guid.NewGuid():N}");
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = TestClock.Today;
 
         // Recipe (servings=1) has one ingredient at 80g. Two meal entries: 1 serving + 2 servings.
         // Expect aggregated total = 80 * 1 + 80 * 2 = 240g for the single product.
@@ -208,7 +208,7 @@ public sealed class MealEndpointsTests
         var client = FreshClient($"meal-{Guid.NewGuid():N}");
         var slotId = await EnsureBreakfastSlotAsync(client);
         var plannedRecipeId = await CreateRecipeAsync(client, $"PlannedRecipe-{Guid.NewGuid():N}");
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = TestClock.Today;
 
         var mealResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
@@ -237,7 +237,7 @@ public sealed class MealEndpointsTests
     public async Task GET_ShoppingList_EmptyRange_ReturnsEmpty()
     {
         var client = FreshClient($"meal-{Guid.NewGuid():N}");
-        var farFuture = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(10));
+        var farFuture = TestClock.Today.AddYears(10);
 
         var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
             $"/api/v1/meals/shopping-list?From={farFuture:yyyy-MM-dd}&To={farFuture:yyyy-MM-dd}");
@@ -257,7 +257,7 @@ public sealed class MealEndpointsTests
         var mealResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
-                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                Date: TestClock.Today,
                 MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
