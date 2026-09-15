@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -29,10 +29,9 @@ function normalize(raw: RawWeightPrediction): WeightPredictionDto {
   };
 }
 
-export function useWeightPrediction(dailyCalorieTarget: number | null) {
-  return useQuery({
+export function weightPredictionOptions(dailyCalorieTarget: number | null) {
+  return queryOptions({
     queryKey: queryKeys.weightPrediction.detail(dailyCalorieTarget),
-    enabled: dailyCalorieTarget !== null && dailyCalorieTarget > 0,
     queryFn: async (): Promise<WeightPredictionDto | null> => {
       if (dailyCalorieTarget === null || dailyCalorieTarget <= 0) {
         return null;
@@ -52,5 +51,12 @@ export function useWeightPrediction(dailyCalorieTarget: number | null) {
 
       return data ? normalize(data) : null;
     },
+  });
+}
+
+export function useWeightPrediction(dailyCalorieTarget: number | null) {
+  return useQuery({
+    ...weightPredictionOptions(dailyCalorieTarget),
+    enabled: dailyCalorieTarget !== null && dailyCalorieTarget > 0,
   });
 }

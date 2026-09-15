@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -8,8 +8,8 @@ import type { components } from '../generated/schema';
 export type UserProfileDto = components['schemas']['UserProfileDto'];
 export type ProfileRequest = components['schemas']['ProfileRequest'];
 
-export function useProfile() {
-  return useQuery({
+export function profileOptions() {
+  return queryOptions({
     queryKey: queryKeys.profile.detail(),
     queryFn: async (): Promise<UserProfileDto | null> => {
       const response = await api.GET('/api/v1/profile');
@@ -25,6 +25,10 @@ export function useProfile() {
       return response.data ?? null;
     },
   });
+}
+
+export function useProfile() {
+  return useQuery(profileOptions());
 }
 
 export function useCreateProfile() {

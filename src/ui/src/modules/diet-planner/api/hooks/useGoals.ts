@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -27,8 +27,8 @@ interface GoalApiResponse {
   error?: unknown;
 }
 
-export function useGoals() {
-  return useQuery({
+export function goalsOptions() {
+  return queryOptions({
     queryKey: queryKeys.goals.detail(),
     queryFn: async (): Promise<Goal | null> => {
       // REASON: /api/v1/goals is not yet in the generated openapi schema — regenerate schema to remove this cast
@@ -43,6 +43,10 @@ export function useGoals() {
       return response.data ?? null;
     },
   });
+}
+
+export function useGoals() {
+  return useQuery(goalsOptions());
 }
 
 export function useCreateGoals() {
