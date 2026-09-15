@@ -18,7 +18,7 @@
 **POM**: `pages/recipes.page.ts`:
 
 - `createButton`: `getByRole('link', { name: /create recipe/i })`
-- `searchFor(query)`: registers `waitForResponse` for `GET /api/v1/recipes` BEFORE filling the search input; falls back to `networkidle` if the search term equals the current value
+- `searchFor(query)`: no-op when the search input already holds `query` (no request fires); otherwise registers `waitForResponse` for `GET /api/v1/recipes` BEFORE filling the search input
 - `recipeCardFor(name)`: `getByRole('listitem', { name })`
 - `openCardMenu(card)`: clicks the card's `Actions` button; `viewRecipe` /
   `editRecipe` / `deleteRecipe` then click the portaled

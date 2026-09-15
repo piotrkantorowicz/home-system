@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { BasePage } from './BasePage';
+import { gotoProfileSection } from './profile-hub.helper';
 
 import type { Page, Locator } from '@playwright/test';
 
@@ -14,6 +15,7 @@ import type { Page, Locator } from '@playwright/test';
  * (Profile → Goals) rather than a free-typed value. See docs/e2e/weight-prediction.md.
  */
 export class WeightPredictionPage extends BasePage {
+  readonly energyModelCard: Locator;
   readonly energyModelEmptyMessage: Locator;
   readonly bmrValue: Locator;
   readonly tdeeValue: Locator;
@@ -23,6 +25,7 @@ export class WeightPredictionPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
+    this.energyModelCard = page.getByText('Energy model', { exact: true });
     this.energyModelEmptyMessage = page.getByText(/set a daily calorie target/i);
     this.bmrValue = this.tileValue(page, 'BMR');
     this.tdeeValue = this.tileValue(page, 'TDEE');
@@ -40,7 +43,7 @@ export class WeightPredictionPage extends BasePage {
   /** Navigate to the Profile overview, where the Energy model card now lives. */
   async goto() {
     await this.page.goto('/diet-planner/profile');
-    await this.waitForPageReady();
+    await this.energyModelCard.waitFor();
   }
 
   /**
@@ -48,8 +51,7 @@ export class WeightPredictionPage extends BasePage {
    * drive the Energy model card (there is no in-place override any more).
    */
   async setDailyCalorieTarget(calories: number) {
-    await this.page.goto('/diet-planner/profile?section=goals');
-    await this.waitForPageReady();
+    await gotoProfileSection(this.page, 'goals');
 
     const input = this.page.locator('#dailyCalorieTarget');
     const current = await input.inputValue();

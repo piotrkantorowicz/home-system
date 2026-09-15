@@ -12,16 +12,19 @@ import type { Page, Locator } from '@playwright/test';
  * …) — it is no longer a link. See docs/e2e/meals.md.
  */
 export class CalendarPage extends BasePage {
+  /** The week grid — WeekGrid renders a skeleton until the meals query resolves. */
+  readonly weekGrid: Locator;
   readonly mealFormDialog: Locator;
 
   constructor(page: Page) {
     super(page);
+    this.weekGrid = page.getByRole('grid');
     this.mealFormDialog = page.getByRole('dialog');
   }
 
   async goto() {
     await this.page.goto('/diet-planner/calendar');
-    await this.waitForPageReady();
+    await this.weekGrid.waitFor();
   }
 
   // ── Cells / chips ───────────────────────────────────────────────────────────
