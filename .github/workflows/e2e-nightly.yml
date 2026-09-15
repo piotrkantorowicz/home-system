@@ -1,0 +1,252 @@
+# Runs the Playwright suite (e2e/) against the REAL stack on a runner: Docker Compose
+# (Authentik + the three module databases, blueprints applied on first boot), the .NET
+# host in Development (auto-migrates, exposes the test-support purge route), and Vite —
+# which Playwright starts itself because CI=true turns reuseExistingServer off.
+#
+# Not part of the PR gate (too slow until the suite is < 2 min) — nightly + on demand.
+#
+# Failure notification: on main, a failed run opens the tracking issue "Nightly e2e
+# failed" (labels bug + ci + e2e) or comments the run URL on it if one is already open; the
+# next green run on main comments and closes it. A workflow_dispatch run on any other
+# ref never touches issues — it only uploads the report.
+#
+# Secrets: TEST_USER_PASSWORD — shared password for E2eWorker0..3. Everything else the
+# compose file needs (Authentik secret key, DB / Redis passwords, bootstrap account) is
+# generated per run — the stack is ephemeral. See docs/e2e/README.md § Nightly CI.
+name: E2E Nightly
+
+on:
+  schedule:
+    # 03:00 UTC every day (05:00 Warsaw in summer, 04:00 in winter) — after the release
+    # job has tagged whatever merged during the day.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write          # open / comment / close the "Nightly e2e failed" tracking issue
+
+# Two nightlies never overlap: a manual dispatch during the scheduled run queues.
+concurrency:
+  group: e2e-nightly
+  cancel-in-progress: false
+
+env:
+  API_URL: http://localhost:5050
+  AUTHENTIK_URL: http://localhost:9000
+
+jobs:
+  e2e:
+    name: Playwright (chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            src/ui/package-lock.json
+            e2e/package-lock.json
+
+      # ── Infrastructure ────────────────────────────────────────────────────────
+      # docker compose reads infrastructure/.env; the runner is throwaway, so every
+      # value except the E2E user password is generated here. E2E_USER_PASSWORD is
+      # what the Authentik blueprint (!Env) provisions E2eWorker0..3 with — it must
+      # equal the TEST_USER_PASSWORD Playwright logs in with.
+      - name: Write infrastructure/.env
+        env:
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          if [[ -z "$TEST_USER_PASSWORD" ]]; then
+            echo "::error::Repository secret TEST_USER_PASSWORD is not set — see docs/e2e/README.md § Nightly CI"
+            exit 1
+          fi
+          cat > infrastructure/.env <<EOF
+          AUTHENTIK_SECRET_KEY=$(openssl rand -hex 32)
+          AUTHENTIK_DB_PASSWORD=$(openssl rand -hex 16)
+          AUTHENTIK_REDIS_PASSWORD=$(openssl rand -hex 16)
+          DIETPLANNER_DB_PASSWORD=$(openssl rand -hex 16)
+          NOTIFICATIONS_DB_PASSWORD=$(openssl rand -hex 16)
+          HOUSEHOLD_DB_PASSWORD=$(openssl rand -hex 16)
+          AUTHENTIK_BOOTSTRAP_PASSWORD=$(openssl rand -hex 16)
+          AUTHENTIK_BOOTSTRAP_EMAIL=akadmin@e2e.invalid
+          AUTHENTIK_BOOTSTRAP_TOKEN=
+          E2E_USER_PASSWORD=$TEST_USER_PASSWORD
+          EOF
+
+      # The host wires DietPlanner + Notifications + Household, so all three module
+      # databases are needed. --wait blocks on the healthchecks (Postgres, Redis);
+      # authentik-server has none, hence the explicit readiness loop below.
+      - name: Start Docker stack
+        working-directory: infrastructure
+        run: |
+          docker compose \
+            --profile diet-planner --profile notifications --profile household \
+            up -d --wait --quiet-pull
+
+      # First boot runs Authentik's migrations, then the worker applies
+      # /blueprints/custom/home-system.yaml (provider + application + E2eWorker0..3).
+      # The application entry is last and the blueprint applies atomically, so the
+      # OIDC discovery document appearing means everything the suite needs exists.
+      - name: Wait for Authentik + blueprint
+        run: |
+          wait_for() {                         # wait_for <label> <url> <max seconds>
+            local label=$1 url=$2 max=$3 waited=0
+            until curl -sf -o /dev/null "$url"; do
+              if (( waited >= max )); then
+                echo "::error::$label not ready after ${max}s ($url)"
+                return 1
+              fi
+              sleep 5; waited=$((waited + 5))
+            done
+            echo "$label ready after ${waited}s"
+          }
+          wait_for "Authentik" "$AUTHENTIK_URL/-/health/ready/" 300
+          wait_for "home-system blueprint" "$AUTHENTIK_URL/application/o/home-system/.well-known/openid-configuration" 300
+
+      # ── Backend ──────────────────────────────────────────────────────────────
+      - name: Restore + build backend
+        run: |
+          dotnet restore src/Apis/HomeSystem.REST/HomeSystem.REST.csproj
+          dotnet build src/Apis/HomeSystem.REST/HomeSystem.REST.csproj --no-restore --configuration Release
+
+      # appsettings.json ships the connection strings with empty passwords — inject
+      # the generated ones. Development: EF/DbUp auto-migrate on startup and the
+      # /api/v1/test-support purge route the global teardown calls is mapped.
+      - name: Start backend
+        run: |
+          set -a; . infrastructure/.env; set +a
+          export ASPNETCORE_ENVIRONMENT=Development
+          export ASPNETCORE_URLS="$API_URL"
+          export ConnectionStrings__DietPlanner="Host=localhost;Port=5432;Database=dietplanner;Username=dietplanner;Password=${DIETPLANNER_DB_PASSWORD}"
+          export ConnectionStrings__Notifications="Host=localhost;Port=5433;Database=notifications;Username=notifications;Password=${NOTIFICATIONS_DB_PASSWORD}"
+          export ConnectionStrings__Household="Host=localhost;Port=5434;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}"
+          nohup dotnet run --project src/Apis/HomeSystem.REST --no-build --no-launch-profile --configuration Release \
+            > backend.log 2>&1 &
+          echo "backend pid $!"
+
+      - name: Wait for backend
+        run: |
+          waited=0
+          until curl -sf -o /dev/null "$API_URL/health"; do
+            if (( waited >= 120 )); then
+              echo "::error::Backend not healthy after ${waited}s — see backend.log in the run artifacts"
+              exit 1
+            fi
+            sleep 3; waited=$((waited + 3))
+          done
+          echo "backend healthy after ${waited}s"
+
+      # ── Frontend + Playwright ────────────────────────────────────────────────
+      # src/ui needs node_modules because playwright.config.ts's webServer runs
+      # `npm --prefix ../src/ui run dev`.
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: src/ui
+
+      - name: Install e2e dependencies
+        run: npm ci
+        working-directory: e2e
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      # CI=true → Playwright starts Vite itself, retries: 2, forbidOnly. The suite
+      # needs no e2e/.env: base / API URLs default to localhost and the password
+      # comes from the environment.
+      - name: Run Playwright suite
+        working-directory: e2e
+        env:
+          CI: 'true'
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: npx playwright test --project=chromium
+
+      # ── Diagnostics ─────────────────────────────────────────────────────────
+      # Uploaded only on failure, 14-day retention, repo-read visibility. GitHub masks
+      # secrets in step logs but NOT inside artifacts: a retry trace holds the login
+      # POST body and the stack logs hold whatever the containers printed, so both can
+      # expose TEST_USER_PASSWORD — which is why that secret must be a throwaway value
+      # used only by E2eWorker0..3 (docs/e2e/README.md § Nightly CI). Every other
+      # credential in the run is generated above and dies with the runner.
+      - name: Collect stack logs
+        if: failure()
+        run: |
+          mkdir -p stack-logs
+          cp backend.log stack-logs/ 2>/dev/null || true
+          (cd infrastructure && docker compose \
+            --profile diet-planner --profile notifications --profile household \
+            logs --no-color) > stack-logs/docker-compose.log 2>&1 || true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload stack logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: stack-logs
+          path: stack-logs
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # ── Notification ─────────────────────────────────────────────────────────
+      # One tracking issue, "Nightly e2e failed" (labels bug + ci + e2e): a failed run on
+      # main opens it or appends the run URL; a green run on main closes it.
+      - name: Track failures in a GitHub issue
+        if: always() && github.ref == 'refs/heads/main' && job.status != 'cancelled'
+        uses: actions/github-script@v9
+        env:
+          JOB_STATUS: ${{ job.status }}
+        with:
+          script: |
+            const title = 'Nightly e2e failed';
+            const labels = ['ci', 'e2e'];          // what the lookup keys on
+            const createLabels = ['bug', ...labels]; // + the repo's type label
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const failed = process.env.JOB_STATUS === 'failure';
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'open', labels: labels.join(','), per_page: 100,
+            });
+            const existing = open.find((issue) => issue.title === title && !issue.pull_request);
+
+            if (failed) {
+              const body = `Run ${runUrl} failed on \`${context.sha.slice(0, 7)}\` (${context.eventName}).`;
+              if (existing) {
+                await github.rest.issues.createComment({ ...context.repo, issue_number: existing.number, body });
+                core.info(`commented on #${existing.number}`);
+              } else {
+                const issue = await github.rest.issues.create({
+                  ...context.repo, title, labels: createLabels,
+                  body: `${body}\n\nThe Playwright report and stack logs are attached to the run as artifacts. ` +
+                    'This issue is closed automatically by the next green nightly run.',
+                });
+                core.info(`opened #${issue.data.number}`);
+              }
+            } else if (existing) {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: existing.number,
+                body: `Green again: ${runUrl} passed on \`${context.sha.slice(0, 7)}\`.`,
+              });
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, state: 'closed' });
+              core.info(`closed #${existing.number}`);
+            }
