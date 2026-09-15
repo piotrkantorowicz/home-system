@@ -78,19 +78,21 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
   }, [goals, goalsExist, reset]);
 
   const onSubmit = async (data: GoalFormData) => {
+    const request = {
+      dailyCalorieTarget: data.dailyCalorieTarget ?? null,
+      proteinGrams: data.proteinGrams ?? null,
+      carbsGrams: data.carbsGrams ?? null,
+      fatGrams: data.fatGrams ?? null,
+      fiberGrams: data.fiberGrams ?? null,
+    };
     try {
-      await saveMutation.mutateAsync({
-        dailyCalorieTarget: data.dailyCalorieTarget ?? null,
-        proteinGrams: data.proteinGrams ?? null,
-        carbsGrams: data.carbsGrams ?? null,
-        fatGrams: data.fatGrams ?? null,
-        fiberGrams: data.fiberGrams ?? null,
-      });
-      toast.success(t('goals.save_success'));
-      onSuccess?.();
+      await saveMutation.mutateAsync(request);
     } catch {
       toast.error(t('goals.save_error'));
+      return;
     }
+    toast.success(t('goals.save_success'));
+    onSuccess?.();
   };
 
   if (isLoading) {

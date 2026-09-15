@@ -14,7 +14,7 @@ import {
 } from '@shared/components/ui';
 import { formatNumber } from '@shared/lib/utils';
 import { Droplet, Settings, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useWaterActions } from '../api/hooks/useWaterActions';
@@ -60,11 +60,11 @@ export default function Hydration() {
   const glassMl = config?.glassSizeMl ?? DEFAULT_GLASS_ML;
   const targetMl = config?.dailyWaterTargetMl ?? DEFAULT_TARGET_ML;
   const totalMl = intake?.totalMl ?? 0;
-  const entries = useMemo(() => intake?.entries ?? [], [intake]);
+  const entries = intake?.entries ?? [];
 
   const percent = targetMl > 0 ? Math.min(100, Math.round((totalMl / targetMl) * 100)) : 0;
   const toGoMl = Math.max(0, targetMl - totalMl);
-  const presets = useMemo(() => mostUsedAmounts(entries, [glassMl, 500, 750]), [entries, glassMl]);
+  const presets = mostUsedAmounts(entries, [glassMl, 500, 750]);
 
   function confirmRemove(id: string) {
     void remove(id).then((removed) => {

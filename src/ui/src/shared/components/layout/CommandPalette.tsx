@@ -8,10 +8,11 @@ import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { getModules } from '@shared/lib/module-registry';
 import { Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
 
 /** Fired by any trigger (module switcher, ⌘K) to open the palette without prop-drilling. */
@@ -22,6 +23,28 @@ interface Destination {
   href: string;
   label: string;
   Icon: LucideIcon;
+}
+
+function collectDestinations(
+  labels: Readonly<Record<string, string>>,
+  t: TFunction,
+): Destination[] {
+  const out: Destination[] = [];
+  for (const mod of getModules()) {
+    const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
+    for (const nav of mod.navItems) {
+      out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
+    }
+  }
+  return out;
+}
+
+function filterDestinations(destinations: Destination[], query: string): Destination[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return destinations;
+  return destinations.filter(
+    (d) => d.label.toLowerCase().includes(q) || d.moduleLabel.toLowerCase().includes(q),
+  );
 }
 
 /**
@@ -60,24 +83,8 @@ export function CommandPalette() {
     if (!next) setQuery('');
   }
 
-  const destinations = useMemo(() => {
-    const out: Destination[] = [];
-    for (const mod of getModules()) {
-      const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
-      for (const nav of mod.navItems) {
-        out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
-      }
-    }
-    return out;
-  }, [t, labels]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return destinations;
-    return destinations.filter(
-      (d) => d.label.toLowerCase().includes(q) || d.moduleLabel.toLowerCase().includes(q),
-    );
-  }, [destinations, query]);
+  const destinations = collectDestinations(labels, t);
+  const filtered = filterDestinations(destinations, query);
 
   function go(href: string) {
     if (!access.canNavigate(href)) return;

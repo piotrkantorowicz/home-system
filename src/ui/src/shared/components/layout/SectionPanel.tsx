@@ -18,6 +18,14 @@ function readCollapsed(): boolean {
   }
 }
 
+function persistCollapsed(collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
+  } catch {
+    // storage unavailable — collapse state stays in-memory only
+  }
+}
+
 /**
  * 216px section panel — the second tier of the two-tier nav. Names the
  * destinations inside the module the {@link ModuleRail} has already picked.
@@ -30,11 +38,7 @@ export function SectionPanel() {
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
-    } catch {
-      // storage unavailable — collapse state stays in-memory only
-    }
+    persistCollapsed(collapsed);
   }, [collapsed]);
 
   const mod = getActiveModule(location.pathname);

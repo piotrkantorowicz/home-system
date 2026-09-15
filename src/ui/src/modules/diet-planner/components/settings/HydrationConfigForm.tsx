@@ -98,12 +98,13 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
   const onSubmit = async (data: HydrationConfigFormData) => {
     try {
       await updateConfigMutation.mutateAsync(data);
-      reset(data);
-      toast.success(t('hydration.settings_saved'));
-      onSuccess?.();
     } catch {
       toast.error(t('hydration.settings_save_error'));
+      return;
     }
+    reset(data);
+    toast.success(t('hydration.settings_saved'));
+    onSuccess?.();
   };
 
   if (configLoading || intakeLoading) {

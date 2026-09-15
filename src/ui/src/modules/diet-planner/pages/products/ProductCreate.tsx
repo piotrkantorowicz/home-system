@@ -12,23 +12,25 @@ export default function ProductCreate() {
   const createMutation = useCreateProduct();
 
   const handleSubmit = async (data: ProductFormData) => {
+    const request = {
+      name: data.name,
+      calories: data.caloriesPer100g,
+      protein: data.proteinPer100g,
+      carbs: data.carbsPer100g,
+      fat: data.fatPer100g,
+      fiber: data.fiberPer100g ?? null,
+      defaultUnit: data.defaultUnit,
+      densityGramsPerMl: data.densityGramsPerMl ?? null,
+      gramPerPiece: data.gramPerPiece ?? null,
+    };
     try {
-      await createMutation.mutateAsync({
-        name: data.name,
-        calories: data.caloriesPer100g,
-        protein: data.proteinPer100g,
-        carbs: data.carbsPer100g,
-        fat: data.fatPer100g,
-        fiber: data.fiberPer100g ?? null,
-        defaultUnit: data.defaultUnit,
-        densityGramsPerMl: data.densityGramsPerMl ?? null,
-        gramPerPiece: data.gramPerPiece ?? null,
-      });
-      toast.success(t('product_form.create_success'));
-      void navigate('/diet-planner/products');
+      await createMutation.mutateAsync(request);
     } catch {
       toast.error(t('product_form.create_error'));
+      return;
     }
+    toast.success(t('product_form.create_success'));
+    void navigate('/diet-planner/products');
   };
 
   return (
