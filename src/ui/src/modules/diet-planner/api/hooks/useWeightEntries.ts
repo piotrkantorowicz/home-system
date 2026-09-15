@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -14,8 +14,8 @@ export interface WeightEntriesRange {
   to?: string;
 }
 
-export function useWeightEntries(range: WeightEntriesRange = {}) {
-  return useQuery({
+export function weightEntriesOptions(range: WeightEntriesRange = {}) {
+  return queryOptions({
     queryKey: queryKeys.weightEntries.list(range),
     queryFn: async (): Promise<WeightEntryDto[]> => {
       const query: { from?: string; to?: string } = {};
@@ -30,6 +30,10 @@ export function useWeightEntries(range: WeightEntriesRange = {}) {
       return response.data ?? [];
     },
   });
+}
+
+export function useWeightEntries(range: WeightEntriesRange = {}) {
+  return useQuery(weightEntriesOptions(range));
 }
 
 export function useLogWeightEntry() {

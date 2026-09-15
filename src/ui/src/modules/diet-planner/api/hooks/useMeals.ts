@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -26,10 +32,10 @@ interface MealsQueryParams {
   to?: string;
 }
 
-export function useMeals(params: MealsQueryParams = {}) {
+export function mealsOptions(params: MealsQueryParams = {}) {
   const { from, to } = params;
 
-  return useQuery({
+  return queryOptions({
     queryKey: queryKeys.meals.list({
       ...(from !== undefined ? { from } : {}),
       ...(to !== undefined ? { to } : {}),
@@ -47,8 +53,11 @@ export function useMeals(params: MealsQueryParams = {}) {
       if (!response.data) throw new Error('Failed to fetch meals');
       return response.data;
     },
-    placeholderData: keepPreviousData,
   });
+}
+
+export function useMeals(params: MealsQueryParams = {}) {
+  return useQuery({ ...mealsOptions(params), placeholderData: keepPreviousData });
 }
 
 export function useCreateMeal() {
@@ -196,8 +205,8 @@ export function useDeleteMeal() {
   });
 }
 
-export function useNutritionSummary(params: { from: string; to: string }) {
-  return useQuery({
+export function nutritionSummaryOptions(params: { from: string; to: string }) {
+  return queryOptions({
     queryKey: queryKeys.nutritionSummary.detail(params),
     queryFn: async (): Promise<DailyNutrition[]> => {
       // REASON: /api/v1/meals/nutrition-summary is not yet in the generated openapi schema — regenerate schema to remove this cast
@@ -208,8 +217,11 @@ export function useNutritionSummary(params: { from: string; to: string }) {
       if (response.error) throw new Error('Failed to fetch nutrition summary');
       return response.data ?? [];
     },
-    placeholderData: keepPreviousData,
   });
+}
+
+export function useNutritionSummary(params: { from: string; to: string }) {
+  return useQuery({ ...nutritionSummaryOptions(params), placeholderData: keepPreviousData });
 }
 
 export function useValidateImport() {

@@ -1,4 +1,8 @@
-import { useProducts, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import {
+  productOptions,
+  useDeleteProduct,
+  useProducts,
+} from '@modules/diet-planner/api/hooks/useProducts';
 import { useListLocation } from '@modules/diet-planner/hooks/useListLocation';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
@@ -22,6 +26,7 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { cn } from '@shared/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import { MoreVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -91,6 +96,12 @@ export default function ProductList() {
     update({ view });
   };
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  // Warm the detail cache on intent so the detail / edit page renders without suspending.
+  // Best-effort: a failed prefetch is swallowed, the page itself surfaces the error.
+  const prefetchProduct = (id: string) => {
+    queryClient.query(productOptions(id)).catch(() => undefined);
+  };
 
   const { data, isLoading, error } = useProducts({
     search: debouncedSearch,
@@ -246,6 +257,12 @@ export default function ProductList() {
                     <Link
                       to={`/diet-planner/products/${p.id}`}
                       className="truncate font-semibold after:absolute after:inset-0 focus:outline-none"
+                      onMouseEnter={() => {
+                        prefetchProduct(p.id);
+                      }}
+                      onFocus={() => {
+                        prefetchProduct(p.id);
+                      }}
                     >
                       {p.name}
                     </Link>
@@ -276,6 +293,9 @@ export default function ProductList() {
             <ProductCardItem
               key={p.id}
               product={p}
+              onPrefetch={() => {
+                prefetchProduct(p.id);
+              }}
               onDelete={() => {
                 setDeleteId(p.id);
               }}
@@ -428,7 +448,15 @@ function RowMenu({ product, onDelete }: { product: Row; onDelete: () => void }) 
   );
 }
 
-function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => void }) {
+function ProductCardItem({
+  product,
+  onPrefetch,
+  onDelete,
+}: {
+  product: Row;
+  onPrefetch: () => void;
+  onDelete: () => void;
+}) {
   const { t } = useTranslation();
   const incomplete = isIncomplete(product);
   const chips: { key: 'protein' | 'carbs' | 'fat'; label: string }[] = [
@@ -452,6 +480,8 @@ function ProductCardItem({ product, onDelete }: { product: Row; onDelete: () => 
         <Link
           to={`/diet-planner/products/${product.id}`}
           className="text-[14px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
+          onMouseEnter={onPrefetch}
+          onFocus={onPrefetch}
         >
           {product.name}
         </Link>

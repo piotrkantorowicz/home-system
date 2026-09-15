@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -8,8 +8,8 @@ import type { components } from '../generated/schema';
 export type DietReminderSettingsDto = components['schemas']['DietReminderSettingsDto'];
 export type DietReminderSettingsRequest = components['schemas']['DietReminderSettingsRequest'];
 
-export function useDietReminderSettings() {
-  return useQuery({
+export function dietReminderSettingsOptions() {
+  return queryOptions({
     queryKey: queryKeys.dietReminderSettings.detail(),
     queryFn: async (): Promise<DietReminderSettingsDto | null> => {
       const response = await api.GET('/api/v1/diet-reminder-settings');
@@ -22,6 +22,10 @@ export function useDietReminderSettings() {
       return response.data ?? null;
     },
   });
+}
+
+export function useDietReminderSettings() {
+  return useQuery(dietReminderSettingsOptions());
 }
 
 export function useUpdateDietReminderSettings() {
