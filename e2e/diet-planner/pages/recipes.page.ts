@@ -16,7 +16,7 @@ export class RecipesPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner/recipes');
-    await this.waitForPageReady();
+    await this.createButton.waitFor();
   }
 
   // ── Create ──────────────────────────────────────────────────────────────────
@@ -72,12 +72,16 @@ export class RecipesPage extends BasePage {
 
     await this.page.getByRole('button', { name: /save|create/i }).click();
     await this.page.waitForURL(/\/diet-planner\/recipes$/);
-    await this.page.waitForLoadState('networkidle');
+    await this.createButton.waitFor();
   }
 
   // ── Search ──────────────────────────────────────────────────────────────────
 
   async searchFor(query: string) {
+    // Typing the term that is already in the box fires no request — the list
+    // is already filtered by it, so there is nothing to wait for.
+    if ((await this.searchInput.inputValue()) === query) return;
+
     // Register the response listener BEFORE filling to avoid missing
     // a fast response that arrives between fill() and waitForResponse().
     const responsePromise = this.page.waitForResponse(
@@ -85,9 +89,7 @@ export class RecipesPage extends BasePage {
       { timeout: 10_000 },
     );
     await this.searchInput.fill(query);
-    // If the search term is the same as the current value, no API call may
-    // be made. Fall back to networkidle to ensure the UI is settled.
-    await responsePromise.catch(() => this.page.waitForLoadState('networkidle'));
+    await responsePromise;
   }
 
   // ── Read ─────────────────────────────────────────────────────────────────────

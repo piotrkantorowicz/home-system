@@ -28,6 +28,6 @@ export class DashboardPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner');
-    await this.waitForPageReady();
+    await this.heading.waitFor();
   }
 }

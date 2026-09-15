@@ -16,7 +16,7 @@ export class ProductsPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner/products');
-    await this.waitForPageReady();
+    await this.createButton.waitFor();
   }
 
   // ── Create ──────────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@
 > review card. `SystemDashboard` was deleted.
 
 **Setup**: `DashboardPage.goto()` navigates to `/diet-planner` and waits for
-`networkidle`. No data setup.
+the **Today** heading. No data setup.
 
 **POM**: `pages/dashboard.page.ts`:
 

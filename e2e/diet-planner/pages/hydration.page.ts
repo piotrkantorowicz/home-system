@@ -15,7 +15,7 @@ export class HydrationPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner/hydration');
-    await this.waitForPageReady();
+    await this.levelMeter.waitFor();
   }
 
   async expectLevelMeterVisible() {
