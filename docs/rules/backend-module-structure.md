@@ -27,7 +27,7 @@ src/
     Shared.Infrastructure.Messaging.Ef/    # EF outbox + inbox executor (parameterised on TDbContext)
     Shared.Infrastructure.Messaging.Dapper/# Dapper inbox executor (parameterised on INpgsqlConnectionFactory)
     Shared.Infrastructure.Persistence/     # EF Core interceptors (DomainEventDispatcherInterceptor)
-    Shared.Infrastructure.Web/             # Cross-cutting web middleware (ExceptionHandlingMiddleware)
+    Shared.Infrastructure.Web/             # Cross-cutting web (ApplicationExceptionHandler, SecurityHeadersMiddleware)
 ```
 
 ## Full Module Anatomy (DDD Module)
