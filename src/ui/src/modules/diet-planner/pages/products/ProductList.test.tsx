@@ -1,9 +1,12 @@
+import { QueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import ProductList from './ProductList';
+
+import { createWrapper } from '@/test/utils/queryWrapper';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -15,8 +18,11 @@ vi.mock('@shared/context/ToastContext', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 vi.mock('@modules/diet-planner/unitLabel', () => ({ unitLabel: (u: string) => u }));
+const productFetch = vi.fn(() => Promise.resolve(null));
+
 vi.mock('@modules/diet-planner/api/hooks/useProducts', () => ({
   useDeleteProduct: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  productOptions: (id: string) => ({ queryKey: ['products', id], queryFn: productFetch }),
   useProducts: () => ({
     isLoading: false,
     error: null,
@@ -50,14 +56,32 @@ vi.mock('@modules/diet-planner/api/hooks/useProducts', () => ({
 }));
 
 function renderList() {
-  return render(
-    <MemoryRouter>
-      <ProductList />
-    </MemoryRouter>,
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const Wrapper = createWrapper(queryClient);
+  const view = render(
+    <Wrapper>
+      <MemoryRouter>
+        <ProductList />
+      </MemoryRouter>
+    </Wrapper>,
   );
+  return { ...view, queryClient };
 }
 
 describe('ProductList', () => {
+  beforeEach(() => {
+    productFetch.mockClear();
+  });
+
+  it('prefetches the product detail when a row link is hovered', async () => {
+    const { queryClient } = renderList();
+
+    await userEvent.hover(screen.getByRole('link', { name: 'Chicken breast' }));
+
+    expect(productFetch).toHaveBeenCalledOnce();
+    expect(queryClient.getQueryState(['products', 'a'])).toBeDefined();
+  });
+
   it('flags a product with missing macros as incomplete', () => {
     renderList();
     expect(screen.getByText('products.incomplete_badge')).toBeInTheDocument();

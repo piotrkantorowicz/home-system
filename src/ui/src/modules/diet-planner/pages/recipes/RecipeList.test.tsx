@@ -1,9 +1,12 @@
+import { QueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import RecipeList from './RecipeList';
+
+import { createWrapper } from '@/test/utils/queryWrapper';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -14,8 +17,11 @@ vi.mock('react-i18next', () => ({
 vi.mock('@shared/context/ToastContext', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
+const recipeFetch = vi.fn(() => Promise.resolve(null));
+
 vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
   useDeleteRecipe: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  recipeOptions: (id: string) => ({ queryKey: ['recipes', id], queryFn: recipeFetch }),
   useRecipes: () => ({
     isLoading: false,
     error: null,
@@ -44,14 +50,32 @@ vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
 }));
 
 function renderList() {
-  return render(
-    <MemoryRouter>
-      <RecipeList />
-    </MemoryRouter>,
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const Wrapper = createWrapper(queryClient);
+  const view = render(
+    <Wrapper>
+      <MemoryRouter>
+        <RecipeList />
+      </MemoryRouter>
+    </Wrapper>,
   );
+  return { ...view, queryClient };
 }
 
 describe('RecipeList', () => {
+  beforeEach(() => {
+    recipeFetch.mockClear();
+  });
+
+  it('prefetches the recipe detail when a card link is hovered', async () => {
+    const { queryClient } = renderList();
+
+    await userEvent.hover(screen.getByRole('link', { name: 'Protein bowl' }));
+
+    expect(recipeFetch).toHaveBeenCalledOnce();
+    expect(queryClient.getQueryState(['recipes', 'a'])).toBeDefined();
+  });
+
   it('renders every recipe and a create tile', () => {
     renderList();
     expect(screen.getByText('Protein bowl')).toBeInTheDocument();
