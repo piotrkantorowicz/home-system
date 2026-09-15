@@ -33,7 +33,7 @@ public sealed class NotificationTests
     {
         var act = () => Notification.Create(
             NotificationId.New(), "  ", NotificationType.WaterReminder,
-            "T", "B", "{}", DateTime.UtcNow);
+            "T", "B", "{}", TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -43,7 +43,7 @@ public sealed class NotificationTests
     public void MarkRead_FirstTime_SetsReadAt()
     {
         var notification = NewMealReminder();
-        var readAt = DateTime.UtcNow;
+        var readAt = TestClock.UtcNow;
 
         notification.MarkRead(readAt);
 
@@ -66,5 +66,5 @@ public sealed class NotificationTests
     private static Notification NewMealReminder()
         => Notification.Create(
             NotificationId.New(), "user-1", NotificationType.MealReminder,
-            "T", "B", "{}", DateTime.UtcNow);
+            "T", "B", "{}", TestClock.UtcNow);
 }

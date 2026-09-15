@@ -5,7 +5,8 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class BulkMarkNotificationsReadCommandHandler(
     INotificationRepository repository,
-    INotificationsUnitOfWork unitOfWork)
+    INotificationsUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<BulkMarkNotificationsReadCommand>
 {
     public async Task HandleAsync(BulkMarkNotificationsReadCommand command, CancellationToken ct = default)
@@ -15,7 +16,7 @@ internal sealed class BulkMarkNotificationsReadCommandHandler(
 
         if (command.Ids.Count == 0) return;
 
-        await repository.BulkMarkReadAsync(command.Ids, command.UserId, DateTime.UtcNow, ct);
+        await repository.BulkMarkReadAsync(command.Ids, command.UserId, clock.GetUtcNow().UtcDateTime, ct);
         await unitOfWork.CommitAsync(ct);
     }
 }

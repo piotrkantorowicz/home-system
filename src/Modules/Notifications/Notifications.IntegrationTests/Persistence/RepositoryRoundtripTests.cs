@@ -10,6 +10,8 @@ using Notifications.IntegrationTests.Infrastructure;
 [Collection(NotificationsDatabaseCollectionDefinition.Name)]
 public sealed class RepositoryRoundtripTests
 {
+    private static readonly DateTime Now = new(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
+
     private readonly NotificationsPostgresFixture _fixture;
 
     /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
@@ -34,7 +36,7 @@ public sealed class RepositoryRoundtripTests
         var id = NotificationId.New();
         var notification = Notification.Create(
             id, $"user-{Guid.NewGuid():N}", NotificationType.MealReminder,
-            "Lunch", "Eat now", """{"slot":"lunch"}""", DateTime.UtcNow);
+            "Lunch", "Eat now", """{"slot":"lunch"}""", Now);
 
         await repo.AddAsync(notification, CancellationToken.None);
         await uow.CommitAsync(CancellationToken.None);
@@ -60,7 +62,7 @@ public sealed class RepositoryRoundtripTests
         var notificationId = NotificationId.New();
         var notification = Notification.Create(
             notificationId, $"user-{Guid.NewGuid():N}", NotificationType.WaterReminder,
-            "Water", "Drink now", "{}", DateTime.UtcNow);
+            "Water", "Drink now", "{}", Now);
         await repo.AddAsync(notification, CancellationToken.None);
 
         var deliveryId = NotificationDeliveryId.New();
@@ -88,7 +90,7 @@ public sealed class RepositoryRoundtripTests
         var repo = new NotificationChannelPreferencesRepository(uow);
 
         var prefs = NotificationChannelPreferences.CreateDefault(
-            NotificationChannelPreferencesId.New(), userId, DateTime.UtcNow);
+            NotificationChannelPreferencesId.New(), userId, Now);
         await repo.AddAsync(prefs, CancellationToken.None);
         await uow.CommitAsync(CancellationToken.None);
 
@@ -100,7 +102,7 @@ public sealed class RepositoryRoundtripTests
         loaded.ConsoleEnabled.ShouldBeTrue();
         loaded.EmailEnabled.ShouldBeTrue();
 
-        loaded.Update(consoleEnabled: false, emailEnabled: true, webSocketEnabled: false, updatedAt: DateTime.UtcNow);
+        loaded.Update(consoleEnabled: false, emailEnabled: true, webSocketEnabled: false, updatedAt: Now);
 
         var (_, uow3) = CreateScope();
         await using var disposeUow3 = uow3;
@@ -128,7 +130,7 @@ public sealed class RepositoryRoundtripTests
 
         (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeFalse();
 
-        await store.RecordAsync(eventId, "Some.Event", DateTime.UtcNow, CancellationToken.None);
+        await store.RecordAsync(eventId, "Some.Event", Now, CancellationToken.None);
 
         (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeTrue();
     }

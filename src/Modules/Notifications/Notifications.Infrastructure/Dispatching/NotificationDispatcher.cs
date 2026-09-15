@@ -15,7 +15,8 @@ internal sealed partial class NotificationDispatcher(
     INotificationTemplateRegistry templates,
     IEnumerable<INotificationChannelSender> senders,
     DapperUnitOfWork unitOfWork,
-    ILogger<NotificationDispatcher> logger)
+    ILogger<NotificationDispatcher> logger,
+    TimeProvider clock)
     : INotificationDispatcher
 {
     private static readonly NotificationChannel[] AllChannels =
@@ -33,11 +34,12 @@ internal sealed partial class NotificationDispatcher(
         ArgumentException.ThrowIfNullOrWhiteSpace(locale);
         ArgumentException.ThrowIfNullOrWhiteSpace(payload);
 
+        var now = clock.GetUtcNow().UtcDateTime;
         var preferences = await preferencesRepository.GetByUserIdAsync(userId, ct);
         if (preferences is null)
         {
             preferences = NotificationChannelPreferences.CreateDefault(
-                NotificationChannelPreferencesId.New(), userId, DateTime.UtcNow);
+                NotificationChannelPreferencesId.New(), userId, now);
             await preferencesRepository.AddAsync(preferences, ct);
         }
 
@@ -47,7 +49,7 @@ internal sealed partial class NotificationDispatcher(
 
         var notificationId = NotificationId.New();
         var notification = Notification.Create(
-            notificationId, userId, type, title, body, payload, DateTime.UtcNow);
+            notificationId, userId, type, title, body, payload, now);
         await notificationRepository.AddAsync(notification, ct);
 
         var enabledChannels = AllChannels.Where(preferences.IsEnabled).ToList();
@@ -68,7 +70,7 @@ internal sealed partial class NotificationDispatcher(
         {
             if (!sendersByChannel.TryGetValue(delivery.Channel, out var sender))
             {
-                delivery.MarkSkipped(DateTime.UtcNow);
+                delivery.MarkSkipped(now);
                 await notificationRepository.UpdateDeliveryAsync(delivery, ct);
                 continue;
             }
@@ -84,12 +86,12 @@ internal sealed partial class NotificationDispatcher(
                     Body: body,
                     CreatedAt: notification.CreatedAt);
                 var outcome = await sender.SendAsync(sendContext, ct);
-                DeliveryOutcomeApplier.Apply(delivery, outcome, DateTime.UtcNow);
+                DeliveryOutcomeApplier.Apply(delivery, outcome, now);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogDeliveryFailed(ex, delivery.Id, delivery.Channel);
-                delivery.MarkFailed(DateTime.UtcNow, ex.Message);
+                delivery.MarkFailed(now, ex.Message);
             }
 
             await notificationRepository.UpdateDeliveryAsync(delivery, ct);

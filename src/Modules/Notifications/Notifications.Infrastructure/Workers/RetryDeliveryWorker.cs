@@ -14,7 +14,8 @@ using Notifications.Infrastructure.Persistence;
 internal sealed partial class RetryDeliveryWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<RetryDeliveryWorkerOptions> options,
-    ILogger<RetryDeliveryWorker> logger) : BackgroundService
+    ILogger<RetryDeliveryWorker> logger,
+    TimeProvider clock) : BackgroundService
 {
     private readonly RetryDeliveryWorkerOptions _options = options.Value;
 
@@ -58,7 +59,7 @@ internal sealed partial class RetryDeliveryWorker(
 
         foreach (var delivery in due)
         {
-            await RetryAsync(delivery, repository, unitOfWork, senders, ct).ConfigureAwait(false);
+            await RetryAsync(delivery, repository, unitOfWork, senders, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
         }
     }
 
@@ -67,6 +68,7 @@ internal sealed partial class RetryDeliveryWorker(
         INotificationRepository repository,
         DapperUnitOfWork unitOfWork,
         Dictionary<NotificationChannel, INotificationChannelSender> senders,
+        DateTime now,
         CancellationToken ct)
     {
         var notification = await repository.GetByIdAsync(delivery.NotificationId, ct).ConfigureAwait(false);
@@ -78,7 +80,7 @@ internal sealed partial class RetryDeliveryWorker(
 
         if (!senders.TryGetValue(delivery.Channel, out var sender))
         {
-            delivery.MarkSkipped(DateTime.UtcNow);
+            delivery.MarkSkipped(now);
             await repository.UpdateDeliveryAsync(delivery, ct).ConfigureAwait(false);
             await unitOfWork.CommitAsync(ct).ConfigureAwait(false);
             return;
@@ -95,12 +97,12 @@ internal sealed partial class RetryDeliveryWorker(
                 Body: notification.Body,
                 CreatedAt: notification.CreatedAt);
             var outcome = await sender.SendAsync(sendContext, ct).ConfigureAwait(false);
-            DeliveryOutcomeApplier.Apply(delivery, outcome, DateTime.UtcNow);
+            DeliveryOutcomeApplier.Apply(delivery, outcome, now);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogRetryFailed(ex, delivery.Id, delivery.Channel, delivery.AttemptCount + 1);
-            delivery.MarkFailed(DateTime.UtcNow, ex.Message);
+            delivery.MarkFailed(now, ex.Message);
         }
 
         await repository.UpdateDeliveryAsync(delivery, ct).ConfigureAwait(false);
