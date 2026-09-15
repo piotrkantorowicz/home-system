@@ -1,5 +1,6 @@
 using DietPlanner.Api;
 using DietPlanner.Infrastructure;
+using HomeSystem.REST;
 using Household.Api;
 using Household.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -109,50 +110,14 @@ builder.WebHost.ConfigureKestrel(options =>
 // ==============================================
 builder.Services.AddOpenApi(options =>
 {
-    options.AddDocumentTransformer((document, _, _) =>
-    {
-        document.Info = new()
-        {
-            Title = "Diet Planner API",
-            Version = "v1",
-            Description = "API for diet planning. Manage products, recipes, meal entries, and nutrition goals."
-        };
-
-        document.Tags = new HashSet<Microsoft.OpenApi.OpenApiTag>
-        {
-            new() { Name = "Products", Description = "Nutritional product catalogue — create, search, update, and delete food products." },
-            new() { Name = "Recipes", Description = "Recipes composed from products — create, search, update, and delete recipes with their ingredient lists." },
-            new() { Name = "Meals", Description = "Daily meal log — record recipe servings against specific dates and meal types, and query aggregated nutrition summaries." },
-            new() { Name = "Goals", Description = "Per-user daily nutrition targets — create or update calorie, protein, carbohydrate, fat, and fibre goals." },
-            new() { Name = "Households", Description = "Households — the sharing boundary that groups the people living together." },
-            new() { Name = "Persons", Description = "The local registry of people. Sync the signed-in account and read its Person record." },
-            new() { Name = "Health", Description = "Service health check endpoint." }
-        };
-
-        document.Components ??= new Microsoft.OpenApi.OpenApiComponents();
-        document.Components.SecuritySchemes ??= new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme>();
-        document.Components.SecuritySchemes["Bearer"] = new Microsoft.OpenApi.OpenApiSecurityScheme
-        {
-            Type = Microsoft.OpenApi.SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            Description = "JWT Bearer token issued by Authentik. Pass the token value — the 'Bearer ' prefix is added automatically."
-        };
-
-        document.Security ??= [];
-        document.Security.Add(new Microsoft.OpenApi.OpenApiSecurityRequirement
-        {
-            [new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
-        });
-
-        return Task.CompletedTask;
-    });
+    options.AddDocumentTransformer<HomeSystemDocumentTransformer>();
 });
 
 // ==============================================
-// Error handling middleware
+// Error handling — one IExceptionHandler maps Shared.Abstractions exceptions to problem+json
 // ==============================================
-builder.Services.AddTransient<ExceptionHandlingMiddleware>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApplicationExceptionHandler>();
 
 // ==============================================
 // Build
@@ -174,14 +139,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
-app.Use(async (context, next) =>
+// Expected (4xx / 499) exceptions are not faults: keep them out of the log and the error metrics.
+app.UseExceptionHandler(new ExceptionHandlerOptions
 {
-    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Append("X-Frame-Options", "DENY");
-    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-    await next();
+    SuppressDiagnosticsCallback = ApplicationExceptionHandler.ShouldSuppressDiagnostics,
 });
 
 app.UseCors("AllowFrontend");
