@@ -18,7 +18,7 @@ export function useUpdateChannelPreferences() {
         body: preferences,
       });
 
-      if (response.error || !response.response.ok) {
+      if (!response.response.ok) {
         throw new Error('Failed to update channel preferences');
       }
 

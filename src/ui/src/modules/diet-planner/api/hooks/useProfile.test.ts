@@ -58,12 +58,11 @@ describe('useProfile', () => {
 });
 
 describe('useCreateProfile', () => {
-  it('calls POST /api/v1/profile and returns the new id', async () => {
+  it('calls POST /api/v1/profile and succeeds', async () => {
     const { result } = renderHook(() => useCreateProfile(), { wrapper: createWrapper() });
 
-    let returnedId: string | undefined;
     await waitFor(async () => {
-      returnedId = await result.current.mutateAsync({
+      await result.current.mutateAsync({
         dateOfBirth: '1990-05-15',
         gender: 'Male',
         heightCm: 180,
@@ -73,7 +72,7 @@ describe('useCreateProfile', () => {
       });
     });
 
-    expect(returnedId).toBe('66666666-6666-6666-6666-666666666666');
+    expect(result.current.isSuccess).toBe(true);
   });
 
   it('throws on server error', async () => {

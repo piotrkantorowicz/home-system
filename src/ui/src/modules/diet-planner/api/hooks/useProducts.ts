@@ -114,7 +114,7 @@ export function useCreateProduct() {
         body: productData,
       });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to create product');
       }
 
@@ -138,7 +138,7 @@ export function useUpdateProduct(id: string) {
         body: productData,
       });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to update product');
       }
 

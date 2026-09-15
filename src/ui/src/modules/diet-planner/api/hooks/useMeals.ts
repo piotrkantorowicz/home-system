@@ -57,7 +57,7 @@ export function useCreateMeal() {
   return useMutation({
     mutationFn: async (data: CreateMealEntryRequest): Promise<MealEntry> => {
       const response = await api.POST('/api/v1/meals', { body: data });
-      if (response.error) throw new Error('Failed to create meal entry');
+      if (!response.response.ok) throw new Error('Failed to create meal entry');
       return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
@@ -83,7 +83,7 @@ export function useUpdateMeal() {
         params: { path: { id } },
         body: data,
       });
-      if (response.error) throw new Error('Failed to update meal entry');
+      if (!response.response.ok) throw new Error('Failed to update meal entry');
       return response.data as unknown as MealEntry;
     },
     onSuccess: () => {
@@ -219,7 +219,7 @@ export function useValidateImport() {
         body: importData,
       });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Validation API call failed');
       }
 
@@ -241,8 +241,7 @@ export function useExecuteImport() {
         body: importData,
       });
 
-      if (response.error) throw new Error('Import failed');
-      if (!response.data) throw new Error('Import returned no data');
+      if (!response.response.ok) throw new Error('Import failed');
       return response.data;
     },
     onSuccess: () => {
