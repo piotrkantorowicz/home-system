@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
 import { notificationsQueryKeys } from '../queryKeys';
 
-import type { ChannelPreferencesDto } from './useChannelPreferences';
+import { channelPreferencesOptions, type ChannelPreferencesDto } from './useChannelPreferences';
 
 interface UpdateContext {
   previous: ChannelPreferencesDto | undefined;
@@ -26,21 +26,18 @@ export function useUpdateChannelPreferences() {
     },
 
     onMutate: async (preferences) => {
-      const queryKey = notificationsQueryKeys.channelPreferences.detail();
+      const { queryKey } = channelPreferencesOptions();
       await queryClient.cancelQueries({ queryKey });
 
-      const previous = queryClient.getQueryData<ChannelPreferencesDto>(queryKey);
-      queryClient.setQueryData<ChannelPreferencesDto>(queryKey, preferences);
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, preferences);
 
       return { previous };
     },
 
     onError: (_err, _vars, context) => {
       if (!context) return;
-      queryClient.setQueryData(
-        notificationsQueryKeys.channelPreferences.detail(),
-        context.previous,
-      );
+      queryClient.setQueryData(channelPreferencesOptions().queryKey, context.previous);
     },
 
     onSettled: () => {
