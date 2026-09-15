@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -56,10 +62,10 @@ interface ProductsQueryParams {
   pageSize?: number;
 }
 
-export function useProducts(params: ProductsQueryParams = {}) {
+export function productListOptions(params: ProductsQueryParams = {}) {
   const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
 
-  return useQuery({
+  return queryOptions({
     queryKey: queryKeys.products.list({ search, onlyMine, page, pageSize }),
     queryFn: async (): Promise<ProductsResponse> => {
       const response = await api.GET('/api/v1/products', {
@@ -81,19 +87,27 @@ export function useProducts(params: ProductsQueryParams = {}) {
       };
       return { ...raw, items: raw.items.map(mapProduct) };
     },
-    placeholderData: keepPreviousData,
   });
 }
 
-export function useProduct(id: string) {
-  return useQuery({
+export function useProducts(params: ProductsQueryParams = {}) {
+  return useQuery({ ...productListOptions(params), placeholderData: keepPreviousData });
+}
+
+export function productOptions(id: string) {
+  return queryOptions({
     queryKey: queryKeys.products.detail(id),
-    queryFn: async (): Promise<Product> => {
+    queryFn: async (): Promise<Product | null> => {
       const response = await api.GET('/api/v1/products/{id}', {
         params: {
           path: { id },
         },
       });
+
+      // A missing product is a valid, expected state — pages render "not found" for null.
+      if (response.response.status === 404) {
+        return null;
+      }
 
       if (!response.data) {
         throw new Error('Failed to fetch product');
@@ -101,8 +115,11 @@ export function useProduct(id: string) {
 
       return mapProduct(response.data);
     },
-    enabled: !!id,
   });
+}
+
+export function useProduct(id: string) {
+  return useQuery({ ...productOptions(id), enabled: !!id });
 }
 
 export function useCreateProduct() {

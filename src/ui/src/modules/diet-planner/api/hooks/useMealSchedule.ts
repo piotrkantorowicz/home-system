@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -10,8 +10,8 @@ export type MealScheduleConfigDto = components['schemas']['MealScheduleConfigDto
 export type MealSlotRequest = components['schemas']['MealSlotRequest'];
 export type UpdateMealScheduleRequest = components['schemas']['UpdateMealScheduleRequest'];
 
-export function useMealSchedule() {
-  return useQuery({
+export function mealScheduleOptions() {
+  return queryOptions({
     queryKey: queryKeys.mealSchedule.detail(),
     queryFn: async (): Promise<MealScheduleConfigDto | null> => {
       const response = await api.GET('/api/v1/meal-schedule');
@@ -24,6 +24,10 @@ export function useMealSchedule() {
       return response.data ?? null;
     },
   });
+}
+
+export function useMealSchedule() {
+  return useQuery(mealScheduleOptions());
 }
 
 export function useUpdateMealSchedule() {

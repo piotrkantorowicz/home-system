@@ -1,9 +1,17 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
 
 import type { components } from '../generated/schema';
+
+export type RecipeDto = components['schemas']['RecipeDto'];
 
 interface RecipesQueryParams {
   search?: string;
@@ -12,10 +20,10 @@ interface RecipesQueryParams {
   pageSize?: number;
 }
 
-export function useRecipes(params: RecipesQueryParams = {}) {
+export function recipeListOptions(params: RecipesQueryParams = {}) {
   const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
 
-  return useQuery({
+  return queryOptions({
     queryKey: queryKeys.recipes.list({ search, onlyMine, page, pageSize }),
     queryFn: async () => {
       const response = await api.GET('/api/v1/recipes', {
@@ -30,19 +38,27 @@ export function useRecipes(params: RecipesQueryParams = {}) {
 
       return response.data;
     },
-    placeholderData: keepPreviousData,
   });
 }
 
-export function useRecipe(id: string) {
-  return useQuery({
+export function useRecipes(params: RecipesQueryParams = {}) {
+  return useQuery({ ...recipeListOptions(params), placeholderData: keepPreviousData });
+}
+
+export function recipeOptions(id: string) {
+  return queryOptions({
     queryKey: queryKeys.recipes.detail(id),
-    queryFn: async () => {
+    queryFn: async (): Promise<RecipeDto | null> => {
       const response = await api.GET('/api/v1/recipes/{id}', {
         params: {
           path: { id },
         },
       });
+
+      // A missing recipe is a valid, expected state — pages render "not found" for null.
+      if (response.response.status === 404) {
+        return null;
+      }
 
       if (!response.data) {
         throw new Error('Failed to fetch recipe');
@@ -50,8 +66,11 @@ export function useRecipe(id: string) {
 
       return response.data;
     },
-    enabled: !!id,
   });
+}
+
+export function useRecipe(id: string) {
+  return useQuery({ ...recipeOptions(id), enabled: !!id });
 }
 
 export function useCreateRecipe() {

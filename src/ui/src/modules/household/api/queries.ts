@@ -1,17 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from 'react-oidc-context';
 
 import { api, checkResponse } from './client';
+import { householdQueryKeys } from './queryKeys';
 
 import type { HouseholdRole } from '../types';
 
-export const householdKeys = { all: ['household'] as const };
-
-export function useHouseholdQuery() {
-  const auth = useAuth();
-  return useQuery({
-    queryKey: [...householdKeys.all, 'me', auth.user?.profile.sub],
-    enabled: auth.isAuthenticated,
+export function householdOptions(subject: string | undefined) {
+  return queryOptions({
+    queryKey: householdQueryKeys.me(subject),
     queryFn: async ({ signal }) => {
       // A missing person also returns 404; this lookup is only a membership snapshot.
       const beforeSync = await api.GET('/api/households/me', { signal });
@@ -33,11 +30,17 @@ export function useHouseholdQuery() {
   });
 }
 
-export function usePickablePersons(enabled: boolean) {
+export function useHouseholdQuery() {
   const auth = useAuth();
   return useQuery({
-    queryKey: [...householdKeys.all, 'pickable', auth.user?.profile.sub],
-    enabled,
+    ...householdOptions(auth.user?.profile.sub),
+    enabled: auth.isAuthenticated,
+  });
+}
+
+export function pickablePersonsOptions(subject: string | undefined) {
+  return queryOptions({
+    queryKey: householdQueryKeys.pickable(subject),
     queryFn: async ({ signal }) => {
       const result = await api.GET('/api/households/pickable-persons', { signal });
       checkResponse(result);
@@ -46,11 +49,14 @@ export function usePickablePersons(enabled: boolean) {
   });
 }
 
-export function useInvitations(id: string, enabled: boolean) {
+export function usePickablePersons(enabled: boolean) {
   const auth = useAuth();
-  return useQuery({
-    queryKey: [...householdKeys.all, 'invitations', id, auth.user?.profile.sub],
-    enabled,
+  return useQuery({ ...pickablePersonsOptions(auth.user?.profile.sub), enabled });
+}
+
+export function invitationsOptions(id: string, subject: string | undefined) {
+  return queryOptions({
+    queryKey: householdQueryKeys.invitations(id, subject),
     queryFn: async ({ signal }) => {
       const result = await api.GET('/api/households/{id}/invitations', {
         params: { path: { id } },
@@ -60,6 +66,11 @@ export function useInvitations(id: string, enabled: boolean) {
       return result.data ?? [];
     },
   });
+}
+
+export function useInvitations(id: string, enabled: boolean) {
+  const auth = useAuth();
+  return useQuery({ ...invitationsOptions(id, auth.user?.profile.sub), enabled });
 }
 
 type HouseholdAction =
@@ -122,7 +133,7 @@ export function useHouseholdMutation() {
   return useMutation({
     mutationFn: mutateHousehold,
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: householdKeys.all });
+      await client.invalidateQueries({ queryKey: householdQueryKeys.all() });
       // Shared resources may now have a different household scope.
       await client.invalidateQueries({ predicate: (query) => query.queryKey[0] !== 'household' });
     },

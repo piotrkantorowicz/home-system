@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -68,8 +68,8 @@ export interface LogWaterIntakeData {
   note?: string;
 }
 
-export function useHydrationConfig() {
-  return useQuery({
+export function hydrationConfigOptions() {
+  return queryOptions({
     queryKey: queryKeys.hydration.config(),
     queryFn: async (): Promise<HydrationConfigDto | null> => {
       // REASON: /api/v1/hydration/config is not in the generated openapi schema — regenerate schema to remove this cast
@@ -85,6 +85,10 @@ export function useHydrationConfig() {
       return response.data ?? null;
     },
   });
+}
+
+export function useHydrationConfig() {
+  return useQuery(hydrationConfigOptions());
 }
 
 export function useUpdateHydrationConfig() {
@@ -110,8 +114,8 @@ export function useUpdateHydrationConfig() {
   });
 }
 
-export function useWaterIntake(date: string) {
-  return useQuery({
+export function waterIntakeOptions(date: string) {
+  return queryOptions({
     queryKey: queryKeys.hydration.intake(date),
     queryFn: async (): Promise<WaterIntakeListDto | null> => {
       // REASON: /api/v1/hydration/intake is not in the generated openapi schema — regenerate schema to remove this cast
@@ -127,6 +131,10 @@ export function useWaterIntake(date: string) {
       return response.data ?? null;
     },
   });
+}
+
+export function useWaterIntake(date: string) {
+  return useQuery(waterIntakeOptions(date));
 }
 
 export function useLogWaterIntake() {

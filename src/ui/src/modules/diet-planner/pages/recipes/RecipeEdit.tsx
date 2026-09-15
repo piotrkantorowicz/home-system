@@ -1,5 +1,6 @@
-import { useRecipe, useUpdateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { recipeOptions, useUpdateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
 import { useToast } from '@shared/context/ToastContext';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ export default function RecipeEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
-  const { data: recipe, isLoading } = useRecipe(id ?? '');
+  const { data: recipe } = useSuspenseQuery(recipeOptions(id ?? ''));
   const updateMutation = useUpdateRecipe(id ?? '');
 
   const handleSubmit = async (data: RecipeFormData) => {
@@ -35,14 +36,6 @@ export default function RecipeEdit() {
     toast.success(t('recipe_form.update_success'));
     void navigate(`/diet-planner/recipes/${id ?? ''}`);
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-8 lg:p-10">
-        <div className="text-muted-foreground text-lg">{t('common.loading')}</div>
-      </div>
-    );
-  }
 
   if (!recipe) {
     return (
