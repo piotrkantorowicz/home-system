@@ -1,5 +1,5 @@
 import { ToastContainer } from '@shared/components/ui/Toast';
-import { createContext, useCallback, useContext, useReducer, useRef } from 'react';
+import { createContext, useContext, useReducer, useRef } from 'react';
 
 import type { ReactNode } from 'react';
 
@@ -59,11 +59,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(toastReducer, { toasts: [] });
   const counterRef = useRef(0);
 
-  const dismiss = useCallback((id: string) => {
+  function dismiss(id: string) {
     dispatch({ type: 'REMOVE', id });
-  }, []);
+  }
 
-  const add = useCallback((variant: ToastVariant, message: string, options?: ToastOptions) => {
+  function add(variant: ToastVariant, message: string, options?: ToastOptions) {
     counterRef.current += 1;
     const id = `toast-${String(counterRef.current)}`;
     const duration = options?.duration ?? 4000;
@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ...(options?.action ? { action: options.action } : {}),
       },
     });
-  }, []);
+  }
 
   const value: ToastContextValue = {
     success: (msg, opts) => {

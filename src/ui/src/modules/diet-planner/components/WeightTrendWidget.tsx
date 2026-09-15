@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from '@shared/components/ui';
 import { ArrowDown, ArrowUp, Minus, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
@@ -47,7 +47,7 @@ function computeDelta(entries: WeightEntryDto[]): { current: number; delta: numb
 export function WeightTrendWidget() {
   const { t } = useTranslation();
   const { data: profile } = useProfile();
-  const range = useMemo(() => getRange(), []);
+  const range = getRange();
   const { data: entries } = useWeightEntries(range);
   const [logOpen, setLogOpen] = useState(false);
 

@@ -44,7 +44,9 @@ export function DayMealList({
   const { t } = useTranslation();
 
   const mealsBySlot = meals.reduce<Record<string, MealEntryDto[]>>((acc, meal) => {
-    (acc[meal.mealSlotId] ??= []).push(meal);
+    const slotMeals = acc[meal.mealSlotId] ?? [];
+    slotMeals.push(meal);
+    acc[meal.mealSlotId] = slotMeals;
     return acc;
   }, {});
 

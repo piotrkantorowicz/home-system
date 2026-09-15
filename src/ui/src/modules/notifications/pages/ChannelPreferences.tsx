@@ -1,6 +1,5 @@
 import { Banner, Button } from '@shared/components/ui';
 import { Mail, Wifi } from 'lucide-react';
-import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -16,14 +15,11 @@ export default function ChannelPreferences() {
   const update = useUpdateChannelPreferences();
   const saveErrorMsg = update.isError ? t('preferences.save_failed') : null;
 
-  const handleChange = useCallback(
-    (field: keyof ChannelPreferencesDto, next: boolean) => {
-      if (!data) return;
-      const updated: ChannelPreferencesDto = { ...data, [field]: next };
-      update.mutate(updated);
-    },
-    [data, update],
-  );
+  function handleChange(field: keyof ChannelPreferencesDto, next: boolean) {
+    if (!data) return;
+    const updated: ChannelPreferencesDto = { ...data, [field]: next };
+    update.mutate(updated);
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8">

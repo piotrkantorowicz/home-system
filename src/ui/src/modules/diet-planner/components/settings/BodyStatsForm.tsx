@@ -82,20 +82,22 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
   }, [profile, reset]);
 
   const onSubmit = async (data: BodyStatsFormData) => {
+    const request = {
+      dateOfBirth: data.dateOfBirth ?? null,
+      gender: data.gender ?? null,
+      heightCm: data.heightCm ?? null,
+      currentWeightKg: data.currentWeightKg ?? null,
+      targetWeightKg: data.targetWeightKg ?? null,
+      activityLevel: data.activityLevel ?? null,
+    };
     try {
-      await saveMutation.mutateAsync({
-        dateOfBirth: data.dateOfBirth ?? null,
-        gender: data.gender ?? null,
-        heightCm: data.heightCm ?? null,
-        currentWeightKg: data.currentWeightKg ?? null,
-        targetWeightKg: data.targetWeightKg ?? null,
-        activityLevel: data.activityLevel ?? null,
-      });
-      toast.success(t('profile.save_success'));
-      onSuccess?.();
+      await saveMutation.mutateAsync(request);
     } catch {
       toast.error(t('profile.save_error'));
+      return;
     }
+    toast.success(t('profile.save_success'));
+    onSuccess?.();
   };
 
   if (isLoading) {

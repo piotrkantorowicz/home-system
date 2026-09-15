@@ -1,6 +1,5 @@
 import { linearRegression } from '@modules/diet-planner/utils/linearRegression';
 import { normalizeWeight } from '@modules/diet-planner/utils/normalizeWeight';
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
@@ -27,40 +26,42 @@ interface ChartPoint {
   trend?: number;
 }
 
+function buildChartPoints(entries: WeightEntryDto[], locale: string): ChartPoint[] {
+  if (entries.length === 0) return [];
+
+  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  const first = sorted[0];
+  if (!first) return [];
+  const baseTime = new Date(first.date).getTime();
+  const dayMs = 1000 * 60 * 60 * 24;
+
+  const regression = linearRegression(
+    sorted.map((e) => ({
+      x: (new Date(e.date).getTime() - baseTime) / dayMs,
+      y: normalizeWeight(e.weightKg),
+    })),
+  );
+
+  const fmt = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
+
+  return sorted.map((e): ChartPoint => {
+    const dayIndex = (new Date(e.date).getTime() - baseTime) / dayMs;
+    const point: ChartPoint = {
+      dateLabel: fmt.format(new Date(e.date)),
+      dayIndex,
+      actual: normalizeWeight(e.weightKg),
+    };
+    if (regression) {
+      point.trend = Math.round((regression.slope * dayIndex + regression.intercept) * 100) / 100;
+    }
+    return point;
+  });
+}
+
 export function WeightChart({ entries, height = 280, showTrend = false }: WeightChartProps) {
   const { t, i18n } = useTranslation();
 
-  const data: ChartPoint[] = useMemo(() => {
-    if (entries.length === 0) return [];
-
-    const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-    const first = sorted[0];
-    if (!first) return [];
-    const baseTime = new Date(first.date).getTime();
-    const dayMs = 1000 * 60 * 60 * 24;
-
-    const regression = linearRegression(
-      sorted.map((e) => ({
-        x: (new Date(e.date).getTime() - baseTime) / dayMs,
-        y: normalizeWeight(e.weightKg),
-      })),
-    );
-
-    const fmt = new Intl.DateTimeFormat(i18n.language, { month: 'short', day: 'numeric' });
-
-    return sorted.map((e): ChartPoint => {
-      const dayIndex = (new Date(e.date).getTime() - baseTime) / dayMs;
-      const point: ChartPoint = {
-        dateLabel: fmt.format(new Date(e.date)),
-        dayIndex,
-        actual: normalizeWeight(e.weightKg),
-      };
-      if (regression) {
-        point.trend = Math.round((regression.slope * dayIndex + regression.intercept) * 100) / 100;
-      }
-      return point;
-    });
-  }, [entries, i18n.language]);
+  const data = buildChartPoints(entries, i18n.language);
 
   if (data.length === 0) {
     return (

@@ -160,11 +160,12 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
         weeklySummaryTimeOfDayUtc: summaryUtc.timeOfDayUtc,
         goalAlertsEnabled: data.goalAlertsEnabled,
       });
-      toast.success(t('dietReminderSettings.save_success'));
-      onSuccess?.();
     } catch {
       toast.error(t('dietReminderSettings.save_error'));
+      return;
     }
+    toast.success(t('dietReminderSettings.save_success'));
+    onSuccess?.();
   };
 
   if (isLoading) {

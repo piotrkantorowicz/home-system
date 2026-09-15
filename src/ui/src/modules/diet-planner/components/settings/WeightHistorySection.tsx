@@ -3,7 +3,7 @@ import { useWeightEntries } from '@modules/diet-planner/api/hooks/useWeightEntri
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
 import { Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { WeightChart } from './WeightChart';
@@ -34,7 +34,7 @@ export function WeightHistorySection() {
   const [showTrend, setShowTrend] = useState(false);
   const days = RANGES.find((r) => r.id === range)?.days ?? null;
   const { data: profile } = useProfile();
-  const queryRange = useMemo(() => rangeFromDays(days), [days]);
+  const queryRange = rangeFromDays(days);
   const { data: entries, isLoading } = useWeightEntries(queryRange);
 
   return (
