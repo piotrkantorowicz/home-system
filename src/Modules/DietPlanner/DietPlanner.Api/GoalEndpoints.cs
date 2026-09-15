@@ -6,6 +6,7 @@ using DietPlanner.Application.Commands.UpdateGoal;
 using DietPlanner.Application.Queries.GetGoal;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -26,31 +27,22 @@ public static class GoalEndpoints
         group.MapGet("/", GetGoal)
             .WithName("GetGoals")
             .WithSummary("Get the current user's nutrition goals")
-            .WithDescription("Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.")
-            .Produces<GoalDto>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns the active nutrition targets for the current user. Returns `null` body when no goals have been set yet.");
 
         group.MapPost("/", CreateGoal)
             .WithName("CreateGoals")
             .WithSummary("Create nutrition goals for the current user")
-            .WithDescription("Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.")
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Sets daily nutrition targets for the current user. All fields are optional — omit any target you do not wish to track.");
 
         group.MapPut("/", UpdateGoal)
             .WithName("UpdateGoals")
             .WithSummary("Update nutrition goals for the current user")
-            .WithDescription("Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Replaces all nutrition targets for the current user. Pass `null` for any field to clear that specific target.");
 
         return app;
     }
 
-    private static async Task<IResult> GetGoal(
+    private static async Task<Ok<GoalDto>> GetGoal(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
@@ -61,7 +53,7 @@ public static class GoalEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> CreateGoal(
+    private static async Task<Created> CreateGoal(
         GoalRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -75,7 +67,7 @@ public static class GoalEndpoints
         return TypedResults.Created($"/api/v1/goals/{id}");
     }
 
-    private static async Task<IResult> UpdateGoal(
+    private static async Task<NoContent> UpdateGoal(
         GoalRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

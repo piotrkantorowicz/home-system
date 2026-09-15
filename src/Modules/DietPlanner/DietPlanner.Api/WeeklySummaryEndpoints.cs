@@ -4,6 +4,7 @@ using System.Security.Claims;
 using DietPlanner.Application.Queries.GetWeeklySummary;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -24,15 +25,12 @@ public static class WeeklySummaryEndpoints
         group.MapGet("/", GetWeeklySummary)
             .WithName("GetWeeklySummary")
             .WithSummary("Get the weekly diet summary for the current user")
-            .WithDescription("Returns aggregated nutrition and hydration statistics for the specified week. Returns zeros for weeks with no data.")
-            .Produces<WeeklySummaryDto>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns aggregated nutrition and hydration statistics for the specified week. Returns zeros for weeks with no data.");
 
         return app;
     }
 
-    private static async Task<IResult> GetWeeklySummary(
+    private static async Task<Results<Ok<WeeklySummaryDto>, ValidationProblem>> GetWeeklySummary(
         DateOnly weekStart,
         DateOnly weekEnd,
         ClaimsPrincipal user,

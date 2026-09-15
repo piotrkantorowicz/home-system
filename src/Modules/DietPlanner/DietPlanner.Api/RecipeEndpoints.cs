@@ -8,6 +8,7 @@ using DietPlanner.Application.Queries.GetRecipeById;
 using DietPlanner.Application.Queries.SearchRecipes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Core.Pagination;
@@ -30,48 +31,32 @@ public static class RecipeEndpoints
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")
             .WithSummary("List recipes with optional search and pagination")
-            .WithDescription("Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.")
-            .Produces<PagedList<RecipeDto>>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.");
 
         group.MapGet("/{id:guid}", GetRecipe)
             .WithName("GetRecipe")
             .WithSummary("Get a recipe by ID")
-            .WithDescription("Returns full recipe details including the ingredient list with per-ingredient amounts and units. Returns 404 if the recipe does not exist or is not visible to the caller.")
-            .Produces<RecipeDto>()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns full recipe details including the ingredient list with per-ingredient amounts and units. Returns 404 if the recipe does not exist or is not visible to the caller.");
 
         group.MapPost("/", CreateRecipe)
             .WithName("CreateRecipe")
             .WithSummary("Create a new recipe")
-            .WithDescription("Creates a new recipe owned by the current user. Each ingredient references an existing product by ID. `servings` defines the default portion count used when logging this recipe as a meal entry.")
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Creates a new recipe owned by the current user. Each ingredient references an existing product by ID. `servings` defines the default portion count used when logging this recipe as a meal entry.");
 
         group.MapPut("/{id:guid}", UpdateRecipe)
             .WithName("UpdateRecipe")
             .WithSummary("Update a recipe")
-            .WithDescription("Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.");
 
         group.MapDelete("/{id:guid}", DeleteRecipe)
             .WithName("DeleteRecipe")
             .WithSummary("Delete a recipe")
-            .WithDescription("Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.");
 
         return app;
     }
 
-    private static async Task<IResult> ListRecipes(
+    private static async Task<Ok<PagedList<RecipeDto>>> ListRecipes(
         [AsParameters] ListRecipesParams @params,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -83,7 +68,7 @@ public static class RecipeEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> GetRecipe(
+    private static async Task<Results<Ok<RecipeDto>, NotFound>> GetRecipe(
         Guid id,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -95,7 +80,7 @@ public static class RecipeEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> CreateRecipe(
+    private static async Task<Created<Guid>> CreateRecipe(
         CreateRecipeRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -112,7 +97,7 @@ public static class RecipeEndpoints
         return TypedResults.Created($"/api/v1/recipes/{id}", id);
     }
 
-    private static async Task<IResult> UpdateRecipe(
+    private static async Task<NoContent> UpdateRecipe(
         Guid id,
         UpdateRecipeRequest request,
         ClaimsPrincipal user,
@@ -130,7 +115,7 @@ public static class RecipeEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> DeleteRecipe(
+    private static async Task<NoContent> DeleteRecipe(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

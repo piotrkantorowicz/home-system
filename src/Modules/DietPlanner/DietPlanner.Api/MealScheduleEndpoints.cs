@@ -5,6 +5,7 @@ using DietPlanner.Application.Commands.UpdateMealSchedule;
 using DietPlanner.Application.Queries.GetMealSchedule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -25,22 +26,17 @@ public static class MealScheduleEndpoints
         group.MapGet("/", GetMealSchedule)
             .WithName("GetMealSchedule")
             .WithSummary("Get the current user's meal schedule configuration")
-            .WithDescription("Returns the configured meal slots for the current user. Returns `null` body when no schedule has been set yet.")
-            .Produces<MealScheduleConfigDto>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns the configured meal slots for the current user. Returns `null` body when no schedule has been set yet.");
 
         group.MapPut("/", UpdateMealSchedule)
             .WithName("UpdateMealSchedule")
             .WithSummary("Create or update meal schedule configuration")
-            .WithDescription("Sets the meal slots for the current user. Replaces all existing slots.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Sets the meal slots for the current user. Replaces all existing slots.");
 
         return app;
     }
 
-    private static async Task<IResult> GetMealSchedule(
+    private static async Task<Ok<MealScheduleConfigDto>> GetMealSchedule(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
@@ -51,7 +47,7 @@ public static class MealScheduleEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> UpdateMealSchedule(
+    private static async Task<NoContent> UpdateMealSchedule(
         UpdateMealScheduleRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
