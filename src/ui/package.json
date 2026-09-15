@@ -51,6 +51,14 @@
     "tailwind-merge": "^3.6.0",
     "zod": "^4.6.2"
   },
+  "overrides": {
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    }
+  },
   "lint-staged": {
     "./src/**/*.{ts,tsx}": [
       "eslint --fix",
