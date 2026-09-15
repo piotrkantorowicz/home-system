@@ -10,6 +10,8 @@ using Shouldly;
 /// <summary>Unit tests for <c>InProcessIntegrationEventTransport</c>: substituted handlers are registered in a real <c>ServiceCollection</c> and invoked through the transport.</summary>
 public sealed class InProcessIntegrationEventTransportTests
 {
+    private static readonly DateTime Now = new(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
+
     /// <summary>Event type the transport is exercised with.</summary>
     /// <param name="EventId">Unique identity of the event.</param>
     /// <param name="OccurredAt">When it was published, UTC.</param>
@@ -43,7 +45,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var sp = services.BuildServiceProvider();
 
         var sut = new InProcessIntegrationEventTransport(sp);
-        var @event = new TestEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
+        var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
         await sut.DispatchAsync(message, CancellationToken.None);
@@ -62,7 +64,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var sut = new InProcessIntegrationEventTransport(sp);
 
         var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
-        var @event = new TestEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
+        var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
         var act = async () => await sut.DispatchAsync(message, CancellationToken.None);
@@ -84,7 +86,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var sp = services.BuildServiceProvider();
 
         var sut = new InProcessIntegrationEventTransport(sp);
-        var @event = new TestEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
+        var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
         await sut.DispatchAsync(message, CancellationToken.None);

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Time.Testing;
 
 /// <summary>
 /// Boots the real host with the Household database pointed at a Testcontainers Postgres and
@@ -12,6 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 /// </summary>
 public sealed class HouseholdApiFactory(string connectionString) : WebApplicationFactory<Program>
 {
+    /// <summary>The clock the host runs on; advance it to move "now" for every request.</summary>
+    public FakeTimeProvider Clock { get; } = TestClock.Create();
+
     /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -20,6 +25,9 @@ public sealed class HouseholdApiFactory(string connectionString) : WebApplicatio
 
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(Clock);
+
             services.AddAuthentication(TestAuthHandler.SchemeName)
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
         });

@@ -26,7 +26,7 @@ public sealed class WeeklySummaryDueIntegrationEventHandlerTests
 
         var @event = new WeeklySummaryDueIntegrationEvent(
             EventId: Guid.NewGuid(),
-            OccurredAt: DateTime.UtcNow,
+            OccurredAt: TestClock.UtcNow,
             UserId: "u99",
             Locale: "en",
             WeekStart: weekStart,

@@ -7,6 +7,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>UpdateMealScheduleCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -17,11 +18,12 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     private readonly IMealEntryRepository _mealEntryRepository =
         Substitute.For<IMealEntryRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly UpdateMealScheduleCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public UpdateMealScheduleCommandHandlerTests()
-        => _sut = new UpdateMealScheduleCommandHandler(_repository, _mealEntryRepository, _unitOfWork);
+        => _sut = new UpdateMealScheduleCommandHandler(_repository, _mealEntryRepository, _unitOfWork, _clock);
 
     private static UpdateMealScheduleCommand NewCommand(params MealSlotInput[] slots)
         => new("user-1", slots);
@@ -53,7 +55,8 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
             "user-1",
-            [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))]);
+            [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))],
+            TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
         _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);
@@ -77,7 +80,8 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
             "user-1",
-            [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))]);
+            [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))],
+            TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
         _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);
@@ -99,7 +103,8 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
             "user-1",
-            [("Breakfast", new TimeOnly(7, 0)), ("Snack", new TimeOnly(15, 0))]);
+            [("Breakfast", new TimeOnly(7, 0)), ("Snack", new TimeOnly(15, 0))],
+            TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
         _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);

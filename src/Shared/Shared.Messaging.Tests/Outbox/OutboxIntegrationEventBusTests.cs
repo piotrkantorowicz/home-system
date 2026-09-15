@@ -9,6 +9,8 @@ using Shouldly;
 /// <summary>Unit tests for <c>OutboxIntegrationEventBus</c>: the outbox store is substituted to capture what is published.</summary>
 public sealed class OutboxIntegrationEventBusTests
 {
+    private static readonly DateTime Now = new(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
+
     private readonly IOutboxStore _store = Substitute.For<IOutboxStore>();
     private readonly IIntegrationEventSerializer _serializer = Substitute.For<IIntegrationEventSerializer>();
     private readonly OutboxIntegrationEventBus _sut;
@@ -47,7 +49,7 @@ public sealed class OutboxIntegrationEventBusTests
     public async Task PublishAsync_WithBaseReference_RecordsRuntimeType()
     {
         // Caller publishes via base IIntegrationEvent reference — bus must capture runtime type.
-        IIntegrationEvent @event = new TestIntegrationEvent(Guid.NewGuid(), DateTime.UtcNow, "x");
+        IIntegrationEvent @event = new TestIntegrationEvent(Guid.NewGuid(), Now, "x");
         _serializer.Serialize(Arg.Any<IIntegrationEvent>()).Returns("{}");
 
         await _sut.PublishAsync(@event, CancellationToken.None);

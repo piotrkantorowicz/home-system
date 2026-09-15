@@ -7,7 +7,8 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class AckNotificationDeliveryCommandHandler(
     INotificationRepository repository,
-    INotificationsUnitOfWork unitOfWork)
+    INotificationsUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<AckNotificationDeliveryCommand>
 {
     public async Task HandleAsync(AckNotificationDeliveryCommand command, CancellationToken ct = default)
@@ -25,7 +26,7 @@ internal sealed class AckNotificationDeliveryCommandHandler(
         if (delivery.Status == DeliveryStatus.Sent)
             return;
 
-        delivery.MarkSent(DateTime.UtcNow);
+        delivery.MarkSent(clock.GetUtcNow().UtcDateTime);
         await repository.UpdateDeliveryAsync(delivery, ct);
         await unitOfWork.CommitAsync(ct);
     }

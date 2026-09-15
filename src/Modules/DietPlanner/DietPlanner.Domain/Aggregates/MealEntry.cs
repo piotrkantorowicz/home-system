@@ -29,6 +29,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
     /// <param name="sequenceOrder">Optional ordering among entries in the same slot.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="mealSlotId"/> or <paramref name="recipeId"/> is null.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static MealEntry Create(
         MealEntryId id,
         string userId,
@@ -38,7 +39,8 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
         decimal servings,
         string? notes,
         TimeOnly? mealTime,
-        int? sequenceOrder)
+        int? sequenceOrder,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
         ArgumentNullException.ThrowIfNull(mealSlotId);
@@ -55,7 +57,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
             Notes = notes,
             MealTime = mealTime,
             SequenceOrder = sequenceOrder,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
             Status = MealEntryStatus.Planned
         };
     }
@@ -95,6 +97,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
     /// <param name="mealTime">New time override, or <see langword="null"/> to fall back to the slot time.</param>
     /// <param name="sequenceOrder">New ordering, or <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="mealSlotId"/> or <paramref name="recipeId"/> is null.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void Update(
         DateOnly date,
         MealSlotId mealSlotId,

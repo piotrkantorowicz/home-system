@@ -7,13 +7,14 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateChannelPreferencesCommandHandler(
     INotificationChannelPreferencesRepository repository,
-    INotificationsUnitOfWork unitOfWork)
+    INotificationsUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<UpdateChannelPreferencesCommand>
 {
     public async Task HandleAsync(UpdateChannelPreferencesCommand command, CancellationToken ct = default)
     {
         var existing = await repository.GetByUserIdAsync(command.UserId, ct);
-        var now = DateTime.UtcNow;
+        var now = clock.GetUtcNow().UtcDateTime;
 
         if (existing is null)
         {

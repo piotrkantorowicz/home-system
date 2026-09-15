@@ -37,7 +37,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
 
         var owner = ownerFactory.CreateClient();
         var member = memberFactory.CreateClient();
-        var date = DateOnly.FromDateTime(DateTime.UtcNow);
+        var date = TestClock.Today;
 
         // Owner sets up a household; the member joins it.
         (await owner.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();

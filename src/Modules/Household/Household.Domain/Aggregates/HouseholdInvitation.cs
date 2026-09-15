@@ -25,19 +25,20 @@ public sealed class HouseholdInvitation : AggregateRoot<HouseholdInvitationId>
     /// <param name="invitedByPersonId">The owner who issued it.</param>
     /// <exception cref="ArgumentNullException"><paramref name="email"/> is null.</exception>
     /// <exception cref="HouseholdDomainException"><paramref name="role"/> is owner.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static HouseholdInvitation Create(
         HouseholdInvitationId id,
         HouseholdId householdId,
         PersonEmail email,
         HouseholdRole role,
-        PersonId invitedByPersonId)
+        PersonId invitedByPersonId,
+        DateTime now)
     {
         ArgumentNullException.ThrowIfNull(email);
 
         if (role == HouseholdRole.Owner)
             throw new HouseholdDomainException("An invitation cannot grant the owner role.");
 
-        var now = DateTime.UtcNow;
         var invitation = new HouseholdInvitation
         {
             Id = id,

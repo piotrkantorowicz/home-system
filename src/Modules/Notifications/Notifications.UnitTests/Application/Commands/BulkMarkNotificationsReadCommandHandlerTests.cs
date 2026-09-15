@@ -1,5 +1,6 @@
 namespace Notifications.UnitTests.Application.Commands;
 
+using Microsoft.Extensions.Time.Testing;
 using Notifications.Application.Commands.BulkMarkNotificationsRead;
 using Notifications.Domain.Abstractions;
 
@@ -8,11 +9,12 @@ public sealed class BulkMarkNotificationsReadCommandHandlerTests
 {
     private readonly INotificationRepository _repository = Substitute.For<INotificationRepository>();
     private readonly INotificationsUnitOfWork _uow = Substitute.For<INotificationsUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly BulkMarkNotificationsReadCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public BulkMarkNotificationsReadCommandHandlerTests()
-        => _sut = new BulkMarkNotificationsReadCommandHandler(_repository, _uow);
+        => _sut = new BulkMarkNotificationsReadCommandHandler(_repository, _uow, _clock);
 
     /// <summary>With ids: <c>Handle</c> delegates scoped bulk mark and commits.</summary>
     [Fact]

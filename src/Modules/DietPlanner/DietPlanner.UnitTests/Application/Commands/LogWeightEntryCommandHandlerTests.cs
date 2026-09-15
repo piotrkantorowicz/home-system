@@ -6,24 +6,26 @@ using DietPlanner.Application.Commands.LogWeightEntry;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>LogWeightEntryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class LogWeightEntryCommandHandlerTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = TestClock.Today;
 
     private readonly IWeightEntryRepository _weightRepo = Substitute.For<IWeightEntryRepository>();
     private readonly IUserProfileRepository _profileRepo = Substitute.For<IUserProfileRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly LogWeightEntryCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public LogWeightEntryCommandHandlerTests()
-        => _sut = new LogWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork);
+        => _sut = new LogWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork, _clock);
 
     private static UserProfile CreateProfile(string userId, decimal? currentWeight = 80m)
-        => UserProfile.Create(UserProfileId.New(), userId, null, null, null, currentWeight, null, null);
+        => UserProfile.Create(UserProfileId.New(), userId, null, null, null, currentWeight, null, null, TestClock.UtcNow);
 
     /// <summary>When no existing entry: <c>HandleAsync</c> creates new entry and updates profile.</summary>
     [Fact]
@@ -49,7 +51,7 @@ public sealed class LogWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenEntryForDateExists_UpdatesExistingEntry()
     {
-        var existing = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 80m);
+        var existing = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 80m, TestClock.UtcNow);
         var command = new LogWeightEntryCommand("user-1", Today, 79m);
         _weightRepo.GetByUserAndDateAsync("user-1", Today, Arg.Any<CancellationToken>())
             .Returns(existing);
@@ -101,9 +103,9 @@ public sealed class LogWeightEntryCommandHandlerTests
 /// <summary>Unit tests for <c>LogWeightEntryCommandValidator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class LogWeightEntryCommandValidatorTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = TestClock.Today;
 
-    private readonly LogWeightEntryCommandValidator _sut = new();
+    private readonly LogWeightEntryCommandValidator _sut = new(TestClock.Create());
 
     /// <summary>With valid command: <c>Validate</c> returns no errors.</summary>
     [Fact]

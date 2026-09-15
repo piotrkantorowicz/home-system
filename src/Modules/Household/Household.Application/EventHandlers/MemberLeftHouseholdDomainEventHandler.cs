@@ -6,7 +6,7 @@ using Shared.Abstractions.Cqrs;
 using Shared.Abstractions.Messaging;
 
 /// <summary>Maps <see cref="MemberLeftHouseholdDomainEvent"/> to its integration event and publishes it via the outbox.</summary>
-internal sealed class MemberLeftHouseholdDomainEventHandler(IIntegrationEventBus bus)
+internal sealed class MemberLeftHouseholdDomainEventHandler(IIntegrationEventBus bus, TimeProvider clock)
     : IDomainEventHandler<MemberLeftHouseholdDomainEvent>
 {
     public Task HandleAsync(MemberLeftHouseholdDomainEvent domainEvent, CancellationToken ct = default)
@@ -16,7 +16,7 @@ internal sealed class MemberLeftHouseholdDomainEventHandler(IIntegrationEventBus
         return bus.PublishAsync(
             new MemberLeftHouseholdIntegrationEvent(
                 EventId: Guid.CreateVersion7(),
-                OccurredAt: DateTime.UtcNow,
+                OccurredAt: clock.GetUtcNow().UtcDateTime,
                 HouseholdId: domainEvent.HouseholdId.Value,
                 PersonId: domainEvent.PersonId.Value),
             ct);

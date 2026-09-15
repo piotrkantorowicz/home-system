@@ -6,35 +6,34 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateHydrationConfigCommandHandler : ICommandHandler<UpdateHydrationConfigCommand>
+internal sealed class UpdateHydrationConfigCommandHandler(
+    IHydrationConfigRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<UpdateHydrationConfigCommand>
 {
-    private readonly IHydrationConfigRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateHydrationConfigCommandHandler(IHydrationConfigRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task HandleAsync(UpdateHydrationConfigCommand command, CancellationToken ct = default)
     {
-        var existing = await _repository.GetByUserIdAsync(command.UserId, ct);
+        var now = clock.GetUtcNow().UtcDateTime;
+        var existing = await repository.GetByUserIdAsync(command.UserId, ct);
 
         if (existing is not null)
         {
-            existing.Update(command.DailyWaterTargetMl, command.GlassSizeMl, command.TrackWaterIntake);
-            _repository.Update(existing);
+            existing.Update(command.DailyWaterTargetMl, command.GlassSizeMl, command.TrackWaterIntake, now);
+            repository.Update(existing);
         }
         else
         {
             var config = HydrationConfig.Create(
                 HydrationConfigId.New(),
                 command.UserId,
+                now,
                 command.DailyWaterTargetMl,
                 command.GlassSizeMl,
                 command.TrackWaterIntake);
 
-            await _repository.AddAsync(config, ct);
+            await repository.AddAsync(config, ct);
         }
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
     }
 }

@@ -13,7 +13,7 @@ public sealed class PersonTests
     public void RegisterFromLogin_SetsLinkedProfile_AndRaisesRegisteredEvent()
     {
         var person = Person.RegisterFromLogin(
-            PersonId.New(), "auth|123", "Ada Lovelace", PersonEmail.Create("ADA@example.com"), " https://img/a.png ");
+            PersonId.New(), "auth|123", "Ada Lovelace", PersonEmail.Create("ADA@example.com"), " https://img/a.png ", TestClock.UtcNow);
 
         person.AuthSubject.ShouldBe("auth|123");
         person.IsLinked.ShouldBeTrue();
@@ -28,7 +28,7 @@ public sealed class PersonTests
     [Fact]
     public void RegisterFromLogin_WithBlankDisplayName_FallsBackToSubject()
     {
-        var person = Person.RegisterFromLogin(PersonId.New(), "auth|123", "   ", null, null);
+        var person = Person.RegisterFromLogin(PersonId.New(), "auth|123", "   ", null, null, TestClock.UtcNow);
 
         person.DisplayName.ShouldBe("auth|123");
     }
@@ -37,7 +37,7 @@ public sealed class PersonTests
     [Fact]
     public void CreateManaged_IsUnlinkedAndManaged()
     {
-        var person = Person.CreateManaged(PersonId.New(), "Adam", null);
+        var person = Person.CreateManaged(PersonId.New(), "Adam", null, TestClock.UtcNow);
 
         person.AuthSubject.ShouldBeNull();
         person.IsLinked.ShouldBeFalse();
@@ -47,16 +47,16 @@ public sealed class PersonTests
     /// <summary>With no name: <c>CreateManaged</c> throws.</summary>
     [Fact]
     public void CreateManaged_WithNoName_Throws()
-        => Should.Throw<HouseholdDomainException>(() => Person.CreateManaged(PersonId.New(), " ", null));
+        => Should.Throw<HouseholdDomainException>(() => Person.CreateManaged(PersonId.New(), " ", null, TestClock.UtcNow));
 
     /// <summary>When nothing changed: <c>RefreshProfile</c> does not stamp updated at.</summary>
     [Fact]
     public void RefreshProfile_WhenNothingChanged_DoesNotStampUpdatedAt()
     {
         var person = Person.RegisterFromLogin(
-            PersonId.New(), "s", "Name", PersonEmail.Create("a@b.com"), "u");
+            PersonId.New(), "s", "Name", PersonEmail.Create("a@b.com"), "u", TestClock.UtcNow);
 
-        person.RefreshProfile("Name", PersonEmail.Create("a@b.com"), "u");
+        person.RefreshProfile("Name", PersonEmail.Create("a@b.com"), "u", TestClock.UtcNow);
 
         person.UpdatedAt.ShouldBeNull();
     }
@@ -65,9 +65,9 @@ public sealed class PersonTests
     [Fact]
     public void RefreshProfile_WhenChanged_UpdatesAndStampsUpdatedAt()
     {
-        var person = Person.RegisterFromLogin(PersonId.New(), "s", "Old", null, null);
+        var person = Person.RegisterFromLogin(PersonId.New(), "s", "Old", null, null, TestClock.UtcNow);
 
-        person.RefreshProfile("New", PersonEmail.Create("a@b.com"), null);
+        person.RefreshProfile("New", PersonEmail.Create("a@b.com"), null, TestClock.UtcNow);
 
         person.DisplayName.ShouldBe("New");
         person.Email!.Value.ShouldBe("a@b.com");
@@ -78,10 +78,10 @@ public sealed class PersonTests
     [Fact]
     public void LinkAuthSubject_OnManagedPerson_LinksAndRaisesEvent()
     {
-        var person = Person.CreateManaged(PersonId.New(), "Adam", PersonEmail.Create("adam@b.com"));
+        var person = Person.CreateManaged(PersonId.New(), "Adam", PersonEmail.Create("adam@b.com"), TestClock.UtcNow);
         person.ClearDomainEvents();
 
-        person.LinkAuthSubject("auth|adam");
+        person.LinkAuthSubject("auth|adam", TestClock.UtcNow);
 
         person.AuthSubject.ShouldBe("auth|adam");
         person.IsManaged.ShouldBeFalse();
@@ -93,9 +93,9 @@ public sealed class PersonTests
     [Fact]
     public void LinkAuthSubject_OnAlreadyLinkedPerson_Throws()
     {
-        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "N", null, null);
+        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "N", null, null, TestClock.UtcNow);
 
-        Should.Throw<HouseholdDomainException>(() => person.LinkAuthSubject("auth|2"))
+        Should.Throw<HouseholdDomainException>(() => person.LinkAuthSubject("auth|2", TestClock.UtcNow))
             .Message.ShouldContain("already linked");
     }
 
@@ -103,9 +103,9 @@ public sealed class PersonTests
     [Fact]
     public void MarkPendingAccountLink_OnManagedPerson_SetsTheMatchEmail()
     {
-        var person = Person.CreateManaged(PersonId.New(), "Kiddo", null);
+        var person = Person.CreateManaged(PersonId.New(), "Kiddo", null, TestClock.UtcNow);
 
-        person.MarkPendingAccountLink(PersonEmail.Create("kiddo@b.com"));
+        person.MarkPendingAccountLink(PersonEmail.Create("kiddo@b.com"), TestClock.UtcNow);
 
         person.Email!.Value.ShouldBe("kiddo@b.com");
         person.IsManaged.ShouldBeTrue();
@@ -116,10 +116,10 @@ public sealed class PersonTests
     [Fact]
     public void MarkPendingAccountLink_OnLinkedPerson_Throws()
     {
-        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "N", null, null);
+        var person = Person.RegisterFromLogin(PersonId.New(), "auth|1", "N", null, null, TestClock.UtcNow);
 
         Should.Throw<HouseholdDomainException>(
-            () => person.MarkPendingAccountLink(PersonEmail.Create("n@b.com")))
+            () => person.MarkPendingAccountLink(PersonEmail.Create("n@b.com"), TestClock.UtcNow))
             .Message.ShouldContain("Only a managed person");
     }
 }

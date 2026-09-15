@@ -5,20 +5,18 @@ using Household.Domain.Abstractions;
 using Household.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class RemoveMemberCommandHandler : ICommandHandler<RemoveMemberCommand>
+internal sealed class RemoveMemberCommandHandler(
+    HouseholdAccessService access,
+    IHouseholdUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<RemoveMemberCommand>
 {
-    private readonly HouseholdAccessService _access;
-    private readonly IHouseholdUnitOfWork _unitOfWork;
-
-    public RemoveMemberCommandHandler(HouseholdAccessService access, IHouseholdUnitOfWork unitOfWork)
-        => (_access, _unitOfWork) = (access, unitOfWork);
-
     public async Task HandleAsync(RemoveMemberCommand command, CancellationToken ct)
     {
-        var (_, household) = await _access.RequireOwnerAsync(
+        var now = clock.GetUtcNow().UtcDateTime;
+        var (_, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
 
-        household.RemoveMember(PersonId.From(command.PersonId));
-        await _unitOfWork.CommitAsync(ct);
+        household.RemoveMember(PersonId.From(command.PersonId), now);
+        await unitOfWork.CommitAsync(ct);
     }
 }

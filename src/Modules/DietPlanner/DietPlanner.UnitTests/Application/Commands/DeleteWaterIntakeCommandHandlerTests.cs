@@ -27,9 +27,10 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
         var intake = WaterIntake.Create(
             WaterIntakeId.From(id),
             "user-1",
-            DateOnly.FromDateTime(DateTime.UtcNow),
+            TestClock.Today,
             250,
-            null);
+            null,
+            TestClock.UtcNow);
 
         _repository.GetByIdAsync(WaterIntakeId.From(id), Arg.Any<CancellationToken>())
             .Returns(intake);

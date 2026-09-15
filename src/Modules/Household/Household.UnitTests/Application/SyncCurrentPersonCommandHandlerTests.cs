@@ -5,6 +5,7 @@ using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 
 /// <summary>Unit tests for <c>SyncCurrentPersonCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
 public sealed class SyncCurrentPersonCommandHandlerTests
@@ -13,14 +14,16 @@ public sealed class SyncCurrentPersonCommandHandlerTests
     private readonly IHouseholdInvitationRepository _invitations = Substitute.For<IHouseholdInvitationRepository>();
     private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
     private readonly IHouseholdUnitOfWork _unitOfWork = Substitute.For<IHouseholdUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly SyncCurrentPersonCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public SyncCurrentPersonCommandHandlerTests()
         => _sut = new SyncCurrentPersonCommandHandler(
             _persons,
-            new InvitationResolver(_invitations, _households),
-            _unitOfWork);
+            new InvitationResolver(_invitations, _households, _clock),
+            _unitOfWork,
+            _clock);
 
     /// <summary>When no person for subject: <c>Handle</c> registers and commits.</summary>
     [Fact]
@@ -44,7 +47,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
     [Fact]
     public async Task Handle_WhenPersonExists_RefreshesProfileAndCommits_WithoutAdding()
     {
-        var existing = Person.RegisterFromLogin(PersonId.New(), "auth|1", "Old", null, null);
+        var existing = Person.RegisterFromLogin(PersonId.New(), "auth|1", "Old", null, null, TestClock.UtcNow);
         _persons.GetByAuthSubjectAsync("auth|1", Arg.Any<CancellationToken>()).Returns(existing);
 
         var result = await _sut.HandleAsync(
@@ -62,7 +65,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
     [Fact]
     public async Task Handle_WhenLoginEmailMatchesAManagedPerson_LinksItInsteadOfCreating()
     {
-        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", PersonEmail.Create("kiddo@x.com"));
+        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", PersonEmail.Create("kiddo@x.com"), TestClock.UtcNow);
         _persons.GetByAuthSubjectAsync("auth|kiddo", Arg.Any<CancellationToken>()).Returns((Person?)null);
         _persons.GetByEmailAsync(
             Arg.Is<PersonEmail>(e => e.Value == "kiddo@x.com"), Arg.Any<CancellationToken>())
@@ -83,7 +86,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
     [Fact]
     public async Task Handle_WhenEmailMatchesAnAlreadyLinkedPerson_RegistersANewPerson()
     {
-        var linked = Person.RegisterFromLogin(PersonId.New(), "auth|other", "Other", PersonEmail.Create("shared@x.com"), null);
+        var linked = Person.RegisterFromLogin(PersonId.New(), "auth|other", "Other", PersonEmail.Create("shared@x.com"), null, TestClock.UtcNow);
         _persons.GetByAuthSubjectAsync("auth|fresh", Arg.Any<CancellationToken>()).Returns((Person?)null);
         _persons.GetByEmailAsync(Arg.Any<PersonEmail>(), Arg.Any<CancellationToken>()).Returns(linked);
 

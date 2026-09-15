@@ -10,7 +10,7 @@ public sealed class MealEntryCompletionTests
     private static MealEntry NewEntry()
         => MealEntry.Create(
             MealEntryId.New(), "user-1", new DateOnly(2026, 1, 15),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
 
     /// <summary><c>Create</c> defaults status to planned.</summary>
     [Fact]

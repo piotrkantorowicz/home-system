@@ -13,6 +13,9 @@ using Shared.Infrastructure.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Wall clock — every handler, worker and inbox/outbox component reads time through this.
+builder.Services.AddSingleton(TimeProvider.System);
+
 // ==============================================
 // Modules
 // ==============================================
@@ -188,7 +191,7 @@ app.UseAuthorization();
 // ==============================================
 // Endpoints
 // ==============================================
-app.MapGet("/health", () => TypedResults.Ok(new HealthResponse("healthy", DateTime.UtcNow, "1.0.0")))
+app.MapGet("/health", (TimeProvider clock) => TypedResults.Ok(new HealthResponse("healthy", clock.GetUtcNow().UtcDateTime, "1.0.0")))
     .WithName("HealthCheck")
     .WithTags("Health")
     .AllowAnonymous();
