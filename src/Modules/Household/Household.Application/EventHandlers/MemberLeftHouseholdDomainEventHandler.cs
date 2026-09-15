@@ -15,7 +15,7 @@ internal sealed class MemberLeftHouseholdDomainEventHandler(IIntegrationEventBus
 
         return bus.PublishAsync(
             new MemberLeftHouseholdIntegrationEvent(
-                EventId: Guid.NewGuid(),
+                EventId: Guid.CreateVersion7(),
                 OccurredAt: DateTime.UtcNow,
                 HouseholdId: domainEvent.HouseholdId.Value,
                 PersonId: domainEvent.PersonId.Value),
