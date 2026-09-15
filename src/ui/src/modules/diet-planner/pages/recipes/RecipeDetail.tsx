@@ -1,5 +1,5 @@
 import { useCreateMeal } from '@modules/diet-planner/api/hooks/useMeals';
-import { useRecipe, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { recipeOptions, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
@@ -11,10 +11,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { cn, formatNumber } from '@shared/lib/utils';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ChevronRight, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -42,7 +42,7 @@ export default function RecipeDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: recipe, isLoading, error } = useRecipe(id ?? '');
+  const { data: recipe } = useSuspenseQuery(recipeOptions(id ?? ''));
   const deleteMutation = useDeleteRecipe();
   const createMeal = useCreateMeal();
   const toast = useToast();
@@ -56,14 +56,7 @@ export default function RecipeDetail() {
 
   const steps = recipe?.instructions ? toSteps(recipe.instructions) : [];
 
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
-        <Skeleton className="h-[420px] w-full rounded-[22px]" />
-      </div>
-    );
-  }
-  if (error || !recipe) {
+  if (!recipe) {
     return (
       <div className="px-4 py-6 md:px-8">
         <p className="text-destructive">{t('recipe_detail.not_found')}</p>

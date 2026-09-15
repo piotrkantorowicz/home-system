@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { notificationsQueryKeys } from '../queryKeys';
@@ -7,8 +7,8 @@ import type { components } from '../generated/schema';
 
 export type ChannelPreferencesDto = components['schemas']['ChannelPreferencesDto'];
 
-export function useChannelPreferences() {
-  return useQuery({
+export function channelPreferencesOptions() {
+  return queryOptions({
     queryKey: notificationsQueryKeys.channelPreferences.detail(),
     queryFn: async (): Promise<ChannelPreferencesDto> => {
       const response = await api.GET('/api/notification-preferences');
@@ -22,4 +22,8 @@ export function useChannelPreferences() {
     },
     staleTime: 60_000,
   });
+}
+
+export function useChannelPreferences() {
+  return useQuery(channelPreferencesOptions());
 }

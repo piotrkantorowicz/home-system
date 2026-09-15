@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -12,8 +12,8 @@ interface ShoppingListParams {
   to: string;
 }
 
-export function useShoppingList(params: ShoppingListParams) {
-  return useQuery({
+export function shoppingListOptions(params: ShoppingListParams) {
+  return queryOptions({
     queryKey: queryKeys.shoppingList.detail(params),
     queryFn: async (): Promise<ShoppingListItemDto[]> => {
       const response = await api.GET('/api/v1/meals/shopping-list', {
@@ -22,6 +22,9 @@ export function useShoppingList(params: ShoppingListParams) {
       if (!response.data) throw new Error('Failed to fetch shopping list');
       return response.data;
     },
-    placeholderData: keepPreviousData,
   });
+}
+
+export function useShoppingList(params: ShoppingListParams) {
+  return useQuery({ ...shoppingListOptions(params), placeholderData: keepPreviousData });
 }

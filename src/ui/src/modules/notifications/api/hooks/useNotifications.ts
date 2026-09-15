@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { notificationsQueryKeys } from '../queryKeys';
@@ -13,8 +13,8 @@ export interface UseNotificationsParams {
   pageSize?: number;
 }
 
-export function useNotifications({ page = 1, pageSize = 20 }: UseNotificationsParams = {}) {
-  return useQuery({
+export function notificationListOptions({ page = 1, pageSize = 20 }: UseNotificationsParams = {}) {
+  return queryOptions({
     queryKey: notificationsQueryKeys.notifications.list({ page, pageSize }),
     queryFn: async (): Promise<NotificationsPage> => {
       const response = await api.GET('/api/notifications', {
@@ -28,8 +28,11 @@ export function useNotifications({ page = 1, pageSize = 20 }: UseNotificationsPa
 
       return response.data;
     },
-    placeholderData: keepPreviousData,
     staleTime: 30_000,
     refetchOnWindowFocus: true,
   });
+}
+
+export function useNotifications(params: UseNotificationsParams = {}) {
+  return useQuery({ ...notificationListOptions(params), placeholderData: keepPreviousData });
 }

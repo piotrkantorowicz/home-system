@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { api } from '../client';
 import { notificationsQueryKeys } from '../queryKeys';
@@ -7,8 +7,8 @@ import type { components } from '../generated/schema';
 
 export type UnreadCountDto = components['schemas']['UnreadCountDto'];
 
-export function useUnreadCount() {
-  return useQuery({
+export function unreadCountOptions() {
+  return queryOptions({
     queryKey: notificationsQueryKeys.notifications.unreadCount(),
     queryFn: async (): Promise<UnreadCountDto> => {
       const response = await api.GET('/api/notifications/unread-count');
@@ -23,4 +23,8 @@ export function useUnreadCount() {
     staleTime: 30_000,
     refetchOnWindowFocus: true,
   });
+}
+
+export function useUnreadCount() {
+  return useQuery(unreadCountOptions());
 }
