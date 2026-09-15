@@ -169,6 +169,66 @@ TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
 
 ---
 
+## Nightly CI
+
+`.github/workflows/e2e-nightly.yml` runs the whole suite against the real stack on
+`ubuntu-latest` every night at **03:00 UTC** and on demand (`workflow_dispatch` — *Actions
+→ E2E Nightly → Run workflow*, any branch). It is deliberately **not** part of the PR gate:
+the suite alone takes ~4 min, and a cold runner adds the Authentik first boot, the
+backend build and the browser install on top, so `scripts/verify.sh` keeps
+type-checking `e2e/` only. Run the suite locally before shipping a
+UI flow.
+
+What the job does, in order:
+
+1. Writes `infrastructure/.env` with **generated** values for everything the compose
+   file interpolates (`AUTHENTIK_SECRET_KEY`, DB / Redis passwords, bootstrap account) —
+   the runner is throwaway, so nothing but the E2E password needs to be a real secret.
+2. `docker compose --profile diet-planner --profile notifications --profile household up -d --wait`
+   in `infrastructure/`, then polls `/-/health/ready/` and the
+   `home-system` OIDC discovery document (bounded, 5 min each). The discovery document
+   only exists once the worker has applied `authentik/blueprints/home-system.yaml`, and
+   the blueprint applies atomically, so the provider, the application and
+   `E2eWorker0..3` are all present at that point.
+3. Builds the host and starts it with `ASPNETCORE_ENVIRONMENT=Development` (EF / DbUp
+   auto-migrate, the `test-support` purge route is mapped) and the generated passwords
+   injected as `ConnectionStrings__*`, then waits for `/health`.
+4. `npm ci` in `src/ui` and `e2e`, `playwright install --with-deps chromium`,
+   `npx playwright test --project=chromium` with `CI=true` — Playwright starts Vite itself
+   (`reuseExistingServer` is off on CI), retries twice, and `test.only` is an error.
+5. On failure: uploads `e2e/playwright-report` + `e2e/test-results` (artifact
+   `playwright-report`) and `backend.log` + `docker compose logs` (artifact `stack-logs`),
+   14-day retention. **These artifacts can contain the e2e password** — a retry trace
+   records the login form POST, and the stack logs echo whatever the containers print —
+   so `TEST_USER_PASSWORD` must be a throwaway value used only by `E2eWorker0..3`, never
+   a password reused anywhere else. Artifacts are visible to everyone with read access
+   to the repository.
+
+### Failure notification
+
+The workflow keeps **one tracking issue** — title `Nightly e2e failed`, labels `bug` +
+`ci` + `e2e` (the lookup keys on the title plus `ci` + `e2e`) — and only for runs on
+`main`:
+
+- a failed run opens it, or comments the run URL on it if it is already open;
+- the next green run comments "green again" and closes it.
+
+A `workflow_dispatch` run on any other branch never touches issues — look at the run
+itself and its artifacts. Two runs never overlap (`concurrency: e2e-nightly`, no
+cancellation), so a manual run during the nightly simply queues.
+
+### Repository secrets (owner action)
+
+| Secret | Value | Used for |
+|---|---|---|
+| `TEST_USER_PASSWORD` | Any string without `$` (compose interpolates `.env`); alphanumeric is safest. It does **not** have to match your local `infrastructure/.env`. | Written to `infrastructure/.env` as `E2E_USER_PASSWORD` so the Authentik blueprint provisions `E2eWorker0..3` with it, and passed to Playwright as `TEST_USER_PASSWORD`. |
+
+The job fails fast with a `::error::` annotation when the secret is missing. No other
+secret is required — the Authentik bootstrap password, secret key and every database
+password are generated per run and never leave the runner.
+
+---
+
 ## Redesign impact & findings
 
 What the #208 audit changed, and what it surfaced.
