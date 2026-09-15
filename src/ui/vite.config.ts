@@ -1,16 +1,17 @@
 import path from 'path';
 
-import react from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        plugins: [['babel-plugin-react-compiler', {}]],
-      },
-    }),
+    react(),
+    // React Compiler (babel-plugin-react-compiler) — React 19.2+ ships react/compiler-runtime,
+    // so no `target` / react-compiler-runtime shim is needed. vitest.config.ts merges this file
+    // so tests run against the same compiled output.
+    babel({ presets: [reactCompilerPreset()] }),
   ],
   build: {
     rolldownOptions: {
@@ -18,7 +19,10 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'react-vendor', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
-            { name: 'query-vendor', test: /node_modules[\\/]@tanstack[\\/](react-)?query-core[\\/]|node_modules[\\/]@tanstack[\\/]react-query[\\/]/ },
+            {
+              name: 'query-vendor',
+              test: /node_modules[\\/]@tanstack[\\/](react-)?query-core[\\/]|node_modules[\\/]@tanstack[\\/]react-query[\\/]/,
+            },
             { name: 'router-vendor', test: /node_modules[\\/]react-router(-dom)?[\\/]/ },
           ],
         },
