@@ -1,5 +1,5 @@
 import { setThousandsSeparator, THIN_SPACE_SEPARATOR } from '@shared/lib/utils';
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'home-system-prefs';
 
@@ -78,9 +78,9 @@ if (typeof window !== 'undefined') {
 export function usePreferences() {
   const prefs = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  const set = useCallback(<K extends keyof Preferences>(key: K, value: Preferences[K]) => {
+  function set<K extends keyof Preferences>(key: K, value: Preferences[K]) {
     setPreference(key, value);
-  }, []);
+  }
 
   return { prefs, set } as const;
 }

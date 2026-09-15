@@ -18,7 +18,7 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Clipboard, Download, FileJson, ShoppingCart } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 function formatLocalDate(date: Date) {
@@ -79,12 +79,10 @@ export default function ShoppingList() {
     to: appliedRange.to,
   });
 
-  const items = useMemo(() => data ?? [], [data]);
+  const items = data ?? [];
 
-  const pagedItems = useMemo(() => {
-    const start = (tablePage - 1) * tablePageSize;
-    return items.slice(start, start + tablePageSize);
-  }, [items, tablePage, tablePageSize]);
+  const pageStart = (tablePage - 1) * tablePageSize;
+  const pagedItems = items.slice(pageStart, pageStart + tablePageSize);
 
   const handleApply = () => {
     if (draftFrom && draftTo && draftFrom <= draftTo) {

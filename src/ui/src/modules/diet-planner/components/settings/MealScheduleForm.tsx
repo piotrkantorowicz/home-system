@@ -72,11 +72,12 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
   const onSubmit = async (data: MealScheduleFormData) => {
     try {
       await updateMutation.mutateAsync({ slots: data.slots });
-      toast.success(t('meal_schedule.save_success'));
-      onSuccess?.();
     } catch {
       toast.error(t('meal_schedule.save_error'));
+      return;
     }
+    toast.success(t('meal_schedule.save_success'));
+    onSuccess?.();
   };
 
   if (isLoading) {

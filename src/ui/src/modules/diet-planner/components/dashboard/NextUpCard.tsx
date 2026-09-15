@@ -47,42 +47,45 @@ export function NextUpCard({ meals, loading, onAddMeal }: NextUpCardProps) {
     if (pendingIds.current.has(meal.id)) return;
     pendingIds.current.add(meal.id);
     setPending(new Set(pendingIds.current));
+    let completed = false;
     try {
       await complete.mutateAsync(meal.id);
-      let available = true;
-      const closeUndoWindow = setTimeout(() => {
-        available = false;
-      }, UNDO_WINDOW_MS);
-      toast.success(t('dashboard.meal_marked_eaten'), {
-        duration: UNDO_WINDOW_MS,
-        action: {
-          label: t('hydration.undo'),
-          onClick: () => {
-            const current = latestMeals.current.find((entry) => entry.id === meal.id);
-            if (
-              !available ||
-              current?.status !== 'Done' ||
-              current.recipeId !== meal.recipeId ||
-              current.servings !== meal.servings
-            )
-              return;
-            available = false;
-            clearTimeout(closeUndoWindow);
-            reset.mutate(meal.id, {
-              onError: () => {
-                toast.error(t('calendar.meal_action_error.reset'));
-              },
-            });
-          },
-        },
-      });
-      heading.current?.focus();
+      completed = true;
     } catch {
       toast.error(t('dashboard.meal_mark_error'));
-    } finally {
-      pendingIds.current.delete(meal.id);
-      setPending(new Set(pendingIds.current));
     }
+    pendingIds.current.delete(meal.id);
+    setPending(new Set(pendingIds.current));
+    if (!completed) return;
+
+    let available = true;
+    const closeUndoWindow = setTimeout(() => {
+      available = false;
+    }, UNDO_WINDOW_MS);
+    toast.success(t('dashboard.meal_marked_eaten'), {
+      duration: UNDO_WINDOW_MS,
+      action: {
+        label: t('hydration.undo'),
+        onClick: () => {
+          const current = latestMeals.current.find((entry) => entry.id === meal.id);
+          if (
+            !available ||
+            current?.status !== 'Done' ||
+            current.recipeId !== meal.recipeId ||
+            current.servings !== meal.servings
+          )
+            return;
+          available = false;
+          clearTimeout(closeUndoWindow);
+          reset.mutate(meal.id, {
+            onError: () => {
+              toast.error(t('calendar.meal_action_error.reset'));
+            },
+          });
+        },
+      },
+    });
+    heading.current?.focus();
   };
 
   return (
