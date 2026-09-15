@@ -21,6 +21,7 @@ export function mealScheduleOptions() {
         throw new Error('Failed to fetch meal schedule');
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- REASON: the server answers 200 with a JSON null body when no schedule exists; the schema declares the body required
       return response.data ?? null;
     },
   });
@@ -37,7 +38,7 @@ export function useUpdateMealSchedule() {
     mutationFn: async (data: UpdateMealScheduleRequest) => {
       const response = await api.PUT('/api/v1/meal-schedule', { body: data });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to update meal schedule');
       }
 

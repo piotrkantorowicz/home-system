@@ -236,7 +236,7 @@ export const profileHandlers = [
   }),
 
   http.post(`${BASE}/api/v1/profile`, () => {
-    return HttpResponse.json('66666666-6666-6666-6666-666666666666', { status: 201 });
+    return new HttpResponse(null, { status: 201 });
   }),
 
   http.put(`${BASE}/api/v1/profile`, () => {

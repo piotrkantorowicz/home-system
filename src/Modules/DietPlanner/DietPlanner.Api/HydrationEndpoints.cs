@@ -8,6 +8,7 @@ using DietPlanner.Application.Queries.GetHydrationConfig;
 using DietPlanner.Application.Queries.GetWaterIntake;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -28,45 +29,32 @@ public static class HydrationEndpoints
         group.MapGet("/config", GetHydrationConfig)
             .WithName("GetHydrationConfig")
             .WithSummary("Get the current user's hydration configuration")
-            .WithDescription("Returns hydration settings including daily water target and glass size. Returns `null` body when no config has been set yet.")
-            .Produces<HydrationConfigDto>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns hydration settings including daily water target and glass size. Returns `null` body when no config has been set yet.");
 
         group.MapPut("/config", UpdateHydrationConfig)
             .WithName("UpdateHydrationConfig")
             .WithSummary("Create or update hydration configuration")
-            .WithDescription("Sets daily water target, glass size, and tracking preference for the current user.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Sets daily water target, glass size, and tracking preference for the current user.");
 
         group.MapGet("/intake", GetWaterIntake)
             .WithName("GetWaterIntake")
             .WithSummary("Get water intake entries for a specific date")
-            .WithDescription("Returns all water intake entries for the current user on the specified date, along with the total amount.")
-            .Produces<WaterIntakeListDto>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns all water intake entries for the current user on the specified date, along with the total amount.");
 
         group.MapPost("/intake", LogWaterIntake)
             .WithName("LogWaterIntake")
             .WithSummary("Log a water intake entry")
-            .WithDescription("Records a new water intake entry for the current user.")
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Records a new water intake entry for the current user.");
 
         group.MapDelete("/intake/{id:guid}", DeleteWaterIntake)
             .WithName("DeleteWaterIntake")
             .WithSummary("Delete a water intake entry")
-            .WithDescription("Removes a water intake entry belonging to the current user.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Removes a water intake entry belonging to the current user.");
 
         return app;
     }
 
-    private static async Task<IResult> GetHydrationConfig(
+    private static async Task<Ok<HydrationConfigDto>> GetHydrationConfig(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
@@ -77,7 +65,7 @@ public static class HydrationEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> UpdateHydrationConfig(
+    private static async Task<NoContent> UpdateHydrationConfig(
         UpdateHydrationConfigRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -90,7 +78,7 @@ public static class HydrationEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> GetWaterIntake(
+    private static async Task<Ok<WaterIntakeListDto>> GetWaterIntake(
         DateOnly date,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -102,7 +90,7 @@ public static class HydrationEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> LogWaterIntake(
+    private static async Task<Created<Guid>> LogWaterIntake(
         LogWaterIntakeRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -114,7 +102,7 @@ public static class HydrationEndpoints
         return TypedResults.Created($"/api/v1/hydration/intake/{id}", id);
     }
 
-    private static async Task<IResult> DeleteWaterIntake(
+    private static async Task<NoContent> DeleteWaterIntake(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

@@ -7,6 +7,7 @@ using DietPlanner.Application.Queries.GetProfile;
 using DietPlanner.Application.Queries.GetWeightPrediction;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
 
@@ -27,41 +28,28 @@ public static class ProfileEndpoints
         group.MapGet("/", GetProfile)
             .WithName("GetProfile")
             .WithSummary("Get the current user's biometrics profile")
-            .WithDescription("Returns the biometrics profile for the current user, or 404 if none exists.")
-            .Produces<UserProfileDto>()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns the biometrics profile for the current user, or 404 if none exists.");
 
         group.MapGet("/prediction", GetWeightPrediction)
             .WithName("GetWeightPrediction")
             .WithSummary("Get weight loss/gain prediction for a given calorie target")
             .WithDescription(
-                "Calculates BMR, TDEE, weekly weight change and estimated goal date based on the user's biometrics profile and the supplied daily calorie target. Returns 404 if the profile does not exist or is missing required biometric fields.")
-            .Produces<WeightPredictionDto>()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+                "Calculates BMR, TDEE, weekly weight change and estimated goal date based on the user's biometrics profile and the supplied daily calorie target. Returns 404 if the profile does not exist or is missing required biometric fields.");
 
         group.MapPost("/", CreateProfile)
             .WithName("CreateProfile")
             .WithSummary("Create a biometrics profile for the current user")
-            .WithDescription("Creates a new biometrics profile. All biometric fields are optional.")
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Creates a new biometrics profile. All biometric fields are optional.");
 
         group.MapPut("/", UpdateProfile)
             .WithName("UpdateProfile")
             .WithSummary("Update the current user's biometrics profile")
-            .WithDescription("Replaces all biometric fields on the existing profile. Pass null to clear a field.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Replaces all biometric fields on the existing profile. Pass null to clear a field.");
 
         return app;
     }
 
-    private static async Task<IResult> GetProfile(
+    private static async Task<Results<Ok<UserProfileDto>, NotFound>> GetProfile(
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
@@ -72,7 +60,7 @@ public static class ProfileEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> GetWeightPrediction(
+    private static async Task<Results<Ok<WeightPredictionDto>, NotFound>> GetWeightPrediction(
         decimal dailyCalorieTarget,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -84,7 +72,7 @@ public static class ProfileEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> CreateProfile(
+    private static async Task<Created> CreateProfile(
         ProfileRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -98,7 +86,7 @@ public static class ProfileEndpoints
         return TypedResults.Created($"/api/v1/profile/{id}");
     }
 
-    private static async Task<IResult> UpdateProfile(
+    private static async Task<NoContent> UpdateProfile(
         ProfileRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,

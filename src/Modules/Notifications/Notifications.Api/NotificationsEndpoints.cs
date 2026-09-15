@@ -26,22 +26,10 @@ public static class NotificationsEndpoints
             .RequireAuthorization()
             .WithTags("Notifications");
 
-        group.MapGet("/", ListNotifications)
-             .WithName("ListNotifications")
-             .Produces<PagedList<NotificationDto>>(StatusCodes.Status200OK);
-
-        group.MapPost("/{id:guid}/read", MarkRead)
-             .WithName("MarkNotificationRead")
-             .Produces(StatusCodes.Status204NoContent)
-             .ProducesProblem(StatusCodes.Status404NotFound);
-
-        group.MapPost("/read", BulkMarkRead)
-             .WithName("BulkMarkNotificationsRead")
-             .Produces(StatusCodes.Status204NoContent);
-
-        group.MapGet("/unread-count", GetUnreadCount)
-             .WithName("GetNotificationsUnreadCount")
-             .Produces<UnreadCountDto>(StatusCodes.Status200OK);
+        group.MapGet("/", ListNotifications).WithName("ListNotifications");
+        group.MapPost("/{id:guid}/read", MarkRead).WithName("MarkNotificationRead");
+        group.MapPost("/read", BulkMarkRead).WithName("BulkMarkNotificationsRead");
+        group.MapGet("/unread-count", GetUnreadCount).WithName("GetNotificationsUnreadCount");
 
         app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
 

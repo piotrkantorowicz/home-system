@@ -15,6 +15,7 @@ using DietPlanner.Application.Queries.GetNutritionSummary;
 using DietPlanner.Application.Queries.GetShoppingList;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Shared.Abstractions.Cqrs;
@@ -36,104 +37,67 @@ public static class MealEndpoints
         group.MapGet("/", GetMeals)
             .WithName("GetMeals")
             .WithSummary("Get meal entries for a date range")
-            .WithDescription("Returns all meal entries logged by the current user within the specified date range. Omit `from`/`to` to return all entries.")
-            .Produces<IReadOnlyList<MealEntryDto>>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Returns all meal entries logged by the current user within the specified date range. Omit `from`/`to` to return all entries.");
 
         group.MapGet("/nutrition-summary", GetNutritionSummary)
             .WithName("GetNutritionSummary")
             .WithSummary("Get daily nutrition summary for a date range")
-            .WithDescription("Aggregates meal entries by day and returns total calories, protein, carbohydrates, fat, and fibre for each day in the range.")
-            .Produces<IReadOnlyList<DailyNutritionDto>>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Aggregates meal entries by day and returns total calories, protein, carbohydrates, fat, and fibre for each day in the range.");
 
         group.MapGet("/shopping-list", GetShoppingList)
             .WithName("GetShoppingList")
             .WithSummary("Get the household's aggregated shopping list for planned meals in a date range")
-            .WithDescription("Aggregates the ingredients of every household member's planned meals (each recipe scaled by servings) across the date range and groups them by product and unit. Falls back to the caller's own meals when they have no household. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.")
-            .Produces<IReadOnlyList<ShoppingListItemDto>>()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Aggregates the ingredients of every household member's planned meals (each recipe scaled by servings) across the date range and groups them by product and unit. Falls back to the caller's own meals when they have no household. Overrides (ActualRecipeId/ActualProducts) are intentionally ignored — shopping lists operate on planned meals.");
 
         group.MapPost("/", CreateMealEntry)
             .WithName("CreateMealEntry")
             .WithSummary("Add a meal entry")
-            .WithDescription("Records a recipe serving in the current user's meal log. `mealType` identifies the meal slot (e.g. Breakfast, Lunch, Dinner, Snack). `servings` is a multiplier applied to the recipe's nutritional values.")
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Records a recipe serving in the current user's meal log. `mealType` identifies the meal slot (e.g. Breakfast, Lunch, Dinner, Snack). `servings` is a multiplier applied to the recipe's nutritional values.");
 
         group.MapPut("/{id:guid}", UpdateMealEntry)
             .WithName("UpdateMealEntry")
             .WithSummary("Update a meal entry")
-            .WithDescription("Updates the date, meal type, servings, and notes of an existing meal entry. Only the owner of the entry may update it.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Updates the date, meal type, servings, and notes of an existing meal entry. Only the owner of the entry may update it.");
 
         group.MapDelete("/{id:guid}", DeleteMealEntry)
             .WithName("DeleteMealEntry")
             .WithSummary("Delete a meal entry")
-            .WithDescription("Permanently removes a meal entry from the log. Only the entry owner may delete it.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Permanently removes a meal entry from the log. Only the entry owner may delete it.");
 
         group.MapPatch("/{id:guid}/complete", CompleteMealEntry)
             .WithName("CompleteMealEntry")
             .WithSummary("Mark a meal entry as done")
-            .WithDescription("Confirms the user ate the meal as planned. Idempotent on already-Done entries; rejected with 422 if the entry has been Modified — reset the override first.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status422UnprocessableEntity)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Confirms the user ate the meal as planned. Idempotent on already-Done entries; rejected with 422 if the entry has been Modified — reset the override first.");
 
         group.MapPatch("/{id:guid}/override", OverrideMealEntry)
             .WithName("OverrideMealEntry")
             .WithSummary("Record what was actually eaten instead of the planned meal")
-            .WithDescription("Replaces the meal's actual recipe and/or ad-hoc product list. Override must include either a recipe or at least one product.")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Replaces the meal's actual recipe and/or ad-hoc product list. Override must include either a recipe or at least one product.");
 
         group.MapPatch("/{id:guid}/reset", ResetMealEntry)
             .WithName("ResetMealEntry")
             .WithSummary("Revert a meal entry to its planned state")
-            .WithDescription("Clears Done/Modified status and any override data. Idempotent on already-Planned entries.")
-            .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Clears Done/Modified status and any override data. Idempotent on already-Planned entries.");
 
         group.MapPost("/bulk-complete", BulkCompleteMeals)
             .WithName("BulkCompleteMeals")
             .WithSummary("Mark all of the day's planned meals as done")
-            .WithDescription("Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.")
-            .Produces<BulkCompleteMealsResponse>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.");
 
         group.MapPost("/validate", ValidateImport)
             .WithName("ValidateImport")
             .WithSummary("Validate import JSON (dry run)")
-            .WithDescription("Validates the import JSON structure and checks for conflicts without executing the import.")
-            .Produces<ValidationResultDto>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Validates the import JSON structure and checks for conflicts without executing the import.");
 
         group.MapPost("/import", ExecuteImport)
             .WithName("ExecuteImport")
             .WithSummary("Import meals from JSON")
-            .WithDescription("Validates and imports meal entries from JSON. Creates/updates products, recipes, and meal schedule.")
-            .Produces<ImportResultDto>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized);
+            .WithDescription("Validates and imports meal entries from JSON. Creates/updates products, recipes, and meal schedule.");
 
         return app;
     }
 
-    private static async Task<IResult> GetMeals(
+    private static async Task<Ok<IReadOnlyList<MealEntryDto>>> GetMeals(
         [AsParameters] MealDateRangeParams @params,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -145,7 +109,7 @@ public static class MealEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> GetNutritionSummary(
+    private static async Task<Ok<IReadOnlyList<DailyNutritionDto>>> GetNutritionSummary(
         [AsParameters] MealDateRangeParams @params,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -157,7 +121,7 @@ public static class MealEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> GetShoppingList(
+    private static async Task<Ok<IReadOnlyList<ShoppingListItemDto>>> GetShoppingList(
         [AsParameters] MealDateRangeParams @params,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
@@ -169,7 +133,7 @@ public static class MealEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> CreateMealEntry(
+    private static async Task<Created<Guid>> CreateMealEntry(
         CreateMealEntryRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -183,7 +147,7 @@ public static class MealEndpoints
         return TypedResults.Created($"/api/v1/meals/{id}", id);
     }
 
-    private static async Task<IResult> UpdateMealEntry(
+    private static async Task<NoContent> UpdateMealEntry(
         Guid id,
         UpdateMealEntryRequest request,
         ClaimsPrincipal user,
@@ -198,7 +162,7 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> DeleteMealEntry(
+    private static async Task<NoContent> DeleteMealEntry(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -209,7 +173,7 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> CompleteMealEntry(
+    private static async Task<NoContent> CompleteMealEntry(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -220,7 +184,7 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> OverrideMealEntry(
+    private static async Task<NoContent> OverrideMealEntry(
         Guid id,
         OverrideMealEntryRequest request,
         ClaimsPrincipal user,
@@ -237,7 +201,7 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> ResetMealEntry(
+    private static async Task<NoContent> ResetMealEntry(
         Guid id,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -248,7 +212,7 @@ public static class MealEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> BulkCompleteMeals(
+    private static async Task<Ok<BulkCompleteMealsResponse>> BulkCompleteMeals(
         BulkCompleteMealsRequest request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -260,7 +224,7 @@ public static class MealEndpoints
         return TypedResults.Ok(new BulkCompleteMealsResponse(result.Completed));
     }
 
-    private static async Task<IResult> ValidateImport(
+    private static async Task<Ok<ValidationResultDto>> ValidateImport(
         ImportDto request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
@@ -272,7 +236,7 @@ public static class MealEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task<IResult> ExecuteImport(
+    private static async Task<Created<ImportResultDto>> ExecuteImport(
         ImportDto request,
         ClaimsPrincipal user,
         ICommandDispatcher dispatcher,
