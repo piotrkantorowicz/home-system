@@ -1,4 +1,8 @@
-import { useRecipes, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import {
+  recipeOptions,
+  useDeleteRecipe,
+  useRecipes,
+} from '@modules/diet-planner/api/hooks/useRecipes';
 import {
   RecipeCard,
   type RecipeCardData,
@@ -19,6 +23,7 @@ import {
   Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
+import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -54,6 +59,12 @@ export default function RecipeList() {
     update({ filter: filter === 'all' ? null : filter, page: null });
   };
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
+  const queryClient = useQueryClient();
+  // Warm the detail cache on intent so the detail / edit page renders without suspending.
+  // Best-effort: a failed prefetch is swallowed, the page itself surfaces the error.
+  const prefetchRecipe = (id: string) => {
+    queryClient.query(recipeOptions(id)).catch(() => undefined);
+  };
 
   const { data, isLoading, error } = useRecipes({
     search: debouncedSearch,
@@ -173,6 +184,9 @@ export default function RecipeList() {
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
+              onPrefetch={() => {
+                prefetchRecipe(recipe.id);
+              }}
               onDelete={() => {
                 setToDelete({ id: recipe.id, name: recipe.name });
               }}

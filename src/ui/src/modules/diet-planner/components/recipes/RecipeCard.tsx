@@ -35,7 +35,14 @@ function dominant(r: RecipeCardData): Macro {
   return (['protein', 'carbs', 'fat'] as const).reduce((a, b) => (v[b] > v[a] ? b : a));
 }
 
-export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDelete: () => void }) {
+export interface RecipeCardProps {
+  recipe: RecipeCardData;
+  /** Fired on hover / focus of the detail link — warm the detail query before navigation. */
+  onPrefetch?: () => void;
+  onDelete: () => void;
+}
+
+export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
   const { t } = useTranslation();
   const macro = dominant(recipe);
   const per = recipe.nutritionPerServing;
@@ -108,6 +115,8 @@ export function RecipeCard({ recipe, onDelete }: { recipe: RecipeCardData; onDel
           <Link
             to={`/diet-planner/recipes/${recipe.id}`}
             className="text-[14.5px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
+            onMouseEnter={onPrefetch}
+            onFocus={onPrefetch}
           >
             {recipe.name}
           </Link>
