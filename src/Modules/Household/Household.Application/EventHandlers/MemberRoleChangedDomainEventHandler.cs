@@ -15,7 +15,7 @@ internal sealed class MemberRoleChangedDomainEventHandler(IIntegrationEventBus b
 
         return bus.PublishAsync(
             new MemberRoleChangedIntegrationEvent(
-                EventId: Guid.NewGuid(),
+                EventId: Guid.CreateVersion7(),
                 OccurredAt: DateTime.UtcNow,
                 HouseholdId: domainEvent.HouseholdId.Value,
                 PersonId: domainEvent.PersonId.Value,

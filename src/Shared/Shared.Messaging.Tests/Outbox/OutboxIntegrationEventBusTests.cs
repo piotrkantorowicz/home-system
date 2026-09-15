@@ -31,6 +31,7 @@ public sealed class OutboxIntegrationEventBusTests
 
         await _store.Received(1).AddAsync(
             Arg.Is<OutboxMessage>(m =>
+                m.Id.Version == 7 &&
                 m.EventId == eventId &&
                 m.OccurredAt == occurredAt &&
                 m.EventType == typeof(TestIntegrationEvent).AssemblyQualifiedName &&

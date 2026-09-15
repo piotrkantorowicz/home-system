@@ -8,7 +8,7 @@ namespace DietPlanner.Domain.ValueObjects;
 public sealed record MealEntryActualProductId(Guid Value)
 {
     /// <summary>Generates a new, unique identifier for an aggregate being created.</summary>
-    public static MealEntryActualProductId New() => new(Guid.NewGuid());
+    public static MealEntryActualProductId New() => new(Guid.CreateVersion7());
 
     /// <summary>Wraps an existing key read from storage or a request.</summary>
     /// <param name="value">The raw key.</param>

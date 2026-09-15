@@ -26,7 +26,7 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
         ArgumentNullException.ThrowIfNull(integrationEvent);
 
         var message = new OutboxMessage(
-            Id: Guid.NewGuid(),
+            Id: Guid.CreateVersion7(),
             EventId: integrationEvent.EventId,
             EventType: integrationEvent.GetType().AssemblyQualifiedName!,
             Payload: _serializer.Serialize(integrationEvent),

@@ -36,7 +36,7 @@ internal sealed class WaterReminderJob(
                 existing.UpdateLastReminderAt(nowUtc);
 
             await bus.PublishAsync(new WaterReminderDueIntegrationEvent(
-                EventId: Guid.NewGuid(),
+                EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
                 UserId: c.UserId,
                 Locale: c.Locale), ct);

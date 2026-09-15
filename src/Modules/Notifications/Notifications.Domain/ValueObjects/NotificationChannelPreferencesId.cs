@@ -8,7 +8,7 @@ namespace Notifications.Domain.ValueObjects;
 public sealed record NotificationChannelPreferencesId(Guid Value)
 {
     /// <summary>Generates a new, unique identifier for a row being created.</summary>
-    public static NotificationChannelPreferencesId New() => new(Guid.NewGuid());
+    public static NotificationChannelPreferencesId New() => new(Guid.CreateVersion7());
 
     /// <summary>Wraps an existing key read from storage or a request.</summary>
     /// <param name="value">The raw key.</param>
