@@ -14,7 +14,8 @@ public sealed class HouseholdInvitationTests
             HouseholdId.New(),
             PersonEmail.Create("invitee@example.com"),
             role,
-            PersonId.New());
+            PersonId.New(),
+            TestClock.UtcNow);
 
     /// <summary><c>Create</c> is pending and expires in 30 days and raises created event.</summary>
     [Fact]
@@ -38,7 +39,7 @@ public sealed class HouseholdInvitationTests
     {
         var invitation = NewInvitation();
 
-        invitation.Accept(DateTime.UtcNow);
+        invitation.Accept(TestClock.UtcNow.AddMinutes(1));
 
         invitation.Status.ShouldBe(InvitationStatus.Accepted);
         invitation.ResolvedAt.ShouldNotBeNull();
@@ -62,7 +63,7 @@ public sealed class HouseholdInvitationTests
     {
         var invitation = NewInvitation();
 
-        invitation.Revoke(DateTime.UtcNow);
+        invitation.Revoke(TestClock.UtcNow.AddMinutes(1));
 
         invitation.Status.ShouldBe(InvitationStatus.Revoked);
     }
@@ -72,8 +73,8 @@ public sealed class HouseholdInvitationTests
     public void Accept_AfterRevoke_Throws()
     {
         var invitation = NewInvitation();
-        invitation.Revoke(DateTime.UtcNow);
+        invitation.Revoke(TestClock.UtcNow.AddMinutes(1));
 
-        Should.Throw<HouseholdDomainException>(() => invitation.Accept(DateTime.UtcNow));
+        Should.Throw<HouseholdDomainException>(() => invitation.Accept(TestClock.UtcNow.AddMinutes(1)));
     }
 }

@@ -4,20 +4,18 @@ using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class RenameHouseholdCommandHandler : ICommandHandler<RenameHouseholdCommand>
+internal sealed class RenameHouseholdCommandHandler(
+    HouseholdAccessService access,
+    IHouseholdUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<RenameHouseholdCommand>
 {
-    private readonly HouseholdAccessService _access;
-    private readonly IHouseholdUnitOfWork _unitOfWork;
-
-    public RenameHouseholdCommandHandler(HouseholdAccessService access, IHouseholdUnitOfWork unitOfWork)
-        => (_access, _unitOfWork) = (access, unitOfWork);
-
     public async Task HandleAsync(RenameHouseholdCommand command, CancellationToken ct)
     {
-        var (_, household) = await _access.RequireOwnerAsync(
+        var now = clock.GetUtcNow().UtcDateTime;
+        var (_, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
 
-        household.Rename(command.Name);
-        await _unitOfWork.CommitAsync(ct);
+        household.Rename(command.Name, now);
+        await unitOfWork.CommitAsync(ct);
     }
 }
