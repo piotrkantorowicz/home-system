@@ -1,7 +1,7 @@
 import { format, addDays, startOfWeek } from 'date-fns';
 
 import { test, expect } from './fixtures';
-import { ImportPage } from './pages';
+import { CalendarPage, ImportPage } from './pages';
 
 test.describe.configure({ mode: 'serial', timeout: 120000 });
 
@@ -152,8 +152,8 @@ test.describe('Diet Plan Import', () => {
     await importPage.runImportWizard({ products, recipes, schedule });
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);
 
-    // Wait for the calendar to load meal data
-    await page.waitForLoadState('networkidle');
+    // The week grid only mounts once the calendar has loaded its meal data
+    await expect(new CalendarPage(page).weekGrid).toBeVisible();
 
     // Each of the 4 recipes should appear exactly 7 times (once per day of the
     // week). Meal chips are <button>s whose accessible name is

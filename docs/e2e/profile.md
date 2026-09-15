@@ -2,7 +2,7 @@
 
 **Purpose**: biometrics form CRUD on the profile hub's Body Stats section — initial save, persistence across navigation, in-place updates, and dirty-state-driven save button enablement.
 
-**Setup**: each test creates a fresh `ProfilePage` and calls `goto()`, which navigates to `/diet-planner/profile?section=body-stats` and waits for `networkidle`. No backend seeding — tests assume the user already exists and operate on the user's profile entity.
+**Setup**: each test creates a fresh `ProfilePage` and calls `goto()`, which navigates to `/diet-planner/profile?section=body-stats` and waits for the **Save Profile** button (the form only mounts once the profile query has resolved). No backend seeding — tests assume the user already exists and operate on the user's profile entity.
 
 **POM**: `pages/profile.page.ts` exposes:
 
@@ -22,7 +22,7 @@ The POM's `fillForm()` method intentionally fills the date-of-birth field LAST. 
 ### `profile page loads and shows the form`
 
 - **Given** the user is on `/diet-planner/profile?section=body-stats`
-- **When** the page settles (`networkidle`)
+- **When** the Body Stats form has mounted (its **Save Profile** button is on screen)
 - **Then** the heading matches `/profile.*settings|profile/i` (the i18n value is `Profile & Settings`), and the save button, height input, and gender select are all visible
 - **Notes**: the heading regex is permissive to tolerate i18n changes; the field assertions are the actual smoke test that the body-stats form mounted.
 

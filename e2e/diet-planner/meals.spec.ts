@@ -62,7 +62,6 @@ test.describe('Calendar CRUD & Navigation', () => {
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
       .last()
       .click();
-    await page.waitForLoadState('networkidle');
 
     // Week header should change
     await expect(weekHeader).not.toHaveText(currentWeekText ?? '', { timeout: 5000 });
@@ -74,7 +73,6 @@ test.describe('Calendar CRUD & Navigation', () => {
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }))
       .last()
       .click();
-    await page.waitForLoadState('networkidle');
 
     // Should be back to original week
     await expect(weekHeader).toHaveText(currentWeekText ?? '', { timeout: 5000 });
@@ -85,7 +83,6 @@ test.describe('Calendar CRUD & Navigation', () => {
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
       .last()
       .click();
-    await page.waitForLoadState('networkidle');
     await expect(weekHeader).toHaveText(nextWeekText ?? '');
 
     // "Today" snaps to the day view for the current date (#241); switching

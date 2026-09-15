@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { ImportPage, NutritionPage } from './pages';
+import { ImportPage, NutritionPage, gotoProfileSection } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
 
 // ── Structure tests (independent of meal data) ────────────────────────────────
@@ -86,8 +86,7 @@ test.describe('Nutrition Summary — with meal data', () => {
 
   test('the average-intake tile reflects the configured calorie goal', async ({ page }) => {
     // Configure goals (now under the profile hub — #114)
-    await page.goto('/diet-planner/profile?section=goals');
-    await page.waitForLoadState('networkidle');
+    await gotoProfileSection(page, 'goals');
 
     // Alternate protein to guarantee the form is always dirty regardless of prior run state
     const currentProtein = await page.locator('#proteinGrams').inputValue();
