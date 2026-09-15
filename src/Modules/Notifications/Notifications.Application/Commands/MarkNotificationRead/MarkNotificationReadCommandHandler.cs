@@ -7,7 +7,8 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class MarkNotificationReadCommandHandler(
     INotificationRepository repository,
-    INotificationsUnitOfWork unitOfWork)
+    INotificationsUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<MarkNotificationReadCommand>
 {
     public async Task HandleAsync(MarkNotificationReadCommand command, CancellationToken ct = default)
@@ -19,7 +20,7 @@ internal sealed class MarkNotificationReadCommandHandler(
         if (notification.UserId != command.UserId)
             throw new NotFoundException("Notification", command.NotificationId);
 
-        await repository.MarkReadAsync(id, DateTime.UtcNow, ct);
+        await repository.MarkReadAsync(id, clock.GetUtcNow().UtcDateTime, ct);
         await unitOfWork.CommitAsync(ct);
     }
 }

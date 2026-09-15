@@ -13,7 +13,7 @@ public sealed class DietReminderSettingsTests
     {
         var id = DietReminderSettingsId.New();
 
-        var settings = DietReminderSettings.Create(id, "user-1");
+        var settings = DietReminderSettings.Create(id, "user-1", TestClock.UtcNow);
 
         settings.Id.ShouldBe(id);
         settings.UserId.ShouldBe("user-1");
@@ -39,6 +39,7 @@ public sealed class DietReminderSettingsTests
 
         var settings = DietReminderSettings.Create(
             id, "user-2",
+            TestClock.UtcNow,
             mealRemindersEnabled: false,
             mealReminderLeadTimeMinutes: 30,
             mealMissedGraceMinutes: 15,
@@ -67,7 +68,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Create_WithNullUserId_ThrowsArgumentException()
     {
-        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), null!);
+        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), null!, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -76,7 +77,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Create_WithWhitespaceUserId_ThrowsArgumentException()
     {
-        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), "   ");
+        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), "   ", TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -89,6 +90,7 @@ public sealed class DietReminderSettingsTests
     {
         var act = () => DietReminderSettings.Create(
             DietReminderSettingsId.New(), "user-1",
+            TestClock.UtcNow,
             mealReminderLeadTimeMinutes: leadTime);
 
         act.ShouldThrow<DietPlannerDomainException>();
@@ -102,6 +104,7 @@ public sealed class DietReminderSettingsTests
     {
         var act = () => DietReminderSettings.Create(
             DietReminderSettingsId.New(), "user-1",
+            TestClock.UtcNow,
             mealMissedGraceMinutes: grace);
 
         act.ShouldThrow<DietPlannerDomainException>();
@@ -113,6 +116,7 @@ public sealed class DietReminderSettingsTests
     {
         var act = () => DietReminderSettings.Create(
             DietReminderSettingsId.New(), "user-1",
+            TestClock.UtcNow,
             waterWindowStartUtc: new TimeOnly(10, 0),
             waterWindowEndUtc: new TimeOnly(10, 0));
 
@@ -124,7 +128,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Update_WithNewValues_UpdatesAllProperties()
     {
-        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1");
+        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
 
         settings.Update(
             mealRemindersEnabled: false,
@@ -137,7 +141,8 @@ public sealed class DietReminderSettingsTests
             weeklySummaryEnabled: false,
             weeklySummaryDayOfWeekUtc: DayOfWeek.Friday,
             weeklySummaryTimeOfDayUtc: new TimeOnly(17, 30),
-            goalAlertsEnabled: false);
+            goalAlertsEnabled: false,
+            TestClock.UtcNow);
 
         settings.MealRemindersEnabled.ShouldBeFalse();
         settings.MealReminderLeadTimeMinutes.ShouldBe(45);
@@ -155,7 +160,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Update_WhenWaterWindowEndNotAfterStart_ThrowsDomainException()
     {
-        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1");
+        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
 
         var act = () => settings.Update(
             mealRemindersEnabled: true,
@@ -168,7 +173,8 @@ public sealed class DietReminderSettingsTests
             weeklySummaryEnabled: true,
             weeklySummaryDayOfWeekUtc: DayOfWeek.Sunday,
             weeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
-            goalAlertsEnabled: true);
+            goalAlertsEnabled: true,
+            TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>();
     }

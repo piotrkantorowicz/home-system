@@ -25,12 +25,14 @@ public sealed class Person : AggregateRoot<PersonId>
     /// <param name="email">Email from the OIDC profile, if present.</param>
     /// <param name="avatarUrl">Avatar from the OIDC profile, if present.</param>
     /// <exception cref="ArgumentException"><paramref name="authSubject"/> is blank.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static Person RegisterFromLogin(
         PersonId id,
         string authSubject,
         string displayName,
         PersonEmail? email,
-        string? avatarUrl)
+        string? avatarUrl,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(authSubject);
 
@@ -42,7 +44,7 @@ public sealed class Person : AggregateRoot<PersonId>
             Email = email,
             AvatarUrl = NullIfBlank(avatarUrl),
             IsManaged = false,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
 
         person.RaiseDomainEvent(new PersonRegisteredDomainEvent(id, IsManaged: false));
@@ -54,7 +56,8 @@ public sealed class Person : AggregateRoot<PersonId>
     /// <param name="displayName">Name shown across the app; required.</param>
     /// <param name="email">Optional address a future login can be matched against.</param>
     /// <exception cref="HouseholdDomainException"><paramref name="displayName"/> is blank.</exception>
-    public static Person CreateManaged(PersonId id, string displayName, PersonEmail? email)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public static Person CreateManaged(PersonId id, string displayName, PersonEmail? email, DateTime now)
     {
         var person = new Person
         {
@@ -64,7 +67,7 @@ public sealed class Person : AggregateRoot<PersonId>
             Email = email,
             AvatarUrl = null,
             IsManaged = true,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
 
         person.RaiseDomainEvent(new PersonRegisteredDomainEvent(id, IsManaged: true));
@@ -93,7 +96,8 @@ public sealed class Person : AggregateRoot<PersonId>
     /// <param name="displayName">Name from the OIDC profile; falls back to the subject when blank.</param>
     /// <param name="email">Email from the OIDC profile, if present.</param>
     /// <param name="avatarUrl">Avatar from the OIDC profile, if present.</param>
-    public void RefreshProfile(string displayName, PersonEmail? email, string? avatarUrl)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void RefreshProfile(string displayName, PersonEmail? email, string? avatarUrl, DateTime now)
     {
         var newName = NormaliseDisplayName(displayName, AuthSubject);
         var newAvatar = NullIfBlank(avatarUrl);
@@ -108,7 +112,7 @@ public sealed class Person : AggregateRoot<PersonId>
         DisplayName = newName;
         Email = email;
         AvatarUrl = newAvatar;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>
@@ -119,7 +123,7 @@ public sealed class Person : AggregateRoot<PersonId>
     /// <param name="email">The address the future login must present.</param>
     /// <exception cref="ArgumentNullException"><paramref name="email"/> is null.</exception>
     /// <exception cref="HouseholdDomainException">The person is not managed, or is already linked.</exception>
-    public void MarkPendingAccountLink(PersonEmail email)
+    public void MarkPendingAccountLink(PersonEmail email, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(email);
 
@@ -130,14 +134,15 @@ public sealed class Person : AggregateRoot<PersonId>
             throw new HouseholdDomainException("This person is already linked to an account.");
 
         Email = email;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Links a managed person to the Authentik account that just signed in as them and raises <see cref="PersonLinkedToAccountDomainEvent"/>.</summary>
     /// <param name="authSubject">The Authentik subject claim; required.</param>
     /// <exception cref="ArgumentException"><paramref name="authSubject"/> is blank.</exception>
     /// <exception cref="HouseholdDomainException">The person is already linked.</exception>
-    public void LinkAuthSubject(string authSubject)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void LinkAuthSubject(string authSubject, DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(authSubject);
 
@@ -146,7 +151,7 @@ public sealed class Person : AggregateRoot<PersonId>
 
         AuthSubject = authSubject;
         IsManaged = false;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new PersonLinkedToAccountDomainEvent(Id, authSubject));
     }
 

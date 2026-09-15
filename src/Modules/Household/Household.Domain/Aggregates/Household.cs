@@ -29,7 +29,8 @@ public sealed class Household : AggregateRoot<HouseholdId>
     /// <param name="ownerPersonId">The person who becomes the first <see cref="HouseholdRole.Owner"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="ownerPersonId"/> is null.</exception>
     /// <exception cref="HouseholdDomainException"><paramref name="name"/> is blank.</exception>
-    public static Household Create(HouseholdId id, string name, PersonId ownerPersonId)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public static Household Create(HouseholdId id, string name, PersonId ownerPersonId, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(ownerPersonId);
 
@@ -37,11 +38,11 @@ public sealed class Household : AggregateRoot<HouseholdId>
         {
             Id = id,
             Name = NormaliseName(name),
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
 
         var owner = HouseholdMember.Create(
-            HouseholdMemberId.New(), ownerPersonId, HouseholdRole.Owner, nickname: null);
+            HouseholdMemberId.New(), ownerPersonId, HouseholdRole.Owner, now, nickname: null);
         household._members.Add(owner);
 
         household.RaiseDomainEvent(new HouseholdCreatedDomainEvent(id, ownerPersonId));
@@ -63,38 +64,41 @@ public sealed class Household : AggregateRoot<HouseholdId>
     /// <summary>Changes the display name; a no-op when the normalised name is unchanged.</summary>
     /// <param name="name">New display name; trimmed and capped at 120 characters.</param>
     /// <exception cref="HouseholdDomainException"><paramref name="name"/> is blank.</exception>
-    public void Rename(string name)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void Rename(string name, DateTime now)
     {
         var normalised = NormaliseName(name);
         if (normalised == Name)
             return;
 
         Name = normalised;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Adds a person with a role and raises <see cref="MemberJoinedHouseholdDomainEvent"/>.</summary>
     /// <param name="personId">The person to add.</param>
     /// <param name="role">Their authority in this household.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <param name="nickname">Optional name used inside this household instead of the person's display name.</param>
     /// <exception cref="ArgumentNullException"><paramref name="personId"/> is null.</exception>
     /// <exception cref="HouseholdDomainException">The person is already a member.</exception>
-    public void AddMember(PersonId personId, HouseholdRole role, string? nickname = null)
+    public void AddMember(PersonId personId, HouseholdRole role, DateTime now, string? nickname = null)
     {
         ArgumentNullException.ThrowIfNull(personId);
 
         if (FindMember(personId) is not null)
             throw new HouseholdDomainException("That person is already a member of this household.");
 
-        _members.Add(HouseholdMember.Create(HouseholdMemberId.New(), personId, role, nickname));
-        UpdatedAt = DateTime.UtcNow;
+        _members.Add(HouseholdMember.Create(HouseholdMemberId.New(), personId, role, now, nickname));
+        UpdatedAt = now;
         RaiseDomainEvent(new MemberJoinedHouseholdDomainEvent(Id, personId, role));
     }
 
     /// <summary>Removes a member and raises <see cref="MemberLeftHouseholdDomainEvent"/>.</summary>
     /// <param name="personId">The member to remove.</param>
     /// <exception cref="HouseholdDomainException">The person is not a member, or is the last owner.</exception>
-    public void RemoveMember(PersonId personId)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void RemoveMember(PersonId personId, DateTime now)
     {
         var member = RequireMember(personId);
 
@@ -102,15 +106,16 @@ public sealed class Household : AggregateRoot<HouseholdId>
             throw new HouseholdDomainException("A household must keep at least one owner.");
 
         _members.Remove(member);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new MemberLeftHouseholdDomainEvent(Id, personId));
     }
 
     /// <summary>Changes a member's role and raises <see cref="MemberRoleChangedDomainEvent"/>; a no-op when unchanged.</summary>
     /// <param name="personId">The member whose role changes.</param>
     /// <param name="newRole">The new role.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="HouseholdDomainException">The person is not a member, or demoting them would leave no owner.</exception>
-    public void ChangeMemberRole(PersonId personId, HouseholdRole newRole)
+    public void ChangeMemberRole(PersonId personId, HouseholdRole newRole, DateTime now)
     {
         var member = RequireMember(personId);
         if (member.Role == newRole)
@@ -121,7 +126,7 @@ public sealed class Household : AggregateRoot<HouseholdId>
 
         var previous = member.Role;
         member.ChangeRole(newRole);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new MemberRoleChangedDomainEvent(Id, personId, previous, newRole));
     }
 
@@ -129,10 +134,11 @@ public sealed class Household : AggregateRoot<HouseholdId>
     /// <param name="personId">The member to rename.</param>
     /// <param name="nickname">The nickname, or blank to clear it; trimmed and capped at 100 characters.</param>
     /// <exception cref="HouseholdDomainException">The person is not a member.</exception>
-    public void RenameMember(PersonId personId, string? nickname)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void RenameMember(PersonId personId, string? nickname, DateTime now)
     {
         RequireMember(personId).Rename(nickname);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Whether the person is currently a member.</summary>

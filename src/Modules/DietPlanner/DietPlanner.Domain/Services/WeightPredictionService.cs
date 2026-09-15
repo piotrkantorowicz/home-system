@@ -64,16 +64,18 @@ public static class WeightPredictionService
     /// current and target weight already differ by less than 0.01 kg, and null when the weekly
     /// change is zero or moves away from the target.
     /// </summary>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static DateOnly? EstimateGoalDate(
         decimal currentWeightKg,
         decimal targetWeightKg,
-        decimal weeklyWeightChangeKg)
+        decimal weeklyWeightChangeKg,
+        DateTime now)
     {
         decimal weightDelta = targetWeightKg - currentWeightKg;
 
         // Already at target
         if (Math.Abs(weightDelta) < 0.01m)
-            return DateOnly.FromDateTime(DateTime.UtcNow);
+            return DateOnly.FromDateTime(now);
 
         // Can't reach target — change is in wrong direction or zero
         if (weeklyWeightChangeKg == 0m)
@@ -88,7 +90,7 @@ public static class WeightPredictionService
         decimal weeksNeeded = Math.Abs(weightDelta / weeklyWeightChangeKg);
         double daysNeeded = (double)(weeksNeeded * 7m);
 
-        var goalDate = DateTime.UtcNow.AddDays(daysNeeded);
+        var goalDate = now.AddDays(daysNeeded);
         return DateOnly.FromDateTime(goalDate);
     }
 }

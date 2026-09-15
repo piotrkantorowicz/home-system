@@ -11,6 +11,8 @@ using Xunit;
 [Collection(nameof(PostgresCollectionDefinition))]
 public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDisposable
 {
+    private static readonly DateTime Now = new(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
+
     private readonly PostgresContainerFixture _fixture;
     private MessagingTestDbContext _dbContext = default!;
 
@@ -40,7 +42,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
     {
         var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", """{"a":1}""",
-            DateTime.UtcNow, null, 0, null);
+            Now, null, 0, null);
 
         await sut.AddAsync(msg, default);
         await _dbContext.SaveChangesAsync();
@@ -56,11 +58,11 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
     {
         var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}",
-            DateTime.UtcNow, null, 0, null);
+            Now, null, 0, null);
 
         await sut.AddAsync(msg, default);
         await _dbContext.SaveChangesAsync();
-        await sut.MarkProcessedAsync(msg.Id, DateTime.UtcNow, default);
+        await sut.MarkProcessedAsync(msg.Id, Now, default);
 
         var unprocessed = await sut.GetUnprocessedAsync(10, default);
         unprocessed.ShouldBeEmpty();
@@ -72,7 +74,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
     {
         var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}",
-            DateTime.UtcNow, null, 0, null);
+            Now, null, 0, null);
 
         await sut.AddAsync(msg, default);
         await _dbContext.SaveChangesAsync();

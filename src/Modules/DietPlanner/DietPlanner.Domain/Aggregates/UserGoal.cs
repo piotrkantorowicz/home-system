@@ -22,9 +22,11 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
     /// <param name="fiberGrams">Daily fibre target in grams.</param>
     /// <param name="targetWeightKg">Weight to reach, in kilograms; enables the milestone notification.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static UserGoal Create(
         UserGoalId id,
         string userId,
+        DateTime now,
         int? dailyCalorieTarget,
         decimal? proteinGrams,
         decimal? carbsGrams,
@@ -44,7 +46,7 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
             FatGrams = fatGrams,
             FiberGrams = fiberGrams,
             TargetWeightKg = targetWeightKg,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
     }
 
@@ -76,12 +78,14 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
     /// <param name="fatGrams">New daily fat target in grams.</param>
     /// <param name="fiberGrams">New daily fibre target in grams.</param>
     /// <param name="targetWeightKg">New target weight in kilograms.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void Update(
         int? dailyCalorieTarget,
         decimal? proteinGrams,
         decimal? carbsGrams,
         decimal? fatGrams,
         decimal? fiberGrams,
+        DateTime now,
         decimal? targetWeightKg = null)
     {
         DailyCalorieTarget = dailyCalorieTarget;
@@ -90,7 +94,7 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
         FatGrams = fatGrams;
         FiberGrams = fiberGrams;
         TargetWeightKg = targetWeightKg;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>

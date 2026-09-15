@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Transport;
 using Shouldly;
@@ -13,6 +14,9 @@ using Shouldly;
 /// <summary>Unit tests for <c>OutboxWorker</c>: the store and transport are substituted and the worker is driven through <c>RunOnceAsync</c>.</summary>
 public sealed class OutboxWorkerTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 9, 12, 10, 0, 0, TimeSpan.Zero);
+    private static readonly FakeTimeProvider Clock = new(Now);
+
     // A dummy DbContext type to satisfy the generic constraint of OutboxWorker<TDbContext>.
     /// <summary>Placeholder <c>DbContext</c> that only satisfies the worker's generic constraint; never opened.</summary>
     public sealed class TestDbContext : DbContext
@@ -23,7 +27,7 @@ public sealed class OutboxWorkerTests
     }
 
     private static OutboxMessage MakePending(Guid id) =>
-        new(id, Guid.NewGuid(), "Some.Event, Some.Asm", "{}", DateTime.UtcNow, null, 0, null);
+        new(id, Guid.NewGuid(), "Some.Event, Some.Asm", "{}", Now.UtcDateTime, null, 0, null);
 
     private static IServiceScopeFactory ScopeFactory(IOutboxStore? store, IIntegrationEventTransport? transport)
     {
@@ -42,7 +46,8 @@ public sealed class OutboxWorkerTests
         ILogger<OutboxWorker<TestDbContext>>? logger = null) =>
         new(ScopeFactory(store, transport),
             Options.Create(new OutboxWorkerOptions()),
-            logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance);
+            logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance,
+            Clock);
 
     /// <summary>With pending messages: <c>RunOnceAsync</c> dispatches and marks processed.</summary>
     [Fact]
@@ -56,7 +61,7 @@ public sealed class OutboxWorkerTests
         await SutWith(store, transport).RunOnceAsync(CancellationToken.None);
 
         await transport.Received(1).DispatchAsync(msg, Arg.Any<CancellationToken>());
-        await store.Received(1).MarkProcessedAsync(msg.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+        await store.Received(1).MarkProcessedAsync(msg.Id, Now.UtcDateTime, Arg.Any<CancellationToken>());
     }
 
     /// <summary>When transport throws: <c>RunOnceAsync</c> records failure and continues.</summary>

@@ -6,51 +6,42 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class LogWeightEntryCommandHandler
+internal sealed class LogWeightEntryCommandHandler(
+    IWeightEntryRepository weightEntryRepository,
+    IUserProfileRepository userProfileRepository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<LogWeightEntryCommand, LogWeightEntryResult>
 {
-    private readonly IWeightEntryRepository _weightEntryRepository;
-    private readonly IUserProfileRepository _userProfileRepository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public LogWeightEntryCommandHandler(
-        IWeightEntryRepository weightEntryRepository,
-        IUserProfileRepository userProfileRepository,
-        IUnitOfWork unitOfWork)
-    {
-        _weightEntryRepository = weightEntryRepository;
-        _userProfileRepository = userProfileRepository;
-        _unitOfWork = unitOfWork;
-    }
-
     public async Task<LogWeightEntryResult> HandleAsync(
         LogWeightEntryCommand command, CancellationToken ct = default)
     {
-        var profile = await _userProfileRepository.GetByUserIdAsync(command.UserId, ct)
+        var now = clock.GetUtcNow().UtcDateTime;
+        var profile = await userProfileRepository.GetByUserIdAsync(command.UserId, ct)
             ?? throw new NotFoundException("UserProfile", command.UserId);
 
-        var existing = await _weightEntryRepository.GetByUserAndDateAsync(
+        var existing = await weightEntryRepository.GetByUserAndDateAsync(
             command.UserId, command.Date, ct);
 
         bool created;
         WeightEntry entry;
         if (existing is null)
         {
-            entry = WeightEntry.Create(WeightEntryId.New(), command.UserId, command.Date, command.WeightKg);
-            await _weightEntryRepository.AddAsync(entry, ct);
+            entry = WeightEntry.Create(WeightEntryId.New(), command.UserId, command.Date, command.WeightKg, now);
+            await weightEntryRepository.AddAsync(entry, ct);
             created = true;
         }
         else
         {
-            existing.ChangeWeight(command.WeightKg);
+            existing.ChangeWeight(command.WeightKg, now);
             entry = existing;
             created = false;
         }
 
-        profile.UpdateCurrentWeight(command.WeightKg);
-        _userProfileRepository.Update(profile);
+        profile.UpdateCurrentWeight(command.WeightKg, now);
+        userProfileRepository.Update(profile);
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
 
         return new LogWeightEntryResult(entry.Id.Value, created);
     }

@@ -34,9 +34,11 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// <param name="goalAlertsEnabled">Whether goal milestone notifications fire.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
     /// <exception cref="DietPlannerDomainException">A minute value is not positive or the water window is empty.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static DietReminderSettings Create(
         DietReminderSettingsId id,
         string userId,
+        DateTime now,
         bool mealRemindersEnabled = true,
         int mealReminderLeadTimeMinutes = 15,
         int mealMissedGraceMinutes = 30,
@@ -77,7 +79,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
             WeeklySummaryDayOfWeekUtc = weeklySummaryDayOfWeekUtc,
             WeeklySummaryTimeOfDayUtc = summaryTimeUtc,
             GoalAlertsEnabled = goalAlertsEnabled,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
     }
 
@@ -123,6 +125,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// <param name="weeklySummaryTimeOfDayUtc">UTC time of day the summary is sent at.</param>
     /// <param name="goalAlertsEnabled">Whether goal milestone notifications fire.</param>
     /// <exception cref="DietPlannerDomainException">A minute value is not positive or the water window is empty.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void Update(
         bool mealRemindersEnabled,
         int mealReminderLeadTimeMinutes,
@@ -134,7 +137,8 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         bool weeklySummaryEnabled,
         DayOfWeek weeklySummaryDayOfWeekUtc,
         TimeOnly weeklySummaryTimeOfDayUtc,
-        bool goalAlertsEnabled)
+        bool goalAlertsEnabled,
+        DateTime now)
     {
         EnsureValid(
             mealReminderLeadTimeMinutes,
@@ -154,7 +158,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         WeeklySummaryDayOfWeekUtc = weeklySummaryDayOfWeekUtc;
         WeeklySummaryTimeOfDayUtc = weeklySummaryTimeOfDayUtc;
         GoalAlertsEnabled = goalAlertsEnabled;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     private static void EnsureValid(

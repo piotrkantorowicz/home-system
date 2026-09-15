@@ -18,6 +18,7 @@ public sealed class HouseholdMember : Entity<HouseholdMemberId>
         HouseholdMemberId id,
         PersonId personId,
         HouseholdRole role,
+        DateTime now,
         string? nickname)
         => new()
         {
@@ -25,7 +26,7 @@ public sealed class HouseholdMember : Entity<HouseholdMemberId>
             PersonId = personId,
             Role = role,
             Nickname = NormaliseNickname(nickname),
-            JoinedAt = DateTime.UtcNow,
+            JoinedAt = now,
         };
 
     /// <summary>The person this membership belongs to.</summary>

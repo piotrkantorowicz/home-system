@@ -24,7 +24,7 @@ public sealed class ResetMealEntryCommandHandlerTests
     public async Task HandleAsync_ResetsEntryAndCommits()
     {
         var entry = MealEntry.Create(MealEntryId.New(), "user-1", new DateOnly(2026, 1, 1),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         entry.ApplyOverride(RecipeId.New(), []);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
@@ -41,7 +41,7 @@ public sealed class ResetMealEntryCommandHandlerTests
     public async Task HandleAsync_WhenEntryNotOwned_ThrowsNotFoundException()
     {
         var entry = MealEntry.Create(MealEntryId.New(), "other-user", new DateOnly(2026, 1, 1),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>

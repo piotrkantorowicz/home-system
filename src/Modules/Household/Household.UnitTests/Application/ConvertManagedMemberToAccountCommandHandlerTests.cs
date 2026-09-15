@@ -6,6 +6,7 @@ using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.Exceptions;
 using Household.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 using HouseholdAggregate = Household.Domain.Aggregates.Household;
 
@@ -15,17 +16,18 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
     private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
     private readonly IHouseholdUnitOfWork _uow = Substitute.For<IHouseholdUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly ConvertManagedMemberToAccountCommandHandler _sut;
 
-    private readonly Person _owner = Person.RegisterFromLogin(PersonId.New(), "auth|owner", "Owner", null, null);
+    private readonly Person _owner = Person.RegisterFromLogin(PersonId.New(), "auth|owner", "Owner", null, null, TestClock.UtcNow);
     private readonly HouseholdAggregate _household;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public ConvertManagedMemberToAccountCommandHandlerTests()
     {
-        _household = HouseholdAggregate.Create(HouseholdId.New(), "Home", _owner.Id);
+        _household = HouseholdAggregate.Create(HouseholdId.New(), "Home", _owner.Id, TestClock.UtcNow);
         _sut = new ConvertManagedMemberToAccountCommandHandler(
-            new HouseholdAccessService(_persons, _households), _persons, _uow);
+            new HouseholdAccessService(_persons, _households), _persons, _uow, _clock);
 
         _persons.GetByAuthSubjectAsync("auth|owner", Arg.Any<CancellationToken>()).Returns(_owner);
         _households.GetByIdAsync(_household.Id, Arg.Any<CancellationToken>()).Returns(_household);
@@ -38,8 +40,8 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     [Fact]
     public async Task Handle_MarksThePendingLink_AndCommits()
     {
-        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null);
-        _household.AddMember(managed.Id, HouseholdRole.Child);
+        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null, TestClock.UtcNow);
+        _household.AddMember(managed.Id, HouseholdRole.Child, TestClock.UtcNow);
         _persons.GetByIdAsync(managed.Id, Arg.Any<CancellationToken>()).Returns(managed);
 
         await _sut.HandleAsync(Command(managed.Id.Value), CancellationToken.None);
@@ -52,7 +54,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     [Fact]
     public async Task Handle_WhenPersonIsNotAMemberOfTheHousehold_Throws()
     {
-        var stranger = Person.CreateManaged(PersonId.New(), "Stranger", null);
+        var stranger = Person.CreateManaged(PersonId.New(), "Stranger", null, TestClock.UtcNow);
         _persons.GetByIdAsync(stranger.Id, Arg.Any<CancellationToken>()).Returns(stranger);
 
         await Should.ThrowAsync<ForbiddenException>(() =>
@@ -65,8 +67,8 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     [Fact]
     public async Task Handle_WhenPersonIsAlreadyLinked_Throws()
     {
-        var linked = Person.RegisterFromLogin(PersonId.New(), "auth|kid", "Kid", null, null);
-        _household.AddMember(linked.Id, HouseholdRole.Adult);
+        var linked = Person.RegisterFromLogin(PersonId.New(), "auth|kid", "Kid", null, null, TestClock.UtcNow);
+        _household.AddMember(linked.Id, HouseholdRole.Adult, TestClock.UtcNow);
         _persons.GetByIdAsync(linked.Id, Arg.Any<CancellationToken>()).Returns(linked);
 
         await Should.ThrowAsync<HouseholdDomainException>(() =>
@@ -77,12 +79,12 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
     [Fact]
     public async Task Handle_WhenCallerIsNotOwner_Throws()
     {
-        var adult = Person.RegisterFromLogin(PersonId.New(), "auth|adult", "Adult", null, null);
-        _household.AddMember(adult.Id, HouseholdRole.Adult);
+        var adult = Person.RegisterFromLogin(PersonId.New(), "auth|adult", "Adult", null, null, TestClock.UtcNow);
+        _household.AddMember(adult.Id, HouseholdRole.Adult, TestClock.UtcNow);
         _persons.GetByAuthSubjectAsync("auth|adult", Arg.Any<CancellationToken>()).Returns(adult);
 
-        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null);
-        _household.AddMember(managed.Id, HouseholdRole.Child);
+        var managed = Person.CreateManaged(PersonId.New(), "Kiddo", null, TestClock.UtcNow);
+        _household.AddMember(managed.Id, HouseholdRole.Child, TestClock.UtcNow);
         _persons.GetByIdAsync(managed.Id, Arg.Any<CancellationToken>()).Returns(managed);
 
         await Should.ThrowAsync<ForbiddenException>(() => _sut.HandleAsync(

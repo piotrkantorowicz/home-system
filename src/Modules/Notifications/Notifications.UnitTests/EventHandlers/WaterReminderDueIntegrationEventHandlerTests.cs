@@ -23,7 +23,7 @@ public sealed class WaterReminderDueIntegrationEventHandlerTests
     {
         var @event = new WaterReminderDueIntegrationEvent(
             EventId: Guid.NewGuid(),
-            OccurredAt: DateTime.UtcNow,
+            OccurredAt: TestClock.UtcNow,
             UserId: "u42",
             Locale: "pl");
 

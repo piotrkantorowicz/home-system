@@ -4,22 +4,20 @@ using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class LeaveHouseholdCommandHandler : ICommandHandler<LeaveHouseholdCommand>
+internal sealed class LeaveHouseholdCommandHandler(
+    HouseholdAccessService access,
+    IHouseholdUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<LeaveHouseholdCommand>
 {
-    private readonly HouseholdAccessService _access;
-    private readonly IHouseholdUnitOfWork _unitOfWork;
-
-    public LeaveHouseholdCommandHandler(HouseholdAccessService access, IHouseholdUnitOfWork unitOfWork)
-        => (_access, _unitOfWork) = (access, unitOfWork);
-
     public async Task HandleAsync(LeaveHouseholdCommand command, CancellationToken ct)
     {
-        var (caller, household) = await _access.RequireMemberAsync(
+        var now = clock.GetUtcNow().UtcDateTime;
+        var (caller, household) = await access.RequireMemberAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
 
         // The last-owner rule in the aggregate stops the sole owner from leaving —
         // they must hand ownership to someone else or delete the household first.
-        household.RemoveMember(caller.Id);
-        await _unitOfWork.CommitAsync(ct);
+        household.RemoveMember(caller.Id, now);
+        await unitOfWork.CommitAsync(ct);
     }
 }

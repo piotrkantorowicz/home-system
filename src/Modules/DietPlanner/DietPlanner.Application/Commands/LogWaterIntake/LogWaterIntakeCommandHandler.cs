@@ -6,21 +6,19 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class LogWaterIntakeCommandHandler : ICommandHandler<LogWaterIntakeCommand, Guid>
+internal sealed class LogWaterIntakeCommandHandler(
+    IWaterIntakeRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<LogWaterIntakeCommand, Guid>
 {
-    private readonly IWaterIntakeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public LogWaterIntakeCommandHandler(IWaterIntakeRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task<Guid> HandleAsync(LogWaterIntakeCommand command, CancellationToken ct = default)
     {
+        var now = clock.GetUtcNow().UtcDateTime;
         var id = WaterIntakeId.New();
-        var intake = WaterIntake.Create(id, command.UserId, command.Date, command.AmountMl, command.Note);
+        var intake = WaterIntake.Create(id, command.UserId, command.Date, command.AmountMl, command.Note, now);
 
-        await _repository.AddAsync(intake, ct);
-        await _unitOfWork.CommitAsync(ct);
+        await repository.AddAsync(intake, ct);
+        await unitOfWork.CommitAsync(ct);
 
         return id.Value;
     }

@@ -27,7 +27,7 @@ public sealed class NotificationDeliveryTests
     public void MarkSent_TransitionsToSentAndIncrementsAttempts()
     {
         var delivery = NewPending();
-        var now = DateTime.UtcNow;
+        var now = TestClock.UtcNow;
 
         delivery.MarkSent(now);
 
@@ -42,7 +42,7 @@ public sealed class NotificationDeliveryTests
     public void MarkFailed_TransitionsToFailedWithReason()
     {
         var delivery = NewPending();
-        var now = DateTime.UtcNow;
+        var now = TestClock.UtcNow;
 
         delivery.MarkFailed(now, "smtp 503");
 
@@ -58,7 +58,7 @@ public sealed class NotificationDeliveryTests
     {
         var delivery = NewPending();
 
-        var act = () => delivery.MarkFailed(DateTime.UtcNow, "  ");
+        var act = () => delivery.MarkFailed(TestClock.UtcNow, "  ");
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -68,7 +68,7 @@ public sealed class NotificationDeliveryTests
     public void RecordPendingAttempt_LeavesStatusPendingAndIncrementsAttempts()
     {
         var delivery = NewPending();
-        var now = DateTime.UtcNow;
+        var now = TestClock.UtcNow;
 
         delivery.RecordPendingAttempt(now);
 
@@ -83,8 +83,8 @@ public sealed class NotificationDeliveryTests
     public void MarkSent_AfterPendingAttempt_TransitionsToSent()
     {
         var delivery = NewPending();
-        delivery.RecordPendingAttempt(DateTime.UtcNow.AddSeconds(-5));
-        var ackedAt = DateTime.UtcNow;
+        delivery.RecordPendingAttempt(TestClock.UtcNow.AddSeconds(-5));
+        var ackedAt = TestClock.UtcNow;
 
         delivery.MarkSent(ackedAt);
 
@@ -98,10 +98,10 @@ public sealed class NotificationDeliveryTests
     public void MarkSent_WhenAlreadySent_IsNoOp()
     {
         var delivery = NewPending();
-        var firstAck = DateTime.UtcNow;
+        var firstAck = TestClock.UtcNow;
         delivery.MarkSent(firstAck);
 
-        delivery.MarkSent(DateTime.UtcNow.AddSeconds(10));
+        delivery.MarkSent(TestClock.UtcNow.AddSeconds(10));
 
         delivery.Status.ShouldBe(DeliveryStatus.Sent);
         delivery.SentAt.ShouldBe(firstAck);
@@ -113,7 +113,7 @@ public sealed class NotificationDeliveryTests
     public void MarkSkipped_TransitionsToSkippedWithoutIncrementing()
     {
         var delivery = NewPending();
-        var now = DateTime.UtcNow;
+        var now = TestClock.UtcNow;
 
         delivery.MarkSkipped(now);
 

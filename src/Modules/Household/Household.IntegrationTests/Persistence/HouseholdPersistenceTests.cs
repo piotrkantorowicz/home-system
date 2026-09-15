@@ -28,8 +28,8 @@ public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseF
 
         await using (var db = NewContext())
         {
-            var household = HouseholdAggregate.Create(householdId, "Round Trip Home", owner);
-            household.AddMember(child, HouseholdRole.Child, "Kiddo");
+            var household = HouseholdAggregate.Create(householdId, "Round Trip Home", owner, TestClock.UtcNow);
+            household.AddMember(child, HouseholdRole.Child, TestClock.UtcNow, "Kiddo");
             db.Set<HouseholdAggregate>().Add(household);
             await db.SaveChangesAsync();
         }
@@ -57,7 +57,7 @@ public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseF
         await using (var db = NewContext())
         {
             db.Set<HouseholdAggregate>().Add(
-                HouseholdAggregate.Create(householdId, "To Delete", PersonId.New()));
+                HouseholdAggregate.Create(householdId, "To Delete", PersonId.New(), TestClock.UtcNow));
             await db.SaveChangesAsync();
         }
 

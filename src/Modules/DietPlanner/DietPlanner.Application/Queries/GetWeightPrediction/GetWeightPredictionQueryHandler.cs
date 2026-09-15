@@ -6,19 +6,15 @@ using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class GetWeightPredictionQueryHandler
+internal sealed class GetWeightPredictionQueryHandler(IDietPlannerReadDbContext dbContext, TimeProvider clock)
     : IQueryHandler<GetWeightPredictionQuery, WeightPredictionDto?>
 {
-    private readonly IDietPlannerReadDbContext _dbContext;
-
-    public GetWeightPredictionQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
 
     public async Task<WeightPredictionDto?> HandleAsync(
         GetWeightPredictionQuery query,
         CancellationToken ct = default)
     {
-        var profile = await _dbContext.UserProfiles
+        var profile = await dbContext.UserProfiles
             .AsNoTracking()
             .Where(p => p.UserId == query.UserId)
             .Select(p => new
@@ -43,7 +39,8 @@ internal sealed class GetWeightPredictionQueryHandler
             || profile.ActivityLevel is null)
             return null;
 
-        int ageYears = CalculateAge(profile.DateOfBirth.Value);
+        DateTime now = clock.GetUtcNow().UtcDateTime;
+        int ageYears = CalculateAge(profile.DateOfBirth.Value, now);
         Gender gender = profile.Gender.Value;
         decimal heightCm = profile.HeightCm.Value;
         decimal currentWeightKg = profile.CurrentWeightKg.Value;
@@ -62,7 +59,8 @@ internal sealed class GetWeightPredictionQueryHandler
             estimatedGoalDate = WeightPredictionService.EstimateGoalDate(
                 currentWeightKg,
                 profile.TargetWeightKg.Value,
-                weeklyWeightChange);
+                weeklyWeightChange,
+                now);
 
             targetBmi = WeightPredictionService.CalculateBmi(profile.TargetWeightKg.Value, heightCm);
         }
@@ -77,9 +75,9 @@ internal sealed class GetWeightPredictionQueryHandler
             TargetBmi: targetBmi);
     }
 
-    private static int CalculateAge(DateOnly dateOfBirth)
+    private static int CalculateAge(DateOnly dateOfBirth, DateTime now)
     {
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = DateOnly.FromDateTime(now);
         int age = today.Year - dateOfBirth.Year;
 
         if (today < dateOfBirth.AddYears(age))

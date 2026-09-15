@@ -15,7 +15,7 @@ using Shared.Infrastructure.Messaging.Ef.Outbox;
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class GoalMilestoneEvaluatorTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = TestClock.Today;
 
     private readonly DatabaseFixture _db;
 
@@ -105,7 +105,7 @@ public sealed class GoalMilestoneEvaluatorTests
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
         var goal = UserGoal.Create(
-            UserGoalId.New(), userId, 2000, 150m, 250m, 70m, 30m,
+            UserGoalId.New(), userId, TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m,
             targetWeightKg: targetWeightKg);
         dbContext.UserGoals.Add(goal);
         await dbContext.SaveChangesAsync();

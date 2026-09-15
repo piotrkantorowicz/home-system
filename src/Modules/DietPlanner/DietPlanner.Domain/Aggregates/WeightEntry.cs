@@ -25,11 +25,12 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
     /// <param name="weightKg">Weight in kilograms, 0.1–999.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
     /// <exception cref="DietPlannerDomainException">The weight is out of range or the date is in the future.</exception>
-    public static WeightEntry Create(WeightEntryId id, string userId, DateOnly date, decimal weightKg)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public static WeightEntry Create(WeightEntryId id, string userId, DateOnly date, decimal weightKg, DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
         EnsureValidWeight(weightKg);
-        EnsureNotFutureDate(date);
+        EnsureNotFutureDate(date, now);
 
         var entry = new WeightEntry
         {
@@ -37,7 +38,7 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
             UserId = userId,
             Date = date,
             WeightKg = weightKg,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
 
         entry.RaiseDomainEvent(new WeightEntryAddedDomainEvent(userId, weightKg, date));
@@ -58,11 +59,12 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
     /// <summary>Corrects the recorded weight and raises <see cref="WeightEntryAddedDomainEvent"/> again.</summary>
     /// <param name="newWeightKg">Corrected weight in kilograms, 0.1–999.</param>
     /// <exception cref="DietPlannerDomainException">The weight is out of range.</exception>
-    public void ChangeWeight(decimal newWeightKg)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void ChangeWeight(decimal newWeightKg, DateTime now)
     {
         EnsureValidWeight(newWeightKg);
         WeightKg = newWeightKg;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         RaiseDomainEvent(new WeightEntryAddedDomainEvent(UserId, newWeightKg, Date));
     }
 
@@ -73,9 +75,9 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
                 $"Weight must be between {MinWeightKg} and {MaxWeightKg} kg.");
     }
 
-    private static void EnsureNotFutureDate(DateOnly date)
+    private static void EnsureNotFutureDate(DateOnly date, DateTime now)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(now);
         if (date > today)
             throw new DietPlannerDomainException("Weight entry date cannot be in the future.");
     }

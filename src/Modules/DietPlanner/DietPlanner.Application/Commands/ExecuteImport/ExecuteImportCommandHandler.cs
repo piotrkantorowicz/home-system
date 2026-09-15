@@ -7,7 +7,13 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImportCommand, ImportResultDto>
+internal sealed class ExecuteImportCommandHandler(
+    IProductRepository productRepository,
+    IRecipeRepository recipeRepository,
+    IMealEntryRepository mealEntryRepository,
+    IMealScheduleConfigRepository scheduleRepository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<ExecuteImportCommand, ImportResultDto>
 {
     private static readonly IReadOnlyList<(string Name, TimeOnly DefaultTime)> DefaultMealSlots =
     [
@@ -17,28 +23,9 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
         ("Snack", new TimeOnly(15, 0)),
     ];
 
-    private readonly IProductRepository _productRepository;
-    private readonly IRecipeRepository _recipeRepository;
-    private readonly IMealEntryRepository _mealEntryRepository;
-    private readonly IMealScheduleConfigRepository _scheduleRepository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public ExecuteImportCommandHandler(
-        IProductRepository productRepository,
-        IRecipeRepository recipeRepository,
-        IMealEntryRepository mealEntryRepository,
-        IMealScheduleConfigRepository scheduleRepository,
-        IUnitOfWork unitOfWork)
-    {
-        _productRepository = productRepository;
-        _recipeRepository = recipeRepository;
-        _mealEntryRepository = mealEntryRepository;
-        _scheduleRepository = scheduleRepository;
-        _unitOfWork = unitOfWork;
-    }
-
     public async Task<ImportResultDto> HandleAsync(ExecuteImportCommand command, CancellationToken ct = default)
     {
+        var now = clock.GetUtcNow().UtcDateTime;
         var import = command.Import;
         var userId = command.UserId;
 
@@ -55,7 +42,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
             if (string.IsNullOrWhiteSpace(p.Name))
                 continue;
 
-            var existing = await _productRepository.GetByNameAsync(p.Name, userId, ct);
+            var existing = await productRepository.GetByNameAsync(p.Name, userId, ct);
             if (existing is not null)
             {
                 productIdByName[p.Name] = existing.Id;
@@ -65,8 +52,8 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
             {
                 var id = ProductId.New();
                 var nutrition = new NutritionPer100g(p.CaloriesPer100g, p.ProteinPer100g, p.CarbsPer100g, p.FatPer100g, p.FiberPer100g);
-                var product = Product.Create(id, p.Name, nutrition, p.Unit ?? "g", p.DensityGramsPerMl, p.GramPerPiece, userId);
-                await _productRepository.AddAsync(product, ct);
+                var product = Product.Create(id, p.Name, nutrition, p.Unit ?? "g", p.DensityGramsPerMl, p.GramPerPiece, userId, now);
+                await productRepository.AddAsync(product, ct);
                 productIdByName[p.Name] = id;
                 productsCreated++;
             }
@@ -80,7 +67,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
             if (string.IsNullOrWhiteSpace(r.Name))
                 continue;
 
-            var existing = await _recipeRepository.GetByNameAsync(r.Name, userId, ct);
+            var existing = await recipeRepository.GetByNameAsync(r.Name, userId, ct);
             if (existing is not null)
             {
                 recipeIdByName[r.Name] = existing.Id;
@@ -90,7 +77,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
             {
                 var id = RecipeId.New();
                 var recipe = Recipe.Create(id, r.Name, r.Description, r.Instructions,
-                    r.Servings ?? 1, r.PrepTimeMinutes, userId);
+                    r.Servings ?? 1, r.PrepTimeMinutes, userId, now);
 
                 foreach (var ing in r.Ingredients ?? [])
                 {
@@ -100,7 +87,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                     // Resolve product ID — first from this import batch, then from DB
                     if (!productIdByName.TryGetValue(ing.Product, out ProductId? productId))
                     {
-                        var dbProduct = await _productRepository.GetByNameAsync(ing.Product, userId, ct);
+                        var dbProduct = await productRepository.GetByNameAsync(ing.Product, userId, ct);
                         if (dbProduct is null)
                             continue; // Skip unresolvable ingredients
                         productId = dbProduct.Id;
@@ -109,18 +96,18 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                     recipe.AddIngredient(RecipeIngredientId.New(), productId, ing.Amount ?? 100m, ing.Unit);
                 }
 
-                await _recipeRepository.AddAsync(recipe, ct);
+                await recipeRepository.AddAsync(recipe, ct);
                 recipeIdByName[r.Name] = id;
                 recipesCreated++;
             }
         }
 
         // ── 3. Resolve meal schedule (auto-provision default if missing) ────
-        var schedule = await _scheduleRepository.GetByUserIdAsync(userId, ct);
+        var schedule = await scheduleRepository.GetByUserIdAsync(userId, ct);
         if (schedule is null)
         {
-            schedule = MealScheduleConfig.Create(MealScheduleConfigId.New(), userId, DefaultMealSlots);
-            await _scheduleRepository.AddAsync(schedule, ct);
+            schedule = MealScheduleConfig.Create(MealScheduleConfigId.New(), userId, DefaultMealSlots, now);
+            await scheduleRepository.AddAsync(schedule, ct);
         }
 
         // ── 4. Create meal entries ──────────────────────────────────────────
@@ -137,13 +124,13 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                 // Resolve recipe ID — from this import batch or DB
                 if (!recipeIdByName.TryGetValue(meal.Recipe, out RecipeId? recipeId))
                 {
-                    var dbRecipe = await _recipeRepository.GetByNameAsync(meal.Recipe, userId, ct);
+                    var dbRecipe = await recipeRepository.GetByNameAsync(meal.Recipe, userId, ct);
                     if (dbRecipe is null)
                         continue; // Skip unresolvable meals
                     recipeId = dbRecipe.Id;
                 }
 
-                MealSlotId mealSlotId = ResolveMealSlot(schedule, meal.Type);
+                MealSlotId mealSlotId = ResolveMealSlot(schedule, meal.Type, now);
 
                 var entry = MealEntry.Create(
                     MealEntryId.New(),
@@ -154,14 +141,15 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                     meal.Servings ?? 1m,
                     meal.Notes,
                     mealTime: null,
-                    sequenceOrder: null);
+                    sequenceOrder: null,
+                    now);
 
-                await _mealEntryRepository.AddAsync(entry, ct);
+                await mealEntryRepository.AddAsync(entry, ct);
                 mealEntriesCreated++;
             }
         }
 
-        await _unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitAsync(ct);
 
         return new ImportResultDto(
             Message: $"Import completed successfully.",
@@ -173,7 +161,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                 MealEntriesCreated: mealEntriesCreated));
     }
 
-    private static MealSlotId ResolveMealSlot(MealScheduleConfig schedule, string? rawType)
+    private static MealSlotId ResolveMealSlot(MealScheduleConfig schedule, string? rawType, DateTime now)
     {
         if (!string.IsNullOrWhiteSpace(rawType))
         {
@@ -194,7 +182,7 @@ internal sealed class ExecuteImportCommandHandler : ICommandHandler<ExecuteImpor
                 .Select(s => new MealSlotUpsert(s.Id, s.Name, s.DefaultTime))
                 .Append(new MealSlotUpsert(null, "Other", new TimeOnly(12, 0)))
                 .ToList();
-            schedule.ApplyUpdate(upserts);
+            schedule.ApplyUpdate(upserts, now);
             other = schedule.Slots.First(s => string.Equals(s.Name, "Other", StringComparison.OrdinalIgnoreCase));
         }
 

@@ -9,27 +9,24 @@ using Household.Domain.Aggregates;
 /// account. Adds them to the household and marks the invitation accepted. Does not commit —
 /// the caller owns the unit of work.
 /// </summary>
-internal sealed class InvitationResolver
+internal sealed class InvitationResolver(
+    IHouseholdInvitationRepository invitations,
+    IHouseholdRepository households,
+    TimeProvider clock)
 {
-    private readonly IHouseholdInvitationRepository _invitations;
-    private readonly IHouseholdRepository _households;
-
-    public InvitationResolver(IHouseholdInvitationRepository invitations, IHouseholdRepository households)
-        => (_invitations, _households) = (invitations, households);
-
     public async Task TryResolveForAsync(Person person, CancellationToken ct)
     {
         if (person.Email is null)
             return;
 
-        if (await _households.GetByMemberPersonIdAsync(person.Id, ct) is not null)
+        if (await households.GetByMemberPersonIdAsync(person.Id, ct) is not null)
             return;
 
-        var invitation = await _invitations.GetPendingByEmailAsync(person.Email, ct);
+        var invitation = await invitations.GetPendingByEmailAsync(person.Email, ct);
         if (invitation is null)
             return;
 
-        var now = DateTime.UtcNow;
+        var now = clock.GetUtcNow().UtcDateTime;
 
         if (invitation.HasExpired(now))
         {
@@ -37,14 +34,14 @@ internal sealed class InvitationResolver
             return;
         }
 
-        var household = await _households.GetByIdAsync(invitation.HouseholdId, ct);
+        var household = await households.GetByIdAsync(invitation.HouseholdId, ct);
         if (household is null)
         {
             invitation.Expire(now);
             return;
         }
 
-        household.AddMember(person.Id, invitation.Role);
+        household.AddMember(person.Id, invitation.Role, now);
         invitation.Accept(now);
     }
 }

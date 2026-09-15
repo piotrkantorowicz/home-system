@@ -147,7 +147,7 @@ public sealed class TestSupportEndpointsTests
         var mealResp = await client.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
-                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                Date: TestClock.Today,
                 MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
@@ -265,7 +265,7 @@ public sealed class TestSupportEndpointsTests
         var staleMealResp = await staleClient.PostAsJsonAsync(
             "/api/v1/meals",
             new CreateMealEntryRequest(
-                Date: DateOnly.FromDateTime(DateTime.UtcNow),
+                Date: TestClock.Today,
                 MealSlotId: staleSlotId,
                 RecipeId: recipeId,
                 Servings: 1m,

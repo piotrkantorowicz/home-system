@@ -15,24 +15,20 @@ using Shared.Infrastructure.Messaging.Transport;
 /// logged and the loop continues.
 /// </summary>
 /// <typeparam name="TDbContext">The publishing module's <c>DbContext</c>, which keys its outbox store.</typeparam>
-public sealed partial class OutboxWorker<TDbContext> : BackgroundService
+/// <param name="scopeFactory">Opens a DI scope per tick so the store uses a fresh <c>DbContext</c>.</param>
+/// <param name="options">Batch size and poll interval.</param>
+/// <param name="logger">Receives tick and dispatch failures.</param>
+/// <param name="clock">Supplies the <c>processed_at</c> timestamp.</param>
+public sealed partial class OutboxWorker<TDbContext>(
+    IServiceScopeFactory scopeFactory,
+    IOptions<OutboxWorkerOptions> options,
+    ILogger<OutboxWorker<TDbContext>> logger,
+    TimeProvider clock) : BackgroundService
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
 
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly OutboxWorkerOptions _options;
-    private readonly ILogger<OutboxWorker<TDbContext>> _logger;
-
-    /// <summary>Creates the worker.</summary>
-    /// <param name="scopeFactory">Opens a DI scope per tick so the store uses a fresh <c>DbContext</c>.</param>
-    /// <param name="options">Batch size and poll interval.</param>
-    /// <param name="logger">Receives tick and dispatch failures.</param>
-    public OutboxWorker(
-        IServiceScopeFactory scopeFactory,
-        IOptions<OutboxWorkerOptions> options,
-        ILogger<OutboxWorker<TDbContext>> logger)
-        => (_scopeFactory, _options, _logger) = (scopeFactory, options.Value, logger);
+    private readonly OutboxWorkerOptions _options = options.Value;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -67,7 +63,7 @@ public sealed partial class OutboxWorker<TDbContext> : BackgroundService
     /// <param name="ct">Propagates cancellation to the store and transport.</param>
     public async Task RunOnceAsync(CancellationToken ct)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;
 
         // Resolve this module's store via the keyed registration made by AddOutbox<TDbContext>().
@@ -94,7 +90,7 @@ public sealed partial class OutboxWorker<TDbContext> : BackgroundService
             try
             {
                 await transport.DispatchAsync(message, ct).ConfigureAwait(false);
-                await store.MarkProcessedAsync(message.Id, DateTime.UtcNow, ct).ConfigureAwait(false);
+                await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

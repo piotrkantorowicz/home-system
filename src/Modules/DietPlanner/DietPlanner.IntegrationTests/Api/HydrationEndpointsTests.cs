@@ -71,7 +71,7 @@ public sealed class HydrationEndpointsTests
     [Fact]
     public async Task POST_WaterIntake_WithValidRequest_Returns201()
     {
-        var request = new LogWaterIntakeRequest(DateOnly.FromDateTime(DateTime.UtcNow), 250, null);
+        var request = new LogWaterIntakeRequest(TestClock.Today, 250, null);
 
         var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request);
 
@@ -82,7 +82,7 @@ public sealed class HydrationEndpointsTests
     [Fact]
     public async Task POST_WaterIntake_WithZeroAmount_Returns400()
     {
-        var request = new LogWaterIntakeRequest(DateOnly.FromDateTime(DateTime.UtcNow), 0, null);
+        var request = new LogWaterIntakeRequest(TestClock.Today, 0, null);
 
         var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request);
 

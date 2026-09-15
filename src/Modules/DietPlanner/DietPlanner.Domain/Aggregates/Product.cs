@@ -21,6 +21,7 @@ public sealed class Product : AggregateRoot<ProductId>
     /// <param name="densityGramsPerMl">Grams per millilitre for converting volume amounts; 1 g/ml is assumed when <see langword="null"/>.</param>
     /// <param name="gramPerPiece">Grams per piece for converting <c>piece</c> amounts; 100 g is assumed when <see langword="null"/>.</param>
     /// <param name="createdByUserId">Auth subject of the creating user; required.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> or <paramref name="createdByUserId"/> is blank.</exception>
     public static Product Create(
         ProductId id,
@@ -29,7 +30,8 @@ public sealed class Product : AggregateRoot<ProductId>
         string defaultUnit,
         decimal? densityGramsPerMl,
         decimal? gramPerPiece,
-        string createdByUserId)
+        string createdByUserId,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(createdByUserId);
@@ -43,7 +45,7 @@ public sealed class Product : AggregateRoot<ProductId>
             DensityGramsPerMl = densityGramsPerMl,
             GramPerPiece = gramPerPiece,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
     }
 
@@ -75,13 +77,15 @@ public sealed class Product : AggregateRoot<ProductId>
     /// <param name="defaultUnit">New default unit.</param>
     /// <param name="densityGramsPerMl">New grams-per-millilitre, or <see langword="null"/> to clear it.</param>
     /// <param name="gramPerPiece">New grams-per-piece, or <see langword="null"/> to clear it.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> is blank.</exception>
     public void Update(
         string name,
         NutritionPer100g nutrition,
         string defaultUnit,
         decimal? densityGramsPerMl,
-        decimal? gramPerPiece)
+        decimal? gramPerPiece,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -90,27 +94,29 @@ public sealed class Product : AggregateRoot<ProductId>
         DefaultUnit = defaultUnit;
         DensityGramsPerMl = densityGramsPerMl;
         GramPerPiece = gramPerPiece;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Hides the product from lists and searches without breaking meals that reference it.</summary>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="DietPlannerDomainException">The product is already deleted.</exception>
-    public void SoftDelete()
+    public void SoftDelete(DateTime now)
     {
         if (IsDeleted)
             throw new DietPlannerDomainException("Product is already deleted.");
 
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = now;
     }
 
     /// <summary>Reverses <see cref="SoftDelete"/>.</summary>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="DietPlannerDomainException">The product is not deleted.</exception>
-    public void Restore()
+    public void Restore(DateTime now)
     {
         if (!IsDeleted)
             throw new DietPlannerDomainException("Product is not deleted.");
 
         DeletedAt = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 }

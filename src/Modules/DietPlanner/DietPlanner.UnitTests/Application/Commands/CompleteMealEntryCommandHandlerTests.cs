@@ -21,7 +21,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
 
     private static MealEntry NewEntry(string userId = "user-1")
         => MealEntry.Create(MealEntryId.New(), userId, new DateOnly(2026, 1, 1),
-            MealSlotId.New(), RecipeId.New(), 1m, null, null, null);
+            MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
 
     /// <summary>With owned entry: <c>HandleAsync</c> marks done and commits.</summary>
     [Fact]
