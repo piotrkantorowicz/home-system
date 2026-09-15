@@ -35,7 +35,7 @@ export function useUpdateDietReminderSettings() {
     mutationFn: async (data: DietReminderSettingsRequest) => {
       const response = await api.PUT('/api/v1/diet-reminder-settings', { body: data });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to update diet reminder settings');
       }
     },

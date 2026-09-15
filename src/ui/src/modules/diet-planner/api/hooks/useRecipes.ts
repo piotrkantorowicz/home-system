@@ -82,8 +82,8 @@ export function useCreateRecipe() {
         body: recipeData,
       });
 
-      if (response.error) {
-        const detail = (response.error as { detail?: string }).detail ?? '';
+      if (!response.response.ok) {
+        const detail = (response.error as { detail?: string } | undefined)?.detail ?? '';
         throw new Error(`Failed to create recipe${detail ? `: ${detail}` : ''}`);
       }
 
@@ -107,7 +107,7 @@ export function useUpdateRecipe(id: string) {
         body: recipeData,
       });
 
-      if (response.error) {
+      if (!response.response.ok) {
         throw new Error('Failed to update recipe');
       }
 
