@@ -507,21 +507,17 @@ services.AddDbContext<BudgetPlanDbContext>((sp, opts) =>
 
 ---
 
-## Error Middleware — Handling Validation Exceptions
+## Error Handling — Validation Exceptions → 400
 
 ```csharp
-// Shared.Infrastructure.Web/ExceptionHandlingMiddleware.cs (relevant excerpt)
-catch (CommandValidationException ex)
+// Shared.Infrastructure.Web/ApplicationExceptionHandler.cs (relevant excerpt)
+CommandValidationException validation => new ProblemDetails
 {
-    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-    await context.Response.WriteAsJsonAsync(new ValidationProblemDetails
-    {
-        Title = "Validation failed",
-        Errors = ex.Errors
-            .GroupBy(e => e.PropertyName)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(e => e.ErrorMessage).ToArray())
-    });
-}
+    Status = StatusCodes.Status400BadRequest,
+    Title = "Validation failed",
+    Extensions = { ["errors"] = GroupErrors(validation) },   // property name → messages, like ValidationProblemDetails
+},
 ```
+
+The handler is an `IExceptionHandler` registered with `AddProblemDetails()` + `AddExceptionHandler<>()`;
+see `backend-api-patterns.md` § Error Handling for the full mapping.

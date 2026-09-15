@@ -163,8 +163,12 @@ Validation errors go into `ProblemDetails.Extensions["errors"]` grouped by prope
 `ValidationProblemDetails`. Unhandled exceptions are logged by the framework's exception handler
 middleware with the request path and trace id — do not log them again in the handler.
 
-The current `ExceptionHandlingMiddleware : IMiddleware` does the same mapping by hand and is
-scheduled for replacement under #269.
+The handler owns the status code and the body only. Logging stays with the framework: the host passes
+`ApplicationExceptionHandler.ShouldSuppressDiagnostics` as `ExceptionHandlerOptions.SuppressDiagnosticsCallback`,
+so the mapped 4xx/499 exceptions are never logged as errors and an unhandled one is logged exactly once.
+`OperationCanceledException` answers 499 with an empty body. Security headers come from
+`SecurityHeadersMiddleware` (`app.UseMiddleware<SecurityHeadersMiddleware>()`), which writes them in
+`Response.OnStarting` so they survive the exception handler's response reset.
 
 ## Authorization
 
