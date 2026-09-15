@@ -5,26 +5,24 @@ using DietPlanner.Domain.Repositories;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateGoalCommandHandler : ICommandHandler<UpdateGoalCommand>
+internal sealed class UpdateGoalCommandHandler(
+    IUserGoalRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<UpdateGoalCommand>
 {
-    private readonly IUserGoalRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateGoalCommandHandler(IUserGoalRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task HandleAsync(UpdateGoalCommand command, CancellationToken ct = default)
     {
-        var goal = await _repository.GetByUserIdAsync(command.UserId, ct)
+        var now = clock.GetUtcNow().UtcDateTime;
+        var goal = await repository.GetByUserIdAsync(command.UserId, ct)
             ?? throw new NotFoundException("UserGoal", command.UserId);
 
         if (goal.UserId != command.UserId)
             throw new DietPlannerDomainException("You can only update your own goals.");
 
         goal.Update(command.DailyCalorieTarget, command.ProteinGrams, command.CarbsGrams,
-            command.FatGrams, command.FiberGrams);
+            command.FatGrams, command.FiberGrams, now);
 
-        _repository.Update(goal);
-        await _unitOfWork.CommitAsync(ct);
+        repository.Update(goal);
+        await unitOfWork.CommitAsync(ct);
     }
 }

@@ -21,12 +21,14 @@ public sealed class WaterIntake : AggregateRoot<WaterIntakeId>
     /// <param name="note">Optional free-text note.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
     /// <exception cref="DietPlannerDomainException"><paramref name="amountMl"/> is not positive.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static WaterIntake Create(
         WaterIntakeId id,
         string userId,
         DateOnly date,
         int amountMl,
-        string? note)
+        string? note,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
@@ -39,7 +41,7 @@ public sealed class WaterIntake : AggregateRoot<WaterIntakeId>
             UserId = userId,
             Date = date,
             AmountMl = amountMl,
-            Timestamp = DateTime.UtcNow,
+            Timestamp = now,
             Note = note
         };
     }

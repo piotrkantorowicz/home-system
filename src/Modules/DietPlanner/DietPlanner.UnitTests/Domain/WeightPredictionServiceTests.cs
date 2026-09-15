@@ -60,10 +60,11 @@ public sealed class WeightPredictionServiceTests
         DateOnly? result = WeightPredictionService.EstimateGoalDate(
             currentWeightKg: 90m,
             targetWeightKg: 80m,
-            weeklyWeightChangeKg: -0.5m);
+            weeklyWeightChangeKg: -0.5m,
+            now: TestClock.UtcNow);
 
         result.ShouldNotBeNull();
-        result!.Value.ShouldBeGreaterThan(DateOnly.FromDateTime(DateTime.UtcNow));
+        result!.Value.ShouldBeGreaterThan(TestClock.Today);
     }
 
     /// <summary>When gaining towards higher target: <c>EstimateGoalDate</c> returns date.</summary>
@@ -73,7 +74,8 @@ public sealed class WeightPredictionServiceTests
         DateOnly? result = WeightPredictionService.EstimateGoalDate(
             currentWeightKg: 70m,
             targetWeightKg: 80m,
-            weeklyWeightChangeKg: 0.5m);
+            weeklyWeightChangeKg: 0.5m,
+            now: TestClock.UtcNow);
 
         result.ShouldNotBeNull();
     }
@@ -86,7 +88,8 @@ public sealed class WeightPredictionServiceTests
         DateOnly? result = WeightPredictionService.EstimateGoalDate(
             currentWeightKg: 90m,
             targetWeightKg: 80m,
-            weeklyWeightChangeKg: 0.5m);
+            weeklyWeightChangeKg: 0.5m,
+            now: TestClock.UtcNow);
 
         result.ShouldBeNull();
     }
@@ -98,7 +101,8 @@ public sealed class WeightPredictionServiceTests
         DateOnly? result = WeightPredictionService.EstimateGoalDate(
             currentWeightKg: 90m,
             targetWeightKg: 80m,
-            weeklyWeightChangeKg: 0m);
+            weeklyWeightChangeKg: 0m,
+            now: TestClock.UtcNow);
 
         result.ShouldBeNull();
     }
@@ -110,9 +114,10 @@ public sealed class WeightPredictionServiceTests
         DateOnly? result = WeightPredictionService.EstimateGoalDate(
             currentWeightKg: 80m,
             targetWeightKg: 80m,
-            weeklyWeightChangeKg: -0.5m);
+            weeklyWeightChangeKg: -0.5m,
+            now: TestClock.UtcNow);
 
-        result.ShouldBe(DateOnly.FromDateTime(DateTime.UtcNow));
+        result.ShouldBe(TestClock.Today);
     }
 
     // ── CalculateBmr ────────────────────────────────────────────────────────

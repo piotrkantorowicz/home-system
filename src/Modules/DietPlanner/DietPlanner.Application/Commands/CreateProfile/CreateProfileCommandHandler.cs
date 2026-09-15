@@ -6,16 +6,14 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class CreateProfileCommandHandler : ICommandHandler<CreateProfileCommand, Guid>
+internal sealed class CreateProfileCommandHandler(
+    IUserProfileRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<CreateProfileCommand, Guid>
 {
-    private readonly IUserProfileRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CreateProfileCommandHandler(IUserProfileRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task<Guid> HandleAsync(CreateProfileCommand command, CancellationToken ct = default)
     {
+        var now = clock.GetUtcNow().UtcDateTime;
         Gender? gender = command.Gender is not null
             ? Enum.Parse<Gender>(command.Gender, ignoreCase: true)
             : null;
@@ -27,10 +25,10 @@ internal sealed class CreateProfileCommandHandler : ICommandHandler<CreateProfil
         var id = UserProfileId.New();
         UserProfile profile = UserProfile.Create(
             id, command.UserId, command.DateOfBirth, gender,
-            command.HeightCm, command.CurrentWeightKg, command.TargetWeightKg, activityLevel);
+            command.HeightCm, command.CurrentWeightKg, command.TargetWeightKg, activityLevel, now);
 
-        await _repository.AddAsync(profile, ct);
-        await _unitOfWork.CommitAsync(ct);
+        await repository.AddAsync(profile, ct);
+        await unitOfWork.CommitAsync(ct);
 
         return id.Value;
     }

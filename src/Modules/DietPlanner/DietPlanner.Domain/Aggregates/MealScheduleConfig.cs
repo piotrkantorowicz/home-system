@@ -30,10 +30,12 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
     /// <param name="userId">Auth subject of the owner; required.</param>
     /// <param name="slots">Name and default time of each slot, in display order; 1 to 8 entries.</param>
     /// <exception cref="DietPlannerDomainException">The user id is blank, the slot count is out of range, or a slot name is blank.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static MealScheduleConfig Create(
         MealScheduleConfigId id,
         string userId,
-        IReadOnlyList<(string Name, TimeOnly DefaultTime)> slots)
+        IReadOnlyList<(string Name, TimeOnly DefaultTime)> slots,
+        DateTime now)
     {
         if (string.IsNullOrWhiteSpace(userId))
             throw new DietPlannerDomainException("User ID is required.");
@@ -44,7 +46,7 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
         {
             Id = id,
             UserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         for (var i = 0; i < slots.Count; i++)
@@ -90,7 +92,8 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
     /// </summary>
     /// <param name="upserts">The desired slot list, in display order; 1 to 8 entries.</param>
     /// <exception cref="DietPlannerDomainException">The slot count is out of range, an id does not belong to this schedule, or a slot name is blank.</exception>
-    public void ApplyUpdate(IReadOnlyList<MealSlotUpsert> upserts)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void ApplyUpdate(IReadOnlyList<MealSlotUpsert> upserts, DateTime now)
     {
         ValidateSlotCount(upserts.Count);
 
@@ -122,7 +125,7 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
             }
         }
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     private static void ValidateSlotCount(int count)

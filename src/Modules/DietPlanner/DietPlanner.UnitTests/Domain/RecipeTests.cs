@@ -13,7 +13,7 @@ public sealed class RecipeTests
     {
         var id = RecipeId.New();
 
-        var recipe = Recipe.Create(id, "Pasta", "Tasty pasta", null, 2, 20, "user-1");
+        var recipe = Recipe.Create(id, "Pasta", "Tasty pasta", null, 2, 20, "user-1", TestClock.UtcNow);
 
         recipe.Id.ShouldBe(id);
         recipe.Name.ShouldBe("Pasta");
@@ -28,7 +28,7 @@ public sealed class RecipeTests
     [Fact]
     public void AddIngredient_AddsToCollection()
     {
-        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1");
+        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1", TestClock.UtcNow);
         var productId = ProductId.New();
 
         recipe.AddIngredient(RecipeIngredientId.New(), productId, 200m, "g");
@@ -42,7 +42,7 @@ public sealed class RecipeTests
     [Fact]
     public void ClearIngredients_RemovesAll()
     {
-        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1");
+        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1", TestClock.UtcNow);
         recipe.AddIngredient(RecipeIngredientId.New(), ProductId.New(), 100m, "g");
         recipe.AddIngredient(RecipeIngredientId.New(), ProductId.New(), 50m, "ml");
 
@@ -55,9 +55,9 @@ public sealed class RecipeTests
     [Fact]
     public void Update_WithValidData_UpdatesRecipe()
     {
-        var recipe = Recipe.Create(RecipeId.New(), "Old", null, null, 1, null, "user-1");
+        var recipe = Recipe.Create(RecipeId.New(), "Old", null, null, 1, null, "user-1", TestClock.UtcNow);
 
-        recipe.Update("New", "desc", "instructions", 4, 30);
+        recipe.Update("New", "desc", "instructions", 4, 30, TestClock.UtcNow);
 
         recipe.Name.ShouldBe("New");
         recipe.Description.ShouldBe("desc");
@@ -70,9 +70,9 @@ public sealed class RecipeTests
     [Fact]
     public void SoftDelete_WhenNotDeleted_SetsDeletedAt()
     {
-        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1");
+        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1", TestClock.UtcNow);
 
-        recipe.SoftDelete();
+        recipe.SoftDelete(TestClock.UtcNow);
 
         recipe.IsDeleted.ShouldBeTrue();
     }
@@ -81,10 +81,10 @@ public sealed class RecipeTests
     [Fact]
     public void SoftDelete_WhenAlreadyDeleted_ThrowsDomainException()
     {
-        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1");
-        recipe.SoftDelete();
+        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1", TestClock.UtcNow);
+        recipe.SoftDelete(TestClock.UtcNow);
 
-        var act = () => recipe.SoftDelete();
+        var act = () => recipe.SoftDelete(TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>();
     }

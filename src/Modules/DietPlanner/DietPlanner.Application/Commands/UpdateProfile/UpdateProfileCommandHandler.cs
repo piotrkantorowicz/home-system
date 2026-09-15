@@ -6,16 +6,14 @@ using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateProfileCommandHandler : ICommandHandler<UpdateProfileCommand>
+internal sealed class UpdateProfileCommandHandler(
+    IUserProfileRepository repository,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<UpdateProfileCommand>
 {
-    private readonly IUserProfileRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateProfileCommandHandler(IUserProfileRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task HandleAsync(UpdateProfileCommand command, CancellationToken ct = default)
     {
+        var now = clock.GetUtcNow().UtcDateTime;
         Gender? gender = command.Gender is not null
             ? Enum.Parse<Gender>(command.Gender, ignoreCase: true)
             : null;
@@ -24,7 +22,7 @@ internal sealed class UpdateProfileCommandHandler : ICommandHandler<UpdateProfil
             ? Enum.Parse<ActivityLevel>(command.ActivityLevel, ignoreCase: true)
             : null;
 
-        var profile = await _repository.GetByUserIdAsync(command.UserId, ct)
+        var profile = await repository.GetByUserIdAsync(command.UserId, ct)
             ?? throw new NotFoundException("UserProfile", command.UserId);
 
         if (profile.UserId != command.UserId)
@@ -32,9 +30,9 @@ internal sealed class UpdateProfileCommandHandler : ICommandHandler<UpdateProfil
 
         profile.Update(
             command.DateOfBirth, gender,
-            command.HeightCm, command.CurrentWeightKg, command.TargetWeightKg, activityLevel);
+            command.HeightCm, command.CurrentWeightKg, command.TargetWeightKg, activityLevel, now);
 
-        _repository.Update(profile);
-        await _unitOfWork.CommitAsync(ct);
+        repository.Update(profile);
+        await unitOfWork.CommitAsync(ct);
     }
 }

@@ -6,6 +6,7 @@ using DietPlanner.Application.Commands.UpdateDietReminderSettings;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>UpdateDietReminderSettingsCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -14,11 +15,12 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     private readonly IDietReminderSettingsRepository _repository =
         Substitute.For<IDietReminderSettingsRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly UpdateDietReminderSettingsCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public UpdateDietReminderSettingsCommandHandlerTests()
-        => _sut = new UpdateDietReminderSettingsCommandHandler(_repository, _unitOfWork);
+        => _sut = new UpdateDietReminderSettingsCommandHandler(_repository, _unitOfWork, _clock);
 
     private static UpdateDietReminderSettingsCommand DefaultCommand(string userId = "user-1")
         => new(
@@ -64,7 +66,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenExistingSettings_UpdatesAndCommits()
     {
-        var existing = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1");
+        var existing = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
         var command = DefaultCommand() with
         {
             MealRemindersEnabled = false,

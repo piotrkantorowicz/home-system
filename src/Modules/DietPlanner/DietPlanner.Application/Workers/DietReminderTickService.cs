@@ -8,7 +8,8 @@ using Microsoft.Extensions.Options;
 internal sealed partial class DietReminderTickService(
     IServiceScopeFactory scopeFactory,
     IOptions<DietReminderTickServiceOptions> options,
-    ILogger<DietReminderTickService> logger) : BackgroundService
+    ILogger<DietReminderTickService> logger,
+    TimeProvider clock) : BackgroundService
 {
     private readonly DietReminderTickServiceOptions _options = options.Value;
 
@@ -44,7 +45,7 @@ internal sealed partial class DietReminderTickService(
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var jobs = scope.ServiceProvider.GetServices<IDietReminderJob>();
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
 
         foreach (var job in jobs)
         {

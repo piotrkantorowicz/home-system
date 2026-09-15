@@ -8,6 +8,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Events;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Messaging;
 
 /// <summary>Unit tests for <c>GoalMilestoneEvaluator</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -15,11 +16,12 @@ public sealed class GoalMilestoneEvaluatorTests
 {
     private readonly IUserGoalRepository _userGoalRepository = Substitute.For<IUserGoalRepository>();
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly GoalMilestoneEvaluator _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public GoalMilestoneEvaluatorTests()
-        => _sut = new GoalMilestoneEvaluator(_userGoalRepository, _bus);
+        => _sut = new GoalMilestoneEvaluator(_userGoalRepository, _bus, _clock);
 
     /// <summary>When no goal exists: <c>HandleAsync</c> does nothing.</summary>
     [Fact]
@@ -28,7 +30,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns((UserGoal?)null);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), CancellationToken.None);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -40,11 +42,11 @@ public sealed class GoalMilestoneEvaluatorTests
     [Fact]
     public async Task HandleAsync_WhenGoalHasNoTarget_DoesNothing()
     {
-        var goal = UserGoal.Create(UserGoalId.New(), "user-1", 2000, null, null, null, null);
+        var goal = UserGoal.Create(UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null);
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), CancellationToken.None);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -56,12 +58,12 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenWeightAboveTarget_DoesNotEmit()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 75m, DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 75m, TestClock.Today), CancellationToken.None);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -73,23 +75,24 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenTargetCrossed_PublishesEventAndMarksAchieved()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 69.5m, DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 69.5m, TestClock.Today), CancellationToken.None);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<GoalMilestoneReachedIntegrationEvent>(e =>
                 e.UserId == "user-1" &&
                 e.GoalKind == "WeightTarget" &&
                 e.Value == 70m &&
-                e.MilestoneLabel.Contains("70")),
+                e.MilestoneLabel.Contains("70") &&
+                e.OccurredAt == _clock.GetUtcNow().UtcDateTime),
             Arg.Any<CancellationToken>());
 
         _userGoalRepository.Received(1).Update(Arg.Is<UserGoal>(g => g.MilestoneAchievedAt != null));
-        goal.MilestoneAchievedAt.ShouldNotBeNull();
+        goal.MilestoneAchievedAt.ShouldBe(_clock.GetUtcNow().UtcDateTime);
     }
 
     /// <summary>When target already achieved: <c>HandleAsync</c> does not emit again.</summary>
@@ -97,13 +100,13 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenTargetAlreadyAchieved_DoesNotEmitAgain()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", 2000, null, null, null, null,
+            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         goal.MarkMilestoneAchieved(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 65m, DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 65m, TestClock.Today), CancellationToken.None);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),

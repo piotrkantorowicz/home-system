@@ -12,7 +12,7 @@ using DietPlanner.IntegrationTests.Infrastructure;
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class MealEntryCompletionEndpointsTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = TestClock.Today;
 
     private readonly DatabaseFixture _db;
 

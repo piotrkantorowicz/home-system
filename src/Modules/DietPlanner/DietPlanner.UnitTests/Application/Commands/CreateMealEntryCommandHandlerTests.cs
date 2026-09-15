@@ -4,6 +4,7 @@ using DietPlanner.Application.Commands.CreateMealEntry;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>CreateMealEntryCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -13,11 +14,12 @@ public sealed class CreateMealEntryCommandHandlerTests
     private readonly IMealScheduleConfigRepository _scheduleRepository =
         Substitute.For<IMealScheduleConfigRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly CreateMealEntryCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateMealEntryCommandHandlerTests()
-        => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork);
+        => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork, _clock);
 
     /// <summary>With valid command: <c>HandleAsync</c> adds meal entry and commits.</summary>
     [Fact]
@@ -26,7 +28,8 @@ public sealed class CreateMealEntryCommandHandlerTests
         var schedule = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
             "user-1",
-            [("Breakfast", new TimeOnly(7, 0))]);
+            [("Breakfast", new TimeOnly(7, 0))],
+            TestClock.UtcNow);
         var slot = schedule.Slots.Single();
         _scheduleRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(schedule);
 
@@ -51,7 +54,8 @@ public sealed class CreateMealEntryCommandHandlerTests
         var schedule = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
             "user-1",
-            [("Breakfast", new TimeOnly(7, 0))]);
+            [("Breakfast", new TimeOnly(7, 0))],
+            TestClock.UtcNow);
         _scheduleRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(schedule);
 
         var command = new CreateMealEntryCommand(

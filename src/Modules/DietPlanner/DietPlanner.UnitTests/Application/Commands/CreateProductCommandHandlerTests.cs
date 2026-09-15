@@ -3,6 +3,7 @@ namespace DietPlanner.UnitTests.Application.Commands;
 using DietPlanner.Application.Commands.CreateProduct;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
+using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>CreateProductCommandHandler</c>: storage, unit of work and bus boundaries are substituted with NSubstitute.</summary>
@@ -10,6 +11,7 @@ public sealed class CreateProductCommandHandlerTests
 {
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly CreateProductCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
@@ -17,7 +19,7 @@ public sealed class CreateProductCommandHandlerTests
     {
         _repository.GetByNameAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Product?)null);
-        _sut = new CreateProductCommandHandler(_repository, _unitOfWork);
+        _sut = new CreateProductCommandHandler(_repository, _unitOfWork, _clock);
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds product and commits.</summary>
@@ -30,7 +32,10 @@ public sealed class CreateProductCommandHandlerTests
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
-            Arg.Is<Product>(p => p.Name == "Chicken" && p.CreatedByUserId == "user-1"),
+            Arg.Is<Product>(p =>
+                p.Name == "Chicken" &&
+                p.CreatedByUserId == "user-1" &&
+                p.CreatedAt == _clock.GetUtcNow().UtcDateTime),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }

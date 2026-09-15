@@ -22,6 +22,7 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
     /// <param name="targetWeightKg">Weight the user is aiming for, in kilograms.</param>
     /// <param name="activityLevel">Selects the TDEE multiplier.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static UserProfile Create(
         UserProfileId id,
         string userId,
@@ -30,7 +31,8 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
         decimal? heightCm,
         decimal? currentWeightKg,
         decimal? targetWeightKg,
-        ActivityLevel? activityLevel)
+        ActivityLevel? activityLevel,
+        DateTime now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
 
@@ -44,7 +46,7 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
             CurrentWeightKg = currentWeightKg,
             TargetWeightKg = targetWeightKg,
             ActivityLevel = activityLevel,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
     }
 
@@ -74,13 +76,15 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
     /// <param name="currentWeightKg">New current weight in kilograms.</param>
     /// <param name="targetWeightKg">New target weight in kilograms.</param>
     /// <param name="activityLevel">New activity level.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void Update(
         DateOnly? dateOfBirth,
         Gender? gender,
         decimal? heightCm,
         decimal? currentWeightKg,
         decimal? targetWeightKg,
-        ActivityLevel? activityLevel)
+        ActivityLevel? activityLevel,
+        DateTime now)
     {
         DateOfBirth = dateOfBirth;
         Gender = gender;
@@ -88,14 +92,14 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
         CurrentWeightKg = currentWeightKg;
         TargetWeightKg = targetWeightKg;
         ActivityLevel = activityLevel;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
     /// <summary>Sets only the current weight — called when the newest weight entry changes.</summary>
     /// <param name="weightKg">The latest weight, or <see langword="null"/> when no entries remain.</param>
-    public void UpdateCurrentWeight(decimal? weightKg)
+    public void UpdateCurrentWeight(decimal? weightKg, DateTime now)
     {
         CurrentWeightKg = weightKg;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 }

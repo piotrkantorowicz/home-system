@@ -19,9 +19,11 @@ public sealed class HydrationConfig : AggregateRoot<HydrationConfigId>
     /// <param name="glassSizeMl">Volume one "glass" tap logs, in millilitres.</param>
     /// <param name="trackWaterIntake">Whether water tracking and reminders are enabled.</param>
     /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static HydrationConfig Create(
         HydrationConfigId id,
         string userId,
+        DateTime now,
         int dailyWaterTargetMl = 2500,
         int glassSizeMl = 250,
         bool trackWaterIntake = true)
@@ -35,8 +37,8 @@ public sealed class HydrationConfig : AggregateRoot<HydrationConfigId>
             DailyWaterTargetMl = dailyWaterTargetMl,
             GlassSizeMl = glassSizeMl,
             TrackWaterIntake = trackWaterIntake,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
     }
 
@@ -57,11 +59,12 @@ public sealed class HydrationConfig : AggregateRoot<HydrationConfigId>
     /// <param name="dailyWaterTargetMl">New daily target in millilitres.</param>
     /// <param name="glassSizeMl">New glass volume in millilitres.</param>
     /// <param name="trackWaterIntake">Whether tracking stays enabled.</param>
-    public void Update(int dailyWaterTargetMl, int glassSizeMl, bool trackWaterIntake)
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    public void Update(int dailyWaterTargetMl, int glassSizeMl, bool trackWaterIntake, DateTime now)
     {
         DailyWaterTargetMl = dailyWaterTargetMl;
         GlassSizeMl = glassSizeMl;
         TrackWaterIntake = trackWaterIntake;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 }
