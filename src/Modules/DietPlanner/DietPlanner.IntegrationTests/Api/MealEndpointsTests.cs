@@ -62,8 +62,8 @@ public sealed class MealEndpointsTests
     [Fact]
     public async Task GET_Meals_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/meals");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await _client.GetAsync("/api/v1/meals", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
@@ -72,8 +72,8 @@ public sealed class MealEndpointsTests
     [Fact]
     public async Task GET_NutritionSummary_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/meals/nutrition-summary");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await _client.GetAsync("/api/v1/meals/nutrition-summary", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
@@ -86,16 +86,14 @@ public sealed class MealEndpointsTests
         await EnsureBreakfastSlotAsync(client);
         var recipeId = await CreateRecipeAsync(client, $"Test Recipe {Guid.NewGuid():N}");
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(
+        var response = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(
                 Date: TestClock.Today,
                 MealSlotId: Guid.NewGuid(),
                 RecipeId: recipeId,
                 Servings: 1m,
                 Notes: null,
                 MealTime: null,
-                SequenceOrder: 0));
+                SequenceOrder: 0), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -108,23 +106,19 @@ public sealed class MealEndpointsTests
         var slotId = await EnsureBreakfastSlotAsync(client);
         var recipeId = await CreateRecipeAsync(client, $"Test Recipe {Guid.NewGuid():N}");
 
-        var mealResp = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(
+        var mealResp = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(
                 Date: TestClock.Today,
                 MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
                 Notes: null,
                 MealTime: null,
-                SequenceOrder: 0));
+                SequenceOrder: 0), cancellationToken: TestContext.Current.CancellationToken);
         mealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // Now try to replace the schedule with a different slot — should fail because
         // the original slot has an entry.
-        var deleteResp = await client.PutAsJsonAsync(
-            "/api/v1/meal-schedule",
-            new UpdateMealScheduleRequest([new MealSlotRequest(null, "Lunch", "12:00")]));
+        var deleteResp = await client.PutAsJsonAsync("/api/v1/meal-schedule", new UpdateMealScheduleRequest([new MealSlotRequest(null, "Lunch", "12:00")]), cancellationToken: TestContext.Current.CancellationToken);
 
         deleteResp.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -143,15 +137,12 @@ public sealed class MealEndpointsTests
         var recipeId = await CreateRecipeAsync(client, $"NutritionRecipe-{Guid.NewGuid():N}");
         var date = TestClock.Today;
 
-        var createResp = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0));
+        var createResp = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0), cancellationToken: TestContext.Current.CancellationToken);
         createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // CreateRecipeAsync seeds: product 100 kcal/100g, recipe with 80 g, servings=1.
         // Meal eats 1 serving → 80 g × 100 kcal/100 g × (1/1) = 80 kcal.
-        var meals = await client.GetFromJsonAsync<List<MealEntryDto>>(
-            $"/api/v1/meals?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+        var meals = await client.GetFromJsonAsync<List<MealEntryDto>>($"/api/v1/meals?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         meals.ShouldNotBeNull();
         var meal = meals!.Single(m => m.RecipeId == recipeId);
@@ -162,8 +153,8 @@ public sealed class MealEndpointsTests
     [Fact]
     public async Task GET_ShoppingList_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/meals/shopping-list");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await _client.GetAsync("/api/v1/meals/shopping-list", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK, body);
     }
@@ -179,18 +170,13 @@ public sealed class MealEndpointsTests
 
         // Recipe (servings=1) has one ingredient at 80g. Two meal entries: 1 serving + 2 servings.
         // Expect aggregated total = 80 * 1 + 80 * 2 = 240g for the single product.
-        var first = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0));
+        var first = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(date, slotId, recipeId, 1m, null, null, 0), cancellationToken: TestContext.Current.CancellationToken);
         first.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var second = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(date, slotId, recipeId, 2m, null, null, 1));
+        var second = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(date, slotId, recipeId, 2m, null, null, 1), cancellationToken: TestContext.Current.CancellationToken);
         second.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
-            $"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
         items!.Count.ShouldBe(1);
@@ -210,21 +196,16 @@ public sealed class MealEndpointsTests
         var plannedRecipeId = await CreateRecipeAsync(client, $"PlannedRecipe-{Guid.NewGuid():N}");
         var date = TestClock.Today;
 
-        var mealResp = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(date, slotId, plannedRecipeId, 1m, null, null, 0));
+        var mealResp = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(date, slotId, plannedRecipeId, 1m, null, null, 0), cancellationToken: TestContext.Current.CancellationToken);
         mealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var mealId = Guid.Parse((await mealResp.Content.ReadAsStringAsync()).Trim('"'));
+        var mealId = Guid.Parse((await mealResp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Trim('"'));
 
         // Override with ad-hoc products — should be ignored by shopping list.
         var replacementRecipeId = await CreateRecipeAsync(client, $"ReplacementRecipe-{Guid.NewGuid():N}");
-        var overrideResp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(replacementRecipeId, []));
+        var overrideResp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(replacementRecipeId, []), cancellationToken: TestContext.Current.CancellationToken);
         overrideResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
-            $"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
         // Only the planned recipe's ingredient should appear (80g), not the replacement.
@@ -239,8 +220,7 @@ public sealed class MealEndpointsTests
         var client = FreshClient($"meal-{Guid.NewGuid():N}");
         var farFuture = TestClock.Today.AddYears(10);
 
-        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>(
-            $"/api/v1/meals/shopping-list?From={farFuture:yyyy-MM-dd}&To={farFuture:yyyy-MM-dd}");
+        var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={farFuture:yyyy-MM-dd}&To={farFuture:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
         items!.ShouldBeEmpty();
@@ -254,24 +234,20 @@ public sealed class MealEndpointsTests
         var slotId = await EnsureBreakfastSlotAsync(client);
         var recipeId = await CreateRecipeAsync(client, $"Test Recipe {Guid.NewGuid():N}");
 
-        var mealResp = await client.PostAsJsonAsync(
-            "/api/v1/meals",
-            new CreateMealEntryRequest(
+        var mealResp = await client.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(
                 Date: TestClock.Today,
                 MealSlotId: slotId,
                 RecipeId: recipeId,
                 Servings: 1m,
                 Notes: null,
                 MealTime: null,
-                SequenceOrder: 0));
+                SequenceOrder: 0), cancellationToken: TestContext.Current.CancellationToken);
         mealResp.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var renameResp = await client.PutAsJsonAsync(
-            "/api/v1/meal-schedule",
-            new UpdateMealScheduleRequest([new MealSlotRequest(slotId, "Brunch", "10:00")]));
+        var renameResp = await client.PutAsJsonAsync("/api/v1/meal-schedule", new UpdateMealScheduleRequest([new MealSlotRequest(slotId, "Brunch", "10:00")]), cancellationToken: TestContext.Current.CancellationToken);
         renameResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule");
+        var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule", cancellationToken: TestContext.Current.CancellationToken);
         schedule!.Slots.Single().Id.ShouldBe(slotId);
         schedule.Slots.Single().Name.ShouldBe("Brunch");
     }

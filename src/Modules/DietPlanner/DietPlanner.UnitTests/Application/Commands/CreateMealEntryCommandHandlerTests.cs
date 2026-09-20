@@ -38,7 +38,7 @@ public sealed class CreateMealEntryCommandHandlerTests
         var command = new CreateMealEntryCommand(
             "user-1", date, slot.Id.Value, recipeId, 1.5m, null, null, null);
 
-        var id = await _sut.HandleAsync(command, CancellationToken.None);
+        var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
@@ -62,7 +62,7 @@ public sealed class CreateMealEntryCommandHandlerTests
             "user-1", new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
 
         await Should.ThrowAsync<NotFoundException>(
-            () => _sut.HandleAsync(command, CancellationToken.None));
+            () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
     }
 
     /// <summary>When schedule missing: <c>HandleAsync</c> throws not found exception.</summary>
@@ -76,6 +76,6 @@ public sealed class CreateMealEntryCommandHandlerTests
             "user-1", new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
 
         await Should.ThrowAsync<NotFoundException>(
-            () => _sut.HandleAsync(command, CancellationToken.None));
+            () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
     }
 }

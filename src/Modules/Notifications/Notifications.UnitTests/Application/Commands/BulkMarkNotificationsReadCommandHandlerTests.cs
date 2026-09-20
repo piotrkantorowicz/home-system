@@ -30,7 +30,7 @@ public sealed class BulkMarkNotificationsReadCommandHandlerTests
             Arg.Any<CancellationToken>())
             .Returns(3);
 
-        await _sut.HandleAsync(new BulkMarkNotificationsReadCommand(ids, userId), CancellationToken.None);
+        await _sut.HandleAsync(new BulkMarkNotificationsReadCommand(ids, userId), TestContext.Current.CancellationToken);
 
         await _repository.Received(1).BulkMarkReadAsync(
             Arg.Is<IReadOnlyCollection<Guid>>(c => c.Count == 3),
@@ -46,7 +46,7 @@ public sealed class BulkMarkNotificationsReadCommandHandlerTests
     {
         await _sut.HandleAsync(
             new BulkMarkNotificationsReadCommand(Array.Empty<Guid>(), "user-1"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await _repository.DidNotReceive().BulkMarkReadAsync(
             Arg.Any<IReadOnlyCollection<Guid>>(),
@@ -62,7 +62,7 @@ public sealed class BulkMarkNotificationsReadCommandHandlerTests
     {
         var act = () => _sut.HandleAsync(
             new BulkMarkNotificationsReadCommand(new[] { Guid.NewGuid() }, "  "),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<ArgumentException>();
     }

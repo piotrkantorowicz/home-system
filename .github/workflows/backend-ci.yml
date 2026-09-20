@@ -54,12 +54,11 @@ jobs:
       # Integration tests use Testcontainers — Docker is available on ubuntu-latest.
       - name: Run all tests
         run: |
-          dotnet test HomeSystem.slnx \
+          dotnet test --solution HomeSystem.slnx \
             --no-build \
             --configuration Release \
-            --logger "console;verbosity=minimal" \
-            --logger trx \
-            --results-directory TestResults
+            --results-directory TestResults \
+            --report-xunit-trx
 
       - name: Upload test results
         if: always()

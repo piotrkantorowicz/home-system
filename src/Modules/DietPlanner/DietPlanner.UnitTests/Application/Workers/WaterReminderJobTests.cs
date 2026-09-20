@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 #pragma warning restore IDE0005
 using System.Globalization;
 using DietPlanner.Application.Workers;
@@ -47,7 +47,7 @@ public sealed class WaterReminderJobTests
     {
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -62,7 +62,7 @@ public sealed class WaterReminderJobTests
         var candidate = MakeCandidate(windowStart: "14:00", windowEnd: "22:00");
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -77,7 +77,7 @@ public sealed class WaterReminderJobTests
         var candidate = MakeCandidate(intervalMinutes: 60, lastAt: Now.AddMinutes(-30));
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -92,7 +92,7 @@ public sealed class WaterReminderJobTests
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>()).Returns((WaterReminderState?)null);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<WaterReminderDueIntegrationEvent>(e =>
@@ -117,7 +117,7 @@ public sealed class WaterReminderJobTests
         var existing = WaterReminderState.Create("u1", lastAt);
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>()).Returns(existing);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<WaterReminderDueIntegrationEvent>(e => e.UserId == "u1"),
@@ -139,7 +139,7 @@ public sealed class WaterReminderJobTests
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>())
             .Returns(WaterReminderState.Create("u1", Now.AddMinutes(-60)));
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -154,7 +154,7 @@ public sealed class WaterReminderJobTests
         _stateRepo.GetByUserIdAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((WaterReminderState?)null);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(2).PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());

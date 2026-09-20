@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.DeleteWeightEntry;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -36,7 +36,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         var profile = UserProfile.Create(UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
 
-        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), CancellationToken.None);
+        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
 
         _weightRepo.Received(1).Delete(entry);
         profile.CurrentWeightKg.ShouldBe(81m);
@@ -54,7 +54,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         var profile = UserProfile.Create(UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
 
-        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), CancellationToken.None);
+        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
 
         profile.CurrentWeightKg.ShouldBeNull();
     }
@@ -68,7 +68,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
             .Returns((WeightEntry?)null);
 
         var act = () => _sut.HandleAsync(
-            new DeleteWeightEntryCommand("user-1", entryId), CancellationToken.None);
+            new DeleteWeightEntryCommand("user-1", entryId), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }
@@ -81,7 +81,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
         _weightRepo.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         var act = () => _sut.HandleAsync(
-            new DeleteWeightEntryCommand("user-1", entry.Id.Value), CancellationToken.None);
+            new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
         _weightRepo.DidNotReceive().Delete(Arg.Any<WeightEntry>());

@@ -29,7 +29,7 @@ public sealed class OutboxIntegrationEventBusTests
 
         _serializer.Serialize(@event).Returns("""{"EventId":"...","Payload":"hello"}""");
 
-        await _sut.PublishAsync(@event, CancellationToken.None);
+        await _sut.PublishAsync(@event, TestContext.Current.CancellationToken);
 
         await _store.Received(1).AddAsync(
             Arg.Is<OutboxMessage>(m =>
@@ -52,7 +52,7 @@ public sealed class OutboxIntegrationEventBusTests
         IIntegrationEvent @event = new TestIntegrationEvent(Guid.NewGuid(), Now, "x");
         _serializer.Serialize(Arg.Any<IIntegrationEvent>()).Returns("{}");
 
-        await _sut.PublishAsync(@event, CancellationToken.None);
+        await _sut.PublishAsync(@event, TestContext.Current.CancellationToken);
 
         await _store.Received(1).AddAsync(
             Arg.Is<OutboxMessage>(m => m.EventType == typeof(TestIntegrationEvent).AssemblyQualifiedName),
@@ -63,7 +63,7 @@ public sealed class OutboxIntegrationEventBusTests
     [Fact]
     public async Task PublishAsync_WithNullEvent_Throws()
     {
-        var act = () => _sut.PublishAsync<TestIntegrationEvent>(null!, CancellationToken.None);
+        var act = () => _sut.PublishAsync<TestIntegrationEvent>(null!, TestContext.Current.CancellationToken);
         await act.ShouldThrowAsync<ArgumentNullException>();
     }
 

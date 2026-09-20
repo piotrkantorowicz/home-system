@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.UpdateDietReminderSettings;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -46,7 +46,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
         _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns((DietReminderSettings?)null);
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
             Arg.Is<DietReminderSettings>(s =>
@@ -78,7 +78,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
         _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         _repository.Received(1).Update(
             Arg.Is<DietReminderSettings>(s =>

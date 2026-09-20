@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.ResetMealEntry;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -29,7 +29,7 @@ public sealed class ResetMealEntryCommandHandlerTests
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
-        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), CancellationToken.None);
+        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Planned);
         entry.ActualRecipeId.ShouldBeNull();
@@ -45,6 +45,6 @@ public sealed class ResetMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), CancellationToken.None));
+            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken));
     }
 }

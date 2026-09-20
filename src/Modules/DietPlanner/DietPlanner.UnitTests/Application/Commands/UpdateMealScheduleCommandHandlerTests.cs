@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.UpdateMealSchedule;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -40,7 +40,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
             new MealSlotInput(null, "Lunch", "12:00"),
             new MealSlotInput(null, "Dinner", "18:00"));
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
             Arg.Is<MealScheduleConfig>(c => c.UserId == "user-1" && c.Slots.Count == 3),
@@ -67,7 +67,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
             new MealSlotInput(existingSlots[0].Id.Value, "Brunch", "10:00"),
             new MealSlotInput(existingSlots[1].Id.Value, "Lunch", "12:00"));
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         existing.Slots.Single(s => s.Id == existingSlots[0].Id).Name.ShouldBe("Brunch");
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -90,7 +90,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
 
         var command = NewCommand(new MealSlotInput(existingSlots[0].Id.Value, "Breakfast", "07:00"));
 
-        var act = () => _sut.HandleAsync(command, CancellationToken.None);
+        var act = () => _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<DietPlannerDomainException>();
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
@@ -113,7 +113,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
 
         var command = NewCommand(new MealSlotInput(existingSlots[0].Id.Value, "Breakfast", "07:00"));
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         existing.Slots.Count.ShouldBe(1);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());

@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.UpdateHydrationConfig;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -30,7 +30,7 @@ public sealed class UpdateHydrationConfigCommandHandlerTests
 
         var command = new UpdateHydrationConfigCommand("user-1", 3000, 300, false);
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
             Arg.Is<HydrationConfig>(c =>
@@ -52,7 +52,7 @@ public sealed class UpdateHydrationConfigCommandHandlerTests
 
         var command = new UpdateHydrationConfigCommand("user-1", 3000, 300, false);
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         _repository.Received(1).Update(Arg.Is<HydrationConfig>(c =>
             c.DailyWaterTargetMl == 3000 &&

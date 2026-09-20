@@ -35,7 +35,7 @@ public sealed class HomeSystemDocumentTransformerTests
         });
         using var client = factory.CreateClient();
 
-        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json"));
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken));
 
         var paths = document.RootElement.GetProperty("paths");
         paths.EnumerateObject().ShouldNotBeEmpty();
@@ -71,7 +71,7 @@ public sealed class HomeSystemDocumentTransformerTests
             endpoints.MapGet("/things", () => TypedResults.Ok("ok")));
         using var client = app.GetTestClient();
 
-        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json"));
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken));
 
         var responses = document.RootElement.GetProperty("paths").GetProperty("/things").GetProperty("get")
             .GetProperty("responses");
@@ -92,7 +92,7 @@ public sealed class HomeSystemDocumentTransformerTests
                 .Produces<ThingMissing>(StatusCodes.Status404NotFound));
         using var client = app.GetTestClient();
 
-        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json"));
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken));
 
         var responses = document.RootElement.GetProperty("paths").GetProperty("/things/{id}").GetProperty("get")
             .GetProperty("responses");

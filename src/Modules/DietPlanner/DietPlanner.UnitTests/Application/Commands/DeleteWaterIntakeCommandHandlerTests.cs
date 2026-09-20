@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.DeleteWaterIntake;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -35,7 +35,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
         _repository.GetByIdAsync(WaterIntakeId.From(id), Arg.Any<CancellationToken>())
             .Returns(intake);
 
-        await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), CancellationToken.None);
+        await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), TestContext.Current.CancellationToken);
 
         _repository.Received(1).Delete(intake);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -50,7 +50,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
             .Returns((WaterIntake?)null);
 
         var act = async () =>
-            await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), CancellationToken.None);
+            await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }

@@ -20,7 +20,7 @@ public sealed class ProductEndpointsTests
     [Fact]
     public async Task GET_Products_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/products");
+        var response = await _client.GetAsync("/api/v1/products", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -31,7 +31,7 @@ public sealed class ProductEndpointsTests
     {
         var request = new CreateProductRequest("Test Chicken", 165m, 31m, 0m, 3.6m, 0m, "g", null, null);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/products", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/products", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
@@ -40,8 +40,8 @@ public sealed class ProductEndpointsTests
     [Fact]
     public async Task GET_ProductById_WhenNotFound_Returns404()
     {
-        var response = await _client.GetAsync($"/api/v1/products/{Guid.NewGuid()}");
-        var body = await response.Content.ReadAsStringAsync();
+        var response = await _client.GetAsync($"/api/v1/products/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound, body);
     }
@@ -52,13 +52,13 @@ public sealed class ProductEndpointsTests
     {
         // Arrange — create first
         var createReq = new CreateProductRequest("DeleteMe", null, null, null, null, null, "g", null, null);
-        var createResp = await _client.PostAsJsonAsync("/api/v1/products", createReq);
+        var createResp = await _client.PostAsJsonAsync("/api/v1/products", createReq, cancellationToken: TestContext.Current.CancellationToken);
         createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var location = createResp.Headers.Location!.ToString();
         var id = location.Split('/').Last();
 
         // Act
-        var deleteResp = await _client.DeleteAsync($"/api/v1/products/{id}");
+        var deleteResp = await _client.DeleteAsync($"/api/v1/products/{id}", TestContext.Current.CancellationToken);
 
         deleteResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }

@@ -22,7 +22,7 @@ public sealed class HouseholdShoppingListFixture : IAsyncLifetime
     public string HouseholdConnectionString => _household.GetConnectionString();
 
     /// <summary>Starts both containers in parallel and creates the DietPlanner schema; Household is migrated by the host on first boot.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await Task.WhenAll(_dietPlanner.StartAsync(), _household.StartAsync());
 
@@ -32,7 +32,7 @@ public sealed class HouseholdShoppingListFixture : IAsyncLifetime
     }
 
     /// <summary>Stops and removes both containers.</summary>
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _dietPlanner.DisposeAsync();
         await _household.DisposeAsync();

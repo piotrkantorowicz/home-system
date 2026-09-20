@@ -9,7 +9,7 @@ using Xunit;
 
 /// <summary>Integration tests for <c>EfInboxExecutor</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
-public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
+public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime
 {
     private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
 
@@ -21,7 +21,7 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
     public EfInboxExecutorIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     /// <summary>Recreates the database schema through an EF <c>DbContext</c> that creates the messaging tables, so every test starts from empty tables.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var options = new DbContextOptionsBuilder<MessagingTestDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
@@ -31,7 +31,6 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
         await _dbContext.Database.EnsureCreatedAsync();
     }
 
-    Task IAsyncLifetime.DisposeAsync() => DisposeAsync().AsTask();
 
     /// <summary>Disposes the test <c>DbContext</c>.</summary>
     public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
@@ -44,10 +43,10 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
 
         invocations.ShouldBe(1);
-        var rowExists = await _dbContext.Set<InboxMessageEntity>().AnyAsync(x => x.EventId == eventId);
+        var rowExists = await _dbContext.Set<InboxMessageEntity>().AnyAsync(x => x.EventId == eventId, cancellationToken: TestContext.Current.CancellationToken);
         rowExists.ShouldBeTrue();
     }
 
@@ -59,8 +58,8 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
 
         invocations.ShouldBe(1);
     }
@@ -79,7 +78,7 @@ public sealed class EfInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisp
 
         await act.ShouldThrowAsync<InvalidOperationException>();
 
-        var rowExists = await _dbContext.Set<InboxMessageEntity>().AnyAsync(x => x.EventId == eventId);
+        var rowExists = await _dbContext.Set<InboxMessageEntity>().AnyAsync(x => x.EventId == eventId, cancellationToken: TestContext.Current.CancellationToken);
         rowExists.ShouldBeFalse();
     }
 }

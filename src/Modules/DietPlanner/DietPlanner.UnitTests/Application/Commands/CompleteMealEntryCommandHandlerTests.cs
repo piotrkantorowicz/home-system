@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.CompleteMealEntry;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -30,7 +30,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
         var entry = NewEntry();
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
-        await _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, "user-1"), CancellationToken.None);
+        await _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Done);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -44,7 +44,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
             .Returns((MealEntry?)null);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new CompleteMealEntryCommand(Guid.NewGuid(), "user-1"), CancellationToken.None));
+            _sut.HandleAsync(new CompleteMealEntryCommand(Guid.NewGuid(), "user-1"), TestContext.Current.CancellationToken));
     }
 
     /// <summary>When entry owned by other user: <c>HandleAsync</c> throws not found exception.</summary>
@@ -55,6 +55,6 @@ public sealed class CompleteMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, "user-1"), CancellationToken.None));
+            _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken));
     }
 }

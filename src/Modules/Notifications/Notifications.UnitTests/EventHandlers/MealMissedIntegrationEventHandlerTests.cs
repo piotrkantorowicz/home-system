@@ -2,7 +2,7 @@ namespace Notifications.UnitTests.EventHandlers;
 
 using System.Globalization;
 using DietPlanner.Contracts.Events;
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using Notifications.Application.Dispatching;
 using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
@@ -28,7 +28,7 @@ public sealed class MealMissedIntegrationEventHandlerTests
             UserId: "u2", Locale: "en",
             MealEntryId: Guid.NewGuid(), MealSlotName: "Breakfast", PlannedAt: planned);
 
-        await _sut.HandleAsync(@event, CancellationToken.None);
+        await _sut.HandleAsync(@event, TestContext.Current.CancellationToken);
 
         await _dispatcher.Received(1).DispatchAsync(
             NotificationType.MealMissed,
@@ -56,7 +56,7 @@ public sealed class MealMissedIntegrationEventHandlerTests
         CultureInfo.CurrentCulture = new CultureInfo("fi-FI");
         try
         {
-            await _sut.HandleAsync(@event, CancellationToken.None);
+            await _sut.HandleAsync(@event, TestContext.Current.CancellationToken);
         }
         finally
         {
