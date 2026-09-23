@@ -138,26 +138,26 @@ in commit metadata.
 
 | I'm working on… | Read this |
 |---|---|
-| C# naming, nullability, style | `.claude/rules/backend-coding-standards.md` |
-| Module / folder structure (DDD + EF) | `.claude/rules/backend-module-structure.md` |
-| Module / folder structure (Dapper) | `.claude/rules/backend-dapper-module-structure.md` |
-| Choosing a persistence style (EF vs Dapper) | `.claude/rules/backend-persistence-styles.md` |
-| Aggregates, Entities, Value Objects | `.claude/rules/backend-ddd-patterns.md` |
-| Commands, Queries, Mapping | `.claude/rules/backend-cqrs-patterns.md` |
-| EF Core, DbContext, Migrations | `.claude/rules/backend-ef-core-patterns.md` |
-| Cross-module integration, event bus, in-process transport | `.claude/rules/backend-integration-patterns.md` |
-| API endpoints, request/response | `.claude/rules/backend-api-patterns.md` |
-| Backend unit & integration tests | `.claude/rules/backend-testing-standards.md` |
-| React + TypeScript coding standards | `.claude/rules/frontend-react-typescript.md` |
-| Frontend architecture & file structure | `.claude/rules/frontend-architecture.md` |
-| Tailwind CSS v4 styling | `.claude/rules/frontend-styling.md` |
-| Vitest + Testing Library | `.claude/rules/frontend-testing.md` |
-| Playwright E2E testing | `.claude/rules/frontend-playwright.md` |
-| Frontend performance | `.claude/rules/frontend-performance.md` |
-| ESLint + Prettier + Husky | `.claude/rules/frontend-tooling.md` |
-| Git workflow, branching, commits | `.claude/rules/git-workflow.md` |
-| Issue → PR → review → merge loop, skills per stage, guard hooks | `.claude/rules/agent-workflow.md` |
-| What must be true before a PR is opened | `.claude/rules/definition-of-done.md` |
+| C# naming, nullability, style | `docs/rules/backend-coding-standards.md` |
+| Module / folder structure (DDD + EF) | `docs/rules/backend-module-structure.md` |
+| Module / folder structure (Dapper) | `docs/rules/backend-dapper-module-structure.md` |
+| Choosing a persistence style (EF vs Dapper) | `docs/rules/backend-persistence-styles.md` |
+| Aggregates, Entities, Value Objects | `docs/rules/backend-ddd-patterns.md` |
+| Commands, Queries, Mapping | `docs/rules/backend-cqrs-patterns.md` |
+| EF Core, DbContext, Migrations | `docs/rules/backend-ef-core-patterns.md` |
+| Cross-module integration, event bus, in-process transport | `docs/rules/backend-integration-patterns.md` |
+| API endpoints, request/response | `docs/rules/backend-api-patterns.md` |
+| Backend unit & integration tests | `docs/rules/backend-testing-standards.md` |
+| React + TypeScript coding standards | `docs/rules/frontend-react-typescript.md` |
+| Frontend architecture & file structure | `docs/rules/frontend-architecture.md` |
+| Tailwind CSS v4 styling | `docs/rules/frontend-styling.md` |
+| Vitest + Testing Library | `docs/rules/frontend-testing.md` |
+| Playwright E2E testing | `docs/rules/frontend-playwright.md` |
+| Frontend performance | `docs/rules/frontend-performance.md` |
+| ESLint + Prettier + Husky | `docs/rules/frontend-tooling.md` |
+| Git workflow, branching, commits | `docs/rules/git-workflow.md` |
+| Issue → PR → review → merge loop, skills per stage, guard hooks | `docs/rules/agent-workflow.md` |
+| What must be true before a PR is opened | `docs/rules/definition-of-done.md` |
 | CQRS dispatcher full source | `.claude/skills/backend-cqrs.md` |
 | Messaging (bus, outbox/inbox, transports) full source | `.claude/skills/backend-messaging.md` |
 
@@ -168,7 +168,7 @@ in commit metadata.
 Repo skills live in `.agents/skills/` (single source, shared with Codex) and are exposed to
 Claude Code through symlinks in `.claude/skills/`. Invoke with `/<name>`.
 
-**Delivery loop** (see `.claude/rules/agent-workflow.md`):
+**Delivery loop** (see `docs/rules/agent-workflow.md`):
 
 | Skill | What it does |
 |---|---|

@@ -20,16 +20,16 @@ If no path is given, review the file the user currently has open (ask if unknown
 Read all of the following before reviewing:
 
 **For backend (.cs) files:**
-- `.claude/rules/backend-module-structure.md`
-- `.claude/rules/backend-coding-standards.md`
-- `.claude/rules/backend-ddd-patterns.md`
-- `.claude/rules/backend-cqrs-patterns.md`
-- `.claude/rules/backend-integration-patterns.md`
+- `docs/rules/backend-module-structure.md`
+- `docs/rules/backend-coding-standards.md`
+- `docs/rules/backend-ddd-patterns.md`
+- `docs/rules/backend-cqrs-patterns.md`
+- `docs/rules/backend-integration-patterns.md`
 
 **For frontend (.ts/.tsx) files:**
-- `.claude/rules/frontend-architecture.md`
-- `.claude/rules/frontend-react-typescript.md`
-- `.claude/rules/frontend-styling.md`
+- `docs/rules/frontend-architecture.md`
+- `docs/rules/frontend-react-typescript.md`
+- `docs/rules/frontend-styling.md`
 
 Then scan the target file(s) for **violations** in these categories. Report each finding with:
 - **Severity**: 🔴 Critical | 🟡 Warning | 🔵 Suggestion

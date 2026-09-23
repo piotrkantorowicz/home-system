@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Edit/Write/MultiEdit. Blocks the first edit in a rule-governed
-# area until the matching .claude/rules/*.md doc has been Read this session. Enforces
+# area until the matching docs/rules/*.md doc has been Read this session. Enforces
 # "read the relevant rule doc before editing" (CLAUDE.md) now that rule docs are no
 # longer preloaded via @imports — see CLAUDE.md § entry-point paragraph.
 # Input: Claude Code hook JSON on stdin. Exit 2 = block (stderr goes back to the agent).
@@ -14,7 +14,7 @@ rel=${file#"$root"/}
 
 # Never gate edits to the rules themselves, migrations, or generated/vendored files.
 case "$rel" in
-  .claude/rules/*|*/Migrations/*|*/generated/*|*/node_modules/*) exit 0 ;;
+  docs/rules/*|*/Migrations/*|*/generated/*|*/node_modules/*) exit 0 ;;
 esac
 
 rule=""
@@ -34,5 +34,5 @@ esac
 [[ -z "$rule" ]] && exit 0
 [[ -n "$transcript" && -f "$transcript" ]] && grep -q "$rule" "$transcript" 2>/dev/null && exit 0
 
-echo "🛑 guard-rules: read .claude/rules/$rule before editing $rel (see CLAUDE.md Quick Reference)." >&2
+echo "🛑 guard-rules: read docs/rules/$rule before editing $rel (see CLAUDE.md Quick Reference)." >&2
 exit 2
