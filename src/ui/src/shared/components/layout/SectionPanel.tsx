@@ -62,16 +62,16 @@ export function SectionPanel() {
           }}
           aria-label={t('common.expand_nav')}
           title={t('common.expand_nav')}
-          className="text-text-2 hover:bg-muted hover:text-foreground mb-3 grid size-8 place-items-center rounded-[9px] transition-colors"
+          className="text-text-2 hover:bg-muted hover:text-foreground rounded-9px mb-3 grid size-8 place-items-center transition-colors"
         >
           <ChevronsRight className="size-4" />
         </button>
       ) : (
         <div className="mb-3 flex items-center gap-2 px-1.5 pb-2">
-          <span className="bg-accent text-accent-foreground grid size-7 flex-none place-items-center rounded-[9px]">
-            <Icon className="size-[15px]" />
+          <span className="bg-accent text-accent-foreground rounded-9px grid size-7 flex-none place-items-center">
+            <Icon className="size-15px" />
           </span>
-          <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold">
+          <span className="text-13-5px min-w-0 flex-1 truncate font-bold">
             {labels[mod.name] ?? t(mod.translationKey)}
           </span>
           <button
@@ -81,7 +81,7 @@ export function SectionPanel() {
             }}
             aria-label={t('common.collapse_nav')}
             title={t('common.collapse_nav')}
-            className="text-text-2 hover:bg-muted hover:text-foreground grid size-7 flex-none place-items-center rounded-[8px] transition-colors"
+            className="text-text-2 hover:bg-muted hover:text-foreground rounded-8px grid size-7 flex-none place-items-center transition-colors"
           >
             <ChevronsLeft className="size-4" />
           </button>
@@ -95,7 +95,7 @@ export function SectionPanel() {
         {groups.map((group, gi) => (
           <div key={group.label ?? `g${String(gi)}`} className={gi > 0 ? 'mt-3.5' : undefined}>
             {group.label && !collapsed ? (
-              <div className="text-text-2 px-2 pb-1 text-[10px] font-bold tracking-wider uppercase">
+              <div className="text-text-2 text-10px px-2 pb-1 font-bold tracking-wider uppercase">
                 {group.label}
               </div>
             ) : null}
@@ -108,7 +108,7 @@ export function SectionPanel() {
                 aria-label={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2.5 rounded-[10px] py-2 text-[13px] font-semibold transition-colors',
+                    'rounded-10px text-13px flex items-center gap-2.5 py-2 font-semibold transition-colors',
                     collapsed ? 'justify-center px-0' : 'px-2.5',
                     isActive
                       ? 'bg-accent text-accent-foreground'
@@ -136,7 +136,7 @@ export function SectionPanel() {
               aria-label={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 cn(
-                  'text-text-2 flex items-center gap-2.5 rounded-[10px] py-2 text-[12.5px] font-semibold transition-colors',
+                  'text-text-2 rounded-10px text-12-5px flex items-center gap-2.5 py-2 font-semibold transition-colors',
                   collapsed ? 'justify-center px-0' : 'px-2.5',
                   isActive ? 'text-foreground' : 'hover:text-foreground',
                 )

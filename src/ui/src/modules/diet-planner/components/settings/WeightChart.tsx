@@ -67,7 +67,7 @@ export function WeightChart({ entries, height = 280, showTrend = false }: Weight
     return (
       <div
         data-testid="weight-chart-empty"
-        className="text-muted-foreground flex h-[280px] items-center justify-center rounded-lg border border-dashed text-sm"
+        className="text-muted-foreground h-280px flex items-center justify-center rounded-lg border border-dashed text-sm"
       >
         {t('weightHistory.chart.empty', 'Log a weight entry to see your trend.')}
       </div>

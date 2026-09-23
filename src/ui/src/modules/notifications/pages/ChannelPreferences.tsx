@@ -25,7 +25,7 @@ export default function ChannelPreferences() {
     <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight">{t('preferences.title')}</h1>
+          <h1 className="text-26px font-bold tracking-tight">{t('preferences.title')}</h1>
           <p className="text-muted-foreground mt-0.5 text-sm">{t('preferences.subtitle')}</p>
         </div>
         <Button asChild variant="secondary" size="sm">
@@ -36,7 +36,7 @@ export default function ChannelPreferences() {
       {isLoading && (
         <ul aria-busy="true" aria-label={t('preferences.loading')} className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <li key={i} className="bg-muted h-20 animate-pulse rounded-[13px]" />
+            <li key={i} className="bg-muted rounded-13px h-20 animate-pulse" />
           ))}
         </ul>
       )}

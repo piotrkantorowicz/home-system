@@ -1,5 +1,63 @@
 import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
+
+// Named --text-*/--radius-*/--spacing-*/--tracking-* keys added in index.css for the
+// redesign scale (#279). Without this, tailwind-merge's default class-group heuristics
+// can't tell e.g. `text-13px` (font-size) from a text-color utility and silently drops
+// one of them — teach it the exact key list so both survive a `cn()` merge.
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      'font-size': [
+        {
+          text: [
+            '9-5px',
+            '10px',
+            '10-5px',
+            '11px',
+            '11-5px',
+            '12px',
+            '12-5px',
+            '13px',
+            '13-5px',
+            '14px',
+            '15px',
+            '17px',
+            '19px',
+            '20px',
+            '22px',
+            '26px',
+            '34px',
+            '0-7rem',
+            '0-9rem',
+            '0-95rem',
+          ],
+        },
+      ],
+      rounded: [
+        {
+          rounded: [
+            '6px',
+            '8px',
+            '9px',
+            '10px',
+            '11px',
+            '12px',
+            '13px',
+            '15px',
+            '16px',
+            '18px',
+            '22px',
+            '26px',
+          ],
+        },
+      ],
+      'rounded-t': [{ 'rounded-t': ['18px'] }],
+      'rounded-b': [{ 'rounded-b': ['26px'] }],
+      tracking: [{ tracking: ['0-05em'] }],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

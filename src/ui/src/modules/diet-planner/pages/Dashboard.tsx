@@ -101,7 +101,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
+      <div className="gap-18px grid grid-cols-1 items-start xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
         {goalsQuery.isError || mealsQuery.isError ? (
           <Banner
             variant="error"

@@ -22,7 +22,7 @@ export function Field({ id, label, error, hint, labelClassName, className, child
       <label
         htmlFor={id}
         className={cn(
-          'mb-1 block text-[12px] font-semibold',
+          'text-12px mb-1 block font-semibold',
           error ? 'text-destructive' : (labelClassName ?? 'text-text-2'),
         )}
       >
@@ -30,9 +30,9 @@ export function Field({ id, label, error, hint, labelClassName, className, child
       </label>
       {children}
       {error ? (
-        <p className="text-destructive mt-1 text-[11.5px]">{error}</p>
+        <p className="text-destructive text-11-5px mt-1">{error}</p>
       ) : hint ? (
-        <p className="text-muted-foreground mt-1 text-[11.5px]">{hint}</p>
+        <p className="text-muted-foreground text-11-5px mt-1">{hint}</p>
       ) : null}
     </div>
   );

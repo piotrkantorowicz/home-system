@@ -97,7 +97,7 @@ export default function RecipeList() {
     <div className="animate-fade-in flex flex-col gap-6 px-4 py-6 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold">{t('recipes.title')}</h1>
+          <h1 className="text-26px font-bold">{t('recipes.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('recipes.subtitle')}</p>
         </div>
         <Button size="xl" asChild>
@@ -108,9 +108,9 @@ export default function RecipeList() {
         </Button>
       </div>
 
-      <div className="border-border bg-card flex flex-wrap items-center gap-2.5 rounded-[18px] border p-3.5">
-        <div className="bg-secondary border-border focus-within:ring-primary flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3 focus-within:ring-2">
-          <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
+      <div className="border-border bg-card rounded-18px flex flex-wrap items-center gap-2.5 border p-3.5">
+        <div className="bg-secondary border-border focus-within:ring-primary h-38px min-w-180px rounded-12px flex flex-1 items-center gap-2 border px-3 focus-within:ring-2">
+          <Search className="text-muted-foreground size-15px shrink-0" strokeWidth={2} />
           <input
             value={search}
             onChange={(e) => {
@@ -118,7 +118,7 @@ export default function RecipeList() {
             }}
             placeholder={t('recipes.search_placeholder')}
             aria-label={t('recipes.search_placeholder')}
-            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent text-[13px] outline-none"
+            className="text-foreground placeholder:text-muted-foreground text-13px w-full bg-transparent outline-none"
           />
         </div>
 
@@ -130,8 +130,8 @@ export default function RecipeList() {
           }}
           className={
             onlyMine
-              ? 'bg-accent text-accent-foreground inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold'
-              : 'bg-secondary border-border text-text-2 hover:text-foreground inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold'
+              ? 'bg-accent text-accent-foreground text-12px inline-flex h-8 items-center gap-1.5 rounded-full px-3 font-semibold'
+              : 'bg-secondary border-border text-text-2 hover:text-foreground text-12px inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-semibold'
           }
         >
           {t('recipes.my_recipes')}
@@ -154,9 +154,9 @@ export default function RecipeList() {
       {error ? <Banner variant="error">{error.message}</Banner> : null}
 
       {isLoading ? (
-        <div className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]">
+        <div className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))]">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[264px] rounded-[22px]" />
+            <Skeleton key={i} className="rounded-22px h-[264px]" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -178,7 +178,7 @@ export default function RecipeList() {
       ) : (
         <div
           role="list"
-          className="grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))] gap-[18px]"
+          className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))]"
         >
           {filtered.map((recipe) => (
             <RecipeCard
@@ -194,12 +194,12 @@ export default function RecipeList() {
           ))}
           <Link
             to="/diet-planner/recipes/new"
-            className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-[22px] border border-dashed transition-colors"
+            className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-22px flex min-h-[200px] flex-col items-center justify-center gap-2 border border-dashed transition-colors"
           >
             <span className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-2xl">
               <Plus className="size-5" />
             </span>
-            <span className="text-[13px] font-semibold">{t('recipes.create_tile')}</span>
+            <span className="text-13px font-semibold">{t('recipes.create_tile')}</span>
           </Link>
         </div>
       )}

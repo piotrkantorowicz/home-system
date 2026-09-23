@@ -93,7 +93,7 @@ export function MealScheduleForm({ onSuccess }: MealScheduleFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="flex flex-col gap-[18px]"
+      className="gap-18px flex flex-col"
     >
       <Card>
         <CardContent className="space-y-4 pt-6">

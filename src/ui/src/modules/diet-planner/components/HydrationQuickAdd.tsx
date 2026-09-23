@@ -45,7 +45,7 @@ export function HydrationQuickAdd() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="min-w-[100px] text-center text-sm font-semibold tabular-nums">
+          <span className="min-w-100px text-center text-sm font-semibold tabular-nums">
             {t('hydration.glasses_count', { current: currentGlasses, target: targetGlasses })}
           </span>
 

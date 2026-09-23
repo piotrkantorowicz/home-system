@@ -164,7 +164,7 @@ export default function ImportWizard() {
   return (
     <div className="animate-fade-in mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:px-8">
       <div>
-        <h1 className="text-[26px] font-bold">{t('import_wizard.title')}</h1>
+        <h1 className="text-26px font-bold">{t('import_wizard.title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('import_wizard.subtitle')}</p>
       </div>
 
@@ -177,13 +177,13 @@ export default function ImportWizard() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="border-border-strong bg-secondary text-muted-foreground hover:text-foreground hover:border-foreground/40 flex flex-col items-center gap-2 rounded-[18px] border border-dashed p-7 text-center transition-colors"
+                className="border-border-strong bg-secondary text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-18px flex flex-col items-center gap-2 border border-dashed p-7 text-center transition-colors"
               >
                 <Upload className="size-6" strokeWidth={1.9} />
-                <span className="text-[13px] font-semibold">
+                <span className="text-13px font-semibold">
                   {t('import_wizard.upload.dropzone_title')}
                 </span>
-                <span className="text-[11.5px]">{t('import_wizard.upload.dropzone_hint')}</span>
+                <span className="text-11-5px">{t('import_wizard.upload.dropzone_hint')}</span>
               </button>
               <input
                 ref={fileInputRef}
@@ -204,7 +204,7 @@ export default function ImportWizard() {
                 }}
                 placeholder={t('import_wizard.upload.placeholder')}
                 rows={10}
-                className="border-border bg-muted rounded-[16px] border p-3 font-mono text-[11.5px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                className="border-border bg-muted rounded-16px text-11-5px focus-visible:ring-ring border p-3 font-mono leading-relaxed outline-none focus-visible:ring-2"
               />
               {jsonError ? <Banner variant="error">{jsonError}</Banner> : null}
               <div className="flex flex-wrap gap-2">
@@ -221,10 +221,10 @@ export default function ImportWizard() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="text-text-2 text-[13px] font-bold">
+              <div className="text-text-2 text-13px font-bold">
                 {t('import_wizard.upload.expected_format')}
               </div>
-              <pre className="bg-muted max-h-[280px] overflow-auto rounded-[16px] p-3 font-mono text-[11.5px] leading-relaxed whitespace-pre">
+              <pre className="bg-muted max-h-280px rounded-16px text-11-5px overflow-auto p-3 font-mono leading-relaxed whitespace-pre">
                 {JSON.stringify(sampleJson, null, 2)}
               </pre>
             </div>
@@ -248,9 +248,9 @@ export default function ImportWizard() {
         {step === 'review' && validation ? (
           <div className="grid gap-5 p-6 md:grid-cols-2">
             <div className="flex flex-col gap-3">
-              <div className="border-border bg-secondary flex items-center gap-3 rounded-[16px] border p-3.5">
+              <div className="border-border bg-secondary rounded-16px flex items-center gap-3 border p-3.5">
                 <FileJson className="text-primary size-5 shrink-0" />
-                <div className="min-w-0 text-[12.5px]">
+                <div className="text-12-5px min-w-0">
                   <div className="font-semibold">{t('import_wizard.review.detected')}</div>
                   <div className="text-muted-foreground">
                     {t('import_wizard.review.detected_meta', {
@@ -310,19 +310,19 @@ export default function ImportWizard() {
               )}
 
               {products.length > 0 ? (
-                <div className="border-border overflow-hidden rounded-[16px] border">
-                  <div className="bg-secondary text-muted-foreground grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 px-3 py-2 text-[10.5px] font-semibold uppercase">
+                <div className="border-border rounded-16px overflow-hidden border">
+                  <div className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 px-3 py-2 font-semibold uppercase">
                     <span>{t('import_wizard.review.col_product')}</span>
                     <span>{t('import_wizard.review.col_unit')}</span>
                     <span className="text-right">kcal</span>
                   </div>
-                  <div className="max-h-[220px] overflow-auto">
+                  <div className="max-h-220px overflow-auto">
                     {products.map((p, i) => {
                       const missing = !p.unit;
                       return (
                         <div
                           key={i}
-                          className="border-border grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 border-t px-3 py-2 text-[12px]"
+                          className="border-border text-12px grid grid-cols-[1.6fr_1fr_0.8fr] gap-2 border-t px-3 py-2"
                         >
                           <span className="truncate font-semibold">{p.name}</span>
                           <span className={cn(missing && 'text-destructive font-semibold')}>
@@ -342,7 +342,7 @@ export default function ImportWizard() {
             {importError ? (
               <p
                 role="alert"
-                className="border-destructive/30 text-destructive rounded-[16px] border px-4 py-3 text-[12.5px] md:col-span-2"
+                className="border-destructive/30 text-destructive rounded-16px text-12-5px border px-4 py-3 md:col-span-2"
                 style={{
                   background: 'color-mix(in oklab, var(--color-fat) 12%, transparent)',
                 }}
@@ -383,9 +383,9 @@ export default function ImportWizard() {
               className="grid size-14 place-items-center rounded-2xl"
               style={{ background: 'color-mix(in oklab, var(--color-good) 14%, transparent)' }}
             >
-              <Check className="size-7 text-[var(--color-good)]" strokeWidth={2.4} />
+              <Check className="text-good size-7" strokeWidth={2.4} />
             </div>
-            <h2 className="text-[22px] font-bold">{t('import_wizard.done.title')}</h2>
+            <h2 className="text-22px font-bold">{t('import_wizard.done.title')}</h2>
             <p className="text-muted-foreground text-sm">{t('import_wizard.done.message')}</p>
           </div>
         ) : null}
@@ -396,11 +396,11 @@ export default function ImportWizard() {
 
 function DetectedTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border-border bg-secondary rounded-[15px] border p-3.5">
-      <div className="text-muted-foreground text-[10.5px] font-semibold tracking-[0.05em] uppercase">
+    <div className="border-border bg-secondary rounded-15px border p-3.5">
+      <div className="text-muted-foreground text-10-5px tracking-0-05em font-semibold uppercase">
         {label}
       </div>
-      <div className="numeral mt-0.5 text-[19px] font-bold">{value}</div>
+      <div className="numeral text-19px mt-0.5 font-bold">{value}</div>
     </div>
   );
 }
@@ -431,7 +431,7 @@ function StepBar({ step }: { step: Step }) {
           >
             <span
               className={cn(
-                'grid size-7 flex-none place-items-center rounded-full text-[12.5px] font-bold',
+                'text-12-5px grid size-7 flex-none place-items-center rounded-full font-bold',
                 state === 'done' && 'text-white',
                 state === 'current' && 'bg-primary text-primary-foreground',
                 state === 'upcoming' && 'bg-muted border-border-strong border',
@@ -440,12 +440,12 @@ function StepBar({ step }: { step: Step }) {
             >
               {state === 'done' ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
             </span>
-            <span className="text-[13px] font-semibold">{label}</span>
+            <span className="text-13px font-semibold">{label}</span>
             {i < labels.length - 1 ? (
               <span
                 className={cn(
                   'h-0.5 flex-1 rounded-full',
-                  state === 'done' ? 'bg-[var(--color-good)]' : 'bg-border-strong',
+                  state === 'done' ? 'bg-good' : 'bg-border-strong',
                 )}
               />
             ) : null}

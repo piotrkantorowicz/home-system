@@ -50,7 +50,7 @@ export default function RecipeCreate() {
     <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
       <div className="mb-8">
         <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipe_form.create_title')}</h1>
-        <p className="text-muted-foreground text-[0.95rem]">{t('recipe_form.create_subtitle')}</p>
+        <p className="text-muted-foreground text-0-95rem">{t('recipe_form.create_subtitle')}</p>
       </div>
 
       <RecipeForm

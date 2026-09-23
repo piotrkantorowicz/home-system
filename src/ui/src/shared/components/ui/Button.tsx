@@ -3,7 +3,7 @@ import { cn } from '@shared/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-[0.9rem] font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-0-9rem font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]',
   {
     variants: {
       variant: {
@@ -24,9 +24,9 @@ const buttonVariants = cva(
         lg: 'h-12 rounded-lg px-8 text-base',
         icon: 'h-10 w-10',
         // Refresh scale — primary CTA / row action / chip.
-        xl: 'h-[42px] gap-2 rounded-[13px] px-4 text-[13.5px]',
-        chip: 'h-8 gap-1.5 rounded-[10px] px-3.5 text-[12.5px]',
-        xs: 'h-[30px] gap-1.5 rounded-[10px] px-3 text-[12.5px]',
+        xl: 'h-42px gap-2 rounded-13px px-4 text-13-5px',
+        chip: 'h-8 gap-1.5 rounded-10px px-3.5 text-12-5px',
+        xs: 'h-30px gap-1.5 rounded-10px px-3 text-12-5px',
       },
     },
     defaultVariants: {

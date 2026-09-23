@@ -58,16 +58,16 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
     <div
       role="listitem"
       aria-label={recipe.name}
-      className="border-border bg-card hover:border-primary focus-within:ring-primary relative flex flex-col overflow-hidden rounded-[22px] border shadow-sm focus-within:ring-2"
+      className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px relative flex flex-col overflow-hidden border shadow-sm focus-within:ring-2"
     >
       <div
-        className="relative h-[132px]"
+        className="h-132px relative"
         style={{
           background: `linear-gradient(140deg, color-mix(in oklab, var(--color-${macro}) 45%, transparent), color-mix(in oklab, var(--color-${macro}) 12%, transparent))`,
         }}
       >
         {recipe.prepTimeMinutes ? (
-          <span className="bg-card absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-[8px] px-2 py-1 text-[11px] font-semibold shadow-sm">
+          <span className="bg-card rounded-8px text-11px absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 font-semibold shadow-sm">
             <Clock className="size-3" />
             {n(recipe.prepTimeMinutes)} {t('recipes.prep_time')}
           </span>
@@ -114,13 +114,13 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
         <div>
           <Link
             to={`/diet-planner/recipes/${recipe.id}`}
-            className="text-[14.5px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
+            className="after:rounded-22px text-[14.5px] font-bold after:absolute after:inset-0 focus:outline-none"
             onMouseEnter={onPrefetch}
             onFocus={onPrefetch}
           >
             {recipe.name}
           </Link>
-          <div className="text-muted-foreground text-[11.5px]">
+          <div className="text-muted-foreground text-11-5px">
             {t('recipes.servings', { count: n(recipe.servings) })}
           </div>
         </div>
@@ -130,7 +130,7 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
             <div
               key={cell.key}
               className={cn(
-                'rounded-[9px] p-1.5 text-center',
+                'rounded-9px p-1.5 text-center',
                 cell.key === 'kcal' && 'bg-secondary border-border border',
               )}
               style={
@@ -141,8 +141,8 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
                     }
               }
             >
-              <div className="tnum text-[13px] font-bold">{cell.value}</div>
-              <div className="text-muted-foreground text-[9.5px]">{cell.label}</div>
+              <div className="tnum text-13px font-bold">{cell.value}</div>
+              <div className="text-muted-foreground text-9-5px">{cell.label}</div>
             </div>
           ))}
         </div>

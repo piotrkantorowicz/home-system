@@ -45,7 +45,7 @@ export function MacroDistributionCard({
             const percent = pct(val);
             return (
               <div key={macro.key}>
-                <div className="mb-2 flex justify-between text-[0.9rem]">
+                <div className="text-0-9rem mb-2 flex justify-between">
                   <span className="font-medium">{t(macro.labelKey)}</span>
                   <span className="text-muted-foreground tnum">
                     {val.toFixed(1)} g

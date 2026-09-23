@@ -36,7 +36,7 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[240px]">
-        <DropdownMenuLabel className="text-muted-foreground text-[10px] font-bold tracking-wide uppercase">
+        <DropdownMenuLabel className="text-muted-foreground text-10px font-bold tracking-wide uppercase">
           {t('common.modules')}
         </DropdownMenuLabel>
         {access.reason && (
@@ -56,7 +56,7 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
               }}
               className={isActive ? 'bg-accent text-accent-foreground' : undefined}
             >
-              <span className="bg-accent text-accent-foreground grid size-[30px] shrink-0 place-items-center rounded-[10px]">
+              <span className="bg-accent text-accent-foreground size-30px rounded-10px grid shrink-0 place-items-center">
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0 flex-1 truncate font-semibold">{tile.label}</span>
@@ -71,7 +71,7 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
         >
           <Search className="size-4" />
           <span className="flex-1 font-semibold">{t('common.search_everything')}</span>
-          <span className="bg-muted text-muted-foreground rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold">
+          <span className="bg-muted text-muted-foreground rounded-6px text-10px px-1.5 py-0.5 font-bold">
             ⌘K
           </span>
         </DropdownMenuItem>

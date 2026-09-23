@@ -99,7 +99,7 @@ export function CommandPalette() {
         <DialogDescription className="sr-only">{t('common.search_everything')}</DialogDescription>
 
         <div className="border-border flex items-center gap-2.5 border-b px-4">
-          <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
+          <Search className="text-muted-foreground size-15px shrink-0" strokeWidth={2} />
           <input
             value={query}
             onChange={(e) => {
@@ -110,7 +110,7 @@ export function CommandPalette() {
             }}
             placeholder={t('common.search_everything')}
             aria-label={t('common.search_everything')}
-            className="text-foreground placeholder:text-muted-foreground h-[52px] w-full bg-transparent text-[14px] outline-none"
+            className="text-foreground placeholder:text-muted-foreground h-52px text-14px w-full bg-transparent outline-none"
           />
         </div>
 
@@ -119,7 +119,7 @@ export function CommandPalette() {
         )}
         <ul role="listbox" className="max-h-[360px] overflow-y-auto p-2">
           {filtered.length === 0 ? (
-            <li className="text-muted-foreground px-3 py-6 text-center text-[13px]">
+            <li className="text-muted-foreground text-13px px-3 py-6 text-center">
               {t('common.no_matches')}
             </li>
           ) : (
@@ -133,11 +133,11 @@ export function CommandPalette() {
                   onClick={() => {
                     go(d.href);
                   }}
-                  className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-40"
+                  className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent rounded-10px text-13px flex w-full items-center gap-3 px-3 py-2.5 text-left font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <d.Icon className="text-muted-foreground size-4 shrink-0" strokeWidth={1.9} />
                   <span className="min-w-0 flex-1 truncate">{d.label}</span>
-                  <span className="text-muted-foreground shrink-0 text-[11px] font-medium">
+                  <span className="text-muted-foreground text-11px shrink-0 font-medium">
                     {d.moduleLabel}
                   </span>
                 </button>
