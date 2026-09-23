@@ -221,27 +221,5 @@ Claude Code through symlinks in `.claude/skills/`. Invoke with `/<name>`.
 
 ---
 
-## Imported Rules
-
-@.claude/rules/backend-coding-standards.md
-@.claude/rules/backend-module-structure.md
-@.claude/rules/backend-dapper-module-structure.md
-@.claude/rules/backend-persistence-styles.md
-@.claude/rules/backend-ddd-patterns.md
-@.claude/rules/backend-cqrs-patterns.md
-@.claude/rules/backend-ef-core-patterns.md
-@.claude/rules/backend-integration-patterns.md
-@.claude/rules/backend-api-patterns.md
-@.claude/rules/backend-testing-standards.md
-@.claude/rules/frontend-react-typescript.md
-@.claude/rules/frontend-architecture.md
-@.claude/rules/frontend-styling.md
-@.claude/rules/frontend-testing.md
-@.claude/rules/frontend-playwright.md
-@.claude/rules/frontend-performance.md
-@.claude/rules/frontend-tooling.md
-@.claude/rules/git-workflow.md
-@.claude/rules/agent-workflow.md
-@.claude/rules/definition-of-done.md
-@.claude/skills/backend-cqrs.md
-@.claude/skills/backend-messaging.md
+Rule docs are **not** preloaded — read the one(s) the Quick Reference table points to
+for the area you're touching, before generating or editing code there.
