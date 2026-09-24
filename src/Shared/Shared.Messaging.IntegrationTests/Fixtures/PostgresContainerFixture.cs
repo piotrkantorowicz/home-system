@@ -18,10 +18,10 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     public string ConnectionString => Container.GetConnectionString();
 
     /// <summary>Starts the container; runs once per collection.</summary>
-    public async Task InitializeAsync() => await Container.StartAsync();
+    public async ValueTask InitializeAsync() => await Container.StartAsync();
 
     /// <summary>Stops and removes the container.</summary>
-    public async Task DisposeAsync() => await Container.DisposeAsync();
+    public async ValueTask DisposeAsync() => await Container.DisposeAsync();
 }
 
 /// <summary>xUnit collection that shares one <see cref="PostgresContainerFixture"/> across the messaging integration tests.</summary>

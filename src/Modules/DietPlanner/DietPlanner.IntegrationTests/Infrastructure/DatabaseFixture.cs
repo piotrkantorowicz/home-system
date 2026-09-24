@@ -20,7 +20,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
     public string ConnectionString => _container.GetConnectionString();
 
     /// <summary>Starts the PostgreSQL container and prepares the schema; runs once per test collection.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
 
@@ -33,5 +33,5 @@ public sealed class DatabaseFixture : IAsyncLifetime
     }
 
     /// <summary>Stops and removes the container.</summary>
-    public async Task DisposeAsync() => await _container.DisposeAsync();
+    public async ValueTask DisposeAsync() => await _container.DisposeAsync();
 }

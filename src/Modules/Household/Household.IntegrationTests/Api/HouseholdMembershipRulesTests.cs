@@ -58,8 +58,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         var (owner, household, _, _) = await HouseholdWithAdultAsync();
         var ownerId = await PersonIdAsync(owner);
 
-        var demote = await owner.PutAsJsonAsync(
-            $"/api/households/{household.Id}/members/{ownerId}/role", new { role = "Adult" });
+        var demote = await owner.PutAsJsonAsync($"/api/households/{household.Id}/members/{ownerId}/role", new { role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
 
         demote.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -71,7 +70,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         var (owner, household, _, _) = await HouseholdWithAdultAsync();
         var ownerId = await PersonIdAsync(owner);
 
-        var remove = await owner.DeleteAsync($"/api/households/{household.Id}/members/{ownerId}");
+        var remove = await owner.DeleteAsync($"/api/households/{household.Id}/members/{ownerId}", TestContext.Current.CancellationToken);
 
         remove.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -83,7 +82,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         var owner = await SignedInAsync("Solo Owner");
         var household = await CreateHouseholdAsync(owner, "Solo");
 
-        var leave = await owner.PostAsync($"/api/households/{household.Id}/leave", null);
+        var leave = await owner.PostAsync($"/api/households/{household.Id}/leave", null, TestContext.Current.CancellationToken);
 
         leave.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -99,8 +98,7 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
         var otherId = await PersonIdAsync(other);
         await CreateHouseholdAsync(other, "Other House");
 
-        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/members",
-            new { personId = otherId, role = "Adult", nickname = (string?)null });
+        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/members", new { personId = otherId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
 
         add.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -111,12 +109,12 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
     {
         var (owner, household, adult, adultId) = await HouseholdWithAdultAsync();
 
-        var leave = await adult.PostAsync($"/api/households/{household.Id}/leave", null);
+        var leave = await adult.PostAsync($"/api/households/{household.Id}/leave", null, TestContext.Current.CancellationToken);
         leave.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        (await adult.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await adult.GetAsync("/api/households/me", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
-        var members = await owner.GetFromJsonAsync<List<Member>>($"/api/households/{household.Id}/members");
+        var members = await owner.GetFromJsonAsync<List<Member>>($"/api/households/{household.Id}/members", cancellationToken: TestContext.Current.CancellationToken);
         members!.ShouldHaveSingleItem().PersonId.ShouldNotBe(adultId);
     }
 

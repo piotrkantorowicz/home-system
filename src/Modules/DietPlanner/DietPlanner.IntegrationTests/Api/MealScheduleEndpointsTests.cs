@@ -29,10 +29,10 @@ public sealed class MealScheduleEndpointsTests
         var freshUserId = Guid.NewGuid().ToString();
         HttpClient freshClient = new DietPlannerWebApplicationFactory(_db.ConnectionString, freshUserId).CreateClient();
 
-        var response = await freshClient.GetAsync("/api/v1/meal-schedule");
+        var response = await freshClient.GetAsync("/api/v1/meal-schedule", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         // TypedResults.Ok(null) serializes as an empty body
         body.ShouldBeOneOf("null", string.Empty);
     }
@@ -48,7 +48,7 @@ public sealed class MealScheduleEndpointsTests
             new MealSlotRequest(null, "Dinner", "18:00")
         ]);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
@@ -66,12 +66,12 @@ public sealed class MealScheduleEndpointsTests
             new MealSlotRequest(null, "Noon", "13:00")
         ]);
 
-        await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
-        var getResponse = await freshClient.GetAsync("/api/v1/meal-schedule");
+        var getResponse = await freshClient.GetAsync("/api/v1/meal-schedule", TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>();
+        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.Slots.Count.ShouldBe(2);
         dto.Slots.OrderBy(s => s.SortOrder).First().Name.ShouldBe("Morning");
@@ -93,12 +93,12 @@ public sealed class MealScheduleEndpointsTests
             new MealSlotRequest(null, "Supper", "20:00")
         ]);
 
-        await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", first);
-        var secondResponse = await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", second);
+        await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", first, cancellationToken: TestContext.Current.CancellationToken);
+        var secondResponse = await freshClient.PutAsJsonAsync("/api/v1/meal-schedule", second, cancellationToken: TestContext.Current.CancellationToken);
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var getResponse = await freshClient.GetAsync("/api/v1/meal-schedule");
-        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>();
+        var getResponse = await freshClient.GetAsync("/api/v1/meal-schedule", TestContext.Current.CancellationToken);
+        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.Slots.Count.ShouldBe(2);
         dto.UpdatedAt.ShouldNotBeNull();
@@ -110,7 +110,7 @@ public sealed class MealScheduleEndpointsTests
     {
         var request = new UpdateMealScheduleRequest([]);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -124,7 +124,7 @@ public sealed class MealScheduleEndpointsTests
             .Select(i => new MealSlotRequest(null, $"Slot {i}", "08:00"))
             .ToList();
 
-        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", new UpdateMealScheduleRequest(slots));
+        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", new UpdateMealScheduleRequest(slots), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -135,7 +135,7 @@ public sealed class MealScheduleEndpointsTests
     {
         var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "", "07:00")]);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -146,7 +146,7 @@ public sealed class MealScheduleEndpointsTests
     {
         var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "not-a-time")]);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -157,12 +157,12 @@ public sealed class MealScheduleEndpointsTests
     {
         var request = new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00")]);
 
-        await _client.PutAsJsonAsync("/api/v1/meal-schedule", request);
+        await _client.PutAsJsonAsync("/api/v1/meal-schedule", request, cancellationToken: TestContext.Current.CancellationToken);
 
-        var getResponse = await _client.GetAsync("/api/v1/meal-schedule");
+        var getResponse = await _client.GetAsync("/api/v1/meal-schedule", TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>();
+        MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.UserId.ShouldBe(TestAuthHandler.TestUserId);
     }

@@ -20,7 +20,7 @@ public sealed class HydrationEndpointsTests
     [Fact]
     public async Task GET_HydrationConfig_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/hydration/config");
+        var response = await _client.GetAsync("/api/v1/hydration/config", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -31,7 +31,7 @@ public sealed class HydrationEndpointsTests
     {
         var request = new UpdateHydrationConfigRequest(2500, 250, true);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
@@ -42,7 +42,7 @@ public sealed class HydrationEndpointsTests
     {
         var request = new UpdateHydrationConfigRequest(50, 250, true);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -53,7 +53,7 @@ public sealed class HydrationEndpointsTests
     {
         var request = new UpdateHydrationConfigRequest(2500, 10, true);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/hydration/config", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -62,7 +62,7 @@ public sealed class HydrationEndpointsTests
     [Fact]
     public async Task GET_WaterIntake_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/hydration/intake?date=2024-01-15");
+        var response = await _client.GetAsync("/api/v1/hydration/intake?date=2024-01-15", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -73,7 +73,7 @@ public sealed class HydrationEndpointsTests
     {
         var request = new LogWaterIntakeRequest(TestClock.Today, 250, null);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
@@ -84,7 +84,7 @@ public sealed class HydrationEndpointsTests
     {
         var request = new LogWaterIntakeRequest(TestClock.Today, 0, null);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/hydration/intake", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -93,7 +93,7 @@ public sealed class HydrationEndpointsTests
     [Fact]
     public async Task DELETE_WaterIntake_WhenEntryDoesNotExist_Returns404()
     {
-        var response = await _client.DeleteAsync($"/api/v1/hydration/intake/{Guid.NewGuid()}");
+        var response = await _client.DeleteAsync($"/api/v1/hydration/intake/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -103,10 +103,10 @@ public sealed class HydrationEndpointsTests
     public async Task PUT_ThenGET_HydrationConfigRoundTrip()
     {
         var request = new UpdateHydrationConfigRequest(3000, 300, false);
-        var putResponse = await _client.PutAsJsonAsync("/api/v1/hydration/config", request);
+        var putResponse = await _client.PutAsJsonAsync("/api/v1/hydration/config", request, cancellationToken: TestContext.Current.CancellationToken);
         putResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var getResponse = await _client.GetAsync("/api/v1/hydration/config");
+        var getResponse = await _client.GetAsync("/api/v1/hydration/config", TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 }

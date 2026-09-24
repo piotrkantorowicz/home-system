@@ -1,7 +1,7 @@
 namespace Notifications.UnitTests.EventHandlers;
 
 using DietPlanner.Contracts.Events;
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using Notifications.Application.Dispatching;
 using Notifications.Application.EventHandlers;
 #pragma warning restore IDE0005
@@ -27,7 +27,7 @@ public sealed class WaterReminderDueIntegrationEventHandlerTests
             UserId: "u42",
             Locale: "pl");
 
-        await _sut.HandleAsync(@event, CancellationToken.None);
+        await _sut.HandleAsync(@event, TestContext.Current.CancellationToken);
 
         await _dispatcher.Received(1).DispatchAsync(
             NotificationType.WaterReminder,
@@ -42,7 +42,7 @@ public sealed class WaterReminderDueIntegrationEventHandlerTests
     [Fact]
     public async Task HandleAsync_WhenEventIsNull_Throws()
     {
-        var act = async () => await _sut.HandleAsync(null!, CancellationToken.None);
+        var act = async () => await _sut.HandleAsync(null!, TestContext.Current.CancellationToken);
         await act.ShouldThrowAsync<ArgumentNullException>();
     }
 }

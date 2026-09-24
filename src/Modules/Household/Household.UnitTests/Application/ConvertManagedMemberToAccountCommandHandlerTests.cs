@@ -44,7 +44,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         _household.AddMember(managed.Id, HouseholdRole.Child, TestClock.UtcNow);
         _persons.GetByIdAsync(managed.Id, Arg.Any<CancellationToken>()).Returns(managed);
 
-        await _sut.HandleAsync(Command(managed.Id.Value), CancellationToken.None);
+        await _sut.HandleAsync(Command(managed.Id.Value), TestContext.Current.CancellationToken);
 
         managed.Email!.Value.ShouldBe("kiddo@x.com");
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -58,7 +58,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         _persons.GetByIdAsync(stranger.Id, Arg.Any<CancellationToken>()).Returns(stranger);
 
         await Should.ThrowAsync<ForbiddenException>(() =>
-            _sut.HandleAsync(Command(stranger.Id.Value), CancellationToken.None));
+            _sut.HandleAsync(Command(stranger.Id.Value), TestContext.Current.CancellationToken));
 
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
@@ -72,7 +72,7 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         _persons.GetByIdAsync(linked.Id, Arg.Any<CancellationToken>()).Returns(linked);
 
         await Should.ThrowAsync<HouseholdDomainException>(() =>
-            _sut.HandleAsync(Command(linked.Id.Value), CancellationToken.None));
+            _sut.HandleAsync(Command(linked.Id.Value), TestContext.Current.CancellationToken));
     }
 
     /// <summary>When caller is not owner: <c>Handle</c> throws.</summary>
@@ -90,6 +90,6 @@ public sealed class ConvertManagedMemberToAccountCommandHandlerTests
         await Should.ThrowAsync<ForbiddenException>(() => _sut.HandleAsync(
             new ConvertManagedMemberToAccountCommand(
                 "auth|adult", _household.Id.Value, managed.Id.Value, "k@x.com"),
-            CancellationToken.None));
+            TestContext.Current.CancellationToken));
     }
 }

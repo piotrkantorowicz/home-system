@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.LogWaterIntake;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -27,7 +27,7 @@ public sealed class LogWaterIntakeCommandHandlerTests
         var date = TestClock.Today;
         var command = new LogWaterIntakeCommand("user-1", date, 250, "Morning");
 
-        var id = await _sut.HandleAsync(command, CancellationToken.None);
+        var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
@@ -47,7 +47,7 @@ public sealed class LogWaterIntakeCommandHandlerTests
         var date = TestClock.Today;
         var command = new LogWaterIntakeCommand("user-1", date, 500, null);
 
-        var id = await _sut.HandleAsync(command, CancellationToken.None);
+        var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(

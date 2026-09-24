@@ -134,7 +134,7 @@ if matches "$BACKEND_RE"; then
     [[ -z "$proj" ]] && continue
     reason=$(skip_integration "$proj")
     if [[ -n "$reason" ]]; then record "$(basename "$proj" .csproj)" "⏭ skipped ($reason)"; continue; fi
-    step "$(basename "$proj" .csproj)" dotnet test "$proj" --no-build --configuration Debug --logger "console;verbosity=minimal" --nologo
+    step "$(basename "$proj" .csproj)" dotnet test --project "$proj" --no-build --configuration Debug
   done
 fi
 

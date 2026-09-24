@@ -43,7 +43,7 @@ public sealed class DietReminderSettingsEndpointsTests
         var freshUserId = Guid.NewGuid().ToString();
         HttpClient freshClient = new DietPlannerWebApplicationFactory(_db.ConnectionString, freshUserId).CreateClient();
 
-        var response = await freshClient.GetAsync(Path);
+        var response = await freshClient.GetAsync(Path, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -52,7 +52,7 @@ public sealed class DietReminderSettingsEndpointsTests
     [Fact]
     public async Task PUT_WithValidRequest_Returns204()
     {
-        var response = await _client.PutAsJsonAsync(Path, DefaultRequest());
+        var response = await _client.PutAsJsonAsync(Path, DefaultRequest(), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
@@ -74,12 +74,12 @@ public sealed class DietReminderSettingsEndpointsTests
             GoalAlertsEnabled = false,
         };
 
-        await _client.PutAsJsonAsync(Path, request);
+        await _client.PutAsJsonAsync(Path, request, cancellationToken: TestContext.Current.CancellationToken);
 
-        var getResponse = await _client.GetAsync(Path);
+        var getResponse = await _client.GetAsync(Path, TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>();
+        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.MealRemindersEnabled.ShouldBeFalse();
         dto.MealReminderLeadTimeMinutes.ShouldBe(30);
@@ -96,17 +96,17 @@ public sealed class DietReminderSettingsEndpointsTests
     [Fact]
     public async Task PUT_CalledTwice_UpdatesExistingSettings()
     {
-        await _client.PutAsJsonAsync(Path, DefaultRequest());
+        await _client.PutAsJsonAsync(Path, DefaultRequest(), cancellationToken: TestContext.Current.CancellationToken);
         var second = DefaultRequest() with
         {
             MealReminderLeadTimeMinutes = 60,
             WaterReminderIntervalMinutes = 240,
         };
-        var secondResponse = await _client.PutAsJsonAsync(Path, second);
+        var secondResponse = await _client.PutAsJsonAsync(Path, second, cancellationToken: TestContext.Current.CancellationToken);
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var getResponse = await _client.GetAsync(Path);
-        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>();
+        var getResponse = await _client.GetAsync(Path, TestContext.Current.CancellationToken);
+        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.MealReminderLeadTimeMinutes.ShouldBe(60);
         dto.WaterReminderIntervalMinutes.ShouldBe(240);
@@ -121,7 +121,7 @@ public sealed class DietReminderSettingsEndpointsTests
     {
         var request = DefaultRequest() with { MealReminderLeadTimeMinutes = leadTime };
 
-        var response = await _client.PutAsJsonAsync(Path, request);
+        var response = await _client.PutAsJsonAsync(Path, request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -134,7 +134,7 @@ public sealed class DietReminderSettingsEndpointsTests
     {
         var request = DefaultRequest() with { WaterReminderIntervalMinutes = interval };
 
-        var response = await _client.PutAsJsonAsync(Path, request);
+        var response = await _client.PutAsJsonAsync(Path, request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -149,7 +149,7 @@ public sealed class DietReminderSettingsEndpointsTests
             WaterWindowEndUtc = new TimeOnly(11, 0),
         };
 
-        var response = await _client.PutAsJsonAsync(Path, request);
+        var response = await _client.PutAsJsonAsync(Path, request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -158,12 +158,12 @@ public sealed class DietReminderSettingsEndpointsTests
     [Fact]
     public async Task GET_UserIdIsReadFromClaimsPrincipal()
     {
-        await _client.PutAsJsonAsync(Path, DefaultRequest());
+        await _client.PutAsJsonAsync(Path, DefaultRequest(), cancellationToken: TestContext.Current.CancellationToken);
 
-        var getResponse = await _client.GetAsync(Path);
+        var getResponse = await _client.GetAsync(Path, TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>();
+        DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.UserId.ShouldBe(TestAuthHandler.TestUserId);
     }

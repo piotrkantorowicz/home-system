@@ -58,7 +58,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>Builds a service provider with the full in-process messaging stack against a fresh schema.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var services = new ServiceCollection();
 
@@ -81,7 +81,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>Disposes the service provider and its <c>DbContext</c>.</summary>
-    public async Task DisposeAsync() => await _sp.DisposeAsync();
+    public async ValueTask DisposeAsync() => await _sp.DisposeAsync();
 
     /// <summary><c>Publish</c> then run once and handler receives event.</summary>
     [Fact]
@@ -92,10 +92,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             var bus = scope.ServiceProvider.GetRequiredService<IIntegrationEventBus>();
             var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
 
-            await bus.PublishAsync(
-                new HelloIntegrationEvent(Guid.NewGuid(), Clock.GetUtcNow().UtcDateTime, "hi"),
-                default);
-            await db.SaveChangesAsync();
+            await bus.PublishAsync(new HelloIntegrationEvent(Guid.NewGuid(), Clock.GetUtcNow().UtcDateTime, "hi"), TestContext.Current.CancellationToken);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         var worker = new OutboxWorker<MessagingTestDbContext>(
@@ -104,7 +102,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
             Clock);
 
-        await worker.RunOnceAsync(default);
+        await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();
         receiver.Received.Count.ShouldBe(1);
@@ -134,7 +132,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
             Clock);
-        await worker.RunOnceAsync(default);
+        await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();
         receiver.Received.Count.ShouldBe(1);

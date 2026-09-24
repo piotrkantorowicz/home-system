@@ -23,7 +23,7 @@ public sealed class HouseholdDatabaseFixture : IAsyncLifetime
     public string ConnectionString => _container.GetConnectionString();
 
     /// <summary>Starts the PostgreSQL container and applies the EF migrations; runs once per test class.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
 
@@ -36,5 +36,5 @@ public sealed class HouseholdDatabaseFixture : IAsyncLifetime
     }
 
     /// <summary>Stops and removes the container.</summary>
-    public async Task DisposeAsync() => await _container.DisposeAsync();
+    public async ValueTask DisposeAsync() => await _container.DisposeAsync();
 }

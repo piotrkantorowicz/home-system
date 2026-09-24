@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.BulkCompleteMealEntries;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -45,7 +45,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
             .Returns([planned1, planned2, done, modified]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand("user-1", Today), CancellationToken.None);
+            new BulkCompleteMealEntriesCommand("user-1", Today), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(2);
         planned1.Status.ShouldBe(MealEntryStatus.Done);
@@ -62,7 +62,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
             .Returns([NewEntry(MealEntryStatus.Done)]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand("user-1", Today), CancellationToken.None);
+            new BulkCompleteMealEntriesCommand("user-1", Today), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(0);
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());

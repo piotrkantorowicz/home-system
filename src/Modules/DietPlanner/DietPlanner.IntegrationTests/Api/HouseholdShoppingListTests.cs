@@ -40,14 +40,13 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
         var date = TestClock.Today;
 
         // Owner sets up a household; the member joins it.
-        (await owner.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
-        (await owner.PostAsJsonAsync("/api/households", new { name = "Shared Kitchen" })).EnsureSuccessStatusCode();
-        var householdId = (await owner.GetFromJsonAsync<HouseholdBody>("/api/households/me"))!.Id;
+        (await owner.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await owner.PostAsJsonAsync("/api/households", new { name = "Shared Kitchen" }, cancellationToken: TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var householdId = (await owner.GetFromJsonAsync<HouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
 
-        (await member.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
-        var memberPersonId = (await member.GetFromJsonAsync<PersonBody>("/api/persons/me"))!.Id;
-        (await owner.PostAsJsonAsync($"/api/households/{householdId}/members",
-            new { personId = memberPersonId, role = "Adult", nickname = (string?)null }))
+        (await member.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var memberPersonId = (await member.GetFromJsonAsync<PersonBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
+        (await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = memberPersonId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
         // Each member plans one meal on the same day, using their own recipe/product.
@@ -55,8 +54,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
         await PlanAMealAsync(member, "Member", date, ingredientGrams: 250m);
 
         // The owner's shopping list includes both.
-        var items = await owner.GetFromJsonAsync<List<ShoppingListItemDto>>(
-            $"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}");
+        var items = await owner.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
         items!.Count.ShouldBe(2);

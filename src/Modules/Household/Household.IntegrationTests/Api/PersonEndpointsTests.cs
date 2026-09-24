@@ -24,12 +24,12 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
         var sub = $"auth|{Guid.NewGuid():N}";
         var client = _factory.CreateClientFor(sub, email: "New.User@Example.com", name: "New User");
 
-        var sync = await client.PostAsync("/api/persons/me/sync", content: null);
+        var sync = await client.PostAsync("/api/persons/me/sync", content: null, cancellationToken: TestContext.Current.CancellationToken);
         sync.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var synced = await sync.Content.ReadFromJsonAsync<SyncBody>();
+        var synced = await sync.Content.ReadFromJsonAsync<SyncBody>(cancellationToken: TestContext.Current.CancellationToken);
         synced!.PersonId.ShouldNotBe(Guid.Empty);
 
-        var me = await client.GetFromJsonAsync<MeBody>("/api/persons/me");
+        var me = await client.GetFromJsonAsync<MeBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken);
         me!.Id.ShouldBe(synced.PersonId);
         me.DisplayName.ShouldBe("New User");
         me.Email.ShouldBe("new.user@example.com");
@@ -43,16 +43,16 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
         var sub = $"auth|{Guid.NewGuid():N}";
 
         var first = await _factory.CreateClientFor(sub, name: "First")
-            .PostAsync("/api/persons/me/sync", null);
-        var firstId = (await first.Content.ReadFromJsonAsync<SyncBody>())!.PersonId;
+            .PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken);
+        var firstId = (await first.Content.ReadFromJsonAsync<SyncBody>(cancellationToken: TestContext.Current.CancellationToken))!.PersonId;
 
         var second = await _factory.CreateClientFor(sub, name: "Renamed")
-            .PostAsync("/api/persons/me/sync", null);
-        var secondId = (await second.Content.ReadFromJsonAsync<SyncBody>())!.PersonId;
+            .PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken);
+        var secondId = (await second.Content.ReadFromJsonAsync<SyncBody>(cancellationToken: TestContext.Current.CancellationToken))!.PersonId;
 
         secondId.ShouldBe(firstId);
 
-        var me = await _factory.CreateClientFor(sub).GetFromJsonAsync<MeBody>("/api/persons/me");
+        var me = await _factory.CreateClientFor(sub).GetFromJsonAsync<MeBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken);
         me!.DisplayName.ShouldBe("Renamed");
     }
 
@@ -62,7 +62,7 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
     {
         var client = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}");
 
-        var response = await client.GetAsync("/api/persons/me");
+        var response = await client.GetAsync("/api/persons/me", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -71,7 +71,7 @@ public sealed class PersonEndpointsTests : IClassFixture<HouseholdDatabaseFixtur
     [Fact]
     public async Task Sync_WithoutAuthentication_Returns401()
     {
-        var response = await _factory.CreateClient().PostAsync("/api/persons/me/sync", null);
+        var response = await _factory.CreateClient().PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }

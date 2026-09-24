@@ -1,6 +1,6 @@
 # Backend — Testing Standards
 
-> **Stack:** xUnit 2.9 (migration to xunit.v3 tracked in #269), Shouldly,
+> **Stack:** xUnit v3, Shouldly,
 > NSubstitute, Testcontainers.PostgreSql, `FakeTimeProvider`.
 > FluentAssertions is deliberately absent — do not add it.
 
@@ -24,7 +24,7 @@ src/Shared/
   Shared.Messaging.IntegrationTests/
 ```
 
-Every `*Tests.csproj` under `src/` is picked up by `dotnet test HomeSystem.slnx` in CI and by
+Every `*Tests.csproj` under `src/` is picked up by `dotnet test --solution HomeSystem.slnx` in CI and by
 `scripts/verify.sh` for the touched module.
 
 ## Unit Tests — Domain
@@ -79,7 +79,7 @@ public sealed class CreateHouseholdCommandHandlerTests
     {
         var command = new CreateHouseholdCommand("sub-1", "Home");
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _households.Received(1).AddAsync(
             Arg.Is<Household>(h => h.Name == "Home" && h.CreatedAt == _clock.GetUtcNow()),
@@ -134,8 +134,8 @@ public sealed class HouseholdWebApplicationFactory : WebApplicationFactory<Progr
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder().WithDatabase("household_test").Build();
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
 
-    public Task InitializeAsync() => _postgres.StartAsync();
-    public new Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
+    public ValueTask InitializeAsync() => new(_postgres.StartAsync());
+    public new ValueTask DisposeAsync() => _postgres.DisposeAsync();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
