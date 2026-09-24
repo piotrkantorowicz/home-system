@@ -17,7 +17,7 @@ Example: `$scaffold-feature budget-plans`
 
 ## Instructions
 
-Read `.claude/rules/frontend-architecture.md` and `.claude/rules/frontend-react-typescript.md` before generating.
+Read `docs/rules/frontend-architecture.md` and `docs/rules/frontend-react-typescript.md` before generating.
 
 Given `FeatureName` (kebab-case input), derive:
 - Folder name: `modules/{featureName}/` (kebab-case)

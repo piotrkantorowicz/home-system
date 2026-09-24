@@ -41,7 +41,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddOutbox<HouseholdDbContext>();
 
         // Module-scoped unit of work + read context — never the global IUnitOfWork
-        // (owned by the first Style-1 module). See .claude/rules/backend-module-structure.md.
+        // (owned by the first Style-1 module). See docs/rules/backend-module-structure.md.
         services.AddScoped<IHouseholdUnitOfWork>(sp => sp.GetRequiredService<HouseholdDbContext>());
         services.AddScoped<IHouseholdReadDbContext>(sp => sp.GetRequiredService<HouseholdDbContext>());
 

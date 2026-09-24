@@ -1,5 +1,5 @@
 # EditorConfig — https://editorconfig.org
-# C# rules mirror .claude/rules/backend-coding-standards.md. `dotnet format` enforces them
+# C# rules mirror docs/rules/backend-coding-standards.md. `dotnet format` enforces them
 # (CI: --verify-no-changes); EnforceCodeStyleInBuild surfaces them as build diagnostics.
 root = true
 

@@ -49,7 +49,7 @@ description: "Start work on a GitHub issue: create the correctly named branch of
    scripts/board.sh add <n> "In Progress"
    ```
 6. **Load context.** From the labels / title, read the matching rule docs (Quick Reference
-   in `CLAUDE.md` / `AGENTS.md`) and `.claude/rules/definition-of-done.md`. If the issue
+   in `CLAUDE.md` / `AGENTS.md`) and `docs/rules/definition-of-done.md`. If the issue
    links a design doc section, read that section.
 7. **Restate the job** in the transcript: scope bullets, acceptance criteria as a checklist,
    likely files. Flag anything in the issue that is ambiguous *before* writing code.

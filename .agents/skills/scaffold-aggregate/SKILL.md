@@ -17,7 +17,7 @@ Example: `$scaffold-aggregate BudgetPlan SpendingGoal`
 
 ## Instructions
 
-Read `.claude/rules/backend-ddd-patterns.md` before generating anything.
+Read `docs/rules/backend-ddd-patterns.md` before generating anything.
 
 Given `ModuleName` and `AggregateName`, generate:
 

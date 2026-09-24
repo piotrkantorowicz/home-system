@@ -1,5 +1,5 @@
 // CA1716 fires on every namespace under the Shared.* root because "Shared" is a VB.NET keyword.
-// The root is mandated by the repository layout (.claude/rules/backend-module-structure.md) and is
+// The root is mandated by the repository layout (docs/rules/backend-module-structure.md) and is
 // consumed from C# only, so each namespace is suppressed individually here rather than renamed.
 using System.Diagnostics.CodeAnalysis;
 

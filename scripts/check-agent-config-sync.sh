@@ -22,7 +22,7 @@ for sec in "Repository Structure" "Commands" "Non-negotiable Rules (Always Apply
 done
 
 # Every rule doc must be referenced by both files.
-for f in .claude/rules/*.md; do
+for f in docs/rules/*.md; do
   for doc in CLAUDE.md AGENTS.md; do
     grep -q "$f" "$doc" || { echo "::error::$doc does not reference $f"; fail=1; }
   done
