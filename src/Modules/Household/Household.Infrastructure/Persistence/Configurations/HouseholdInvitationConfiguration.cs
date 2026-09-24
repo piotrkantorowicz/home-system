@@ -29,7 +29,13 @@ internal sealed class HouseholdInvitationConfiguration : IEntityTypeConfiguratio
 
             email.HasIndex(e => e.Value).HasDatabaseName("idx_household_invitations_email");
         });
-        builder.Navigation(x => x.Email).IsRequired();
+        builder.Navigation(x => x.Email).IsRequired(false);
+
+        builder.Property(x => x.TargetPersonId)
+            .HasConversion(id => id!.Value, value => PersonId.From(value))
+            .HasColumnName("target_person_id");
+
+        builder.HasIndex(x => x.TargetPersonId).HasDatabaseName("idx_household_invitations_target_person");
 
         builder.Property(x => x.Role)
             .HasConversion<string>()
@@ -39,6 +45,10 @@ internal sealed class HouseholdInvitationConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.InvitedByPersonId)
             .HasConversion(id => id.Value, value => PersonId.From(value))
             .HasColumnName("invited_by_person_id");
+
+        builder.Property(x => x.Nickname)
+            .HasMaxLength(100)
+            .HasColumnName("nickname");
 
         builder.Property(x => x.Status)
             .HasConversion<string>()

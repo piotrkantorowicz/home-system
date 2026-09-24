@@ -2,11 +2,13 @@ namespace Household.Api;
 
 using System.Security.Claims;
 using Household.Api.Identity;
+using Household.Application.Commands.AcceptInvitation;
 using Household.Application.Commands.AddExistingPersonAsMember;
 using Household.Application.Commands.ChangeMemberRole;
 using Household.Application.Commands.ConvertManagedMemberToAccount;
 using Household.Application.Commands.CreateHousehold;
 using Household.Application.Commands.CreateManagedMember;
+using Household.Application.Commands.DeclineInvitation;
 using Household.Application.Commands.DeleteHousehold;
 using Household.Application.Commands.InvitePersonByEmail;
 using Household.Application.Commands.LeaveHousehold;
@@ -15,6 +17,7 @@ using Household.Application.Commands.RenameHousehold;
 using Household.Application.Commands.RevokeInvitation;
 using Household.Application.Queries.GetMyHousehold;
 using Household.Application.Queries.ListHouseholdMembers;
+using Household.Application.Queries.ListMyInvitations;
 using Household.Application.Queries.ListPendingInvitations;
 using Household.Application.Queries.ListPickablePersons;
 using Household.Application.Queries.Projections;
@@ -49,6 +52,9 @@ internal static class HouseholdEndpoints
         group.MapGet("/{id:guid}/invitations", ListInvitations).WithName("ListPendingInvitations");
         group.MapPost("/{id:guid}/invitations", Invite).WithName("InvitePersonByEmail");
         group.MapDelete("/{id:guid}/invitations/{invitationId:guid}", RevokeInvitation).WithName("RevokeInvitation");
+        group.MapGet("/invitations/mine", ListMyInvitations).WithName("ListMyInvitations");
+        group.MapPost("/invitations/{invitationId:guid}/accept", AcceptInvitation).WithName("AcceptInvitation");
+        group.MapPost("/invitations/{invitationId:guid}/decline", DeclineInvitation).WithName("DeclineInvitation");
 
         return app;
     }
@@ -101,13 +107,14 @@ internal static class HouseholdEndpoints
         => TypedResults.Ok(await dispatcher.SendAsync<ListHouseholdMembersQuery, IReadOnlyList<HouseholdMemberDto>>(
             new ListHouseholdMembersQuery(Sub(user), id), ct));
 
-    private static async Task<NoContent> AddMember(
+    private static async Task<Ok<AddExistingPersonAsMemberResult>> AddMember(
         Guid id, AddMemberRequest request, ClaimsPrincipal user,
         ICommandDispatcher dispatcher, CancellationToken ct)
     {
-        await dispatcher.SendAsync(new AddExistingPersonAsMemberCommand(
-            Sub(user), id, request.PersonId, ParseRole(request.Role), request.Nickname), ct);
-        return TypedResults.NoContent();
+        var result = await dispatcher.SendAsync<AddExistingPersonAsMemberCommand, AddExistingPersonAsMemberResult>(
+            new AddExistingPersonAsMemberCommand(
+                Sub(user), id, request.PersonId, ParseRole(request.Role), request.Nickname), ct);
+        return TypedResults.Ok(result);
     }
 
     private static async Task<Created> AddManagedMember(
@@ -155,6 +162,25 @@ internal static class HouseholdEndpoints
         Guid id, Guid invitationId, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
     {
         await dispatcher.SendAsync(new RevokeInvitationCommand(Sub(user), id, invitationId), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<IReadOnlyList<MyInvitationDto>>> ListMyInvitations(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListMyInvitationsQuery, IReadOnlyList<MyInvitationDto>>(
+            new ListMyInvitationsQuery(Sub(user)), ct));
+
+    private static async Task<NoContent> AcceptInvitation(
+        Guid invitationId, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new AcceptInvitationCommand(Sub(user), invitationId), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> DeclineInvitation(
+        Guid invitationId, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new DeclineInvitationCommand(Sub(user), invitationId), ct);
         return TypedResults.NoContent();
     }
 

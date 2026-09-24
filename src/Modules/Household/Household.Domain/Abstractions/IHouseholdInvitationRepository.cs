@@ -15,11 +15,6 @@ public interface IHouseholdInvitationRepository
     /// <returns>The tracked invitation, or <see langword="null"/> when it does not exist.</returns>
     Task<HouseholdInvitation?> GetByIdAsync(HouseholdInvitationId id, CancellationToken ct = default);
 
-    /// <summary>The single pending invitation for this email, if any.</summary>
-    /// <param name="email">The normalised address to match.</param>
-    /// <param name="ct">Propagates cancellation to the storage call.</param>
-    Task<HouseholdInvitation?> GetPendingByEmailAsync(PersonEmail email, CancellationToken ct = default);
-
     /// <summary>Loads every invitation a household ever issued, in any status.</summary>
     /// <param name="householdId">The household.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
@@ -32,6 +27,13 @@ public interface IHouseholdInvitationRepository
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task<bool> HasPendingForEmailInHouseholdAsync(
         HouseholdId householdId, PersonEmail email, CancellationToken ct = default);
+
+    /// <summary>Whether the household already has a pending invitation targeting this person — used to reject duplicates.</summary>
+    /// <param name="householdId">The household.</param>
+    /// <param name="personId">The targeted person.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    Task<bool> HasPendingForPersonInHouseholdAsync(
+        HouseholdId householdId, PersonId personId, CancellationToken ct = default);
 
     /// <summary>Stages a new invitation; it is written when the unit of work commits.</summary>
     /// <param name="invitation">The invitation to add.</param>

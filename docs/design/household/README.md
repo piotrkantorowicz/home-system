@@ -40,7 +40,7 @@ concerns grow, `Person` can be extracted into its own `Identity` module. Not now
 | **Person** | A human. May be linked to an Authentik account (`AuthSubject`) or *managed* (no login — e.g. a child). Carries `DisplayName`, `Email`, `AvatarUrl`. |
 | **Household** | The sharing boundary. Has a name and one or more members. |
 | **HouseholdMember** | A `Person` in a `Household` with a `Role`. |
-| **HouseholdInvitation** | A pending membership, addressed by email, resolved on login. No email is sent in phase 1. |
+| **HouseholdInvitation** | A pending membership, addressed by email, by a known `Person`, or both. No email is sent in phase 1. Signing in never resolves it — the invitee must explicitly accept or decline (#251). |
 
 ### Roles
 
@@ -66,9 +66,12 @@ At least one `Owner` must exist in a household at all times.
    (`IsManaged = true`, `AuthSubject = null`) and can log personal data for them.
 3. **No email in v1.** The Notifications module declares a
    `NotificationChannel.Email` but has no sender (tracked in #164). Invitations
-   therefore resolve *without* sending mail — the owner tells the invitee
-   verbally to log in once, and the pending invitation auto-resolves by email
-   claim match.
+   therefore go out *without* sending mail — the owner tells the invitee
+   verbally to sign in. Signing in alone never joins them to the household:
+   the invitee reviews the invitation on their own "Invitations for you" panel
+   and explicitly accepts or declines it (#251) — a silent auto-add on login
+   would grant household access (and visibility into shared resources) without
+   consent.
 4. **Module name is `Household`.** `Family` / "family member" survives only as a
    UI label where it reads warmer. Code, module, tables, contracts, events all
    use `Household`.
@@ -149,17 +152,30 @@ Household.Api/
 > `AddCqrsHandlers()`, and `Household` exposes `IHouseholdUnitOfWork` rather than
 > rebinding the global `IUnitOfWork`.
 
-### Invitation resolution (no email)
+### Invitation resolution — explicit consent (#251)
 
-1. Owner calls `InvitePersonByEmail(householdId, email, role)`.
-   - If a `Person` with that email already exists → add as member immediately.
-   - Otherwise → create `HouseholdInvitation { Pending, ExpiresAt = +30d }`.
-2. On every OIDC login the host calls `UpsertPersonOnLogin(claims)`:
-   - Upsert `Person` by `AuthSubject`.
-   - If the person is brand new (or managed + unlinked) and a `Pending`
-     invitation matches their email → link / create the membership, mark the
-     invitation `Accepted`, raise `MemberJoinedHouseholdDomainEvent`.
-3. The frontend shows a one-time "You've joined the _Kowalski_ household" toast.
+1. An owner issues an invitation, either:
+   - `InvitePersonByEmail(householdId, email, role)` — addressed by email; if a
+     `Person` with that email already exists, the invitation also carries their
+     `PersonId` (a bonus for accept-by-id, not a fast path to membership); or
+   - `AddExistingPersonAsMember(householdId, personId, role)` — addressed by a
+     specific existing `Person` picked from `ListPickablePersons`. That person
+     may have no email on file (a managed account, or an OIDC provider that
+     omits the claim), so the invitation is created with `email: null` in that
+     case — `TargetPersonId` alone still addresses it.
+   - Either way this only ever creates `HouseholdInvitation { Pending, ExpiresAt = +30d }`
+     — never immediate membership.
+2. On every OIDC login the host calls `UpsertPersonOnLogin(claims)`, which
+   upserts the `Person` by `AuthSubject` and links a matching managed person by
+   email. It does **not** touch invitations — signing in is not consent.
+3. The invitee sees their pending invitations (`GET /api/households/invitations/mine`,
+   matched by `TargetPersonId` or `Email`) and explicitly calls
+   `AcceptInvitationCommand` or `DeclineInvitationCommand`. Accepting adds the
+   membership, marks the invitation `Accepted`, and raises
+   `MemberJoinedHouseholdDomainEvent`; declining marks it `Declined` with no
+   membership change.
+4. The frontend shows a one-time "You've joined the _Kowalski_ household" toast
+   right after a successful accept.
 
 ### Managed member → real account
 
@@ -224,8 +240,11 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
   - `HouseholdPage` — member list with role, rename household, add member,
     pending invitations, remove member, leave household.
   - `AddMemberDialog` — tabbed: pick existing person · invite by email · create
-    managed member.
-  - Accept-invitation toast handled globally (not a page).
+    managed member. The first two tabs always create a pending invitation now
+    (#251) — never immediate membership.
+  - `MyInvitations` — shown on `HouseholdPage` when the caller has no household
+    yet; lists invitations addressed to them with accept / decline actions. The
+    "You've joined" toast fires from a successful accept, not globally.
 - **Onboarding** — after person sync and invitation resolution, a person without
   a household must explicitly create one before entering feature pages. Prefill
   the editable name with “My home” / “Mój dom”; “Get started” / “Rozpocznij”

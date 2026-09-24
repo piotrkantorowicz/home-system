@@ -1,7 +1,6 @@
 namespace Household.UnitTests.Application;
 
 using Household.Application.Commands.SyncCurrentPerson;
-using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
@@ -11,19 +10,13 @@ using Microsoft.Extensions.Time.Testing;
 public sealed class SyncCurrentPersonCommandHandlerTests
 {
     private readonly IPersonRepository _persons = Substitute.For<IPersonRepository>();
-    private readonly IHouseholdInvitationRepository _invitations = Substitute.For<IHouseholdInvitationRepository>();
-    private readonly IHouseholdRepository _households = Substitute.For<IHouseholdRepository>();
     private readonly IHouseholdUnitOfWork _unitOfWork = Substitute.For<IHouseholdUnitOfWork>();
     private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly SyncCurrentPersonCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public SyncCurrentPersonCommandHandlerTests()
-        => _sut = new SyncCurrentPersonCommandHandler(
-            _persons,
-            new InvitationResolver(_invitations, _households, _clock),
-            _unitOfWork,
-            _clock);
+        => _sut = new SyncCurrentPersonCommandHandler(_persons, _unitOfWork, _clock);
 
     /// <summary>When no person for subject: <c>Handle</c> registers and commits.</summary>
     [Fact]

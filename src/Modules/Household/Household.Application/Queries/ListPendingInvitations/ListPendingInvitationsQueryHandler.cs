@@ -29,16 +29,20 @@ internal sealed class ListPendingInvitationsQueryHandler
         if (!isMember)
             throw new ForbiddenException("You are not a member of this household.");
 
-        return await _db.HouseholdInvitations.AsNoTracking()
-            .Where(i => i.HouseholdId == householdId && i.Status == InvitationStatus.Pending)
-            .OrderByDescending(i => i.CreatedAt)
-            .Select(i => new InvitationDto(
-                i.Id.Value,
-                i.Email!.Value,
-                i.Role.ToString(),
-                i.Status.ToString(),
-                i.CreatedAt,
-                i.ExpiresAt))
+        return await (
+            from invitation in _db.HouseholdInvitations.AsNoTracking()
+            where invitation.HouseholdId == householdId && invitation.Status == InvitationStatus.Pending
+            orderby invitation.CreatedAt descending
+            select new InvitationDto(
+                invitation.Id.Value,
+                invitation.Email == null ? null : invitation.Email.Value,
+                invitation.TargetPersonId == null
+                    ? null
+                    : _db.Persons.Where(p => p.Id == invitation.TargetPersonId).Select(p => p.DisplayName).FirstOrDefault(),
+                invitation.Role.ToString(),
+                invitation.Status.ToString(),
+                invitation.CreatedAt,
+                invitation.ExpiresAt))
             .ToListAsync(ct);
     }
 }

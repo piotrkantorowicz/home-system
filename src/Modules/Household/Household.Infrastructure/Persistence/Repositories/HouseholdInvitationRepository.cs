@@ -14,12 +14,6 @@ internal sealed class HouseholdInvitationRepository : IHouseholdInvitationReposi
     public Task<HouseholdInvitation?> GetByIdAsync(HouseholdInvitationId id, CancellationToken ct = default)
         => _dbContext.HouseholdInvitations.FirstOrDefaultAsync(i => i.Id == id, ct);
 
-    public Task<HouseholdInvitation?> GetPendingByEmailAsync(PersonEmail email, CancellationToken ct = default)
-        => _dbContext.HouseholdInvitations
-            .Where(i => i.Status == InvitationStatus.Pending && i.Email!.Value == email.Value)
-            .OrderBy(i => i.CreatedAt)
-            .FirstOrDefaultAsync(ct);
-
     public async Task<IReadOnlyList<HouseholdInvitation>> ListForHouseholdAsync(
         HouseholdId householdId, CancellationToken ct = default)
         => await _dbContext.HouseholdInvitations
@@ -32,7 +26,15 @@ internal sealed class HouseholdInvitationRepository : IHouseholdInvitationReposi
         => _dbContext.HouseholdInvitations.AnyAsync(
             i => i.HouseholdId == householdId
                  && i.Status == InvitationStatus.Pending
-                 && i.Email!.Value == email.Value,
+                 && i.Email != null && i.Email.Value == email.Value,
+            ct);
+
+    public Task<bool> HasPendingForPersonInHouseholdAsync(
+        HouseholdId householdId, PersonId personId, CancellationToken ct = default)
+        => _dbContext.HouseholdInvitations.AnyAsync(
+            i => i.HouseholdId == householdId
+                 && i.Status == InvitationStatus.Pending
+                 && i.TargetPersonId == personId,
             ct);
 
     public async Task AddAsync(HouseholdInvitation invitation, CancellationToken ct = default)
