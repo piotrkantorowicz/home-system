@@ -38,12 +38,12 @@ public sealed class RepositoryRoundtripTests
             id, $"user-{Guid.NewGuid():N}", NotificationType.MealReminder,
             "Lunch", "Eat now", """{"slot":"lunch"}""", Now);
 
-        await repo.AddAsync(notification, CancellationToken.None);
-        await uow.CommitAsync(CancellationToken.None);
+        await repo.AddAsync(notification, TestContext.Current.CancellationToken);
+        await uow.CommitAsync(TestContext.Current.CancellationToken);
 
         var (_, uow2) = CreateScope();
         await using var disposeUow2 = uow2;
-        var roundtrip = await new NotificationRepository(uow2).GetByIdAsync(id, CancellationToken.None);
+        var roundtrip = await new NotificationRepository(uow2).GetByIdAsync(id, TestContext.Current.CancellationToken);
 
         roundtrip.ShouldNotBeNull();
         roundtrip.UserId.ShouldBe(notification.UserId);
@@ -63,16 +63,16 @@ public sealed class RepositoryRoundtripTests
         var notification = Notification.Create(
             notificationId, $"user-{Guid.NewGuid():N}", NotificationType.WaterReminder,
             "Water", "Drink now", "{}", Now);
-        await repo.AddAsync(notification, CancellationToken.None);
+        await repo.AddAsync(notification, TestContext.Current.CancellationToken);
 
         var deliveryId = NotificationDeliveryId.New();
         var delivery = NotificationDelivery.Create(deliveryId, notificationId, NotificationChannel.Console);
-        await repo.AddDeliveryAsync(delivery, CancellationToken.None);
-        await uow.CommitAsync(CancellationToken.None);
+        await repo.AddDeliveryAsync(delivery, TestContext.Current.CancellationToken);
+        await uow.CommitAsync(TestContext.Current.CancellationToken);
 
         var (_, uow2) = CreateScope();
         await using var disposeUow2 = uow2;
-        var roundtrip = await new NotificationRepository(uow2).GetDeliveryAsync(deliveryId, CancellationToken.None);
+        var roundtrip = await new NotificationRepository(uow2).GetDeliveryAsync(deliveryId, TestContext.Current.CancellationToken);
 
         roundtrip.ShouldNotBeNull();
         roundtrip.Channel.ShouldBe(NotificationChannel.Console);
@@ -91,13 +91,13 @@ public sealed class RepositoryRoundtripTests
 
         var prefs = NotificationChannelPreferences.CreateDefault(
             NotificationChannelPreferencesId.New(), userId, Now);
-        await repo.AddAsync(prefs, CancellationToken.None);
-        await uow.CommitAsync(CancellationToken.None);
+        await repo.AddAsync(prefs, TestContext.Current.CancellationToken);
+        await uow.CommitAsync(TestContext.Current.CancellationToken);
 
         var (_, uow2) = CreateScope();
         await using var disposeUow2 = uow2;
         var loaded = await new NotificationChannelPreferencesRepository(uow2)
-            .GetByUserIdAsync(userId, CancellationToken.None);
+            .GetByUserIdAsync(userId, TestContext.Current.CancellationToken);
         loaded.ShouldNotBeNull();
         loaded.ConsoleEnabled.ShouldBeTrue();
         loaded.EmailEnabled.ShouldBeTrue();
@@ -107,13 +107,13 @@ public sealed class RepositoryRoundtripTests
         var (_, uow3) = CreateScope();
         await using var disposeUow3 = uow3;
         var updateRepo = new NotificationChannelPreferencesRepository(uow3);
-        await updateRepo.UpdateAsync(loaded, CancellationToken.None);
-        await uow3.CommitAsync(CancellationToken.None);
+        await updateRepo.UpdateAsync(loaded, TestContext.Current.CancellationToken);
+        await uow3.CommitAsync(TestContext.Current.CancellationToken);
 
         var (_, uow4) = CreateScope();
         await using var disposeUow4 = uow4;
         var refetched = await new NotificationChannelPreferencesRepository(uow4)
-            .GetByUserIdAsync(userId, CancellationToken.None);
+            .GetByUserIdAsync(userId, TestContext.Current.CancellationToken);
         refetched.ShouldNotBeNull();
         refetched.ConsoleEnabled.ShouldBeFalse();
         refetched.EmailEnabled.ShouldBeTrue();
@@ -128,11 +128,11 @@ public sealed class RepositoryRoundtripTests
         var store = new InboxStore(factory);
         var eventId = Guid.NewGuid();
 
-        (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeFalse();
+        (await store.ExistsAsync(eventId, TestContext.Current.CancellationToken)).ShouldBeFalse();
 
-        await store.RecordAsync(eventId, "Some.Event", Now, CancellationToken.None);
+        await store.RecordAsync(eventId, "Some.Event", Now, TestContext.Current.CancellationToken);
 
-        (await store.ExistsAsync(eventId, CancellationToken.None)).ShouldBeTrue();
+        (await store.ExistsAsync(eventId, TestContext.Current.CancellationToken)).ShouldBeTrue();
     }
 
     /// <summary><c>DbUp</c> is idempotent.</summary>

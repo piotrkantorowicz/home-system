@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.EventHandlers;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.EventHandlers;
 #pragma warning restore IDE0005
 using DietPlanner.Contracts.Events;
@@ -30,7 +30,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns((UserGoal?)null);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -46,7 +46,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -63,7 +63,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 75m, TestClock.Today), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 75m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -80,7 +80,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 69.5m, TestClock.Today), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 69.5m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<GoalMilestoneReachedIntegrationEvent>(e =>
@@ -106,7 +106,7 @@ public sealed class GoalMilestoneEvaluatorTests
         _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 65m, TestClock.Today), CancellationToken.None);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 65m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),

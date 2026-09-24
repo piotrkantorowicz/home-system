@@ -19,14 +19,14 @@ public sealed class NotificationsPostgresFixture : IAsyncLifetime
     public string ConnectionString => _container.GetConnectionString();
 
     /// <summary>Starts the container and runs the embedded DbUp migrations.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
         DbUpRunner.Run(ConnectionString);
     }
 
     /// <summary>Stops and removes the container.</summary>
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
         => await _container.DisposeAsync();
 }
 

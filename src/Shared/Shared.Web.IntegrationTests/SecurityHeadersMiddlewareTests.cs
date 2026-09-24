@@ -19,7 +19,7 @@ public sealed class SecurityHeadersMiddlewareTests
         await using var host = await ErrorPipelineHost.StartAsync(ctx => ctx.Response.WriteAsync("ok"));
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         AssertSecurityHeaders(response);
@@ -32,7 +32,7 @@ public sealed class SecurityHeadersMiddlewareTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(new NotFoundException("missing"));
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         AssertSecurityHeaders(response);

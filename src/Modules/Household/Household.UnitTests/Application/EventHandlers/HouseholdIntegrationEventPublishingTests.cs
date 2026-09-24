@@ -21,7 +21,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
         var ownerId = PersonId.New();
         var sut = new HouseholdCreatedDomainEventHandler(_bus, _clock);
 
-        await sut.HandleAsync(new HouseholdCreatedDomainEvent(householdId, ownerId), CancellationToken.None);
+        await sut.HandleAsync(new HouseholdCreatedDomainEvent(householdId, ownerId), TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<HouseholdCreatedIntegrationEvent>(e =>
@@ -41,7 +41,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
 
         await sut.HandleAsync(
             new MemberJoinedHouseholdDomainEvent(householdId, personId, HouseholdRole.Adult),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<MemberJoinedHouseholdIntegrationEvent>(e =>
@@ -59,7 +59,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
         var personId = PersonId.New();
         var sut = new MemberLeftHouseholdDomainEventHandler(_bus, _clock);
 
-        await sut.HandleAsync(new MemberLeftHouseholdDomainEvent(householdId, personId), CancellationToken.None);
+        await sut.HandleAsync(new MemberLeftHouseholdDomainEvent(householdId, personId), TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<MemberLeftHouseholdIntegrationEvent>(e =>
@@ -77,7 +77,7 @@ public sealed class HouseholdIntegrationEventPublishingTests
 
         await sut.HandleAsync(
             new MemberRoleChangedDomainEvent(householdId, personId, HouseholdRole.Child, HouseholdRole.Adult),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<MemberRoleChangedIntegrationEvent>(e =>

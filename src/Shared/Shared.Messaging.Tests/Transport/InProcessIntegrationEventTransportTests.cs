@@ -48,7 +48,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
-        await sut.DispatchAsync(message, CancellationToken.None);
+        await sut.DispatchAsync(message, TestContext.Current.CancellationToken);
 
         captured.ShouldNotBeNull();
         captured!.Payload.ShouldBe("x");
@@ -67,7 +67,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
-        var act = async () => await sut.DispatchAsync(message, CancellationToken.None);
+        var act = async () => await sut.DispatchAsync(message, TestContext.Current.CancellationToken);
         await act.ShouldNotThrowAsync();
     }
 
@@ -89,7 +89,7 @@ public sealed class InProcessIntegrationEventTransportTests
         var @event = new TestEvent(Guid.NewGuid(), Now, "x");
         var message = MakeMessage(@event, serializer);
 
-        await sut.DispatchAsync(message, CancellationToken.None);
+        await sut.DispatchAsync(message, TestContext.Current.CancellationToken);
 
         await h1.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());
         await h2.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());

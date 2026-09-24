@@ -39,7 +39,7 @@ public sealed class CreateHouseholdCommandHandlerTests
             .Returns((HouseholdAggregate?)null);
 
         var id = await _sut.HandleAsync(
-            new CreateHouseholdCommand("auth|1", "New Home"), CancellationToken.None);
+            new CreateHouseholdCommand("auth|1", "New Home"), TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _households.Received(1).AddAsync(
@@ -57,7 +57,7 @@ public sealed class CreateHouseholdCommandHandlerTests
             .Returns(HouseholdAggregate.Create(HouseholdId.New(), "Existing", caller.Id, TestClock.UtcNow));
 
         await Should.ThrowAsync<HouseholdDomainException>(() =>
-            _sut.HandleAsync(new CreateHouseholdCommand("auth|1", "Another"), CancellationToken.None));
+            _sut.HandleAsync(new CreateHouseholdCommand("auth|1", "Another"), TestContext.Current.CancellationToken));
 
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
@@ -69,6 +69,6 @@ public sealed class CreateHouseholdCommandHandlerTests
         _persons.GetByAuthSubjectAsync("auth|ghost", Arg.Any<CancellationToken>()).Returns((Person?)null);
 
         await Should.ThrowAsync<Shared.Abstractions.Core.Domain.NotFoundException>(() =>
-            _sut.HandleAsync(new CreateHouseholdCommand("auth|ghost", "X"), CancellationToken.None));
+            _sut.HandleAsync(new CreateHouseholdCommand("auth|ghost", "X"), TestContext.Current.CancellationToken));
     }
 }

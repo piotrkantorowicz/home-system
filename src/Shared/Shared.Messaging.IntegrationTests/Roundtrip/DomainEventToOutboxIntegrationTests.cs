@@ -89,7 +89,7 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>Builds a service provider with the outbox, dispatcher interceptor and test handler wired to a fresh schema.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var services = new ServiceCollection();
 
@@ -115,7 +115,7 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>Disposes the service provider and its <c>DbContext</c>.</summary>
-    public async Task DisposeAsync() => await _sp.DisposeAsync();
+    public async ValueTask DisposeAsync() => await _sp.DisposeAsync();
 
     /// <summary>When aggregate raises domain event: <c>SaveChanges</c> persists outbox row atomically.</summary>
     [Fact]
@@ -127,18 +127,18 @@ public sealed class DomainEventToOutboxIntegrationTests : IAsyncLifetime
         {
             var db = scope.ServiceProvider.GetRequiredService<DomainEventTestDbContext>();
             var aggregate = TestAggregate.Create(aggregateId);
-            await db.Aggregates.AddAsync(aggregate);
-            await db.SaveChangesAsync();
+            await db.Aggregates.AddAsync(aggregate, TestContext.Current.CancellationToken);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Verify both rows exist after the same SaveChangesAsync.
         await using var verifyScope = _sp.CreateAsyncScope();
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<DomainEventTestDbContext>();
 
-        bool aggregateExists = await verifyDb.Aggregates.AnyAsync(a => a.Id == aggregateId);
+        bool aggregateExists = await verifyDb.Aggregates.AnyAsync(a => a.Id == aggregateId, cancellationToken: TestContext.Current.CancellationToken);
         aggregateExists.ShouldBeTrue();
 
-        List<OutboxMessageEntity> outboxRows = await verifyDb.Set<OutboxMessageEntity>().ToListAsync();
+        List<OutboxMessageEntity> outboxRows = await verifyDb.Set<OutboxMessageEntity>().ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
         outboxRows.Count.ShouldBe(1);
         outboxRows[0].EventType.ShouldContain(nameof(TestCreatedIntegrationEvent));
     }

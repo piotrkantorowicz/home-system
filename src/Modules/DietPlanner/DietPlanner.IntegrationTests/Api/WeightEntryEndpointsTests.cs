@@ -40,12 +40,10 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries",
-            new LogWeightEntryRequest(Today, 78.5m));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 78.5m), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var body = await response.Content.ReadFromJsonAsync<LogWeightEntryResponse>();
+        var body = await response.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
         body.ShouldNotBeNull();
         body.Created.ShouldBeTrue();
     }
@@ -57,15 +55,13 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var first = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m));
+        var first = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m), cancellationToken: TestContext.Current.CancellationToken);
         first.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var firstBody = await first.Content.ReadFromJsonAsync<LogWeightEntryResponse>();
+        var firstBody = await first.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
-        var second = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 79m));
+        var second = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 79m), cancellationToken: TestContext.Current.CancellationToken);
         second.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var secondBody = await second.Content.ReadFromJsonAsync<LogWeightEntryResponse>();
+        var secondBody = await second.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
         secondBody.ShouldNotBeNull();
         secondBody.Created.ShouldBeFalse();
@@ -79,13 +75,12 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 72.5m));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 72.5m), cancellationToken: TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var profileResponse = await client.GetAsync("/api/v1/profile");
+        var profileResponse = await client.GetAsync("/api/v1/profile", TestContext.Current.CancellationToken);
         profileResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var profile = await profileResponse.Content.ReadFromJsonAsync<UserProfileDto>();
+        var profile = await profileResponse.Content.ReadFromJsonAsync<UserProfileDto>(cancellationToken: TestContext.Current.CancellationToken);
         profile!.CurrentWeightKg.ShouldBe(72.5m);
     }
 
@@ -99,8 +94,7 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, weight));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, weight), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -112,8 +106,7 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(1), 80m));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(1), 80m), cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -125,17 +118,14 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-2), 81m));
-        await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m));
-        await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-1), 80.5m));
+        await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-2), 81m), cancellationToken: TestContext.Current.CancellationToken);
+        await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m), cancellationToken: TestContext.Current.CancellationToken);
+        await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-1), 80.5m), cancellationToken: TestContext.Current.CancellationToken);
 
-        var response = await client.GetAsync("/api/v1/weight-entries");
+        var response = await client.GetAsync("/api/v1/weight-entries", TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<WeightEntryDto>>();
+        var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<WeightEntryDto>>(cancellationToken: TestContext.Current.CancellationToken);
         entries.ShouldNotBeNull();
         entries.Count.ShouldBe(3);
         entries[0].Date.ShouldBe(Today.AddDays(-2));
@@ -150,8 +140,7 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.GetAsync(
-            $"/api/v1/weight-entries?from={Today:yyyy-MM-dd}&to={Today.AddDays(-5):yyyy-MM-dd}");
+        var response = await client.GetAsync($"/api/v1/weight-entries?from={Today:yyyy-MM-dd}&to={Today.AddDays(-5):yyyy-MM-dd}", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -163,16 +152,14 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var olderResponse = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-1), 81m));
-        var latestResponse = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m));
-        var latestBody = await latestResponse.Content.ReadFromJsonAsync<LogWeightEntryResponse>();
+        var olderResponse = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-1), 81m), cancellationToken: TestContext.Current.CancellationToken);
+        var latestResponse = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m), cancellationToken: TestContext.Current.CancellationToken);
+        var latestBody = await latestResponse.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
-        var deleteResponse = await client.DeleteAsync($"/api/v1/weight-entries/{latestBody!.Id}");
+        var deleteResponse = await client.DeleteAsync($"/api/v1/weight-entries/{latestBody!.Id}", TestContext.Current.CancellationToken);
         deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var profile = await client.GetFromJsonAsync<UserProfileDto>("/api/v1/profile");
+        var profile = await client.GetFromJsonAsync<UserProfileDto>("/api/v1/profile", cancellationToken: TestContext.Current.CancellationToken);
         profile!.CurrentWeightKg.ShouldBe(81m);
     }
 
@@ -183,7 +170,7 @@ public sealed class WeightEntryEndpointsTests
         var client = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(client);
 
-        var response = await client.DeleteAsync($"/api/v1/weight-entries/{Guid.NewGuid()}");
+        var response = await client.DeleteAsync($"/api/v1/weight-entries/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -196,14 +183,13 @@ public sealed class WeightEntryEndpointsTests
         var ownerClient = CreateClient(owner);
         await EnsureProfileExists(ownerClient);
 
-        var created = await ownerClient.PostAsJsonAsync(
-            "/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m));
-        var body = await created.Content.ReadFromJsonAsync<LogWeightEntryResponse>();
+        var created = await ownerClient.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m), cancellationToken: TestContext.Current.CancellationToken);
+        var body = await created.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
         var otherClient = CreateClient($"weight-user-{Guid.NewGuid():N}");
         await EnsureProfileExists(otherClient);
 
-        var response = await otherClient.DeleteAsync($"/api/v1/weight-entries/{body!.Id}");
+        var response = await otherClient.DeleteAsync($"/api/v1/weight-entries/{body!.Id}", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }

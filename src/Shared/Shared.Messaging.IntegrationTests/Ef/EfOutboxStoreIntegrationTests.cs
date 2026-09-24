@@ -9,7 +9,7 @@ using Xunit;
 
 /// <summary>Integration tests for <c>EfOutboxStore</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
-public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDisposable
+public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
 {
     private static readonly DateTime Now = new(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
 
@@ -21,7 +21,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
     public EfOutboxStoreIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     /// <summary>Recreates the database schema through an EF <c>DbContext</c> that creates the messaging tables, so every test starts from empty tables.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var options = new DbContextOptionsBuilder<MessagingTestDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
@@ -31,7 +31,6 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
         await _dbContext.Database.EnsureCreatedAsync();
     }
 
-    Task IAsyncLifetime.DisposeAsync() => DisposeAsync().AsTask();
 
     /// <summary>Disposes the test <c>DbContext</c>.</summary>
     public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
@@ -44,10 +43,10 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", """{"a":1}""",
             Now, null, 0, null);
 
-        await sut.AddAsync(msg, default);
-        await _dbContext.SaveChangesAsync();
+        await sut.AddAsync(msg, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, default);
+        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
         unprocessed.Count.ShouldBe(1);
         unprocessed[0].EventId.ShouldBe(msg.EventId);
     }
@@ -60,11 +59,11 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}",
             Now, null, 0, null);
 
-        await sut.AddAsync(msg, default);
-        await _dbContext.SaveChangesAsync();
-        await sut.MarkProcessedAsync(msg.Id, Now, default);
+        await sut.AddAsync(msg, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await sut.MarkProcessedAsync(msg.Id, Now, TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, default);
+        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
         unprocessed.ShouldBeEmpty();
     }
 
@@ -76,13 +75,13 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime, IAsyncDispos
         var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}",
             Now, null, 0, null);
 
-        await sut.AddAsync(msg, default);
-        await _dbContext.SaveChangesAsync();
+        await sut.AddAsync(msg, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await sut.RecordFailureAsync(msg.Id, "boom", default);
-        await sut.RecordFailureAsync(msg.Id, "boom2", default);
+        await sut.RecordFailureAsync(msg.Id, "boom", TestContext.Current.CancellationToken);
+        await sut.RecordFailureAsync(msg.Id, "boom2", TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, default);
+        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
         unprocessed[0].AttemptCount.ShouldBe(2);
         unprocessed[0].LastError.ShouldBe("boom2");
     }

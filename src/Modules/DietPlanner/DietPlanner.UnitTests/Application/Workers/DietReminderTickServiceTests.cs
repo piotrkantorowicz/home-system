@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +29,7 @@ public sealed class DietReminderTickServiceTests
             NullLogger<DietReminderTickService>.Instance,
             TestClock.Create());
 
-        await sut.RunOnceAsync(CancellationToken.None);
+        await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         jobA.Calls.Count.ShouldBe(1);
         jobB.Calls.Count.ShouldBe(1);
@@ -53,7 +53,7 @@ public sealed class DietReminderTickServiceTests
             NullLogger<DietReminderTickService>.Instance,
             TestClock.Create());
 
-        await sut.RunOnceAsync(CancellationToken.None);
+        await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         ok.Calls.Count.ShouldBe(1);
     }
@@ -74,7 +74,7 @@ public sealed class DietReminderTickServiceTests
             logger,
             TestClock.Create());
 
-        await sut.RunOnceAsync(CancellationToken.None);
+        await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Error);
@@ -99,7 +99,7 @@ public sealed class DietReminderTickServiceTests
             NullLogger<DietReminderTickService>.Instance,
             TestClock.Create());
 
-        await sut.RunOnceAsync(CancellationToken.None);
+        await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         job.Calls.ShouldBeEmpty();
     }

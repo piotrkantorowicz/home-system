@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.LogWeightEntry;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -37,7 +37,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         var profile = CreateProfile("user-1");
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
 
-        LogWeightEntryResult result = await _sut.HandleAsync(command, CancellationToken.None);
+        LogWeightEntryResult result = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         result.Created.ShouldBeTrue();
         await _weightRepo.Received(1).AddAsync(
@@ -58,7 +58,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         var profile = CreateProfile("user-1");
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
 
-        LogWeightEntryResult result = await _sut.HandleAsync(command, CancellationToken.None);
+        LogWeightEntryResult result = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         result.Created.ShouldBeFalse();
         result.Id.ShouldBe(existing.Id.Value);
@@ -79,7 +79,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         var profile = CreateProfile("user-1", currentWeight: 80m);
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         profile.CurrentWeightKg.ShouldBe(90m);
     }
@@ -94,7 +94,7 @@ public sealed class LogWeightEntryCommandHandlerTests
         _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
             .Returns((UserProfile?)null);
 
-        var act = () => _sut.HandleAsync(command, CancellationToken.None);
+        var act = () => _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }

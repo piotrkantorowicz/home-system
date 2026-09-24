@@ -10,7 +10,7 @@ using Xunit;
 
 /// <summary>Integration tests for <c>DapperInboxExecutor</c> against a real PostgreSQL container.</summary>
 [Collection(nameof(PostgresCollectionDefinition))]
-public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsyncDisposable
+public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime
 {
     private static readonly FakeTimeProvider Clock = new(new DateTimeOffset(2026, 9, 12, 10, 0, 0, TimeSpan.Zero));
 
@@ -22,7 +22,7 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
     public DapperInboxExecutorIntegrationTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     /// <summary>Recreates the database schema through an EF <c>DbContext</c> that creates the messaging tables, so every test starts from empty tables.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var options = new DbContextOptionsBuilder<MessagingTestDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
@@ -32,7 +32,6 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
         await _dbContext.Database.EnsureCreatedAsync();
     }
 
-    Task IAsyncLifetime.DisposeAsync() => DisposeAsync().AsTask();
 
     /// <summary>Disposes the test <c>DbContext</c>.</summary>
     public ValueTask DisposeAsync() => _dbContext.DisposeAsync();
@@ -46,10 +45,10 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
 
         invocations.ShouldBe(1);
-        await using var conn = await factory.OpenAsync();
+        await using var conn = await factory.OpenAsync(TestContext.Current.CancellationToken);
         var count = await conn.ExecuteScalarAsync<int>(
             "SELECT count(*) FROM inbox_messages WHERE event_id = @EventId", new { EventId = eventId });
         count.ShouldBe(1);
@@ -64,8 +63,8 @@ public sealed class DapperInboxExecutorIntegrationTests : IAsyncLifetime, IAsync
         var eventId = Guid.NewGuid();
         var invocations = 0;
 
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
-        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, default);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
+        await sut.ExecuteAsync(eventId, "X.Y", _ => { invocations++; return Task.CompletedTask; }, TestContext.Current.CancellationToken);
 
         invocations.ShouldBe(1);
     }

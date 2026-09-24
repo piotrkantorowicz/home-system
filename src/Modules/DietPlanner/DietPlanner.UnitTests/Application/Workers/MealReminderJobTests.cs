@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
 using DietPlanner.Contracts.Events;
@@ -35,7 +35,7 @@ public sealed class MealReminderJobTests
         _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
         _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(Arg.Any<MealReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
         await _bus.DidNotReceive().PublishAsync(Arg.Any<MealMissedIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -55,7 +55,7 @@ public sealed class MealReminderJobTests
         _ledger.ExistsAsync(Arg.Any<MealEntryId>(), MealReminderKind.Reminder, Arg.Any<CancellationToken>())
             .Returns(false);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<MealReminderDueIntegrationEvent>(e =>
@@ -84,7 +84,7 @@ public sealed class MealReminderJobTests
         _ledger.ExistsAsync(Arg.Any<MealEntryId>(), MealReminderKind.Missed, Arg.Any<CancellationToken>())
             .Returns(false);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<MealMissedIntegrationEvent>(e =>
@@ -108,7 +108,7 @@ public sealed class MealReminderJobTests
                 Arg.Any<CancellationToken>())
             .Returns(true);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(Arg.Any<MealReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
         await _ledger.DidNotReceive().AddAsync(Arg.Any<SentMealReminder>(), Arg.Any<CancellationToken>());
@@ -139,7 +139,7 @@ public sealed class MealReminderJobTests
         _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == missedId), MealReminderKind.Missed, Arg.Any<CancellationToken>())
             .Returns(false);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         // dueId1 skipped
         await _bus.DidNotReceive().PublishAsync(

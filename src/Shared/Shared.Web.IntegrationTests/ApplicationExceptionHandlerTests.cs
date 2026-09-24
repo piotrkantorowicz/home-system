@@ -35,12 +35,12 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(status);
         response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(ProblemJson);
 
-        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         body.RootElement.GetProperty("status").GetInt32().ShouldBe((int)status);
         body.RootElement.GetProperty("title").GetString().ShouldBe(title);
         body.RootElement.GetProperty("detail").GetString().ShouldBe(exception.Message);
@@ -61,12 +61,12 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(ProblemJson);
 
-        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         body.RootElement.GetProperty("title").GetString().ShouldBe("Validation failed");
         body.RootElement.GetProperty("traceId").GetString().ShouldNotBeNullOrWhiteSpace();
 
@@ -84,10 +84,10 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(new OperationCanceledException());
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         ((int)response.StatusCode).ShouldBe(ApplicationExceptionHandler.ClientClosedRequestStatusCode);
-        (await response.Content.ReadAsStringAsync()).ShouldBeEmpty();
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldBeEmpty();
     }
 
     /// <summary>An unexpected exception becomes a generic 500: no message, no type, no stack in the body.</summary>
@@ -98,12 +98,12 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
         response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(ProblemJson);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         content.ShouldNotContain("hunter2");
         content.ShouldNotContain(nameof(InvalidOperationException));
 
@@ -122,7 +122,7 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         host.Logs.GetSnapshot()
             .Where(log => log.Level >= LogLevel.Error && ReferenceEquals(log.Exception, exception))
@@ -138,7 +138,7 @@ public sealed class ApplicationExceptionHandlerTests
         await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
         using var client = host.CreateClient();
 
-        using var response = await client.GetAsync("/");
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         host.Logs.GetSnapshot().ShouldNotContain(log => log.Level >= LogLevel.Error);

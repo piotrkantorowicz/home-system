@@ -58,7 +58,7 @@ public sealed class OutboxWorkerTests
         store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([msg]);
         var transport = Substitute.For<IIntegrationEventTransport>();
 
-        await SutWith(store, transport).RunOnceAsync(CancellationToken.None);
+        await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
 
         await transport.Received(1).DispatchAsync(msg, Arg.Any<CancellationToken>());
         await store.Received(1).MarkProcessedAsync(msg.Id, Now.UtcDateTime, Arg.Any<CancellationToken>());
@@ -76,7 +76,7 @@ public sealed class OutboxWorkerTests
         transport.When(t => t.DispatchAsync(m1, Arg.Any<CancellationToken>()))
                  .Throw(new InvalidOperationException("boom"));
 
-        await SutWith(store, transport).RunOnceAsync(CancellationToken.None);
+        await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
 
         await store.Received(1).RecordFailureAsync(m1.Id, "boom", Arg.Any<CancellationToken>());
         await store.DidNotReceive().MarkProcessedAsync(m1.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
@@ -96,7 +96,7 @@ public sealed class OutboxWorkerTests
         transport.When(t => t.DispatchAsync(msg, Arg.Any<CancellationToken>())).Throw(boom);
         var logger = new FakeLogger<OutboxWorker<TestDbContext>>();
 
-        await SutWith(store, transport, logger).RunOnceAsync(CancellationToken.None);
+        await SutWith(store, transport, logger).RunOnceAsync(TestContext.Current.CancellationToken);
 
         var record = logger.Collector.GetSnapshot().ShouldHaveSingleItem();
         record.Level.ShouldBe(LogLevel.Error);
@@ -116,7 +116,7 @@ public sealed class OutboxWorkerTests
         store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
         var transport = Substitute.For<IIntegrationEventTransport>();
 
-        await SutWith(store, transport).RunOnceAsync(CancellationToken.None);
+        await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
 
         await transport.DidNotReceive().DispatchAsync(Arg.Any<OutboxMessage>(), Arg.Any<CancellationToken>());
     }
@@ -125,7 +125,7 @@ public sealed class OutboxWorkerTests
     [Fact]
     public async Task RunOnceAsync_WithNoStoreRegistered_ReturnsWithoutThrowing()
     {
-        var act = () => SutWith(null, null).RunOnceAsync(CancellationToken.None);
+        var act = () => SutWith(null, null).RunOnceAsync(TestContext.Current.CancellationToken);
         await act.ShouldNotThrowAsync();
     }
 }

@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.OverrideMealEntry;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -39,7 +39,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         _recipeRepository.GetByIdAsync(recipeId, Arg.Any<CancellationToken>()).Returns(recipe);
 
         var command = new OverrideMealEntryCommand(entry.Id.Value, "user-1", recipeIdGuid, []);
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Modified);
         entry.ActualRecipeId.ShouldBe(recipeId);
@@ -69,7 +69,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
             UserId: "user-1",
             ActualRecipeId: null,
             ActualProducts: [new ActualProductInput(productIdGuid, 50m, "g")]);
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Modified);
         entry.ActualProducts.Count.ShouldBe(1);
@@ -91,7 +91,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         var command = new OverrideMealEntryCommand(entry.Id.Value, "user-1", recipeIdGuid, []);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(command, CancellationToken.None));
+            _sut.HandleAsync(command, TestContext.Current.CancellationToken));
     }
 
     /// <summary>When product belongs to other user: <c>HandleAsync</c> throws not found exception.</summary>
@@ -116,6 +116,6 @@ public sealed class OverrideMealEntryCommandHandlerTests
             [new ActualProductInput(productIdGuid, 50m, "g")]);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(command, CancellationToken.None));
+            _sut.HandleAsync(command, TestContext.Current.CancellationToken));
     }
 }

@@ -34,29 +34,25 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         var (owner, householdId) = await OwnerWithHouseholdAsync();
         var inviteeEmail = $"invitee-{Guid.NewGuid():N}@example.com";
 
-        var invite = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/invitations",
-            new { email = inviteeEmail, role = "Adult" });
+        var invite = await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email = inviteeEmail, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
         invite.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var result = await invite.Content.ReadFromJsonAsync<InviteResult>();
+        var result = await invite.Content.ReadFromJsonAsync<InviteResult>(cancellationToken: TestContext.Current.CancellationToken);
         result!.AddedImmediately.ShouldBeFalse();
         result.InvitationId.ShouldNotBeNull();
 
-        var pending = await owner.GetFromJsonAsync<List<Invitation>>(
-            $"/api/households/{householdId}/invitations");
+        var pending = await owner.GetFromJsonAsync<List<Invitation>>($"/api/households/{householdId}/invitations", cancellationToken: TestContext.Current.CancellationToken);
         pending!.ShouldHaveSingleItem().Email.ShouldBe(inviteeEmail);
 
         // the invitee logs in for the first time
         var invitee = _factory.CreateClientFor(
             $"auth|{Guid.NewGuid():N}", email: inviteeEmail.ToUpperInvariant(), name: "Invitee");
-        (await invitee.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
+        (await invitee.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var inviteeHousehold = await invitee.GetFromJsonAsync<Mine>("/api/households/me");
+        var inviteeHousehold = await invitee.GetFromJsonAsync<Mine>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken);
         inviteeHousehold!.Id.ShouldBe(householdId);
         inviteeHousehold.MyRole.ShouldBe("Adult");
 
-        var afterResolve = await owner.GetFromJsonAsync<List<Invitation>>(
-            $"/api/households/{householdId}/invitations");
+        var afterResolve = await owner.GetFromJsonAsync<List<Invitation>>($"/api/households/{householdId}/invitations", cancellationToken: TestContext.Current.CancellationToken);
         afterResolve!.ShouldBeEmpty();
     }
 
@@ -68,16 +64,14 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
 
         var otherEmail = $"other-{Guid.NewGuid():N}@example.com";
         var other = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: otherEmail, name: "Other");
-        (await other.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
+        (await other.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var invite = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/invitations",
-            new { email = otherEmail, role = "Adult" });
+        var invite = await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email = otherEmail, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
 
-        var result = await invite.Content.ReadFromJsonAsync<InviteResult>();
+        var result = await invite.Content.ReadFromJsonAsync<InviteResult>(cancellationToken: TestContext.Current.CancellationToken);
         result!.AddedImmediately.ShouldBeTrue();
 
-        (await other.GetFromJsonAsync<Mine>("/api/households/me"))!.Id.ShouldBe(householdId);
+        (await other.GetFromJsonAsync<Mine>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id.ShouldBe(householdId);
     }
 
     /// <summary><c>RevokedInvitation</c> does not resolve on login.</summary>
@@ -87,17 +81,16 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         var (owner, householdId) = await OwnerWithHouseholdAsync();
         var email = $"revoked-{Guid.NewGuid():N}@example.com";
 
-        var invite = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/invitations", new { email, role = "Adult" });
-        var invitationId = (await invite.Content.ReadFromJsonAsync<InviteResult>())!.InvitationId;
+        var invite = await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
+        var invitationId = (await invite.Content.ReadFromJsonAsync<InviteResult>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
 
-        var revoke = await owner.DeleteAsync($"/api/households/{householdId}/invitations/{invitationId}");
+        var revoke = await owner.DeleteAsync($"/api/households/{householdId}/invitations/{invitationId}", TestContext.Current.CancellationToken);
         revoke.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var invitee = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: email, name: "Nope");
-        (await invitee.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
+        (await invitee.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        (await invitee.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await invitee.GetAsync("/api/households/me", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     /// <summary>Duplicate pending email: <c>Invite</c> returns 422.</summary>
@@ -107,9 +100,8 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         var (owner, householdId) = await OwnerWithHouseholdAsync();
         var email = $"dup-{Guid.NewGuid():N}@example.com";
 
-        await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email, role = "Adult" });
-        var second = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/invitations", new { email, role = "Adult" });
+        await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
+        var second = await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
 
         second.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }

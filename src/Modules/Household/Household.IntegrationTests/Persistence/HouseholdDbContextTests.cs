@@ -23,12 +23,12 @@ public sealed class HouseholdDbContextTests : IClassFixture<HouseholdDatabaseFix
 
         await using var db = new HouseholdDbContext(options);
 
-        var applied = await db.Database.GetAppliedMigrationsAsync();
+        var applied = await db.Database.GetAppliedMigrationsAsync(cancellationToken: TestContext.Current.CancellationToken);
         applied.ShouldContain(m => m.EndsWith("InitialCreate"));
 
         var tables = await db.Database
             .SqlQuery<string>($"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
-            .ToListAsync();
+            .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         tables.ShouldContain("outbox_messages");
         tables.ShouldContain("inbox_messages");
