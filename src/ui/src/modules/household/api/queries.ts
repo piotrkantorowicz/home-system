@@ -10,22 +10,17 @@ export function householdOptions(subject: string | undefined) {
   return queryOptions({
     queryKey: householdQueryKeys.me(subject),
     queryFn: async ({ signal }) => {
-      // A missing person also returns 404; this lookup is only a membership snapshot.
-      const beforeSync = await api.GET('/api/households/me', { signal });
-      if (beforeSync.response.status !== 404) checkResponse(beforeSync);
-
       // Sync before loading the authoritative household state and admitting feature routes.
+      // Signing in never joins a household by itself — only an explicit invitation accept does.
       const sync = await api.POST('/api/persons/me/sync', { signal });
       checkResponse(sync);
 
-      // Now check household state
       const result = await api.GET('/api/households/me', { signal });
-      if (result.response.status === 404) return { household: null, joined: false };
+      if (result.response.status === 404) return { household: null };
       checkResponse(result);
       if (!result.data) throw new Error('Missing household response');
 
-      const joined = beforeSync.response.status === 404;
-      return { household: result.data, joined };
+      return { household: result.data };
     },
   });
 }
@@ -73,6 +68,22 @@ export function useInvitations(id: string, enabled: boolean) {
   return useQuery({ ...invitationsOptions(id, auth.user?.profile.sub), enabled });
 }
 
+export function myInvitationsOptions(subject: string | undefined) {
+  return queryOptions({
+    queryKey: householdQueryKeys.mine(subject),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/households/invitations/mine', { signal });
+      checkResponse(result);
+      return result.data ?? [];
+    },
+  });
+}
+
+export function useMyInvitations(enabled: boolean) {
+  const auth = useAuth();
+  return useQuery({ ...myInvitationsOptions(auth.user?.profile.sub), enabled });
+}
+
 type HouseholdAction =
   | { kind: 'create'; name: string }
   | { kind: 'rename'; id: string; name: string }
@@ -82,12 +93,20 @@ type HouseholdAction =
   | { kind: 'existing'; id: string; personId: string; role: HouseholdRole }
   | { kind: 'managed'; id: string; displayName: string; role: HouseholdRole }
   | { kind: 'invite'; id: string; email: string; role: HouseholdRole }
-  | { kind: 'revoke'; id: string; invitationId: string };
+  | { kind: 'revoke'; id: string; invitationId: string }
+  | { kind: 'accept-invitation'; invitationId: string }
+  | { kind: 'decline-invitation'; invitationId: string };
 
 async function mutateHousehold(action: HouseholdAction) {
   const result = await (() => {
     if (action.kind === 'create')
       return api.POST('/api/households', { body: { name: action.name } });
+    if (action.kind === 'accept-invitation' || action.kind === 'decline-invitation') {
+      const verb = action.kind === 'accept-invitation' ? 'accept' : 'decline';
+      return api.POST(`/api/households/invitations/{invitationId}/${verb}`, {
+        params: { path: { invitationId: action.invitationId } },
+      });
+    }
     const params = { path: { id: action.id } };
     switch (action.kind) {
       case 'rename':

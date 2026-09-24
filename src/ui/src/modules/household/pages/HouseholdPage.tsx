@@ -8,6 +8,7 @@ import { AddMemberDialog } from '../components/AddMemberDialog';
 import { ConfirmHouseholdAction } from '../components/ConfirmHouseholdAction';
 import { HouseholdMembers } from '../components/HouseholdMembers';
 import { HouseholdNameForm } from '../components/HouseholdNameForm';
+import { MyInvitations } from '../components/MyInvitations';
 import { PendingInvitations } from '../components/PendingInvitations';
 import { useHousehold } from '../hooks/useHousehold';
 
@@ -47,14 +48,17 @@ export default function HouseholdPage() {
           {t('load_error')}
         </Banner>
       ) : !household ? (
-        <section className="bg-card border-border max-w-xl space-y-5 rounded-xl border p-6 shadow-sm">
-          <House className="text-primary size-10" aria-hidden="true" />
-          <div>
-            <h2 className="text-xl font-semibold">{t('setup_title')}</h2>
-            <p className="text-text-2 mt-2 text-sm">{t('setup_description')}</p>
-          </div>
-          <HouseholdNameForm />
-        </section>
+        <div className="space-y-6">
+          <MyInvitations />
+          <section className="bg-card border-border max-w-xl space-y-5 rounded-xl border p-6 shadow-sm">
+            <House className="text-primary size-10" aria-hidden="true" />
+            <div>
+              <h2 className="text-xl font-semibold">{t('setup_title')}</h2>
+              <p className="text-text-2 mt-2 text-sm">{t('setup_description')}</p>
+            </div>
+            <HouseholdNameForm />
+          </section>
+        </div>
       ) : (
         <div className="space-y-6">
           {owner && household.members.length === 1 && (

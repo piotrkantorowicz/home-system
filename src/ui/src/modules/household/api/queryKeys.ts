@@ -4,4 +4,5 @@ export const householdQueryKeys = {
   pickable: (subject: string | undefined) => ['household', 'pickable', subject] as const,
   invitations: (id: string, subject: string | undefined) =>
     ['household', 'invitations', id, subject] as const,
+  mine: (subject: string | undefined) => ['household', 'invitations', 'mine', subject] as const,
 } as const;
