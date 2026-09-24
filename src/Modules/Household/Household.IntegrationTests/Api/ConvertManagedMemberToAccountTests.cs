@@ -34,32 +34,28 @@ public sealed class ConvertManagedMemberToAccountTests : IClassFixture<Household
     public async Task ConvertedManagedMember_KeepsItsPersonId_WhenItFirstSignsIn()
     {
         var owner = await OwnerWithHouseholdAsync();
-        var household = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me"))!;
+        var household = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!;
 
         var kidEmail = $"{Guid.NewGuid():N}@x.com";
-        var add = await owner.PostAsJsonAsync(
-            $"/api/households/{household.Id}/managed-members",
-            new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = (string?)null });
+        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/managed-members", new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
         add.StatusCode.ShouldBe(HttpStatusCode.Created);
         var managedPersonId = Guid.Parse(add.Headers.Location!.ToString().Split("/")[^1]);
 
-        var convert = await owner.PostAsJsonAsync(
-            $"/api/households/{household.Id}/members/{managedPersonId}/convert-to-account",
-            new { email = kidEmail });
+        var convert = await owner.PostAsJsonAsync($"/api/households/{household.Id}/members/{managedPersonId}/convert-to-account", new { email = kidEmail }, cancellationToken: TestContext.Current.CancellationToken);
         convert.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // The kid signs in for the first time.
         var kid = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: kidEmail, name: "Kiddo Grown");
-        var sync = await kid.PostAsync("/api/persons/me/sync", null);
+        var sync = await kid.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken);
         sync.EnsureSuccessStatusCode();
-        var linkedPersonId = (await sync.Content.ReadFromJsonAsync<SyncBody>())!.PersonId;
+        var linkedPersonId = (await sync.Content.ReadFromJsonAsync<SyncBody>(cancellationToken: TestContext.Current.CancellationToken))!.PersonId;
 
         linkedPersonId.ShouldBe(managedPersonId);
 
-        var me = await kid.GetFromJsonAsync<PersonMe>("/api/persons/me");
+        var me = await kid.GetFromJsonAsync<PersonMe>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken);
         me!.IsManaged.ShouldBeFalse();
 
-        var members = await owner.GetFromJsonAsync<List<MemberBody>>($"/api/households/{household.Id}/members");
+        var members = await owner.GetFromJsonAsync<List<MemberBody>>($"/api/households/{household.Id}/members", cancellationToken: TestContext.Current.CancellationToken);
         var kiddo = members!.Single(m => m.PersonId == managedPersonId);
         kiddo.Role.ShouldBe("Child");
         kiddo.IsManaged.ShouldBeFalse();
@@ -70,19 +66,15 @@ public sealed class ConvertManagedMemberToAccountTests : IClassFixture<Household
     public async Task ConvertToAccount_ByANonOwner_IsForbidden()
     {
         var owner = await OwnerWithHouseholdAsync();
-        var household = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me"))!;
+        var household = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!;
 
-        var add = await owner.PostAsJsonAsync(
-            $"/api/households/{household.Id}/managed-members",
-            new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = (string?)null });
+        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/managed-members", new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
         var managedPersonId = Guid.Parse(add.Headers.Location!.ToString().Split("/")[^1]);
 
         var stranger = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: $"{Guid.NewGuid():N}@x.com", name: "Nosy");
-        (await stranger.PostAsync("/api/persons/me/sync", null)).EnsureSuccessStatusCode();
+        (await stranger.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var convert = await stranger.PostAsJsonAsync(
-            $"/api/households/{household.Id}/members/{managedPersonId}/convert-to-account",
-            new { email = $"{Guid.NewGuid():N}@x.com" });
+        var convert = await stranger.PostAsJsonAsync($"/api/households/{household.Id}/members/{managedPersonId}/convert-to-account", new { email = $"{Guid.NewGuid():N}@x.com" }, cancellationToken: TestContext.Current.CancellationToken);
 
         convert.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }

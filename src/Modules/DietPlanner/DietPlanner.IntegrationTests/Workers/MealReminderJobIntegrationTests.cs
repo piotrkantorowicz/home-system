@@ -50,7 +50,7 @@ public sealed class MealReminderJobIntegrationTests
                 TestClock.UtcNow);
 
             dbContext.MealScheduleConfigs.Add(config);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             // Read back the persisted slot to get its ID (EF-generated)
             seededSlotId = config.Slots.First().Id;
@@ -67,7 +67,7 @@ public sealed class MealReminderJobIntegrationTests
                 TestClock.UtcNow);
 
             dbContext.Recipes.Add(recipe);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             // Seed DietReminderSettings with MealRemindersEnabled = true, lead = 15 min
             var settings = DietReminderSettings.Create(
@@ -78,7 +78,7 @@ public sealed class MealReminderJobIntegrationTests
                 mealReminderLeadTimeMinutes: 15);
 
             dbContext.DietReminderSettings.Add(settings);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             // Seed MealEntry: Date = today, MealTime = 12:00, Status = Planned
             mealEntryId = MealEntryId.New();
@@ -95,7 +95,7 @@ public sealed class MealReminderJobIntegrationTests
                 TestClock.UtcNow);
 
             dbContext.MealEntries.Add(entry);
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Resolve the MealReminderJob via the public IDietReminderJob interface
@@ -106,7 +106,7 @@ public sealed class MealReminderJobIntegrationTests
                 .Single(j => j.Name == "MealReminderJob");
 
             // Act 1: first run
-            await job.RunAsync(nowUtc, CancellationToken.None);
+            await job.RunAsync(nowUtc, TestContext.Current.CancellationToken);
         }
 
         // Assert: ledger has exactly 1 row for (mealEntryId, Reminder)
@@ -115,13 +115,13 @@ public sealed class MealReminderJobIntegrationTests
             var dbContext = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
 
             var ledgerCount = await dbContext.SentMealReminders
-                .CountAsync(r => r.MealEntryId == mealEntryId && r.Kind == MealReminderKind.Reminder);
+                .CountAsync(r => r.MealEntryId == mealEntryId && r.Kind == MealReminderKind.Reminder, cancellationToken: TestContext.Current.CancellationToken);
             ledgerCount.ShouldBe(1);
 
             // Assert: outbox has exactly 1 MealReminderDueIntegrationEvent for this user
             var outboxRows = (await dbContext.Set<OutboxMessageEntity>()
                     .Where(x => x.EventType.Contains("MealReminderDueIntegrationEvent"))
-                    .ToListAsync())
+                    .ToListAsync(cancellationToken: TestContext.Current.CancellationToken))
                 .Where(x => x.Payload.Contains(userId, StringComparison.Ordinal))
                 .ToList();
             outboxRows.Count.ShouldBe(1);
@@ -134,7 +134,7 @@ public sealed class MealReminderJobIntegrationTests
                 .GetServices<IDietReminderJob>()
                 .Single(j => j.Name == "MealReminderJob");
 
-            await job.RunAsync(nowUtc, CancellationToken.None);
+            await job.RunAsync(nowUtc, TestContext.Current.CancellationToken);
         }
 
         // Assert idempotency: counts remain at 1
@@ -143,12 +143,12 @@ public sealed class MealReminderJobIntegrationTests
             var dbContext = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
 
             var ledgerCount = await dbContext.SentMealReminders
-                .CountAsync(r => r.MealEntryId == mealEntryId && r.Kind == MealReminderKind.Reminder);
+                .CountAsync(r => r.MealEntryId == mealEntryId && r.Kind == MealReminderKind.Reminder, cancellationToken: TestContext.Current.CancellationToken);
             ledgerCount.ShouldBe(1, "ledger must not accumulate on second run");
 
             var outboxRows = (await dbContext.Set<OutboxMessageEntity>()
                     .Where(x => x.EventType.Contains("MealReminderDueIntegrationEvent"))
-                    .ToListAsync())
+                    .ToListAsync(cancellationToken: TestContext.Current.CancellationToken))
                 .Where(x => x.Payload.Contains(userId, StringComparison.Ordinal))
                 .ToList();
             outboxRows.Count.ShouldBe(1, "outbox must not accumulate on second run");

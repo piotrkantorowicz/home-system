@@ -31,14 +31,14 @@ public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseF
             var household = HouseholdAggregate.Create(householdId, "Round Trip Home", owner, TestClock.UtcNow);
             household.AddMember(child, HouseholdRole.Child, TestClock.UtcNow, "Kiddo");
             db.Set<HouseholdAggregate>().Add(household);
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using (var db = NewContext())
         {
             var reloaded = await db.Set<HouseholdAggregate>()
                 .Include(h => h.Members)
-                .SingleAsync(h => h.Id == householdId);
+                .SingleAsync(h => h.Id == householdId, cancellationToken: TestContext.Current.CancellationToken);
 
             reloaded.Name.ShouldBe("Round Trip Home");
             reloaded.Members.Count.ShouldBe(2);
@@ -58,23 +58,23 @@ public sealed class HouseholdPersistenceTests : IClassFixture<HouseholdDatabaseF
         {
             db.Set<HouseholdAggregate>().Add(
                 HouseholdAggregate.Create(householdId, "To Delete", PersonId.New(), TestClock.UtcNow));
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using (var db = NewContext())
         {
             var household = await db.Set<HouseholdAggregate>()
                 .Include(h => h.Members)
-                .SingleAsync(h => h.Id == householdId);
+                .SingleAsync(h => h.Id == householdId, cancellationToken: TestContext.Current.CancellationToken);
             db.Set<HouseholdAggregate>().Remove(household);
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using (var db = NewContext())
         {
             var orphanMembers = await db.Database
                 .SqlQuery<int>($"SELECT count(*)::int AS \"Value\" FROM household_members WHERE household_id = {householdId.Value}")
-                .SingleAsync();
+                .SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
             orphanMembers.ShouldBe(0);
         }
     }

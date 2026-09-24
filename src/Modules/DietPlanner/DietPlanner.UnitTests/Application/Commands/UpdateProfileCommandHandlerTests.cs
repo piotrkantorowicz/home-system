@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.UpdateProfile;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -42,7 +42,7 @@ public sealed class UpdateProfileCommandHandlerTests
             65m,
             "VeryActive");
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         _repository.Received(1).Update(Arg.Is<UserProfile>(p => p.HeightCm == 175m));
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -57,7 +57,7 @@ public sealed class UpdateProfileCommandHandlerTests
 
         var command = new UpdateProfileCommand("unknown-user", null, null, null, null, null, null);
 
-        await Should.ThrowAsync<NotFoundException>(() => _sut.HandleAsync(command, CancellationToken.None));
+        await Should.ThrowAsync<NotFoundException>(() => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
         _repository.DidNotReceive().Update(Arg.Any<UserProfile>());
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }

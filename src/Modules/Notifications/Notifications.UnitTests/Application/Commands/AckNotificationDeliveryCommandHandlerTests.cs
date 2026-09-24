@@ -38,7 +38,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         _repository.GetByIdAsync(notificationId, Arg.Any<CancellationToken>())
             .Returns(notification);
 
-        await _sut.HandleAsync(new AckNotificationDeliveryCommand(deliveryId.Value, userId), CancellationToken.None);
+        await _sut.HandleAsync(new AckNotificationDeliveryCommand(deliveryId.Value, userId), TestContext.Current.CancellationToken);
 
         delivery.Status.ShouldBe(DeliveryStatus.Sent);
         await _repository.Received(1).UpdateDeliveryAsync(delivery, Arg.Any<CancellationToken>());
@@ -61,7 +61,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
 
         var act = () => _sut.HandleAsync(
             new AckNotificationDeliveryCommand(deliveryId.Value, "intruder"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
         await _repository.DidNotReceive().UpdateDeliveryAsync(Arg.Any<NotificationDelivery>(), Arg.Any<CancellationToken>());
@@ -85,7 +85,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
         _repository.GetDeliveryAsync(deliveryId, Arg.Any<CancellationToken>()).Returns(delivery);
         _repository.GetByIdAsync(notificationId, Arg.Any<CancellationToken>()).Returns(notification);
 
-        await _sut.HandleAsync(new AckNotificationDeliveryCommand(deliveryId.Value, userId), CancellationToken.None);
+        await _sut.HandleAsync(new AckNotificationDeliveryCommand(deliveryId.Value, userId), TestContext.Current.CancellationToken);
 
         await _repository.DidNotReceive().UpdateDeliveryAsync(Arg.Any<NotificationDelivery>(), Arg.Any<CancellationToken>());
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
@@ -100,7 +100,7 @@ public sealed class AckNotificationDeliveryCommandHandlerTests
 
         var act = () => _sut.HandleAsync(
             new AckNotificationDeliveryCommand(Guid.NewGuid(), "user-1"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }

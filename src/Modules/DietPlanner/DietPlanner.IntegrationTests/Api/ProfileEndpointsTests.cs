@@ -21,7 +21,7 @@ public sealed class ProfileEndpointsTests
     [Fact]
     public async Task GET_Profile_ReturnsOkOrNotFound()
     {
-        var response = await _client.GetAsync("/api/v1/profile");
+        var response = await _client.GetAsync("/api/v1/profile", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
     }
@@ -31,14 +31,14 @@ public sealed class ProfileEndpointsTests
     public async Task POST_Profile_WithValidRequest_Returns201()
     {
         // Skip if profile already exists for test user (shared DB across tests)
-        var existing = await _client.GetAsync("/api/v1/profile");
+        var existing = await _client.GetAsync("/api/v1/profile", TestContext.Current.CancellationToken);
         if (existing.StatusCode == HttpStatusCode.OK)
             return;
 
         var request = new ProfileRequest(
             new DateOnly(1990, 5, 15), "Male", 180m, 80m, 75m, "ModeratelyActive");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/profile", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/profile", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         response.Headers.Location.ShouldNotBeNull();
@@ -50,7 +50,7 @@ public sealed class ProfileEndpointsTests
     {
         var request = new ProfileRequest(null, "NotAGender", null, null, null, null);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/profile", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/profile", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -61,7 +61,7 @@ public sealed class ProfileEndpointsTests
     {
         var request = new ProfileRequest(null, null, null, null, null, "RunningLikeCheetah");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/profile", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/profile", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -72,7 +72,7 @@ public sealed class ProfileEndpointsTests
     {
         var request = new ProfileRequest(null, null, -1m, null, null, null);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/profile", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/profile", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -83,7 +83,7 @@ public sealed class ProfileEndpointsTests
     {
         var request = new ProfileRequest(null, "NotAGender", null, null, null, null);
 
-        var response = await _client.PutAsJsonAsync("/api/v1/profile", request);
+        var response = await _client.PutAsJsonAsync("/api/v1/profile", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -93,25 +93,25 @@ public sealed class ProfileEndpointsTests
     public async Task POST_ThenGET_ThenPUT_ProfileRoundTrip()
     {
         // Skip if profile already exists for test user (shared DB across tests)
-        var existingResponse = await _client.GetAsync("/api/v1/profile");
+        var existingResponse = await _client.GetAsync("/api/v1/profile", TestContext.Current.CancellationToken);
         if (existingResponse.StatusCode == HttpStatusCode.NotFound)
         {
             var createRequest = new ProfileRequest(
                 new DateOnly(1985, 3, 20), "Female", 165m, 60m, 55m, "LightlyActive");
 
-            var createResponse = await _client.PostAsJsonAsync("/api/v1/profile", createRequest);
+            var createResponse = await _client.PostAsJsonAsync("/api/v1/profile", createRequest, cancellationToken: TestContext.Current.CancellationToken);
             createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
         }
 
-        var getResponse = await _client.GetAsync("/api/v1/profile");
+        var getResponse = await _client.GetAsync("/api/v1/profile", TestContext.Current.CancellationToken);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        UserProfileDto? dto = await getResponse.Content.ReadFromJsonAsync<UserProfileDto>();
+        UserProfileDto? dto = await getResponse.Content.ReadFromJsonAsync<UserProfileDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
         dto.UserId.ShouldNotBeNullOrEmpty();
 
         var updateRequest = new ProfileRequest(null, null, 170m, 65m, 60m, "VeryActive");
-        var updateResponse = await _client.PutAsJsonAsync("/api/v1/profile", updateRequest);
+        var updateResponse = await _client.PutAsJsonAsync("/api/v1/profile", updateRequest, cancellationToken: TestContext.Current.CancellationToken);
         updateResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 }

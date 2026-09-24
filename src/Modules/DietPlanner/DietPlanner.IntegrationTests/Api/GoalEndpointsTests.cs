@@ -20,7 +20,7 @@ public sealed class GoalEndpointsTests
     [Fact]
     public async Task GET_Goals_ReturnsOk()
     {
-        var response = await _client.GetAsync("/api/v1/goals");
+        var response = await _client.GetAsync("/api/v1/goals", TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -31,7 +31,7 @@ public sealed class GoalEndpointsTests
     {
         var request = new GoalRequest(2000, 150m, 250m, 70m, 30m);
 
-        var response = await _client.PostAsJsonAsync("/api/v1/goals", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/goals", request, cancellationToken: TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }

@@ -53,13 +53,13 @@ dotnet build HomeSystem.slnx
 ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Apis/HomeSystem.REST
 
 # Run all unit tests
-dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj
+dotnet test --project src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj
 
 # Run all integration tests (requires Docker for Testcontainers)
-dotnet test src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj
+dotnet test --project src/Modules/DietPlanner/DietPlanner.IntegrationTests/DietPlanner.IntegrationTests.csproj
 
 # Run a single test by name filter
-dotnet test src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj --filter "FullyQualifiedName~AddEntry_WhenAmountExceedsLimit"
+dotnet test --project src/Modules/DietPlanner/DietPlanner.UnitTests/DietPlanner.UnitTests.csproj --filter "FullyQualifiedName~AddEntry_WhenAmountExceedsLimit"
 
 # Add a new EF Core migration
 dotnet ef migrations add <Name> \

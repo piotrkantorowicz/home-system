@@ -92,7 +92,7 @@ public sealed class MealEntryCompletionEndpointsTests
         var recipeId = await CreateRecipeAsync(client, $"Recipe {Guid.NewGuid():N}");
         var mealId = await CreateMealAsync(client, slotId, recipeId);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         var entry = entries!.Single(e => e.Id == mealId);
 
         entry.Calories.ShouldBe(80m);
@@ -113,12 +113,10 @@ public sealed class MealEntryCompletionEndpointsTests
         var snackId = await CreateProductAsync(client, $"Snack {Guid.NewGuid():N}");
 
         // Override with a 50g ad-hoc snack: 200 kcal/100g × 50g = 100 kcal.
-        var resp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(null, [new ActualProductRequest(snackId, 50m, "g")]));
+        var resp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(null, [new ActualProductRequest(snackId, 50m, "g")]), cancellationToken: TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         var entry = entries!.Single(e => e.Id == mealId);
 
         entry.Status.ShouldBe("Modified");
@@ -134,10 +132,10 @@ public sealed class MealEntryCompletionEndpointsTests
         var recipeId = await CreateRecipeAsync(client, $"Recipe {Guid.NewGuid():N}");
         var mealId = await CreateMealAsync(client, slotId, recipeId);
 
-        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/complete", null);
+        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/complete", null, TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         entries!.Single(e => e.Id == mealId).Status.ShouldBe("Done");
     }
 
@@ -147,7 +145,7 @@ public sealed class MealEntryCompletionEndpointsTests
     {
         var client = FreshClient($"complete-{Guid.NewGuid():N}");
 
-        var resp = await client.PatchAsync($"/api/v1/meals/{Guid.NewGuid()}/complete", null);
+        var resp = await client.PatchAsync($"/api/v1/meals/{Guid.NewGuid()}/complete", null, TestContext.Current.CancellationToken);
 
         resp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -162,12 +160,10 @@ public sealed class MealEntryCompletionEndpointsTests
         var mealId = await CreateMealAsync(client, slotId, recipeId);
 
         var altRecipe = await CreateRecipeAsync(client, $"Alt {Guid.NewGuid():N}");
-        var overrideResp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(altRecipe, []));
+        var overrideResp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(altRecipe, []), cancellationToken: TestContext.Current.CancellationToken);
         overrideResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/complete", null);
+        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/complete", null, TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
 
@@ -181,12 +177,10 @@ public sealed class MealEntryCompletionEndpointsTests
         var mealId = await CreateMealAsync(client, slotId, plannedRecipe);
         var actualRecipe = await CreateRecipeAsync(client, $"Actual {Guid.NewGuid():N}");
 
-        var resp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(actualRecipe, []));
+        var resp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(actualRecipe, []), cancellationToken: TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         var entry = entries!.Single(e => e.Id == mealId);
         entry.Status.ShouldBe("Modified");
         entry.ActualRecipe!.Id.ShouldBe(actualRecipe);
@@ -202,12 +196,10 @@ public sealed class MealEntryCompletionEndpointsTests
         var mealId = await CreateMealAsync(client, slotId, recipeId);
         var snackId = await CreateProductAsync(client, $"Snack {Guid.NewGuid():N}");
 
-        var resp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(null, [new ActualProductRequest(snackId, 50m, "g")]));
+        var resp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(null, [new ActualProductRequest(snackId, 50m, "g")]), cancellationToken: TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         var entry = entries!.Single(e => e.Id == mealId);
         entry.Status.ShouldBe("Modified");
         entry.ActualProducts.Count.ShouldBe(1);
@@ -223,9 +215,7 @@ public sealed class MealEntryCompletionEndpointsTests
         var recipeId = await CreateRecipeAsync(client, $"Recipe {Guid.NewGuid():N}");
         var mealId = await CreateMealAsync(client, slotId, recipeId);
 
-        var resp = await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(null, []));
+        var resp = await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(null, []), cancellationToken: TestContext.Current.CancellationToken);
 
         resp.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -242,9 +232,7 @@ public sealed class MealEntryCompletionEndpointsTests
         var foreignClient = FreshClient($"foreign-{Guid.NewGuid():N}");
         var foreignProductId = await CreateProductAsync(foreignClient, $"Foreign {Guid.NewGuid():N}");
 
-        var resp = await ownerClient.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(null, [new ActualProductRequest(foreignProductId, 50m, "g")]));
+        var resp = await ownerClient.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(null, [new ActualProductRequest(foreignProductId, 50m, "g")]), cancellationToken: TestContext.Current.CancellationToken);
 
         resp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -259,14 +247,12 @@ public sealed class MealEntryCompletionEndpointsTests
         var mealId = await CreateMealAsync(client, slotId, recipeId);
 
         var altRecipe = await CreateRecipeAsync(client, $"Alt {Guid.NewGuid():N}");
-        await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(altRecipe, []));
+        await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(altRecipe, []), cancellationToken: TestContext.Current.CancellationToken);
 
-        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/reset", null);
+        var resp = await client.PatchAsync($"/api/v1/meals/{mealId}/reset", null, TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         var entry = entries!.Single(e => e.Id == mealId);
         entry.Status.ShouldBe("Planned");
         entry.ActualRecipe.ShouldBeNull();
@@ -285,18 +271,15 @@ public sealed class MealEntryCompletionEndpointsTests
         var doneMeal = await CreateMealAsync(client, slotId, recipeId);
         var modifiedMeal = await CreateMealAsync(client, slotId, recipeId);
 
-        await client.PatchAsync($"/api/v1/meals/{doneMeal}/complete", null);
-        await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{modifiedMeal}/override",
-            new OverrideMealEntryRequest(recipeId, []));
+        await client.PatchAsync($"/api/v1/meals/{doneMeal}/complete", null, TestContext.Current.CancellationToken);
+        await client.PatchAsJsonAsync($"/api/v1/meals/{modifiedMeal}/override", new OverrideMealEntryRequest(recipeId, []), cancellationToken: TestContext.Current.CancellationToken);
 
-        var resp = await client.PostAsJsonAsync(
-            "/api/v1/meals/bulk-complete", new BulkCompleteMealsRequest(Today));
+        var resp = await client.PostAsJsonAsync("/api/v1/meals/bulk-complete", new BulkCompleteMealsRequest(Today), cancellationToken: TestContext.Current.CancellationToken);
         resp.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var body = await resp.Content.ReadFromJsonAsync<BulkCompleteMealsResponse>();
+        var body = await resp.Content.ReadFromJsonAsync<BulkCompleteMealsResponse>(cancellationToken: TestContext.Current.CancellationToken);
         body!.Completed.ShouldBe(1);
 
-        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals");
+        var entries = await client.GetFromJsonAsync<List<MealEntryDto>>("/api/v1/meals", cancellationToken: TestContext.Current.CancellationToken);
         entries.ShouldNotBeNull();
         entries.Single(e => e.Id == planned).Status.ShouldBe("Done");
         entries.Single(e => e.Id == modifiedMeal).Status.ShouldBe("Modified");
@@ -311,11 +294,10 @@ public sealed class MealEntryCompletionEndpointsTests
         // Completed = 0 when no Planned entries match.
         var client = FreshClient($"bulk-{Guid.NewGuid():N}");
 
-        var resp = await client.PostAsJsonAsync(
-            "/api/v1/meals/bulk-complete", new BulkCompleteMealsRequest(Today.AddDays(1)));
+        var resp = await client.PostAsJsonAsync("/api/v1/meals/bulk-complete", new BulkCompleteMealsRequest(Today.AddDays(1)), cancellationToken: TestContext.Current.CancellationToken);
 
         resp.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var body = await resp.Content.ReadFromJsonAsync<BulkCompleteMealsResponse>();
+        var body = await resp.Content.ReadFromJsonAsync<BulkCompleteMealsResponse>(cancellationToken: TestContext.Current.CancellationToken);
         body!.Completed.ShouldBe(0);
     }
 
@@ -330,17 +312,13 @@ public sealed class MealEntryCompletionEndpointsTests
         var mealId = await CreateMealAsync(client, slotId, plannedRecipe);
 
         // Baseline (Planned)
-        var baseline = await client.GetFromJsonAsync<List<DailyNutritionDto>>(
-            $"/api/v1/meals/nutrition-summary?from={Today:yyyy-MM-dd}&to={Today:yyyy-MM-dd}");
+        var baseline = await client.GetFromJsonAsync<List<DailyNutritionDto>>($"/api/v1/meals/nutrition-summary?from={Today:yyyy-MM-dd}&to={Today:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
         var baselineCalories = baseline!.SingleOrDefault(d => d.Date == Today)?.Calories ?? 0m;
 
         // Override with a different recipe
-        await client.PatchAsJsonAsync(
-            $"/api/v1/meals/{mealId}/override",
-            new OverrideMealEntryRequest(altRecipe, []));
+        await client.PatchAsJsonAsync($"/api/v1/meals/{mealId}/override", new OverrideMealEntryRequest(altRecipe, []), cancellationToken: TestContext.Current.CancellationToken);
 
-        var afterOverride = await client.GetFromJsonAsync<List<DailyNutritionDto>>(
-            $"/api/v1/meals/nutrition-summary?from={Today:yyyy-MM-dd}&to={Today:yyyy-MM-dd}");
+        var afterOverride = await client.GetFromJsonAsync<List<DailyNutritionDto>>($"/api/v1/meals/nutrition-summary?from={Today:yyyy-MM-dd}&to={Today:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
         var afterCalories = afterOverride!.SingleOrDefault(d => d.Date == Today)?.Calories ?? 0m;
 
         // The two recipes are independent — proves the summary switched inputs.

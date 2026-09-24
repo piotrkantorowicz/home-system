@@ -70,7 +70,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
     {
         var (sub, personId) = await SignedInPersonAsync();
         var client = _factory.CreateClientFor(sub);
-        var create = await client.PostAsJsonAsync("/api/households", new { name = "Context House" });
+        var create = await client.PostAsJsonAsync("/api/households", new { name = "Context House" }, cancellationToken: TestContext.Current.CancellationToken);
         create.EnsureSuccessStatusCode();
 
         var context = await WithScopeAsync(sp =>
@@ -89,7 +89,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
     {
         var (sub, _) = await SignedInPersonAsync();
         var client = _factory.CreateClientFor(sub);
-        (await client.PostAsJsonAsync("/api/households", new { name = "Outbox House" })).EnsureSuccessStatusCode();
+        (await client.PostAsJsonAsync("/api/households", new { name = "Outbox House" }, cancellationToken: TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var eventTypes = await WithScopeAsync(async sp =>
         {

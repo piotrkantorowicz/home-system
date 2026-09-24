@@ -33,7 +33,7 @@ public sealed class CreateRecipeCommandHandlerTests
         };
         var command = new CreateRecipeCommand("Pasta Bolognese", "Classic pasta", null, 4, 30, ingredients, "user-1");
 
-        var id = await _sut.HandleAsync(command, CancellationToken.None);
+        var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
@@ -52,7 +52,7 @@ public sealed class CreateRecipeCommandHandlerTests
         Recipe? captured = null;
         await _repository.AddAsync(Arg.Do<Recipe>(r => captured = r), Arg.Any<CancellationToken>());
 
-        await _sut.HandleAsync(command, CancellationToken.None);
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         captured.ShouldNotBeNull();
         captured!.Ingredients.ShouldHaveSingleItem();

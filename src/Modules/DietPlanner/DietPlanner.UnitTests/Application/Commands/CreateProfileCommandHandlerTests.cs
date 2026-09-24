@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
-#pragma warning disable IDE0005 // false positive — InternalsVisibleTo prevents Roslyn from resolving internal types
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.CreateProfile;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
@@ -33,7 +33,7 @@ public sealed class CreateProfileCommandHandlerTests
             75m,
             "ModeratelyActive");
 
-        Guid id = await _sut.HandleAsync(command, CancellationToken.None);
+        Guid id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
@@ -52,7 +52,7 @@ public sealed class CreateProfileCommandHandlerTests
     {
         var command = new CreateProfileCommand("user-1", null, null, null, null, null, null);
 
-        Guid id = await _sut.HandleAsync(command, CancellationToken.None);
+        Guid id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(

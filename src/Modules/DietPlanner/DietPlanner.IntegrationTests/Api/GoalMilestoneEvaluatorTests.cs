@@ -36,9 +36,7 @@ public sealed class GoalMilestoneEvaluatorTests
         UserGoalId goalId = await SeedGoalWithTargetWeight(factory, userId, targetWeightKg: 70m);
 
         // Act: log weight that crosses target
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries",
-            new LogWeightEntryRequest(Today, 69.5m));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 69.5m), cancellationToken: TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // Assert: outbox row written + milestone achieved
@@ -49,12 +47,12 @@ public sealed class GoalMilestoneEvaluatorTests
         // by payload substring in memory.
         var milestoneRows = (await dbContext.Set<OutboxMessageEntity>()
             .Where(x => x.EventType.Contains("GoalMilestoneReachedIntegrationEvent"))
-            .ToListAsync())
+            .ToListAsync(cancellationToken: TestContext.Current.CancellationToken))
             .Where(x => x.Payload.Contains(userId, StringComparison.Ordinal))
             .ToList();
         milestoneRows.ShouldNotBeEmpty();
 
-        var goal = await dbContext.UserGoals.FirstOrDefaultAsync(g => g.Id == goalId);
+        var goal = await dbContext.UserGoals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken: TestContext.Current.CancellationToken);
         goal.ShouldNotBeNull();
         goal.MilestoneAchievedAt.ShouldNotBeNull();
     }
@@ -70,9 +68,7 @@ public sealed class GoalMilestoneEvaluatorTests
         await EnsureProfileExists(client);
         await SeedGoalWithTargetWeight(factory, userId, targetWeightKg: 65m);
 
-        var response = await client.PostAsJsonAsync(
-            "/api/v1/weight-entries",
-            new LogWeightEntryRequest(Today, 75m));
+        var response = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 75m), cancellationToken: TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         await using var scope = factory.Services.CreateAsyncScope();
@@ -82,7 +78,7 @@ public sealed class GoalMilestoneEvaluatorTests
         // tied to a GoalMilestoneReachedIntegrationEvent
         var milestoneRows = (await dbContext.Set<OutboxMessageEntity>()
             .Where(x => x.EventType.Contains("GoalMilestoneReachedIntegrationEvent"))
-            .ToListAsync())
+            .ToListAsync(cancellationToken: TestContext.Current.CancellationToken))
             .Where(x => x.Payload.Contains(userId, StringComparison.Ordinal))
             .ToList();
         milestoneRows.ShouldBeEmpty();

@@ -34,7 +34,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
 
         var result = await _sut.HandleAsync(
             new SyncCurrentPersonCommand("auth|new", "New User", "new@x.com", null),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         result.ShouldNotBe(Guid.Empty);
         await _persons.Received(1).AddAsync(
@@ -52,7 +52,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
 
         var result = await _sut.HandleAsync(
             new SyncCurrentPersonCommand("auth|1", "New Name", "n@x.com", "pic"),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         result.ShouldBe(existing.Id.Value);
         existing.DisplayName.ShouldBe("New Name");
@@ -73,7 +73,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
 
         var result = await _sut.HandleAsync(
             new SyncCurrentPersonCommand("auth|kiddo", "Kiddo Grown", "kiddo@x.com", null),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         result.ShouldBe(managed.Id.Value);
         managed.AuthSubject.ShouldBe("auth|kiddo");
@@ -92,7 +92,7 @@ public sealed class SyncCurrentPersonCommandHandlerTests
 
         await _sut.HandleAsync(
             new SyncCurrentPersonCommand("auth|fresh", "Fresh", "shared@x.com", null),
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         await _persons.Received(1).AddAsync(
             Arg.Is<Person>(p => p.AuthSubject == "auth|fresh"), Arg.Any<CancellationToken>());

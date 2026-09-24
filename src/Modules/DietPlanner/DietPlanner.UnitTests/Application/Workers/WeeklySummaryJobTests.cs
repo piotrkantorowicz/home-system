@@ -1,6 +1,6 @@
 namespace DietPlanner.UnitTests.Application.Workers;
 
-#pragma warning disable IDE0005
+#pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 #pragma warning restore IDE0005
 using System.Globalization;
 using DietPlanner.Application.Workers;
@@ -53,7 +53,7 @@ public sealed class WeeklySummaryJobTests
     {
         _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -68,7 +68,7 @@ public sealed class WeeklySummaryJobTests
         var candidate = MakeCandidate(day: DayOfWeek.Monday);
         _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -83,7 +83,7 @@ public sealed class WeeklySummaryJobTests
         var candidate = MakeCandidate(time: "09:00");
         _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -98,7 +98,7 @@ public sealed class WeeklySummaryJobTests
         var candidate = MakeCandidate(lastAt: Now.AddDays(-3));
         _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -116,7 +116,7 @@ public sealed class WeeklySummaryJobTests
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>())
             .Returns((WeeklySummaryState?)null);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         var expectedWeekEnd = DateOnly.FromDateTime(Now).AddDays(-1); // 2026-04-25
         var expectedWeekStart = expectedWeekEnd.AddDays(-6);            // 2026-04-19
@@ -153,7 +153,7 @@ public sealed class WeeklySummaryJobTests
         var existing = WeeklySummaryState.Create("u1", lastAt);
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>()).Returns(existing);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -174,7 +174,7 @@ public sealed class WeeklySummaryJobTests
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>())
             .Returns(WeeklySummaryState.Create("u1", Now.AddDays(-7)));
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -193,7 +193,7 @@ public sealed class WeeklySummaryJobTests
         _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>())
             .Returns((WeeklySummaryState?)null);
 
-        await _sut.RunAsync(nowExact, CancellationToken.None);
+        await _sut.RunAsync(nowExact, TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
@@ -210,7 +210,7 @@ public sealed class WeeklySummaryJobTests
         _stateRepo.GetByUserIdAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((WeeklySummaryState?)null);
 
-        await _sut.RunAsync(Now, CancellationToken.None);
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
         await _bus.Received(2).PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());

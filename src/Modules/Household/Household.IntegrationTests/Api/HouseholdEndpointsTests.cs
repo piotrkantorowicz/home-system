@@ -35,45 +35,42 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         var owner = await SignedInClientAsync("Owner");
 
         // create
-        var create = await owner.PostAsJsonAsync("/api/households", new { name = "The Test House" });
+        var create = await owner.PostAsJsonAsync("/api/households", new { name = "The Test House" }, cancellationToken: TestContext.Current.CancellationToken);
         create.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var mine = await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me");
+        var mine = await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken);
         mine!.Name.ShouldBe("The Test House");
         mine.MyRole.ShouldBe("Owner");
         mine.Members.Count.ShouldBe(1);
         var householdId = mine.Id;
 
         // add a managed member
-        var addManaged = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/managed-members",
-            new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = "K" });
+        var addManaged = await owner.PostAsJsonAsync($"/api/households/{householdId}/managed-members", new { displayName = "Kiddo", email = (string?)null, role = "Child", nickname = "K" }, cancellationToken: TestContext.Current.CancellationToken);
         addManaged.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var members = await owner.GetFromJsonAsync<List<MemberBody>>($"/api/households/{householdId}/members");
+        var members = await owner.GetFromJsonAsync<List<MemberBody>>($"/api/households/{householdId}/members", cancellationToken: TestContext.Current.CancellationToken);
         members!.Count.ShouldBe(2);
         var kiddo = members.Single(m => m.DisplayName == "Kiddo");
         kiddo.Role.ShouldBe("Child");
         kiddo.IsManaged.ShouldBeTrue();
 
         // promote to Adult
-        var changeRole = await owner.PutAsJsonAsync(
-            $"/api/households/{householdId}/members/{kiddo.PersonId}/role", new { role = "Adult" });
+        var changeRole = await owner.PutAsJsonAsync($"/api/households/{householdId}/members/{kiddo.PersonId}/role", new { role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
         changeRole.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // remove
-        var remove = await owner.DeleteAsync($"/api/households/{householdId}/members/{kiddo.PersonId}");
+        var remove = await owner.DeleteAsync($"/api/households/{householdId}/members/{kiddo.PersonId}", TestContext.Current.CancellationToken);
         remove.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // rename
-        var rename = await owner.PutAsJsonAsync($"/api/households/{householdId}", new { name = "Renamed House" });
+        var rename = await owner.PutAsJsonAsync($"/api/households/{householdId}", new { name = "Renamed House" }, cancellationToken: TestContext.Current.CancellationToken);
         rename.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me"))!.Name.ShouldBe("Renamed House");
+        (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Name.ShouldBe("Renamed House");
 
         // delete
-        var delete = await owner.DeleteAsync($"/api/households/{householdId}");
+        var delete = await owner.DeleteAsync($"/api/households/{householdId}", TestContext.Current.CancellationToken);
         delete.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await owner.GetAsync("/api/households/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await owner.GetAsync("/api/households/me", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     /// <summary><c>AddExistingPerson</c> then that person sees the household.</summary>
@@ -84,15 +81,13 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         var invitee = await SignedInClientAsync("Invitee");
         var inviteeId = await PersonIdAsync(invitee);
 
-        await owner.PostAsJsonAsync("/api/households", new { name = "Shared" });
-        var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me"))!.Id;
+        await owner.PostAsJsonAsync("/api/households", new { name = "Shared" }, cancellationToken: TestContext.Current.CancellationToken);
+        var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
 
-        var add = await owner.PostAsJsonAsync(
-            $"/api/households/{householdId}/members",
-            new { personId = inviteeId, role = "Adult", nickname = (string?)null });
+        var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = inviteeId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
         add.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var inviteeView = await invitee.GetFromJsonAsync<MyHouseholdBody>("/api/households/me");
+        var inviteeView = await invitee.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken);
         inviteeView!.Id.ShouldBe(householdId);
         inviteeView.MyRole.ShouldBe("Adult");
     }
@@ -105,12 +100,11 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         var adult = await SignedInClientAsync("Adult");
         var adultId = await PersonIdAsync(adult);
 
-        await owner.PostAsJsonAsync("/api/households", new { name = "H" });
-        var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me"))!.Id;
-        await owner.PostAsJsonAsync($"/api/households/{householdId}/members",
-            new { personId = adultId, role = "Adult", nickname = (string?)null });
+        await owner.PostAsJsonAsync("/api/households", new { name = "H" }, cancellationToken: TestContext.Current.CancellationToken);
+        var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
+        await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = adultId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
 
-        var rename = await adult.PutAsJsonAsync($"/api/households/{householdId}", new { name = "Hacked" });
+        var rename = await adult.PutAsJsonAsync($"/api/households/{householdId}", new { name = "Hacked" }, cancellationToken: TestContext.Current.CancellationToken);
 
         rename.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
@@ -120,9 +114,9 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
     public async Task CreateHousehold_WhenAlreadyInOne_Returns422()
     {
         var owner = await SignedInClientAsync();
-        await owner.PostAsJsonAsync("/api/households", new { name = "First" });
+        await owner.PostAsJsonAsync("/api/households", new { name = "First" }, cancellationToken: TestContext.Current.CancellationToken);
 
-        var second = await owner.PostAsJsonAsync("/api/households", new { name = "Second" });
+        var second = await owner.PostAsJsonAsync("/api/households", new { name = "Second" }, cancellationToken: TestContext.Current.CancellationToken);
 
         second.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
     }
@@ -135,9 +129,9 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         var free = await SignedInClientAsync("Free Agent");
         var freeId = await PersonIdAsync(free);
 
-        await owner.PostAsJsonAsync("/api/households", new { name = "H" });
+        await owner.PostAsJsonAsync("/api/households", new { name = "H" }, cancellationToken: TestContext.Current.CancellationToken);
 
-        var pickable = await owner.GetFromJsonAsync<List<PickableBody>>("/api/households/pickable-persons");
+        var pickable = await owner.GetFromJsonAsync<List<PickableBody>>("/api/households/pickable-persons", cancellationToken: TestContext.Current.CancellationToken);
 
         pickable.ShouldNotBeNull();
         pickable.ShouldContain(p => p.PersonId == freeId);
