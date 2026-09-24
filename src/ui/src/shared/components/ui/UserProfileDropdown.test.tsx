@@ -36,7 +36,7 @@ describe('UserProfileDropdown', () => {
     expect(screen.getByRole('button', { name: /common.user_menu/i })).toBeInTheDocument();
   });
 
-  it('shows menu items when opened', async () => {
+  it('shows menu items when opened', () => {
     renderDropdown();
 
     fireEvent.pointerDown(screen.getByRole('button', { name: /common.user_menu/i }), {
@@ -63,7 +63,7 @@ describe('UserProfileDropdown', () => {
     expect(onLogout).toHaveBeenCalledOnce();
   });
 
-  it('contains navigation links to settings pages', async () => {
+  it('contains navigation links to settings pages', () => {
     renderDropdown();
 
     fireEvent.pointerDown(screen.getByRole('button', { name: /common.user_menu/i }), {
