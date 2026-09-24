@@ -3,8 +3,7 @@ updates:
   - package-ecosystem: nuget
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     groups:
       nuget-minor-patch:
         update-types: [minor, patch]
@@ -21,8 +20,7 @@ updates:
   - package-ecosystem: npm
     directory: /src/ui
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
@@ -38,8 +36,7 @@ updates:
   - package-ecosystem: npm
     directory: /e2e
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     commit-message:
       prefix: "chore(deps)"
 

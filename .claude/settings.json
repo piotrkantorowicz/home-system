@@ -58,6 +58,16 @@
             "timeout": 15
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hooks/guard-rules.sh\"",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "PostToolUse": [

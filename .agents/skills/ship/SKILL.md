@@ -10,7 +10,7 @@ Preconditions, in order — stop at the first that fails:
 1. Branch matches `<type>/<n>-<slug>` and is not `main`.
 2. `git status --porcelain` is empty (everything committed).
 3. `/verify` ran green in this session (or run it now).
-4. `.claude/rules/definition-of-done.md` checklist holds. Walk it explicitly.
+4. `docs/rules/definition-of-done.md` checklist holds. Walk it explicitly.
 
 ## Steps
 

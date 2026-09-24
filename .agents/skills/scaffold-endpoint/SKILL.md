@@ -21,7 +21,7 @@ $scaffold-endpoint BudgetPlan BudgetPlan ListByUser --query
 
 ## Instructions
 
-Read `.claude/rules/backend-cqrs-patterns.md` and `.claude/rules/backend-api-patterns.md` before generating.
+Read `docs/rules/backend-cqrs-patterns.md` and `docs/rules/backend-api-patterns.md` before generating.
 
 ### For `--command`:
 
