@@ -89,7 +89,7 @@ export default function Hydration() {
   if (configLoading || intakeLoading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-6 md:px-8">
-        <Skeleton className="h-[420px] w-full rounded-[22px]" />
+        <Skeleton className="h-420px rounded-22px w-full" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function Hydration() {
     <div className="animate-fade-in mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold">{t('hydration.title')}</h1>
+          <h1 className="text-26px font-bold">{t('hydration.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('hydration.subtitle')}</p>
         </div>
         <Button
@@ -120,8 +120,7 @@ export default function Hydration() {
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="bg-secondary relative h-[176px] w-[132px] flex-none overflow-hidden border-2 border-[var(--color-water)]"
-          style={{ borderRadius: '18px 18px 26px 26px' }}
+          className="bg-secondary w-132px rounded-t-18px rounded-b-26px border-water relative h-[176px] flex-none overflow-hidden border-2"
         >
           <div
             className="absolute inset-x-0 bottom-0 transition-[height] duration-500"
@@ -131,10 +130,10 @@ export default function Hydration() {
                 'linear-gradient(180deg, color-mix(in oklab, var(--color-water) 75%, transparent), var(--color-water))',
             }}
           />
-          <div className="tnum absolute inset-0 grid place-items-center text-center text-[13px] font-bold">
+          <div className="tnum text-13px absolute inset-0 grid place-items-center text-center font-bold">
             {(totalMl / 1000).toFixed(1)} L
             <br />
-            <span className="text-text-2 text-[11px] font-medium">
+            <span className="text-text-2 text-11px font-medium">
               / {(targetMl / 1000).toFixed(1)} L
             </span>
           </div>
@@ -142,12 +141,12 @@ export default function Hydration() {
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div>
-            <div className="numeral text-[22px] font-bold">
+            <div className="numeral text-22px font-bold">
               {toGoMl > 0
                 ? t('hydration.to_go', { amount: (toGoMl / 1000).toFixed(1) })
                 : t('hydration.goal_reached')}
             </div>
-            <div className="text-muted-foreground tnum text-[12.5px]">{percent}%</div>
+            <div className="text-muted-foreground tnum text-12-5px">{percent}%</div>
           </div>
 
           <GlassRow
@@ -195,19 +194,17 @@ export default function Hydration() {
             </Button>
             <WaterCustomAmountPopover presets={presets} onAdd={add} />
           </div>
-          <p className="text-muted-foreground text-[11.5px] leading-relaxed">
+          <p className="text-muted-foreground text-11-5px leading-relaxed">
             {t('hydration.quick_add_note')}
           </p>
         </div>
       </Card>
 
-      <Card className="flex flex-col gap-3 p-[22px]">
+      <Card className="p-22px flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="text-[15px] font-bold">{t('hydration.entries_header')}</div>
+          <div className="text-15px font-bold">{t('hydration.entries_header')}</div>
           {entries.length > 0 ? (
-            <div className="tnum text-[13px] font-bold text-[var(--color-water)]">
-              {formatNumber(totalMl)} ml
-            </div>
+            <div className="tnum text-13px text-water font-bold">{formatNumber(totalMl)} ml</div>
           ) : null}
         </div>
         {entries.length === 0 ? (
@@ -217,18 +214,18 @@ export default function Hydration() {
             description={t('hydration.no_entries_desc')}
           />
         ) : (
-          <div className="-mx-[22px] flex flex-col">
+          <div className="-mx-22px flex flex-col">
             {entries.map((entry) =>
               confirmDeleteId === entry.id ? (
                 <div
                   key={entry.id}
-                  className="border-border flex items-center gap-3 border-t px-[22px] py-2.5 first:border-t-0"
+                  className="border-border px-22px flex items-center gap-3 border-t py-2.5 first:border-t-0"
                   style={{ background: 'color-mix(in oklab, var(--color-fat) 7%, transparent)' }}
                 >
-                  <span className="text-muted-foreground tnum w-11 flex-none text-[12px]">
+                  <span className="text-muted-foreground tnum text-12px w-11 flex-none">
                     {formatTime(entry.timestamp)}
                   </span>
-                  <span className="text-text-2 min-w-0 flex-1 truncate text-[12.5px]">
+                  <span className="text-text-2 text-12-5px min-w-0 flex-1 truncate">
                     {t('hydration.remove_entry_confirm')}
                   </span>
                   <Button
@@ -254,24 +251,22 @@ export default function Hydration() {
               ) : (
                 <div
                   key={entry.id}
-                  className="border-border flex items-center gap-3 border-t px-[22px] py-2.5 first:border-t-0"
+                  className="border-border px-22px flex items-center gap-3 border-t py-2.5 first:border-t-0"
                 >
-                  <span className="text-muted-foreground tnum w-11 flex-none text-[12px]">
+                  <span className="text-muted-foreground tnum text-12px w-11 flex-none">
                     {formatTime(entry.timestamp)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
+                  <span className="text-13-5px min-w-0 flex-1 truncate font-semibold">
                     {entry.note ?? t('hydration.entry_water')}
                   </span>
-                  <span className="tnum text-[13px] font-bold text-[var(--color-water)]">
-                    {entry.amountMl} ml
-                  </span>
+                  <span className="tnum text-13px text-water font-bold">{entry.amountMl} ml</span>
                   <button
                     type="button"
                     onClick={() => {
                       setConfirmDeleteId(entry.id);
                     }}
                     aria-label={t('hydration.delete_entry_aria')}
-                    className="text-muted-foreground hover:text-destructive grid size-8 place-items-center rounded-[10px]"
+                    className="text-muted-foreground hover:text-destructive rounded-10px grid size-8 place-items-center"
                   >
                     <Trash2 className="size-4" />
                   </button>

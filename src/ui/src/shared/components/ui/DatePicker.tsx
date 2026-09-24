@@ -61,18 +61,12 @@ export function DatePicker({
           data-testid={testId}
           data-value={value ?? ''}
           className={cn(
-            'flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
+            'bg-background border-input outline-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
             'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            !selected && 'text-muted-foreground',
+            selected ? 'text-foreground' : 'text-muted-foreground',
             className,
           )}
-          style={{
-            backgroundColor: 'var(--color-background)',
-            borderColor: 'var(--color-input)',
-            color: selected ? 'var(--color-foreground)' : 'var(--color-muted-foreground)',
-            outlineColor: 'var(--color-ring)',
-          }}
         >
           <span>{selected ? format(selected, 'dd MMM yyyy') : placeholder}</span>
           <CalendarIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -84,17 +78,12 @@ export function DatePicker({
           align="start"
           sideOffset={4}
           className={cn(
-            'z-50 rounded-md border shadow-md',
+            'bg-popover text-popover-foreground border-border z-50 rounded-md border shadow-md',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
             'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
             'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
           )}
-          style={{
-            backgroundColor: 'var(--color-popover)',
-            color: 'var(--color-popover-foreground)',
-            borderColor: 'var(--color-border)',
-          }}
         >
           <Calendar
             mode="single"

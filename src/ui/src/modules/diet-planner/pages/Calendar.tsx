@@ -378,7 +378,7 @@ export default function Calendar() {
                 type="button"
                 onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
                 aria-label={t('common.previous')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-11 place-items-center rounded-[12px] border transition-colors"
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -386,7 +386,7 @@ export default function Calendar() {
                 type="button"
                 onClick={view === 'week' ? goToNextWeek : goToNextDay}
                 aria-label={t('common.next')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-11 place-items-center rounded-[12px] border transition-colors"
+                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
               >
                 <ChevronRight className="size-4" />
               </button>

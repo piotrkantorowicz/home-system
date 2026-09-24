@@ -63,12 +63,12 @@ export function ProfileOverview({ onEdit }: ProfileOverviewProps) {
   const toGo = weight !== null && targetWeight !== null ? Math.abs(weight - targetWeight) : null;
 
   return (
-    <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-2">
+    <div className="gap-18px grid grid-cols-1 items-start lg:grid-cols-2">
       {/* Identity */}
-      <Card className="flex flex-col gap-4 p-[22px]">
+      <Card className="p-22px flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <div
-            className="grid size-[60px] flex-none place-items-center rounded-[20px] text-[20px] font-bold text-white"
+            className="size-60px text-20px grid flex-none place-items-center rounded-[20px] font-bold text-white"
             style={{ background: 'var(--gradient-avatar)' }}
           >
             {getInitials(displayName)}
@@ -76,7 +76,7 @@ export function ProfileOverview({ onEdit }: ProfileOverviewProps) {
           <div className="min-w-0">
             <div className="truncate text-[18px] font-bold">{displayName}</div>
             {identityMeta ? (
-              <div className="text-muted-foreground text-[12.5px]">{identityMeta}</div>
+              <div className="text-muted-foreground text-12-5px">{identityMeta}</div>
             ) : null}
           </div>
         </div>
@@ -107,11 +107,11 @@ export function ProfileOverview({ onEdit }: ProfileOverviewProps) {
                 }}
               />
             </div>
-            <div className="text-muted-foreground text-[11.5px]">
+            <div className="text-muted-foreground text-11-5px">
               {t('profile.overview.weight_to_go', { kg: toGo.toFixed(1) })}
             </div>
             {prediction?.estimatedGoalDate ? (
-              <div className="text-muted-foreground text-[11.5px]">
+              <div className="text-muted-foreground text-11-5px">
                 {t('profile.overview.est_goal_date')}{' '}
                 <strong className="text-foreground">
                   {new Date(prediction.estimatedGoalDate).toLocaleDateString(i18n.language, {
@@ -138,10 +138,10 @@ export function ProfileOverview({ onEdit }: ProfileOverviewProps) {
       </Card>
 
       {/* Energy model */}
-      <Card className="flex flex-col gap-4 p-[22px]">
+      <Card className="p-22px flex flex-col gap-4">
         <div>
-          <div className="text-[15px] font-bold">{t('profile.overview.energy_model')}</div>
-          <div className="text-muted-foreground text-[12.5px]">
+          <div className="text-15px font-bold">{t('profile.overview.energy_model')}</div>
+          <div className="text-muted-foreground text-12-5px">
             {t('profile.overview.energy_model_sub')}
           </div>
         </div>
@@ -169,7 +169,7 @@ export function ProfileOverview({ onEdit }: ProfileOverviewProps) {
             />
           </div>
         ) : (
-          <p className="text-muted-foreground text-[12.5px]">
+          <p className="text-muted-foreground text-12-5px">
             {t('profile.overview.energy_model_empty')}
           </p>
         )}
@@ -230,8 +230,8 @@ function MacroTargetsCard({
   ];
 
   return (
-    <Card className="flex flex-col gap-4 p-[22px]">
-      <div className="text-[15px] font-bold">{t('profile.overview.macro_targets')}</div>
+    <Card className="p-22px flex flex-col gap-4">
+      <div className="text-15px font-bold">{t('profile.overview.macro_targets')}</div>
 
       {totalCal > 0 ? (
         <div className="flex h-3 overflow-hidden rounded-full">
@@ -246,7 +246,7 @@ function MacroTargetsCard({
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground text-[12.5px]">
+        <p className="text-muted-foreground text-12-5px">
           {t('profile.overview.macro_targets_empty')}
         </p>
       )}
@@ -256,7 +256,7 @@ function MacroTargetsCard({
           <div
             key={row.key}
             className={cn(
-              'flex items-center justify-between py-2 text-[13px]',
+              'text-13px flex items-center justify-between py-2',
               row.key === 'fiber' && 'border-border mt-1 border-t pt-3',
             )}
           >
@@ -354,8 +354,8 @@ function RemindersCard({ onEditAll }: { onEditAll: () => void }) {
     : [];
 
   return (
-    <Card className="flex flex-col gap-2 p-[22px]">
-      <div className="mb-1 text-[15px] font-bold">{t('profile.sidebar.notifications')}</div>
+    <Card className="p-22px flex flex-col gap-2">
+      <div className="text-15px mb-1 font-bold">{t('profile.sidebar.notifications')}</div>
       {rows.map((row, i) => (
         <div
           key={row.field}
@@ -365,9 +365,9 @@ function RemindersCard({ onEditAll }: { onEditAll: () => void }) {
           )}
         >
           <div className="min-w-0">
-            <div className="text-[13.5px] font-semibold">{row.label}</div>
+            <div className="text-13-5px font-semibold">{row.label}</div>
             {row.detail ? (
-              <div className="text-muted-foreground text-[11.5px]">{row.detail}</div>
+              <div className="text-muted-foreground text-11-5px">{row.detail}</div>
             ) : null}
           </div>
           <Switch

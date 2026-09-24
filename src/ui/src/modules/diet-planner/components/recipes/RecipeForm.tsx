@@ -155,16 +155,11 @@ function ProductPicker({ value, onChange, placeholder, invalid, inputId }: Produ
         createPortal(
           <ul
             role="listbox"
-            className="max-h-60 overflow-auto rounded-lg border shadow-lg"
+            className="bg-popover text-popover-foreground border-border fixed z-[60] max-h-60 overflow-auto rounded-lg border shadow-lg"
             style={{
-              position: 'fixed',
               top: popoverRect.top,
               left: popoverRect.left,
               width: popoverRect.width,
-              zIndex: 60,
-              background: 'var(--color-popover)',
-              color: 'var(--color-popover-foreground)',
-              borderColor: 'var(--color-border)',
             }}
           >
             {products.map((product) => (
@@ -228,7 +223,7 @@ export function RecipeForm({
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="mx-auto flex max-w-3xl flex-col gap-[18px]"
+      className="gap-18px mx-auto flex max-w-3xl flex-col"
     >
       <Card>
         <CardHeader>
@@ -452,7 +447,7 @@ export function RecipeForm({
           <CardTitle>{t('recipe_form.summary_header')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3 text-[13px]">
+          <div className="text-13px space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('recipe_form.total_ingredients')}</span>
               <span className="tnum font-semibold">{fields.length}</span>

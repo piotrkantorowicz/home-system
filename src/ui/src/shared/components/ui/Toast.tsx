@@ -110,7 +110,7 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
               toast.action?.onClick();
               handleDismiss();
             }}
-            className="border-border text-foreground hover:bg-muted mt-2 h-7 rounded-[9px] border px-2.5 text-xs font-bold transition-colors"
+            className="border-border text-foreground hover:bg-muted rounded-9px mt-2 h-7 border px-2.5 text-xs font-bold transition-colors"
           >
             {toast.action.label}
           </button>

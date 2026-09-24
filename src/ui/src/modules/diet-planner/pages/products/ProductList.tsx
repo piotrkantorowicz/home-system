@@ -130,7 +130,7 @@ export default function ProductList() {
     <div className="animate-fade-in flex flex-col gap-6 px-4 py-6 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold">{t('products.title')}</h1>
+          <h1 className="text-26px font-bold">{t('products.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {t('products.count', { count: data?.totalCount ?? 0 })}
           </p>
@@ -144,9 +144,9 @@ export default function ProductList() {
       </div>
 
       {/* Filter strip */}
-      <div className="border-border bg-card flex flex-wrap items-center gap-2.5 rounded-[18px] border p-3.5">
-        <div className="bg-secondary border-border focus-within:ring-primary flex h-[38px] min-w-[180px] flex-1 items-center gap-2 rounded-[12px] border px-3 focus-within:ring-2">
-          <Search className="text-muted-foreground size-[15px] shrink-0" strokeWidth={2} />
+      <div className="border-border bg-card rounded-18px flex flex-wrap items-center gap-2.5 border p-3.5">
+        <div className="bg-secondary border-border focus-within:ring-primary h-38px min-w-180px rounded-12px flex flex-1 items-center gap-2 border px-3 focus-within:ring-2">
+          <Search className="text-muted-foreground size-15px shrink-0" strokeWidth={2} />
           <input
             value={search}
             onChange={(e) => {
@@ -154,7 +154,7 @@ export default function ProductList() {
             }}
             placeholder={t('products.search_placeholder')}
             aria-label={t('products.search_placeholder')}
-            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent text-[13px] outline-none"
+            className="text-foreground placeholder:text-muted-foreground text-13px w-full bg-transparent outline-none"
           />
         </div>
 
@@ -192,7 +192,7 @@ export default function ProductList() {
       {error ? <Banner variant="error">{error.message}</Banner> : null}
 
       {isLoading ? (
-        <Skeleton className="h-[420px] w-full rounded-[22px]" />
+        <Skeleton className="h-420px rounded-22px w-full" />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={Package}
@@ -210,11 +210,11 @@ export default function ProductList() {
           }
         />
       ) : view === 'table' ? (
-        <div className="border-border bg-card overflow-x-auto rounded-[22px] border" role="table">
+        <div className="border-border bg-card rounded-22px overflow-x-auto border" role="table">
           <div className="min-w-[720px]">
             <div
               role="row"
-              className="bg-secondary text-muted-foreground grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 text-[10.5px] font-semibold uppercase"
+              className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 font-semibold uppercase"
             >
               <span role="columnheader">{t('products.table.name')}</span>
               <span role="columnheader" className="text-right">
@@ -243,7 +243,7 @@ export default function ProductList() {
                   role="row"
                   aria-label={p.name}
                   className={cn(
-                    'border-border hover:bg-secondary focus-within:ring-primary relative grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 text-[13px] focus-within:ring-2 focus-within:ring-inset',
+                    'border-border hover:bg-secondary focus-within:ring-primary text-13px relative grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 focus-within:ring-2 focus-within:ring-inset',
                   )}
                   style={
                     incomplete
@@ -267,7 +267,7 @@ export default function ProductList() {
                       {p.name}
                     </Link>
                     {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
-                    <span className="text-muted-foreground text-[11.5px]">
+                    <span className="text-muted-foreground text-11-5px">
                       {unitLabel(p.defaultUnit, t)}
                     </span>
                   </span>
@@ -288,7 +288,7 @@ export default function ProductList() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3" role="list">
+        <div className="gap-18px grid sm:grid-cols-2 lg:grid-cols-3" role="list">
           {rows.map((p) => (
             <ProductCardItem
               key={p.id}
@@ -367,7 +367,7 @@ function FilterChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-colors',
+        'text-12px inline-flex h-11 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors',
         active
           ? 'bg-accent text-accent-foreground'
           : 'bg-secondary border-border text-text-2 hover:text-foreground border',
@@ -400,7 +400,7 @@ function MacroCell({
 function IncompleteBadge({ label }: { label: string }) {
   return (
     <span
-      className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-carbs)]"
+      className="rounded-6px text-10px text-carbs px-1.5 py-0.5 font-bold"
       style={{ background: 'color-mix(in oklab, var(--color-carbs) 22%, transparent)' }}
     >
       {label}
@@ -416,7 +416,7 @@ function RowMenu({ product, onDelete }: { product: Row; onDelete: () => void }) 
         <button
           type="button"
           aria-label={t('common.actions')}
-          className="text-muted-foreground hover:text-foreground relative z-10 grid size-11 place-items-center rounded-[10px]"
+          className="text-muted-foreground hover:text-foreground rounded-10px relative z-10 grid size-11 place-items-center"
         >
           <MoreVertical className="size-4" />
         </button>
@@ -474,12 +474,12 @@ function ProductCardItem({
     <div
       role="listitem"
       aria-label={product.name}
-      className="border-border bg-card hover:border-primary focus-within:ring-primary relative flex flex-col gap-3 rounded-[22px] border p-[18px] shadow-sm focus-within:ring-2"
+      className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px p-18px relative flex flex-col gap-3 border shadow-sm focus-within:ring-2"
     >
       <div className="flex items-start justify-between gap-2">
         <Link
           to={`/diet-planner/products/${product.id}`}
-          className="text-[14px] font-bold after:absolute after:inset-0 after:rounded-[22px] focus:outline-none"
+          className="text-14px after:rounded-22px font-bold after:absolute after:inset-0 focus:outline-none"
           onMouseEnter={onPrefetch}
           onFocus={onPrefetch}
         >
@@ -488,21 +488,21 @@ function ProductCardItem({
         <RowMenu product={product} onDelete={onDelete} />
       </div>
       {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
-      <div className="numeral text-[20px] font-bold">
+      <div className="numeral text-20px font-bold">
         {fmt(product.caloriesPer100g)}
-        <span className="text-muted-foreground ml-1 text-[11px] font-medium">kcal / 100 g</span>
+        <span className="text-muted-foreground text-11px ml-1 font-medium">kcal / 100 g</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {chips.map((c) => (
           <div
             key={c.key}
-            className="rounded-[9px] p-2 text-center"
+            className="rounded-9px p-2 text-center"
             style={{
               background: `color-mix(in oklab, var(--color-${c.key}) 12%, transparent)`,
             }}
           >
-            <div className="tnum text-[13px] font-bold">{fmt(val[c.key])}</div>
-            <div className="text-muted-foreground text-[9.5px]">{c.label}</div>
+            <div className="tnum text-13px font-bold">{fmt(val[c.key])}</div>
+            <div className="text-muted-foreground text-9-5px">{c.label}</div>
           </div>
         ))}
       </div>

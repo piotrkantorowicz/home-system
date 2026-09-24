@@ -92,7 +92,7 @@ export default function NutritionSummary() {
     <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold">{t('nutrition_page.title')}</h1>
+          <h1 className="text-26px font-bold">{t('nutrition_page.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('nutrition_page.subtitle')}</p>
         </div>
         <SegmentedControl
@@ -118,7 +118,7 @@ export default function NutritionSummary() {
           {t('dashboard.data_error')}
         </Banner>
       ) : isLoading ? (
-        <Skeleton className="h-[420px] w-full rounded-[22px]" />
+        <Skeleton className="h-420px rounded-22px w-full" />
       ) : days.length === 0 ? (
         <EmptyState
           icon={CalendarX}
@@ -127,7 +127,7 @@ export default function NutritionSummary() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-[18px] lg:grid-cols-4">
+          <div className="gap-18px grid grid-cols-2 lg:grid-cols-4">
             <MetricTile
               label={t('nutrition_page.avg_intake')}
               value={formatNumber(avgKcal)}
@@ -149,12 +149,12 @@ export default function NutritionSummary() {
             />
           </div>
 
-          <Card className="flex flex-col gap-4 p-[22px]">
-            <div className="text-[15px] font-bold">{t('nutrition_page.intake_vs_target')}</div>
+          <Card className="p-22px flex flex-col gap-4">
+            <div className="text-15px font-bold">{t('nutrition_page.intake_vs_target')}</div>
             <div className="relative flex h-[190px] items-end gap-1">
               {targetLinePct !== null ? (
                 <div
-                  className="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[var(--color-fat)]"
+                  className="border-fat pointer-events-none absolute inset-x-0 border-t-2 border-dashed"
                   style={{ bottom: `${String(targetLinePct)}%` }}
                 />
               ) : null}
@@ -188,13 +188,13 @@ export default function NutritionSummary() {
             </div>
           </Card>
 
-          <Card className="flex flex-col gap-4 p-[22px]">
-            <div className="text-[15px] font-bold">{t('nutrition_page.macro_split')}</div>
+          <Card className="p-22px flex flex-col gap-4">
+            <div className="text-15px font-bold">{t('nutrition_page.macro_split')}</div>
             <SplitRow label={t('nutrition_page.actual')} split={actualSplit} />
             {targetSplit ? (
               <SplitRow label={t('nutrition_page.target')} split={targetSplit} dim />
             ) : null}
-            <div className="text-muted-foreground flex gap-4 text-[11px]">
+            <div className="text-muted-foreground text-11px flex gap-4">
               {(['protein', 'carbs', 'fat'] as const).map((m) => (
                 <span key={m} className="inline-flex items-center gap-1.5 capitalize">
                   <span
@@ -211,7 +211,7 @@ export default function NutritionSummary() {
             <div className="min-w-[560px]">
               <div
                 role="row"
-                className="bg-secondary text-muted-foreground grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 text-[10.5px] font-semibold uppercase"
+                className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 font-semibold uppercase"
               >
                 <span role="columnheader">{t('nutrition_page.date')}</span>
                 <span role="columnheader" className="text-right">
@@ -234,7 +234,7 @@ export default function NutritionSummary() {
                 <div
                   key={day.date}
                   role="row"
-                  className="border-border grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 border-t px-4 py-2.5 text-[12.5px]"
+                  className="border-border text-12-5px grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 border-t px-4 py-2.5"
                 >
                   <span className="font-semibold">{day.date.slice(0, 10)}</span>
                   <span className="tnum text-right font-semibold">
@@ -275,7 +275,7 @@ function SplitRow({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="text-muted-foreground text-[10.5px] font-semibold uppercase">{label}</div>
+      <div className="text-muted-foreground text-10-5px font-semibold uppercase">{label}</div>
       <div className={cn('flex h-3.5 overflow-hidden rounded-full', dim && 'opacity-40')}>
         {(['protein', 'carbs', 'fat'] as const).map((m) => (
           <div key={m} style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }} />

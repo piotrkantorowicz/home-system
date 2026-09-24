@@ -59,7 +59,7 @@ export function WaterCard() {
         className="bg-muted h-2 overflow-hidden rounded-full"
       >
         <div
-          className="h-full rounded-full bg-[var(--color-water)]"
+          className="bg-water h-full rounded-full"
           style={{ width: `${String(target > 0 ? Math.min(100, (total / target) * 100) : 0)}%` }}
         />
       </div>

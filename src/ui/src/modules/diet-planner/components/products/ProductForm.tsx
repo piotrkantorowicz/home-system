@@ -73,11 +73,11 @@ export function ProductForm({
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="grid gap-[18px] lg:grid-cols-3"
+      className="gap-18px grid lg:grid-cols-3"
     >
       <Card className="flex flex-col gap-5 p-6 lg:col-span-2">
         <div>
-          <div className="mb-3 text-[15px] font-bold">{t('product_form.basic_info')}</div>
+          <div className="text-15px mb-3 font-bold">{t('product_form.basic_info')}</div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="name" label={t('product_form.name_label')} error={errors.name}>
               <input
@@ -102,7 +102,7 @@ export function ProductForm({
         </div>
 
         <div className="border-border border-t pt-5">
-          <div className="mb-3 text-[15px] font-bold">{t('product_form.nutrition_header')}</div>
+          <div className="text-15px mb-3 font-bold">{t('product_form.nutrition_header')}</div>
           <div className="grid gap-4 sm:grid-cols-3">
             <NumField
               id="caloriesPer100g"
@@ -139,7 +139,7 @@ export function ProductForm({
         </div>
 
         <div className="border-border border-t pt-5">
-          <div className="mb-3 text-[15px] font-bold">{t('product_form.conversions_header')}</div>
+          <div className="text-15px mb-3 font-bold">{t('product_form.conversions_header')}</div>
           <div className="grid gap-4 sm:grid-cols-2">
             <NumField
               id="densityGramsPerMl"
@@ -178,9 +178,9 @@ export function ProductForm({
         </div>
       </Card>
 
-      <div className="flex flex-col gap-[18px]">
-        <Card className="flex flex-col gap-3 p-[22px]">
-          <div className="text-[15px] font-bold">{t('product_form.macro_summary')}</div>
+      <div className="gap-18px flex flex-col">
+        <Card className="p-22px flex flex-col gap-3">
+          <div className="text-15px font-bold">{t('product_form.macro_summary')}</div>
           <div className="flex h-3 overflow-hidden rounded-full">
             {(['protein', 'carbs', 'fat'] as const).map((k, i) => (
               <div
@@ -200,7 +200,7 @@ export function ProductForm({
                 ['fat', t('products.table.fat'), fat, fCal],
               ] as const
             ).map(([k, label, grams, cal]) => (
-              <div key={k} className="flex items-center justify-between py-1.5 text-[12.5px]">
+              <div key={k} className="text-12-5px flex items-center justify-between py-1.5">
                 <span className="inline-flex items-center gap-2 font-semibold">
                   <span
                     className="size-2.5 rounded-full"
@@ -237,7 +237,7 @@ export function ProductForm({
 
 function inputClass(invalid: boolean): string {
   return cn(
-    'h-[42px] w-full rounded-[13px] border px-3 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]',
+    'h-42px w-full rounded-13px border px-3 text-13px outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
     invalid ? 'border-destructive' : 'border-border bg-secondary',
   );
 }
@@ -262,7 +262,7 @@ function Field({
       <label
         htmlFor={id}
         className={cn(
-          'mb-1 block text-[12px] font-semibold',
+          'text-12px mb-1 block font-semibold',
           error ? 'text-destructive' : (labelClassName ?? 'text-text-2'),
         )}
       >
@@ -281,9 +281,9 @@ function Field({
         {children}
       </div>
       {error ? (
-        <p className="text-destructive mt-1 text-[11.5px]">{error.message}</p>
+        <p className="text-destructive text-11-5px mt-1">{error.message}</p>
       ) : hint ? (
-        <p className="text-muted-foreground mt-1 text-[11.5px]">{hint}</p>
+        <p className="text-muted-foreground text-11-5px mt-1">{hint}</p>
       ) : null}
     </div>
   );

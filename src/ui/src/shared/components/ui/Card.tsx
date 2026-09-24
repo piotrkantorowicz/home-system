@@ -33,7 +33,7 @@ export function CardDescription({ ref, className, ...props }: React.ComponentPro
   return (
     <p
       ref={ref}
-      className={cn('text-muted-foreground text-[0.9rem] leading-relaxed', className)}
+      className={cn('text-muted-foreground text-0-9rem leading-relaxed', className)}
       {...props}
     />
   );

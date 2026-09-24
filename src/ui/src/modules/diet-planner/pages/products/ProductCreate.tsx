@@ -36,7 +36,7 @@ export default function ProductCreate() {
   return (
     <div className="animate-fade-in-up mx-auto max-w-6xl px-4 py-6 md:px-8">
       <div className="mb-8">
-        <h1 className="text-[26px] font-bold">{t('product_form.create_title')}</h1>
+        <h1 className="text-26px font-bold">{t('product_form.create_title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('product_form.create_subtitle')}</p>
       </div>
 
