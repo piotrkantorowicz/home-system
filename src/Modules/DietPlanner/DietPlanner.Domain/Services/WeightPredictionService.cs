@@ -64,6 +64,9 @@ public static class WeightPredictionService
     /// current and target weight already differ by less than 0.01 kg, and null when the weekly
     /// change is zero or moves away from the target.
     /// </summary>
+    /// <param name="currentWeightKg">The current weight, in kilograms.</param>
+    /// <param name="targetWeightKg">The target weight, in kilograms.</param>
+    /// <param name="weeklyWeightChangeKg">The projected weekly weight change, in kilograms.</param>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static DateOnly? EstimateGoalDate(
         decimal currentWeightKg,

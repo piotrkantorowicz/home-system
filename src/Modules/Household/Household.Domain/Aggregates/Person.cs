@@ -121,6 +121,7 @@ public sealed class Person : AggregateRoot<PersonId>
     /// completes on that person's first sign-in — see <see cref="LinkAuthSubject"/>.
     /// </summary>
     /// <param name="email">The address the future login must present.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     /// <exception cref="ArgumentNullException"><paramref name="email"/> is null.</exception>
     /// <exception cref="HouseholdDomainException">The person is not managed, or is already linked.</exception>
     public void MarkPendingAccountLink(PersonEmail email, DateTime now)

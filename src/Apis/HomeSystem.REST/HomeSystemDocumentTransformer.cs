@@ -31,14 +31,14 @@ public sealed class HomeSystemDocumentTransformer : IOpenApiDocumentTransformer
     public async Task TransformAsync(
         OpenApiDocument document,
         OpenApiDocumentTransformerContext context,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(context);
 
         ApplyInfo(document);
         ApplyBearerSecurity(document);
-        await ApplySharedProblemResponsesAsync(document, context, ct);
+        await ApplySharedProblemResponsesAsync(document, context, cancellationToken);
     }
 
     private static void ApplyInfo(OpenApiDocument document)

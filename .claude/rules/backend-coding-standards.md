@@ -22,7 +22,9 @@
   <TargetFramework>net10.0</TargetFramework>
   <ImplicitUsings>enable</ImplicitUsings>
   <Nullable>enable</Nullable>
-  <TreatWarningsAsErrors>false</TreatWarningsAsErrors>   <!-- flipping to true is tracked in #269 -->
+  <AnalysisMode>Recommended</AnalysisMode>
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 </PropertyGroup>
 ```
