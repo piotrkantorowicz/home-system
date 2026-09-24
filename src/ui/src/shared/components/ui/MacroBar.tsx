@@ -39,7 +39,7 @@ export function MacroBar({
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <div className="flex justify-between text-[12.5px]">
+      <div className="text-12-5px flex justify-between">
         <span className="font-semibold">{label}</span>
         <span className="text-text-2 tnum">
           {valueText ?? `${formatNumber(value)} / ${formatNumber(target)}${unit ? ` ${unit}` : ''}`}

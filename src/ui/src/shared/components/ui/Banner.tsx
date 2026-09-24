@@ -38,7 +38,7 @@ export function Banner({
   return (
     <div
       role={variant === 'error' ? 'alert' : 'status'}
-      className={cn('flex gap-3 rounded-[16px] border p-4', className)}
+      className={cn('rounded-16px flex gap-3 border p-4', className)}
       style={{
         background: `color-mix(in oklab, hsl(var(${token})) 12%, transparent)`,
         borderColor: `color-mix(in oklab, hsl(var(${token})) 28%, transparent)`,
@@ -49,7 +49,7 @@ export function Banner({
         style={{ color: `hsl(var(${token}))` }}
         strokeWidth={2.2}
       />
-      <div className="min-w-0 flex-1 text-[12.5px]">
+      <div className="text-12-5px min-w-0 flex-1">
         {title ? (
           <div className="font-bold" style={{ color: `hsl(var(${token}))` }}>
             {title}

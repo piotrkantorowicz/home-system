@@ -54,7 +54,7 @@ export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCard
       <CardContent className="space-y-6 p-5">
         {/* Calories */}
         <section className="text-center">
-          <p className="text-muted-foreground text-[0.7rem] font-semibold tracking-widest uppercase">
+          <p className="text-muted-foreground text-0-7rem font-semibold tracking-widest uppercase">
             {t('dashboard.hero_eaten')}
           </p>
           <p className="mt-1 text-4xl font-bold tracking-tight tabular-nums">
@@ -78,7 +78,7 @@ export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCard
 
         {/* Macros */}
         <section className="space-y-3 border-t pt-4">
-          <p className="text-muted-foreground text-[0.7rem] font-semibold tracking-widest uppercase">
+          <p className="text-muted-foreground text-0-7rem font-semibold tracking-widest uppercase">
             {t('day_view.summary.macros')}
           </p>
           <div className="space-y-2">
@@ -112,7 +112,7 @@ export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCard
         {/* Meals progress */}
         <section className="space-y-2 border-t pt-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-muted-foreground text-[0.7rem] font-semibold tracking-widest uppercase">
+            <p className="text-muted-foreground text-0-7rem font-semibold tracking-widest uppercase">
               {t('day_view.summary.meals')}
             </p>
             <span className="text-sm font-semibold tabular-nums">
@@ -132,7 +132,7 @@ export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCard
         {/* Hydration */}
         <section className="space-y-2 border-t pt-4">
           <div className="flex items-baseline justify-between">
-            <p className="text-muted-foreground text-[0.7rem] font-semibold tracking-widest uppercase">
+            <p className="text-muted-foreground text-0-7rem font-semibold tracking-widest uppercase">
               <Droplets className="mr-1 inline-block h-3 w-3" />
               {t('day_view.summary.hydration')}
             </p>

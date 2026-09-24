@@ -28,7 +28,7 @@ export function StatusPill({ variant, icon: Icon, children, className }: StatusP
   return (
     <span
       className={cn(
-        'inline-flex h-[30px] items-center gap-1.5 rounded-full px-3 text-xs font-bold',
+        'h-30px inline-flex items-center gap-1.5 rounded-full px-3 text-xs font-bold',
         variantText[variant],
         className,
       )}

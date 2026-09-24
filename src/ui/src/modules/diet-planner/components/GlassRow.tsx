@@ -54,10 +54,7 @@ export function GlassRow({
         aria-valuenow={Math.min(totalMl, targetMl)}
         className="bg-muted h-2 overflow-hidden rounded-full"
       >
-        <div
-          className="h-full rounded-full bg-[var(--color-water)]"
-          style={{ width: `${String(percent)}%` }}
-        />
+        <div className="bg-water h-full rounded-full" style={{ width: `${String(percent)}%` }} />
       </div>
     );
   }
@@ -70,9 +67,9 @@ export function GlassRow({
   const partialMl = Math.round(totalMl - filled * glassMl);
   const hasPartial = partialMl > 0;
 
-  const heightClass = size === 'sm' ? 'h-11' : 'h-[60px]';
-  const radiusClass = size === 'sm' ? 'rounded-[11px]' : 'rounded-[13px]';
-  const textClass = size === 'sm' ? 'text-[10px]' : 'text-[11px]';
+  const heightClass = size === 'sm' ? 'h-11' : 'h-60px';
+  const radiusClass = size === 'sm' ? 'rounded-11px' : 'rounded-13px';
+  const textClass = size === 'sm' ? 'text-10px' : 'text-11px';
 
   const firstEmptyIndex = filled + (hasPartial ? 1 : 0);
 

@@ -41,23 +41,23 @@ export function MetricTile({
   return (
     <div
       className={cn(
-        'border-border rounded-[15px] border p-3.5',
+        'border-border rounded-15px border p-3.5',
         accent === 'default' && 'bg-secondary',
         className,
       )}
       style={accent === 'default' ? undefined : { background: accentTint[accent] }}
     >
-      <div className="text-muted-foreground text-[10.5px] font-semibold tracking-[0.05em] uppercase">
+      <div className="text-muted-foreground text-10-5px tracking-0-05em font-semibold uppercase">
         {label}
       </div>
       {loading ? (
         <Skeleton className="mt-1 h-5 w-16" />
       ) : (
-        <div className={cn('numeral mt-0.5 text-[19px] font-bold', accentValueClass[accent])}>
+        <div className={cn('numeral text-19px mt-0.5 font-bold', accentValueClass[accent])}>
           {value}
         </div>
       )}
-      {hint ? <div className="text-muted-foreground text-[10.5px]">{hint}</div> : null}
+      {hint ? <div className="text-muted-foreground text-10-5px">{hint}</div> : null}
     </div>
   );
 }

@@ -108,11 +108,11 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="flex flex-col gap-[18px]"
+      className="gap-18px flex flex-col"
     >
       <Card>
         <CardHeader>
-          <CardTitle className="text-[15px]">{t('goals.nutrition_header')}</CardTitle>
+          <CardTitle className="text-15px">{t('goals.nutrition_header')}</CardTitle>
           <CardDescription>{t('goals.nutrition_desc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">

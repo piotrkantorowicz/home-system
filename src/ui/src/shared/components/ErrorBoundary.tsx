@@ -25,7 +25,7 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
           </svg>
         </div>
         <h1 className="mb-3 text-2xl font-bold">Something went wrong</h1>
-        <p className="text-muted-foreground mb-6 text-[0.95rem]">{errorMessage}</p>
+        <p className="text-muted-foreground text-0-95rem mb-6">{errorMessage}</p>
         {import.meta.env.DEV && errorStack && (
           <pre className="bg-muted/50 text-muted-foreground mb-6 max-h-48 overflow-auto rounded-xl border p-4 text-left text-xs">
             {errorStack}

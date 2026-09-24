@@ -27,14 +27,14 @@ export function ChannelToggleRow({
   return (
     <div
       className={cn(
-        'border-border bg-card flex items-center justify-between gap-4 rounded-[13px] border p-4',
+        'border-border bg-card rounded-13px flex items-center justify-between gap-4 border p-4',
         disabled && 'opacity-60',
       )}
       title={disabled && disabledReason ? disabledReason : undefined}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="bg-accent text-primary flex size-9 shrink-0 items-center justify-center rounded-[10px]">
-          <Icon aria-hidden className="size-[18px]" />
+        <span className="bg-accent text-primary rounded-10px flex size-9 shrink-0 items-center justify-center">
+          <Icon aria-hidden className="size-18px" />
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium">

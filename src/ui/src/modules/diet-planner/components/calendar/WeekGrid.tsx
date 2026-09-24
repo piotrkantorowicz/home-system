@@ -107,7 +107,7 @@ export function WeekGrid({
   if (loading) {
     return (
       <Card className="p-4">
-        <Skeleton className="h-[420px] w-full" />
+        <Skeleton className="h-420px w-full" />
       </Card>
     );
   }
@@ -136,12 +136,12 @@ export function WeekGrid({
                   isToday && 'bg-accent',
                 )}
               >
-                <div className={cn('text-[12px] font-bold', isToday && 'text-accent-foreground')}>
+                <div className={cn('text-12px font-bold', isToday && 'text-accent-foreground')}>
                   {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
                 </div>
                 <div
                   className={cn(
-                    'text-[11px]',
+                    'text-11px',
                     isToday ? 'text-accent-foreground/80' : 'text-muted-foreground',
                   )}
                 >
@@ -170,7 +170,7 @@ export function WeekGrid({
           ))}
 
           {/* Day total row */}
-          <div className="text-muted-foreground px-3 py-3 text-[12px] font-bold">
+          <div className="text-muted-foreground text-12px px-3 py-3 font-bold">
             {t('calendar.week_grid.day_total')}
           </div>
           {weekDays.map((date) => {
@@ -187,10 +187,10 @@ export function WeekGrid({
                   isToday && 'bg-accent',
                 )}
               >
-                <div className="numeral text-[12.5px] font-bold">{formatNumber(kcal)}</div>
+                <div className="numeral text-12-5px font-bold">{formatNumber(kcal)}</div>
                 <div
                   className={cn(
-                    'text-[10.5px] font-semibold',
+                    'text-10-5px font-semibold',
                     delta === null
                       ? 'text-muted-foreground'
                       : delta > 0
@@ -221,7 +221,7 @@ export function WeekGrid({
       </Card>
 
       {/* Legend */}
-      <div className="border-border bg-card flex flex-wrap items-center gap-4 rounded-[18px] border px-4 py-3.5 text-[12px]">
+      <div className="border-border bg-card rounded-18px text-12px flex flex-wrap items-center gap-4 border px-4 py-3.5">
         <span className="font-semibold">{t('calendar.week_grid.legend')}</span>
         <LegendSwatch macro="carbs" label={t('calendar.week_grid.carb_led')} />
         <LegendSwatch macro="protein" label={t('calendar.week_grid.protein_led')} />
@@ -261,7 +261,7 @@ function FragmentRow({
     <>
       <div
         role="rowheader"
-        className="border-border text-muted-foreground border-t px-3 py-3 text-[12px] font-bold"
+        className="border-border text-muted-foreground text-12px border-t px-3 py-3 font-bold"
       >
         {slot.name}
       </div>
@@ -282,7 +282,7 @@ function FragmentRow({
                 onClick={() => {
                   onAddMeal(dateStr, slot.id);
                 }}
-                className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 grid min-h-[52px] w-full place-items-center rounded-[12px] border border-dashed text-[17px] transition-colors"
+                className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 min-h-52px rounded-12px text-17px grid w-full place-items-center border border-dashed transition-colors"
                 title={t('meal_form.add_title')}
                 aria-label={t('meal_form.add_title')}
               >
@@ -338,7 +338,7 @@ function MealChip({
         <button
           type="button"
           className={cn(
-            'w-full rounded-[12px] px-2.5 py-2 text-left text-[11.5px] leading-tight font-semibold transition-[filter] hover:brightness-95',
+            'rounded-12px text-11-5px w-full px-2.5 py-2 text-left leading-tight font-semibold transition-[filter] hover:brightness-95',
             done && 'opacity-60',
           )}
           style={{ background: macroTint[dominantMacro([meal])] }}
@@ -356,7 +356,7 @@ function MealChip({
               onCompleteMeal(meal);
             }}
           >
-            <Check className="size-4 text-[var(--color-good)]" />
+            <Check className="text-good size-4" />
             {t('calendar.meal_actions.mark_done')}
           </DropdownMenuItem>
         )}

@@ -56,33 +56,33 @@ export function WaterCustomAmountPopover({
       </PopoverTrigger>
       <PopoverContent className="w-auto">
         <div className="flex flex-col gap-3">
-          <div className="text-[12.5px] font-bold">{t('hydration.custom_popover_title')}</div>
+          <div className="text-12-5px font-bold">{t('hydration.custom_popover_title')}</div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="border-border bg-card flex h-[42px] items-center overflow-hidden rounded-[13px] border">
+            <div className="border-border bg-card h-42px rounded-13px flex items-center overflow-hidden border">
               <button
                 type="button"
                 onClick={() => {
                   step(-STEP_ML);
                 }}
                 aria-label={t('hydration.custom_step_down_aria')}
-                className="text-text-2 hover:bg-muted flex h-full w-9 items-center justify-center text-[17px]"
+                className="text-text-2 hover:bg-muted text-17px flex h-full w-9 items-center justify-center"
               >
                 <Minus className="size-3.5" />
               </button>
-              <span className="tnum w-[60px] text-center text-[15px] font-bold">{amount}</span>
+              <span className="tnum w-60px text-15px text-center font-bold">{amount}</span>
               <button
                 type="button"
                 onClick={() => {
                   step(STEP_ML);
                 }}
                 aria-label={t('hydration.custom_step_up_aria')}
-                className="text-text-2 hover:bg-muted flex h-full w-9 items-center justify-center text-[17px]"
+                className="text-text-2 hover:bg-muted text-17px flex h-full w-9 items-center justify-center"
               >
                 <Plus className="size-3.5" />
               </button>
             </div>
-            <span className="text-text-2 text-[12px] font-semibold">
+            <span className="text-text-2 text-12px font-semibold">
               {t('hydration.custom_ml_unit')}
             </span>
 
@@ -95,7 +95,7 @@ export function WaterCustomAmountPopover({
                     onClick={() => {
                       setAmount(p);
                     }}
-                    className="border-border bg-card hover:border-border-strong tnum h-[30px] rounded-[9px] border px-2.5 text-[12px] font-bold"
+                    className="border-border bg-card hover:border-border-strong tnum h-30px rounded-9px text-12px border px-2.5 font-bold"
                   >
                     {p}
                   </button>
@@ -111,7 +111,7 @@ export function WaterCustomAmountPopover({
                 setNote(e.target.value);
               }}
               placeholder={t('hydration.custom_note_placeholder')}
-              className="h-[38px] flex-1 text-[12.5px]"
+              className="h-38px text-12-5px flex-1"
             />
             <Button
               type="button"

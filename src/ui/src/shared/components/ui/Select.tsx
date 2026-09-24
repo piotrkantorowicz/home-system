@@ -9,7 +9,7 @@ export function Select({ ref, className, children, ...props }: SelectProps) {
     <div className="relative w-full">
       <select
         className={cn(
-          'border-border bg-secondary aria-[invalid=true]:border-destructive flex h-[42px] w-full appearance-none rounded-[13px] border px-3 text-[13px] [color-scheme:light] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:[color-scheme:dark]',
+          'border-border bg-secondary aria-[invalid=true]:border-destructive h-42px rounded-13px text-13px focus-visible:ring-ring flex w-full appearance-none border px-3 [color-scheme:light] transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:[color-scheme:dark]',
           className,
         )}
         ref={ref}

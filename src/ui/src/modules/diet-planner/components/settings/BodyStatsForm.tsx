@@ -113,12 +113,12 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="flex flex-col gap-[18px]"
+      className="gap-18px flex flex-col"
     >
       {/* Personal Info — dateOfBirth, gender, activityLevel */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-[15px]">{t('profile.personal_header')}</CardTitle>
+          <CardTitle className="text-15px">{t('profile.personal_header')}</CardTitle>
           <CardDescription>{t('profile.personal_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -139,7 +139,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 )}
               />
               {errors.dateOfBirth && (
-                <p className="text-destructive mt-1 text-[11.5px]">{errors.dateOfBirth.message}</p>
+                <p className="text-destructive text-11-5px mt-1">{errors.dateOfBirth.message}</p>
               )}
             </div>
             <div>
@@ -156,7 +156,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 <option value="Other">{t('profile.gender_other')}</option>
               </Select>
               {errors.gender && (
-                <p className="text-destructive mt-1 text-[11.5px]">{errors.gender.message}</p>
+                <p className="text-destructive text-11-5px mt-1">{errors.gender.message}</p>
               )}
             </div>
             <div>
@@ -175,9 +175,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 <option value="ExtraActive">{t('profile.activity_extra')}</option>
               </Select>
               {errors.activityLevel && (
-                <p className="text-destructive mt-1 text-[11.5px]">
-                  {errors.activityLevel.message}
-                </p>
+                <p className="text-destructive text-11-5px mt-1">{errors.activityLevel.message}</p>
               )}
             </div>
           </div>
@@ -187,7 +185,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
       {/* Body Measurements — heightCm, currentWeightKg, targetWeightKg */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-[15px]">{t('profile.measurements_header')}</CardTitle>
+          <CardTitle className="text-15px">{t('profile.measurements_header')}</CardTitle>
           <CardDescription>{t('profile.measurements_desc')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,7 +202,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('heightCm')}
               />
               {errors.heightCm && (
-                <p className="text-destructive mt-1 text-[11.5px]">{errors.heightCm.message}</p>
+                <p className="text-destructive text-11-5px mt-1">{errors.heightCm.message}</p>
               )}
             </div>
             <div>
@@ -219,7 +217,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('currentWeightKg')}
               />
               {errors.currentWeightKg && (
-                <p className="text-destructive mt-1 text-[11.5px]">
+                <p className="text-destructive text-11-5px mt-1">
                   {errors.currentWeightKg.message}
                 </p>
               )}
@@ -236,9 +234,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('targetWeightKg')}
               />
               {errors.targetWeightKg && (
-                <p className="text-destructive mt-1 text-[11.5px]">
-                  {errors.targetWeightKg.message}
-                </p>
+                <p className="text-destructive text-11-5px mt-1">{errors.targetWeightKg.message}</p>
               )}
             </div>
           </div>
