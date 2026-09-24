@@ -6,7 +6,7 @@
  * the recipe-search UI inside the real form.
  */
 import { ToastProvider } from '@shared/context/ToastContext';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, describe, it, expect, vi } from 'vitest';
@@ -157,7 +157,7 @@ async function openMealMenu() {
   const mealTitle = await screen.findByText('Oatmeal');
   const trigger = mealTitle.closest('button');
   if (!trigger) throw new Error('Could not find meal chip trigger');
-  await userEvent.click(trigger);
+  fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
 }
 
 async function clickMenuItem(name: RegExp) {
