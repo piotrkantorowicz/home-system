@@ -97,6 +97,7 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
 
     /// <summary>Sets only the current weight — called when the newest weight entry changes.</summary>
     /// <param name="weightKg">The latest weight, or <see langword="null"/> when no entries remain.</param>
+    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void UpdateCurrentWeight(decimal? weightKg, DateTime now)
     {
         CurrentWeightKg = weightKg;

@@ -182,6 +182,11 @@ dotnet_diagnostic.IDE0161.severity = warning  # file-scoped namespace
 [**/*Tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
 
+# CA1716 flags "Shared" (a VB.NET reserved word) as a namespace segment. Every project under
+# src/Shared/* uses it by design — Rule 6: namespace = folder path — so renaming isn't an option.
+[src/Shared/**.cs]
+dotnet_diagnostic.CA1716.severity = none
+
 # Generated EF migrations: leave alone
 [**/Migrations/*.cs]
 generated_code = true

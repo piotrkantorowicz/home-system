@@ -16,7 +16,7 @@ using Shared.Abstractions.Cqrs;
 /// <remarks>
 /// Registered through <c>AddExceptionHandler&lt;ApplicationExceptionHandler&gt;()</c> and invoked by the framework's
 /// exception handler middleware, which also owns logging: pass <see cref="ShouldSuppressDiagnostics"/> as the
-/// <see cref="ExceptionHandlerOptions.SuppressDiagnosticsCallback"/> so expected exceptions stay quiet and unhandled
+/// <see cref="Microsoft.AspNetCore.Builder.ExceptionHandlerOptions.SuppressDiagnosticsCallback"/> so expected exceptions stay quiet and unhandled
 /// ones are logged exactly once.
 /// </remarks>
 /// <param name="problemDetails">Writes the response body, adding the <c>traceId</c> and RFC 9457 defaults.</param>
@@ -26,7 +26,7 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
     public const int ClientClosedRequestStatusCode = 499;
 
     /// <inheritdoc />
-    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken ct)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentNullException.ThrowIfNull(exception);
