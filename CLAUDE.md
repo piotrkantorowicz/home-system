@@ -197,6 +197,7 @@ Claude Code through symlinks in `.claude/skills/`. Invoke with `/<name>`.
 | `/run-e2e` | Run the Playwright E2E suite against the real stack |
 | `/branch-summary` | Commit-body-style summary of unmerged commits on the branch |
 | `/pr-summary` | Concise PR body summary from the diff vs `main` |
+| `/handoff` | Save a session summary that auto-loads into the next session after `/clear` |
 
 ---
 
