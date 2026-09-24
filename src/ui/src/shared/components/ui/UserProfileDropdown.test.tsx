@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
@@ -36,11 +36,13 @@ describe('UserProfileDropdown', () => {
     expect(screen.getByRole('button', { name: /common.user_menu/i })).toBeInTheDocument();
   });
 
-  it('shows menu items when opened', async () => {
-    const user = userEvent.setup();
+  it('shows menu items when opened', () => {
     renderDropdown();
 
-    await user.click(screen.getByRole('button', { name: /common.user_menu/i }));
+    fireEvent.pointerDown(screen.getByRole('button', { name: /common.user_menu/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
 
     expect(screen.getByText('common.profile')).toBeInTheDocument();
     expect(screen.getByText('common.notifications')).toBeInTheDocument();
@@ -52,17 +54,22 @@ describe('UserProfileDropdown', () => {
     const user = userEvent.setup();
     renderDropdown({ ...defaultProps, onLogout });
 
-    await user.click(screen.getByRole('button', { name: /common.user_menu/i }));
+    fireEvent.pointerDown(screen.getByRole('button', { name: /common.user_menu/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
     await user.click(screen.getByText('common.logout'));
 
     expect(onLogout).toHaveBeenCalledOnce();
   });
 
-  it('contains navigation links to settings pages', async () => {
-    const user = userEvent.setup();
+  it('contains navigation links to settings pages', () => {
     renderDropdown();
 
-    await user.click(screen.getByRole('button', { name: /common.user_menu/i }));
+    fireEvent.pointerDown(screen.getByRole('button', { name: /common.user_menu/i }), {
+      button: 0,
+      ctrlKey: false,
+    });
 
     const profileLink = screen.getByText('common.profile').closest('a');
     expect(profileLink).toHaveAttribute('href', '/diet-planner/profile');
