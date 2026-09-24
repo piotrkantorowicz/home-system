@@ -97,7 +97,6 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
     /// <param name="mealTime">New time override, or <see langword="null"/> to fall back to the slot time.</param>
     /// <param name="sequenceOrder">New ordering, or <see langword="null"/>.</param>
     /// <exception cref="ArgumentNullException"><paramref name="mealSlotId"/> or <paramref name="recipeId"/> is null.</exception>
-    /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void Update(
         DateOnly date,
         MealSlotId mealSlotId,
