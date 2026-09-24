@@ -32,7 +32,16 @@ case "$rel" in
 esac
 
 [[ -z "$rule" ]] && exit 0
-[[ -n "$transcript" && -f "$transcript" ]] && grep -q "$rule" "$transcript" 2>/dev/null && exit 0
+
+if [[ -n "$transcript" && -f "$transcript" ]]; then
+  rule_path="$root/docs/rules/$rule"
+  was_read=$(jq -s --arg f "$rule_path" '
+    ([.[] | select(.type=="user") | .message.content[]? | select(.type=="tool_result" and (.is_error!=true)) | .tool_use_id]) as $ok
+    | ([.[] | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use" and .name=="Read" and .input.file_path==$f) | .id]) as $reads
+    | any($reads[]; . as $id | $ok | index($id))
+  ' "$transcript" 2>/dev/null)
+  [[ "$was_read" == "true" ]] && exit 0
+fi
 
 echo "🛑 guard-rules: read docs/rules/$rule before editing $rel (see CLAUDE.md Quick Reference)." >&2
 exit 2
