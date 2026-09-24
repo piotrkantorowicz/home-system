@@ -228,7 +228,7 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
                     {...register('dailyWaterTargetMl')}
                   />
                   {errors.dailyWaterTargetMl && (
-                    <p className="text-destructive mt-1 text-[11.5px]">
+                    <p className="text-destructive text-11-5px mt-1">
                       {errors.dailyWaterTargetMl.message}
                     </p>
                   )}
@@ -244,7 +244,7 @@ export function HydrationConfigForm({ onSuccess }: HydrationConfigFormProps) {
                     {...register('glassSizeMl')}
                   />
                   {errors.glassSizeMl && (
-                    <p className="text-destructive mt-1 text-[11.5px]">
+                    <p className="text-destructive text-11-5px mt-1">
                       {errors.glassSizeMl.message}
                     </p>
                   )}

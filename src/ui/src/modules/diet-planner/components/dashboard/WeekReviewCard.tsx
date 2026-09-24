@@ -44,7 +44,7 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
 
   return (
     <Card className="flex min-w-0 flex-col gap-5 p-6">
-      <div className="text-[15px] font-bold">{t('dashboard.week_review_title')}</div>
+      <div className="text-15px font-bold">{t('dashboard.week_review_title')}</div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
         <MetricTile label={t('dashboard.week_avg_intake')} value={formatNumber(avg)} hint="kcal" />
@@ -60,7 +60,7 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
       </div>
 
       <p className="text-text-2 text-sm">{t('dashboard.week_partial')}</p>
-      <div aria-hidden="true" className="flex h-[132px] items-end gap-2.5 border-b pb-0">
+      <div aria-hidden="true" className="h-132px flex items-end gap-2.5 border-b pb-0">
         {days.map((day) => {
           const heightPct = day.calories > 0 ? Math.max(6, (day.calories / scaleMax) * 100) : 0;
           return (
@@ -71,7 +71,7 @@ export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
               <div className="flex min-h-0 w-full flex-1 items-end justify-center">
                 <div
                   className={cn(
-                    'w-full max-w-[46px] rounded-t-[10px] rounded-b-[3px]',
+                    'rounded-t-10px w-full max-w-[46px] rounded-b-[3px]',
                     day.calories === 0 && 'border-border-strong border border-dashed',
                   )}
                   style={{

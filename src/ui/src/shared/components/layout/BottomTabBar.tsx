@@ -30,13 +30,13 @@ export function BottomTabBar() {
           end={item.end}
           className={({ isActive }) =>
             cn(
-              'relative flex min-w-[4.25rem] flex-1 flex-col items-center gap-1 rounded-[12px] px-1 py-1.5 transition-colors',
+              'rounded-12px relative flex min-w-[4.25rem] flex-1 flex-col items-center gap-1 px-1 py-1.5 transition-colors',
               isActive ? 'text-primary' : 'text-muted-foreground',
             )
           }
         >
           <item.icon className="size-[21px]" strokeWidth={1.9} />
-          <span className="text-[10px] leading-none font-semibold">{item.label}</span>
+          <span className="text-10px leading-none font-semibold">{item.label}</span>
           {item.Badge ? (
             <span className="absolute top-0.5 right-2">
               <item.Badge />

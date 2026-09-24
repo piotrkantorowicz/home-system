@@ -21,17 +21,17 @@ export default function Preferences() {
   return (
     <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
       <div>
-        <h1 className="text-[26px] font-bold">{t('preferences.title')}</h1>
+        <h1 className="text-26px font-bold">{t('preferences.title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('preferences.subtitle')}</p>
       </div>
 
-      <div className="grid [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))] gap-[18px]">
+      <div className="gap-18px grid [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
         {/* Appearance */}
-        <Card className="flex flex-col gap-4 p-[22px]">
-          <div className="text-[15px] font-bold">{t('preferences.appearance')}</div>
+        <Card className="p-22px flex flex-col gap-4">
+          <div className="text-15px font-bold">{t('preferences.appearance')}</div>
 
           <div>
-            <div className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase">
+            <div className="text-muted-foreground text-11px mb-2 font-semibold uppercase">
               {t('preferences.theme')}
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -43,14 +43,14 @@ export default function Preferences() {
                     setTheme(choice);
                   }}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 text-[11px] font-semibold transition-colors',
+                    'text-11px flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 font-semibold transition-colors',
                     theme === choice
                       ? 'border-primary bg-accent text-accent-foreground'
                       : 'border-border text-text-2 hover:text-foreground',
                   )}
                 >
                   <span
-                    className="border-border size-[34px] rounded-[10px] border"
+                    className="border-border size-34px rounded-10px border"
                     style={{
                       background:
                         choice === 'light'
@@ -67,7 +67,7 @@ export default function Preferences() {
           </div>
 
           <div className="border-border border-t pt-4">
-            <div className="text-muted-foreground mb-2 text-[11px] font-semibold uppercase">
+            <div className="text-muted-foreground text-11px mb-2 font-semibold uppercase">
               {t('preferences.language')}
             </div>
             <SegmentedControl
@@ -94,8 +94,8 @@ export default function Preferences() {
         </Card>
 
         {/* Units & formats */}
-        <Card className="flex flex-col gap-4 p-[22px]">
-          <div className="text-[15px] font-bold">{t('preferences.units')}</div>
+        <Card className="p-22px flex flex-col gap-4">
+          <div className="text-15px font-bold">{t('preferences.units')}</div>
           <div className="grid [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))] gap-3">
             <SelectRow
               label={t('preferences.energy')}
@@ -143,22 +143,22 @@ export default function Preferences() {
         </Card>
 
         {/* Account */}
-        <Card className="flex flex-col gap-3 p-[22px]">
-          <div className="text-[15px] font-bold">{t('preferences.account')}</div>
-          <div className="border-border bg-secondary flex items-center gap-3 rounded-[16px] border p-3.5">
+        <Card className="p-22px flex flex-col gap-3">
+          <div className="text-15px font-bold">{t('preferences.account')}</div>
+          <div className="border-border bg-secondary rounded-16px flex items-center gap-3 border p-3.5">
             <span
-              className="grid size-11 flex-none place-items-center rounded-[13px] text-[14px] font-bold text-white"
+              className="rounded-13px text-14px grid size-11 flex-none place-items-center font-bold text-white"
               style={{ background: 'var(--gradient-avatar)' }}
             >
               {getInitials(displayName)}
             </span>
             <div className="min-w-0">
-              <div className="truncate text-[13.5px] font-bold">{displayName}</div>
+              <div className="text-13-5px truncate font-bold">{displayName}</div>
               {profile?.email ? (
-                <div className="text-muted-foreground truncate text-[11.5px]">{profile.email}</div>
+                <div className="text-muted-foreground text-11-5px truncate">{profile.email}</div>
               ) : null}
               {provider ? (
-                <div className="text-muted-foreground truncate text-[11px]">{provider}</div>
+                <div className="text-muted-foreground text-11px truncate">{provider}</div>
               ) : null}
             </div>
           </div>
@@ -168,14 +168,14 @@ export default function Preferences() {
             onClick={() => {
               void auth.signoutRedirect();
             }}
-            className="border-border hover:bg-muted flex items-center justify-between rounded-[13px] border px-3.5 py-3 text-[13px] font-semibold transition-colors"
+            className="border-border hover:bg-muted rounded-13px text-13px flex items-center justify-between border px-3.5 py-3 font-semibold transition-colors"
           >
             {t('preferences.sign_out')}
             <LogOut className="size-4" />
           </button>
 
           <div
-            className="flex items-center justify-between rounded-[13px] border px-3.5 py-3 text-[13px] font-semibold"
+            className="rounded-13px text-13px flex items-center justify-between border px-3.5 py-3 font-semibold"
             style={{
               borderColor: 'color-mix(in oklab, var(--color-fat) 40%, transparent)',
               background: 'color-mix(in oklab, var(--color-fat) 8%, transparent)',
@@ -206,8 +206,8 @@ function SwitchRow({
   return (
     <div className="border-border flex items-center justify-between gap-3 border-t pt-4">
       <div className="min-w-0">
-        <div className="text-[13px] font-semibold">{label}</div>
-        {hint ? <div className="text-muted-foreground text-[11.5px]">{hint}</div> : null}
+        <div className="text-13px font-semibold">{label}</div>
+        {hint ? <div className="text-muted-foreground text-11-5px">{hint}</div> : null}
       </div>
       <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
@@ -228,14 +228,14 @@ function SelectRow({
   display?: (v: string) => string;
 }) {
   return (
-    <label className="text-text-2 text-[11px] font-semibold uppercase">
+    <label className="text-text-2 text-11px font-semibold uppercase">
       {label}
       <select
         value={value}
         onChange={(e) => {
           onChange(e.target.value);
         }}
-        className="border-border bg-secondary text-foreground mt-1 h-[42px] w-full rounded-[13px] border px-3 text-[13px] font-medium normal-case outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        className="border-border bg-secondary text-foreground h-42px rounded-13px text-13px focus-visible:ring-ring mt-1 w-full border px-3 font-medium normal-case outline-none focus-visible:ring-2"
       >
         {options.map((o) => (
           <option key={o} value={o}>

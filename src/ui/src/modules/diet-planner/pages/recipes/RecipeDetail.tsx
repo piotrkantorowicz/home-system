@@ -91,7 +91,7 @@ export default function RecipeDetail() {
 
   return (
     <div className="animate-fade-in mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 md:px-8">
-      <nav className="text-muted-foreground flex items-center gap-1 text-[12.5px]">
+      <nav className="text-muted-foreground text-12-5px flex items-center gap-1">
         <Link to="/diet-planner/recipes" className="hover:text-foreground">
           {t('recipes.title')}
         </Link>
@@ -101,7 +101,7 @@ export default function RecipeDetail() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold">{recipe.name}</h1>
+          <h1 className="text-26px font-bold">{recipe.name}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {recipe.prepTimeMinutes
               ? `${String(n(recipe.prepTimeMinutes))} ${t('recipes.prep_time')} · `
@@ -141,24 +141,24 @@ export default function RecipeDetail() {
         </div>
       </div>
 
-      <div className="grid items-start gap-[18px] lg:grid-cols-3">
+      <div className="gap-18px grid items-start lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
           <div className="flex flex-col gap-6 p-6">
             {recipe.description ? (
-              <p className="text-text-2 text-[13px] leading-relaxed">{recipe.description}</p>
+              <p className="text-text-2 text-13px leading-relaxed">{recipe.description}</p>
             ) : null}
 
             <div>
-              <div className="mb-2 text-[15px] font-bold">{t('recipe_detail.ingredients')}</div>
-              <div className="border-border overflow-hidden rounded-[16px] border">
-                <div className="bg-secondary text-muted-foreground grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-3 py-2 text-[10.5px] font-semibold uppercase">
+              <div className="text-15px mb-2 font-bold">{t('recipe_detail.ingredients')}</div>
+              <div className="border-border rounded-16px overflow-hidden border">
+                <div className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-3 py-2 font-semibold uppercase">
                   <span>{t('recipe_detail.table.product')}</span>
                   <span className="text-right">{t('recipe_detail.table.amount')}</span>
                 </div>
                 {recipe.ingredients.map((ing) => (
                   <div
                     key={ing.id}
-                    className="border-border grid grid-cols-[minmax(0,1fr)_auto] gap-4 border-t px-3 py-2 text-[12.5px]"
+                    className="border-border text-12-5px grid grid-cols-[minmax(0,1fr)_auto] gap-4 border-t px-3 py-2"
                   >
                     <span className="font-semibold break-words">{ing.productName}</span>
                     <span className="tnum text-right">
@@ -171,16 +171,14 @@ export default function RecipeDetail() {
 
             {steps.length > 0 ? (
               <div>
-                <div className="mb-2 text-[15px] font-bold">{t('recipe_detail.method')}</div>
+                <div className="text-15px mb-2 font-bold">{t('recipe_detail.method')}</div>
                 <ol className="flex flex-col gap-3">
                   {steps.map((step, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="bg-accent text-accent-foreground grid size-[26px] flex-none place-items-center rounded-full text-[12px] font-bold">
+                      <span className="bg-accent text-accent-foreground text-12px grid size-[26px] flex-none place-items-center rounded-full font-bold">
                         {i + 1}
                       </span>
-                      <p className="text-text-2 text-[13.5px] leading-relaxed text-pretty">
-                        {step}
-                      </p>
+                      <p className="text-text-2 text-13-5px leading-relaxed text-pretty">{step}</p>
                     </li>
                   ))}
                 </ol>
@@ -189,13 +187,13 @@ export default function RecipeDetail() {
           </div>
         </Card>
 
-        <div className="flex flex-col gap-[18px]">
+        <div className="gap-18px flex flex-col">
           {per ? (
-            <Card className="flex flex-col gap-3 p-[22px]">
-              <h2 className="text-[15px] font-bold">{t('recipe_detail.nutrition_per_serving')}</h2>
-              <div className="numeral text-[34px] leading-none font-bold">
+            <Card className="p-22px flex flex-col gap-3">
+              <h2 className="text-15px font-bold">{t('recipe_detail.nutrition_per_serving')}</h2>
+              <div className="numeral text-34px leading-none font-bold">
                 {formatNumber(n(per.calories))}
-                <span className="text-muted-foreground ml-1 text-[12px] font-medium">kcal</span>
+                <span className="text-muted-foreground text-12px ml-1 font-medium">kcal</span>
               </div>
               <dl className="divide-border divide-y">
                 {MACROS.map((m) => {
@@ -208,14 +206,14 @@ export default function RecipeDetail() {
                   );
                 })}
               </dl>
-              <p className="text-muted-foreground text-[11px]">
+              <p className="text-muted-foreground text-11px">
                 {t('recipe_detail.per_serving_note')}
               </p>
             </Card>
           ) : null}
 
-          <Card className="flex flex-col gap-3 p-[22px]">
-            <div className="text-[15px] font-bold">{t('recipe_detail.servings_label')}</div>
+          <Card className="p-22px flex flex-col gap-3">
+            <div className="text-15px font-bold">{t('recipe_detail.servings_label')}</div>
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -224,26 +222,26 @@ export default function RecipeDetail() {
                   setServings(Math.max(1, shown - 1));
                 }}
                 className={cn(
-                  'border-border grid size-11 place-items-center rounded-[12px] border',
+                  'border-border rounded-12px grid size-11 place-items-center border',
                   shown <= 1 && 'opacity-40',
                 )}
                 disabled={shown <= 1}
               >
                 <Minus className="size-4" />
               </button>
-              <span className="numeral text-[22px] font-bold">{shown}</span>
+              <span className="numeral text-22px font-bold">{shown}</span>
               <button
                 type="button"
                 aria-label={t('recipe_detail.increase_servings')}
                 onClick={() => {
                   setServings(shown + 1);
                 }}
-                className="border-border grid size-11 place-items-center rounded-[12px] border"
+                className="border-border rounded-12px grid size-11 place-items-center border"
               >
                 <Plus className="size-4" />
               </button>
             </div>
-            <p className="text-muted-foreground text-[11px]">{t('recipe_detail.scale_note')}</p>
+            <p className="text-muted-foreground text-11px">{t('recipe_detail.scale_note')}</p>
             {per && (
               <p className="text-text-2 text-sm">
                 {t('recipe_detail.total_calories', {

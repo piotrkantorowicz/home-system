@@ -109,7 +109,7 @@ export function WeightHistorySection() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex h-[280px] items-center justify-center">
+            <div className="h-280px flex items-center justify-center">
               <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : (

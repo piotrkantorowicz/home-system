@@ -187,7 +187,7 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
         void handleSubmit(onSubmit)(e);
       }}
       noValidate
-      className="flex flex-col gap-[18px]"
+      className="gap-18px flex flex-col"
     >
       <Card>
         <CardContent className="space-y-1 pt-6">

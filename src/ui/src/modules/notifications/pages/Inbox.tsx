@@ -79,7 +79,7 @@ export default function Inbox() {
     <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight">{t('inbox.title')}</h1>
+          <h1 className="text-26px font-bold tracking-tight">{t('inbox.title')}</h1>
           <p className="text-muted-foreground mt-0.5 text-sm">{t('inbox.subtitle')}</p>
         </div>
         <Button asChild variant="secondary" size="sm">
@@ -90,7 +90,7 @@ export default function Inbox() {
       {isLoading && (
         <ul aria-busy="true" className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <li key={i} className="bg-muted h-20 animate-pulse rounded-[13px]" />
+            <li key={i} className="bg-muted rounded-13px h-20 animate-pulse" />
           ))}
         </ul>
       )}
@@ -102,7 +102,7 @@ export default function Inbox() {
       )}
 
       {!isLoading && !isError && items.length === 0 && (
-        <div className="bg-card rounded-[22px] border">
+        <div className="bg-card rounded-22px border">
           <EmptyState
             icon={InboxIcon}
             title={t('inbox.empty_title')}
@@ -114,7 +114,7 @@ export default function Inbox() {
       {!isLoading && !isError && items.length > 0 && (
         <>
           {unreadIdsOnPage.length > 0 ? (
-            <div className="bg-accent mb-3 flex items-center gap-3 rounded-[13px] px-3 py-2">
+            <div className="bg-accent rounded-13px mb-3 flex items-center gap-3 px-3 py-2">
               <Checkbox
                 checked={allSelected}
                 ref={(el) => {

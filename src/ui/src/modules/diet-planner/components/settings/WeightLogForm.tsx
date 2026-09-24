@@ -84,7 +84,7 @@ export function WeightLogForm({ onSuccess, defaultDate, className }: WeightLogFo
             )}
           />
           {errors.date && (
-            <p className="text-destructive mt-1 text-[11.5px]">{errors.date.message}</p>
+            <p className="text-destructive text-11-5px mt-1">{errors.date.message}</p>
           )}
         </div>
         <div>
@@ -101,7 +101,7 @@ export function WeightLogForm({ onSuccess, defaultDate, className }: WeightLogFo
             {...register('weightKg')}
           />
           {errors.weightKg && (
-            <p className="text-destructive mt-1 text-[11.5px]">{errors.weightKg.message}</p>
+            <p className="text-destructive text-11-5px mt-1">{errors.weightKg.message}</p>
           )}
         </div>
         <Button type="submit" size="xl" disabled={mutation.isPending}>

@@ -69,6 +69,66 @@
   --radius-md: 0.6875rem;
   --radius-sm: 0.5rem;
 
+  /*
+   * Redesign scale — recurring arbitrary values promoted to named theme
+   * keys (#279). Key = the literal value with '.' -> '-'; each generates
+   * a same-named utility (e.g. --text-12-5px -> text-12-5px). Values are
+   * intentionally granular (not rounded) to preserve pixel-exact parity
+   * with the pre-existing redesign — see docs/design/redesign.
+   */
+  --text-9-5px: 9.5px;
+  --text-10px: 10px;
+  --text-10-5px: 10.5px;
+  --text-11px: 11px;
+  --text-11-5px: 11.5px;
+  --text-12px: 12px;
+  --text-12-5px: 12.5px;
+  --text-13px: 13px;
+  --text-13-5px: 13.5px;
+  --text-14px: 14px;
+  --text-15px: 15px;
+  --text-17px: 17px;
+  --text-19px: 19px;
+  --text-20px: 20px;
+  --text-22px: 22px;
+  --text-26px: 26px;
+  --text-34px: 34px;
+  --text-0-7rem: 0.7rem;
+  --text-0-9rem: 0.9rem;
+  --text-0-95rem: 0.95rem;
+
+  --radius-6px: 6px;
+  --radius-8px: 8px;
+  --radius-9px: 9px;
+  --radius-10px: 10px;
+  --radius-11px: 11px;
+  --radius-12px: 12px;
+  --radius-13px: 13px;
+  --radius-15px: 15px;
+  --radius-16px: 16px;
+  --radius-18px: 18px;
+  --radius-22px: 22px;
+  --radius-26px: 26px;
+
+  --spacing-3px: 3px;
+  --spacing-15px: 15px;
+  --spacing-18px: 18px;
+  --spacing-22px: 22px;
+  --spacing-30px: 30px;
+  --spacing-34px: 34px;
+  --spacing-38px: 38px;
+  --spacing-42px: 42px;
+  --spacing-52px: 52px;
+  --spacing-60px: 60px;
+  --spacing-100px: 100px;
+  --spacing-132px: 132px;
+  --spacing-180px: 180px;
+  --spacing-220px: 220px;
+  --spacing-280px: 280px;
+  --spacing-420px: 420px;
+
+  --tracking-0-05em: 0.05em;
+
   /* Exactly one shadow level on cards */
   --shadow-sm: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
   --shadow-md: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);

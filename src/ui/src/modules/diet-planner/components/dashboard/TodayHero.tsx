@@ -32,8 +32,8 @@ export function TodayHero({ goals, nutrition, onSetGoals }: TodayHeroProps) {
           <Target className="size-6" />
         </div>
         <div>
-          <h3 className="text-[15px] font-bold">{t('dashboard.goals_cta_title')}</h3>
-          <p className="text-muted-foreground mt-1 text-[12.5px]">
+          <h3 className="text-15px font-bold">{t('dashboard.goals_cta_title')}</h3>
+          <p className="text-muted-foreground text-12-5px mt-1">
             {t('dashboard.goals_cta_description')}
           </p>
         </div>

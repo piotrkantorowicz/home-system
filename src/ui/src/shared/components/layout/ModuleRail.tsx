@@ -41,7 +41,7 @@ export function ModuleRail() {
         <button
           type="button"
           aria-label={t('common.switch_module')}
-          className="bg-primary text-primary-foreground mb-2.5 grid size-[38px] place-items-center rounded-xl text-[16px] font-bold"
+          className="bg-primary text-primary-foreground size-38px mb-2.5 grid place-items-center rounded-xl text-[16px] font-bold"
         >
           H
         </button>
@@ -63,14 +63,14 @@ export function ModuleRail() {
               void navigate(tile.basePath);
             }}
             className={cn(
-              'relative grid size-[42px] flex-none place-items-center rounded-[13px] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40',
+              'size-42px rounded-13px relative grid flex-none place-items-center transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40',
               isActive
                 ? 'bg-card border-border-strong text-primary border shadow-sm'
                 : 'text-text-2 hover:bg-card/60',
             )}
           >
             {isActive ? (
-              <span className="bg-primary absolute top-1/2 -left-4 h-[22px] w-[3px] -translate-y-1/2 rounded-full" />
+              <span className="bg-primary h-22px w-3px absolute top-1/2 -left-4 -translate-y-1/2 rounded-full" />
             ) : null}
             <Icon className="size-[19px]" strokeWidth={1.9} />
           </button>
@@ -85,7 +85,7 @@ export function ModuleRail() {
           setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
         }}
         aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground grid size-[38px] place-items-center rounded-xl border transition-colors duration-150"
+        className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground size-38px grid place-items-center rounded-xl border transition-colors duration-150"
       >
         {resolvedTheme === 'dark' ? (
           <Sun className="size-4" strokeWidth={1.9} />

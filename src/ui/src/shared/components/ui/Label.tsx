@@ -9,7 +9,7 @@ export function Label({ ref, className, ...props }: LabelProps) {
     <label
       ref={ref}
       className={cn(
-        'mb-1.5 block text-[0.9rem] leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+        'text-0-9rem mb-1.5 block leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
         className,
       )}
       {...props}

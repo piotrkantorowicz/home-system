@@ -83,7 +83,7 @@ export default function ProductDetail() {
 
   return (
     <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:px-8">
-      <nav className="text-muted-foreground flex items-center gap-1 text-[12.5px]">
+      <nav className="text-muted-foreground text-12-5px flex items-center gap-1">
         <Link to="/diet-planner/products" className="hover:text-foreground">
           {t('products.title')}
         </Link>
@@ -93,7 +93,7 @@ export default function ProductDetail() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-bold tracking-tight">{product.name}</h1>
+          <h1 className="text-26px font-bold tracking-tight">{product.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <StatusPill variant="neutral">{unitLabel(product.defaultUnit, t)}</StatusPill>
             <StatusPill variant={product.isOwner ? 'good' : 'neutral'}>
@@ -124,32 +124,32 @@ export default function ProductDetail() {
         )}
       </div>
 
-      <div className="grid items-start gap-[18px] lg:grid-cols-3">
-        <Card className="flex flex-col gap-5 p-[22px] lg:col-span-2">
+      <div className="gap-18px grid items-start lg:grid-cols-3">
+        <Card className="p-22px flex flex-col gap-5 lg:col-span-2">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[15px] font-bold">{t('product_detail.nutrition_facts')}</h2>
-            <span className="bg-secondary text-text-2 rounded-full px-2.5 py-1 text-[11px] font-semibold">
+            <h2 className="text-15px font-bold">{t('product_detail.nutrition_facts')}</h2>
+            <span className="bg-secondary text-text-2 text-11px rounded-full px-2.5 py-1 font-semibold">
               {t('product_detail.per_100g')}
             </span>
           </div>
 
           <div className="border-border flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-4">
-            <span className="text-[15px] font-semibold">{t('products.table.calories')}</span>
-            <span className="numeral text-[34px] leading-none font-bold">
+            <span className="text-15px font-semibold">{t('products.table.calories')}</span>
+            <span className="numeral text-34px leading-none font-bold">
               <span className="tnum">
                 {product.caloriesPer100g === null ? '—' : formatNumber(product.caloriesPer100g)}
               </span>
-              <span className="text-muted-foreground ml-1 text-[12px] font-medium">kcal</span>
+              <span className="text-muted-foreground text-12px ml-1 font-medium">kcal</span>
             </span>
           </div>
 
           {hasCompleteMacroData ? (
             <div className="flex flex-col gap-2.5">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[12.5px] font-semibold">
+                <span className="text-12-5px font-semibold">
                   {t('product_detail.macro_balance')}
                 </span>
-                <span className="text-muted-foreground text-[11px]">
+                <span className="text-muted-foreground text-11px">
                   {t('product_detail.share_by_weight')}
                 </span>
               </div>
@@ -188,7 +188,7 @@ export default function ProductDetail() {
                     ? '—'
                     : `${row.grams.toFixed(1)} g`}
                   {row.share !== null ? (
-                    <span className="text-muted-foreground ml-2 text-[12px]">
+                    <span className="text-muted-foreground text-12px ml-2">
                       ({row.share.toFixed(0)}%)
                     </span>
                   ) : null}
@@ -198,29 +198,29 @@ export default function ProductDetail() {
           </dl>
 
           {hasCompleteMacroData ? (
-            <p className="text-muted-foreground text-[11px] leading-relaxed">
+            <p className="text-muted-foreground text-11px leading-relaxed">
               {t('product_detail.macro_balance_note')}
             </p>
           ) : null}
         </Card>
 
-        <Card className="flex flex-col gap-4 p-[22px]">
-          <h2 className="text-[15px] font-bold">{t('product_detail.conversions')}</h2>
+        <Card className="p-22px flex flex-col gap-4">
+          <h2 className="text-15px font-bold">{t('product_detail.conversions')}</h2>
 
           <div>
-            <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+            <div className="text-muted-foreground text-11px font-semibold uppercase">
               {t('product_detail.default_unit')}
             </div>
-            <p className="mt-0.5 text-[13px]">{unitLabel(product.defaultUnit, t)}</p>
+            <p className="text-13px mt-0.5">{unitLabel(product.defaultUnit, t)}</p>
           </div>
 
           {product.densityGramsPerMl ? (
             <div>
-              <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+              <div className="text-muted-foreground text-11px font-semibold uppercase">
                 {t('product_detail.density')}
               </div>
-              <p className="tnum mt-0.5 text-[13px]">{product.densityGramsPerMl.toFixed(2)} g/ml</p>
-              <p className="text-muted-foreground mt-1 text-[11px]">
+              <p className="tnum text-13px mt-0.5">{product.densityGramsPerMl.toFixed(2)} g/ml</p>
+              <p className="text-muted-foreground text-11px mt-1">
                 {t('product_detail.density_info', { value: product.densityGramsPerMl.toFixed(2) })}
               </p>
             </div>
@@ -228,18 +228,18 @@ export default function ProductDetail() {
 
           {product.gramPerPiece ? (
             <div>
-              <div className="text-muted-foreground text-[11px] font-semibold uppercase">
+              <div className="text-muted-foreground text-11px font-semibold uppercase">
                 {t('product_detail.weight_per_piece')}
               </div>
-              <p className="tnum mt-0.5 text-[13px]">{product.gramPerPiece.toFixed(1)} g</p>
-              <p className="text-muted-foreground mt-1 text-[11px]">
+              <p className="tnum text-13px mt-0.5">{product.gramPerPiece.toFixed(1)} g</p>
+              <p className="text-muted-foreground text-11px mt-1">
                 {t('product_detail.piece_info', { value: product.gramPerPiece.toFixed(1) })}
               </p>
             </div>
           ) : null}
 
           {!product.densityGramsPerMl && !product.gramPerPiece ? (
-            <p className="text-muted-foreground text-[13px]">{t('product_detail.no_conversion')}</p>
+            <p className="text-muted-foreground text-13px">{t('product_detail.no_conversion')}</p>
           ) : null}
         </Card>
       </div>
