@@ -10,7 +10,10 @@ export function MyInvitations() {
   const query = useMyInvitations(true);
   const mutation = useHouseholdMutation();
 
-  if (!query.data?.length) return null;
+  // Only a confirmed empty result hides the panel — a slow or failed request must stay visible,
+  // or an invited user could create their own household while unable to see the one they were
+  // actually invited to (membership is one household per person, so that would lock them out).
+  if (query.isSuccess && query.data.length === 0) return null;
 
   return (
     <section className="bg-card border-border max-w-xl space-y-4 rounded-xl border p-6 shadow-sm">
@@ -18,9 +21,21 @@ export function MyInvitations() {
         <h2 className="text-xl font-semibold">{t('my_invitations_title')}</h2>
         <p className="text-text-2 mt-2 text-sm">{t('my_invitations_description')}</p>
       </div>
+      {query.isPending && <p role="status">{t('loading')}</p>}
+      {query.isError && (
+        <Banner
+          variant="error"
+          onRetry={() => {
+            void query.refetch();
+          }}
+          retryLabel={t('retry')}
+        >
+          {t('invitations_error')}
+        </Banner>
+      )}
       {mutation.isError && <Banner variant="error">{t('save_error')}</Banner>}
       <ul className="divide-border divide-y">
-        {query.data.map((invitation) => (
+        {query.data?.map((invitation) => (
           <li
             key={invitation.id}
             className="flex flex-wrap items-center justify-between gap-3 py-3"

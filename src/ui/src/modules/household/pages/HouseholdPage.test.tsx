@@ -371,6 +371,37 @@ describe('Household UI', () => {
     await screen.findByRole('heading', { name: 'Give your home a name' });
   });
 
+  it('shows a loading state for pending invitations instead of treating it as none', async () => {
+    household = null;
+    server.use(
+      http.get(`${BASE}/api/households/invitations/mine`, async () => {
+        await delay('infinite');
+        return HttpResponse.json([]);
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText('Loading household…')).toBeInTheDocument();
+  });
+
+  it('shows a retryable error for pending invitations instead of treating it as none', async () => {
+    household = null;
+    let fail = true;
+    server.use(
+      http.get(`${BASE}/api/households/invitations/mine`, () =>
+        fail ? new HttpResponse(null, { status: 500 }) : HttpResponse.json([]),
+      ),
+    );
+    renderPage();
+    const banner = await screen.findByRole('alert');
+    expect(banner).toHaveTextContent('Could not load invitations.');
+    expect(screen.getByRole('heading', { name: 'Give your home a name' })).toBeInTheDocument();
+    fail = false;
+    await userEvent.click(within(banner).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
   it('blocks feature access when person sync fails', async () => {
     server.use(
       http.post(`${BASE}/api/persons/me/sync`, () => new HttpResponse(null, { status: 500 })),
