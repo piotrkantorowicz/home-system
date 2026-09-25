@@ -3,14 +3,8 @@ name: Frontend CI
 on:
   push:
     branches: [main, 'epic/**']
-    paths:
-      - 'src/ui/**'
-      - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [main, 'epic/**']
-    paths:
-      - 'src/ui/**'
-      - '.github/workflows/frontend-ci.yml'
 
 concurrency:
   group: frontend-${{ github.workflow }}-${{ github.ref }}
@@ -25,9 +19,23 @@ jobs:
         working-directory: src/ui
 
     steps:
+      # Required status check must always report, so the workflow always triggers and
+      # this step decides — instead of skipping the whole workflow via `on.paths`,
+      # which leaves a required check stuck pending forever on unrelated PRs.
+      - name: Check for relevant changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - 'src/ui/**'
+              - '.github/workflows/frontend-ci.yml'
+
       - uses: actions/checkout@v7
+        if: steps.filter.outputs.relevant == 'true'
 
       - name: Setup Node.js
+        if: steps.filter.outputs.relevant == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -35,19 +43,25 @@ jobs:
           cache-dependency-path: src/ui/package-lock.json
 
       - name: Install dependencies
+        if: steps.filter.outputs.relevant == 'true'
         run: npm ci
 
       - name: Type check
+        if: steps.filter.outputs.relevant == 'true'
         run: npm run type-check
 
       - name: Lint
+        if: steps.filter.outputs.relevant == 'true'
         run: npm run lint
 
       - name: Format check
+        if: steps.filter.outputs.relevant == 'true'
         run: npm run format:check
 
       - name: Test with coverage
+        if: steps.filter.outputs.relevant == 'true'
         run: npm run test:coverage
 
       - name: Build
+        if: steps.filter.outputs.relevant == 'true'
         run: npm run build
