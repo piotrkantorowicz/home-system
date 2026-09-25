@@ -24,13 +24,13 @@ public sealed class CreateGoalCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsGoalAndCommits()
     {
-        var command = new CreateGoalCommand("user-1", 2000, 150m, 250m, 70m, 30m);
+        var command = new CreateGoalCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 2000, 150m, 250m, 70m, 30m);
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
-            Arg.Is<UserGoal>(g => g.UserId == "user-1" && g.DailyCalorieTarget == 2000),
+            Arg.Is<UserGoal>(g => g.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") && g.DailyCalorieTarget == 2000),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }

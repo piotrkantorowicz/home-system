@@ -4,7 +4,7 @@ namespace DietPlanner.Application.Queries.GetDietReminderSettings;
 /// A user's notification preferences as stored. All times are UTC.
 /// </summary>
 /// <param name="Id">Identifier of the settings row.</param>
-/// <param name="UserId">Auth subject of the owner.</param>
+/// <param name="PersonId">Person identifier of the owner.</param>
 /// <param name="MealRemindersEnabled">Whether meal notifications fire.</param>
 /// <param name="MealReminderLeadTimeMinutes">Minutes before the planned time the reminder is sent.</param>
 /// <param name="MealMissedGraceMinutes">Minutes after the planned time before an uncompleted meal counts as missed.</param>
@@ -20,7 +20,7 @@ namespace DietPlanner.Application.Queries.GetDietReminderSettings;
 /// <param name="UpdatedAt">Time of the last change, UTC; <see langword="null"/> if never changed.</param>
 public sealed record DietReminderSettingsDto(
     Guid Id,
-    string UserId,
+    Guid PersonId,
     bool MealRemindersEnabled,
     int MealReminderLeadTimeMinutes,
     int MealMissedGraceMinutes,

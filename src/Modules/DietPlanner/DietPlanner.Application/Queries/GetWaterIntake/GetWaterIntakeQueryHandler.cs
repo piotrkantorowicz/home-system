@@ -15,7 +15,7 @@ internal sealed class GetWaterIntakeQueryHandler : IQueryHandler<GetWaterIntakeQ
     {
         var entries = await _dbContext.WaterIntakes
             .AsNoTracking()
-            .Where(w => w.UserId == query.UserId && w.Date == query.Date)
+            .Where(w => w.PersonId == query.PersonId && w.Date == query.Date)
             .OrderByDescending(w => w.Timestamp)
             .Select(w => new WaterIntakeEntryDto(
                 w.Id.Value,

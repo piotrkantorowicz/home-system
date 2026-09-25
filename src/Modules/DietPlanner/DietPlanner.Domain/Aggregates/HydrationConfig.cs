@@ -14,26 +14,27 @@ public sealed class HydrationConfig : AggregateRoot<HydrationConfigId>
 
     /// <summary>Creates the config, defaulting to 2500 ml a day in 250 ml glasses with tracking on.</summary>
     /// <param name="id">Identifier for the new config.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="dailyWaterTargetMl">Daily target in millilitres.</param>
     /// <param name="glassSizeMl">Volume one "glass" tap logs, in millilitres.</param>
     /// <param name="trackWaterIntake">Whether water tracking and reminders are enabled.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static HydrationConfig Create(
         HydrationConfigId id,
-        string userId,
+        Guid personId,
         DateTime now,
         int dailyWaterTargetMl = 2500,
         int glassSizeMl = 250,
         bool trackWaterIntake = true)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
 
         return new HydrationConfig
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             DailyWaterTargetMl = dailyWaterTargetMl,
             GlassSizeMl = glassSizeMl,
             TrackWaterIntake = trackWaterIntake,
@@ -42,8 +43,8 @@ public sealed class HydrationConfig : AggregateRoot<HydrationConfigId>
         };
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Daily target in millilitres.</summary>
     public int DailyWaterTargetMl { get; private set; }
     /// <summary>Volume one "glass" tap logs, in millilitres.</summary>

@@ -16,14 +16,14 @@ internal sealed class CreateMealEntryCommandHandler(
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var slotId = MealSlotId.From(command.MealSlotId);
-        var schedule = await scheduleRepository.GetByUserIdAsync(command.UserId, ct)
-            ?? throw new NotFoundException("MealScheduleConfig", command.UserId);
+        var schedule = await scheduleRepository.GetByPersonIdAsync(command.PersonId, ct)
+            ?? throw new NotFoundException("MealScheduleConfig", command.PersonId);
 
         if (schedule.Slots.All(s => s.Id != slotId))
             throw new NotFoundException("MealSlot", command.MealSlotId);
 
         var id = MealEntryId.New();
-        var entry = MealEntry.Create(id, command.UserId, command.Date, slotId,
+        var entry = MealEntry.Create(id, command.PersonId, command.Date, slotId,
             RecipeId.From(command.RecipeId), command.Servings, command.Notes,
             command.MealTime, command.SequenceOrder, now);
 

@@ -4,6 +4,7 @@ namespace DietPlanner.UnitTests.Application.EventHandlers;
 using DietPlanner.Application.EventHandlers;
 #pragma warning restore IDE0005
 using DietPlanner.Contracts.Events;
+using Household.Contracts.Interfaces;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Events;
 using DietPlanner.Domain.Repositories;
@@ -15,22 +16,26 @@ using Shared.Abstractions.Messaging;
 public sealed class GoalMilestoneEvaluatorTests
 {
     private readonly IUserGoalRepository _userGoalRepository = Substitute.For<IUserGoalRepository>();
+    private readonly IHouseholdQueryService _persons = Substitute.For<IHouseholdQueryService>();
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
     private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly GoalMilestoneEvaluator _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public GoalMilestoneEvaluatorTests()
-        => _sut = new GoalMilestoneEvaluator(_userGoalRepository, _bus, _clock);
+    {
+        _persons.GetAuthSubjectForPersonAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns("user-1");
+        _sut = new GoalMilestoneEvaluator(_userGoalRepository, _bus, _persons, _clock);
+    }
 
     /// <summary>When no goal exists: <c>HandleAsync</c> does nothing.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoGoalExists_DoesNothing()
     {
-        _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _userGoalRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((UserGoal?)null);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 70m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -42,11 +47,11 @@ public sealed class GoalMilestoneEvaluatorTests
     [Fact]
     public async Task HandleAsync_WhenGoalHasNoTarget_DoesNothing()
     {
-        var goal = UserGoal.Create(UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null);
-        _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        var goal = UserGoal.Create(UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null);
+        _userGoalRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 70m, TestClock.Today), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 70m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -58,12 +63,12 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenWeightAboveTarget_DoesNotEmit()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
-        _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _userGoalRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 75m, TestClock.Today), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 75m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),
@@ -75,12 +80,12 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenTargetCrossed_PublishesEventAndMarksAchieved()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
-        _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _userGoalRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 69.5m, TestClock.Today), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 69.5m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.Received(1).PublishAsync(
             Arg.Is<GoalMilestoneReachedIntegrationEvent>(e =>
@@ -100,13 +105,13 @@ public sealed class GoalMilestoneEvaluatorTests
     public async Task HandleAsync_WhenTargetAlreadyAchieved_DoesNotEmitAgain()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         goal.MarkMilestoneAchieved(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-        _userGoalRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _userGoalRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(goal);
 
-        await _sut.HandleAsync(new WeightEntryAddedDomainEvent("user-1", 65m, TestClock.Today), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new WeightEntryAddedDomainEvent(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 65m, TestClock.Today), TestContext.Current.CancellationToken);
 
         await _bus.DidNotReceive().PublishAsync(
             Arg.Any<GoalMilestoneReachedIntegrationEvent>(),

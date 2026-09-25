@@ -22,8 +22,8 @@ public sealed class OverrideMealEntryCommandHandlerTests
         => _sut = new OverrideMealEntryCommandHandler(
             _repository, _recipeRepository, _productRepository, _unitOfWork);
 
-    private static MealEntry NewEntry(string userId = "user-1")
-        => MealEntry.Create(MealEntryId.New(), userId, new DateOnly(2026, 1, 1),
+    private static MealEntry NewEntry(Guid personId = default)
+        => MealEntry.Create(MealEntryId.New(), personId == Guid.Empty ? Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") : personId, new DateOnly(2026, 1, 1),
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
 
     /// <summary>With recipe only: <c>HandleAsync</c> overrides entry and commits.</summary>
@@ -38,7 +38,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _recipeRepository.GetByIdAsync(recipeId, Arg.Any<CancellationToken>()).Returns(recipe);
 
-        var command = new OverrideMealEntryCommand(entry.Id.Value, "user-1", recipeIdGuid, []);
+        var command = new OverrideMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), recipeIdGuid, [], AuthSubject: "user-1");
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Modified);
@@ -66,9 +66,9 @@ public sealed class OverrideMealEntryCommandHandlerTests
 
         var command = new OverrideMealEntryCommand(
             Id: entry.Id.Value,
-            UserId: "user-1",
+            PersonId: Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             ActualRecipeId: null,
-            ActualProducts: [new ActualProductInput(productIdGuid, 50m, "g")]);
+            ActualProducts: [new ActualProductInput(productIdGuid, 50m, "g")], AuthSubject: "user-1");
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Modified);
@@ -88,7 +88,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
         _recipeRepository.GetByIdAsync(recipeId, Arg.Any<CancellationToken>()).Returns(foreignRecipe);
 
-        var command = new OverrideMealEntryCommand(entry.Id.Value, "user-1", recipeIdGuid, []);
+        var command = new OverrideMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), recipeIdGuid, [], AuthSubject: "user-1");
 
         await Should.ThrowAsync<NotFoundException>(() =>
             _sut.HandleAsync(command, TestContext.Current.CancellationToken));
@@ -112,8 +112,8 @@ public sealed class OverrideMealEntryCommandHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns([foreignProduct]);
 
-        var command = new OverrideMealEntryCommand(entry.Id.Value, "user-1", null,
-            [new ActualProductInput(productIdGuid, 50m, "g")]);
+        var command = new OverrideMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null,
+            [new ActualProductInput(productIdGuid, 50m, "g")], AuthSubject: "user-1");
 
         await Should.ThrowAsync<NotFoundException>(() =>
             _sut.HandleAsync(command, TestContext.Current.CancellationToken));

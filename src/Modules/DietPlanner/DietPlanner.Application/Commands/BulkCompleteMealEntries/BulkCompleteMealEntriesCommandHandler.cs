@@ -18,8 +18,8 @@ internal sealed class BulkCompleteMealEntriesCommandHandler
     public async Task<BulkCompleteResult> HandleAsync(
         BulkCompleteMealEntriesCommand command, CancellationToken ct = default)
     {
-        var entries = await _repository.GetByUserAndDateRangeAsync(
-            command.UserId, command.Date, command.Date, ct);
+        var entries = await _repository.GetByPersonAndDateRangeAsync(
+            command.PersonId, command.Date, command.Date, ct);
 
         var completed = 0;
         foreach (var entry in entries.Where(e => e.Status == MealEntryStatus.Planned))

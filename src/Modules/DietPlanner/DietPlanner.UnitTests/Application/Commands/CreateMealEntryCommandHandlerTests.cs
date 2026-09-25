@@ -27,22 +27,22 @@ public sealed class CreateMealEntryCommandHandlerTests
     {
         var schedule = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [("Breakfast", new TimeOnly(7, 0))],
             TestClock.UtcNow);
         var slot = schedule.Slots.Single();
-        _scheduleRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(schedule);
+        _scheduleRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(schedule);
 
         var recipeId = Guid.NewGuid();
         var date = new DateOnly(2024, 3, 15);
         var command = new CreateMealEntryCommand(
-            "user-1", date, slot.Id.Value, recipeId, 1.5m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, slot.Id.Value, recipeId, 1.5m, null, null, null);
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
-            Arg.Is<MealEntry>(m => m.UserId == "user-1" && m.MealSlotId == slot.Id),
+            Arg.Is<MealEntry>(m => m.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") && m.MealSlotId == slot.Id),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
@@ -53,13 +53,13 @@ public sealed class CreateMealEntryCommandHandlerTests
     {
         var schedule = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [("Breakfast", new TimeOnly(7, 0))],
             TestClock.UtcNow);
-        _scheduleRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(schedule);
+        _scheduleRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(schedule);
 
         var command = new CreateMealEntryCommand(
-            "user-1", new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
 
         await Should.ThrowAsync<NotFoundException>(
             () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
@@ -69,11 +69,11 @@ public sealed class CreateMealEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenScheduleMissing_ThrowsNotFoundException()
     {
-        _scheduleRepository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _scheduleRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((MealScheduleConfig?)null);
 
         var command = new CreateMealEntryCommand(
-            "user-1", new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
 
         await Should.ThrowAsync<NotFoundException>(
             () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));

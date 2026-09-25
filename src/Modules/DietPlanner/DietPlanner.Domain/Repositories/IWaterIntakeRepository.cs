@@ -14,10 +14,10 @@ public interface IWaterIntakeRepository
     /// <returns>The tracked water intake entry, or <see langword="null"/> when it does not exist.</returns>
     Task<WaterIntake?> GetByIdAsync(WaterIntakeId id, CancellationToken ct = default);
     /// <summary>Loads every drink a user logged on one day, newest first.</summary>
-    /// <param name="userId">Auth subject of the owner.</param>
+    /// <param name="personId">Person identifier of the owner.</param>
     /// <param name="day">The calendar day.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
-    Task<IReadOnlyList<WaterIntake>> GetByUserAndDateAsync(string userId, DateOnly day, CancellationToken ct = default);
+    Task<IReadOnlyList<WaterIntake>> GetByPersonAndDateAsync(Guid personId, DateOnly day, CancellationToken ct = default);
     /// <summary>Stages a new water intake entry; it is written when the unit of work commits.</summary>
     /// <param name="intake">The water intake entry to add.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>

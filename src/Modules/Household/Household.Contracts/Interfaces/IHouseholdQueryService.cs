@@ -15,4 +15,7 @@ public interface IHouseholdQueryService
     Task<HouseholdContext?> GetHouseholdContextForUserAsync(
         string authSubject,
         CancellationToken ct = default);
+    /// <summary>Returns the linked authentication subject, or null for an unknown or managed person.</summary>
+    Task<string?> GetAuthSubjectForPersonAsync(Guid personId, CancellationToken ct = default);
 }
+

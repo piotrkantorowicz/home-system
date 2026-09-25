@@ -6,8 +6,8 @@ internal sealed class UpdateGoalCommandValidator : ICommandValidator<UpdateGoalC
 {
     public IEnumerable<ValidationError> Validate(UpdateGoalCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.DailyCalorieTarget is < 0)
             yield return new ValidationError(nameof(command.DailyCalorieTarget), "DailyCalorieTarget must be non-negative.");

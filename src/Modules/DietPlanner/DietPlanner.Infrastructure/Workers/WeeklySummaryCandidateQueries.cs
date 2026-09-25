@@ -19,11 +19,11 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
             from settings in dbContext.DietReminderSettings.AsNoTracking()
             where settings.WeeklySummaryEnabled
             join state in dbContext.WeeklySummaryStates.AsNoTracking()
-                on settings.UserId equals state.UserId into stateJoin
+                on settings.PersonId equals state.PersonId into stateJoin
             from state in stateJoin.DefaultIfEmpty()
             select new
             {
-                settings.UserId,
+                settings.PersonId,
                 settings.WeeklySummaryDayOfWeekUtc,
                 settings.WeeklySummaryTimeOfDayUtc,
                 LastAt = state == null ? (DateTime?)null : state.LastWeeklySummaryAt
@@ -31,7 +31,7 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
 
         return rows
             .Select(r => new WeeklySummaryCandidate(
-                r.UserId,
+                r.PersonId,
                 DefaultLocale,
                 r.WeeklySummaryDayOfWeekUtc,
                 r.WeeklySummaryTimeOfDayUtc,
@@ -40,12 +40,12 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
     }
 
     public async Task<WeeklyStats> GetStatsAsync(
-        string userId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
+        Guid personId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
     {
-        int targetKcal = await ComputeTargetKcalAsync(userId, ct);
-        KcalResult kcalResult = await ComputeTotalKcalAndCountsAsync(userId, weekStart, weekEnd, ct);
-        decimal avgWaterLiters = await ComputeAvgWaterLitersAsync(userId, weekStart, weekEnd, ct);
-        decimal? weightDeltaKg = await ComputeWeightDeltaAsync(userId, weekStart, weekEnd, ct);
+        int targetKcal = await ComputeTargetKcalAsync(personId, ct);
+        KcalResult kcalResult = await ComputeTotalKcalAndCountsAsync(personId, weekStart, weekEnd, ct);
+        decimal avgWaterLiters = await ComputeAvgWaterLitersAsync(personId, weekStart, weekEnd, ct);
+        decimal? weightDeltaKg = await ComputeWeightDeltaAsync(personId, weekStart, weekEnd, ct);
 
         return new WeeklyStats(
             TotalKcal: kcalResult.TotalKcal,
@@ -56,11 +56,11 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
             MealsPlanned: kcalResult.MealsPlanned);
     }
 
-    private async Task<int> ComputeTargetKcalAsync(string userId, CancellationToken ct)
+    private async Task<int> ComputeTargetKcalAsync(Guid personId, CancellationToken ct)
     {
         int? goal = await dbContext.UserGoals
             .AsNoTracking()
-            .Where(g => g.UserId == userId)
+            .Where(g => g.PersonId == personId)
             .Select(g => g.DailyCalorieTarget)
             .FirstOrDefaultAsync(ct);
 
@@ -68,11 +68,11 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
     }
 
     private async Task<decimal> ComputeAvgWaterLitersAsync(
-        string userId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
+        Guid personId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
     {
         int totalMl = await dbContext.WaterIntakes
             .AsNoTracking()
-            .Where(w => w.UserId == userId
+            .Where(w => w.PersonId == personId
                 && w.Date >= weekStart
                 && w.Date <= weekEnd)
             .SumAsync(w => w.AmountMl, ct);
@@ -81,11 +81,11 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
     }
 
     private async Task<decimal?> ComputeWeightDeltaAsync(
-        string userId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
+        Guid personId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
     {
         List<decimal> weights = await dbContext.WeightEntries
             .AsNoTracking()
-            .Where(w => w.UserId == userId
+            .Where(w => w.PersonId == personId
                 && w.Date >= weekStart
                 && w.Date <= weekEnd)
             .OrderBy(w => w.Date)
@@ -98,11 +98,11 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
     }
 
     private async Task<KcalResult> ComputeTotalKcalAndCountsAsync(
-        string userId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
+        Guid personId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct)
     {
         List<EntryProjection> entries = await dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => me.UserId == userId
+            .Where(me => me.PersonId == personId
                 && me.Date >= weekStart
                 && me.Date <= weekEnd)
             .Select(me => new EntryProjection

@@ -12,10 +12,10 @@ public sealed class UserGoalTests
     {
         var id = UserGoalId.New();
 
-        var goal = UserGoal.Create(id, "user-1", TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m);
+        var goal = UserGoal.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m);
 
         goal.Id.ShouldBe(id);
-        goal.UserId.ShouldBe("user-1");
+        goal.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         goal.DailyCalorieTarget.ShouldBe(2000);
         goal.ProteinGrams.ShouldBe(150m);
         goal.CarbsGrams.ShouldBe(250m);
@@ -28,7 +28,7 @@ public sealed class UserGoalTests
     [Fact]
     public void Update_WithNewValues_UpdatesGoal()
     {
-        var goal = UserGoal.Create(UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m);
+        var goal = UserGoal.Create(UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m);
 
         goal.Update(1800, 140m, 200m, 60m, 25m, TestClock.UtcNow);
 
@@ -42,9 +42,9 @@ public sealed class UserGoalTests
 
     /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithMissingPersonId_ThrowsArgumentException()
     {
-        var act = () => UserGoal.Create(UserGoalId.New(), null!, TestClock.UtcNow, null, null, null, null, null);
+        var act = () => UserGoal.Create(UserGoalId.New(), Guid.Empty, TestClock.UtcNow, null, null, null, null, null);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -57,7 +57,7 @@ public sealed class UserGoalMilestoneTests
     [Fact]
     public void ShouldEmitWeightMilestone_WhenNoTarget_ReturnsFalse()
     {
-        var goal = UserGoal.Create(UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null);
+        var goal = UserGoal.Create(UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null);
 
         goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
     }
@@ -67,7 +67,7 @@ public sealed class UserGoalMilestoneTests
     public void ShouldEmitWeightMilestone_WhenAboveTarget_ReturnsFalse()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
 
         goal.ShouldEmitWeightMilestone(75m).ShouldBeFalse();
@@ -78,7 +78,7 @@ public sealed class UserGoalMilestoneTests
     public void ShouldEmitWeightMilestone_WhenAtOrBelowTarget_ReturnsTrue()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
 
         goal.ShouldEmitWeightMilestone(70m).ShouldBeTrue();
@@ -90,7 +90,7 @@ public sealed class UserGoalMilestoneTests
     public void ShouldEmitWeightMilestone_AfterMarkAchieved_ReturnsFalse()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
 
         goal.MarkMilestoneAchieved(TestClock.UtcNow);
@@ -103,7 +103,7 @@ public sealed class UserGoalMilestoneTests
     public void MarkMilestoneAchieved_FirstCall_SetsTimestamp()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         var now = TestClock.UtcNow;
 
@@ -117,7 +117,7 @@ public sealed class UserGoalMilestoneTests
     public void MarkMilestoneAchieved_SecondCall_IsNoOp()
     {
         var goal = UserGoal.Create(
-            UserGoalId.New(), "user-1", TestClock.UtcNow, 2000, null, null, null, null,
+            UserGoalId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2000, null, null, null, null,
             targetWeightKg: 70m);
         var first = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var second = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);

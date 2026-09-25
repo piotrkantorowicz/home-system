@@ -25,16 +25,16 @@ public sealed class UpdateHydrationConfigCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenNoExistingConfig_CreatesNewConfig()
     {
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((HydrationConfig?)null);
 
-        var command = new UpdateHydrationConfigCommand("user-1", 3000, 300, false);
+        var command = new UpdateHydrationConfigCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 3000, 300, false);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
             Arg.Is<HydrationConfig>(c =>
-                c.UserId == "user-1" &&
+                c.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") &&
                 c.DailyWaterTargetMl == 3000 &&
                 c.GlassSizeMl == 300 &&
                 !c.TrackWaterIntake),
@@ -46,11 +46,11 @@ public sealed class UpdateHydrationConfigCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenConfigExists_UpdatesExistingConfig()
     {
-        var existing = HydrationConfig.Create(HydrationConfigId.New(), "user-1", TestClock.UtcNow, 2500, 250, true);
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        var existing = HydrationConfig.Create(HydrationConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 2500, 250, true);
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(existing);
 
-        var command = new UpdateHydrationConfigCommand("user-1", 3000, 300, false);
+        var command = new UpdateHydrationConfigCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), 3000, 300, false);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 

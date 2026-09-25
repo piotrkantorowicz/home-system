@@ -14,11 +14,11 @@ public interface IMealEntryRepository
     /// <returns>The tracked meal entry, or <see langword="null"/> when it does not exist.</returns>
     Task<MealEntry?> GetByIdAsync(MealEntryId id, CancellationToken ct = default);
     /// <summary>Loads a user's entries within an inclusive date range, ordered by date then sequence.</summary>
-    /// <param name="userId">Auth subject of the owner.</param>
+    /// <param name="personId">Person identifier of the owner.</param>
     /// <param name="fromDate">First day to include, or <see langword="null"/> for no lower bound.</param>
     /// <param name="toDate">Last day to include, or <see langword="null"/> for no upper bound.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
-    Task<List<MealEntry>> GetByUserAndDateRangeAsync(string userId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default);
+    Task<List<MealEntry>> GetByPersonAndDateRangeAsync(Guid personId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default);
     /// <summary>Whether any entry references the slot — used to block removing a slot from the schedule.</summary>
     /// <param name="mealSlotId">The slot to check.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>

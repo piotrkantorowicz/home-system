@@ -29,7 +29,7 @@ internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<Override
         var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.UserId != command.UserId)
+        if (entry.PersonId != command.PersonId)
             throw new NotFoundException("MealEntry", command.Id);
 
         RecipeId? actualRecipeId = null;
@@ -37,7 +37,7 @@ internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<Override
         {
             actualRecipeId = RecipeId.From(rawRecipeId);
             var recipe = await _recipeRepository.GetByIdAsync(actualRecipeId, ct);
-            if (recipe is null || recipe.CreatedByUserId != command.UserId)
+            if (recipe is null || recipe.CreatedByUserId != command.AuthSubject)
                 throw new NotFoundException("Recipe", rawRecipeId);
         }
 
@@ -50,7 +50,7 @@ internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<Override
             var productIds = productInputs.Select(p => p.ProductId).Distinct().ToList();
             var products = await _productRepository.GetByIdsAsync(productIds, ct);
             var foundIds = products
-                .Where(p => p.CreatedByUserId == command.UserId)
+                .Where(p => p.CreatedByUserId == command.AuthSubject)
                 .Select(p => p.Id)
                 .ToHashSet();
 

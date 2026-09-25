@@ -10,8 +10,8 @@ internal sealed class WeeklySummaryStateConfiguration : IEntityTypeConfiguration
     {
         builder.ToTable("weekly_summary_state");
 
-        builder.HasKey(x => x.UserId);
-        builder.Property(x => x.UserId).HasColumnName("user_id");
+        builder.HasKey(x => x.PersonId);
+        builder.Property(x => x.PersonId).HasColumnName("person_id");
 
         builder.Property(x => x.LastWeeklySummaryAt)
             .HasColumnName("last_weekly_summary_at");

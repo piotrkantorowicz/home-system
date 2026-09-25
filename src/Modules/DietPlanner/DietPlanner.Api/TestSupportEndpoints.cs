@@ -39,7 +39,7 @@ public static class TestSupportEndpoints
         CancellationToken ct)
     {
         var userId = GetUserId(user);
-        await dispatcher.SendAsync(new PurgeUserDataCommand(userId), ct);
+        await dispatcher.SendAsync(new PurgeUserDataCommand(userId, PersonalDataClaims.GetPersonId(user)), ct);
         return TypedResults.NoContent();
     }
 

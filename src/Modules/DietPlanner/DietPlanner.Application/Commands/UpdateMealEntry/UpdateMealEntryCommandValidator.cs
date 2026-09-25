@@ -9,8 +9,8 @@ internal sealed class UpdateMealEntryCommandValidator : ICommandValidator<Update
         if (command.Id == Guid.Empty)
             yield return new ValidationError(nameof(command.Id), "Id is required.");
 
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.MealSlotId == Guid.Empty)
             yield return new ValidationError(nameof(command.MealSlotId), "MealSlotId is required.");

@@ -14,6 +14,7 @@ internal sealed class PurgeUserDataCommandHandler : ICommandHandler<PurgeUserDat
     public async Task HandleAsync(PurgeUserDataCommand command, CancellationToken ct = default)
     {
         var userId = command.UserId;
+        var personId = command.PersonId;
 
         // Single batched statement — one round trip, atomic with the outer command
         // transaction. Raw SQL is chosen for predictability: EF's LINQ translation of
@@ -34,10 +35,13 @@ internal sealed class PurgeUserDataCommandHandler : ICommandHandler<PurgeUserDat
         await _dbContext.Database.ExecuteSqlAsync(
             $"""
             DELETE FROM meal_entries
-            WHERE user_id = {userId}
+            WHERE person_id = {personId}
                OR recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = {userId});
 
-            DELETE FROM water_intakes WHERE user_id = {userId};
+            DELETE FROM weight_entries WHERE person_id = {personId};
+            DELETE FROM weekly_summary_state WHERE person_id = {personId};
+            DELETE FROM water_reminder_state WHERE person_id = {personId};
+            DELETE FROM water_intakes WHERE person_id = {personId};
 
             DELETE FROM recipe_ingredients
             WHERE product_id IN (SELECT id FROM products WHERE created_by_user_id = {userId});
@@ -45,11 +49,11 @@ internal sealed class PurgeUserDataCommandHandler : ICommandHandler<PurgeUserDat
             DELETE FROM recipes WHERE created_by_user_id = {userId};
             DELETE FROM products WHERE created_by_user_id = {userId};
 
-            DELETE FROM hydration_configs WHERE user_id = {userId};
-            DELETE FROM user_goals WHERE user_id = {userId};
-            DELETE FROM meal_schedule_configs WHERE user_id = {userId};
-            DELETE FROM diet_reminder_settings WHERE user_id = {userId};
-            DELETE FROM user_profiles WHERE user_id = {userId};
+            DELETE FROM hydration_configs WHERE person_id = {personId};
+            DELETE FROM user_goals WHERE person_id = {personId};
+            DELETE FROM meal_schedule_configs WHERE person_id = {personId};
+            DELETE FROM diet_reminder_settings WHERE person_id = {personId};
+            DELETE FROM user_profiles WHERE person_id = {personId};
             """, ct);
     }
 }

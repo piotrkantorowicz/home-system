@@ -17,7 +17,7 @@ internal sealed class UpdateMealScheduleCommandHandler(
     public async Task HandleAsync(UpdateMealScheduleCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        MealScheduleConfig? config = await repository.GetByUserIdAsync(command.UserId, ct);
+        MealScheduleConfig? config = await repository.GetByPersonIdAsync(command.PersonId, ct);
 
         if (config is null)
         {
@@ -26,7 +26,7 @@ internal sealed class UpdateMealScheduleCommandHandler(
                 .Select(s => (s.Name, TimeOnly.Parse(s.DefaultTime, CultureInfo.InvariantCulture)))
                 .ToList();
 
-            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.UserId, newSlots, now);
+            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.PersonId, newSlots, now);
             await repository.AddAsync(config, ct);
         }
         else

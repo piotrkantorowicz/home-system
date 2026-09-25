@@ -17,17 +17,17 @@ internal sealed class LogWeightEntryCommandHandler(
         LogWeightEntryCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var profile = await userProfileRepository.GetByUserIdAsync(command.UserId, ct)
-            ?? throw new NotFoundException("UserProfile", command.UserId);
+        var profile = await userProfileRepository.GetByPersonIdAsync(command.PersonId, ct)
+            ?? throw new NotFoundException("UserProfile", command.PersonId);
 
-        var existing = await weightEntryRepository.GetByUserAndDateAsync(
-            command.UserId, command.Date, ct);
+        var existing = await weightEntryRepository.GetByPersonAndDateAsync(
+            command.PersonId, command.Date, ct);
 
         bool created;
         WeightEntry entry;
         if (existing is null)
         {
-            entry = WeightEntry.Create(WeightEntryId.New(), command.UserId, command.Date, command.WeightKg, now);
+            entry = WeightEntry.Create(WeightEntryId.New(), command.PersonId, command.Date, command.WeightKg, now);
             await weightEntryRepository.AddAsync(entry, ct);
             created = true;
         }

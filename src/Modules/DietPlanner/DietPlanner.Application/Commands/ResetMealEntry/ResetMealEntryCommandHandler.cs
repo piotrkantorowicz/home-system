@@ -18,7 +18,7 @@ internal sealed class ResetMealEntryCommandHandler : ICommandHandler<ResetMealEn
         var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.UserId != command.UserId)
+        if (entry.PersonId != command.PersonId)
             throw new NotFoundException("MealEntry", command.Id);
 
         entry.Reset();

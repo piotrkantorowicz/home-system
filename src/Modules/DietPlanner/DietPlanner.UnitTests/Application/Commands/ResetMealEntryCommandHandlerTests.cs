@@ -23,13 +23,13 @@ public sealed class ResetMealEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_ResetsEntryAndCommits()
     {
-        var entry = MealEntry.Create(MealEntryId.New(), "user-1", new DateOnly(2026, 1, 1),
+        var entry = MealEntry.Create(MealEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2026, 1, 1),
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         entry.ApplyOverride(RecipeId.New(), []);
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
-        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Planned);
         entry.ActualRecipeId.ShouldBeNull();
@@ -40,11 +40,11 @@ public sealed class ResetMealEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenEntryNotOwned_ThrowsNotFoundException()
     {
-        var entry = MealEntry.Create(MealEntryId.New(), "other-user", new DateOnly(2026, 1, 1),
+        var entry = MealEntry.Create(MealEntryId.New(), Guid.Parse("1e5f1a27-4c4e-5b84-b4dd-5227b40c755d"), new DateOnly(2026, 1, 1),
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, "user-1"), TestContext.Current.CancellationToken));
+            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken));
     }
 }

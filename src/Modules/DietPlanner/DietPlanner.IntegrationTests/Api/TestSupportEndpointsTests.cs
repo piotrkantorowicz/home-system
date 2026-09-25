@@ -85,7 +85,7 @@ public sealed class TestSupportEndpointsTests
         {
             var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
             (await db.Products.AnyAsync(x => x.CreatedByUserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeTrue();
-            (await db.HydrationConfigs.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeTrue();
+            (await db.HydrationConfigs.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeTrue();
         }
 
         // Act — purge.
@@ -98,13 +98,13 @@ public sealed class TestSupportEndpointsTests
             var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
             (await db.Products.AnyAsync(x => x.CreatedByUserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
             (await db.Recipes.AnyAsync(x => x.CreatedByUserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.MealEntries.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.UserGoals.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.MealScheduleConfigs.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.UserProfiles.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.DietReminderSettings.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.HydrationConfigs.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-            (await db.WaterIntakes.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.MealEntries.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.UserGoals.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.MealScheduleConfigs.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.UserProfiles.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.DietReminderSettings.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.HydrationConfigs.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+            (await db.WaterIntakes.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
         }
     }
 
@@ -154,7 +154,7 @@ public sealed class TestSupportEndpointsTests
         // Assert — everything gone, including the ingredient rows that cascade from Recipe.
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
-        (await db.MealEntries.AnyAsync(x => x.UserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await db.MealEntries.AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(userId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
         (await db.Recipes.AnyAsync(x => x.CreatedByUserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
         (await db.Products.AnyAsync(x => x.CreatedByUserId == userId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
@@ -266,7 +266,7 @@ public sealed class TestSupportEndpointsTests
         var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
         (await db.Recipes.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == currentUserId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
         (await db.Products.IgnoreQueryFilters().AnyAsync(x => x.CreatedByUserId == currentUserId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
-        (await db.MealEntries.IgnoreQueryFilters().AnyAsync(x => x.UserId == staleUserId, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await db.MealEntries.IgnoreQueryFilters().AnyAsync(x => x.PersonId == TestAuthHandler.PersonIdFor(staleUserId), cancellationToken: TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 
     /// <summary>When user has no data: <c>DELETE</c> purge my data returns 204.</summary>

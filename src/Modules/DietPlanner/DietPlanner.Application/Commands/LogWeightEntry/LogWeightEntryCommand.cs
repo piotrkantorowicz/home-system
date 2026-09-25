@@ -5,11 +5,11 @@ using Shared.Abstractions.Cqrs;
 /// <summary>
 /// Records the caller's weight for a day. If the day already has an entry its weight is corrected instead of adding a second one; either way the profile's current weight is refreshed.
 /// </summary>
-/// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
+/// <param name="PersonId">Person identifier of the caller; the command only touches this user's data.</param>
 /// <param name="Date">The day of the weigh-in; today or earlier.</param>
 /// <param name="WeightKg">Weight in kilograms, 0.1–999.</param>
 public sealed record LogWeightEntryCommand(
-    string UserId,
+    Guid PersonId,
     DateOnly Date,
     decimal WeightKg) : ICommand<LogWeightEntryResult>;
 

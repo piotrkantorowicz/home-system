@@ -17,14 +17,14 @@ internal sealed class DeleteWeightEntryCommandHandler(
         var entry = await weightEntryRepository.GetByIdAsync(WeightEntryId.From(command.EntryId), ct)
             ?? throw new NotFoundException("WeightEntry", command.EntryId);
 
-        if (entry.UserId != command.UserId)
+        if (entry.PersonId != command.PersonId)
             throw new NotFoundException("WeightEntry", command.EntryId);
 
-        var latest = await weightEntryRepository.GetLatestByUserAsync(command.UserId, entry.Id, ct);
+        var latest = await weightEntryRepository.GetLatestByPersonAsync(command.PersonId, entry.Id, ct);
 
         weightEntryRepository.Delete(entry);
 
-        var profile = await userProfileRepository.GetByUserIdAsync(command.UserId, ct);
+        var profile = await userProfileRepository.GetByPersonIdAsync(command.PersonId, ct);
         if (profile is not null)
         {
             profile.UpdateCurrentWeight(latest?.WeightKg, now);

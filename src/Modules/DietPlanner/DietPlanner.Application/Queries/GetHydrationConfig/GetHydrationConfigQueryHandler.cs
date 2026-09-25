@@ -14,10 +14,10 @@ internal sealed class GetHydrationConfigQueryHandler : IQueryHandler<GetHydratio
     public async Task<HydrationConfigDto?> HandleAsync(GetHydrationConfigQuery query, CancellationToken ct = default)
         => await _dbContext.HydrationConfigs
             .AsNoTracking()
-            .Where(c => c.UserId == query.UserId)
+            .Where(c => c.PersonId == query.PersonId)
             .Select(c => new HydrationConfigDto(
                 c.Id.Value,
-                c.UserId,
+                c.PersonId,
                 c.DailyWaterTargetMl,
                 c.GlassSizeMl,
                 c.TrackWaterIntake,

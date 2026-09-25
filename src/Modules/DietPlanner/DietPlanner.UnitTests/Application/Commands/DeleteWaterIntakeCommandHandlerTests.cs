@@ -26,7 +26,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
         var id = Guid.NewGuid();
         var intake = WaterIntake.Create(
             WaterIntakeId.From(id),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             TestClock.Today,
             250,
             null,
@@ -35,7 +35,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
         _repository.GetByIdAsync(WaterIntakeId.From(id), Arg.Any<CancellationToken>())
             .Returns(intake);
 
-        await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken);
 
         _repository.Received(1).Delete(intake);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -50,7 +50,7 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
             .Returns((WaterIntake?)null);
 
         var act = async () =>
-            await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, "user-1"), TestContext.Current.CancellationToken);
+            await _sut.HandleAsync(new DeleteWaterIntakeCommand(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }

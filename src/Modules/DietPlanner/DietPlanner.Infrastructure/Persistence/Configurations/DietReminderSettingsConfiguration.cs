@@ -16,14 +16,13 @@ internal sealed class DietReminderSettingsConfiguration : IEntityTypeConfigurati
             .HasConversion(id => id.Value, value => DietReminderSettingsId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(x => x.PersonId)
             .IsUnique()
-            .HasDatabaseName("idx_diet_reminder_settings_user");
+            .HasDatabaseName("idx_diet_reminder_settings_person");
 
         builder.Property(x => x.MealRemindersEnabled).HasColumnName("meal_reminders_enabled");
         builder.Property(x => x.MealReminderLeadTimeMinutes).HasColumnName("meal_reminder_lead_time_minutes");

@@ -1,6 +1,7 @@
 namespace DietPlanner.IntegrationTests.Infrastructure;
 
 using DietPlanner.Infrastructure.Persistence;
+using Household.Contracts.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -49,6 +50,13 @@ public sealed class DietPlannerWebApplicationFactory(
             // Pin the wall clock so timestamps and "today" are deterministic
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
+
+            if (settings is null || !settings.ContainsKey("ConnectionStrings:Household"))
+            {
+                services.AddSingleton<TestHouseholdQueryService>();
+                services.RemoveAll<IHouseholdQueryService>();
+                services.AddSingleton<IHouseholdQueryService>(sp => sp.GetRequiredService<TestHouseholdQueryService>());
+            }
 
             // Optionally override the test user identity (e.g. for isolation tests)
             if (userId is not null)

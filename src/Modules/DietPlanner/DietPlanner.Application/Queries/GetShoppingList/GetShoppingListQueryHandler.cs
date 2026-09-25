@@ -23,11 +23,11 @@ internal sealed partial class GetShoppingListQueryHandler
     public async Task<IReadOnlyList<ShoppingListItemDto>> HandleAsync(
         GetShoppingListQuery query, CancellationToken ct = default)
     {
-        var userIds = await ResolveHouseholdUserIdsAsync(query.UserId, ct);
+        var personIds = await ResolveHouseholdPersonIdsAsync(query.PersonId, query.AuthSubject, ct);
 
         var entries = await _dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => userIds.Contains(me.UserId)
+            .Where(me => personIds.Contains(me.PersonId)
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Select(me => new EntryProjection
@@ -113,33 +113,31 @@ internal sealed partial class GetShoppingListQueryHandler
     /// <summary>
     /// The shopping list is a shared household resource (#223): it aggregates the planned
     /// meals of every member. Resolves the caller's household and returns every member's
-    /// auth subject (meal entries are still keyed by subject in v1) plus the caller's own.
+    /// person identifier, including managed members, plus the caller's own.
     /// Falls back to the caller alone when they have no household or the Household module
     /// is unavailable — the list must never fail because of a household lookup.
     /// </summary>
-    private async Task<IReadOnlyList<string>> ResolveHouseholdUserIdsAsync(
-        string callerUserId, CancellationToken ct)
+    private async Task<IReadOnlyList<Guid>> ResolveHouseholdPersonIdsAsync(
+        Guid callerPersonId, string authSubject, CancellationToken ct)
     {
         try
         {
-            var context = await _households.GetHouseholdContextForUserAsync(callerUserId, ct);
+            var context = await _households.GetHouseholdContextForUserAsync(authSubject, ct);
             if (context is null)
-                return [callerUserId];
+                return [callerPersonId];
 
             var subjects = context.Members
-                .Select(m => m.AuthSubject)
-                .Where(s => !string.IsNullOrEmpty(s))
-                .Select(s => s!)
-                .Append(callerUserId)
-                .Distinct(StringComparer.Ordinal)
+                .Select(m => m.PersonId)
+                .Append(callerPersonId)
+                .Distinct()
                 .ToList();
 
             return subjects;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogHouseholdUnresolved(ex);
-            return [callerUserId];
+            return [callerPersonId];
         }
     }
 

@@ -108,7 +108,7 @@ public sealed class ProfileEndpointsTests
 
         UserProfileDto? dto = await getResponse.Content.ReadFromJsonAsync<UserProfileDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
-        dto.UserId.ShouldNotBeNullOrEmpty();
+        dto.PersonId.ShouldNotBe(Guid.Empty);
 
         var updateRequest = new ProfileRequest(null, null, 170m, 65m, 60m, "VeryActive");
         var updateResponse = await _client.PutAsJsonAsync("/api/v1/profile", updateRequest, cancellationToken: TestContext.Current.CancellationToken);
