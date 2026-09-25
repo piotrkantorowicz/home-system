@@ -26,6 +26,6 @@ internal sealed class RevokeInvitationCommandHandler(
             throw new NotFoundException("Invitation", command.InvitationId);
 
         invitation.Revoke(now);
-        await unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitOrThrowConflictAsync(ct);
     }
 }

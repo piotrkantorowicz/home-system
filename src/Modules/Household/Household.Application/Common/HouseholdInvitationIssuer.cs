@@ -39,6 +39,7 @@ internal sealed class HouseholdInvitationIssuer(
         string? nickname,
         CancellationToken ct)
     {
+        var now = clock.GetUtcNow().UtcDateTime;
         var existingPerson = knownTarget ?? (email is not null ? await persons.GetByEmailAsync(email, ct) : null);
 
         if (existingPerson is not null)
@@ -49,13 +50,13 @@ internal sealed class HouseholdInvitationIssuer(
             if (await households.GetByMemberPersonIdAsync(existingPerson.Id, ct) is not null)
                 throw new HouseholdDomainException($"{existingPerson.DisplayName} already belongs to a household.");
 
-            if (await invitations.HasPendingForPersonInHouseholdAsync(household.Id, existingPerson.Id, ct))
+            if (await invitations.HasPendingForPersonInHouseholdAsync(household.Id, existingPerson.Id, now, ct))
                 throw new HouseholdDomainException($"{existingPerson.DisplayName} already has a pending invitation to this household.");
         }
 
         email ??= existingPerson?.Email;
 
-        if (email is not null && await invitations.HasPendingForEmailInHouseholdAsync(household.Id, email, ct))
+        if (email is not null && await invitations.HasPendingForEmailInHouseholdAsync(household.Id, email, now, ct))
             throw new HouseholdDomainException("There is already a pending invitation for that email.");
 
         var invitation = HouseholdInvitation.Create(
@@ -65,7 +66,7 @@ internal sealed class HouseholdInvitationIssuer(
             existingPerson?.Id,
             role,
             invitedByPersonId,
-            clock.GetUtcNow().UtcDateTime,
+            now,
             nickname);
 
         await invitations.AddAsync(invitation, ct);

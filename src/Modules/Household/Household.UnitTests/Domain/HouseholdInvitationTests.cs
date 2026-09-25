@@ -128,6 +128,30 @@ public sealed class HouseholdInvitationTests
         invitation.Nickname.ShouldBe("Gram");
     }
 
+    /// <summary>
+    /// <c>Create</c> trims and caps an over-long nickname at 100 characters instead of writing raw
+    /// input into the varchar(100) column. Regression for a 500 on <c>POST /members</c> with a
+    /// 101-character nickname, since the invitation-issuing path skipped the normalisation
+    /// <c>HouseholdMember.Create</c> already applied for the immediate-add path it replaced.
+    /// </summary>
+    [Fact]
+    public void Create_WithAnOverLongNickname_TrimsAndCapsIt()
+    {
+        var overLong = new string('a', 150);
+
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            PersonEmail.Create("invitee@example.com"),
+            targetPersonId: null,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow,
+            nickname: overLong);
+
+        invitation.Nickname.ShouldBe(new string('a', 100));
+    }
+
     /// <summary>Addressed only by target person, with no email: <c>Create</c> succeeds.</summary>
     [Fact]
     public void Create_WithTargetPersonAndNoEmail_Succeeds()
@@ -176,6 +200,32 @@ public sealed class HouseholdInvitationTests
 
         invitation.IsAddressedTo(target, email: null).ShouldBeTrue();
         invitation.IsAddressedTo(PersonId.New(), email: null).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// When targeted at a specific person, a different person who merely shares that email must not
+    /// match — <c>PersonEmail</c> is not a unique key, so email must never bypass an authoritative
+    /// <c>TargetPersonId</c>. Regression for a bug where a second account sharing the invitee's email
+    /// could accept (or decline) an invitation meant for someone else.
+    /// </summary>
+    [Fact]
+    public void IsAddressedTo_WhenTargetedAtAPerson_IgnoresADifferentPersonWithTheSameEmail()
+    {
+        var target = PersonId.New();
+        var sharedEmail = PersonEmail.Create("shared@example.com");
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            sharedEmail,
+            targetPersonId: target,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow);
+
+        var impersonator = PersonId.New();
+
+        invitation.IsAddressedTo(impersonator, sharedEmail).ShouldBeFalse();
+        invitation.IsAddressedTo(target, email: null).ShouldBeTrue();
     }
 
     /// <summary><c>IsAddressedTo</c> matches by email when there is no target person.</summary>

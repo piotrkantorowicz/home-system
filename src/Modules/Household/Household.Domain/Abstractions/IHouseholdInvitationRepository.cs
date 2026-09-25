@@ -21,19 +21,21 @@ public interface IHouseholdInvitationRepository
     Task<IReadOnlyList<HouseholdInvitation>> ListForHouseholdAsync(
         HouseholdId householdId, CancellationToken ct = default);
 
-    /// <summary>Whether the household already has a pending invitation for the address — used to reject duplicates.</summary>
+    /// <summary>Whether the household already has a pending, unexpired invitation for the address — used to reject duplicates.</summary>
     /// <param name="householdId">The household.</param>
     /// <param name="email">The normalised address.</param>
+    /// <param name="now">Current time, UTC; an invitation whose lifetime has passed does not count.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task<bool> HasPendingForEmailInHouseholdAsync(
-        HouseholdId householdId, PersonEmail email, CancellationToken ct = default);
+        HouseholdId householdId, PersonEmail email, DateTime now, CancellationToken ct = default);
 
-    /// <summary>Whether the household already has a pending invitation targeting this person — used to reject duplicates.</summary>
+    /// <summary>Whether the household already has a pending, unexpired invitation targeting this person — used to reject duplicates.</summary>
     /// <param name="householdId">The household.</param>
     /// <param name="personId">The targeted person.</param>
+    /// <param name="now">Current time, UTC; an invitation whose lifetime has passed does not count.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task<bool> HasPendingForPersonInHouseholdAsync(
-        HouseholdId householdId, PersonId personId, CancellationToken ct = default);
+        HouseholdId householdId, PersonId personId, DateTime now, CancellationToken ct = default);
 
     /// <summary>Stages a new invitation; it is written when the unit of work commits.</summary>
     /// <param name="invitation">The invitation to add.</param>

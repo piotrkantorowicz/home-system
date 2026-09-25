@@ -148,6 +148,92 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
         accept.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    /// <summary>
+    /// A different account that merely shares the targeted person's email cannot accept in their
+    /// place. Regression: <c>PersonEmail</c> is not unique, so email must never bypass an
+    /// authoritative <c>TargetPersonId</c> on a person-targeted invitation.
+    /// </summary>
+    [Fact]
+    public async Task Accept_ByADifferentAccountSharingTheTargetsEmail_Returns403()
+    {
+        var (owner, householdId) = await OwnerWithHouseholdAsync();
+        var sharedEmail = $"shared-{Guid.NewGuid():N}@example.com";
+
+        var target = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: sharedEmail, name: "Target");
+        (await target.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var targetId = (await target.GetFromJsonAsync<PersonBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
+
+        var impersonator = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: sharedEmail, name: "Impersonator");
+        (await impersonator.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = targetId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddResult>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+
+        var impersonatorAccept = await impersonator.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken);
+        impersonatorAccept.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        var targetAccept = await target.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken);
+        targetAccept.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await target.GetFromJsonAsync<Mine>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id.ShouldBe(householdId);
+    }
+
+    /// <summary>
+    /// An invitation past its 30-day lifetime is excluded from both the invitee's and the owner's
+    /// lists and cannot be accepted, even though its status is never persisted as <c>Expired</c>
+    /// (accepting inside a rolled-back ambient transaction cannot also flip and save that flag).
+    /// </summary>
+    [Fact]
+    public async Task ExpiredInvitation_IsExcludedFromListsAndCannotBeAccepted()
+    {
+        var (owner, householdId) = await OwnerWithHouseholdAsync();
+        var email = $"expired-{Guid.NewGuid():N}@example.com";
+
+        var invite = await owner.PostAsJsonAsync($"/api/households/{householdId}/invitations", new { email, role = "Adult" }, cancellationToken: TestContext.Current.CancellationToken);
+        var invitationId = (await invite.Content.ReadFromJsonAsync<InviteResult>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+
+        _factory.Clock.Advance(TimeSpan.FromDays(31));
+
+        var invitee = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: email, name: "TooLate");
+        (await invitee.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        var mine = await invitee.GetFromJsonAsync<List<MyInvitation>>("/api/households/invitations/mine", cancellationToken: TestContext.Current.CancellationToken);
+        mine!.ShouldBeEmpty();
+
+        var pending = await owner.GetFromJsonAsync<List<Invitation>>($"/api/households/{householdId}/invitations", cancellationToken: TestContext.Current.CancellationToken);
+        pending!.ShouldBeEmpty();
+
+        var accept = await invitee.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken);
+        accept.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    /// <summary>
+    /// An over-long nickname is trimmed and capped at 100 characters instead of failing at the
+    /// database. Regression: the immediate-add path normalised it via
+    /// <c>HouseholdMember.NormaliseNickname</c>; the invitation-issuing path that replaced it
+    /// originally did not, and a 101-character nickname returned 500.
+    /// </summary>
+    [Fact]
+    public async Task AddExistingPersonAsMember_WithAnOverLongNickname_TrimsItInsteadOfFailing()
+    {
+        var (owner, householdId) = await OwnerWithHouseholdAsync();
+
+        var target = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}", email: $"{Guid.NewGuid():N}@x.com", name: "Target");
+        (await target.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var targetId = (await target.GetFromJsonAsync<PersonBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
+
+        var overLong = new string('a', 150);
+        var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = targetId, role = "Adult", nickname = overLong }, cancellationToken: TestContext.Current.CancellationToken);
+        add.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddResult>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+
+        (await target.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        var members = await owner.GetFromJsonAsync<List<Member>>($"/api/households/{householdId}/members", cancellationToken: TestContext.Current.CancellationToken);
+        members!.Single(m => m.PersonId == targetId).Nickname.ShouldBe(new string('a', 100));
+    }
+
     /// <summary>Duplicate pending email: <c>Invite</c> returns 422.</summary>
     [Fact]
     public async Task Invite_DuplicatePendingEmail_Returns422()
@@ -163,6 +249,9 @@ public sealed class HouseholdInvitationTests : IClassFixture<HouseholdDatabaseFi
 
     private sealed record Mine(Guid Id, string Name, string MyRole);
     private sealed record InviteResult(Guid InvitationId);
+    private sealed record AddResult(Guid InvitationId);
     private sealed record Invitation(Guid Id, string Email, string Role, string Status);
     private sealed record MyInvitation(Guid Id, Guid HouseholdId, string HouseholdName, string Role);
+    private sealed record PersonBody(Guid Id);
+    private sealed record Member(Guid PersonId, string? Nickname);
 }

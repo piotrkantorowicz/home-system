@@ -5,7 +5,7 @@ using Household.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class ListMyInvitationsQueryHandler(IHouseholdReadDbContext db)
+internal sealed class ListMyInvitationsQueryHandler(IHouseholdReadDbContext db, TimeProvider clock)
     : IQueryHandler<ListMyInvitationsQuery, IReadOnlyList<MyInvitationDto>>
 {
     public async Task<IReadOnlyList<MyInvitationDto>> HandleAsync(
@@ -19,12 +19,18 @@ internal sealed class ListMyInvitationsQueryHandler(IHouseholdReadDbContext db)
         if (caller is null)
             return [];
 
+        var now = clock.GetUtcNow().UtcDateTime;
+
+        // TargetPersonId, when set, is authoritative — email is not a unique key, so it is only
+        // consulted for a purely email-addressed invitation (see HouseholdInvitation.IsAddressedTo).
         return await (
             from invitation in db.HouseholdInvitations.AsNoTracking()
             join household in db.Households.AsNoTracking() on invitation.HouseholdId equals household.Id
             where invitation.Status == InvitationStatus.Pending
-                  && (invitation.TargetPersonId == caller.Id
-                      || (caller.Email != null && invitation.Email != null && invitation.Email.Value == caller.Email))
+                  && invitation.ExpiresAt > now
+                  && (invitation.TargetPersonId != null
+                      ? invitation.TargetPersonId == caller.Id
+                      : caller.Email != null && invitation.Email != null && invitation.Email.Value == caller.Email)
             orderby invitation.CreatedAt descending
             select new MyInvitationDto(
                 invitation.Id.Value,

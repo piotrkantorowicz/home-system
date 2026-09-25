@@ -29,12 +29,13 @@ internal sealed class AcceptInvitationCommandHandler(
         if (await households.GetByMemberPersonIdAsync(caller.Id, ct) is not null)
             throw new HouseholdDomainException("You already belong to a household.");
 
+        // An expired-but-still-Pending row is never persisted as Expired here: this handler runs
+        // inside an ambient transaction that only commits when it returns without throwing, so a
+        // commit followed by a throw would silently roll back. Read paths (ListPendingInvitations,
+        // ListMyInvitations, HouseholdInvitationIssuer's duplicate checks) filter on ExpiresAt
+        // instead of relying on the Status ever flipping to Expired.
         if (invitation.HasExpired(now))
-        {
-            invitation.Expire(now);
-            await unitOfWork.CommitAsync(ct);
             throw new HouseholdDomainException("This invitation has expired.");
-        }
 
         if (!invitation.IsPending)
             throw new HouseholdDomainException($"This invitation is already {invitation.Status.ToString().ToLowerInvariant()}.");
@@ -45,6 +46,6 @@ internal sealed class AcceptInvitationCommandHandler(
         household.AddMember(caller.Id, invitation.Role, now, invitation.Nickname);
         invitation.Accept(now);
 
-        await unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitOrThrowConflictAsync(ct);
     }
 }

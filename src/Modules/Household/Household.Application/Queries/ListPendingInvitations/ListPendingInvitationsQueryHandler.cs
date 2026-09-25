@@ -6,12 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class ListPendingInvitationsQueryHandler
+internal sealed class ListPendingInvitationsQueryHandler(IHouseholdReadDbContext db, TimeProvider clock)
     : IQueryHandler<ListPendingInvitationsQuery, IReadOnlyList<InvitationDto>>
 {
-    private readonly IHouseholdReadDbContext _db;
-
-    public ListPendingInvitationsQueryHandler(IHouseholdReadDbContext db) => _db = db;
+    private readonly IHouseholdReadDbContext _db = db;
 
     public async Task<IReadOnlyList<InvitationDto>> HandleAsync(
         ListPendingInvitationsQuery query, CancellationToken ct)
@@ -29,9 +27,13 @@ internal sealed class ListPendingInvitationsQueryHandler
         if (!isMember)
             throw new ForbiddenException("You are not a member of this household.");
 
+        var now = clock.GetUtcNow().UtcDateTime;
+
         return await (
             from invitation in _db.HouseholdInvitations.AsNoTracking()
-            where invitation.HouseholdId == householdId && invitation.Status == InvitationStatus.Pending
+            where invitation.HouseholdId == householdId
+                  && invitation.Status == InvitationStatus.Pending
+                  && invitation.ExpiresAt > now
             orderby invitation.CreatedAt descending
             select new InvitationDto(
                 invitation.Id.Value,

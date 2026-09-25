@@ -69,6 +69,28 @@ public sealed class AcceptInvitationCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When targeted at a specific person: <c>Handle</c> throws for a different account sharing that person's email, even though email alone would otherwise match.</summary>
+    [Fact]
+    public async Task Handle_WhenTargetedAtAPerson_ThrowsForADifferentAccountWithTheSameEmail()
+    {
+        var target = Person.RegisterFromLogin(
+            PersonId.New(), "auth|target", "Target", PersonEmail.Create("shared@example.com"), null, TestClock.UtcNow);
+        var targeted = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(), _household.Id, PersonEmail.Create("shared@example.com"),
+            targetPersonId: target.Id, HouseholdRole.Adult, PersonId.New(), TestClock.UtcNow);
+        _invitations.GetByIdAsync(targeted.Id, Arg.Any<CancellationToken>()).Returns(targeted);
+
+        var impersonator = Person.RegisterFromLogin(
+            PersonId.New(), "auth|impersonator", "Impersonator", PersonEmail.Create("shared@example.com"), null, TestClock.UtcNow);
+        _persons.GetByAuthSubjectAsync("auth|impersonator", Arg.Any<CancellationToken>()).Returns(impersonator);
+
+        await Should.ThrowAsync<ForbiddenException>(() => _sut.HandleAsync(
+            new AcceptInvitationCommand("auth|impersonator", targeted.Id.Value), TestContext.Current.CancellationToken));
+
+        _household.HasMember(impersonator.Id).ShouldBeFalse();
+        await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
     /// <summary>When the caller already belongs to a household: <c>Handle</c> throws.</summary>
     [Fact]
     public async Task Handle_WhenCallerAlreadyBelongsToAHousehold_Throws()
@@ -82,18 +104,18 @@ public sealed class AcceptInvitationCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
-    /// <summary>When expired: <c>Handle</c> marks the invitation expired, commits that, and throws.</summary>
+    /// <summary>When expired: <c>Handle</c> throws without committing, leaving the row untouched — this handler runs inside an ambient transaction that rolls back on throw, so a persisted status flip would be silently lost anyway. Elapsed invitations are excluded by ExpiresAt in the read paths instead (ListPendingInvitations, ListMyInvitations, HouseholdInvitationIssuer's duplicate checks).</summary>
     [Fact]
-    public async Task Handle_WhenExpired_MarksExpired_Commits_AndThrows()
+    public async Task Handle_WhenExpired_Throws_WithoutCommitting()
     {
         _clock.SetUtcNow(TestClock.Now.Add(HouseholdInvitation.Lifetime).AddSeconds(1));
 
         await Should.ThrowAsync<HouseholdDomainException>(() =>
             _sut.HandleAsync(Command(), TestContext.Current.CancellationToken));
 
-        _invitation.Status.ShouldBe(InvitationStatus.Expired);
+        _invitation.Status.ShouldBe(InvitationStatus.Pending);
         _household.HasMember(_invitee.Id).ShouldBeFalse();
-        await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
     /// <summary>When no invitation exists for the id: <c>Handle</c> throws not found.</summary>

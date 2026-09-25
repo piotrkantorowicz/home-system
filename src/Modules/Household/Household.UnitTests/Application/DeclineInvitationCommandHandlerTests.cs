@@ -61,6 +61,28 @@ public sealed class DeclineInvitationCommandHandlerTests
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    /// <summary>When targeted at a specific person: <c>Handle</c> throws for a different account sharing that person's email, even though email alone would otherwise match.</summary>
+    [Fact]
+    public async Task Handle_WhenTargetedAtAPerson_ThrowsForADifferentAccountWithTheSameEmail()
+    {
+        var target = Person.RegisterFromLogin(
+            PersonId.New(), "auth|target", "Target", PersonEmail.Create("shared@example.com"), null, TestClock.UtcNow);
+        var targeted = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(), HouseholdId.New(), PersonEmail.Create("shared@example.com"),
+            targetPersonId: target.Id, HouseholdRole.Adult, PersonId.New(), TestClock.UtcNow);
+        _invitations.GetByIdAsync(targeted.Id, Arg.Any<CancellationToken>()).Returns(targeted);
+
+        var impersonator = Person.RegisterFromLogin(
+            PersonId.New(), "auth|impersonator", "Impersonator", PersonEmail.Create("shared@example.com"), null, TestClock.UtcNow);
+        _persons.GetByAuthSubjectAsync("auth|impersonator", Arg.Any<CancellationToken>()).Returns(impersonator);
+
+        await Should.ThrowAsync<ForbiddenException>(() => _sut.HandleAsync(
+            new DeclineInvitationCommand("auth|impersonator", targeted.Id.Value), TestContext.Current.CancellationToken));
+
+        targeted.Status.ShouldBe(InvitationStatus.Pending);
+        await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
     /// <summary>When no invitation exists for the id: <c>Handle</c> throws not found.</summary>
     [Fact]
     public async Task Handle_WhenInvitationDoesNotExist_Throws()

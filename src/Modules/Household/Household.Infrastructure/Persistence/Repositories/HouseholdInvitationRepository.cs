@@ -22,18 +22,20 @@ internal sealed class HouseholdInvitationRepository : IHouseholdInvitationReposi
             .ToListAsync(ct);
 
     public Task<bool> HasPendingForEmailInHouseholdAsync(
-        HouseholdId householdId, PersonEmail email, CancellationToken ct = default)
+        HouseholdId householdId, PersonEmail email, DateTime now, CancellationToken ct = default)
         => _dbContext.HouseholdInvitations.AnyAsync(
             i => i.HouseholdId == householdId
                  && i.Status == InvitationStatus.Pending
+                 && i.ExpiresAt > now
                  && i.Email != null && i.Email.Value == email.Value,
             ct);
 
     public Task<bool> HasPendingForPersonInHouseholdAsync(
-        HouseholdId householdId, PersonId personId, CancellationToken ct = default)
+        HouseholdId householdId, PersonId personId, DateTime now, CancellationToken ct = default)
         => _dbContext.HouseholdInvitations.AnyAsync(
             i => i.HouseholdId == householdId
                  && i.Status == InvitationStatus.Pending
+                 && i.ExpiresAt > now
                  && i.TargetPersonId == personId,
             ct);
 

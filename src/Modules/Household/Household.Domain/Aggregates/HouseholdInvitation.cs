@@ -1,5 +1,6 @@
 namespace Household.Domain.Aggregates;
 
+using global::Household.Domain.Entities;
 using global::Household.Domain.Events;
 using global::Household.Domain.Exceptions;
 using global::Household.Domain.ValueObjects;
@@ -53,7 +54,7 @@ public sealed class HouseholdInvitation : AggregateRoot<HouseholdInvitationId>
             Email = email,
             TargetPersonId = targetPersonId,
             Role = role,
-            Nickname = nickname,
+            Nickname = HouseholdMember.NormaliseNickname(nickname),
             InvitedByPersonId = invitedByPersonId,
             Status = InvitationStatus.Pending,
             CreatedAt = now,
@@ -86,15 +87,30 @@ public sealed class HouseholdInvitation : AggregateRoot<HouseholdInvitationId>
     public DateTime ExpiresAt { get; private set; }
     /// <summary>When it left the pending state, UTC; <see langword="null"/> while pending.</summary>
     public DateTime? ResolvedAt { get; private set; }
+    /// <summary>
+    /// Optimistic-concurrency token mapped to PostgreSQL's <c>xmin</c> system column (see
+    /// <c>HouseholdInvitationConfiguration</c>) — never set by domain logic. Accept, decline and
+    /// revoke all read-then-write this row with no other locking; without it, two concurrent
+    /// requests could both read <c>Pending</c> and the loser would silently overwrite the winner's
+    /// outcome instead of failing with a concurrency exception.
+    /// </summary>
+    public uint Version { get; private set; }
 
     /// <summary>Whether the invitation can still be accepted or revoked.</summary>
     public bool IsPending => Status == InvitationStatus.Pending;
 
-    /// <summary>Whether this invitation addresses the given person — by <see cref="TargetPersonId"/> or by a matching <see cref="Email"/>.</summary>
+    /// <summary>
+    /// Whether this invitation addresses the given person. <see cref="TargetPersonId"/>, when set, is
+    /// authoritative — email is never consulted, since <see cref="Domain.ValueObjects.PersonEmail"/>
+    /// is not a unique key and a different person could otherwise claim a person-targeted invitation
+    /// by sharing (or later acquiring) the same address.
+    /// </summary>
     /// <param name="personId">The person to check.</param>
     /// <param name="email">That person's own email, if any.</param>
     public bool IsAddressedTo(PersonId personId, PersonEmail? email)
-        => TargetPersonId == personId || (Email is not null && email is not null && Email == email);
+        => TargetPersonId is not null
+            ? TargetPersonId == personId
+            : Email is not null && email is not null && Email == email;
 
     /// <summary>Whether the lifetime has passed at the given instant, regardless of <see cref="Status"/>.</summary>
     /// <param name="utcNow">The current time, UTC.</param>

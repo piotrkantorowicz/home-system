@@ -60,5 +60,9 @@ internal sealed class HouseholdInvitationConfiguration : IEntityTypeConfiguratio
         builder.Property(x => x.ResolvedAt).HasColumnName("resolved_at");
 
         builder.HasIndex(x => x.HouseholdId).HasDatabaseName("idx_household_invitations_household");
+
+        // Maps to PostgreSQL's xmin system column — no schema change, no migration. See
+        // HouseholdInvitation.Version and InvitationConflictGuard.
+        builder.Property(x => x.Version).IsRowVersion();
     }
 }

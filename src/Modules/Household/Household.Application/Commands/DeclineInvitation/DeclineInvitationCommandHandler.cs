@@ -25,6 +25,6 @@ internal sealed class DeclineInvitationCommandHandler(
             throw new ForbiddenException("This invitation is not addressed to you.");
 
         invitation.Decline(now);
-        await unitOfWork.CommitAsync(ct);
+        await unitOfWork.CommitOrThrowConflictAsync(ct);
     }
 }
