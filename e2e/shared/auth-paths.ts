@@ -23,18 +23,16 @@ export function credentialsFor(workerIndex: number): {
   username: string;
   password: string;
 } {
-  const username =
-    process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
+  const username = process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
 
   const password =
-    process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
-    process.env["TEST_USER_PASSWORD"];
+    process.env[`TEST_USER_PASSWORD_${workerIndex}`] ?? process.env['TEST_USER_PASSWORD'];
 
   if (!password) {
     throw new Error(
       `TEST_USER_PASSWORD (or TEST_USER_PASSWORD_${workerIndex}) is not set. ` +
-        "Copy e2e/.env.example to e2e/.env and set the value — it must match " +
-        "infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.",
+        'Copy e2e/.env.example to e2e/.env and set the value — it must match ' +
+        'infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.',
     );
   }
 
@@ -47,21 +45,29 @@ export function credentialsFor(workerIndex: number): {
  * accept/decline target in cross-user specs without touching a worker's own data.
  */
 export function inviteeAuthStatePath(): string {
-  return "playwright/.auth/invitee.json";
+  return 'playwright/.auth/invitee.json';
 }
 
 export function inviteeCredentials(): { username: string; password: string } {
-  const username = process.env["TEST_INVITEE_EMAIL"] ?? "E2eInvitee";
-  const password =
-    process.env["TEST_INVITEE_PASSWORD"] ?? process.env["TEST_USER_PASSWORD"];
+  const username = process.env['TEST_INVITEE_EMAIL'] ?? 'E2eInvitee';
+  const password = process.env['TEST_INVITEE_PASSWORD'] ?? process.env['TEST_USER_PASSWORD'];
 
   if (!password) {
     throw new Error(
-      "TEST_INVITEE_PASSWORD (or TEST_USER_PASSWORD) is not set. " +
-        "Copy e2e/.env.example to e2e/.env and set the value — it must match " +
-        "infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.",
+      'TEST_INVITEE_PASSWORD (or TEST_USER_PASSWORD) is not set. ' +
+        'Copy e2e/.env.example to e2e/.env and set the value — it must match ' +
+        'infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.',
     );
   }
 
   return { username, password };
+}
+
+/**
+ * The invitee's real email address — distinct from `inviteeCredentials().username`,
+ * which is the Authentik login name. This is what `InvitePersonByEmail` needs to
+ * address a `HouseholdInvitation` at them; matches the blueprint's `attrs.email`.
+ */
+export function inviteeInvitationEmail(): string {
+  return process.env['TEST_INVITEE_INVITATION_EMAIL'] ?? 'e2e-invitee@test.local';
 }

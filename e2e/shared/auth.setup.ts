@@ -1,13 +1,13 @@
-import { test as setup } from "@playwright/test";
+import { test as setup } from '@playwright/test';
 
 import {
   authStatePath,
   credentialsFor,
   inviteeAuthStatePath,
   inviteeCredentials,
-} from "./auth-paths";
-import { loginViaAuthentik } from "./authentik-login";
-import { ensureHousehold } from "./household-seed";
+} from './auth-paths';
+import { loginViaAuthentik } from './authentik-login';
+import { ensureHousehold } from './household-seed';
 
 const WORKER_COUNT = 4;
 
@@ -31,7 +31,7 @@ for (let workerIndex = 0; workerIndex < WORKER_COUNT; workerIndex++) {
   });
 }
 
-setup("authenticate invitee", async ({ browser }) => {
+setup('authenticate invitee', async ({ browser }) => {
   const { username, password } = inviteeCredentials();
 
   const context = await browser.newContext();
