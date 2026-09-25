@@ -1,6 +1,11 @@
 import { test as setup } from '@playwright/test';
 
-import { authStatePath, credentialsFor } from './auth-paths';
+import {
+  authStatePath,
+  credentialsFor,
+  inviteeAuthStatePath,
+  inviteeCredentials,
+} from './auth-paths';
 import { loginViaAuthentik } from './authentik-login';
 import { ensureHousehold } from './household-seed';
 
@@ -25,3 +30,19 @@ for (let workerIndex = 0; workerIndex < WORKER_COUNT; workerIndex++) {
     await ensureHousehold(workerIndex);
   });
 }
+
+setup('authenticate invitee', async ({ browser }) => {
+  const { username, password } = inviteeCredentials();
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await loginViaAuthentik(page, username, password);
+
+  await context.storageState({ path: inviteeAuthStatePath() });
+  await context.close();
+
+  // Deliberately no ensureHousehold() — this identity stays outside the WORKER_COUNT
+  // pool specifically so cross-user specs (e.g. household invitations) have a real
+  // second Authentik user with no household of its own to accept into.
+});
