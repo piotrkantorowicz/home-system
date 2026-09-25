@@ -35,20 +35,24 @@ if [[ "$branch" == epic/* ]] && grep -Eq '(^|[;&|[:space:]])git[[:space:]]+(comm
 fi
 
 # 2. No force push. --force-with-lease is tolerated on feature branches only.
-if grep -Eq 'git[[:space:]]+push' <<< "$cmd"; then
-  if grep -Eq -- '(^|[[:space:]])(-f|--force)([[:space:]]|$)|[[:space:]]\+[[:alnum:]]' <<< "$cmd"; then
+# Scoped to the `git push ...` segment itself — not the full (possibly chained) command —
+# so prose elsewhere in the command (e.g. a `gh pr create --title` containing the word
+# "main") can't false-positive as a push destination.
+push_segment=$(grep -Eo 'git[[:space:]]+push[^;&|]*' <<< "$cmd" | head -1)
+if [[ -n "$push_segment" ]]; then
+  if grep -Eq -- '(^|[[:space:]])(-f|--force)([[:space:]]|$)|[[:space:]]\+[[:alnum:]]' <<< "$push_segment"; then
     block "force push is not allowed. Use --force-with-lease on a feature branch if you must rewrite it."
   fi
   # A refspec's destination follows ':'; a bare ref is also its destination.
   # Include full refs, deletion refspecs and quoted arguments, but not main:feature.
   main_destination="(^|[[:space:]])[\"']?([^[:space:]:]*:)?(refs/heads/)?main[\"']?([[:space:];&|]|$)"
-  if grep -Eq "$main_destination" <<< "$cmd"; then
+  if grep -Eq "$main_destination" <<< "$push_segment"; then
     block "never push directly to 'main'. Push a feature branch and open a PR."
   fi
   # An epic branch is pushed only by the rebase-onto-main sync (--force-with-lease).
   epic_destination="(^|[[:space:]])[\"']?([^[:space:]:]*:)?(refs/heads/)?epic/[^[:space:]\"']+[\"']?([[:space:];&|]|$)"
-  if [[ "$branch" == epic/* ]] || grep -Eq "$epic_destination" <<< "$cmd"; then
-    grep -Eq -- '--force-with-lease' <<< "$cmd" \
+  if [[ "$branch" == epic/* ]] || grep -Eq "$epic_destination" <<< "$push_segment"; then
+    grep -Eq -- '--force-with-lease' <<< "$push_segment" \
       || block "pushing to an epic branch is only allowed as the rebase sync: git push --force-with-lease origin epic/<n>-<slug>. Children land via PRs."
   fi
 fi
