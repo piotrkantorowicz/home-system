@@ -267,6 +267,7 @@
   "shopping_list": {
     "title": "Shopping List",
     "subtitle": "Aggregated ingredients from your planned meals — overrides are ignored.",
+    "shared_with": "Shared with {{household}}",
     "from": "From",
     "to": "To",
     "apply": "Apply",
