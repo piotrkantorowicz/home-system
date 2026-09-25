@@ -62,6 +62,34 @@ export async function revokeStalePendingInvitation(
   }
 }
 
+/**
+ * Arranges a clean starting point for a cross-user invitation spec: the
+ * owner's own household id/name, with any invitation stale from a previous
+ * interrupted run revoked, and the invitee confirmed to hold no household of
+ * their own. Shared by every spec exercising the reserved invitee identity,
+ * since each otherwise repeats the same three API calls before it can act.
+ */
+export async function arrangeCleanInvitation(
+  ownerPage: Page,
+  inviteePage: Page,
+  inviteeEmail: string,
+): Promise<{ id: string; name: string }> {
+  const ownerApi = await createApiContext(ownerPage);
+  let household: { id: string; name: string };
+  try {
+    const mine = await ownerApi.get('/api/households/me');
+    if (!mine.ok()) {
+      throw new Error(`arrangeCleanInvitation: GET /api/households/me returned ${mine.status()}`);
+    }
+    household = (await mine.json()) as { id: string; name: string };
+    await revokeStalePendingInvitation(ownerPage, household.id, inviteeEmail);
+  } finally {
+    await ownerApi.dispose();
+  }
+  await ensureNoHousehold(inviteePage);
+  return household;
+}
+
 interface MealSlotDto {
   id: string;
   name: string;

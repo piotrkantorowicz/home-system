@@ -51,6 +51,14 @@ export class HouseholdPage extends BasePage {
     await this.page.getByRole('heading', { level: 1, name: householdName }).waitFor();
   }
 
+  async declineInvitationFrom(householdName: string) {
+    await this.myInvitationsHeading.waitFor();
+    const row = this.invitationFrom(householdName);
+    await row.getByRole('button', { name: /^decline$/i }).click();
+    // The row disappears on the real effect, rather than waiting on the toast.
+    await row.waitFor({ state: 'hidden' });
+  }
+
   async leaveHousehold() {
     await this.leaveButton.click();
     await this.confirmButton.click();
