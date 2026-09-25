@@ -14,14 +14,16 @@ public sealed record ListPendingInvitationsQuery(string AuthSubject, Guid Househ
 /// A pending invitation.
 /// </summary>
 /// <param name="Id">Invitation identifier.</param>
-/// <param name="Email">The invited address.</param>
+/// <param name="Email">The invited address, or <see langword="null"/> when addressed only by <paramref name="TargetDisplayName"/>.</param>
+/// <param name="TargetDisplayName">The invited person's display name, when addressed by an existing person picked from the household's list; otherwise <see langword="null"/>.</param>
 /// <param name="Role">Role name granted on acceptance.</param>
 /// <param name="Status">Status name; always <c>Pending</c> from this query.</param>
 /// <param name="CreatedAt">When it was issued, UTC.</param>
 /// <param name="ExpiresAt">When it stops being acceptable, UTC.</param>
 public sealed record InvitationDto(
     Guid Id,
-    string Email,
+    string? Email,
+    string? TargetDisplayName,
     string Role,
     string Status,
     DateTime CreatedAt,

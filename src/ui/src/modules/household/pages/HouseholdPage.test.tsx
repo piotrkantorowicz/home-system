@@ -82,6 +82,7 @@ beforeEach(() => {
     ),
     http.post(`${BASE}/api/persons/me/sync`, () => HttpResponse.json({ personId: 'owner' })),
     http.get(`${BASE}/api/households/home-1/invitations`, () => HttpResponse.json([])),
+    http.get(`${BASE}/api/households/invitations/mine`, () => HttpResponse.json([])),
     http.get(`${BASE}/api/households/pickable-persons`, () =>
       HttpResponse.json([
         { personId: 'new-person', displayName: 'Jo', email: 'jo@example.com', isManaged: false },
@@ -155,22 +156,20 @@ describe('Household UI', () => {
     expect(screen.getByText('Diet planner')).toBeInTheDocument();
   });
 
-  it('waits for invitation resolution before admitting a user without creating another home', async () => {
+  it('does not join a household just because sync completed', async () => {
     household = null;
-    const create = vi.fn(() => new HttpResponse(null, { status: 201 }));
     server.use(
       http.post(`${BASE}/api/persons/me/sync`, async () => {
         await delay(40);
-        household = { ...fixture, myRole: 'Adult' };
         return HttpResponse.json({ personId: 'person-123' });
       }),
-      http.post(`${BASE}/api/households`, create),
     );
     renderPage('/diet-planner');
     expect(screen.queryByText('Diet planner')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Get started' })).not.toBeInTheDocument();
-    expect(await screen.findByText('Diet planner')).toBeInTheDocument();
-    expect(create).not.toHaveBeenCalled();
+    expect(
+      await screen.findByRole('heading', { name: 'Give your home a name' }),
+    ).toBeInTheDocument();
   });
 
   it('keeps setup visible after a failed creation', async () => {
@@ -229,13 +228,9 @@ describe('Household UI', () => {
       server.use(
         http.post(`${BASE}/api/households/home-1/${endpoint}`, async ({ request }) => {
           post(await request.json());
-          return mode === 'invite'
-            ? HttpResponse.json({
-                addedImmediately: false,
-                invitationId: 'invite-1',
-                personId: null,
-              })
-            : new HttpResponse(null, { status: 204 });
+          return mode === 'managed'
+            ? new HttpResponse(null, { status: 204 })
+            : HttpResponse.json({ invitationId: 'invite-1' });
         }),
       );
       renderPage();
@@ -266,9 +261,9 @@ describe('Household UI', () => {
             ? { displayName: 'Taylor', role: 'Child', email: null, nickname: null }
             : { email: 'jo@example.com', role: 'Adult' },
       );
-      if (mode === 'invite')
+      if (mode !== 'managed')
         expect(
-          screen.getByText('Invitation created. Ask them to sign in; no email was sent.'),
+          screen.getByText('Invitation created. They must accept it before they join.'),
         ).toBeInTheDocument();
     },
   );
@@ -317,28 +312,95 @@ describe('Household UI', () => {
     });
   });
 
-  it('announces an invitation resolved by sync once', async () => {
+  it('accepts a pending invitation and then shows the joined household', async () => {
     household = null;
     server.use(
-      http.post(`${BASE}/api/persons/me/sync`, () => {
+      http.get(`${BASE}/api/households/invitations/mine`, () =>
+        HttpResponse.json([
+          {
+            id: 'invite-1',
+            householdId: 'home-1',
+            householdName: 'Our home',
+            role: 'Adult',
+            createdAt: '2026-09-08T10:00:00Z',
+            expiresAt: '2026-10-08T10:00:00Z',
+          },
+        ]),
+      ),
+      http.post(`${BASE}/api/households/invitations/invite-1/accept`, () => {
         household = { ...fixture, myRole: 'Adult' };
-        return HttpResponse.json({ personId: 'person-123' });
+        return new HttpResponse(null, { status: 204 });
       }),
     );
     renderPage();
+    await screen.findByText('Our home invited you as Adult');
+    await userEvent.click(screen.getByRole('button', { name: 'Accept' }));
     expect(await screen.findByText("You've joined the Our home household.")).toBeInTheDocument();
-    expect(screen.getAllByText("You've joined the Our home household.")).toHaveLength(1);
+    await screen.findByRole('heading', { name: 'Our home' });
   });
 
-  it.each(['Owner', 'Adult', 'Child', 'Guest'])(
-    'does not announce existing %s membership as a new invitation',
-    async (role) => {
-      household = { ...fixture, myRole: role };
-      renderPage();
-      await screen.findByRole('heading', { name: 'Our home' });
-      expect(screen.queryByText(/You've joined/)).not.toBeInTheDocument();
-    },
-  );
+  it('declines a pending invitation without joining', async () => {
+    household = null;
+    let pending = true;
+    server.use(
+      http.get(`${BASE}/api/households/invitations/mine`, () =>
+        HttpResponse.json(
+          pending
+            ? [
+                {
+                  id: 'invite-1',
+                  householdId: 'home-1',
+                  householdName: 'Our home',
+                  role: 'Adult',
+                  createdAt: '2026-09-08T10:00:00Z',
+                  expiresAt: '2026-10-08T10:00:00Z',
+                },
+              ]
+            : [],
+        ),
+      ),
+      http.post(`${BASE}/api/households/invitations/invite-1/decline`, () => {
+        pending = false;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+    await screen.findByText('Our home invited you as Adult');
+    await userEvent.click(screen.getByRole('button', { name: 'Decline' }));
+    expect(await screen.findByText('Invitation declined.')).toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Give your home a name' });
+  });
+
+  it('shows a loading state for pending invitations instead of treating it as none', async () => {
+    household = null;
+    server.use(
+      http.get(`${BASE}/api/households/invitations/mine`, async () => {
+        await delay('infinite');
+        return HttpResponse.json([]);
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText('Loading household…')).toBeInTheDocument();
+  });
+
+  it('shows a retryable error for pending invitations instead of treating it as none', async () => {
+    household = null;
+    let fail = true;
+    server.use(
+      http.get(`${BASE}/api/households/invitations/mine`, () =>
+        fail ? new HttpResponse(null, { status: 500 }) : HttpResponse.json([]),
+      ),
+    );
+    renderPage();
+    const banner = await screen.findByRole('alert');
+    expect(banner).toHaveTextContent('Could not load invitations.');
+    expect(screen.getByRole('heading', { name: 'Give your home a name' })).toBeInTheDocument();
+    fail = false;
+    await userEvent.click(within(banner).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
 
   it('blocks feature access when person sync fails', async () => {
     server.use(

@@ -32,9 +32,11 @@ async function getAccessToken(page: Page): Promise<string> {
 
 /**
  * Creates a one-shot APIRequestContext authenticated as the current user.
- * Callers must `dispose()` it when done (the helpers below do this).
+ * Callers must `dispose()` it when done (the helpers below do this). Exported
+ * so other modules' seed helpers (e.g. household) can build on the same
+ * token-reading logic instead of duplicating it.
  */
-async function createApiContext(page: Page): Promise<APIRequestContext> {
+export async function createApiContext(page: Page): Promise<APIRequestContext> {
   const token = await getAccessToken(page);
   return request.newContext({
     baseURL: API_BASE_URL,
@@ -142,7 +144,9 @@ interface MealEntryDto {
 export async function clearMealsInSlot(page: Page, date: string, slotName: string): Promise<void> {
   const api = await createApiContext(page);
   try {
-    const res = await api.get('/api/v1/meals', { params: { from: date, to: date } });
+    const res = await api.get('/api/v1/meals', {
+      params: { from: date, to: date },
+    });
     if (!res.ok()) {
       throw new Error(`clearMealsInSlot: GET returned ${res.status()}: ${await res.text()}`);
     }
@@ -252,10 +256,16 @@ export async function seedMealSchedule(
       ...slot,
     }));
     for (const extra of existing.slice(slots.length)) {
-      upserts.push({ id: extra.id, name: extra.name, defaultTime: extra.defaultTime });
+      upserts.push({
+        id: extra.id,
+        name: extra.name,
+        defaultTime: extra.defaultTime,
+      });
     }
 
-    const res = await api.put('/api/v1/meal-schedule', { data: { slots: upserts } });
+    const res = await api.put('/api/v1/meal-schedule', {
+      data: { slots: upserts },
+    });
     if (!res.ok()) {
       throw new Error(`seedMealSchedule: PUT returned ${res.status()}: ${await res.text()}`);
     }

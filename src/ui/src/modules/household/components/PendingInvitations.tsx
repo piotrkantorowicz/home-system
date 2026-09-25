@@ -30,34 +30,37 @@ export function PendingInvitations({ id, owner }: { id: string; owner: boolean }
         <p className="text-muted-foreground mt-4 text-sm">{t('no_invitations')}</p>
       )}
       <ul className="divide-border mt-2 divide-y">
-        {query.data?.map((invitation) => (
-          <li
-            key={invitation.id}
-            className="flex flex-wrap items-center justify-between gap-3 py-3"
-          >
-            <div className="min-w-0">
-              <p className="break-words">{invitation.email}</p>
-              <p className="text-muted-foreground text-sm">
-                {t(`roles.${invitation.role}`)} ·{' '}
-                {t(new Date(invitation.expiresAt) <= new Date() ? 'expired' : 'expires', {
-                  date: new Date(invitation.expiresAt).toLocaleDateString(i18n.language),
-                })}
-              </p>
-            </div>
-            {owner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={t('revoke_email', { email: invitation.email })}
-                onClick={() => {
-                  setRevoke(invitation.id);
-                }}
-              >
-                {t('revoke')}
-              </Button>
-            )}
-          </li>
-        ))}
+        {query.data?.map((invitation) => {
+          const label = invitation.email ?? invitation.targetDisplayName ?? '';
+          return (
+            <li
+              key={invitation.id}
+              className="flex flex-wrap items-center justify-between gap-3 py-3"
+            >
+              <div className="min-w-0">
+                <p className="break-words">{label}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t(`roles.${invitation.role}`)} ·{' '}
+                  {t(new Date(invitation.expiresAt) <= new Date() ? 'expired' : 'expires', {
+                    date: new Date(invitation.expiresAt).toLocaleDateString(i18n.language),
+                  })}
+                </p>
+              </div>
+              {owner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t('revoke_email', { email: label })}
+                  onClick={() => {
+                    setRevoke(invitation.id);
+                  }}
+                >
+                  {t('revoke')}
+                </Button>
+              )}
+            </li>
+          );
+        })}
       </ul>
       {revoke && (
         <ConfirmHouseholdAction

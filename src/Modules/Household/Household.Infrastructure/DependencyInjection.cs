@@ -49,7 +49,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IHouseholdRepository, HouseholdRepository>();
         services.AddScoped<IHouseholdInvitationRepository, HouseholdInvitationRepository>();
         services.AddScoped<HouseholdAccessService>();
-        services.AddScoped<InvitationResolver>();
+        services.AddScoped<HouseholdInvitationIssuer>();
 
         // Read-side query surface for other modules + the host claims transformer.
         services.AddScoped<IHouseholdQueryService, HouseholdQueryService>();

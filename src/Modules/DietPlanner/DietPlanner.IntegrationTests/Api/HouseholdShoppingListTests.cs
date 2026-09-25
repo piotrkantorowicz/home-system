@@ -46,7 +46,10 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
 
         (await member.PostAsync("/api/persons/me/sync", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var memberPersonId = (await member.GetFromJsonAsync<PersonBody>("/api/persons/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
-        (await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = memberPersonId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken))
+        var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = memberPersonId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
+        add.EnsureSuccessStatusCode();
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddMemberResultBody>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+        (await member.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
         // Each member plans one meal on the same day, using their own recipe/product.
@@ -93,6 +96,8 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
     }
 
     private sealed record HouseholdBody(Guid Id);
+
+    private sealed record AddMemberResultBody(Guid InvitationId);
 
     private sealed record PersonBody(Guid Id);
 }

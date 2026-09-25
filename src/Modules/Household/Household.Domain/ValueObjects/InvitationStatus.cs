@@ -12,6 +12,8 @@ public enum InvitationStatus
     Accepted,
     /// <summary>An owner withdrew it before it was accepted.</summary>
     Revoked,
+    /// <summary>The invitee declined it.</summary>
+    Declined,
     /// <summary>Its 30-day lifetime passed without acceptance.</summary>
     Expired,
 }

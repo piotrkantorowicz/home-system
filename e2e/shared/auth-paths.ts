@@ -23,8 +23,7 @@ export function credentialsFor(workerIndex: number): {
   username: string;
   password: string;
 } {
-  const username =
-    process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
+  const username = process.env[`TEST_USER_EMAIL_${workerIndex}`] ?? `E2eWorker${workerIndex}`;
 
   const password =
     process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
@@ -64,4 +63,13 @@ export function inviteeCredentials(): { username: string; password: string } {
   }
 
   return { username, password };
+}
+
+/**
+ * The invitee's real email address — distinct from `inviteeCredentials().username`,
+ * which is the Authentik login name. This is what `InvitePersonByEmail` needs to
+ * address a `HouseholdInvitation` at them; matches the blueprint's `attrs.email`.
+ */
+export function inviteeInvitationEmail(): string {
+  return process.env["TEST_INVITEE_INVITATION_EMAIL"] ?? "e2e-invitee@test.local";
 }
