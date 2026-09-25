@@ -94,6 +94,21 @@ entries:
       is_active: true
       password: !Env E2E_USER_PASSWORD
 
+  # A fifth user reserved for cross-user specs (e.g. household invitations) that need a
+  # second identity with no household of its own. Outside the WORKER_COUNT=4 pool used by
+  # playwright.config.ts, so it's never assigned to a worker and never seeded a household —
+  # borrowing a pool worker for this would break the "one Authentik user per worker, no
+  # shared data" isolation the pool exists for.
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: E2eInvitee
+    attrs:
+      name: E2E Invitee
+      email: e2e-invitee@test.local
+      is_active: true
+      password: !Env E2E_USER_PASSWORD
+
   # ── Application ──────────────────────────────────────────────────────────────
   - model: authentik_core.application
     state: present
