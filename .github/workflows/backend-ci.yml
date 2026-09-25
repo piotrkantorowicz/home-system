@@ -3,26 +3,8 @@ name: Backend CI
 on:
   push:
     branches: [main, 'epic/**']
-    paths:
-      - 'src/Apis/**'
-      - 'src/Modules/**'
-      - 'src/Shared/**'
-      - 'Directory.Build.props'
-      - 'Directory.Packages.props'
-      - 'HomeSystem.slnx'
-      - '.editorconfig'
-      - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [main, 'epic/**']
-    paths:
-      - 'src/Apis/**'
-      - 'src/Modules/**'
-      - 'src/Shared/**'
-      - 'Directory.Build.props'
-      - 'Directory.Packages.props'
-      - 'HomeSystem.slnx'
-      - '.editorconfig'
-      - '.github/workflows/backend-ci.yml'
 
 concurrency:
   group: backend-${{ github.workflow }}-${{ github.ref }}
@@ -34,25 +16,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Required status check must always report, so the workflow always triggers and
+      # this step decides — instead of skipping the whole workflow via `on.paths`,
+      # which leaves a required check stuck pending forever on unrelated PRs.
+      - name: Check for relevant changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - 'src/Apis/**'
+              - 'src/Modules/**'
+              - 'src/Shared/**'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'HomeSystem.slnx'
+              - '.editorconfig'
+              - '.github/workflows/backend-ci.yml'
+
       - uses: actions/checkout@v7
+        if: steps.filter.outputs.relevant == 'true'
 
       - name: Setup .NET 10
+        if: steps.filter.outputs.relevant == 'true'
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
+        if: steps.filter.outputs.relevant == 'true'
         run: dotnet restore HomeSystem.slnx
 
       - name: Format check
+        if: steps.filter.outputs.relevant == 'true'
         run: dotnet format HomeSystem.slnx --no-restore --verify-no-changes --verbosity minimal
 
       - name: Build
+        if: steps.filter.outputs.relevant == 'true'
         run: dotnet build HomeSystem.slnx --no-restore --configuration Release
 
       # Every *.UnitTests / *.Tests / *.IntegrationTests project in the solution.
       # Integration tests use Testcontainers — Docker is available on ubuntu-latest.
       - name: Run all tests
+        if: steps.filter.outputs.relevant == 'true'
         run: |
           dotnet test --solution HomeSystem.slnx \
             --no-build \
@@ -61,7 +67,7 @@ jobs:
             --report-xunit-trx
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.filter.outputs.relevant == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: backend-test-results
