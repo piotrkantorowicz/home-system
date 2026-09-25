@@ -3,6 +3,7 @@ namespace DietPlanner.Application.Workers;
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
+using Household.Contracts.Interfaces;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
@@ -10,7 +11,8 @@ internal sealed class WaterReminderJob(
     IWaterReminderCandidateQueries queries,
     IWaterReminderStateRepository stateRepo,
     IIntegrationEventBus bus,
-    IUnitOfWork unitOfWork) : IDietReminderJob
+    IUnitOfWork unitOfWork,
+    IHouseholdQueryService persons) : IDietReminderJob
 {
     public string Name => "WaterReminderJob";
 
@@ -29,16 +31,19 @@ internal sealed class WaterReminderJob(
             if (!IsIntervalPassed(nowUtc, c.LastWaterReminderAt, c.WaterReminderIntervalMinutes))
                 continue;
 
-            var existing = await stateRepo.GetByUserIdAsync(c.UserId, ct);
+            string? authSubject = await persons.GetAuthSubjectForPersonAsync(c.PersonId, ct);
+            if (authSubject is null) continue;
+
+            var existing = await stateRepo.GetByPersonIdAsync(c.PersonId, ct);
             if (existing is null)
-                await stateRepo.AddAsync(WaterReminderState.Create(c.UserId, nowUtc), ct);
+                await stateRepo.AddAsync(WaterReminderState.Create(c.PersonId, nowUtc), ct);
             else
                 existing.UpdateLastReminderAt(nowUtc);
 
             await bus.PublishAsync(new WaterReminderDueIntegrationEvent(
                 EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
-                UserId: c.UserId,
+                UserId: authSubject,
                 Locale: c.Locale), ct);
 
             publishedAny = true;

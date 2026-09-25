@@ -14,10 +14,10 @@ internal sealed class GetProfileQueryHandler : IQueryHandler<GetProfileQuery, Us
     public async Task<UserProfileDto?> HandleAsync(GetProfileQuery query, CancellationToken ct = default)
         => await _dbContext.UserProfiles
             .AsNoTracking()
-            .Where(p => p.UserId == query.UserId)
+            .Where(p => p.PersonId == query.PersonId)
             .Select(p => new UserProfileDto(
                 p.Id.Value,
-                p.UserId,
+                p.PersonId,
                 p.DateOfBirth,
                 p.Gender.HasValue ? p.Gender.Value.ToString() : null,
                 p.HeightCm,

@@ -14,18 +14,18 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
 
     /// <summary>Creates a profile; any field may be left unknown.</summary>
     /// <param name="id">Identifier for the new profile.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="dateOfBirth">Used to derive age for the BMR formula.</param>
     /// <param name="gender">Selects the BMR constant.</param>
     /// <param name="heightCm">Height in centimetres.</param>
     /// <param name="currentWeightKg">Latest known weight in kilograms; kept in sync by weight entries.</param>
     /// <param name="targetWeightKg">Weight the user is aiming for, in kilograms.</param>
     /// <param name="activityLevel">Selects the TDEE multiplier.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static UserProfile Create(
         UserProfileId id,
-        string userId,
+        Guid personId,
         DateOnly? dateOfBirth,
         Gender? gender,
         decimal? heightCm,
@@ -34,12 +34,13 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
         ActivityLevel? activityLevel,
         DateTime now)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
 
         return new UserProfile
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             DateOfBirth = dateOfBirth,
             Gender = gender,
             HeightCm = heightCm,
@@ -50,8 +51,8 @@ public sealed class UserProfile : AggregateRoot<UserProfileId>
         };
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Date of birth, if provided; age is derived from it.</summary>
     public DateOnly? DateOfBirth { get; private set; }
     /// <summary>Gender for the BMR formula, if provided.</summary>

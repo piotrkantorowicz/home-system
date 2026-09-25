@@ -11,8 +11,8 @@ internal sealed class DietReminderSettingsRepository : IDietReminderSettingsRepo
     public DietReminderSettingsRepository(DietPlannerDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<DietReminderSettings?> GetByUserIdAsync(string userId, CancellationToken ct = default)
-        => await _dbContext.DietReminderSettings.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+    public async Task<DietReminderSettings?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
+        => await _dbContext.DietReminderSettings.FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(DietReminderSettings settings, CancellationToken ct = default)
         => await _dbContext.DietReminderSettings.AddAsync(settings, ct);

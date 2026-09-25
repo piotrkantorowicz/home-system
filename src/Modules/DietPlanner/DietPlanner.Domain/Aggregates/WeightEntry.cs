@@ -20,33 +20,34 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
 
     /// <summary>Records a weigh-in and raises <see cref="WeightEntryAddedDomainEvent"/>.</summary>
     /// <param name="id">Identifier for the new entry.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="date">The day of the weigh-in; today or earlier (UTC).</param>
     /// <param name="weightKg">Weight in kilograms, 0.1–999.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <exception cref="DietPlannerDomainException">The weight is out of range or the date is in the future.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
-    public static WeightEntry Create(WeightEntryId id, string userId, DateOnly date, decimal weightKg, DateTime now)
+    public static WeightEntry Create(WeightEntryId id, Guid personId, DateOnly date, decimal weightKg, DateTime now)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
         EnsureValidWeight(weightKg);
         EnsureNotFutureDate(date, now);
 
         var entry = new WeightEntry
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             Date = date,
             WeightKg = weightKg,
             CreatedAt = now,
         };
 
-        entry.RaiseDomainEvent(new WeightEntryAddedDomainEvent(userId, weightKg, date));
+        entry.RaiseDomainEvent(new WeightEntryAddedDomainEvent(personId, weightKg, date));
         return entry;
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>The day of the weigh-in.</summary>
     public DateOnly Date { get; private set; }
     /// <summary>Weight in kilograms.</summary>
@@ -65,7 +66,7 @@ public sealed class WeightEntry : AggregateRoot<WeightEntryId>
         EnsureValidWeight(newWeightKg);
         WeightKg = newWeightKg;
         UpdatedAt = now;
-        RaiseDomainEvent(new WeightEntryAddedDomainEvent(UserId, newWeightKg, Date));
+        RaiseDomainEvent(new WeightEntryAddedDomainEvent(PersonId, newWeightKg, Date));
     }
 
     private static void EnsureValidWeight(decimal weightKg)

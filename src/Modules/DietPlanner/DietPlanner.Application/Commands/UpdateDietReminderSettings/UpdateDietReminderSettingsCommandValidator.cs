@@ -6,8 +6,8 @@ internal sealed class UpdateDietReminderSettingsCommandValidator : ICommandValid
 {
     public IEnumerable<ValidationError> Validate(UpdateDietReminderSettingsCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.MealReminderLeadTimeMinutes is < 1 or > 120)
             yield return new ValidationError(nameof(command.MealReminderLeadTimeMinutes), "MealReminderLeadTimeMinutes must be between 1 and 120.");

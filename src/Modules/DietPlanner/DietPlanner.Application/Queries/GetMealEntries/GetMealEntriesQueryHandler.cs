@@ -20,7 +20,7 @@ internal sealed class GetMealEntriesQueryHandler
         // Phase 1 — pull entries + denormalised slot/recipe/actual-recipe/actual-product data.
         var rows = await _dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => me.UserId == query.UserId
+            .Where(me => me.PersonId == query.PersonId
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters(),

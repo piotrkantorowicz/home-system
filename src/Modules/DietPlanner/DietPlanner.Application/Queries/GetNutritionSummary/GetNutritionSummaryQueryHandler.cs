@@ -19,7 +19,7 @@ internal sealed class GetNutritionSummaryQueryHandler
     {
         var entries = await _dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => me.UserId == query.UserId
+            .Where(me => me.PersonId == query.PersonId
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
             .Select(me => new EntryProjection

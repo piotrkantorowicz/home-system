@@ -8,4 +8,5 @@ using Shared.Abstractions.Cqrs;
 /// </summary>
 /// <param name="Import">The parsed import file.</param>
 /// <param name="UserId">Auth subject of the importing user.</param>
-public sealed record ExecuteImportCommand(ImportDto Import, string UserId) : ICommand<ImportResultDto>;
+/// <param name="PersonId">Person identifier of the importing user.</param>
+public sealed record ExecuteImportCommand(ImportDto Import, string UserId, Guid PersonId) : ICommand<ImportResultDto>;

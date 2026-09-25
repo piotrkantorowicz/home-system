@@ -9,21 +9,22 @@ public sealed class WaterReminderState
     private WaterReminderState() { }
 
     /// <summary>Creates the row for a user the first time a reminder is sent.</summary>
-    /// <param name="userId">Auth subject of the user; required.</param>
+    /// <param name="personId">Person identifier of the user; required.</param>
     /// <param name="lastReminderAt">When the reminder was sent, UTC.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
-    public static WaterReminderState Create(string userId, DateTime lastReminderAt)
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
+    public static WaterReminderState Create(Guid personId, DateTime lastReminderAt)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
         return new WaterReminderState
         {
-            UserId = userId,
+            PersonId = personId,
             LastWaterReminderAt = lastReminderAt
         };
     }
 
-    /// <summary>Auth subject of the user; the key.</summary>
-    public string UserId { get; private init; } = default!;
+    /// <summary>Person identifier of the user; the key.</summary>
+    public Guid PersonId { get; private init; }
     /// <summary>When the last water reminder was sent, UTC.</summary>
     public DateTime? LastWaterReminderAt { get; private set; }
 

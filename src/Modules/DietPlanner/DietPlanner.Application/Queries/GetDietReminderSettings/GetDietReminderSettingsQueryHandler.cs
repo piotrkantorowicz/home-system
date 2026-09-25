@@ -14,10 +14,10 @@ internal sealed class GetDietReminderSettingsQueryHandler : IQueryHandler<GetDie
     public async Task<DietReminderSettingsDto?> HandleAsync(GetDietReminderSettingsQuery query, CancellationToken ct = default)
         => await _dbContext.DietReminderSettings
             .AsNoTracking()
-            .Where(s => s.UserId == query.UserId)
+            .Where(s => s.PersonId == query.PersonId)
             .Select(s => new DietReminderSettingsDto(
                 s.Id.Value,
-                s.UserId,
+                s.PersonId,
                 s.MealRemindersEnabled,
                 s.MealReminderLeadTimeMinutes,
                 s.MealMissedGraceMinutes,

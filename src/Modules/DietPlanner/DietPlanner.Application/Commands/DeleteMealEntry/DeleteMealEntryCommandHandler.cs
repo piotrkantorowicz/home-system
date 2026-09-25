@@ -19,7 +19,7 @@ internal sealed class DeleteMealEntryCommandHandler : ICommandHandler<DeleteMeal
         var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.UserId != command.UserId)
+        if (entry.PersonId != command.PersonId)
             throw new DietPlannerDomainException("You can only delete your own meal entries.");
 
         _repository.Delete(entry);

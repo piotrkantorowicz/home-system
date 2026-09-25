@@ -14,10 +14,10 @@ public sealed class WaterIntakeTests
         var id = WaterIntakeId.New();
         var date = TestClock.Today;
 
-        var intake = WaterIntake.Create(id, "user-1", date, 250, "Morning glass", TestClock.UtcNow);
+        var intake = WaterIntake.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, 250, "Morning glass", TestClock.UtcNow);
 
         intake.Id.ShouldBe(id);
-        intake.UserId.ShouldBe("user-1");
+        intake.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         intake.Date.ShouldBe(date);
         intake.AmountMl.ShouldBe(250);
         intake.Note.ShouldBe("Morning glass");
@@ -27,16 +27,16 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithNullNote_CreatesEntry()
     {
-        var intake = WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, 500, null, TestClock.UtcNow);
+        var intake = WaterIntake.Create(WaterIntakeId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.Today, 500, null, TestClock.UtcNow);
 
         intake.Note.ShouldBeNull();
     }
 
     /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithMissingPersonId_ThrowsArgumentException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), null!, TestClock.Today, 250, null, TestClock.UtcNow);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), Guid.Empty, TestClock.Today, 250, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -45,7 +45,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithZeroAmount_ThrowsDomainException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, 0, null, TestClock.UtcNow);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.Today, 0, null, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>()
            .Message.ShouldContain("greater than zero");
@@ -55,7 +55,7 @@ public sealed class WaterIntakeTests
     [Fact]
     public void Create_WithNegativeAmount_ThrowsDomainException()
     {
-        var act = () => WaterIntake.Create(WaterIntakeId.New(), "user-1", TestClock.Today, -100, null, TestClock.UtcNow);
+        var act = () => WaterIntake.Create(WaterIntakeId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.Today, -100, null, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>();
     }

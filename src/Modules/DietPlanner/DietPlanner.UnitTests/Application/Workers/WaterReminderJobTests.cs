@@ -7,6 +7,7 @@ using DietPlanner.Application.Workers;
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
+using Household.Contracts.Interfaces;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
@@ -17,6 +18,7 @@ public sealed class WaterReminderJobTests
         Substitute.For<IWaterReminderCandidateQueries>();
     private readonly IWaterReminderStateRepository _stateRepo =
         Substitute.For<IWaterReminderStateRepository>();
+    private readonly IHouseholdQueryService _persons = Substitute.For<IHouseholdQueryService>();
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
     private readonly IUnitOfWork _uow = Substitute.For<IUnitOfWork>();
     private readonly WaterReminderJob _sut;
@@ -25,17 +27,20 @@ public sealed class WaterReminderJobTests
     private static readonly DateTime Now = new(2026, 4, 29, 12, 0, 0, DateTimeKind.Utc);
 
     private static WaterReminderCandidate MakeCandidate(
-        string userId = "u1",
+        Guid personId = default,
         int intervalMinutes = 60,
         string windowStart = "06:00",
         string windowEnd = "22:00",
         DateTime? lastAt = null)
-        => new(userId, "en", intervalMinutes,
+        => new(personId == Guid.Empty ? Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") : personId, "en", intervalMinutes,
             TimeOnly.Parse(windowStart, CultureInfo.InvariantCulture), TimeOnly.Parse(windowEnd, CultureInfo.InvariantCulture), lastAt);
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WaterReminderJobTests()
-        => _sut = new WaterReminderJob(_queries, _stateRepo, _bus, _uow);
+    {
+        _persons.GetAuthSubjectForPersonAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns("u1");
+        _sut = new WaterReminderJob(_queries, _stateRepo, _bus, _uow, _persons);
+    }
 
     /// <summary><c>Name</c> is stable.</summary>
     [Fact]
@@ -90,7 +95,7 @@ public sealed class WaterReminderJobTests
     {
         var candidate = MakeCandidate(lastAt: null);
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
-        _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>()).Returns((WaterReminderState?)null);
+        _stateRepo.GetByPersonIdAsync(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), Arg.Any<CancellationToken>()).Returns((WaterReminderState?)null);
 
         await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
@@ -100,7 +105,7 @@ public sealed class WaterReminderJobTests
             Arg.Any<CancellationToken>());
 
         await _stateRepo.Received(1).AddAsync(
-            Arg.Is<WaterReminderState>(s => s.UserId == "u1" && s.LastWaterReminderAt == Now),
+            Arg.Is<WaterReminderState>(s => s.PersonId == Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") && s.LastWaterReminderAt == Now),
             Arg.Any<CancellationToken>());
 
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -114,8 +119,8 @@ public sealed class WaterReminderJobTests
         var candidate = MakeCandidate(intervalMinutes: 60, lastAt: lastAt);
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
 
-        var existing = WaterReminderState.Create("u1", lastAt);
-        _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>()).Returns(existing);
+        var existing = WaterReminderState.Create(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), lastAt);
+        _stateRepo.GetByPersonIdAsync(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), Arg.Any<CancellationToken>()).Returns(existing);
 
         await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
@@ -136,8 +141,8 @@ public sealed class WaterReminderJobTests
         // last at exactly Now - interval → eligible (boundary inclusive)
         var candidate = MakeCandidate(intervalMinutes: 60, lastAt: Now.AddMinutes(-60));
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
-        _stateRepo.GetByUserIdAsync("u1", Arg.Any<CancellationToken>())
-            .Returns(WaterReminderState.Create("u1", Now.AddMinutes(-60)));
+        _stateRepo.GetByPersonIdAsync(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), Arg.Any<CancellationToken>())
+            .Returns(WaterReminderState.Create(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), Now.AddMinutes(-60)));
 
         await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
 
@@ -150,8 +155,8 @@ public sealed class WaterReminderJobTests
     public async Task RunAsync_MultipleEligibleUsers_CommitsOnce()
     {
         _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>())
-            .Returns([MakeCandidate("u1"), MakeCandidate("u2")]);
-        _stateRepo.GetByUserIdAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns([MakeCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458")), MakeCandidate(Guid.Parse("256bfca0-761e-5058-8d12-d39fd1b216f2"))]);
+        _stateRepo.GetByPersonIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((WaterReminderState?)null);
 
         await _sut.RunAsync(Now, TestContext.Current.CancellationToken);

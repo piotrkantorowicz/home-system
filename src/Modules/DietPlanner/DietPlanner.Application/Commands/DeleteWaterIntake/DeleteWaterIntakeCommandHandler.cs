@@ -19,7 +19,7 @@ internal sealed class DeleteWaterIntakeCommandHandler : ICommandHandler<DeleteWa
         var intake = await _repository.GetByIdAsync(WaterIntakeId.From(command.Id), ct)
             ?? throw new NotFoundException("WaterIntake", command.Id);
 
-        if (intake.UserId != command.UserId)
+        if (intake.PersonId != command.PersonId)
             throw new DietPlannerDomainException("You can only delete your own water intake entries.");
 
         _repository.Delete(intake);

@@ -54,9 +54,9 @@ public static class ProfileEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         UserProfileDto? result = await dispatcher.SendAsync<GetProfileQuery, UserProfileDto?>(
-            new GetProfileQuery(userId), ct);
+            new GetProfileQuery(personId), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
@@ -66,9 +66,9 @@ public static class ProfileEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         WeightPredictionDto? result = await dispatcher.SendAsync<GetWeightPredictionQuery, WeightPredictionDto?>(
-            new GetWeightPredictionQuery(userId, dailyCalorieTarget), ct);
+            new GetWeightPredictionQuery(personId, dailyCalorieTarget), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
@@ -78,10 +78,10 @@ public static class ProfileEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         Guid id = await dispatcher.SendAsync<CreateProfileCommand, Guid>(
             new CreateProfileCommand(
-                userId, request.DateOfBirth, request.Gender, request.HeightCm,
+                personId, request.DateOfBirth, request.Gender, request.HeightCm,
                 request.CurrentWeightKg, request.TargetWeightKg, request.ActivityLevel), ct);
         return TypedResults.Created($"/api/v1/profile/{id}");
     }
@@ -92,18 +92,16 @@ public static class ProfileEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         await dispatcher.SendAsync(
             new UpdateProfileCommand(
-                userId, request.DateOfBirth, request.Gender, request.HeightCm,
+                personId, request.DateOfBirth, request.Gender, request.HeightCm,
                 request.CurrentWeightKg, request.TargetWeightKg, request.ActivityLevel), ct);
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

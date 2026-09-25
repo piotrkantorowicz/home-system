@@ -14,18 +14,18 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
 
     /// <summary>Creates a goal; any target may be left unset.</summary>
     /// <param name="id">Identifier for the new goal.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="dailyCalorieTarget">Daily energy target in kcal.</param>
     /// <param name="proteinGrams">Daily protein target in grams.</param>
     /// <param name="carbsGrams">Daily carbohydrate target in grams.</param>
     /// <param name="fatGrams">Daily fat target in grams.</param>
     /// <param name="fiberGrams">Daily fibre target in grams.</param>
     /// <param name="targetWeightKg">Weight to reach, in kilograms; enables the milestone notification.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static UserGoal Create(
         UserGoalId id,
-        string userId,
+        Guid personId,
         DateTime now,
         int? dailyCalorieTarget,
         decimal? proteinGrams,
@@ -34,12 +34,13 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
         decimal? fiberGrams,
         decimal? targetWeightKg = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
 
         return new UserGoal
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             DailyCalorieTarget = dailyCalorieTarget,
             ProteinGrams = proteinGrams,
             CarbsGrams = carbsGrams,
@@ -50,8 +51,8 @@ public sealed class UserGoal : AggregateRoot<UserGoalId>
         };
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Daily energy target in kcal, if set.</summary>
     public int? DailyCalorieTarget { get; private set; }
     /// <summary>Daily protein target in grams, if set.</summary>

@@ -16,7 +16,7 @@ internal sealed class GetWeightEntriesQueryHandler
         GetWeightEntriesQuery query, CancellationToken ct = default)
         => await _dbContext.WeightEntries
             .AsNoTracking()
-            .Where(e => e.UserId == query.UserId
+            .Where(e => e.PersonId == query.PersonId
                 && (query.From == null || e.Date >= query.From)
                 && (query.To == null || e.Date <= query.To))
             .OrderBy(e => e.Date)

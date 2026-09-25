@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Workers;
 
 internal sealed record WaterReminderCandidate(
-    string UserId,
+    Guid PersonId,
     string Locale,
     int WaterReminderIntervalMinutes,
     TimeOnly WaterWindowStartUtc,

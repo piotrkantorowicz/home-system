@@ -4,6 +4,7 @@ namespace DietPlanner.UnitTests.Application.Workers;
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
 using DietPlanner.Contracts.Events;
+using Household.Contracts.Interfaces;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -15,6 +16,7 @@ public sealed class MealReminderJobTests
 {
     private readonly IMealReminderCandidateQueries _queries = Substitute.For<IMealReminderCandidateQueries>();
     private readonly ISentMealReminderRepository _ledger = Substitute.For<ISentMealReminderRepository>();
+    private readonly IHouseholdQueryService _persons = Substitute.For<IHouseholdQueryService>();
     private readonly IIntegrationEventBus _bus = Substitute.For<IIntegrationEventBus>();
     private readonly IUnitOfWork _uow = Substitute.For<IUnitOfWork>();
     private readonly MealReminderJob _sut;
@@ -22,7 +24,10 @@ public sealed class MealReminderJobTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public MealReminderJobTests()
-        => _sut = new MealReminderJob(_queries, _ledger, _bus, _uow);
+    {
+        _persons.GetAuthSubjectForPersonAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns("u1");
+        _sut = new MealReminderJob(_queries, _ledger, _bus, _uow, _persons);
+    }
 
     /// <summary><c>Name</c> is stable.</summary>
     [Fact]
@@ -50,7 +55,7 @@ public sealed class MealReminderJobTests
         var entryId = Guid.NewGuid();
         var planned = Now.AddMinutes(10);
         _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>())
-            .Returns([new MealReminderCandidate("u1", "en", entryId, "Lunch", planned)]);
+            .Returns([new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", entryId, "Lunch", planned)]);
         _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
         _ledger.ExistsAsync(Arg.Any<MealEntryId>(), MealReminderKind.Reminder, Arg.Any<CancellationToken>())
             .Returns(false);
@@ -80,7 +85,7 @@ public sealed class MealReminderJobTests
         var planned = Now.AddHours(-2);
         _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
         _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>())
-            .Returns([new MealReminderCandidate("u1", "en", entryId, "Breakfast", planned)]);
+            .Returns([new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", entryId, "Breakfast", planned)]);
         _ledger.ExistsAsync(Arg.Any<MealEntryId>(), MealReminderKind.Missed, Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -102,7 +107,7 @@ public sealed class MealReminderJobTests
     {
         var entryId = Guid.NewGuid();
         _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>())
-            .Returns([new MealReminderCandidate("u1", "en", entryId, "Lunch", Now.AddMinutes(5))]);
+            .Returns([new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", entryId, "Lunch", Now.AddMinutes(5))]);
         _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>()).Returns([]);
         _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == entryId), MealReminderKind.Reminder,
                 Arg.Any<CancellationToken>())
@@ -125,11 +130,11 @@ public sealed class MealReminderJobTests
 
         _queries.GetDueRemindersAsync(Now, Arg.Any<CancellationToken>())
             .Returns([
-                new MealReminderCandidate("u1", "en", dueId1, "Lunch", Now.AddMinutes(10)),
-                new MealReminderCandidate("u1", "en", dueId2, "Snack", Now.AddMinutes(20))
+                new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", dueId1, "Lunch", Now.AddMinutes(10)),
+                new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", dueId2, "Snack", Now.AddMinutes(20))
             ]);
         _queries.GetMissedRemindersAsync(Now, Arg.Any<CancellationToken>())
-            .Returns([new MealReminderCandidate("u1", "en", missedId, "Breakfast", Now.AddHours(-2))]);
+            .Returns([new MealReminderCandidate(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), "en", missedId, "Breakfast", Now.AddHours(-2))]);
 
         // dueId1 already sent; dueId2 and missedId fresh
         _ledger.ExistsAsync(Arg.Is<MealEntryId>(id => id.Value == dueId1), MealReminderKind.Reminder, Arg.Any<CancellationToken>())

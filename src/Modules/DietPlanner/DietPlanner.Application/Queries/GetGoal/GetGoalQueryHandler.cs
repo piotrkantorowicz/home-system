@@ -14,10 +14,10 @@ internal sealed class GetGoalQueryHandler : IQueryHandler<GetGoalQuery, GoalDto?
     public async Task<GoalDto?> HandleAsync(GetGoalQuery query, CancellationToken ct = default)
         => await _dbContext.UserGoals
             .AsNoTracking()
-            .Where(g => g.UserId == query.UserId)
+            .Where(g => g.PersonId == query.PersonId)
             .Select(g => new GoalDto(
                 g.Id.Value,
-                g.UserId,
+                g.PersonId,
                 g.DailyCalorieTarget,
                 g.ProteinGrams,
                 g.CarbsGrams,

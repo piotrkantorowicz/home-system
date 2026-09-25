@@ -16,14 +16,13 @@ internal sealed class UserGoalConfiguration : IEntityTypeConfiguration<UserGoal>
             .HasConversion(id => id.Value, value => UserGoalId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(x => x.PersonId)
             .IsUnique()
-            .HasDatabaseName("idx_user_goals_user");
+            .HasDatabaseName("idx_user_goals_person");
 
         builder.Property(x => x.DailyCalorieTarget).HasColumnName("daily_calorie_target");
         builder.Property(x => x.ProteinGrams).HasColumnName("protein_grams");

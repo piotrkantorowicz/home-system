@@ -164,6 +164,6 @@ public sealed class MealScheduleEndpointsTests
 
         MealScheduleConfigDto? dto = await getResponse.Content.ReadFromJsonAsync<MealScheduleConfigDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
-        dto.UserId.ShouldBe(TestAuthHandler.TestUserId);
+        dto.PersonId.ShouldBe(TestAuthHandler.PersonIdFor(TestAuthHandler.TestUserId));
     }
 }

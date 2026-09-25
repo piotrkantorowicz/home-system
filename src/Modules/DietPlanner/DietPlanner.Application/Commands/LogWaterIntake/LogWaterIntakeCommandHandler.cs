@@ -15,7 +15,7 @@ internal sealed class LogWaterIntakeCommandHandler(
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var id = WaterIntakeId.New();
-        var intake = WaterIntake.Create(id, command.UserId, command.Date, command.AmountMl, command.Note, now);
+        var intake = WaterIntake.Create(id, command.PersonId, command.Date, command.AmountMl, command.Note, now);
 
         await repository.AddAsync(intake, ct);
         await unitOfWork.CommitAsync(ct);

@@ -16,7 +16,7 @@ internal sealed class GetWeightPredictionQueryHandler(IDietPlannerReadDbContext 
     {
         var profile = await dbContext.UserProfiles
             .AsNoTracking()
-            .Where(p => p.UserId == query.UserId)
+            .Where(p => p.PersonId == query.PersonId)
             .Select(p => new
             {
                 p.DateOfBirth,

@@ -11,5 +11,5 @@ internal interface IWeeklySummaryCandidateQueries
     /// <summary>
     /// Computes the summary stats for a user over the given calendar week.
     /// </summary>
-    Task<WeeklyStats> GetStatsAsync(string userId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct);
+    Task<WeeklyStats> GetStatsAsync(Guid personId, DateOnly weekStart, DateOnly weekEnd, CancellationToken ct);
 }

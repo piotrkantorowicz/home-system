@@ -26,13 +26,13 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         => _sut = new UpdateMealScheduleCommandHandler(_repository, _mealEntryRepository, _unitOfWork, _clock);
 
     private static UpdateMealScheduleCommand NewCommand(params MealSlotInput[] slots)
-        => new("user-1", slots);
+        => new(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), slots);
 
     /// <summary>When no existing config: <c>HandleAsync</c> creates new and commits.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingConfig_CreatesNewAndCommits()
     {
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((MealScheduleConfig?)null);
 
         var command = NewCommand(
@@ -43,7 +43,7 @@ public sealed class UpdateMealScheduleCommandHandlerTests
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
-            Arg.Is<MealScheduleConfig>(c => c.UserId == "user-1" && c.Slots.Count == 3),
+            Arg.Is<MealScheduleConfig>(c => c.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") && c.Slots.Count == 3),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
@@ -54,12 +54,12 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     {
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))],
             TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(existing);
         _mealEntryRepository.AnyForSlotAsync(Arg.Any<MealSlotId>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -79,12 +79,12 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     {
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [("Breakfast", new TimeOnly(7, 0)), ("Lunch", new TimeOnly(12, 0))],
             TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(existing);
         _mealEntryRepository.AnyForSlotAsync(existingSlots[1].Id, Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -102,12 +102,12 @@ public sealed class UpdateMealScheduleCommandHandlerTests
     {
         var existing = MealScheduleConfig.Create(
             MealScheduleConfigId.New(),
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [("Breakfast", new TimeOnly(7, 0)), ("Snack", new TimeOnly(15, 0))],
             TestClock.UtcNow);
         var existingSlots = existing.Slots.OrderBy(s => s.SortOrder).ToList();
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(existing);
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(existing);
         _mealEntryRepository.AnyForSlotAsync(Arg.Any<MealSlotId>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -127,7 +127,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
 
     private static UpdateMealScheduleCommand ValidCommand(int slotCount = 2)
         => new(
-            UserId: "user-1",
+            PersonId: Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             Slots: Enumerable.Range(1, slotCount)
                 .Select(i => new MealSlotInput(null, $"Slot {i}", "08:00"))
                 .ToList());
@@ -141,25 +141,23 @@ public sealed class UpdateMealScheduleCommandValidatorTests
         errors.ShouldBeEmpty();
     }
 
-    /// <summary>With empty user id: <c>Validate</c> returns error.</summary>
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Validate_WithEmptyUserId_ReturnsError(string userId)
+    /// <summary>With empty person id: <c>Validate</c> returns error.</summary>
+    [Fact]
+    public void Validate_WithEmptyPersonId_ReturnsError()
     {
-        var command = new UpdateMealScheduleCommand(userId,
+        var command = new UpdateMealScheduleCommand(Guid.Empty,
             [new MealSlotInput(null, "Breakfast", "07:00")]);
 
         var errors = _sut.Validate(command).ToList();
 
-        errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
+        errors.ShouldContain(e => e.PropertyName == nameof(command.PersonId));
     }
 
     /// <summary>With zero slots: <c>Validate</c> returns error.</summary>
     [Fact]
     public void Validate_WithZeroSlots_ReturnsError()
     {
-        var command = new UpdateMealScheduleCommand("user-1", []);
+        var command = new UpdateMealScheduleCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), []);
 
         var errors = _sut.Validate(command).ToList();
 
@@ -171,7 +169,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
     public void Validate_WithNineSlots_ReturnsError()
     {
         var command = new UpdateMealScheduleCommand(
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             Enumerable.Range(1, 9)
                 .Select(i => new MealSlotInput(null, $"Slot {i}", "08:00"))
                 .ToList());
@@ -187,7 +185,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
     [InlineData("   ")]
     public void Validate_WithEmptySlotName_ReturnsError(string name)
     {
-        var command = new UpdateMealScheduleCommand("user-1",
+        var command = new UpdateMealScheduleCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [new MealSlotInput(null, name, "07:00")]);
 
         var errors = _sut.Validate(command).ToList();
@@ -202,7 +200,7 @@ public sealed class UpdateMealScheduleCommandValidatorTests
     [InlineData("abc")]
     public void Validate_WithInvalidSlotTime_ReturnsError(string time)
     {
-        var command = new UpdateMealScheduleCommand("user-1",
+        var command = new UpdateMealScheduleCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             [new MealSlotInput(null, "Breakfast", time)]);
 
         var errors = _sut.Validate(command).ToList();

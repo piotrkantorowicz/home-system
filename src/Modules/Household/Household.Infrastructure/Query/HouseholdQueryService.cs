@@ -62,4 +62,9 @@ internal sealed class HouseholdQueryService : IHouseholdQueryService
 
         return new HouseholdContext(household.Id.Value, meId.Value, myRole.ToString(), members);
     }
+    public Task<string?> GetAuthSubjectForPersonAsync(Guid personId, CancellationToken ct = default)
+        => _db.Persons.AsNoTracking()
+            .Where(p => p.Id == Domain.ValueObjects.PersonId.From(personId))
+            .Select(p => p.AuthSubject)
+            .FirstOrDefaultAsync(ct);
 }

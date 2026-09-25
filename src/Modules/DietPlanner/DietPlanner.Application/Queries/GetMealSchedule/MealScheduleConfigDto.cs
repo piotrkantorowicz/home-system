@@ -12,8 +12,8 @@ public sealed record MealSlotDto(Guid Id, string Name, string DefaultTime, int S
 /// A user's meal schedule with its slots in display order.
 /// </summary>
 /// <param name="Id">Identifier of the schedule.</param>
-/// <param name="UserId">Auth subject of the owner.</param>
+/// <param name="PersonId">Person identifier of the owner.</param>
 /// <param name="Slots">The slots, ordered by <c>SortOrder</c>.</param>
 /// <param name="CreatedAt">Creation time, UTC.</param>
 /// <param name="UpdatedAt">Time of the last change, UTC; <see langword="null"/> if never changed.</param>
-public sealed record MealScheduleConfigDto(Guid Id, string UserId, IReadOnlyList<MealSlotDto> Slots, DateTime CreatedAt, DateTime? UpdatedAt);
+public sealed record MealScheduleConfigDto(Guid Id, Guid PersonId, IReadOnlyList<MealSlotDto> Slots, DateTime CreatedAt, DateTime? UpdatedAt);

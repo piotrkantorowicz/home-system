@@ -4,6 +4,7 @@ using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
+using Household.Contracts.Interfaces;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
@@ -11,7 +12,8 @@ internal sealed class MealReminderJob(
     IMealReminderCandidateQueries queries,
     ISentMealReminderRepository ledger,
     IIntegrationEventBus bus,
-    IUnitOfWork unitOfWork) : IDietReminderJob
+    IUnitOfWork unitOfWork,
+    IHouseholdQueryService persons) : IDietReminderJob
 {
     public string Name => "MealReminderJob";
 
@@ -24,13 +26,15 @@ internal sealed class MealReminderJob(
 
         foreach (var c in due)
         {
+            string? authSubject = await persons.GetAuthSubjectForPersonAsync(c.PersonId, ct);
+            if (authSubject is null) continue;
             var id = MealEntryId.From(c.MealEntryId);
             if (await ledger.ExistsAsync(id, MealReminderKind.Reminder, ct)) continue;
 
             await bus.PublishAsync(new MealReminderDueIntegrationEvent(
                 EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
-                UserId: c.UserId,
+                UserId: authSubject,
                 Locale: c.Locale,
                 MealEntryId: c.MealEntryId,
                 MealSlotName: c.MealSlotName,
@@ -42,13 +46,15 @@ internal sealed class MealReminderJob(
 
         foreach (var c in missed)
         {
+            string? authSubject = await persons.GetAuthSubjectForPersonAsync(c.PersonId, ct);
+            if (authSubject is null) continue;
             var id = MealEntryId.From(c.MealEntryId);
             if (await ledger.ExistsAsync(id, MealReminderKind.Missed, ct)) continue;
 
             await bus.PublishAsync(new MealMissedIntegrationEvent(
                 EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
-                UserId: c.UserId,
+                UserId: authSubject,
                 Locale: c.Locale,
                 MealEntryId: c.MealEntryId,
                 MealSlotName: c.MealSlotName,

@@ -41,9 +41,9 @@ public static class MealScheduleEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         MealScheduleConfigDto? result = await dispatcher.SendAsync<GetMealScheduleQuery, MealScheduleConfigDto?>(
-            new GetMealScheduleQuery(userId), ct);
+            new GetMealScheduleQuery(personId), ct);
         return TypedResults.Ok(result);
     }
 
@@ -53,20 +53,18 @@ public static class MealScheduleEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         var slots = request.Slots
             .Select(s => new MealSlotInput(s.Id, s.Name, s.DefaultTime))
             .ToList();
 
         await dispatcher.SendAsync(
-            new UpdateMealScheduleCommand(userId, slots), ct);
+            new UpdateMealScheduleCommand(personId, slots), ct);
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

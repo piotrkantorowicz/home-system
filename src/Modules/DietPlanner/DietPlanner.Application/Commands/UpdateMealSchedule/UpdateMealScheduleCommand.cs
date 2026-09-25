@@ -12,6 +12,6 @@ public sealed record MealSlotInput(Guid? Id, string Name, string DefaultTime);
 /// <summary>
 /// Replaces the caller's meal schedule with the given slots (1–8), creating the schedule on first use. Slots omitted from the list are removed, which fails if any meal entry still references them.
 /// </summary>
-/// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
+/// <param name="PersonId">Person identifier of the caller; the command only touches this user's data.</param>
 /// <param name="Slots">The desired slots in display order.</param>
-public sealed record UpdateMealScheduleCommand(string UserId, IReadOnlyList<MealSlotInput> Slots) : ICommand;
+public sealed record UpdateMealScheduleCommand(Guid PersonId, IReadOnlyList<MealSlotInput> Slots) : ICommand;
