@@ -3,12 +3,16 @@
 # host in Development (auto-migrates, exposes the test-support purge route), and Vite —
 # which Playwright starts itself because CI=true turns reuseExistingServer off.
 #
-# Not part of the PR gate (too slow until the suite is < 2 min) — nightly + on demand.
+# Runs nightly, on demand, and on PRs targeting main — the last one report-only (not a
+# required status check yet) while we watch the flake rate. See issue #379.
+#
+# PRs from forks never see repo secrets, so the job skips itself there instead of
+# failing on a missing TEST_USER_PASSWORD.
 #
 # Failure notification: on main, a failed run opens the tracking issue "Nightly e2e
 # failed" (labels bug + ci + e2e) or comments the run URL on it if one is already open; the
-# next green run on main comments and closes it. A workflow_dispatch run on any other
-# ref never touches issues — it only uploads the report.
+# next green run on main comments and closes it. A workflow_dispatch or pull_request run
+# on any other ref never touches issues — it only uploads the report.
 #
 # Secrets: TEST_USER_PASSWORD — shared password for E2eWorker0..3. Everything else the
 # compose file needs (Authentik secret key, DB / Redis passwords, bootstrap account) is
@@ -21,15 +25,18 @@ on:
     # job has tagged whatever merged during the day.
     - cron: '0 3 * * *'
   workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
   issues: write          # open / comment / close the "Nightly e2e failed" tracking issue
 
-# Two nightlies never overlap: a manual dispatch during the scheduled run queues.
+# Nightly / dispatch runs never overlap (one shared queue, nothing cancelled). A PR run
+# gets its own group keyed by PR number, and a new push cancels the superseded one.
 concurrency:
-  group: e2e-nightly
-  cancel-in-progress: false
+  group: e2e-nightly-${{ github.event.pull_request.number || 'scheduled' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   API_URL: http://localhost:5050
@@ -40,6 +47,7 @@ jobs:
     name: Playwright (chromium)
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - uses: actions/checkout@v7
