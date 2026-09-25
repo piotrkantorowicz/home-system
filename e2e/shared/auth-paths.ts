@@ -28,13 +28,38 @@ export function credentialsFor(workerIndex: number): {
 
   const password =
     process.env[`TEST_USER_PASSWORD_${workerIndex}`] ??
-    process.env['TEST_USER_PASSWORD'];
+    process.env["TEST_USER_PASSWORD"];
 
   if (!password) {
     throw new Error(
       `TEST_USER_PASSWORD (or TEST_USER_PASSWORD_${workerIndex}) is not set. ` +
-        'Copy e2e/.env.example to e2e/.env and set the value — it must match ' +
-        'infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.',
+        "Copy e2e/.env.example to e2e/.env and set the value — it must match " +
+        "infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.",
+    );
+  }
+
+  return { username, password };
+}
+
+/**
+ * Storage state path for the reserved invitee identity (`E2eInvitee`) — outside the
+ * WORKER_COUNT pool and never seeded a household, so it's safe to use as a fresh
+ * accept/decline target in cross-user specs without touching a worker's own data.
+ */
+export function inviteeAuthStatePath(): string {
+  return "playwright/.auth/invitee.json";
+}
+
+export function inviteeCredentials(): { username: string; password: string } {
+  const username = process.env["TEST_INVITEE_EMAIL"] ?? "E2eInvitee";
+  const password =
+    process.env["TEST_INVITEE_PASSWORD"] ?? process.env["TEST_USER_PASSWORD"];
+
+  if (!password) {
+    throw new Error(
+      "TEST_INVITEE_PASSWORD (or TEST_USER_PASSWORD) is not set. " +
+        "Copy e2e/.env.example to e2e/.env and set the value — it must match " +
+        "infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.",
     );
   }
 
