@@ -18,7 +18,7 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -43,6 +43,10 @@ export interface BodyStatsFormProps {
 }
 
 export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
+  // React Compiler's memoization mis-tracks react-hook-form's Proxy-based `formState`
+  // (isDirty stops updating after a reset() call from elsewhere in the component, even
+  // though the underlying value does change) — opt this component out. See #374.
+  'use no memo';
   const { t } = useTranslation();
   const toast = useToast();
   const { data: profile, isLoading } = useProfile();
@@ -68,8 +72,14 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
     },
   });
 
+  // Hydrate the form from the server exactly once. After that the form owns its
+  // values until submit — a later background refetch (TanStack Query's
+  // refetchOnWindowFocus fires on almost any interaction, not just after a save)
+  // must never call reset() again, or it wipes an in-progress edit. See #374.
+  const hydratedRef = useRef(false);
   useEffect(() => {
-    if (profile) {
+    if (profile && !hydratedRef.current) {
+      hydratedRef.current = true;
       reset({
         dateOfBirth: profile.dateOfBirth ?? null,
         gender: (profile.gender as BodyStatsFormInput['gender']) ?? null,
@@ -96,6 +106,10 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
       toast.error(t('profile.save_error'));
       return;
     }
+    // Reset with the values just submitted — sets the new clean baseline
+    // synchronously instead of waiting on the (now-ignored) background refetch.
+    hydratedRef.current = true;
+    reset(request);
     toast.success(t('profile.save_success'));
     onSuccess?.();
   };
