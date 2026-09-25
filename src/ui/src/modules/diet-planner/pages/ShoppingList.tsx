@@ -1,5 +1,7 @@
 import { useShoppingList } from '@modules/diet-planner/api/hooks/useShoppingList';
+import { useHousehold } from '@modules/household';
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -66,6 +68,7 @@ function csvEscape(value: string) {
 export default function ShoppingList() {
   const { t } = useTranslation();
   const toast = useToast();
+  const { household } = useHousehold();
   const defaultRange = getDefaultRange();
 
   const [draftFrom, setDraftFrom] = useState(defaultRange.from);
@@ -137,11 +140,16 @@ export default function ShoppingList() {
   return (
     <div className="animate-fade-in-up mx-auto max-w-5xl p-8 lg:p-10">
       <div className="mb-8">
-        <div className="mb-3 flex items-center gap-3">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
           <div className="rounded-xl bg-emerald-500/10 p-2.5">
             <ShoppingCart className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{t('shopping_list.title')}</h1>
+          {household && (
+            <Badge variant="secondary" data-testid="shopping-list-household-badge">
+              {t('shopping_list.shared_with', { household: household.name })}
+            </Badge>
+          )}
         </div>
         <p className="text-muted-foreground">{t('shopping_list.subtitle')}</p>
       </div>
