@@ -44,8 +44,12 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
 
         var adult = await SignedInAsync("Adult");
         var adultId = await PersonIdAsync(adult);
-        (await owner.PostAsJsonAsync($"/api/households/{household.Id}/members",
-            new { personId = adultId, role = "Adult", nickname = (string?)null }))
+        var add = await owner.PostAsJsonAsync($"/api/households/{household.Id}/members",
+            new { personId = adultId, role = "Adult", nickname = (string?)null });
+        add.EnsureSuccessStatusCode();
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddResult>())!.InvitationId;
+
+        (await adult.PostAsync($"/api/households/invitations/{invitationId}/accept", null))
             .EnsureSuccessStatusCode();
 
         return (owner, household, adult, adultId);
@@ -119,6 +123,8 @@ public sealed class HouseholdMembershipRulesTests : IClassFixture<HouseholdDatab
     }
 
     private sealed record Body(Guid Id);
+
+    private sealed record AddResult(Guid InvitationId);
 
     private sealed record Household(Guid Id, string Name, string MyRole, List<Member> Members);
 

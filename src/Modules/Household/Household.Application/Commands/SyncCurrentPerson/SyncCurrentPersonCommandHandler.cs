@@ -1,6 +1,5 @@
 namespace Household.Application.Commands.SyncCurrentPerson;
 
-using Household.Application.Common;
 using Household.Domain.Abstractions;
 using Household.Domain.Aggregates;
 using Household.Domain.ValueObjects;
@@ -8,7 +7,6 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class SyncCurrentPersonCommandHandler(
     IPersonRepository persons,
-    InvitationResolver invitationResolver,
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock)
     : ICommandHandler<SyncCurrentPersonCommand, Guid>
@@ -32,7 +30,6 @@ internal sealed class SyncCurrentPersonCommandHandler(
             await persons.AddAsync(person, ct);
         }
 
-        await invitationResolver.TryResolveForAsync(person, ct);
         await unitOfWork.CommitAsync(ct);
 
         return person.Id.Value;

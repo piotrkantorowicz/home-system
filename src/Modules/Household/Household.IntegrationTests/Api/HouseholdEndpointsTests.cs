@@ -73,9 +73,9 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         (await owner.GetAsync("/api/households/me", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    /// <summary><c>AddExistingPerson</c> then that person sees the household.</summary>
+    /// <summary><c>AddExistingPerson</c> creates a pending invitation; once accepted, that person sees the household.</summary>
     [Fact]
-    public async Task AddExistingPerson_ThenThatPersonSeesTheHousehold()
+    public async Task AddExistingPerson_OnceAccepted_ThenThatPersonSeesTheHousehold()
     {
         var owner = await SignedInClientAsync("Owner");
         var invitee = await SignedInClientAsync("Invitee");
@@ -85,7 +85,13 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
         var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
 
         var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = inviteeId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
-        add.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        add.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddResultBody>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+
+        (await invitee.GetAsync("/api/households/me", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var accept = await invitee.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken);
+        accept.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var inviteeView = await invitee.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken);
         inviteeView!.Id.ShouldBe(householdId);
@@ -102,7 +108,9 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
 
         await owner.PostAsJsonAsync("/api/households", new { name = "H" }, cancellationToken: TestContext.Current.CancellationToken);
         var householdId = (await owner.GetFromJsonAsync<MyHouseholdBody>("/api/households/me", cancellationToken: TestContext.Current.CancellationToken))!.Id;
-        await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = adultId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
+        var add = await owner.PostAsJsonAsync($"/api/households/{householdId}/members", new { personId = adultId, role = "Adult", nickname = (string?)null }, cancellationToken: TestContext.Current.CancellationToken);
+        var invitationId = (await add.Content.ReadFromJsonAsync<AddResultBody>(cancellationToken: TestContext.Current.CancellationToken))!.InvitationId;
+        await adult.PostAsync($"/api/households/invitations/{invitationId}/accept", null, TestContext.Current.CancellationToken);
 
         var rename = await adult.PutAsJsonAsync($"/api/households/{householdId}", new { name = "Hacked" }, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -126,6 +134,7 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
     public async Task PickablePersons_ListsPeopleNotYetInAHousehold()
     {
         var owner = await SignedInClientAsync("Owner");
+        var ownerId = await PersonIdAsync(owner);
         var free = await SignedInClientAsync("Free Agent");
         var freeId = await PersonIdAsync(free);
 
@@ -135,10 +144,12 @@ public sealed class HouseholdEndpointsTests : IClassFixture<HouseholdDatabaseFix
 
         pickable.ShouldNotBeNull();
         pickable.ShouldContain(p => p.PersonId == freeId);
-        pickable.ShouldNotContain(p => p.DisplayName == "Owner");
+        // Not by display name: other tests in this shared-database suite also sign in as "Owner".
+        pickable.ShouldNotContain(p => p.PersonId == ownerId);
     }
 
     private sealed record MeBody(Guid Id);
+    private sealed record AddResultBody(Guid InvitationId);
     private sealed record MyHouseholdBody(Guid Id, string Name, string MyRole, List<MemberBody> Members);
     private sealed record MemberBody(Guid PersonId, string DisplayName, string Role, bool IsManaged);
     private sealed record PickableBody(Guid PersonId, string DisplayName, string? Email, bool IsManaged);

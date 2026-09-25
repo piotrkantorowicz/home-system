@@ -13,6 +13,7 @@ public sealed class HouseholdInvitationTests
             HouseholdInvitationId.New(),
             HouseholdId.New(),
             PersonEmail.Create("invitee@example.com"),
+            targetPersonId: null,
             role,
             PersonId.New(),
             TestClock.UtcNow);
@@ -76,5 +77,167 @@ public sealed class HouseholdInvitationTests
         invitation.Revoke(TestClock.UtcNow.AddMinutes(1));
 
         Should.Throw<HouseholdDomainException>(() => invitation.Accept(TestClock.UtcNow.AddMinutes(1)));
+    }
+
+    /// <summary>When pending: <c>Decline</c> marks declined.</summary>
+    [Fact]
+    public void Decline_WhenPending_MarksDeclined()
+    {
+        var invitation = NewInvitation();
+
+        invitation.Decline(TestClock.UtcNow.AddMinutes(1));
+
+        invitation.Status.ShouldBe(InvitationStatus.Declined);
+        invitation.ResolvedAt.ShouldNotBeNull();
+    }
+
+    /// <summary>After decline: <c>Accept</c> throws.</summary>
+    [Fact]
+    public void Accept_AfterDecline_Throws()
+    {
+        var invitation = NewInvitation();
+        invitation.Decline(TestClock.UtcNow.AddMinutes(1));
+
+        Should.Throw<HouseholdDomainException>(() => invitation.Accept(TestClock.UtcNow.AddMinutes(1)));
+    }
+
+    /// <summary>When already accepted: <c>Decline</c> throws.</summary>
+    [Fact]
+    public void Decline_AfterAccept_Throws()
+    {
+        var invitation = NewInvitation();
+        invitation.Accept(TestClock.UtcNow.AddMinutes(1));
+
+        Should.Throw<HouseholdDomainException>(() => invitation.Decline(TestClock.UtcNow.AddMinutes(1)));
+    }
+
+    /// <summary><c>Create</c> carries the nickname through for use when the invitation is accepted.</summary>
+    [Fact]
+    public void Create_WithNickname_CarriesItThrough()
+    {
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            PersonEmail.Create("invitee@example.com"),
+            targetPersonId: null,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow,
+            nickname: "Gram");
+
+        invitation.Nickname.ShouldBe("Gram");
+    }
+
+    /// <summary>
+    /// <c>Create</c> trims and caps an over-long nickname at 100 characters instead of writing raw
+    /// input into the varchar(100) column. Regression for a 500 on <c>POST /members</c> with a
+    /// 101-character nickname, since the invitation-issuing path skipped the normalisation
+    /// <c>HouseholdMember.Create</c> already applied for the immediate-add path it replaced.
+    /// </summary>
+    [Fact]
+    public void Create_WithAnOverLongNickname_TrimsAndCapsIt()
+    {
+        var overLong = new string('a', 150);
+
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            PersonEmail.Create("invitee@example.com"),
+            targetPersonId: null,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow,
+            nickname: overLong);
+
+        invitation.Nickname.ShouldBe(new string('a', 100));
+    }
+
+    /// <summary>Addressed only by target person, with no email: <c>Create</c> succeeds.</summary>
+    [Fact]
+    public void Create_WithTargetPersonAndNoEmail_Succeeds()
+    {
+        var target = PersonId.New();
+
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            email: null,
+            targetPersonId: target,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow);
+
+        invitation.Email.ShouldBeNull();
+        invitation.TargetPersonId.ShouldBe(target);
+        invitation.IsPending.ShouldBeTrue();
+    }
+
+    /// <summary>Neither email nor target person given: <c>Create</c> throws.</summary>
+    [Fact]
+    public void Create_WithNeitherEmailNorTargetPerson_Throws()
+        => Should.Throw<HouseholdDomainException>(() => HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            email: null,
+            targetPersonId: null,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow));
+
+    /// <summary><c>IsAddressedTo</c> matches by target person id even without a matching email.</summary>
+    [Fact]
+    public void IsAddressedTo_MatchesByTargetPersonId()
+    {
+        var target = PersonId.New();
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            email: null,
+            targetPersonId: target,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow);
+
+        invitation.IsAddressedTo(target, email: null).ShouldBeTrue();
+        invitation.IsAddressedTo(PersonId.New(), email: null).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// When targeted at a specific person, a different person who merely shares that email must not
+    /// match — <c>PersonEmail</c> is not a unique key, so email must never bypass an authoritative
+    /// <c>TargetPersonId</c>. Regression for a bug where a second account sharing the invitee's email
+    /// could accept (or decline) an invitation meant for someone else.
+    /// </summary>
+    [Fact]
+    public void IsAddressedTo_WhenTargetedAtAPerson_IgnoresADifferentPersonWithTheSameEmail()
+    {
+        var target = PersonId.New();
+        var sharedEmail = PersonEmail.Create("shared@example.com");
+        var invitation = HouseholdInvitation.Create(
+            HouseholdInvitationId.New(),
+            HouseholdId.New(),
+            sharedEmail,
+            targetPersonId: target,
+            HouseholdRole.Adult,
+            PersonId.New(),
+            TestClock.UtcNow);
+
+        var impersonator = PersonId.New();
+
+        invitation.IsAddressedTo(impersonator, sharedEmail).ShouldBeFalse();
+        invitation.IsAddressedTo(target, email: null).ShouldBeTrue();
+    }
+
+    /// <summary><c>IsAddressedTo</c> matches by email when there is no target person.</summary>
+    [Fact]
+    public void IsAddressedTo_MatchesByEmail_WhenNoTargetPerson()
+    {
+        var invitation = NewInvitation();
+        var matchingEmail = PersonEmail.Create("invitee@example.com");
+        var otherEmail = PersonEmail.Create("someone-else@example.com");
+
+        invitation.IsAddressedTo(PersonId.New(), matchingEmail).ShouldBeTrue();
+        invitation.IsAddressedTo(PersonId.New(), otherEmail).ShouldBeFalse();
+        invitation.IsAddressedTo(PersonId.New(), email: null).ShouldBeFalse();
     }
 }

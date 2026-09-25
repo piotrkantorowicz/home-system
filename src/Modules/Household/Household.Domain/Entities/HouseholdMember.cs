@@ -42,7 +42,8 @@ public sealed class HouseholdMember : Entity<HouseholdMemberId>
 
     internal void Rename(string? nickname) => Nickname = NormaliseNickname(nickname);
 
-    private static string? NormaliseNickname(string? nickname)
+    /// <summary>Trims and caps a nickname at <see cref="MaxNicknameLength"/>; blank input maps to <see langword="null"/>. Shared with <see cref="Aggregates.HouseholdInvitation"/>, which carries a nickname to apply on acceptance.</summary>
+    internal static string? NormaliseNickname(string? nickname)
     {
         if (string.IsNullOrWhiteSpace(nickname))
             return null;

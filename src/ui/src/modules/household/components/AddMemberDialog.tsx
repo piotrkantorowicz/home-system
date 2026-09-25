@@ -119,13 +119,8 @@ function AddMemberForm({ mode, id, onClose }: AddMemberDialogProps & { mode: Add
                 ? { kind: mode, id, displayName: value, role }
                 : { kind: mode, id, email: value, role };
           mutation.mutate(action, {
-            onSuccess: (result) => {
-              const pending =
-                mode === 'invite' &&
-                result &&
-                'addedImmediately' in result &&
-                !result.addedImmediately;
-              toast.success(t(pending ? 'invitation_created' : 'member_added'));
+            onSuccess: () => {
+              toast.success(t(mode === 'managed' ? 'member_added' : 'invitation_created'));
               onClose();
             },
           });
