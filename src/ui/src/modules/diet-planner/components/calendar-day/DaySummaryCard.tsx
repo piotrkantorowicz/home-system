@@ -57,7 +57,10 @@ export function DaySummaryCard({ date, meals, goals, className }: DaySummaryCard
           <p className="text-muted-foreground text-0-7rem font-semibold tracking-widest uppercase">
             {t('dashboard.hero_eaten')}
           </p>
-          <p className="mt-1 text-4xl font-bold tracking-tight tabular-nums">
+          <p
+            data-testid="day-summary-calories"
+            className="mt-1 text-4xl font-bold tracking-tight tabular-nums"
+          >
             {Math.round(totals.calories)}
           </p>
           {target !== null && (

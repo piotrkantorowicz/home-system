@@ -15,11 +15,17 @@ export class CalendarPage extends BasePage {
   /** The week grid — WeekGrid renders a skeleton until the meals query resolves. */
   readonly weekGrid: Locator;
   readonly mealFormDialog: Locator;
+  readonly dayViewRadio: Locator;
+  readonly weekViewRadio: Locator;
+  readonly dayEaten: Locator;
 
   constructor(page: Page) {
     super(page);
     this.weekGrid = page.getByRole('grid');
     this.mealFormDialog = page.getByRole('dialog');
+    this.dayViewRadio = page.getByRole('radio', { name: /^day$/i });
+    this.weekViewRadio = page.getByRole('radio', { name: /^week$/i });
+    this.dayEaten = page.getByTestId('day-summary-calories');
   }
 
   async goto() {
@@ -31,12 +37,23 @@ export class CalendarPage extends BasePage {
 
   /** A day/slot cell, e.g. ("Mon", "Snack") — matched on the gridcell aria-label. */
   cell(weekdayAbbr: string, slotName: string): Locator {
-    return this.page.getByRole('gridcell', { name: `${weekdayAbbr} ${slotName}` });
+    return this.page.getByRole('gridcell', {
+      name: `${weekdayAbbr} ${slotName}`,
+    });
   }
 
   /** All meal chips (across the whole grid) whose recipe name contains `recipeName`. */
   mealChips(recipeName: string): Locator {
     return this.page.getByRole('button', { name: recipeName });
+  }
+
+  dayAction(name: string): Locator {
+    return this.page.getByRole('button', { name, exact: true });
+  }
+
+  async openMealAction(weekday: string, slot: string, recipeName: string, action: string) {
+    await this.cell(weekday, slot).getByRole('button', { name: recipeName }).click();
+    await this.page.getByRole('menuitem', { name: action, exact: true }).click();
   }
 
   async expectMealInDay(weekdayAbbr: string, recipeName: string) {
@@ -49,15 +66,19 @@ export class CalendarPage extends BasePage {
   }
 
   async expectNoMealInDay(weekdayAbbr: string, slotName: string) {
-    await expect(this.cell(weekdayAbbr, slotName).getByRole('button', { name: /add meal/i })).toBeVisible(
-      { timeout: 10000 },
-    );
+    await expect(
+      this.cell(weekdayAbbr, slotName).getByRole('button', {
+        name: /add meal/i,
+      }),
+    ).toBeVisible({ timeout: 10000 });
   }
 
   // ── Add meal ────────────────────────────────────────────────────────────────
 
   async clickAddMeal(weekdayAbbr: string, slotName: string) {
-    await this.cell(weekdayAbbr, slotName).getByRole('button', { name: /add meal/i }).click();
+    await this.cell(weekdayAbbr, slotName)
+      .getByRole('button', { name: /add meal/i })
+      .click();
     await expect(this.mealFormDialog).toBeVisible({ timeout: 5000 });
   }
 
@@ -81,9 +102,7 @@ export class CalendarPage extends BasePage {
   }
 
   async submitMealForm() {
-    await this.mealFormDialog
-      .getByRole('button', { name: /add meal|save changes/i })
-      .click();
+    await this.mealFormDialog.getByRole('button', { name: /add meal|save changes/i }).click();
     await expect(this.mealFormDialog).not.toBeVisible({ timeout: 10000 });
   }
 
@@ -102,7 +121,9 @@ export class CalendarPage extends BasePage {
     await this.page.getByRole('menuitem', { name: /^delete$/i }).click();
 
     const dialog = this.page.getByRole('dialog');
-    await expect(dialog.getByText(/delete meal/i)).toBeVisible({ timeout: 5000 });
+    await expect(dialog.getByText(/delete meal/i)).toBeVisible({
+      timeout: 5000,
+    });
     await dialog.getByRole('button', { name: /^delete$/i }).click();
     await expect(dialog).not.toBeVisible({ timeout: 5000 });
   }
