@@ -128,6 +128,8 @@ npm run test:ui                 # interactive
 npm run test:debug              # step-through
 ```
 
-`/run-e2e` wraps the prerequisites. E2E is **not** a PR gate — it runs nightly against the real
-stack (`.github/workflows/e2e-nightly.yml`, `workflow_dispatch` for on-demand runs; see
-`docs/e2e/README.md` § Nightly CI). Run it locally before shipping UI flows.
+`/run-e2e` wraps the prerequisites. E2E runs nightly against the real stack and also on PRs
+targeting `main` (`.github/workflows/e2e-nightly.yml`, `workflow_dispatch` for on-demand runs;
+see `docs/e2e/README.md` § Nightly CI). The PR run is report-only for now — not a required
+status check, while flake rate is being watched (issue #379). Run it locally before shipping
+UI flows.
