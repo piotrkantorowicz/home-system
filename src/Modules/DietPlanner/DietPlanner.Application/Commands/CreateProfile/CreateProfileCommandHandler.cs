@@ -24,7 +24,7 @@ internal sealed class CreateProfileCommandHandler(
 
         var id = UserProfileId.New();
         UserProfile profile = UserProfile.Create(
-            id, command.UserId, command.DateOfBirth, gender,
+            id, command.PersonId, command.DateOfBirth, gender,
             command.HeightCm, command.CurrentWeightKg, command.TargetWeightKg, activityLevel, now);
 
         await repository.AddAsync(profile, ct);

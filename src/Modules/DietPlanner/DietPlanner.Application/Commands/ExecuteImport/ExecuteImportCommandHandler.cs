@@ -103,10 +103,10 @@ internal sealed class ExecuteImportCommandHandler(
         }
 
         // ── 3. Resolve meal schedule (auto-provision default if missing) ────
-        var schedule = await scheduleRepository.GetByUserIdAsync(userId, ct);
+        var schedule = await scheduleRepository.GetByPersonIdAsync(command.PersonId, ct);
         if (schedule is null)
         {
-            schedule = MealScheduleConfig.Create(MealScheduleConfigId.New(), userId, DefaultMealSlots, now);
+            schedule = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.PersonId, DefaultMealSlots, now);
             await scheduleRepository.AddAsync(schedule, ct);
         }
 
@@ -134,7 +134,7 @@ internal sealed class ExecuteImportCommandHandler(
 
                 var entry = MealEntry.Create(
                     MealEntryId.New(),
-                    userId,
+                    command.PersonId,
                     date,
                     mealSlotId,
                     recipeId,

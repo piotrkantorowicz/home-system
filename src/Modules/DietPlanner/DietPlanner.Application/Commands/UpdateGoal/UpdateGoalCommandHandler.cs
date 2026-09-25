@@ -13,10 +13,10 @@ internal sealed class UpdateGoalCommandHandler(
     public async Task HandleAsync(UpdateGoalCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var goal = await repository.GetByUserIdAsync(command.UserId, ct)
-            ?? throw new NotFoundException("UserGoal", command.UserId);
+        var goal = await repository.GetByPersonIdAsync(command.PersonId, ct)
+            ?? throw new NotFoundException("UserGoal", command.PersonId);
 
-        if (goal.UserId != command.UserId)
+        if (goal.PersonId != command.PersonId)
             throw new DietPlannerDomainException("You can only update your own goals.");
 
         goal.Update(command.DailyCalorieTarget, command.ProteinGrams, command.CarbsGrams,

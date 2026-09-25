@@ -13,10 +13,10 @@ public sealed class DietReminderSettingsTests
     {
         var id = DietReminderSettingsId.New();
 
-        var settings = DietReminderSettings.Create(id, "user-1", TestClock.UtcNow);
+        var settings = DietReminderSettings.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
 
         settings.Id.ShouldBe(id);
-        settings.UserId.ShouldBe("user-1");
+        settings.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         settings.MealRemindersEnabled.ShouldBeTrue();
         settings.MealReminderLeadTimeMinutes.ShouldBe(15);
         settings.MealMissedGraceMinutes.ShouldBe(30);
@@ -38,7 +38,7 @@ public sealed class DietReminderSettingsTests
         var id = DietReminderSettingsId.New();
 
         var settings = DietReminderSettings.Create(
-            id, "user-2",
+            id, Guid.Parse("1e5f1a27-4c4e-5b84-b4dd-5227b40c755d"),
             TestClock.UtcNow,
             mealRemindersEnabled: false,
             mealReminderLeadTimeMinutes: 30,
@@ -66,18 +66,18 @@ public sealed class DietReminderSettingsTests
 
     /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithMissingPersonId_ThrowsArgumentException()
     {
-        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), null!, TestClock.UtcNow);
+        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Empty, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
 
     /// <summary>With whitespace user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithWhitespaceUserId_ThrowsArgumentException()
+    public void Create_WithWhitespacePersonId_ThrowsArgumentException()
     {
-        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), "   ", TestClock.UtcNow);
+        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Empty, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -89,7 +89,7 @@ public sealed class DietReminderSettingsTests
     public void Create_WithNonPositiveLeadTime_ThrowsDomainException(int leadTime)
     {
         var act = () => DietReminderSettings.Create(
-            DietReminderSettingsId.New(), "user-1",
+            DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             TestClock.UtcNow,
             mealReminderLeadTimeMinutes: leadTime);
 
@@ -103,7 +103,7 @@ public sealed class DietReminderSettingsTests
     public void Create_WithNonPositiveGraceMinutes_ThrowsDomainException(int grace)
     {
         var act = () => DietReminderSettings.Create(
-            DietReminderSettingsId.New(), "user-1",
+            DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             TestClock.UtcNow,
             mealMissedGraceMinutes: grace);
 
@@ -115,7 +115,7 @@ public sealed class DietReminderSettingsTests
     public void Create_WhenWaterWindowEndNotAfterStart_ThrowsDomainException()
     {
         var act = () => DietReminderSettings.Create(
-            DietReminderSettingsId.New(), "user-1",
+            DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             TestClock.UtcNow,
             waterWindowStartUtc: new TimeOnly(10, 0),
             waterWindowEndUtc: new TimeOnly(10, 0));
@@ -128,7 +128,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Update_WithNewValues_UpdatesAllProperties()
     {
-        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
+        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
 
         settings.Update(
             mealRemindersEnabled: false,
@@ -160,7 +160,7 @@ public sealed class DietReminderSettingsTests
     [Fact]
     public void Update_WhenWaterWindowEndNotAfterStart_ThrowsDomainException()
     {
-        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
+        var settings = DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
 
         var act = () => settings.Update(
             mealRemindersEnabled: true,

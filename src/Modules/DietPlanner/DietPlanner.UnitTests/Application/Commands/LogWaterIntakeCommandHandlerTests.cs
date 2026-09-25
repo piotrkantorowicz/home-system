@@ -25,14 +25,14 @@ public sealed class LogWaterIntakeCommandHandlerTests
     public async Task HandleAsync_WithValidCommand_AddsEntryAndCommits()
     {
         var date = TestClock.Today;
-        var command = new LogWaterIntakeCommand("user-1", date, 250, "Morning");
+        var command = new LogWaterIntakeCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, 250, "Morning");
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
             Arg.Is<WaterIntake>(e =>
-                e.UserId == "user-1" &&
+                e.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") &&
                 e.AmountMl == 250 &&
                 e.Note == "Morning" &&
                 e.Timestamp == _clock.GetUtcNow().UtcDateTime),
@@ -45,7 +45,7 @@ public sealed class LogWaterIntakeCommandHandlerTests
     public async Task HandleAsync_WithNullNote_AddsEntryAndCommits()
     {
         var date = TestClock.Today;
-        var command = new LogWaterIntakeCommand("user-1", date, 500, null);
+        var command = new LogWaterIntakeCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, 500, null);
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 

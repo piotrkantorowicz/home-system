@@ -22,7 +22,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
 
     private static MealEntry NewEntry(MealEntryStatus status)
     {
-        var entry = MealEntry.Create(MealEntryId.New(), "user-1", Today,
+        var entry = MealEntry.Create(MealEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today,
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
         switch (status)
         {
@@ -41,11 +41,11 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
         var done = NewEntry(MealEntryStatus.Done);
         var modified = NewEntry(MealEntryStatus.Modified);
 
-        _repository.GetByUserAndDateRangeAsync("user-1", Today, Today, Arg.Any<CancellationToken>())
+        _repository.GetByPersonAndDateRangeAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, Today, Arg.Any<CancellationToken>())
             .Returns([planned1, planned2, done, modified]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand("user-1", Today), TestContext.Current.CancellationToken);
+            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(2);
         planned1.Status.ShouldBe(MealEntryStatus.Done);
@@ -58,11 +58,11 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WithNoPlannedEntries_ReturnsZeroAndDoesNotCommit()
     {
-        _repository.GetByUserAndDateRangeAsync("user-1", Today, Today, Arg.Any<CancellationToken>())
+        _repository.GetByPersonAndDateRangeAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, Today, Arg.Any<CancellationToken>())
             .Returns([NewEntry(MealEntryStatus.Done)]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand("user-1", Today), TestContext.Current.CancellationToken);
+            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(0);
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
@@ -76,13 +76,13 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
 
     /// <summary>With empty user id: <c>Validate</c> returns error.</summary>
     [Fact]
-    public void Validate_WithEmptyUserId_ReturnsError()
+    public void Validate_WithEmptyPersonId_ReturnsError()
     {
         var today = TestClock.Today;
 
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("", today)).ToList();
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Empty, today)).ToList();
 
-        errors.ShouldContain(e => e.PropertyName == nameof(BulkCompleteMealEntriesCommand.UserId));
+        errors.ShouldContain(e => e.PropertyName == nameof(BulkCompleteMealEntriesCommand.PersonId));
     }
 
     /// <summary><c>Validate</c> allows any date including future and avoids timezone false positives.</summary>
@@ -94,7 +94,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
         // because it only transitions Planned entries that already exist on that date.
         var future = TestClock.Today.AddDays(7);
 
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand("user-1", future)).ToList();
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), future)).ToList();
 
         errors.ShouldBeEmpty();
     }

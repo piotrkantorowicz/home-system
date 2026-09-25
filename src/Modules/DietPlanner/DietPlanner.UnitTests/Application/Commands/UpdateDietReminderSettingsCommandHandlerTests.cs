@@ -22,9 +22,9 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     public UpdateDietReminderSettingsCommandHandlerTests()
         => _sut = new UpdateDietReminderSettingsCommandHandler(_repository, _unitOfWork, _clock);
 
-    private static UpdateDietReminderSettingsCommand DefaultCommand(string userId = "user-1")
+    private static UpdateDietReminderSettingsCommand DefaultCommand(Guid personId)
         => new(
-            userId,
+            personId,
             MealRemindersEnabled: true,
             MealReminderLeadTimeMinutes: 15,
             MealMissedGraceMinutes: 30,
@@ -41,16 +41,16 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenNoExistingSettings_CreatesNewAndCommits()
     {
-        var command = DefaultCommand();
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((DietReminderSettings?)null);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         await _repository.Received(1).AddAsync(
             Arg.Is<DietReminderSettings>(s =>
-                s.UserId == "user-1" &&
+                s.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") &&
                 s.MealRemindersEnabled &&
                 s.MealReminderLeadTimeMinutes == 15 &&
                 s.MealMissedGraceMinutes == 30 &&
@@ -66,8 +66,8 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenExistingSettings_UpdatesAndCommits()
     {
-        var existing = DietReminderSettings.Create(DietReminderSettingsId.New(), "user-1", TestClock.UtcNow);
-        var command = DefaultCommand() with
+        var existing = DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with
         {
             MealRemindersEnabled = false,
             MealReminderLeadTimeMinutes = 45,
@@ -75,7 +75,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
             GoalAlertsEnabled = false,
         };
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(existing);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
@@ -97,9 +97,9 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
 {
     private readonly UpdateDietReminderSettingsCommandValidator _sut = new();
 
-    private static UpdateDietReminderSettingsCommand DefaultCommand(string userId = "user-1")
+    private static UpdateDietReminderSettingsCommand DefaultCommand(Guid personId)
         => new(
-            userId,
+            personId,
             MealRemindersEnabled: true,
             MealReminderLeadTimeMinutes: 15,
             MealMissedGraceMinutes: 30,
@@ -116,17 +116,17 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     [Fact]
     public void Validate_WithValidCommand_ReturnsNoErrors()
     {
-        var errors = _sut.Validate(DefaultCommand()).ToList();
+        var errors = _sut.Validate(DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"))).ToList();
         errors.ShouldBeEmpty();
     }
 
     /// <summary>With empty user id: <c>Validate</c> returns validation error.</summary>
     [Fact]
-    public void Validate_WithEmptyUserId_ReturnsValidationError()
+    public void Validate_WithEmptyPersonId_ReturnsValidationError()
     {
-        var command = DefaultCommand("");
+        var command = DefaultCommand(Guid.Empty);
         var errors = _sut.Validate(command).ToList();
-        errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
+        errors.ShouldContain(e => e.PropertyName == nameof(command.PersonId));
     }
 
     /// <summary>With invalid meal lead time minutes: <c>Validate</c> returns validation error.</summary>
@@ -136,7 +136,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     [InlineData(121)]
     public void Validate_WithInvalidMealLeadTimeMinutes_ReturnsValidationError(int leadTime)
     {
-        var command = DefaultCommand() with { MealReminderLeadTimeMinutes = leadTime };
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with { MealReminderLeadTimeMinutes = leadTime };
         var errors = _sut.Validate(command).ToList();
         errors.ShouldContain(e => e.PropertyName == nameof(command.MealReminderLeadTimeMinutes));
     }
@@ -147,7 +147,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     [InlineData(241)]
     public void Validate_WithInvalidGraceMinutes_ReturnsValidationError(int grace)
     {
-        var command = DefaultCommand() with { MealMissedGraceMinutes = grace };
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with { MealMissedGraceMinutes = grace };
         var errors = _sut.Validate(command).ToList();
         errors.ShouldContain(e => e.PropertyName == nameof(command.MealMissedGraceMinutes));
     }
@@ -158,7 +158,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     [InlineData(481)]
     public void Validate_WithInvalidWaterReminderIntervalMinutes_ReturnsValidationError(int interval)
     {
-        var command = DefaultCommand() with { WaterReminderIntervalMinutes = interval };
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with { WaterReminderIntervalMinutes = interval };
         var errors = _sut.Validate(command).ToList();
         errors.ShouldContain(e => e.PropertyName == nameof(command.WaterReminderIntervalMinutes));
     }
@@ -167,7 +167,7 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     [Fact]
     public void Validate_WhenWaterWindowEndNotAfterStart_ReturnsValidationError()
     {
-        var command = DefaultCommand() with
+        var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with
         {
             WaterWindowStartUtc = new TimeOnly(12, 0),
             WaterWindowEndUtc = new TimeOnly(11, 0),

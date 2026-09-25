@@ -8,10 +8,10 @@ using DietPlanner.Domain.Aggregates;
 public interface IUserGoalRepository
 {
     /// <summary>Loads the user's goal for mutation.</summary>
-    /// <param name="userId">Auth subject of the owner.</param>
+    /// <param name="personId">Person identifier of the owner.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns>The tracked goal, or <see langword="null"/> when the user has none yet.</returns>
-    Task<UserGoal?> GetByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<UserGoal?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default);
     /// <summary>Stages a new goal; it is written when the unit of work commits.</summary>
     /// <param name="goal">The goal to add.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>

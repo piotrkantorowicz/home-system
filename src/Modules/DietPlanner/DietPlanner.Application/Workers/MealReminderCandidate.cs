@@ -1,7 +1,7 @@
 namespace DietPlanner.Application.Workers;
 
 internal sealed record MealReminderCandidate(
-    string UserId,
+    Guid PersonId,
     string Locale,
     Guid MealEntryId,
     string MealSlotName,

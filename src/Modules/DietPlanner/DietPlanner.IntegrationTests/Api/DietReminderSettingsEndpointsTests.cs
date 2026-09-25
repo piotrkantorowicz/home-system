@@ -165,6 +165,6 @@ public sealed class DietReminderSettingsEndpointsTests
 
         DietReminderSettingsDto? dto = await getResponse.Content.ReadFromJsonAsync<DietReminderSettingsDto>(cancellationToken: TestContext.Current.CancellationToken);
         dto.ShouldNotBeNull();
-        dto.UserId.ShouldBe(TestAuthHandler.TestUserId);
+        dto.PersonId.ShouldBe(TestAuthHandler.PersonIdFor(TestAuthHandler.TestUserId));
     }
 }

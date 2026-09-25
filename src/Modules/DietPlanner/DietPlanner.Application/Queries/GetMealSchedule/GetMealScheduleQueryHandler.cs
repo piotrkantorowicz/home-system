@@ -15,10 +15,10 @@ internal sealed class GetMealScheduleQueryHandler : IQueryHandler<GetMealSchedul
     public async Task<MealScheduleConfigDto?> HandleAsync(GetMealScheduleQuery query, CancellationToken ct = default)
         => await _dbContext.MealScheduleConfigs
             .AsNoTracking()
-            .Where(c => c.UserId == query.UserId)
+            .Where(c => c.PersonId == query.PersonId)
             .Select(c => new MealScheduleConfigDto(
                 c.Id.Value,
-                c.UserId,
+                c.PersonId,
                 c.Slots
                     .OrderBy(s => s.SortOrder)
                     .Select(s => new MealSlotDto(

@@ -17,10 +17,9 @@ internal sealed class MealEntryConfiguration : IEntityTypeConfiguration<MealEntr
             .HasConversion(id => id.Value, value => MealEntryId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
         builder.Property(x => x.Date).HasColumnName("date");
 
@@ -80,7 +79,7 @@ internal sealed class MealEntryConfiguration : IEntityTypeConfiguration<MealEntr
 
         builder.Navigation(x => x.ActualProducts).UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.HasIndex(x => new { x.UserId, x.Date }).HasDatabaseName("idx_meal_entries_user_date");
+        builder.HasIndex(x => new { x.PersonId, x.Date }).HasDatabaseName("idx_meal_entries_person_date");
         builder.HasIndex(x => x.RecipeId).HasDatabaseName("idx_meal_entries_recipe");
         builder.HasIndex(x => x.MealSlotId).HasDatabaseName("idx_meal_entries_meal_slot");
         builder.HasIndex(x => x.ActualRecipeId).HasDatabaseName("idx_meal_entries_actual_recipe");

@@ -45,7 +45,7 @@ public sealed class MealReminderJobIntegrationTests
             // Seed MealScheduleConfig with one slot at 12:00 (default time, but will be overridden by MealEntry.MealTime)
             var config = MealScheduleConfig.Create(
                 MealScheduleConfigId.New(),
-                userId,
+                TestAuthHandler.PersonIdFor(userId),
                 [("Lunch", new TimeOnly(12, 0))],
                 TestClock.UtcNow);
 
@@ -72,7 +72,7 @@ public sealed class MealReminderJobIntegrationTests
             // Seed DietReminderSettings with MealRemindersEnabled = true, lead = 15 min
             var settings = DietReminderSettings.Create(
                 DietReminderSettingsId.New(),
-                userId,
+                TestAuthHandler.PersonIdFor(userId),
                 TestClock.UtcNow,
                 mealRemindersEnabled: true,
                 mealReminderLeadTimeMinutes: 15);
@@ -84,7 +84,7 @@ public sealed class MealReminderJobIntegrationTests
             mealEntryId = MealEntryId.New();
             var entry = MealEntry.Create(
                 mealEntryId,
-                userId,
+                TestAuthHandler.PersonIdFor(userId),
                 todayUtc,
                 seededSlotId,
                 recipe.Id,

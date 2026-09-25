@@ -9,7 +9,7 @@ public sealed class MealEntryCompletionTests
 {
     private static MealEntry NewEntry()
         => MealEntry.Create(
-            MealEntryId.New(), "user-1", new DateOnly(2026, 1, 15),
+            MealEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2026, 1, 15),
             MealSlotId.New(), RecipeId.New(), 1m, null, null, null, TestClock.UtcNow);
 
     /// <summary><c>Create</c> defaults status to planned.</summary>

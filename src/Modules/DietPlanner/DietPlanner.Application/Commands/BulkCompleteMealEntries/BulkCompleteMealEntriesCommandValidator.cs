@@ -7,7 +7,7 @@ internal sealed class BulkCompleteMealEntriesCommandValidator
 {
     public IEnumerable<ValidationError> Validate(BulkCompleteMealEntriesCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
     }
 }

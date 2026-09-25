@@ -16,14 +16,13 @@ internal sealed class HydrationConfigConfiguration : IEntityTypeConfiguration<Hy
             .HasConversion(id => id.Value, value => HydrationConfigId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(x => x.PersonId)
             .IsUnique()
-            .HasDatabaseName("idx_hydration_configs_user");
+            .HasDatabaseName("idx_hydration_configs_person");
 
         builder.Property(x => x.DailyWaterTargetMl).HasColumnName("daily_water_target_ml");
         builder.Property(x => x.GlassSizeMl).HasColumnName("glass_size_ml");

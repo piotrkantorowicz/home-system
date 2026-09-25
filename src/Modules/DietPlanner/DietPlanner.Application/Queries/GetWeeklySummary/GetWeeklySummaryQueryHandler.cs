@@ -19,7 +19,7 @@ internal sealed class GetWeeklySummaryQueryHandler
     public async Task<WeeklySummaryDto> HandleAsync(
         GetWeeklySummaryQuery query, CancellationToken ct = default)
     {
-        int targetKcal = await ComputeTargetKcalAsync(query.UserId, ct);
+        int targetKcal = await ComputeTargetKcalAsync(query.PersonId, ct);
         KcalResult kcalResult = await ComputeTotalKcalAndCountsAsync(query, ct);
         decimal avgWaterLiters = await ComputeAvgWaterLitersAsync(query, ct);
         decimal? weightDeltaKg = await ComputeWeightDeltaAsync(query, ct);
@@ -35,11 +35,11 @@ internal sealed class GetWeeklySummaryQueryHandler
             MealsPlanned: kcalResult.MealsPlanned);
     }
 
-    private async Task<int> ComputeTargetKcalAsync(string userId, CancellationToken ct)
+    private async Task<int> ComputeTargetKcalAsync(Guid personId, CancellationToken ct)
     {
         var goal = await _db.UserGoals
             .AsNoTracking()
-            .Where(g => g.UserId == userId)
+            .Where(g => g.PersonId == personId)
             .Select(g => g.DailyCalorieTarget)
             .FirstOrDefaultAsync(ct);
 
@@ -51,7 +51,7 @@ internal sealed class GetWeeklySummaryQueryHandler
     {
         int totalMl = await _db.WaterIntakes
             .AsNoTracking()
-            .Where(w => w.UserId == query.UserId
+            .Where(w => w.PersonId == query.PersonId
                 && w.Date >= query.WeekStart
                 && w.Date <= query.WeekEnd)
             .SumAsync(w => w.AmountMl, ct);
@@ -64,7 +64,7 @@ internal sealed class GetWeeklySummaryQueryHandler
     {
         var weights = await _db.WeightEntries
             .AsNoTracking()
-            .Where(w => w.UserId == query.UserId
+            .Where(w => w.PersonId == query.PersonId
                 && w.Date >= query.WeekStart
                 && w.Date <= query.WeekEnd)
             .OrderBy(w => w.Date)
@@ -81,7 +81,7 @@ internal sealed class GetWeeklySummaryQueryHandler
     {
         var entries = await _db.MealEntries
             .AsNoTracking()
-            .Where(me => me.UserId == query.UserId
+            .Where(me => me.PersonId == query.PersonId
                 && me.Date >= query.WeekStart
                 && me.Date <= query.WeekEnd)
             .Select(me => new EntryProjection

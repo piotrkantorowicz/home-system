@@ -59,9 +59,9 @@ public static class HydrationEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         HydrationConfigDto? result = await dispatcher.SendAsync<GetHydrationConfigQuery, HydrationConfigDto?>(
-            new GetHydrationConfigQuery(userId), ct);
+            new GetHydrationConfigQuery(personId), ct);
         return TypedResults.Ok(result);
     }
 
@@ -71,10 +71,10 @@ public static class HydrationEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         await dispatcher.SendAsync(
             new UpdateHydrationConfigCommand(
-                userId, request.DailyWaterTargetMl, request.GlassSizeMl, request.TrackWaterIntake), ct);
+                personId, request.DailyWaterTargetMl, request.GlassSizeMl, request.TrackWaterIntake), ct);
         return TypedResults.NoContent();
     }
 
@@ -84,9 +84,9 @@ public static class HydrationEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         WaterIntakeListDto result = await dispatcher.SendAsync<GetWaterIntakeQuery, WaterIntakeListDto>(
-            new GetWaterIntakeQuery(userId, date), ct);
+            new GetWaterIntakeQuery(personId, date), ct);
         return TypedResults.Ok(result);
     }
 
@@ -96,9 +96,9 @@ public static class HydrationEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         var id = await dispatcher.SendAsync<LogWaterIntakeCommand, Guid>(
-            new LogWaterIntakeCommand(userId, request.Date, request.AmountMl, request.Note), ct);
+            new LogWaterIntakeCommand(personId, request.Date, request.AmountMl, request.Note), ct);
         return TypedResults.Created($"/api/v1/hydration/intake/{id}", id);
     }
 
@@ -108,15 +108,13 @@ public static class HydrationEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
-        await dispatcher.SendAsync(new DeleteWaterIntakeCommand(id, userId), ct);
+        var personId = GetPersonId(user);
+        await dispatcher.SendAsync(new DeleteWaterIntakeCommand(id, personId), ct);
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

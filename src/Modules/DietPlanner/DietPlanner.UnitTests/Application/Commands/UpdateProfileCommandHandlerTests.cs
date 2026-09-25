@@ -26,15 +26,15 @@ public sealed class UpdateProfileCommandHandlerTests
     public async Task HandleAsync_WhenProfileExists_UpdatesAndCommits()
     {
         UserProfile existing = UserProfile.Create(
-            UserProfileId.New(), "user-1",
+            UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15), Gender.Male,
             180m, 80m, 75m, ActivityLevel.Sedentary, TestClock.UtcNow);
 
-        _repository.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns(existing);
 
         var command = new UpdateProfileCommand(
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15),
             "Female",
             175m,
@@ -52,10 +52,10 @@ public sealed class UpdateProfileCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenProfileNotFound_ThrowsNotFoundException()
     {
-        _repository.GetByUserIdAsync("unknown-user", Arg.Any<CancellationToken>())
+        _repository.GetByPersonIdAsync(Guid.Parse("764ae4ad-7805-5482-b116-3e6d4e118a1a"), Arg.Any<CancellationToken>())
             .Returns((UserProfile?)null);
 
-        var command = new UpdateProfileCommand("unknown-user", null, null, null, null, null, null);
+        var command = new UpdateProfileCommand(Guid.Parse("764ae4ad-7805-5482-b116-3e6d4e118a1a"), null, null, null, null, null, null);
 
         await Should.ThrowAsync<NotFoundException>(() => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
         _repository.DidNotReceive().Update(Arg.Any<UserProfile>());

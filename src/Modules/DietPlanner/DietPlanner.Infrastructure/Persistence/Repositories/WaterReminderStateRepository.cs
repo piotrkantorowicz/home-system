@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 internal sealed class WaterReminderStateRepository(DietPlannerDbContext dbContext)
     : IWaterReminderStateRepository
 {
-    public Task<WaterReminderState?> GetByUserIdAsync(string userId, CancellationToken ct = default)
+    public Task<WaterReminderState?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
         => dbContext.WaterReminderStates
-            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
+            .FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(WaterReminderState state, CancellationToken ct = default)
         => await dbContext.WaterReminderStates.AddAsync(state, ct);

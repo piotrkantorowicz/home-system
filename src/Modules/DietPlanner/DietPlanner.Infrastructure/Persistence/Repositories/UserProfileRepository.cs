@@ -11,8 +11,8 @@ internal sealed class UserProfileRepository : IUserProfileRepository
     public UserProfileRepository(DietPlannerDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<UserProfile?> GetByUserIdAsync(string userId, CancellationToken ct = default)
-        => await _dbContext.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+    public async Task<UserProfile?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
+        => await _dbContext.UserProfiles.FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(UserProfile profile, CancellationToken ct = default)
         => await _dbContext.UserProfiles.AddAsync(profile, ct);

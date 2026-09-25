@@ -11,10 +11,10 @@ internal sealed class MealScheduleConfigRepository : IMealScheduleConfigReposito
     public MealScheduleConfigRepository(DietPlannerDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<MealScheduleConfig?> GetByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<MealScheduleConfig?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
         => await _dbContext.MealScheduleConfigs
             .Include(x => x.Slots)
-            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
+            .FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(MealScheduleConfig config, CancellationToken ct = default)
         => await _dbContext.MealScheduleConfigs.AddAsync(config, ct);
