@@ -172,11 +172,12 @@ TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
 ## Nightly CI
 
 `.github/workflows/e2e-nightly.yml` runs the whole suite against the real stack on
-`ubuntu-latest` every night at **03:00 UTC** and on demand (`workflow_dispatch` — *Actions
-→ E2E Nightly → Run workflow*, any branch). It is deliberately **not** part of the PR gate:
-the suite alone takes ~4 min, and a cold runner adds the Authentik first boot, the
-backend build and the browser install on top, so `scripts/verify.sh` keeps
-type-checking `e2e/` only. Run the suite locally before shipping a
+`ubuntu-latest` every night at **03:00 UTC**, on demand (`workflow_dispatch` — *Actions
+→ E2E Nightly → Run workflow*, any branch), and on every PR targeting `main`. The PR run
+is **report-only** — it is not in required status checks yet, while the flake rate is
+being watched (issue #379); a red check does not block merge. A PR from a fork skips the
+job entirely (no `TEST_USER_PASSWORD` secret). `scripts/verify.sh` still only
+type-checks `e2e/` — it does not run the suite. Run the suite locally before shipping a
 UI flow.
 
 What the job does, in order:
@@ -213,9 +214,10 @@ The workflow keeps **one tracking issue** — title `Nightly e2e failed`, labels
 - a failed run opens it, or comments the run URL on it if it is already open;
 - the next green run comments "green again" and closes it.
 
-A `workflow_dispatch` run on any other branch never touches issues — look at the run
-itself and its artifacts. Two runs never overlap (`concurrency: e2e-nightly`, no
-cancellation), so a manual run during the nightly simply queues.
+A `workflow_dispatch` or `pull_request` run never touches issues — look at the run
+itself and its artifacts. Scheduled / dispatch runs share one queue and never overlap
+(nothing is cancelled), so a manual run during the nightly simply queues. A PR run gets
+its own queue keyed by PR number, and a new push cancels the one it supersedes.
 
 ### Repository secrets (owner action)
 

@@ -81,6 +81,6 @@ Hooks need `src/ui/node_modules` — a fresh clone or a new git worktree must ru
 - `frontend-ci.yml` — type-check, lint, format:check, test:coverage, build (on `src/ui/**` changes)
 - `backend-ci.yml` — restore, `dotnet format --verify-no-changes`, build, `dotnet test` on the whole solution
 - `pr-hygiene.yml` — every PR: commitlint on commits + PR title, branch name, linked issue, `CLAUDE.md` ↔ `AGENTS.md` sync
-- `e2e-nightly.yml` — nightly (03:00 UTC) + `workflow_dispatch`: the Playwright suite against the real stack (Docker infra, backend, Vite); not a PR gate — see `docs/e2e/README.md` § Nightly CI
+- `e2e-nightly.yml` — nightly (03:00 UTC) + `workflow_dispatch` + PRs targeting `main`: the Playwright suite against the real stack (Docker infra, backend, Vite); the PR run is report-only, not yet a required check — see `docs/e2e/README.md` § Nightly CI
 
 Anything green locally via `scripts/verify.sh --branch` is green in CI; the two run the same commands.
