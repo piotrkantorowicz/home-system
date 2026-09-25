@@ -16,6 +16,8 @@ export class ImportPage extends BasePage {
   readonly importButton: Locator;
   readonly loadSampleButton: Locator;
   readonly reviewDetected: Locator;
+  readonly uploadButton: Locator;
+  readonly previousButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -24,6 +26,8 @@ export class ImportPage extends BasePage {
     this.importButton = page.getByRole('button', { name: /^import \d+ days?$/i });
     this.loadSampleButton = page.getByRole('button', { name: /load sample/i });
     this.reviewDetected = page.getByText('Detected', { exact: true });
+    this.uploadButton = page.getByRole('button', { name: /drop a plan file here/i });
+    this.previousButton = page.getByRole('button', { name: /^previous$/i });
   }
 
   async goto() {
@@ -38,6 +42,19 @@ export class ImportPage extends BasePage {
   async setJson(json: object | string) {
     const jsonString = typeof json === 'string' ? json : JSON.stringify(json, null, 2);
     await this.jsonInput.fill(jsonString);
+  }
+
+  async uploadJson(json: object) {
+    const chooser = this.page.waitForEvent('filechooser');
+    await this.uploadButton.click();
+    await (
+      await chooser
+    ).setFiles({
+      name: 'diet-plan.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(json)),
+    });
+    await expect(this.jsonInput).toHaveValue(JSON.stringify(json));
   }
 
   /**
