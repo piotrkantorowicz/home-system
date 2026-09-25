@@ -22,10 +22,10 @@ internal sealed class UpdateProfileCommandHandler(
             ? Enum.Parse<ActivityLevel>(command.ActivityLevel, ignoreCase: true)
             : null;
 
-        var profile = await repository.GetByUserIdAsync(command.UserId, ct)
-            ?? throw new NotFoundException("UserProfile", command.UserId);
+        var profile = await repository.GetByPersonIdAsync(command.PersonId, ct)
+            ?? throw new NotFoundException("UserProfile", command.PersonId);
 
-        if (profile.UserId != command.UserId)
+        if (profile.PersonId != command.PersonId)
             throw new DietPlannerDomainException("You can only update your own profile.");
 
         profile.Update(

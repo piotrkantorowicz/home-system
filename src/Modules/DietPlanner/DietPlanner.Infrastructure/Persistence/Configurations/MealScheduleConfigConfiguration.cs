@@ -16,14 +16,13 @@ internal sealed class MealScheduleConfigConfiguration : IEntityTypeConfiguration
             .HasConversion(id => id.Value, value => MealScheduleConfigId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(x => x.PersonId)
             .IsUnique()
-            .HasDatabaseName("idx_meal_schedule_configs_user");
+            .HasDatabaseName("idx_meal_schedule_configs_person");
 
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");

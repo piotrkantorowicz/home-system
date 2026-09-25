@@ -6,8 +6,8 @@ internal sealed class CreateMealEntryCommandValidator : ICommandValidator<Create
 {
     public IEnumerable<ValidationError> Validate(CreateMealEntryCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.MealSlotId == Guid.Empty)
             yield return new ValidationError(nameof(command.MealSlotId), "MealSlotId is required.");

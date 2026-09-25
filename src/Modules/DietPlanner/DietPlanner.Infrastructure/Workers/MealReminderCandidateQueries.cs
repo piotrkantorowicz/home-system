@@ -21,7 +21,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
             from settings in dbContext.DietReminderSettings.AsNoTracking()
             where settings.MealRemindersEnabled
             join entry in dbContext.MealEntries.AsNoTracking()
-                on settings.UserId equals entry.UserId
+                on settings.PersonId equals entry.PersonId
             join slot in dbContext.MealSlots.AsNoTracking()
                 on entry.MealSlotId equals slot.Id
             where entry.Status == MealEntryStatus.Planned
@@ -30,7 +30,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
                     .Any(s => s.MealEntryId == entry.Id && s.Kind == MealReminderKind.Reminder)
             select new
             {
-                settings.UserId,
+                settings.PersonId,
                 settings.MealReminderLeadTimeMinutes,
                 EntryId = entry.Id,
                 entry.Date,
@@ -48,7 +48,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
             if (plannedAt > nowUtc && plannedAt <= leadEnd)
             {
                 result.Add(new MealReminderCandidate(
-                    r.UserId, DefaultLocale, r.EntryId.Value, r.SlotName, plannedAt));
+                    r.PersonId, DefaultLocale, r.EntryId.Value, r.SlotName, plannedAt));
             }
         }
 
@@ -65,7 +65,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
             from settings in dbContext.DietReminderSettings.AsNoTracking()
             where settings.MealRemindersEnabled
             join entry in dbContext.MealEntries.AsNoTracking()
-                on settings.UserId equals entry.UserId
+                on settings.PersonId equals entry.PersonId
             join slot in dbContext.MealSlots.AsNoTracking()
                 on entry.MealSlotId equals slot.Id
             where entry.Status == MealEntryStatus.Planned
@@ -74,7 +74,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
                     .Any(s => s.MealEntryId == entry.Id && s.Kind == MealReminderKind.Missed)
             select new
             {
-                settings.UserId,
+                settings.PersonId,
                 settings.MealMissedGraceMinutes,
                 EntryId = entry.Id,
                 entry.Date,
@@ -92,7 +92,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
             if (missedAt <= nowUtc && plannedAt > nowUtc.Subtract(MissedLookback))
             {
                 result.Add(new MealReminderCandidate(
-                    r.UserId, DefaultLocale, r.EntryId.Value, r.SlotName, plannedAt));
+                    r.PersonId, DefaultLocale, r.EntryId.Value, r.SlotName, plannedAt));
             }
         }
 

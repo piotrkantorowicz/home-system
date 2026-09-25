@@ -47,9 +47,9 @@ public static class GoalEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         GoalDto? result = await dispatcher.SendAsync<GetGoalQuery, GoalDto?>(
-            new GetGoalQuery(userId), ct);
+            new GetGoalQuery(personId), ct);
         return TypedResults.Ok(result);
     }
 
@@ -59,10 +59,10 @@ public static class GoalEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         var id = await dispatcher.SendAsync<CreateGoalCommand, Guid>(
             new CreateGoalCommand(
-                userId, request.DailyCalorieTarget, request.ProteinGrams,
+                personId, request.DailyCalorieTarget, request.ProteinGrams,
                 request.CarbsGrams, request.FatGrams, request.FiberGrams), ct);
         return TypedResults.Created($"/api/v1/goals/{id}");
     }
@@ -73,18 +73,16 @@ public static class GoalEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         await dispatcher.SendAsync(
             new UpdateGoalCommand(
-                userId, request.DailyCalorieTarget, request.ProteinGrams,
+                personId, request.DailyCalorieTarget, request.ProteinGrams,
                 request.CarbsGrams, request.FatGrams, request.FiberGrams), ct);
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

@@ -11,8 +11,8 @@ internal sealed class HydrationConfigRepository : IHydrationConfigRepository
     public HydrationConfigRepository(DietPlannerDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<HydrationConfig?> GetByUserIdAsync(string userId, CancellationToken ct = default)
-        => await _dbContext.HydrationConfigs.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+    public async Task<HydrationConfig?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
+        => await _dbContext.HydrationConfigs.FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(HydrationConfig config, CancellationToken ct = default)
         => await _dbContext.HydrationConfigs.AddAsync(config, ct);

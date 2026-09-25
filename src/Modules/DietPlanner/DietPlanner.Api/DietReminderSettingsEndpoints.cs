@@ -41,9 +41,9 @@ public static class DietReminderSettingsEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         DietReminderSettingsDto? result = await dispatcher.SendAsync<GetDietReminderSettingsQuery, DietReminderSettingsDto?>(
-            new GetDietReminderSettingsQuery(userId), ct);
+            new GetDietReminderSettingsQuery(personId), ct);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
@@ -53,10 +53,10 @@ public static class DietReminderSettingsEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         await dispatcher.SendAsync(
             new UpdateDietReminderSettingsCommand(
-                userId,
+                personId,
                 request.MealRemindersEnabled,
                 request.MealReminderLeadTimeMinutes,
                 request.MealMissedGraceMinutes,
@@ -71,10 +71,8 @@ public static class DietReminderSettingsEndpoints
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

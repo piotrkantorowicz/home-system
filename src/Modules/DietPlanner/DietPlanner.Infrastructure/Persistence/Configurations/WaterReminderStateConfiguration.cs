@@ -10,8 +10,8 @@ internal sealed class WaterReminderStateConfiguration : IEntityTypeConfiguration
     {
         builder.ToTable("water_reminder_state");
 
-        builder.HasKey(x => x.UserId);
-        builder.Property(x => x.UserId).HasColumnName("user_id");
+        builder.HasKey(x => x.PersonId);
+        builder.Property(x => x.PersonId).HasColumnName("person_id");
 
         builder.Property(x => x.LastWaterReminderAt)
             .HasColumnName("last_water_reminder_at");

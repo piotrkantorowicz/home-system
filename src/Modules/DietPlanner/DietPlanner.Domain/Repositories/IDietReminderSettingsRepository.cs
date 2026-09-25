@@ -8,10 +8,10 @@ using DietPlanner.Domain.Aggregates;
 public interface IDietReminderSettingsRepository
 {
     /// <summary>Loads the user's reminder settings for mutation.</summary>
-    /// <param name="userId">Auth subject of the owner.</param>
+    /// <param name="personId">Person identifier of the owner.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns>The tracked reminder settings, or <see langword="null"/> when the user has none yet.</returns>
-    Task<DietReminderSettings?> GetByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<DietReminderSettings?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default);
     /// <summary>Stages a new reminder settings; it is written when the unit of work commits.</summary>
     /// <param name="settings">The reminder settings to add.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>

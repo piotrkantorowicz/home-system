@@ -14,7 +14,7 @@ internal sealed class UpdateHydrationConfigCommandHandler(
     public async Task HandleAsync(UpdateHydrationConfigCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var existing = await repository.GetByUserIdAsync(command.UserId, ct);
+        var existing = await repository.GetByPersonIdAsync(command.PersonId, ct);
 
         if (existing is not null)
         {
@@ -25,7 +25,7 @@ internal sealed class UpdateHydrationConfigCommandHandler(
         {
             var config = HydrationConfig.Create(
                 HydrationConfigId.New(),
-                command.UserId,
+                command.PersonId,
                 now,
                 command.DailyWaterTargetMl,
                 command.GlassSizeMl,

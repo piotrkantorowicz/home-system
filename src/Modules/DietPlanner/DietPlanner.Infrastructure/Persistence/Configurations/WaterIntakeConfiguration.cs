@@ -16,10 +16,9 @@ internal sealed class WaterIntakeConfiguration : IEntityTypeConfiguration<WaterI
             .HasConversion(id => id.Value, value => WaterIntakeId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
         builder.Property(x => x.Date)
             .HasColumnName("date");
@@ -34,7 +33,7 @@ internal sealed class WaterIntakeConfiguration : IEntityTypeConfiguration<WaterI
             .HasMaxLength(500)
             .HasColumnName("note");
 
-        builder.HasIndex(x => new { x.UserId, x.Date })
-            .HasDatabaseName("idx_water_intakes_user_date");
+        builder.HasIndex(x => new { x.PersonId, x.Date })
+            .HasDatabaseName("idx_water_intakes_person_date");
     }
 }

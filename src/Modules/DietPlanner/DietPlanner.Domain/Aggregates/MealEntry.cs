@@ -19,7 +19,7 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
 
     /// <summary>Plans a meal; it starts in <see cref="MealEntryStatus.Planned"/>.</summary>
     /// <param name="id">Identifier for the new entry.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="date">Calendar day the meal is planned for.</param>
     /// <param name="mealSlotId">Slot from the user's meal schedule (breakfast, lunch, …).</param>
     /// <param name="recipeId">The recipe planned to be eaten.</param>
@@ -27,12 +27,12 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
     /// <param name="notes">Optional free-text note.</param>
     /// <param name="mealTime">Optional time overriding the slot's default; reminders use it when set.</param>
     /// <param name="sequenceOrder">Optional ordering among entries in the same slot.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <exception cref="ArgumentNullException"><paramref name="mealSlotId"/> or <paramref name="recipeId"/> is null.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static MealEntry Create(
         MealEntryId id,
-        string userId,
+        Guid personId,
         DateOnly date,
         MealSlotId mealSlotId,
         RecipeId recipeId,
@@ -42,14 +42,15 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
         int? sequenceOrder,
         DateTime now)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
         ArgumentNullException.ThrowIfNull(mealSlotId);
         ArgumentNullException.ThrowIfNull(recipeId);
 
         return new MealEntry
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             Date = date,
             MealSlotId = mealSlotId,
             RecipeId = recipeId,
@@ -62,8 +63,8 @@ public sealed class MealEntry : AggregateRoot<MealEntryId>
         };
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Calendar day the meal is planned for.</summary>
     public DateOnly Date { get; private set; }
     /// <summary>Slot from the user's meal schedule.</summary>

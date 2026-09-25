@@ -11,8 +11,8 @@ internal sealed class UserGoalRepository : IUserGoalRepository
     public UserGoalRepository(DietPlannerDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<UserGoal?> GetByUserIdAsync(string userId, CancellationToken ct = default)
-        => await _dbContext.UserGoals.FirstOrDefaultAsync(x => x.UserId == userId, ct);
+    public async Task<UserGoal?> GetByPersonIdAsync(Guid personId, CancellationToken ct = default)
+        => await _dbContext.UserGoals.FirstOrDefaultAsync(x => x.PersonId == personId, ct);
 
     public async Task AddAsync(UserGoal goal, CancellationToken ct = default)
         => await _dbContext.UserGoals.AddAsync(goal, ct);

@@ -103,9 +103,9 @@ public static class MealEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         IReadOnlyList<MealEntryDto> result = await dispatcher.SendAsync<GetMealEntriesQuery, IReadOnlyList<MealEntryDto>>(
-            new GetMealEntriesQuery(userId, @params.From, @params.To), ct);
+            new GetMealEntriesQuery(personId, @params.From, @params.To), ct);
         return TypedResults.Ok(result);
     }
 
@@ -115,9 +115,9 @@ public static class MealEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         IReadOnlyList<DailyNutritionDto> result = await dispatcher.SendAsync<GetNutritionSummaryQuery, IReadOnlyList<DailyNutritionDto>>(
-            new GetNutritionSummaryQuery(userId, @params.From, @params.To), ct);
+            new GetNutritionSummaryQuery(personId, @params.From, @params.To), ct);
         return TypedResults.Ok(result);
     }
 
@@ -127,9 +127,9 @@ public static class MealEndpoints
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         IReadOnlyList<ShoppingListItemDto> result = await dispatcher.SendAsync<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>(
-            new GetShoppingListQuery(userId, @params.From, @params.To), ct);
+            new GetShoppingListQuery(personId, @params.From, @params.To, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.Ok(result);
     }
 
@@ -139,10 +139,10 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         var id = await dispatcher.SendAsync<CreateMealEntryCommand, Guid>(
             new CreateMealEntryCommand(
-                userId, request.Date, request.MealSlotId, request.RecipeId,
+                personId, request.Date, request.MealSlotId, request.RecipeId,
                 request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
         return TypedResults.Created($"/api/v1/meals/{id}", id);
     }
@@ -154,10 +154,10 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         await dispatcher.SendAsync(
             new UpdateMealEntryCommand(
-                id, userId, request.Date, request.MealSlotId, request.RecipeId,
+                id, personId, request.Date, request.MealSlotId, request.RecipeId,
                 request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
         return TypedResults.NoContent();
     }
@@ -168,8 +168,8 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
-        await dispatcher.SendAsync(new DeleteMealEntryCommand(id, userId), ct);
+        var personId = GetPersonId(user);
+        await dispatcher.SendAsync(new DeleteMealEntryCommand(id, personId), ct);
         return TypedResults.NoContent();
     }
 
@@ -179,8 +179,8 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
-        await dispatcher.SendAsync(new CompleteMealEntryCommand(id, userId), ct);
+        var personId = GetPersonId(user);
+        await dispatcher.SendAsync(new CompleteMealEntryCommand(id, personId), ct);
         return TypedResults.NoContent();
     }
 
@@ -191,13 +191,13 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         var products = request.ActualProducts
             .Select(p => new ActualProductInput(p.ProductId, p.Amount, p.Unit))
             .ToList();
 
         await dispatcher.SendAsync(
-            new OverrideMealEntryCommand(id, userId, request.ActualRecipeId, products), ct);
+            new OverrideMealEntryCommand(id, personId, request.ActualRecipeId, products, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.NoContent();
     }
 
@@ -207,8 +207,8 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
-        await dispatcher.SendAsync(new ResetMealEntryCommand(id, userId), ct);
+        var personId = GetPersonId(user);
+        await dispatcher.SendAsync(new ResetMealEntryCommand(id, personId), ct);
         return TypedResults.NoContent();
     }
 
@@ -218,9 +218,9 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         BulkCompleteResult result = await dispatcher.SendAsync<BulkCompleteMealEntriesCommand, BulkCompleteResult>(
-            new BulkCompleteMealEntriesCommand(userId, request.Date), ct);
+            new BulkCompleteMealEntriesCommand(personId, request.Date), ct);
         return TypedResults.Ok(new BulkCompleteMealsResponse(result.Completed));
     }
 
@@ -230,9 +230,9 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         ValidationResultDto result = await dispatcher.SendAsync<ValidateImportCommand, ValidationResultDto>(
-            new ValidateImportCommand(request, userId), ct);
+            new ValidateImportCommand(request, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.Ok(result);
     }
 
@@ -242,16 +242,14 @@ public static class MealEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         ImportResultDto result = await dispatcher.SendAsync<ExecuteImportCommand, ImportResultDto>(
-            new ExecuteImportCommand(request, userId), ct);
+            new ExecuteImportCommand(request, PersonalDataClaims.GetAuthSubject(user), personId), ct);
         return TypedResults.Created("/api/v1/meals", result);
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

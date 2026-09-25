@@ -25,7 +25,7 @@ public sealed class CreateProfileCommandHandlerTests
     public async Task HandleAsync_WithValidCommand_AddsProfileAndCommits()
     {
         var command = new CreateProfileCommand(
-            "user-1",
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15),
             "Male",
             180m,
@@ -38,7 +38,7 @@ public sealed class CreateProfileCommandHandlerTests
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
             Arg.Is<UserProfile>(p =>
-                p.UserId == "user-1" &&
+                p.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") &&
                 p.HeightCm == 180m &&
                 p.CurrentWeightKg == 80m &&
                 p.CreatedAt == _clock.GetUtcNow().UtcDateTime),
@@ -50,13 +50,13 @@ public sealed class CreateProfileCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WithAllNullableFieldsNull_AddsProfileAndCommits()
     {
-        var command = new CreateProfileCommand("user-1", null, null, null, null, null, null);
+        var command = new CreateProfileCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, null, null, null);
 
         Guid id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         id.ShouldNotBe(Guid.Empty);
         await _repository.Received(1).AddAsync(
-            Arg.Is<UserProfile>(p => p.UserId == "user-1"),
+            Arg.Is<UserProfile>(p => p.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }

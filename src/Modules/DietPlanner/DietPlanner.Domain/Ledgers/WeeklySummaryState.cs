@@ -9,21 +9,22 @@ public sealed class WeeklySummaryState
     private WeeklySummaryState() { }
 
     /// <summary>Creates the row for a user the first time a summary is sent.</summary>
-    /// <param name="userId">Auth subject of the user; required.</param>
+    /// <param name="personId">Person identifier of the user; required.</param>
     /// <param name="lastSummaryAt">When the summary was sent, UTC.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
-    public static WeeklySummaryState Create(string userId, DateTime lastSummaryAt)
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
+    public static WeeklySummaryState Create(Guid personId, DateTime lastSummaryAt)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
         return new WeeklySummaryState
         {
-            UserId = userId,
+            PersonId = personId,
             LastWeeklySummaryAt = lastSummaryAt
         };
     }
 
-    /// <summary>Auth subject of the user; the key.</summary>
-    public string UserId { get; private init; } = default!;
+    /// <summary>Person identifier of the user; the key.</summary>
+    public Guid PersonId { get; private init; }
     /// <summary>When the last weekly summary was sent, UTC.</summary>
     public DateTime? LastWeeklySummaryAt { get; private set; }
 

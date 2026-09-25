@@ -28,15 +28,15 @@ public sealed class DeleteWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_DeletesEntryAndRecomputesProfileCurrentWeight()
     {
-        var entry = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 80m, TestClock.UtcNow);
-        var latestRemaining = WeightEntry.Create(WeightEntryId.New(), "user-1", Today.AddDays(-1), 81m, TestClock.UtcNow);
+        var entry = WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 80m, TestClock.UtcNow);
+        var latestRemaining = WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today.AddDays(-1), 81m, TestClock.UtcNow);
         _weightRepo.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
-        _weightRepo.GetLatestByUserAsync("user-1", entry.Id, Arg.Any<CancellationToken>())
+        _weightRepo.GetLatestByPersonAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entry.Id, Arg.Any<CancellationToken>())
             .Returns(latestRemaining);
-        var profile = UserProfile.Create(UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
+        var profile = UserProfile.Create(UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, 80m, null, null, TestClock.UtcNow);
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
 
-        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new DeleteWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entry.Id.Value), TestContext.Current.CancellationToken);
 
         _weightRepo.Received(1).Delete(entry);
         profile.CurrentWeightKg.ShouldBe(81m);
@@ -47,14 +47,14 @@ public sealed class DeleteWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenLastEntryDeleted_SetsProfileCurrentWeightToNull()
     {
-        var entry = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 80m, TestClock.UtcNow);
+        var entry = WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 80m, TestClock.UtcNow);
         _weightRepo.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
-        _weightRepo.GetLatestByUserAsync("user-1", entry.Id, Arg.Any<CancellationToken>())
+        _weightRepo.GetLatestByPersonAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entry.Id, Arg.Any<CancellationToken>())
             .Returns((WeightEntry?)null);
-        var profile = UserProfile.Create(UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
+        var profile = UserProfile.Create(UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, 80m, null, null, TestClock.UtcNow);
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
 
-        await _sut.HandleAsync(new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new DeleteWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entry.Id.Value), TestContext.Current.CancellationToken);
 
         profile.CurrentWeightKg.ShouldBeNull();
     }
@@ -68,7 +68,7 @@ public sealed class DeleteWeightEntryCommandHandlerTests
             .Returns((WeightEntry?)null);
 
         var act = () => _sut.HandleAsync(
-            new DeleteWeightEntryCommand("user-1", entryId), TestContext.Current.CancellationToken);
+            new DeleteWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entryId), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
     }
@@ -77,11 +77,11 @@ public sealed class DeleteWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenEntryBelongsToOtherUser_ThrowsNotFoundException()
     {
-        var entry = WeightEntry.Create(WeightEntryId.New(), "user-2", Today, 80m, TestClock.UtcNow);
+        var entry = WeightEntry.Create(WeightEntryId.New(), Guid.Parse("1e5f1a27-4c4e-5b84-b4dd-5227b40c755d"), Today, 80m, TestClock.UtcNow);
         _weightRepo.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         var act = () => _sut.HandleAsync(
-            new DeleteWeightEntryCommand("user-1", entry.Id.Value), TestContext.Current.CancellationToken);
+            new DeleteWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), entry.Id.Value), TestContext.Current.CancellationToken);
 
         await act.ShouldThrowAsync<NotFoundException>();
         _weightRepo.DidNotReceive().Delete(Arg.Any<WeightEntry>());

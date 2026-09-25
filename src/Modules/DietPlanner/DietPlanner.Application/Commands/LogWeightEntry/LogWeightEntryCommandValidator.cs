@@ -6,8 +6,8 @@ internal sealed class LogWeightEntryCommandValidator(TimeProvider clock) : IComm
 {
     public IEnumerable<ValidationError> Validate(LogWeightEntryCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.WeightKg <= 0 || command.WeightKg > 999)
             yield return new ValidationError(nameof(command.WeightKg), "WeightKg must be between 0 and 999.");

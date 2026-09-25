@@ -24,12 +24,12 @@ internal sealed class UpdateMealEntryCommandHandler : ICommandHandler<UpdateMeal
         var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.UserId != command.UserId)
+        if (entry.PersonId != command.PersonId)
             throw new DietPlannerDomainException("You can only update your own meal entries.");
 
         var slotId = MealSlotId.From(command.MealSlotId);
-        var schedule = await _scheduleRepository.GetByUserIdAsync(command.UserId, ct)
-            ?? throw new NotFoundException("MealScheduleConfig", command.UserId);
+        var schedule = await _scheduleRepository.GetByPersonIdAsync(command.PersonId, ct)
+            ?? throw new NotFoundException("MealScheduleConfig", command.PersonId);
 
         if (schedule.Slots.All(s => s.Id != slotId))
             throw new NotFoundException("MealSlot", command.MealSlotId);

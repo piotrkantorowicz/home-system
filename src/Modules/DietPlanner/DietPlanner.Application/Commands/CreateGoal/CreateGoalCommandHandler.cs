@@ -15,7 +15,7 @@ internal sealed class CreateGoalCommandHandler(
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var id = UserGoalId.New();
-        var goal = UserGoal.Create(id, command.UserId, now, command.DailyCalorieTarget,
+        var goal = UserGoal.Create(id, command.PersonId, now, command.DailyCalorieTarget,
             command.ProteinGrams, command.CarbsGrams, command.FatGrams, command.FiberGrams);
 
         await repository.AddAsync(goal, ct);

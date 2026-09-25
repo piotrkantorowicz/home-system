@@ -101,7 +101,7 @@ public sealed class GoalMilestoneEvaluatorTests
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
         var goal = UserGoal.Create(
-            UserGoalId.New(), userId, TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m,
+            UserGoalId.New(), TestAuthHandler.PersonIdFor(userId), TestClock.UtcNow, 2000, 150m, 250m, 70m, 30m,
             targetWeightKg: targetWeightKg);
         dbContext.UserGoals.Add(goal);
         await dbContext.SaveChangesAsync();

@@ -16,11 +16,11 @@ internal sealed class WaterReminderCandidateQueries(DietPlannerDbContext dbConte
             from settings in dbContext.DietReminderSettings.AsNoTracking()
             where settings.WaterRemindersEnabled
             join state in dbContext.WaterReminderStates.AsNoTracking()
-                on settings.UserId equals state.UserId into stateJoin
+                on settings.PersonId equals state.PersonId into stateJoin
             from state in stateJoin.DefaultIfEmpty()
             select new
             {
-                settings.UserId,
+                settings.PersonId,
                 settings.WaterReminderIntervalMinutes,
                 settings.WaterWindowStartUtc,
                 settings.WaterWindowEndUtc,
@@ -29,7 +29,7 @@ internal sealed class WaterReminderCandidateQueries(DietPlannerDbContext dbConte
 
         return rows
             .Select(r => new WaterReminderCandidate(
-                r.UserId,
+                r.PersonId,
                 DefaultLocale,
                 r.WaterReminderIntervalMinutes,
                 r.WaterWindowStartUtc,

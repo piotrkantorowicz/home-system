@@ -27,17 +27,17 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
 
     /// <summary>Creates a user's schedule with brand-new slots in the given order.</summary>
     /// <param name="id">Identifier for the new config.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="slots">Name and default time of each slot, in display order; 1 to 8 entries.</param>
     /// <exception cref="DietPlannerDomainException">The user id is blank, the slot count is out of range, or a slot name is blank.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static MealScheduleConfig Create(
         MealScheduleConfigId id,
-        string userId,
+        Guid personId,
         IReadOnlyList<(string Name, TimeOnly DefaultTime)> slots,
         DateTime now)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        if (personId == Guid.Empty)
             throw new DietPlannerDomainException("User ID is required.");
 
         ValidateSlotCount(slots.Count);
@@ -45,7 +45,7 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
         var config = new MealScheduleConfig
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             CreatedAt = now
         };
 
@@ -57,8 +57,8 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
         return config;
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Creation time, UTC.</summary>
     public DateTime CreatedAt { get; private set; }
     /// <summary>Time of the last <see cref="ApplyUpdate"/>, UTC; <see langword="null"/> if never changed.</summary>
@@ -91,7 +91,7 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
     /// removes slots that are absent from the upsert list.
     /// </summary>
     /// <param name="upserts">The desired slot list, in display order; 1 to 8 entries.</param>
-    /// <exception cref="DietPlannerDomainException">The slot count is out of range, an id does not belong to this schedule, or a slot name is blank.</exception>
+    /// <exception cref="DietPlannerDomainException">The slot count is out of range, an id does not belong to this schedule, or a slot name is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public void ApplyUpdate(IReadOnlyList<MealSlotUpsert> upserts, DateTime now)
     {

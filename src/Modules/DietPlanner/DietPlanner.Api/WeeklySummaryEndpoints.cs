@@ -43,14 +43,12 @@ public static class WeeklySummaryEndpoints
                 ["weekStart"] = ["'weekStart' must be on or before 'weekEnd'."]
             });
 
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         WeeklySummaryDto result = await dispatcher.SendAsync<GetWeeklySummaryQuery, WeeklySummaryDto>(
-            new GetWeeklySummaryQuery(userId, weekStart, weekEnd), ct);
+            new GetWeeklySummaryQuery(personId, weekStart, weekEnd), ct);
         return TypedResults.Ok(result);
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }

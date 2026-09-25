@@ -6,8 +6,8 @@ internal sealed class UpdateMealScheduleCommandValidator : ICommandValidator<Upd
 {
     public IEnumerable<ValidationError> Validate(UpdateMealScheduleCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.Slots.Count < 1)
             yield return new ValidationError(nameof(command.Slots), "At least 1 meal slot is required.");

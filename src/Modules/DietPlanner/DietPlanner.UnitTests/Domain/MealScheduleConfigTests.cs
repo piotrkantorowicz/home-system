@@ -23,10 +23,10 @@ public sealed class MealScheduleConfigTests
     {
         var id = MealScheduleConfigId.New();
 
-        MealScheduleConfig config = MealScheduleConfig.Create(id, "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
 
         config.Id.ShouldBe(id);
-        config.UserId.ShouldBe("user-1");
+        config.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         config.Slots.Count.ShouldBe(3);
         config.UpdatedAt.ShouldBeNull();
         config.CreatedAt.ShouldBe(TestClock.UtcNow);
@@ -36,7 +36,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void Create_WithValidData_SlotsHaveCorrectNamesAndTimes()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
 
         var slots = config.Slots.OrderBy(s => s.SortOrder).ToList();
         slots[0].Name.ShouldBe("Breakfast");
@@ -53,16 +53,16 @@ public sealed class MealScheduleConfigTests
             .Select(i => ($"Slot {i}", new TimeOnly(6 + i, 0)))
             .ToList();
 
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", slots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), slots, TestClock.UtcNow);
 
         config.Slots.Count.ShouldBe(8);
     }
 
     /// <summary>With null user id: <c>Create</c> throws domain exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsDomainException()
+    public void Create_WithMissingPersonId_ThrowsDomainException()
     {
-        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), null!, DefaultSlots, TestClock.UtcNow);
+        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Empty, DefaultSlots, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>();
     }
@@ -71,7 +71,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void Create_WithZeroSlots_ThrowsDomainException()
     {
-        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", [], TestClock.UtcNow);
+        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), [], TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("at least 1 slot");
     }
@@ -84,7 +84,7 @@ public sealed class MealScheduleConfigTests
             .Select(i => ($"Slot {i}", new TimeOnly(6 + i, 0)))
             .ToList();
 
-        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", slots, TestClock.UtcNow);
+        var act = () => MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), slots, TestClock.UtcNow);
 
         act.ShouldThrow<DietPlannerDomainException>().Message.ShouldContain("more than 8 slots");
     }
@@ -93,7 +93,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_KeepingSameSlots_PreservesIdsAndUpdatesFields()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
         var existing = config.Slots.OrderBy(s => s.SortOrder).ToList();
 
         config.ApplyUpdate(Upserts(
@@ -112,7 +112,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_AddingNewSlot_AssignsFreshId()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
         var existing = config.Slots.OrderBy(s => s.SortOrder).ToList();
 
         config.ApplyUpdate(Upserts(
@@ -131,7 +131,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_OmittingSlot_RemovesIt()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
         var existing = config.Slots.OrderBy(s => s.SortOrder).ToList();
 
         config.ApplyUpdate(Upserts(
@@ -146,7 +146,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ComputeRemovedSlots_ReturnsOnlyAbsentIds()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
         var existing = config.Slots.OrderBy(s => s.SortOrder).ToList();
 
         var removed = config.ComputeRemovedSlots(Upserts(
@@ -161,7 +161,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_WithUnknownId_ThrowsDomainException()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
 
         var act = () => config.ApplyUpdate(Upserts((MealSlotId.New(), "Bogus", new TimeOnly(8, 0))), TestClock.UtcNow);
 
@@ -172,7 +172,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_SetsUpdatedAt()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
 
         config.ApplyUpdate(Upserts((null, "Single", new TimeOnly(8, 0))), TestClock.UtcNow);
 
@@ -183,7 +183,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_WithZeroSlots_ThrowsDomainException()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
 
         var act = () => config.ApplyUpdate([], TestClock.UtcNow);
 
@@ -194,7 +194,7 @@ public sealed class MealScheduleConfigTests
     [Fact]
     public void ApplyUpdate_WithNineSlots_ThrowsDomainException()
     {
-        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), "user-1", DefaultSlots, TestClock.UtcNow);
+        MealScheduleConfig config = MealScheduleConfig.Create(MealScheduleConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), DefaultSlots, TestClock.UtcNow);
         var tooMany = Enumerable.Range(1, 9)
             .Select(i => new MealSlotUpsert(null, $"Slot {i}", new TimeOnly(6 + i, 0)))
             .ToList();

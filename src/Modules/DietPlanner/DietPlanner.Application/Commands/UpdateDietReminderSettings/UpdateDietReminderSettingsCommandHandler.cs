@@ -14,13 +14,13 @@ internal sealed class UpdateDietReminderSettingsCommandHandler(
     public async Task HandleAsync(UpdateDietReminderSettingsCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
-        var settings = await repository.GetByUserIdAsync(command.UserId, ct);
+        var settings = await repository.GetByPersonIdAsync(command.PersonId, ct);
 
         if (settings is null)
         {
             settings = DietReminderSettings.Create(
                 DietReminderSettingsId.New(),
-                command.UserId,
+                command.PersonId,
                 now,
                 command.MealRemindersEnabled,
                 command.MealReminderLeadTimeMinutes,

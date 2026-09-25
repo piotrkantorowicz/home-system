@@ -4,7 +4,7 @@ namespace DietPlanner.Application.Queries.GetProfile;
 /// A user's body profile; every field may be unknown.
 /// </summary>
 /// <param name="Id">Identifier of the profile.</param>
-/// <param name="UserId">Auth subject of the owner.</param>
+/// <param name="PersonId">Person identifier of the owner.</param>
 /// <param name="DateOfBirth">Date of birth, if provided.</param>
 /// <param name="Gender"><c>Male</c>, <c>Female</c> or <c>Other</c>, if provided.</param>
 /// <param name="HeightCm">Height in centimetres, if provided.</param>
@@ -15,7 +15,7 @@ namespace DietPlanner.Application.Queries.GetProfile;
 /// <param name="UpdatedAt">Time of the last change, UTC; <see langword="null"/> if never changed.</param>
 public sealed record UserProfileDto(
     Guid Id,
-    string UserId,
+    Guid PersonId,
     DateOnly? DateOfBirth,
     string? Gender,
     decimal? HeightCm,

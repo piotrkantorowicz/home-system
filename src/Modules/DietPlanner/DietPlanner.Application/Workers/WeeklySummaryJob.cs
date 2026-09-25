@@ -3,6 +3,7 @@ namespace DietPlanner.Application.Workers;
 using DietPlanner.Contracts.Events;
 using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.Repositories;
+using Household.Contracts.Interfaces;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Messaging;
 
@@ -10,7 +11,8 @@ internal sealed class WeeklySummaryJob(
     IWeeklySummaryCandidateQueries queries,
     IWeeklySummaryStateRepository stateRepo,
     IIntegrationEventBus bus,
-    IUnitOfWork unitOfWork) : IDietReminderJob
+    IUnitOfWork unitOfWork,
+    IHouseholdQueryService persons) : IDietReminderJob
 {
     public string Name => "WeeklySummaryJob";
 
@@ -35,18 +37,21 @@ internal sealed class WeeklySummaryJob(
             var weekEnd = DateOnly.FromDateTime(nowUtc).AddDays(-1);
             var weekStart = weekEnd.AddDays(-6);
 
-            WeeklyStats stats = await queries.GetStatsAsync(c.UserId, weekStart, weekEnd, ct);
+            WeeklyStats stats = await queries.GetStatsAsync(c.PersonId, weekStart, weekEnd, ct);
 
-            var existing = await stateRepo.GetByUserIdAsync(c.UserId, ct);
+            string? authSubject = await persons.GetAuthSubjectForPersonAsync(c.PersonId, ct);
+            if (authSubject is null) continue;
+
+            var existing = await stateRepo.GetByPersonIdAsync(c.PersonId, ct);
             if (existing is null)
-                await stateRepo.AddAsync(WeeklySummaryState.Create(c.UserId, nowUtc), ct);
+                await stateRepo.AddAsync(WeeklySummaryState.Create(c.PersonId, nowUtc), ct);
             else
                 existing.UpdateLastSummaryAt(nowUtc);
 
             await bus.PublishAsync(new WeeklySummaryDueIntegrationEvent(
                 EventId: Guid.CreateVersion7(),
                 OccurredAt: nowUtc,
-                UserId: c.UserId,
+                UserId: authSubject,
                 Locale: c.Locale,
                 WeekStart: weekStart,
                 WeekEnd: weekEnd,

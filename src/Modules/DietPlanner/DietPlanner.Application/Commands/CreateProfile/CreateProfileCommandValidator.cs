@@ -7,8 +7,8 @@ internal sealed class CreateProfileCommandValidator : ICommandValidator<CreatePr
 {
     public IEnumerable<ValidationError> Validate(CreateProfileCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-            yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+        if (command.PersonId == Guid.Empty)
+            yield return new ValidationError(nameof(command.PersonId), "PersonId is required.");
 
         if (command.Gender is not null && !Enum.TryParse<Gender>(command.Gender, ignoreCase: true, out _))
             yield return new ValidationError(nameof(command.Gender), "Gender must be a valid value (Male, Female, Other).");

@@ -20,7 +20,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// 60 min between 06:00 and 22:00 UTC; weekly summary Sunday 08:00 UTC; everything enabled.
     /// </summary>
     /// <param name="id">Identifier for the new settings.</param>
-    /// <param name="userId">Auth subject of the owner; required.</param>
+    /// <param name="personId">Person identifier of the owner; required.</param>
     /// <param name="mealRemindersEnabled">Whether "meal coming up" and "meal missed" notifications fire.</param>
     /// <param name="mealReminderLeadTimeMinutes">Minutes before the planned time to remind; positive.</param>
     /// <param name="mealMissedGraceMinutes">Minutes after the planned time before a meal counts as missed; positive.</param>
@@ -32,12 +32,12 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// <param name="weeklySummaryDayOfWeekUtc">UTC weekday the summary is sent on.</param>
     /// <param name="weeklySummaryTimeOfDayUtc">UTC time of day the summary is sent at; 08:00 if omitted.</param>
     /// <param name="goalAlertsEnabled">Whether goal milestone notifications fire.</param>
-    /// <exception cref="ArgumentException"><paramref name="userId"/> is blank.</exception>
+    /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <exception cref="DietPlannerDomainException">A minute value is not positive or the water window is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
     public static DietReminderSettings Create(
         DietReminderSettingsId id,
-        string userId,
+        Guid personId,
         DateTime now,
         bool mealRemindersEnabled = true,
         int mealReminderLeadTimeMinutes = 15,
@@ -51,7 +51,8 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         TimeOnly? weeklySummaryTimeOfDayUtc = null,
         bool goalAlertsEnabled = true)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        if (personId == Guid.Empty)
+            throw new ArgumentException("PersonId is required.", nameof(personId));
 
         var startUtc = waterWindowStartUtc ?? new TimeOnly(6, 0);
         var endUtc = waterWindowEndUtc ?? new TimeOnly(22, 0);
@@ -67,7 +68,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         return new DietReminderSettings
         {
             Id = id,
-            UserId = userId,
+            PersonId = personId,
             MealRemindersEnabled = mealRemindersEnabled,
             MealReminderLeadTimeMinutes = mealReminderLeadTimeMinutes,
             MealMissedGraceMinutes = mealMissedGraceMinutes,
@@ -83,8 +84,8 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         };
     }
 
-    /// <summary>Auth subject of the owner.</summary>
-    public string UserId { get; private set; } = default!;
+    /// <summary>Person identifier of the owner.</summary>
+    public Guid PersonId { get; private set; }
     /// <summary>Whether "meal coming up" and "meal missed" notifications fire.</summary>
     public bool MealRemindersEnabled { get; private set; }
     /// <summary>Minutes before the planned time the reminder is sent.</summary>

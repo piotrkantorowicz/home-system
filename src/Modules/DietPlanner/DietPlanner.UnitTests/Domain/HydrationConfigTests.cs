@@ -12,10 +12,10 @@ public sealed class HydrationConfigTests
     {
         var id = HydrationConfigId.New();
 
-        var config = HydrationConfig.Create(id, "user-1", TestClock.UtcNow);
+        var config = HydrationConfig.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
 
         config.Id.ShouldBe(id);
-        config.UserId.ShouldBe("user-1");
+        config.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         config.DailyWaterTargetMl.ShouldBe(2500);
         config.GlassSizeMl.ShouldBe(250);
         config.TrackWaterIntake.ShouldBeTrue();
@@ -25,7 +25,7 @@ public sealed class HydrationConfigTests
     [Fact]
     public void Create_WithCustomValues_CreatesConfig()
     {
-        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1", TestClock.UtcNow, 3000, 300, false);
+        var config = HydrationConfig.Create(HydrationConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow, 3000, 300, false);
 
         config.DailyWaterTargetMl.ShouldBe(3000);
         config.GlassSizeMl.ShouldBe(300);
@@ -34,9 +34,9 @@ public sealed class HydrationConfigTests
 
     /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithMissingPersonId_ThrowsArgumentException()
     {
-        var act = () => HydrationConfig.Create(HydrationConfigId.New(), null!, TestClock.UtcNow);
+        var act = () => HydrationConfig.Create(HydrationConfigId.New(), Guid.Empty, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -45,7 +45,7 @@ public sealed class HydrationConfigTests
     [Fact]
     public void Update_WithNewValues_UpdatesConfig()
     {
-        var config = HydrationConfig.Create(HydrationConfigId.New(), "user-1", TestClock.UtcNow);
+        var config = HydrationConfig.Create(HydrationConfigId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), TestClock.UtcNow);
 
         config.Update(3000, 300, false, TestClock.UtcNow);
 

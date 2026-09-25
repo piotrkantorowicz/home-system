@@ -24,24 +24,24 @@ public sealed class LogWeightEntryCommandHandlerTests
     public LogWeightEntryCommandHandlerTests()
         => _sut = new LogWeightEntryCommandHandler(_weightRepo, _profileRepo, _unitOfWork, _clock);
 
-    private static UserProfile CreateProfile(string userId, decimal? currentWeight = 80m)
-        => UserProfile.Create(UserProfileId.New(), userId, null, null, null, currentWeight, null, null, TestClock.UtcNow);
+    private static UserProfile CreateProfile(Guid personId, decimal? currentWeight = 80m)
+        => UserProfile.Create(UserProfileId.New(), personId, null, null, null, currentWeight, null, null, TestClock.UtcNow);
 
     /// <summary>When no existing entry: <c>HandleAsync</c> creates new entry and updates profile.</summary>
     [Fact]
     public async Task HandleAsync_WhenNoExistingEntry_CreatesNewEntryAndUpdatesProfile()
     {
-        var command = new LogWeightEntryCommand("user-1", Today, 75m);
-        _weightRepo.GetByUserAndDateAsync("user-1", Today, Arg.Any<CancellationToken>())
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 75m);
+        _weightRepo.GetByPersonAndDateAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, Arg.Any<CancellationToken>())
             .Returns((WeightEntry?)null);
-        var profile = CreateProfile("user-1");
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
+        var profile = CreateProfile(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
 
         LogWeightEntryResult result = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         result.Created.ShouldBeTrue();
         await _weightRepo.Received(1).AddAsync(
-            Arg.Is<WeightEntry>(e => e.UserId == "user-1" && e.Date == Today && e.WeightKg == 75m),
+            Arg.Is<WeightEntry>(e => e.PersonId == Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") && e.Date == Today && e.WeightKg == 75m),
             Arg.Any<CancellationToken>());
         profile.CurrentWeightKg.ShouldBe(75m);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -51,12 +51,12 @@ public sealed class LogWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenEntryForDateExists_UpdatesExistingEntry()
     {
-        var existing = WeightEntry.Create(WeightEntryId.New(), "user-1", Today, 80m, TestClock.UtcNow);
-        var command = new LogWeightEntryCommand("user-1", Today, 79m);
-        _weightRepo.GetByUserAndDateAsync("user-1", Today, Arg.Any<CancellationToken>())
+        var existing = WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 80m, TestClock.UtcNow);
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 79m);
+        _weightRepo.GetByPersonAndDateAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, Arg.Any<CancellationToken>())
             .Returns(existing);
-        var profile = CreateProfile("user-1");
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
+        var profile = CreateProfile(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
 
         LogWeightEntryResult result = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -73,11 +73,11 @@ public sealed class LogWeightEntryCommandHandlerTests
     public async Task HandleAsync_AlwaysUpdatesProfileCurrentWeight_EvenForRetroactiveEntries()
     {
         var pastDate = Today.AddDays(-30);
-        var command = new LogWeightEntryCommand("user-1", pastDate, 90m);
-        _weightRepo.GetByUserAndDateAsync("user-1", pastDate, Arg.Any<CancellationToken>())
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), pastDate, 90m);
+        _weightRepo.GetByPersonAndDateAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), pastDate, Arg.Any<CancellationToken>())
             .Returns((WeightEntry?)null);
-        var profile = CreateProfile("user-1", currentWeight: 80m);
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>()).Returns(profile);
+        var profile = CreateProfile(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), currentWeight: 80m);
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -88,10 +88,10 @@ public sealed class LogWeightEntryCommandHandlerTests
     [Fact]
     public async Task HandleAsync_WhenProfileMissing_ThrowsNotFoundException()
     {
-        var command = new LogWeightEntryCommand("user-1", Today, 75m);
-        _weightRepo.GetByUserAndDateAsync("user-1", Today, Arg.Any<CancellationToken>())
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 75m);
+        _weightRepo.GetByPersonAndDateAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, Arg.Any<CancellationToken>())
             .Returns((WeightEntry?)null);
-        _profileRepo.GetByUserIdAsync("user-1", Arg.Any<CancellationToken>())
+        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>())
             .Returns((UserProfile?)null);
 
         var act = () => _sut.HandleAsync(command, TestContext.Current.CancellationToken);
@@ -111,7 +111,7 @@ public sealed class LogWeightEntryCommandValidatorTests
     [Fact]
     public void Validate_WithValidCommand_ReturnsNoErrors()
     {
-        var command = new LogWeightEntryCommand("user-1", Today, 80m);
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, 80m);
 
         var errors = _sut.Validate(command).ToList();
 
@@ -120,13 +120,13 @@ public sealed class LogWeightEntryCommandValidatorTests
 
     /// <summary>With empty user id: <c>Validate</c> returns validation error.</summary>
     [Fact]
-    public void Validate_WithEmptyUserId_ReturnsValidationError()
+    public void Validate_WithEmptyPersonId_ReturnsValidationError()
     {
-        var command = new LogWeightEntryCommand("", Today, 80m);
+        var command = new LogWeightEntryCommand(Guid.Empty, Today, 80m);
 
         var errors = _sut.Validate(command).ToList();
 
-        errors.ShouldContain(e => e.PropertyName == nameof(command.UserId));
+        errors.ShouldContain(e => e.PropertyName == nameof(command.PersonId));
     }
 
     /// <summary>With invalid weight: <c>Validate</c> returns validation error.</summary>
@@ -136,7 +136,7 @@ public sealed class LogWeightEntryCommandValidatorTests
     [InlineData(1000)]
     public void Validate_WithInvalidWeight_ReturnsValidationError(decimal weight)
     {
-        var command = new LogWeightEntryCommand("user-1", Today, weight);
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, weight);
 
         var errors = _sut.Validate(command).ToList();
 
@@ -147,7 +147,7 @@ public sealed class LogWeightEntryCommandValidatorTests
     [Fact]
     public void Validate_WithFutureDate_ReturnsValidationError()
     {
-        var command = new LogWeightEntryCommand("user-1", Today.AddDays(1), 80m);
+        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today.AddDays(1), 80m);
 
         var errors = _sut.Validate(command).ToList();
 

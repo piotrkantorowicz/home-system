@@ -48,9 +48,9 @@ public static class WeightEntryEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         LogWeightEntryResult result = await dispatcher.SendAsync<LogWeightEntryCommand, LogWeightEntryResult>(
-            new LogWeightEntryCommand(userId, request.Date, request.WeightKg), ct);
+            new LogWeightEntryCommand(personId, request.Date, request.WeightKg), ct);
         return TypedResults.Created(
             $"/api/v1/weight-entries/{result.Id}",
             new LogWeightEntryResponse(result.Id, result.Created));
@@ -69,9 +69,9 @@ public static class WeightEntryEndpoints
                 ["from"] = ["'from' must be on or before 'to'."]
             });
 
-        var userId = GetUserId(user);
+        var personId = GetPersonId(user);
         IReadOnlyList<WeightEntryDto> result = await dispatcher.SendAsync<GetWeightEntriesQuery, IReadOnlyList<WeightEntryDto>>(
-            new GetWeightEntriesQuery(userId, from, to), ct);
+            new GetWeightEntriesQuery(personId, from, to), ct);
         return TypedResults.Ok(result);
     }
 
@@ -81,15 +81,13 @@ public static class WeightEntryEndpoints
         ICommandDispatcher dispatcher,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
-        await dispatcher.SendAsync(new DeleteWeightEntryCommand(userId, id), ct);
+        var personId = GetPersonId(user);
+        await dispatcher.SendAsync(new DeleteWeightEntryCommand(personId, id), ct);
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier)
-           ?? user.FindFirstValue("sub")
-           ?? throw new UnauthorizedAccessException("User ID not found in token");
+    private static Guid GetPersonId(ClaimsPrincipal user)
+        => PersonalDataClaims.GetPersonId(user);
 }
 
 /// <summary>

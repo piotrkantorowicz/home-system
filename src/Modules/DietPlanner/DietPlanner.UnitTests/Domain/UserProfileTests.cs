@@ -13,12 +13,12 @@ public sealed class UserProfileTests
         var id = UserProfileId.New();
 
         UserProfile profile = UserProfile.Create(
-            id, "user-1",
+            id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15), Gender.Male,
             180m, 80m, 75m, ActivityLevel.ModeratelyActive, TestClock.UtcNow);
 
         profile.Id.ShouldBe(id);
-        profile.UserId.ShouldBe("user-1");
+        profile.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         profile.DateOfBirth.ShouldBe(new DateOnly(1990, 5, 15));
         profile.Gender.ShouldBe(Gender.Male);
         profile.HeightCm.ShouldBe(180m);
@@ -34,10 +34,10 @@ public sealed class UserProfileTests
     {
         var id = UserProfileId.New();
 
-        UserProfile profile = UserProfile.Create(id, "user-1", null, null, null, null, null, null, TestClock.UtcNow);
+        UserProfile profile = UserProfile.Create(id, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, null, null, null, TestClock.UtcNow);
 
         profile.Id.ShouldBe(id);
-        profile.UserId.ShouldBe("user-1");
+        profile.PersonId.ShouldBe(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"));
         profile.DateOfBirth.ShouldBeNull();
         profile.Gender.ShouldBeNull();
         profile.HeightCm.ShouldBeNull();
@@ -48,18 +48,18 @@ public sealed class UserProfileTests
 
     /// <summary>With null user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithNullUserId_ThrowsArgumentException()
+    public void Create_WithMissingPersonId_ThrowsArgumentException()
     {
-        var act = () => UserProfile.Create(UserProfileId.New(), null!, null, null, null, null, null, null, TestClock.UtcNow);
+        var act = () => UserProfile.Create(UserProfileId.New(), Guid.Empty, null, null, null, null, null, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
 
     /// <summary>With empty user id: <c>Create</c> throws argument exception.</summary>
     [Fact]
-    public void Create_WithEmptyUserId_ThrowsArgumentException()
+    public void Create_WithEmptyPersonId_ThrowsArgumentException()
     {
-        var act = () => UserProfile.Create(UserProfileId.New(), string.Empty, null, null, null, null, null, null, TestClock.UtcNow);
+        var act = () => UserProfile.Create(UserProfileId.New(), Guid.Empty, null, null, null, null, null, null, TestClock.UtcNow);
 
         act.ShouldThrow<ArgumentException>();
     }
@@ -69,7 +69,7 @@ public sealed class UserProfileTests
     public void Update_WithNewValues_UpdatesProfile()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1",
+            UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15), Gender.Male,
             180m, 80m, 75m, ActivityLevel.Sedentary, TestClock.UtcNow);
 
@@ -90,7 +90,7 @@ public sealed class UserProfileTests
     public void UpdateCurrentWeight_WithValue_SetsWeightAndStampsUpdatedAt()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
+            UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, 80m, null, null, TestClock.UtcNow);
 
         profile.UpdateCurrentWeight(82.5m, TestClock.UtcNow);
 
@@ -103,7 +103,7 @@ public sealed class UserProfileTests
     public void UpdateCurrentWeight_WithNull_ClearsWeight()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1", null, null, null, 80m, null, null, TestClock.UtcNow);
+            UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), null, null, null, 80m, null, null, TestClock.UtcNow);
 
         profile.UpdateCurrentWeight(null, TestClock.UtcNow);
 
@@ -116,7 +116,7 @@ public sealed class UserProfileTests
     public void Update_WithNullValues_ClearsFields()
     {
         UserProfile profile = UserProfile.Create(
-            UserProfileId.New(), "user-1",
+            UserProfileId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             new DateOnly(1990, 5, 15), Gender.Male,
             180m, 80m, 75m, ActivityLevel.LightlyActive, TestClock.UtcNow);
 

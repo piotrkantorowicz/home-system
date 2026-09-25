@@ -16,14 +16,13 @@ internal sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserPr
             .HasConversion(id => id.Value, value => UserProfileId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
-        builder.HasIndex(x => x.UserId)
+        builder.HasIndex(x => x.PersonId)
             .IsUnique()
-            .HasDatabaseName("idx_user_profiles_user");
+            .HasDatabaseName("idx_user_profiles_person");
 
         builder.Property(x => x.DateOfBirth).HasColumnName("date_of_birth");
 

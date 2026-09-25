@@ -16,10 +16,9 @@ internal sealed class WeightEntryConfiguration : IEntityTypeConfiguration<Weight
             .HasConversion(id => id.Value, value => WeightEntryId.From(value))
             .HasColumnName("id");
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.PersonId)
             .IsRequired()
-            .HasMaxLength(255)
-            .HasColumnName("user_id");
+            .HasColumnName("person_id");
 
         builder.Property(x => x.Date).HasColumnName("date");
 
@@ -30,8 +29,8 @@ internal sealed class WeightEntryConfiguration : IEntityTypeConfiguration<Weight
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
 
-        builder.HasIndex(x => new { x.UserId, x.Date })
+        builder.HasIndex(x => new { x.PersonId, x.Date })
             .IsUnique()
-            .HasDatabaseName("idx_weight_entries_user_date");
+            .HasDatabaseName("idx_weight_entries_person_date");
     }
 }
