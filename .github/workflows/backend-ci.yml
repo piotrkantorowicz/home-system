@@ -16,9 +16,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Required status check must always report, so the workflow always triggers and
-      # this step decides — instead of skipping the whole workflow via `on.paths`,
-      # which leaves a required check stuck pending forever on unrelated PRs.
+      # dorny/paths-filter needs the repo checked out (it shells out to local git for
+      # push events) — checkout always runs first, unconditionally, then the filter
+      # decides whether the rest of the job does real work. Required status check must
+      # always report, so the workflow always triggers instead of being skipped via
+      # `on.paths`, which leaves a required check stuck pending forever on unrelated PRs.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
       - name: Check for relevant changes
         id: filter
         uses: dorny/paths-filter@v3
@@ -33,9 +39,6 @@ jobs:
               - 'HomeSystem.slnx'
               - '.editorconfig'
               - '.github/workflows/backend-ci.yml'
-
-      - uses: actions/checkout@v7
-        if: steps.filter.outputs.relevant == 'true'
 
       - name: Setup .NET 10
         if: steps.filter.outputs.relevant == 'true'
