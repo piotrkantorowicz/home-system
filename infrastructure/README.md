@@ -6,8 +6,8 @@ Docker Compose setup for shared services used across all home-system modules.
 
 | Service | Image | Port | Profile |
 |---|---|---|---|
-| Authentik (server) | `goauthentik/server:2025.2.4` | 9000 (HTTP), 9443 (HTTPS) | always |
-| Authentik (worker) | `goauthentik/server:2025.2.4` | — | always |
+| Authentik (server) | `goauthentik/server:2025.2.3` | 9000 (HTTP), 9443 (HTTPS) | always |
+| Authentik (worker) | `goauthentik/server:2025.2.3` | — | always |
 | Authentik DB | `postgres:16-alpine` | internal | always |
 | Redis | `redis:7-alpine` | internal | always |
 | Diet Planner DB | `postgres:16-alpine` | 5432 | `diet-planner` |
