@@ -271,6 +271,7 @@
   "shopping_list": {
     "title": "Lista Zakupów",
     "subtitle": "Zagregowane składniki z zaplanowanych posiłków — modyfikacje są ignorowane.",
+    "shared_with": "Udostępniona: {{household}}",
     "from": "Od",
     "to": "Do",
     "apply": "Zastosuj",
