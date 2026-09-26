@@ -57,7 +57,9 @@ navigation contracts hold.
 
 - Today hero empty-state (no goals configured) — the "Set goals" CTA
 - Macro-bar values / progress against goal
-- Next up card meal completion ("Mark eaten") + optimistic toast
+- Next up card meal completion and undo have journey coverage in
+  `redesign-v2.spec.ts`; optimistic toast behavior remains uncovered.
 - Water card's own glass-row add/remove controls (hydration page logging and Water card total are covered in [hydration](hydration.md))
 - This week review bar chart values
-- Mobile layout
+- Other mobile layout states beyond the responsive Today smoke in
+  `redesign-v2.spec.ts`

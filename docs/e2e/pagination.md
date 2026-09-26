@@ -50,8 +50,6 @@ List pagination on Products and Recipes presents the standard four page sizes, d
 
 - Next button enabled-when-more-pages, disabled-when-last-page
 - Clicking Next / Previous and asserting page-N data
-- Jump-to-last-page or page-number input
-- Page indicator text ("Page 1 of N")
 - URL-state preservation across reloads (`?page=2&pageSize=10`)
 - Calendar / nutrition pagination (Nutrition has its own pagination tested in [nutrition](nutrition.md))
 - Empty-results state at page > 1 after a delete

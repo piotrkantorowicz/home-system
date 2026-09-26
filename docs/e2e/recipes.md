@@ -77,6 +77,7 @@ Recipes CRUD works end-to-end with computed nutrition per serving and ingredient
 
 - Ingredient amount edge cases (zero, very large)
 - Prep-time validation (out-of-range values)
-- Dietary tags / categories
+- `detail-improvements.spec.ts` exercises the detail-page scaling control;
+  exact scaling math remains a unit/component-test concern
 - Adding/removing ingredients on edit
 - Search by ingredient name (not just recipe name)

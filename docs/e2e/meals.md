@@ -61,7 +61,6 @@ Calendar CRUD, week/day navigation, meal status actions, and consumed intake wor
 
 ## Gaps
 
-- Drag-and-drop between slots (no UI currently offers this action)
 - Notes round-trip verification
 - Servings value read-back after edit
 - Mobile layout, keyboard nav

@@ -83,8 +83,6 @@ per-day labels.
 
 ## Gaps
 
-- Custom date ranges (removed — presets only now)
 - The chart's dashed target line / bar heights
 - Macro-split percentages
-- CSV export, week-over-week comparison, column sorting
 - Mobile layout

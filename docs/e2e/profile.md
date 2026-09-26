@@ -70,7 +70,5 @@ The body-stats form persists biometrics correctly, surfaces a sensible dirty/sav
 - Client-side validation for out-of-range height / weight (current min / max not exercised)
 - Gender / activity-level dropdown coverage beyond the two values used by the suite
 - Date-of-birth keyboard input (the POM uses the calendar popover only; year-jump UX is covered, but typed entry is not)
-- Profile delete
-- Profile export
 - Server-side validation errors (e.g., 400 from the API)
 - Error toast when the save mutation fails

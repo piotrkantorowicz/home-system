@@ -1,17 +1,16 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `e2e/` covers **90 tests across 15 spec
+The Playwright end-to-end suite at `e2e/` covers **94 tests across 16 spec
 files**, plus the auth setup (4 worker logins). It runs against a real backend,
 real frontend, and real Authentik; the two `notifications/` specs are fully
 route-mocked, and a few diet-planner tests mock one endpoint to force a
 deterministic branch (see per-spec docs).
 
-> **Audited against the #208 UI redesign (2026-09).** The redesign moved,
-> restructured, or removed a lot of what the suite targeted — see
-> [Redesign impact & findings](#redesign-impact--findings) below. All specs
-> and POMs in this doc reflect the post-redesign app.
+> **Audited against the #208 UI redesign (2026-09).** See
+> [Redesign impact & findings](#redesign-impact--findings) for the resulting
+> behavior and remaining product decisions.
 
-This directory is the human-readable reference. Each spec has its own page below; this README is the hub for cross-cutting concerns and discovery.
+This README is the hub for cross-cutting concerns and spec discovery. Linked specs have detailed pages below.
 
 ---
 
@@ -20,6 +19,11 @@ This directory is the human-readable reference. Each spec has its own page below
 | Spec | What it covers | Tests |
 |---|---|---|
 | [dashboard](dashboard.md) | Today hero + quick actions on the redesigned dashboard | 5 |
+| [navigation](navigation.md) | Desktop module switch, palette, root redirect, mobile tabs, keyboard, Polish language | 4 |
+| `detail-improvements.spec.ts` | Product nutrition, recipe scaling, planning, Today navigation | 1 |
+| `redesign-v2.spec.ts` | Meal completion/undo and responsive Today/calendar smoke | 1 |
+| `logout.spec.ts` | Real OIDC logout and token revocation | 1 |
+| `household/household-invite.spec.ts` | Invitation accept/decline, access gate, shared shopping list | 3 |
 | [import](import.md) | 2-step import wizard end-to-end | 5 |
 | [meals](meals.md) | WeekGrid calendar CRUD and week navigation | 6 |
 | [pagination](pagination.md) | List pagination on Products and Recipes | 8 |
@@ -41,10 +45,10 @@ This directory is the human-readable reference. Each spec has its own page below
 | Concern | Choice |
 |---|---|
 | Framework | `@playwright/test` (Chromium only) |
-| Test directory | `e2e/diet-planner/` + `e2e/notifications/` (`testDir: '.'`) |
+| Test directory | `e2e/diet-planner/`, `e2e/household/`, `e2e/notifications/` (`testDir: '.'`) |
 | Page objects | `pages/` — POM per page, plus `profile-hub.helper.ts` for shared section navigation |
 | Fixtures | `fixtures/auth.fixture.ts` — extends `test` with OIDC token refresh and per-worker `storageState` resolution |
-| Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`), password sourced from `TEST_USER_PASSWORD` in `e2e/.env` (must match `E2E_USER_PASSWORD` in `infrastructure/.env`). Per-worker overrides available via `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` |
+| Auth | Real Authentik (`http://localhost:9000`) — one user per worker (`E2eWorker0`..`E2eWorker3`) plus a reserved invitee. Password sourced from `TEST_USER_PASSWORD` in `e2e/.env` (must match `E2E_USER_PASSWORD` in `infrastructure/.env`). Per-worker overrides available via `TEST_USER_EMAIL_<n>` / `TEST_USER_PASSWORD_<n>` |
 | Auth state | `playwright/.auth/user-${workerIndex}.json` — one file per worker, saved by `shared/auth.setup.ts`, refreshed per-test by the fixture |
 | Household seed | `shared/household-seed.ts` — after each worker logs in, `auth.setup.ts` ensures the user belongs to a household (`GET /api/households/me` → on 404 `POST /api/persons/me/sync` + `POST /api/households`). Without it `HouseholdRequired` redirects every module route to `/household`. Idempotent; the household is not purged by teardown |
 | Workers | `4` — each worker owns a distinct Authentik user so tests run in parallel without cross-worker data contention |
@@ -56,9 +60,9 @@ This directory is the human-readable reference. Each spec has its own page below
 
 ## Auth fixture behaviour
 
-Each worker runs as a dedicated Authentik user. `shared/auth.setup.ts` logs in all four users sequentially at the start of the suite and writes one storage-state file per worker (`playwright/.auth/user-0.json` … `user-3.json`). The auth fixture picks the right file via `testInfo.workerIndex` and overrides the default `storageState` fixture accordingly.
+Each worker runs as a dedicated Authentik user. `shared/auth.setup.ts` logs in all four worker users and one reserved invitee at the start of the suite, writing separate storage-state files. The auth fixture picks the worker file via `testInfo.parallelIndex` and overrides the default `storageState` fixture accordingly. Household invitation tests use the invitee state in a second browser context.
 
-Right after each login the setup project seeds a household for that user (see `shared/household-seed.ts`). The SPA's `HouseholdRequired` gate redirects household-less users to the onboarding page, so this must happen before any spec navigates. The household persists across runs — teardown only purges DietPlanner data.
+After each worker login, setup seeds a household for that user (see `shared/household-seed.ts`). The invitee stays household-free for invitation tests. The SPA's `HouseholdRequired` gate redirects household-less users to onboarding, so worker seeding must happen before ordinary specs navigate. Worker households persist across runs — teardown only purges DietPlanner data.
 
 Before each test the fixture tries to refresh the stored OIDC tokens via the refresh-token grant. On success it injects fresh tokens into `localStorage` before navigation (~200 ms). On failure (token revoked / Authentik restart), it falls back to a full interactive login through the Authentik UI and rewrites the worker's auth file for subsequent tests.
 
@@ -66,7 +70,7 @@ Before each test the fixture tries to refresh the stored OIDC tokens via the ref
 
 To run more (or fewer) workers:
 
-1. Add matching `E2eWorker<n>` entries to `infrastructure/authentik/blueprints/home-system.yaml`, bounce Authentik (`docker compose down && docker compose up -d`).
+1. Add matching `E2eWorker<n>` entries to `infrastructure/authentik/blueprints/home-system.yaml` and reprovision Authentik.
 2. Bump the `WORKER_COUNT` constant in `e2e/shared/auth.setup.ts`.
 3. Set `workers: <n>` in `e2e/playwright.config.ts`.
 
@@ -108,6 +112,7 @@ Most specs are independent and can run in any order. A few share state and must 
 | [recipes](recipes.md) | Edit and delete tests reuse the recipe created by the first test. |
 | [notification-preferences](notification-preferences.md) (`diet-reminder-settings.spec.ts`) | Every test writes the same per-user reminder-settings record — made `serial` during the audit. |
 | [weight-prediction](weight-prediction.md) | Every test writes the same per-user profile + goals record — `serial` + per-test profile seeding. |
+| `household/household-invite.spec.ts` | All tests use the reserved invitee and modify their household membership. |
 
 Cross-spec state: a `dailyCalorieTarget` goal configured by `nutrition.spec.ts`
 (and by `weight-prediction.spec.ts`) persists for the rest of the run (it's
@@ -121,11 +126,11 @@ user-level data). `weight-prediction.spec.ts`'s empty-state test route-mocks
 ### Prerequisites
 
 ```bash
-# 1. Backend infra (Authentik + Postgres for diet-planner module)
-cd infrastructure && docker compose --profile diet-planner up -d
+# 1. Backend infra (Authentik + module databases)
+cd infrastructure && docker compose --profile diet-planner --profile household --profile notifications up -d
 
-# 2. Backend API
-ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Apis/HomeSystem.REST
+# 2. Backend API (inject DB passwords from infrastructure/.env)
+# Follow $run-project --no-frontend, step 3
 
 # 3. (Optional — Playwright auto-starts it) Vite frontend
 cd src/ui && npm run dev
@@ -157,7 +162,6 @@ E2E_USER_PASSWORD=<shared password for E2eWorker0..E2eWorker3>
 **`e2e/.env`** (auto-loaded by `playwright.config.ts` via `dotenv`):
 
 ```env
-PLAYWRIGHT_BASE_URL=http://localhost:5173
 API_BASE_URL=http://localhost:5050
 TEST_USER_PASSWORD=<must match E2E_USER_PASSWORD above>
 # Optional per-worker overrides:
@@ -283,26 +287,29 @@ What the #208 audit changed, and what it surfaced.
 
 ## Known coverage gaps (cross-cutting)
 
+See [E2E coverage plan](coverage-plan.md) for ordered, testable slices and
+features that need product work before E2E coverage makes sense.
+
 `diet-planner/logout.spec.ts` covers real menu logout: access/refresh revocation,
 rejection of refresh-token reuse, cleared browser tokens, and Authentik's logout
 confirmation. Run with `npm test -- diet-planner/logout.spec.ts` from `e2e/`.
 
-Features that have no e2e coverage today:
+Areas still missing e2e coverage:
 
-- **Two-tier nav** — `ModuleRail` / `SectionPanel` grouping + collapse,
-  `ModuleSwitcher`, the ⌘K `CommandPalette`.
-- **`/` redirect logic** (`RootRedirect`) — 0 / 1 / many registered modules.
-- **Mobile** — `BottomTabBar`, narrow-viewport layouts, sidebar drawer.
-- **Dashboard cards' interactions** — Today hero goals CTA, Next up "Mark
-  eaten", Water card glass-row, This week chart.
-- **Calendar** — day view (`view: 'day'`), the meal-chip dropdown's other
-  actions (Mark done / Record actual / Revert / bulk-complete), drag-to-move.
-- **Weight-prediction** — the interactive calculator (removed; nothing to test).
+- **Root redirect** — 0/1 registered-module branches have unit coverage only;
+  e2e covers the last-visited branch.
+- **Mobile** — broader narrow-viewport layouts beyond navigation tabs.
+- **Dashboard cards' interactions** — Today hero goals CTA, Water card
+  glass-row, This week chart. Next up "Mark eaten" and undo have coverage in
+  `redesign-v2.spec.ts`.
+- **Calendar** — day view (`view: 'day'`) and the meal-chip dropdown's other
+  actions (Mark done / Record actual / Revert / bulk-complete).
 - **User profile dropdown** — language switcher and settings deep-links.
 - **Notification live-push** — real preferences and single/bulk inbox read now run against the backend in `notifications/real-inbox.spec.ts`; delivery to an already-open inbox remains uncovered. See [notifications](notifications.md).
 - **Authentication failure paths** — invalid credentials, locked account, password reset.
 - **i18n parity** — every text selector hard-codes English; no Polish coverage.
 - **Accessibility** — no keyboard-only flows, no screen-reader assertions, no axe checks.
-- **Visual regression** — `playwright/visual` baselines do not exist.
+- **Visual regression** — `redesign-v2.spec.ts` and `detail-improvements.spec.ts`
+  capture screenshots as artifacts, but no comparison baselines exist.
 
-Tracking issues for each cluster of gaps would belong in the same milestone as the relevant feature work.
+The coverage plan separates current journeys from removed or unimplemented features.
