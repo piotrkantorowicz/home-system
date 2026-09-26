@@ -273,3 +273,102 @@ export async function seedMealSchedule(
     await api.dispose();
   }
 }
+
+// ── Known nutrition totals ───────────────────────────────────────────────────
+
+export interface KnownNutritionTotals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+}
+
+/**
+ * Creates one product with round, easy-to-assert macros (`perServing`) and
+ * plans it as a meal on each given date — since the recipe is exactly 100 g
+ * of the product, `servings` scales a day's total linearly and predictably.
+ * Pick dates no other spec seeds meals on (e.g. well outside the current
+ * calendar week) so the day's total is exactly `perServing * servings`, not
+ * `perServing * servings` plus whatever else landed on that date.
+ */
+export async function seedKnownNutritionDays(
+  page: Page,
+  days: ReadonlyArray<{ date: string; servings: number }>,
+): Promise<KnownNutritionTotals> {
+  const perServing: KnownNutritionTotals = {
+    calories: 200,
+    protein: 20,
+    carbs: 25,
+    fat: 8,
+    fiber: 4,
+  };
+  await seedMealSchedule(page);
+
+  const api = await createApiContext(page);
+  try {
+    const schedule = await api.get('/api/v1/meal-schedule');
+    const { slots } = (await schedule.json()) as { slots: MealSlotDto[] };
+    const slotId = slots[0]?.id;
+    if (!slotId) {
+      throw new Error('seedKnownNutritionDays: no meal slot available');
+    }
+
+    const product = await api.post('/api/v1/products', {
+      data: {
+        name: `E2E Known Nutrition Product ${Date.now()}`,
+        calories: perServing.calories,
+        protein: perServing.protein,
+        carbs: perServing.carbs,
+        fat: perServing.fat,
+        fiber: perServing.fiber,
+        defaultUnit: 'g',
+        densityGramsPerMl: null,
+        gramPerPiece: null,
+      },
+    });
+    if (!product.ok()) {
+      throw new Error(`seedKnownNutritionDays: creating the product returned ${product.status()}`);
+    }
+    // Product/recipe creation returns the new id as a bare JSON string.
+    const productId = (await product.json()) as string;
+
+    const recipe = await api.post('/api/v1/recipes', {
+      data: {
+        name: `E2E Known Nutrition Recipe ${Date.now()}`,
+        description: null,
+        instructions: null,
+        servings: 1,
+        prepTimeMinutes: null,
+        ingredients: [{ productId, amount: 100, unit: 'g' }],
+      },
+    });
+    if (!recipe.ok()) {
+      throw new Error(`seedKnownNutritionDays: creating the recipe returned ${recipe.status()}`);
+    }
+    const recipeId = (await recipe.json()) as string;
+
+    for (const day of days) {
+      const meal = await api.post('/api/v1/meals', {
+        data: {
+          date: day.date,
+          mealSlotId: slotId,
+          recipeId,
+          servings: day.servings,
+          notes: null,
+          mealTime: null,
+          sequenceOrder: null,
+        },
+      });
+      if (!meal.ok()) {
+        throw new Error(
+          `seedKnownNutritionDays: planning the meal on ${day.date} returned ${meal.status()}`,
+        );
+      }
+    }
+
+    return perServing;
+  } finally {
+    await api.dispose();
+  }
+}

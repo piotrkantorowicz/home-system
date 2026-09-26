@@ -260,6 +260,7 @@
     "days_logged": "Days logged",
     "over_days": "Over-target days",
     "intake_vs_target": "Intake vs target",
+    "chart_bar_label": "{{date}}: {{kcal}} kcal",
     "macro_split": "Average macro split",
     "actual": "Actual",
     "target": "Target"

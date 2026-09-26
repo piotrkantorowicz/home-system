@@ -167,6 +167,11 @@ export default function NutritionSummary() {
                 return (
                   <div
                     key={date}
+                    role="img"
+                    aria-label={t('nutrition_page.chart_bar_label', {
+                      date,
+                      kcal: Math.round(kcal),
+                    })}
                     className={cn(
                       'flex-1 rounded-t-[5px]',
                       kcal === 0 && 'border-border-strong border border-dashed',
