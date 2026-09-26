@@ -2,6 +2,7 @@ import { format, addDays, startOfWeek } from 'date-fns';
 
 import { test, expect } from './fixtures';
 import { CalendarPage, ImportPage } from './pages';
+import { createApiContext } from './utils/seed';
 
 test.describe.configure({ mode: 'serial', timeout: 120000 });
 
@@ -25,6 +26,89 @@ test.describe('Diet Plan Import', () => {
     await importPage.continueButton.click();
 
     await expect(page.getByText(/invalid json/i)).toBeVisible();
+  });
+
+  test('uploaded JSON can be reviewed, backed out, and imported', async ({ page }) => {
+    const importPage = new ImportPage(page);
+    const suffix = String(Date.now());
+    const product = `File Product ${suffix}`;
+    const recipe = `File Recipe ${suffix}`;
+    const data = {
+      products: [{ name: product, caloriesPer100g: 180, unit: 'g' }],
+      recipes: [
+        {
+          name: recipe,
+          servings: 1,
+          ingredients: [{ product, amount: 100, unit: 'g' }],
+        },
+      ],
+      schedule: [
+        {
+          date: format(new Date(), 'yyyy-MM-dd'),
+          meals: [{ type: 'lunch', recipe, servings: 1 }],
+        },
+      ],
+    };
+
+    await importPage.goto();
+    await importPage.uploadJson(data);
+    await importPage.continueButton.click();
+    await expect(importPage.reviewDetected).toBeVisible();
+    await expect(importPage.importButton).toBeEnabled();
+    await importPage.previousButton.click();
+    await expect(importPage.jsonInput).toHaveValue(JSON.stringify(data));
+
+    const api = await createApiContext(page);
+    try {
+      const before = await api.get('/api/v1/products', { params: { Search: product } });
+      expect(before.ok()).toBe(true);
+      const beforeData = (await before.json()) as { items: { name: string }[] };
+      expect(beforeData.items.some((item) => item.name === product)).toBe(false);
+    } finally {
+      await api.dispose();
+    }
+
+    await importPage.continueButton.click();
+    await expect(importPage.reviewDetected).toBeVisible();
+    await importPage.importButton.click();
+    await expect(page).toHaveURL(/\/diet-planner\/calendar/);
+    await expect(new CalendarPage(page).mealChips(recipe).first()).toBeVisible();
+  });
+
+  test('row validation errors block import', async ({ page }) => {
+    const importPage = new ImportPage(page);
+    await importPage.goto();
+    await importPage.setJson({
+      products: [{ name: '', caloriesPer100g: 100, unit: 'g' }],
+      recipes: [{ name: 'Invalid recipe', ingredients: [{ product: '', amount: 100, unit: 'g' }] }],
+      schedule: [{ date: 'not-a-date', meals: [] }],
+    });
+    await importPage.continueButton.click();
+    await expect(importPage.reviewDetected).toBeVisible();
+    await expect(page.getByText("Can't import yet")).toBeVisible();
+    await expect(page.getByText('Product name is required.')).toBeVisible();
+    await expect(page.getByText(/has no product name/)).toBeVisible();
+    await expect(page.getByText(/not a valid date/)).toBeVisible();
+    await expect(importPage.importButton).toBeDisabled();
+  });
+
+  test('duplicate product warning allows review to continue', async ({ page }) => {
+    const importPage = new ImportPage(page);
+    const product = `Duplicate Product ${String(Date.now())}`;
+    await importPage.goto();
+    await importPage.setJson({
+      products: [
+        { name: product, caloriesPer100g: 100, unit: 'g' },
+        { name: product, caloriesPer100g: 120, unit: 'g' },
+      ],
+      recipes: [],
+      schedule: [{ date: format(new Date(), 'yyyy-MM-dd'), meals: [] }],
+    });
+    await importPage.continueButton.click();
+    await expect(importPage.reviewDetected).toBeVisible();
+    await expect(page.getByText(/1 warning\(s\)/)).toBeVisible();
+    await expect(page.getByText(/appears more than once/)).toBeVisible();
+    await expect(importPage.importButton).toBeEnabled();
   });
 
   test('continuing past step 1 auto-validates and shows a ready-to-import summary', async ({
