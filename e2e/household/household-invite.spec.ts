@@ -1,3 +1,4 @@
+import { tryRefreshTokens } from '../diet-planner/fixtures/auth.fixture';
 import { ProductsPage, RecipesPage } from '../diet-planner/pages';
 import { inviteeAuthStatePath, inviteeInvitationEmail } from '../shared/auth-paths';
 
@@ -18,6 +19,15 @@ import type { Browser } from '@playwright/test';
 // invitation and role describes never overlap either.
 test.describe.configure({ mode: 'serial' });
 
+/**
+ * A browser context signed in as the invitee. Access tokens live 5 minutes and this serial
+ * file outlives the one saved at setup, so refresh it first — as the worker fixture does.
+ */
+async function newInviteeContext(browser: Browser) {
+  await tryRefreshTokens(inviteeAuthStatePath());
+  return browser.newContext({ storageState: inviteeAuthStatePath() });
+}
+
 test.describe('Household invitations', () => {
   test('owner invites a member, they accept, and both see the shared shopping list', async ({
     page,
@@ -31,9 +41,7 @@ test.describe('Household invitations', () => {
     const ownerHousehold = new HouseholdPage(page);
     await ownerHousehold.goto();
 
-    const inviteeContext = await browser.newContext({
-      storageState: inviteeAuthStatePath(),
-    });
+    const inviteeContext = await newInviteeContext(browser);
     const inviteePage = await inviteeContext.newPage();
     const inviteeHousehold = new HouseholdPage(inviteePage);
     await inviteeHousehold.goto();
@@ -79,9 +87,7 @@ test.describe('Household invitations', () => {
     const ownerHousehold = new HouseholdPage(page);
     await ownerHousehold.goto();
 
-    const inviteeContext = await browser.newContext({
-      storageState: inviteeAuthStatePath(),
-    });
+    const inviteeContext = await newInviteeContext(browser);
     const inviteePage = await inviteeContext.newPage();
     const inviteeHousehold = new HouseholdPage(inviteePage);
     await inviteeHousehold.goto();
@@ -116,9 +122,7 @@ test.describe('Household invitations', () => {
     const ownerHousehold = new HouseholdPage(page);
     await ownerHousehold.goto();
 
-    const inviteeContext = await browser.newContext({
-      storageState: inviteeAuthStatePath(),
-    });
+    const inviteeContext = await newInviteeContext(browser);
     const inviteePage = await inviteeContext.newPage();
     const inviteeHousehold = new HouseholdPage(inviteePage);
     await inviteeHousehold.goto();
@@ -145,7 +149,7 @@ test.describe('Household invitations', () => {
 test.describe('Household roles', () => {
   /** Opens the invitee's household page — a same-origin document the API seed helpers need. */
   async function openInvitee(browser: Browser) {
-    const context = await browser.newContext({ storageState: inviteeAuthStatePath() });
+    const context = await newInviteeContext(browser);
     const page = await context.newPage();
     const household = new HouseholdPage(page);
     await household.goto();
@@ -254,7 +258,7 @@ test.describe('Library visibility', () => {
     await ownerRecipes.searchFor(privateRecipe);
     await expect(ownerRecipes.visibilityBadgeFor(privateRecipe, 'Private')).toBeVisible();
 
-    const inviteeContext = await browser.newContext({ storageState: inviteeAuthStatePath() });
+    const inviteeContext = await newInviteeContext(browser);
     const inviteePage = await inviteeContext.newPage();
     await new HouseholdPage(inviteePage).goto();
 
