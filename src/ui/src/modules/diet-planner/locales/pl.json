@@ -264,6 +264,7 @@
     "days_logged": "Dni zapisane",
     "over_days": "Dni ponad cel",
     "intake_vs_target": "Spożycie vs cel",
+    "chart_bar_label": "{{date}}: {{kcal}} kcal",
     "macro_split": "Średni podział makro",
     "actual": "Rzeczywiste",
     "target": "Cel"

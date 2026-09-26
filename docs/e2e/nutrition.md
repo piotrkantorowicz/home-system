@@ -1,7 +1,8 @@
 # nutrition.spec.ts — Nutrition Summary
 
-Two describes: **page structure** (3 tests, independent) and **with meal data**
-(9 tests, serial, `mode: 'serial'`, timeout 180000).
+Three describes: **page structure** (3 tests, independent), **with meal data**
+(9 tests, serial, `mode: 'serial'`, timeout 180000), and **known totals** (1
+test, independent — seeds its own isolated dates, no shared setup needed).
 
 **Purpose**: the nutrition summary page — range presets, metric tiles, the
 intake-vs-target chart, the macro split, and the paginated daily breakdown.
@@ -62,15 +63,27 @@ intake-vs-target chart, the macro split, and the paginated daily breakdown.
 - **pagination** — defaults to `25`; `setPageSize` updates the selector;
   Previous is disabled on page 1.
 
+## Tests — known totals
+
+- **`known completed meals show exact daily, chart, and average totals`** —
+  `seedKnownNutritionDays` (`utils/seed.ts`) plants one product/recipe with
+  round macros (200 kcal / 20 g protein / 25 g carbs / 8 g fat / 4 g fiber per
+  serving) on two dates 12-13 days ago, well outside any other spec's current-
+  week data. Asserts the exact daily-breakdown row for both dates, the
+  chart bar's accessible label (`role="img"`, `"<date>: <kcal> kcal"`) for
+  both, and the Avg-intake tile against the API's own aggregate over the
+  visible 30-day window (computed in the test, not hardcoded, since other
+  specs also log meals in that window).
+
 ## Acceptance
 
 The summary aggregates the selected preset range, reflects a configured calorie
-goal, and paginates the daily breakdown.
+goal, paginates the daily breakdown, and gives the intake chart accessible
+per-day labels.
 
 ## Gaps
 
 - Custom date ranges (removed — presets only now)
-- Specific aggregate values for known meal data
 - The chart's dashed target line / bar heights
 - Macro-split percentages
 - CSV export, week-over-week comparison, column sorting

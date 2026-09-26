@@ -88,10 +88,29 @@ export class NutritionPage extends BasePage {
   }
 
   async expectChartVisible() {
-    await expect(this.page.getByText(/intake vs\.? target/i)).toBeVisible({ timeout: 8000 });
+    await expect(this.page.getByText(/intake vs\.? target/i)).toBeVisible({
+      timeout: 8000,
+    });
   }
 
   async expectMacroSplitVisible() {
-    await expect(this.page.getByText(/macro split/i)).toBeVisible({ timeout: 8000 });
+    await expect(this.page.getByText(/macro split/i)).toBeVisible({
+      timeout: 8000,
+    });
+  }
+
+  /** One numeric cell of a day's row — column order matches `NutritionSummary.tsx`. */
+  dayCell(date: string, column: 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber'): Locator {
+    const index = { calories: 1, protein: 2, carbs: 3, fat: 4, fiber: 5 }[column];
+    return this.tableRows.filter({ hasText: date }).locator('span').nth(index);
+  }
+
+  /** The intake chart gives each day a `role="img"` bar labelled `"<date>: <kcal> kcal"`. */
+  chartBar(date: string, kcal: number): Locator {
+    return this.page.getByRole('img', { name: `${date}: ${kcal} kcal` });
+  }
+
+  tileValue(label: string): Locator {
+    return this.page.getByText(label, { exact: true }).locator('xpath=..').locator('> div').nth(1);
   }
 }

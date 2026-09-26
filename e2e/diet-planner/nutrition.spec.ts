@@ -1,6 +1,9 @@
+import { subDays, format } from 'date-fns';
+
 import { test, expect } from './fixtures';
 import { ImportPage, NutritionPage, gotoProfileSection } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
+import { createApiContext, seedKnownNutritionDays } from './utils/seed';
 
 // ── Structure tests (independent of meal data) ────────────────────────────────
 
@@ -30,7 +33,11 @@ test.describe('Nutrition Summary — page structure', () => {
     // presets are always "last N days ending today") — mock the response
     // instead of depending on this worker's shared meal data being absent.
     await page.route('**/api/v1/meals/nutrition-summary**', (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '[]',
+      }),
     );
 
     const nutritionPage = new NutritionPage(page);
@@ -152,5 +159,62 @@ test.describe('Nutrition Summary — with meal data', () => {
     await nutritionPage.goto();
 
     await expect(nutritionPage.previousButton).toBeDisabled();
+  });
+});
+
+// ── Known totals (isolated from the shared weekly plan) ─────────────────────
+
+test.describe('Nutrition Summary — known totals', () => {
+  test('known completed meals show exact daily, chart, and average totals', async ({ page }) => {
+    const nutritionPage = new NutritionPage(page);
+    // A fresh context starts on `about:blank`, an opaque origin that throws on
+    // any storage access — load a same-origin page before the API seed below
+    // reads the access token out of localStorage.
+    await nutritionPage.goto();
+
+    // Well outside the current calendar week, so no other spec's meals land
+    // on these dates — the day totals below are exactly `perServing * servings`.
+    const dayA = format(subDays(new Date(), 13), 'yyyy-MM-dd');
+    const dayB = format(subDays(new Date(), 12), 'yyyy-MM-dd');
+    const perServing = await seedKnownNutritionDays(page, [
+      { date: dayA, servings: 1 },
+      { date: dayB, servings: 2 },
+    ]);
+
+    await nutritionPage.goto();
+    await nutritionPage.selectRange('30');
+
+    await expect(nutritionPage.dayCell(dayA, 'calories')).toHaveText(String(perServing.calories));
+    await expect(nutritionPage.dayCell(dayA, 'protein')).toHaveText(perServing.protein.toFixed(1));
+    await expect(nutritionPage.dayCell(dayA, 'carbs')).toHaveText(perServing.carbs.toFixed(1));
+    await expect(nutritionPage.dayCell(dayA, 'fat')).toHaveText(perServing.fat.toFixed(1));
+    await expect(nutritionPage.dayCell(dayA, 'fiber')).toHaveText(perServing.fiber.toFixed(1));
+    await expect(nutritionPage.chartBar(dayA, perServing.calories)).toBeVisible();
+
+    const doubled = {
+      calories: perServing.calories * 2,
+      protein: perServing.protein * 2,
+      carbs: perServing.carbs * 2,
+      fat: perServing.fat * 2,
+      fiber: perServing.fiber * 2,
+    };
+    await expect(nutritionPage.dayCell(dayB, 'calories')).toHaveText(String(doubled.calories));
+    await expect(nutritionPage.dayCell(dayB, 'protein')).toHaveText(doubled.protein.toFixed(1));
+    await expect(nutritionPage.chartBar(dayB, doubled.calories)).toBeVisible();
+
+    // The average tile is checked against the API's own aggregate rather than
+    // a hardcoded guess — other specs on this worker also log meals within
+    // the visible 30-day window.
+    const api = await createApiContext(page);
+    const from = format(subDays(new Date(), 29), 'yyyy-MM-dd');
+    const to = format(new Date(), 'yyyy-MM-dd');
+    const summaryRes = await api.get('/api/v1/meals/nutrition-summary', { params: { from, to } });
+    const summary = (await summaryRes.json()) as { calories: number }[];
+    await api.dispose();
+
+    const logged = summary.filter((d) => d.calories > 0);
+    const expectedAvg = Math.round(logged.reduce((sum, d) => sum + d.calories, 0) / logged.length);
+
+    await expect(nutritionPage.tileValue('Avg intake')).toHaveText(String(expectedAvg));
   });
 });
