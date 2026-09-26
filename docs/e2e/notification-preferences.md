@@ -93,7 +93,7 @@ Notification preferences round-trip correctly. Dependent inputs (lead time, wate
 
 ## Gaps
 
-- Actual delivery of notifications (out of scope for UI tests — would need a notification service mock or real listener)
+- Reminder types beyond the real meal-missed delivery covered by `notifications/real-inbox.spec.ts` (see [notifications.md](notifications.md))
 - Localized lead-time labels (`5 min` vs `5 minut`)
 - Default-value display when no preferences exist server-side (`404 → defaults` path)
 - Error toast when `PUT` fails (e.g., 500)

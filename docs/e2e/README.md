@@ -299,7 +299,7 @@ Features that have no e2e coverage today:
   actions (Mark done / Record actual / Revert / bulk-complete), drag-to-move.
 - **Weight-prediction** — the interactive calculator (removed; nothing to test).
 - **User profile dropdown** — language switcher and settings deep-links.
-- **`notifications/` specs run fully mocked** — no real-backend inbox / channel path.
+- **Notification live-push** — real preferences and single/bulk inbox read now run against the backend in `notifications/real-inbox.spec.ts`; delivery to an already-open inbox remains uncovered. See [notifications](notifications.md).
 - **Authentication failure paths** — invalid credentials, locked account, password reset.
 - **i18n parity** — every text selector hard-codes English; no Polish coverage.
 - **Accessibility** — no keyboard-only flows, no screen-reader assertions, no axe checks.
