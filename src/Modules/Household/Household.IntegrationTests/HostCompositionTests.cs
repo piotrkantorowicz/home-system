@@ -1,5 +1,6 @@
 namespace Household.IntegrationTests;
 
+using global::Household.Contracts.Events;
 using global::Household.Contracts.Interfaces;
 using global::Household.Domain.Abstractions;
 using global::Household.Infrastructure.Persistence;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Messaging.Serialization;
 
 /// <summary>
 /// Proves the Household module composes into the real host without breaking DI —
@@ -41,5 +43,20 @@ public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixtur
         sp.GetService<IHouseholdQueryService>().ShouldNotBeNull();
         sp.GetServices<IClaimsTransformation>()
             .ShouldContain(t => t.GetType().Name == "HouseholdClaimsTransformation");
+    }
+
+    /// <summary>The host serializer accepts Household events, so the outbox can dispatch them (#416).</summary>
+    [Fact]
+    public void IntegrationEventSerializer_HouseholdEvent_RoundTrips()
+    {
+        var serializer = _factory.Services.GetRequiredService<IIntegrationEventSerializer>();
+        var @event = new HouseholdCreatedIntegrationEvent(
+            Guid.CreateVersion7(), new DateTime(2026, 9, 26, 12, 0, 0, DateTimeKind.Utc), Guid.CreateVersion7(), Guid.CreateVersion7());
+
+        // A non-generic, non-open type always has an assembly-qualified name.
+        var result = serializer.Deserialize(
+            serializer.Serialize(@event), typeof(HouseholdCreatedIntegrationEvent).AssemblyQualifiedName!);
+
+        result.ShouldBe(@event);
     }
 }

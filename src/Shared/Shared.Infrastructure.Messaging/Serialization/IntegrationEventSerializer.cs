@@ -34,7 +34,7 @@ public sealed class IntegrationEventSerializer : IIntegrationEventSerializer
 
     // Default allowlist used when registered via DI.
     private static readonly string[] DefaultAllowedPrefixes =
-        ["Shared.", "DietPlanner.Contracts", "Notifications.Contracts"];
+        ["Shared.", "DietPlanner.Contracts", "Household.Contracts", "Notifications.Contracts"];
 
     private readonly IReadOnlyCollection<string> _allowedTypePrefixes;
 
