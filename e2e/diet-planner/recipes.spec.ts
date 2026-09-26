@@ -122,7 +122,8 @@ test.describe('Recipes CRUD', () => {
     await page.getByRole('button', { name: /save|update/i }).click();
     await page.waitForURL(/\/diet-planner\/recipes\/[a-z0-9-]+$/);
     await page.reload();
-    await expect(page.getByText('4 servings', { exact: true })).toBeVisible();
+    // The visibility badge shares the line ("Household 4 servings").
+    await expect(page.getByText(/4 servings$/i)).toBeVisible();
     await expect(page.getByText('200.0 g', { exact: true })).toBeVisible();
     await expect(page.getByText('200.0 ml', { exact: true })).toBeVisible();
     await expect(page.getByText('Mix grains.')).toBeVisible();

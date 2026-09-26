@@ -156,6 +156,17 @@ describe('Calendar — household person filter', () => {
     });
   });
 
+  it('returns to the caller without a diet profile', async () => {
+    captureMealRequests();
+    server.use(http.get(`${BASE}/api/v1/profile`, () => new HttpResponse(null, { status: 404 })));
+    const router = renderCalendar({}, '/calendar?person=kid-1');
+
+    const filter = await screen.findByRole('combobox', { name: 'calendar.person_filter' });
+    await userEvent.selectOptions(filter, 'person-1');
+
+    expect(router.state.location.search).toBe('');
+  });
+
   it('shows no filter for a household of one', async () => {
     captureMealRequests();
     renderCalendar({ members: [me] });

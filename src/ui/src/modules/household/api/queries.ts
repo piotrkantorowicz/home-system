@@ -14,13 +14,14 @@ export function householdOptions(subject: string | undefined) {
       // Signing in never joins a household by itself — only an explicit invitation accept does.
       const sync = await api.POST('/api/persons/me/sync', { signal });
       checkResponse(sync);
+      const myPersonId = sync.data?.personId ?? null;
 
       const result = await api.GET('/api/households/me', { signal });
-      if (result.response.status === 404) return { household: null };
+      if (result.response.status === 404) return { household: null, myPersonId };
       checkResponse(result);
       if (!result.data) throw new Error('Missing household response');
 
-      return { household: result.data };
+      return { household: result.data, myPersonId };
     },
   });
 }
