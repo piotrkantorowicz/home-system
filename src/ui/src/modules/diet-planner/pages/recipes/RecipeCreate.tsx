@@ -34,6 +34,7 @@ export default function RecipeCreate() {
       instructions: data.instructions ?? null,
       servings: data.servings,
       prepTimeMinutes: data.prepTimeMinutes ?? null,
+      visibility: data.visibility,
     };
     try {
       const ingredients = await Promise.all(data.ingredients.map(resolveIngredient));

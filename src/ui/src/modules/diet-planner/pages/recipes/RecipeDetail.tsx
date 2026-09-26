@@ -1,5 +1,6 @@
 import { useCreateMeal } from '@modules/diet-planner/api/hooks/useMeals';
 import { recipeOptions, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { VisibilityBadge } from '@modules/diet-planner/components/VisibilityBadge';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
@@ -102,7 +103,8 @@ export default function RecipeDetail() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-26px font-bold">{recipe.name}</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-sm">
+            <VisibilityBadge visibility={recipe.visibility} />
             {recipe.prepTimeMinutes
               ? `${String(n(recipe.prepTimeMinutes))} ${t('recipes.prep_time')} · `
               : ''}
@@ -118,7 +120,7 @@ export default function RecipeDetail() {
           >
             {t('recipe_detail.add_to_plan')}
           </Button>
-          {recipe.isOwner ? (
+          {recipe.canEdit ? (
             <>
               <Button size="xl" variant="outline" asChild>
                 <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>

@@ -23,6 +23,8 @@ interface Product {
   densityGramsPerMl?: number | null;
   gramPerPiece?: number | null;
   isOwner: boolean;
+  visibility: string;
+  canEdit: boolean;
   createdAt: string;
 }
 
@@ -43,6 +45,8 @@ function mapProduct(p: ApiProduct): Product {
     densityGramsPerMl: toNum(p.densityGramsPerMl),
     gramPerPiece: toNum(p.gramPerPiece),
     isOwner: p.isOwner,
+    visibility: p.visibility,
+    canEdit: p.canEdit,
     createdAt: p.createdAt,
   };
 }

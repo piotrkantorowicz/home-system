@@ -22,6 +22,7 @@ export default function ProductCreate() {
       defaultUnit: data.defaultUnit,
       densityGramsPerMl: data.densityGramsPerMl ?? null,
       gramPerPiece: data.gramPerPiece ?? null,
+      visibility: data.visibility,
     };
     try {
       await createMutation.mutateAsync(request);

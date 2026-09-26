@@ -27,6 +27,8 @@ const product = {
   densityGramsPerMl: null,
   gramPerPiece: null,
   isOwner: true,
+  visibility: 'Household',
+  canEdit: true,
 };
 
 // The page reads the product through useSuspenseQuery(productOptions(id)); the mocked
@@ -79,6 +81,22 @@ describe('ProductDetail', () => {
     state.data = null;
     renderAt();
     expect(await screen.findByText('product_detail.not_found')).toBeInTheDocument();
+    state.data = product;
+  });
+
+  it('shows the visibility badge and the edit controls for an editor', async () => {
+    renderAt();
+    expect(await screen.findByText('visibility.Household')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'common.edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'common.delete' })).toBeInTheDocument();
+  });
+
+  it('hides edit and delete when the caller cannot change the product', async () => {
+    state.data = { ...product, isOwner: false, canEdit: false };
+    renderAt();
+    expect(await screen.findByRole('heading', { name: 'Rolled oats' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'common.edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'common.delete' })).not.toBeInTheDocument();
     state.data = product;
   });
 });

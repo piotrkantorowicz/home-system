@@ -32,6 +32,8 @@ const recipe = {
   servings: 2,
   prepTimeMinutes: 25,
   isOwner: true,
+  visibility: 'Private',
+  canEdit: true,
   description: '',
   instructions: 'Grill the chicken.\nCook the rice.\nCombine and serve.',
   ingredients: [
@@ -83,5 +85,20 @@ describe('RecipeDetail', () => {
     renderDetail();
     expect(await screen.findByText('Grill the chicken.')).toBeInTheDocument();
     expect(screen.getByText('Cook the rice.')).toBeInTheDocument();
+  });
+
+  it('shows the visibility badge and the edit controls for an editor', async () => {
+    renderDetail();
+    expect(await screen.findByText('visibility.Private')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'common.edit' })).toBeInTheDocument();
+  });
+
+  it('hides edit and delete when the caller cannot change the recipe', async () => {
+    recipe.canEdit = false;
+    renderDetail();
+    expect(await screen.findByText('Grill the chicken.')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'common.edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'common.delete' })).not.toBeInTheDocument();
+    recipe.canEdit = true;
   });
 });

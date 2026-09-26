@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ProductForm, type ProductFormData } from '../../components/products/ProductForm';
+import { toVisibility } from '../../utils/visibility';
 
 export default function ProductEdit() {
   const { t } = useTranslation();
@@ -25,6 +26,8 @@ export default function ProductEdit() {
       defaultUnit: data.defaultUnit,
       densityGramsPerMl: data.densityGramsPerMl ?? null,
       gramPerPiece: data.gramPerPiece ?? null,
+      // null keeps the current visibility — only the creator may change it.
+      visibility: product?.isOwner ? data.visibility : null,
     };
     try {
       await updateMutation.mutateAsync(request);
@@ -64,7 +67,9 @@ export default function ProductEdit() {
           defaultUnit: product.defaultUnit,
           densityGramsPerMl: product.densityGramsPerMl ?? undefined,
           gramPerPiece: product.gramPerPiece ?? undefined,
+          visibility: toVisibility(product.visibility),
         }}
+        canChangeVisibility={product.isOwner}
         onSubmit={handleSubmit}
         isSubmitting={updateMutation.isPending}
         submitLabel={t('product_form.update_btn')}

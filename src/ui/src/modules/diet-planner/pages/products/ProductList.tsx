@@ -3,8 +3,11 @@ import {
   useDeleteProduct,
   useProducts,
 } from '@modules/diet-planner/api/hooks/useProducts';
+import { VisibilityBadge } from '@modules/diet-planner/components/VisibilityBadge';
 import { useListLocation } from '@modules/diet-planner/hooks/useListLocation';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
+import { canWriteLibrary } from '@modules/diet-planner/utils/householdAccess';
+import { useHousehold } from '@modules/household';
 import {
   Banner,
   Button,
@@ -43,7 +46,8 @@ interface Row {
   fatPer100g: number | null;
   fiberPer100g?: number | null;
   defaultUnit: string;
-  isOwner: boolean;
+  visibility: string;
+  canEdit: boolean;
 }
 
 const macroClass = { protein: 'text-protein', carbs: 'text-carbs', fat: 'text-fat' } as const;
@@ -68,6 +72,7 @@ const fmt = (v: number | null | undefined): string =>
 export default function ProductList() {
   const { t } = useTranslation();
   const toast = useToast();
+  const canCreate = canWriteLibrary(useHousehold().myRole);
   const {
     params,
     search,
@@ -135,12 +140,14 @@ export default function ProductList() {
             {t('products.count', { count: data?.totalCount ?? 0 })}
           </p>
         </div>
-        <Button size="xl" asChild>
-          <Link to="/diet-planner/products/new">
-            <Plus className="size-4" />
-            {t('products.add_product')}
-          </Link>
-        </Button>
+        {canCreate ? (
+          <Button size="xl" asChild>
+            <Link to="/diet-planner/products/new">
+              <Plus className="size-4" />
+              {t('products.add_product')}
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
       {/* Filter strip */}
@@ -206,7 +213,9 @@ export default function ProductList() {
                     update({ search: null, mine: null, incomplete: null, page: null });
                   },
                 }
-              : { label: t('products.add_first_product'), href: '/diet-planner/products/new' }
+              : canCreate
+                ? { label: t('products.add_first_product'), href: '/diet-planner/products/new' }
+                : undefined
           }
         />
       ) : view === 'table' ? (
@@ -267,6 +276,7 @@ export default function ProductList() {
                       {p.name}
                     </Link>
                     {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
+                    <VisibilityBadge visibility={p.visibility} />
                     <span className="text-muted-foreground text-11-5px">
                       {unitLabel(p.defaultUnit, t)}
                     </span>
@@ -425,7 +435,7 @@ function RowMenu({ product, onDelete }: { product: Row; onDelete: () => void }) 
         <DropdownMenuItem asChild>
           <Link to={`/diet-planner/products/${product.id}`}>{t('common.view')}</Link>
         </DropdownMenuItem>
-        {product.isOwner ? (
+        {product.canEdit ? (
           <>
             <DropdownMenuItem asChild>
               <Link to={`/diet-planner/products/${product.id}/edit`}>
@@ -487,7 +497,10 @@ function ProductCardItem({
         </Link>
         <RowMenu product={product} onDelete={onDelete} />
       </div>
-      {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
+      <div className="flex flex-wrap gap-1.5">
+        <VisibilityBadge visibility={product.visibility} />
+        {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
+      </div>
       <div className="numeral text-20px font-bold">
         {fmt(product.caloriesPer100g)}
         <span className="text-muted-foreground text-11px ml-1 font-medium">kcal / 100 g</span>
