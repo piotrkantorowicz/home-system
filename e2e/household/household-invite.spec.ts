@@ -206,6 +206,7 @@ test.describe('Household roles', () => {
       await invitee.household.goto();
       await expect(invitee.household.addMemberButton).toBeVisible();
       await expect(invitee.household.settingsHeading).toBeVisible();
+      await expect(invitee.household.deleteButton).toBeVisible();
       await expect(invitee.household.roleSelects).not.toHaveCount(0);
     } finally {
       // Two owners now, so the promoted invitee may leave.
