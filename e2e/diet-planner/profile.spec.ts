@@ -90,9 +90,13 @@ test.describe('Profile', () => {
     await profilePage.goto();
 
     // Known-good baseline so the reload checks below prove the invalid
-    // attempts below were rejected, not merely unobserved.
+    // attempts below were rejected, not merely unobserved. Another test in
+    // this file may have already persisted this exact baseline on this
+    // worker, in which case the form isn't dirty and Save stays disabled.
     await profilePage.fillForm({ heightCm: 180, currentWeightKg: 80 });
-    await profilePage.save();
+    if (await profilePage.saveButton.isEnabled()) {
+      await profilePage.save();
+    }
 
     // Height above the 300 cm bound (BodyStatsForm's zod schema).
     await profilePage.heightInput.fill('301');
