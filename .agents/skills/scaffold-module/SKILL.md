@@ -47,6 +47,9 @@ Then generate all of the following, adapting names for the given module:
 
 **`{ModuleName}.Contracts/`**
 - `Events/{ModuleName}CreatedIntegrationEvent.cs` — sealed record with primitives only
+- Add `"{ModuleName}.Contracts"` to `DefaultAllowedPrefixes` in
+  `src/Shared/Shared.Infrastructure.Messaging/Serialization/IntegrationEventSerializer.cs` —
+  without it the outbox refuses to dispatch the module's events
 
 **`{ModuleName}.Infrastructure/`**
 - `Persistence/{ModuleName}DbContext.cs` — with `IUnitOfWork` implementation
