@@ -372,3 +372,37 @@ export async function seedKnownNutritionDays(
     await api.dispose();
   }
 }
+
+// ── Bulk products (pagination) ───────────────────────────────────────────────
+
+/**
+ * Creates one product per name. Products search is household-wide, not
+ * scoped to the caller, so give every name a shared unique prefix (e.g. a
+ * timestamp) — searching for it then isolates exactly this batch from
+ * whatever else other specs or workers have created.
+ */
+export async function seedProducts(page: Page, names: ReadonlyArray<string>): Promise<void> {
+  const api = await createApiContext(page);
+  try {
+    for (const name of names) {
+      const res = await api.post('/api/v1/products', {
+        data: {
+          name,
+          calories: 100,
+          protein: 5,
+          carbs: 10,
+          fat: 2,
+          fiber: null,
+          defaultUnit: 'g',
+          densityGramsPerMl: null,
+          gramPerPiece: null,
+        },
+      });
+      if (!res.ok()) {
+        throw new Error(`seedProducts: creating "${name}" returned ${res.status()}`);
+      }
+    }
+  } finally {
+    await api.dispose();
+  }
+}
