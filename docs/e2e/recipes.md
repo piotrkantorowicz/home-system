@@ -37,7 +37,7 @@
     `position: fixed` popover), types the name, then clicks the
     `getByRole('option', { name })` with `{ force: true }`
   - Amount input: `getByPlaceholder('100')` — exact numeric placeholder
-  - Unit select: `page.locator('select[name^="ingredients"]')` — targeted by name prefix
+  - Unit select: `getByRole('combobox', { name: /^unit/i })`
 - **API**: `POST /api/v1/products` then `POST /api/v1/recipes`
 
 ### `user can view recipe details including the ingredient`
@@ -65,13 +65,18 @@
 
 Recipes CRUD works end-to-end with computed nutrition per serving and ingredient persistence.
 
+### `mixed-unit ingredients, instructions, and per-serving nutrition survive edits`
+
+- Creates a liquid product with `ml`, density `1`, and fiber `7.5 g`; verifies its detail after reload.
+- Creates a two-serving recipe with `100 g` of a `100 kcal/100 g` product and `200 ml` of a `50 kcal/100 g` product, plus two instruction lines.
+- Verifies both ingredients, units, instructions, and `100 kcal` per serving after reload.
+- Edits the named gram ingredient to `200 g` and servings to four; verifies persisted amounts, instructions, and `75 kcal` per serving after reload.
+- Ingredient edit helper matches product name because persisted ingredient order can differ from creation order.
+
 ## Gaps
 
-- Multi-ingredient recipes (only single-ingredient cases tested)
-- Ingredient amount / unit edge cases (zero, very large, mixed units)
-- Instructions field (`getByLabel(/instructions/i)` is supported by the POM but no test uses it)
+- Ingredient amount edge cases (zero, very large)
 - Prep-time validation (out-of-range values)
 - Dietary tags / categories
-- Recipe scaling math when servings change
 - Adding/removing ingredients on edit
 - Search by ingredient name (not just recipe name)

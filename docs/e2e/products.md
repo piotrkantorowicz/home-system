@@ -65,12 +65,13 @@
 
 Products CRUD surface works with form validation. Created entities are cleaned up automatically by the global teardown.
 
+The mixed-unit journey in `recipes.spec.ts` also creates a product with `ml`, density `1`, and fiber `7.5 g`, then reloads its detail to verify unit and fiber persistence. Recipe nutrition verifies density conversion through the real backend.
+
 ## Gaps
 
 - Macro percentage validation (e.g., protein + carbs + fat shouldn't exceed 100% of calories)
 - Server-side error display (e.g., 409 conflict on duplicate name)
-- Unit selector (g / ml / oz) — defaulted to `g` in the POM
-- Fiber field (only filled when explicitly passed)
+- Units beyond `g` and `ml`, and non-unit density conversion
 - Optional fields (description, brand, source URL) not exercised
 - Bulk operations (delete many, import from CSV)
 - Search debounce and clearing

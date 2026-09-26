@@ -28,11 +28,17 @@ export class ProductsPage extends BasePage {
     carbs?: number;
     fat?: number;
     fiber?: number;
+    unit?: 'g' | 'ml' | 'piece';
+    density?: number;
   }) {
     await this.createButton.click();
     await this.page.waitForURL('**/products/new');
 
     await this.page.getByRole('textbox', { name: /product name/i }).fill(data.name);
+    if (data.unit !== undefined)
+      await this.page.getByLabel(/default unit/i).selectOption(data.unit);
+    if (data.density !== undefined)
+      await this.page.getByRole('spinbutton', { name: /density/i }).fill(String(data.density));
 
     if (data.calories !== undefined)
       await this.page.getByRole('spinbutton', { name: /calories/i }).fill(String(data.calories));
@@ -74,6 +80,12 @@ export class ProductsPage extends BasePage {
 
   async expectProductNotVisible(name: string) {
     await expect(this.rowFor(name)).not.toBeVisible({ timeout: 5000 });
+  }
+
+  async viewProduct(name: string) {
+    await this.searchFor(name);
+    await this.rowFor(name).getByRole('link', { name }).click();
+    await this.page.getByRole('heading', { name, level: 1 }).waitFor();
   }
 
   // ── Row actions ────────────────────────────────────────────────────────────────
