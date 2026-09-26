@@ -65,9 +65,10 @@ export class RecipesPage extends BasePage {
       const amountInputs = this.page.getByPlaceholder('100');
       await amountInputs.nth(index).fill(String(ingredient.amount));
 
-      // Unit select — the product search inputs also have combobox role (datalist), so target <select> elements directly
-      const unitSelects = this.page.locator('select[name^="ingredients"]');
-      await unitSelects.nth(index).selectOption(ingredient.unit);
+      await this.page
+        .getByRole('combobox', { name: /^unit/i })
+        .nth(index)
+        .selectOption(ingredient.unit);
     }
 
     await this.page.getByRole('button', { name: /save|create/i }).click();
@@ -136,6 +137,17 @@ export class RecipesPage extends BasePage {
     await this.openCardMenu(card);
     await this.page.getByRole('menuitem', { name: /^edit$/i }).click();
     await this.page.waitForURL(/\/edit$/);
+  }
+
+  async updateIngredientAmount(name: string, amount: number) {
+    const products = this.page.getByPlaceholder(/search product/i);
+    for (let index = 0; index < (await products.count()); index++) {
+      if ((await products.nth(index).inputValue()) === name) {
+        await this.page.getByPlaceholder('100').nth(index).fill(String(amount));
+        return;
+      }
+    }
+    throw new Error(`Ingredient not found: ${name}`);
   }
 
   // ── Delete ───────────────────────────────────────────────────────────────────
