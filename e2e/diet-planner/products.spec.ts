@@ -48,7 +48,13 @@ test.describe('Products', () => {
 
     const productName = `Edit Product ${Date.now()}`;
 
-    await productsPage.createProduct({ name: productName, calories: 100, protein: 5, carbs: 10, fat: 3 });
+    await productsPage.createProduct({
+      name: productName,
+      calories: 100,
+      protein: 5,
+      carbs: 10,
+      fat: 3,
+    });
     await productsPage.editProduct(productName, { calories: 250 });
 
     // After edit, the detail page shows the updated calorie value
@@ -60,7 +66,13 @@ test.describe('Products', () => {
     await productsPage.goto();
 
     const productName = `Delete Product ${Date.now()}`;
-    await productsPage.createProduct({ name: productName, calories: 80, protein: 4, carbs: 8, fat: 2 });
+    await productsPage.createProduct({
+      name: productName,
+      calories: 80,
+      protein: 4,
+      carbs: 8,
+      fat: 2,
+    });
 
     await productsPage.deleteProduct(productName);
 

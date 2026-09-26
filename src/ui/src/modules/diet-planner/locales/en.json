@@ -203,7 +203,8 @@
     },
     "choose_day": "Choose a day",
     "day_view": "Day",
-    "week_view": "Week"
+    "week_view": "Week",
+    "person_filter": "Person"
   },
   "override_dialog": {
     "title": "What did you eat instead?",
@@ -422,7 +423,7 @@
     "macro_distribution": "Macro Distribution (Per Serving)",
     "ingredients": "Ingredients",
     "instructions": "Instructions",
-    "total_calories": "Total Calories",
+    "total_calories": "Total for {{count}} servings: {{calories}} kcal",
     "total_protein": "Total Protein",
     "total_carbs": "Total Carbs",
     "total_fat": "Total Fat",
@@ -440,8 +441,7 @@
     "scale_note": "Ingredient amounts scale automatically.",
     "per_serving_note": "Nutrition for one serving stays the same when scaling ingredients.",
     "decrease_servings": "Decrease servings",
-    "increase_servings": "Increase servings",
-    "total_calories": "Total for {{count}} servings: {{calories}} kcal"
+    "increase_servings": "Increase servings"
   },
   "day_view": {
     "summary": {
@@ -497,7 +497,8 @@
     "add_error": "Failed to add meal",
     "edit_error": "Failed to update meal",
     "delete_success": "Meal removed",
-    "delete_error": "Failed to delete meal"
+    "delete_error": "Failed to delete meal",
+    "person_label": "Plan for"
   },
   "prediction": {
     "header": "Weight Prediction",

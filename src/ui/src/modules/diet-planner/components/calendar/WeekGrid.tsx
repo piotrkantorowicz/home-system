@@ -36,6 +36,12 @@ interface WeekGridProps {
   onOverrideMeal: (mealId: string) => void;
   onDeleteMeal: (meal: MealEntryDto) => void;
   onBulkComplete: (date: string) => void;
+  /** Add, edit, delete controls (default true). */
+  canPlan?: boolean;
+  /** Complete, override, reset controls (default true). */
+  canLog?: boolean;
+  /** Label each meal with its person — set when viewing someone else's plan. */
+  showPerson?: boolean;
 }
 
 const num = (v: number | string | null | undefined): number =>
@@ -90,6 +96,9 @@ export function WeekGrid({
   onOverrideMeal,
   onDeleteMeal,
   onBulkComplete,
+  canPlan = true,
+  canLog = true,
+  showPerson = false,
 }: WeekGridProps) {
   const { t, i18n } = useTranslation();
   const todayStr = toDateStr(new Date());
@@ -166,6 +175,7 @@ export function WeekGrid({
               onResetMeal={onResetMeal}
               onOverrideMeal={onOverrideMeal}
               onDeleteMeal={onDeleteMeal}
+              access={{ canPlan, canLog, showPerson }}
             />
           ))}
 
@@ -200,7 +210,7 @@ export function WeekGrid({
                 >
                   {delta === null ? t('calendar.week_grid.gap') : formatSigned(delta)}
                 </div>
-                {hasPlanned ? (
+                {hasPlanned && canLog ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -242,6 +252,13 @@ interface FragmentRowProps {
   onResetMeal: (meal: MealEntryDto) => void;
   onOverrideMeal: (mealId: string) => void;
   onDeleteMeal: (meal: MealEntryDto) => void;
+  access: ChipAccess;
+}
+
+interface ChipAccess {
+  canPlan: boolean;
+  canLog: boolean;
+  showPerson: boolean;
 }
 
 function FragmentRow({
@@ -255,6 +272,7 @@ function FragmentRow({
   onResetMeal,
   onOverrideMeal,
   onDeleteMeal,
+  access,
 }: FragmentRowProps) {
   const { t, i18n } = useTranslation();
   return (
@@ -277,17 +295,19 @@ function FragmentRow({
             className={cn('border-border border-t border-l p-2', isToday && 'bg-accent/40')}
           >
             {cellMeals.length === 0 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onAddMeal(dateStr, slot.id);
-                }}
-                className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 min-h-52px rounded-12px text-17px grid w-full place-items-center border border-dashed transition-colors"
-                title={t('meal_form.add_title')}
-                aria-label={t('meal_form.add_title')}
-              >
-                <Plus className="size-4" />
-              </button>
+              access.canPlan && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAddMeal(dateStr, slot.id);
+                  }}
+                  className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 min-h-52px rounded-12px text-17px grid w-full place-items-center border border-dashed transition-colors"
+                  title={t('meal_form.add_title')}
+                  aria-label={t('meal_form.add_title')}
+                >
+                  <Plus className="size-4" />
+                </button>
+              )
             ) : (
               <div className="flex flex-col gap-1.5">
                 {cellMeals.map((meal) => (
@@ -299,6 +319,7 @@ function FragmentRow({
                     onResetMeal={onResetMeal}
                     onOverrideMeal={onOverrideMeal}
                     onDeleteMeal={onDeleteMeal}
+                    access={access}
                   />
                 ))}
               </div>
@@ -317,6 +338,7 @@ interface MealChipProps {
   onResetMeal: (meal: MealEntryDto) => void;
   onOverrideMeal: (mealId: string) => void;
   onDeleteMeal: (meal: MealEntryDto) => void;
+  access: ChipAccess;
 }
 
 function MealChip({
@@ -326,31 +348,48 @@ function MealChip({
   onResetMeal,
   onOverrideMeal,
   onDeleteMeal,
+  access: { canPlan, canLog, showPerson },
 }: MealChipProps) {
   const { t } = useTranslation();
   const done = isDone(meal);
   const name =
     meal.status === 'Modified' && meal.actualRecipe ? meal.actualRecipe.name : meal.recipeName;
+  const chipClass = cn(
+    'rounded-12px text-11-5px w-full px-2.5 py-2 text-left leading-tight font-semibold',
+    done && 'opacity-60',
+  );
+  const chipBody = (
+    <>
+      <span className={cn('block truncate', done && 'line-through')}>{name}</span>
+      <span className="text-text-2 tnum block font-medium">
+        {formatNumber(num(meal.calories))} kcal
+      </span>
+      {showPerson && meal.personName !== null && (
+        <span className="text-text-2 block truncate font-medium">{meal.personName}</span>
+      )}
+    </>
+  );
+
+  if (!canPlan && !canLog)
+    return (
+      <div className={chipClass} style={{ background: macroTint[dominantMacro([meal])] }}>
+        {chipBody}
+      </div>
+    );
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn(
-            'rounded-12px text-11-5px w-full px-2.5 py-2 text-left leading-tight font-semibold transition-[filter] hover:brightness-95',
-            done && 'opacity-60',
-          )}
+          className={cn(chipClass, 'transition-[filter] hover:brightness-95')}
           style={{ background: macroTint[dominantMacro([meal])] }}
         >
-          <span className={cn('block truncate', done && 'line-through')}>{name}</span>
-          <span className="text-text-2 tnum block font-medium">
-            {formatNumber(num(meal.calories))} kcal
-          </span>
+          {chipBody}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[150px]">
-        {!done && (
+        {canLog && !done && (
           <DropdownMenuItem
             onSelect={() => {
               onCompleteMeal(meal);
@@ -360,15 +399,17 @@ function MealChip({
             {t('calendar.meal_actions.mark_done')}
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          onSelect={() => {
-            onOverrideMeal(meal.id);
-          }}
-        >
-          <Sparkles className="size-4" />
-          {t('calendar.meal_actions.override')}
-        </DropdownMenuItem>
-        {meal.status !== 'Planned' && (
+        {canLog && (
+          <DropdownMenuItem
+            onSelect={() => {
+              onOverrideMeal(meal.id);
+            }}
+          >
+            <Sparkles className="size-4" />
+            {t('calendar.meal_actions.override')}
+          </DropdownMenuItem>
+        )}
+        {canLog && meal.status !== 'Planned' && (
           <DropdownMenuItem
             onSelect={() => {
               onResetMeal(meal);
@@ -378,24 +419,28 @@ function MealChip({
             {t('calendar.meal_actions.reset')}
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={() => {
-            onEditMeal(meal);
-          }}
-        >
-          <Pencil className="size-4" />
-          {t('common.edit')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={() => {
-            onDeleteMeal(meal);
-          }}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="size-4" />
-          {t('common.delete')}
-        </DropdownMenuItem>
+        {canPlan && (
+          <>
+            {canLog && <DropdownMenuSeparator />}
+            <DropdownMenuItem
+              onSelect={() => {
+                onEditMeal(meal);
+              }}
+            >
+              <Pencil className="size-4" />
+              {t('common.edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                onDeleteMeal(meal);
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="size-4" />
+              {t('common.delete')}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

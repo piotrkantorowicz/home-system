@@ -30,15 +30,18 @@ export type BulkCompleteMealsResponse = components['schemas']['BulkCompleteMeals
 interface MealsQueryParams {
   from?: string;
   to?: string;
+  /** Household member whose meals to read; absent = the caller. */
+  personId?: string;
 }
 
 export function mealsOptions(params: MealsQueryParams = {}) {
-  const { from, to } = params;
+  const { from, to, personId } = params;
 
   return queryOptions({
     queryKey: queryKeys.meals.list({
       ...(from !== undefined ? { from } : {}),
       ...(to !== undefined ? { to } : {}),
+      ...(personId !== undefined ? { personId } : {}),
     }),
     queryFn: async (): Promise<MealEntry[]> => {
       const response = await api.GET('/api/v1/meals', {
@@ -46,6 +49,7 @@ export function mealsOptions(params: MealsQueryParams = {}) {
           query: {
             ...(from !== undefined ? { From: from } : {}),
             ...(to !== undefined ? { To: to } : {}),
+            ...(personId !== undefined ? { personId } : {}),
           },
         },
       });
@@ -57,7 +61,13 @@ export function mealsOptions(params: MealsQueryParams = {}) {
 }
 
 export function useMeals(params: MealsQueryParams = {}) {
-  return useQuery({ ...mealsOptions(params), placeholderData: keepPreviousData });
+  return useQuery({
+    ...mealsOptions(params),
+    // Keep the previous range on screen while paging, but never another person's meals:
+    // the page's action controls already follow the newly selected person.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1].personId === params.personId ? previous : undefined,
+  });
 }
 
 export function useCreateMeal() {
@@ -172,9 +182,15 @@ export function useBulkCompleteMeals() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (date: string): Promise<BulkCompleteMealsResponse> => {
+    mutationFn: async ({
+      date,
+      personId,
+    }: {
+      date: string;
+      personId?: string | undefined;
+    }): Promise<BulkCompleteMealsResponse> => {
       const response = await api.POST('/api/v1/meals/bulk-complete', {
-        body: { date },
+        body: { date, personId: personId ?? null },
       });
       if (!response.data) throw new Error('Failed to bulk complete meals');
       return response.data;

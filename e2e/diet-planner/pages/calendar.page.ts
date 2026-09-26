@@ -18,9 +18,15 @@ export class CalendarPage extends BasePage {
   readonly dayViewRadio: Locator;
   readonly weekViewRadio: Locator;
   readonly dayEaten: Locator;
+  /** Household person filter — only rendered when the household has more than one member. */
+  readonly personFilter: Locator;
+  /** "Plan for" picker in the meal form — only when the caller may plan for someone else. */
+  readonly assignToPicker: Locator;
 
   constructor(page: Page) {
     super(page);
+    this.personFilter = page.getByRole('combobox', { name: /^person$/i });
+    this.assignToPicker = page.getByRole('dialog').getByLabel(/plan for/i);
     this.weekGrid = page.getByRole('grid');
     this.mealFormDialog = page.getByRole('dialog');
     this.dayViewRadio = page.getByRole('radio', { name: /^day$/i });
