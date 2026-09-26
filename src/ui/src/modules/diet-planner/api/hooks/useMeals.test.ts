@@ -25,6 +25,29 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
 }));
 
 describe('useMeals', () => {
+  it("keeps the previous week while paging but not another person's meals", async () => {
+    server.use(
+      http.get(`${BASE}/api/v1/meals`, async ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get('From') !== '2024-01-15') await new Promise(() => undefined);
+        return HttpResponse.json([{ id: 'adult-meal' }]);
+      }),
+    );
+    const { result, rerender } = renderHook(
+      (params: { from: string; personId?: string }) => useMeals(params),
+      { wrapper: createWrapper(), initialProps: { from: '2024-01-15', personId: 'adult-1' } },
+    );
+    await waitFor(() => {
+      expect(result.current.data).toHaveLength(1);
+    });
+
+    rerender({ from: '2024-01-22', personId: 'adult-1' });
+    expect(result.current.data).toHaveLength(1);
+
+    rerender({ from: '2024-01-22', personId: 'kid-1' });
+    expect(result.current.data).toBeUndefined();
+  });
+
   it('returns meals for date range', async () => {
     const { result } = renderHook(() => useMeals({ from: '2024-01-15', to: '2024-01-15' }), {
       wrapper: createWrapper(),

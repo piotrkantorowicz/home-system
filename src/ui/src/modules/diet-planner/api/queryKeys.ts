@@ -3,7 +3,7 @@
 export const queryKeys = {
   meals: {
     all: () => ['meals'] as const,
-    list: (range: { from?: string; to?: string }) => ['meals', range] as const,
+    list: (range: { from?: string; to?: string; personId?: string }) => ['meals', range] as const,
   },
   nutritionSummary: {
     all: () => ['nutrition-summary'] as const,
@@ -21,7 +21,8 @@ export const queryKeys = {
     intake: (date: string) => ['water-intake', date] as const,
   },
   mealSchedule: {
-    detail: () => ['meal-schedule'] as const,
+    all: () => ['meal-schedule'] as const,
+    detail: (personId?: string) => ['meal-schedule', personId ?? 'me'] as const,
   },
   products: {
     all: () => ['products'] as const,

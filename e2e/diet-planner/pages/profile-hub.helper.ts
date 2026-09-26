@@ -1,11 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 export type ProfileSection =
-  | 'body-stats'
-  | 'goals'
-  | 'meal-schedule'
-  | 'hydration'
-  | 'notifications';
+  'body-stats' | 'goals' | 'meal-schedule' | 'hydration' | 'notifications';
 
 /**
  * Every profile section renders a spinner until its query resolves and only

@@ -10,13 +10,15 @@ export type MealScheduleConfigDto = components['schemas']['MealScheduleConfigDto
 export type MealSlotRequest = components['schemas']['MealSlotRequest'];
 export type UpdateMealScheduleRequest = components['schemas']['UpdateMealScheduleRequest'];
 
-export function mealScheduleOptions() {
+/** `personId` absent = the caller's schedule. */
+export function mealScheduleOptions(personId?: string) {
   return queryOptions({
-    queryKey: queryKeys.mealSchedule.detail(),
+    queryKey: queryKeys.mealSchedule.detail(personId),
     queryFn: async (): Promise<MealScheduleConfigDto | null> => {
-      const response = await api.GET('/api/v1/meal-schedule');
+      const response = await api.GET('/api/v1/meal-schedule', {
+        params: { query: personId !== undefined ? { personId } : {} },
+      });
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- openapi-typescript types 401 content as never; error is set at runtime for non-200 responses
       if (response.error) {
         throw new Error('Failed to fetch meal schedule');
       }
@@ -27,8 +29,8 @@ export function mealScheduleOptions() {
   });
 }
 
-export function useMealSchedule() {
-  return useQuery(mealScheduleOptions());
+export function useMealSchedule(personId?: string) {
+  return useQuery(mealScheduleOptions(personId));
 }
 
 export function useUpdateMealSchedule() {
@@ -45,7 +47,7 @@ export function useUpdateMealSchedule() {
       return null;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.mealSchedule.detail() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.mealSchedule.all() });
     },
   });
 }
