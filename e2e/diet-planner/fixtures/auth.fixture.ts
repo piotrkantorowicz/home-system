@@ -62,7 +62,7 @@ function readOidcEntry(
  * OidcUser on success, or null if the refresh token is missing or Authentik
  * rejects it (e.g. after a server restart).
  */
-async function tryRefreshTokens(authFile: string): Promise<OidcUser | null> {
+export async function tryRefreshTokens(authFile: string): Promise<OidcUser | null> {
   if (!fs.existsSync(authFile)) return null;
 
   let state: StorageState;
