@@ -7,11 +7,17 @@ import type { Page, Locator } from '@playwright/test';
 export class ProductsPage extends BasePage {
   readonly createButton: Locator;
   readonly searchInput: Locator;
+  readonly pageSizeSelect: Locator;
+  readonly nextButton: Locator;
+  readonly previousButton: Locator;
 
   constructor(page: Page) {
     super(page);
     this.createButton = page.getByRole('link', { name: /add product/i });
     this.searchInput = page.getByPlaceholder(/search/i);
+    this.pageSizeSelect = page.getByRole('combobox');
+    this.nextButton = page.getByRole('button', { name: /next/i });
+    this.previousButton = page.getByRole('button', { name: /previous/i });
   }
 
   async goto() {
@@ -55,13 +61,35 @@ export class ProductsPage extends BasePage {
     await this.page.waitForURL(/\/diet-planner\/products$/);
   }
 
-  // ── Search ──────────────────────────────────────────────────────────────────
+  // ── Search & pagination ────────────────────────────────────────────────────
+
+  private waitForList(action: () => Promise<unknown>) {
+    return Promise.all([
+      this.page.waitForResponse(
+        (resp) => resp.url().includes('/api/v1/products') && resp.request().method() === 'GET',
+      ),
+      action(),
+    ]);
+  }
 
   async searchFor(query: string) {
-    await this.searchInput.fill(query);
-    await this.page.waitForResponse(
-      (resp) => resp.url().includes('/api/v1/products') && resp.request().method() === 'GET',
-    );
+    await this.waitForList(() => this.searchInput.fill(query));
+  }
+
+  async clearSearch() {
+    await this.waitForList(() => this.searchInput.fill(''));
+  }
+
+  async setPageSize(size: number) {
+    await this.waitForList(() => this.pageSizeSelect.selectOption(String(size)));
+  }
+
+  async goToNextPage() {
+    await this.waitForList(() => this.nextButton.click());
+  }
+
+  async goToPreviousPage() {
+    await this.waitForList(() => this.previousButton.click());
   }
 
   // ── Read ────────────────────────────────────────────────────────────────────

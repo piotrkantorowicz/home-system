@@ -1,6 +1,6 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `e2e/` covers **98 tests across 16 spec
+The Playwright end-to-end suite at `e2e/` covers **100 tests across 16 spec
 files**, plus the auth setup (4 worker logins). It runs against a real backend,
 real frontend, and real Authentik; the two `notifications/` specs are fully
 route-mocked, and a few diet-planner tests mock one endpoint to force a
@@ -26,7 +26,7 @@ This README is the hub for cross-cutting concerns and spec discovery. Linked spe
 | `household/household-invite.spec.ts` | Invitation accept/decline, access gate, shared shopping list | 3 |
 | [import](import.md) | 2-step import wizard end-to-end | 5 |
 | [meals](meals.md) | WeekGrid calendar CRUD and week navigation | 6 |
-| [pagination](pagination.md) | List pagination on Products and Recipes | 8 |
+| [pagination](pagination.md) | List pagination on Products and Recipes | 10 |
 | [products](products.md) | Products CRUD and search | 5 |
 | [recipes](recipes.md) | Recipes CRUD with ingredients | 4 |
 | [nutrition](nutrition.md) | Nutrition summary — range presets, tiles, chart, table | 13 |
