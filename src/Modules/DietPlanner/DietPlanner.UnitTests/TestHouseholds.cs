@@ -4,7 +4,6 @@ namespace DietPlanner.UnitTests;
 using DietPlanner.Application.Households;
 #pragma warning restore IDE0005
 using Household.Contracts.Interfaces;
-using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary><see cref="HouseholdRosterProvider"/> instances for handler tests.</summary>
 internal static class TestHouseholds
@@ -17,6 +16,6 @@ internal static class TestHouseholds
     {
         var households = Substitute.For<IHouseholdQueryService>();
         households.GetHouseholdContextForUserAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(context);
-        return new HouseholdRosterProvider(households, NullLogger<HouseholdRosterProvider>.Instance);
+        return new HouseholdRosterProvider(households);
     }
 }
