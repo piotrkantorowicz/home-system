@@ -23,7 +23,7 @@ public static class MessagingExtensions
     {
         services.TryAddSingleton<IIntegrationEventSerializer, IntegrationEventSerializer>();
         services.TryAddScoped<IIntegrationEventBus, OutboxIntegrationEventBus>();
-        services.AddOptions<OutboxWorkerOptions>();
+        services.AddOptions<OutboxWorkerOptions>().BindConfiguration(OutboxWorkerOptions.SectionName);
 
         return new MessagingBuilder(services);
     }

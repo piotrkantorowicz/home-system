@@ -48,10 +48,12 @@ Another module's internals are as inaccessible as another service's database.
         → aggregate row + outbox row committed atomically
 
 [Outbox worker — BackgroundService, every ~1 s]
-    → IOutboxStore.GetUnprocessedAsync(batchSize)
+    → IOutboxStore.GetUnprocessedAsync(batchSize, maxAttempts)
     → for each message: IIntegrationEventTransport.DispatchAsync(message)
     → on success: IOutboxStore.MarkProcessedAsync
     → on failure: IOutboxStore.RecordFailureAsync (increments attempt_count)
+    → attempt_count >= Messaging:Outbox MaxAttempts (10) → dead-lettered: skipped until an
+      admin retries it (IOutboxDeadLetterStore, /api/admin/outbox, the SPA's /admin page)
 
 [Transport — InProcessIntegrationEventTransport (v1)]
     → resolves IIntegrationEventHandler<T> from a fresh DI scope

@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 /// <summary>
 /// Test authentication: reads the desired identity from request headers so a single host can
 /// serve many "users". Headers: <c>X-Test-Sub</c> (required), <c>X-Test-Email</c>,
-/// <c>X-Test-Name</c>. A request without <c>X-Test-Sub</c> is treated as anonymous.
+/// <c>X-Test-Name</c>, <c>X-Test-Roles</c> (comma-separated, emitted as <c>roles</c> claims). A request without <c>X-Test-Sub</c> is treated as anonymous.
 /// </summary>
 internal sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
@@ -37,6 +37,10 @@ internal sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSche
         var name = Request.Headers["X-Test-Name"].ToString();
         if (!string.IsNullOrEmpty(name))
             claims.Add(new Claim("name", name));
+
+        foreach (var role in Request.Headers["X-Test-Roles"].ToString()
+                     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            claims.Add(new Claim("roles", role));
 
         var identity = new ClaimsIdentity(claims, SchemeName);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName);
