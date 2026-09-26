@@ -5,13 +5,18 @@ using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
-internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbContext)
+internal sealed class WeeklySummaryCandidateQueries(
+    DietPlannerDbContext dbContext,
+    IOptions<DietReminderTickServiceOptions> options)
     : IWeeklySummaryCandidateQueries
 {
     private const string DefaultLocale = "en";
     private const decimal MlPerLiter = 1000m;
     private const int DaysInWeek = 7;
+
+    private readonly TimeZoneInfo _timeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.TimeZoneId);
 
     public async Task<IReadOnlyList<WeeklySummaryCandidate>> GetCandidatesAsync(CancellationToken ct)
     {
@@ -24,8 +29,8 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
             select new
             {
                 settings.PersonId,
-                settings.WeeklySummaryDayOfWeekUtc,
-                settings.WeeklySummaryTimeOfDayUtc,
+                settings.WeeklySummaryDayOfWeek,
+                settings.WeeklySummaryTimeOfDay,
                 LastAt = state == null ? (DateTime?)null : state.LastWeeklySummaryAt
             }).ToListAsync(ct);
 
@@ -33,8 +38,9 @@ internal sealed class WeeklySummaryCandidateQueries(DietPlannerDbContext dbConte
             .Select(r => new WeeklySummaryCandidate(
                 r.PersonId,
                 DefaultLocale,
-                r.WeeklySummaryDayOfWeekUtc,
-                r.WeeklySummaryTimeOfDayUtc,
+                _timeZone,
+                r.WeeklySummaryDayOfWeek,
+                r.WeeklySummaryTimeOfDay,
                 r.LastAt))
             .ToList();
     }

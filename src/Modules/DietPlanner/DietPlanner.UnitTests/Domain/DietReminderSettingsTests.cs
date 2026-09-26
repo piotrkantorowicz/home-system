@@ -22,11 +22,11 @@ public sealed class DietReminderSettingsTests
         settings.MealMissedGraceMinutes.ShouldBe(30);
         settings.WaterRemindersEnabled.ShouldBeTrue();
         settings.WaterReminderIntervalMinutes.ShouldBe(60);
-        settings.WaterWindowStartUtc.ShouldBe(new TimeOnly(6, 0));
-        settings.WaterWindowEndUtc.ShouldBe(new TimeOnly(22, 0));
+        settings.WaterWindowStart.ShouldBe(new TimeOnly(6, 0));
+        settings.WaterWindowEnd.ShouldBe(new TimeOnly(22, 0));
         settings.WeeklySummaryEnabled.ShouldBeTrue();
-        settings.WeeklySummaryDayOfWeekUtc.ShouldBe(DayOfWeek.Sunday);
-        settings.WeeklySummaryTimeOfDayUtc.ShouldBe(new TimeOnly(8, 0));
+        settings.WeeklySummaryDayOfWeek.ShouldBe(DayOfWeek.Sunday);
+        settings.WeeklySummaryTimeOfDay.ShouldBe(new TimeOnly(8, 0));
         settings.GoalAlertsEnabled.ShouldBeTrue();
         settings.UpdatedAt.ShouldBeNull();
     }
@@ -45,11 +45,11 @@ public sealed class DietReminderSettingsTests
             mealMissedGraceMinutes: 15,
             waterRemindersEnabled: false,
             waterReminderIntervalMinutes: 120,
-            waterWindowStartUtc: new TimeOnly(7, 30),
-            waterWindowEndUtc: new TimeOnly(20, 0),
+            waterWindowStart: new TimeOnly(7, 30),
+            waterWindowEnd: new TimeOnly(20, 0),
             weeklySummaryEnabled: false,
-            weeklySummaryDayOfWeekUtc: DayOfWeek.Monday,
-            weeklySummaryTimeOfDayUtc: new TimeOnly(9, 0),
+            weeklySummaryDayOfWeek: DayOfWeek.Monday,
+            weeklySummaryTimeOfDay: new TimeOnly(9, 0),
             goalAlertsEnabled: false);
 
         settings.MealRemindersEnabled.ShouldBeFalse();
@@ -57,10 +57,10 @@ public sealed class DietReminderSettingsTests
         settings.MealMissedGraceMinutes.ShouldBe(15);
         settings.WaterRemindersEnabled.ShouldBeFalse();
         settings.WaterReminderIntervalMinutes.ShouldBe(120);
-        settings.WaterWindowStartUtc.ShouldBe(new TimeOnly(7, 30));
-        settings.WaterWindowEndUtc.ShouldBe(new TimeOnly(20, 0));
-        settings.WeeklySummaryDayOfWeekUtc.ShouldBe(DayOfWeek.Monday);
-        settings.WeeklySummaryTimeOfDayUtc.ShouldBe(new TimeOnly(9, 0));
+        settings.WaterWindowStart.ShouldBe(new TimeOnly(7, 30));
+        settings.WaterWindowEnd.ShouldBe(new TimeOnly(20, 0));
+        settings.WeeklySummaryDayOfWeek.ShouldBe(DayOfWeek.Monday);
+        settings.WeeklySummaryTimeOfDay.ShouldBe(new TimeOnly(9, 0));
         settings.GoalAlertsEnabled.ShouldBeFalse();
     }
 
@@ -117,11 +117,11 @@ public sealed class DietReminderSettingsTests
         var act = () => DietReminderSettings.Create(
             DietReminderSettingsId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"),
             TestClock.UtcNow,
-            waterWindowStartUtc: new TimeOnly(10, 0),
-            waterWindowEndUtc: new TimeOnly(10, 0));
+            waterWindowStart: new TimeOnly(10, 0),
+            waterWindowEnd: new TimeOnly(10, 0));
 
         act.ShouldThrow<DietPlannerDomainException>()
-           .Message.ShouldContain("WaterWindowEndUtc");
+           .Message.ShouldContain("WaterWindowEnd");
     }
 
     /// <summary>With new values: <c>Update</c> updates all properties.</summary>
@@ -136,11 +136,11 @@ public sealed class DietReminderSettingsTests
             mealMissedGraceMinutes: 20,
             waterRemindersEnabled: false,
             waterReminderIntervalMinutes: 90,
-            waterWindowStartUtc: new TimeOnly(8, 0),
-            waterWindowEndUtc: new TimeOnly(18, 0),
+            waterWindowStart: new TimeOnly(8, 0),
+            waterWindowEnd: new TimeOnly(18, 0),
             weeklySummaryEnabled: false,
-            weeklySummaryDayOfWeekUtc: DayOfWeek.Friday,
-            weeklySummaryTimeOfDayUtc: new TimeOnly(17, 30),
+            weeklySummaryDayOfWeek: DayOfWeek.Friday,
+            weeklySummaryTimeOfDay: new TimeOnly(17, 30),
             goalAlertsEnabled: false,
             TestClock.UtcNow);
 
@@ -148,10 +148,10 @@ public sealed class DietReminderSettingsTests
         settings.MealReminderLeadTimeMinutes.ShouldBe(45);
         settings.MealMissedGraceMinutes.ShouldBe(20);
         settings.WaterReminderIntervalMinutes.ShouldBe(90);
-        settings.WaterWindowStartUtc.ShouldBe(new TimeOnly(8, 0));
-        settings.WaterWindowEndUtc.ShouldBe(new TimeOnly(18, 0));
-        settings.WeeklySummaryDayOfWeekUtc.ShouldBe(DayOfWeek.Friday);
-        settings.WeeklySummaryTimeOfDayUtc.ShouldBe(new TimeOnly(17, 30));
+        settings.WaterWindowStart.ShouldBe(new TimeOnly(8, 0));
+        settings.WaterWindowEnd.ShouldBe(new TimeOnly(18, 0));
+        settings.WeeklySummaryDayOfWeek.ShouldBe(DayOfWeek.Friday);
+        settings.WeeklySummaryTimeOfDay.ShouldBe(new TimeOnly(17, 30));
         settings.GoalAlertsEnabled.ShouldBeFalse();
         settings.UpdatedAt.ShouldNotBeNull();
     }
@@ -168,11 +168,11 @@ public sealed class DietReminderSettingsTests
             mealMissedGraceMinutes: 30,
             waterRemindersEnabled: true,
             waterReminderIntervalMinutes: 60,
-            waterWindowStartUtc: new TimeOnly(12, 0),
-            waterWindowEndUtc: new TimeOnly(11, 0),
+            waterWindowStart: new TimeOnly(12, 0),
+            waterWindowEnd: new TimeOnly(11, 0),
             weeklySummaryEnabled: true,
-            weeklySummaryDayOfWeekUtc: DayOfWeek.Sunday,
-            weeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
+            weeklySummaryDayOfWeek: DayOfWeek.Sunday,
+            weeklySummaryTimeOfDay: new TimeOnly(8, 0),
             goalAlertsEnabled: true,
             TestClock.UtcNow);
 

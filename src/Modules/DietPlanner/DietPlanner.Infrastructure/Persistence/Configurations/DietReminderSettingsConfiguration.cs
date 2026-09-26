@@ -29,13 +29,13 @@ internal sealed class DietReminderSettingsConfiguration : IEntityTypeConfigurati
         builder.Property(x => x.MealMissedGraceMinutes).HasColumnName("meal_missed_grace_minutes");
         builder.Property(x => x.WaterRemindersEnabled).HasColumnName("water_reminders_enabled");
         builder.Property(x => x.WaterReminderIntervalMinutes).HasColumnName("water_reminder_interval_minutes");
-        builder.Property(x => x.WaterWindowStartUtc).HasColumnName("water_window_start_utc");
-        builder.Property(x => x.WaterWindowEndUtc).HasColumnName("water_window_end_utc");
+        builder.Property(x => x.WaterWindowStart).HasColumnName("water_window_start");
+        builder.Property(x => x.WaterWindowEnd).HasColumnName("water_window_end");
         builder.Property(x => x.WeeklySummaryEnabled).HasColumnName("weekly_summary_enabled");
-        builder.Property(x => x.WeeklySummaryDayOfWeekUtc)
+        builder.Property(x => x.WeeklySummaryDayOfWeek)
             .HasConversion<int>()
-            .HasColumnName("weekly_summary_day_of_week_utc");
-        builder.Property(x => x.WeeklySummaryTimeOfDayUtc).HasColumnName("weekly_summary_time_of_day_utc");
+            .HasColumnName("weekly_summary_day_of_week");
+        builder.Property(x => x.WeeklySummaryTimeOfDay).HasColumnName("weekly_summary_time_of_day");
         builder.Property(x => x.GoalAlertsEnabled).HasColumnName("goal_alerts_enabled");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");

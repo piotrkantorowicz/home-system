@@ -26,6 +26,8 @@ public sealed class WeeklySummaryJobTests
     // Sunday 08:15 UTC — configured day=Sunday, time=08:00
     private static readonly DateTime Now = new(2026, 4, 26, 8, 15, 0, DateTimeKind.Utc);
 
+    private static readonly TimeZoneInfo Warsaw = TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
+
     private static readonly WeeklyStats DefaultStats = new(
         TotalKcal: 12000,
         TargetKcal: 14000,
@@ -38,8 +40,9 @@ public sealed class WeeklySummaryJobTests
         Guid personId = default,
         DayOfWeek day = DayOfWeek.Sunday,
         string time = "08:00",
-        DateTime? lastAt = null)
-        => new(personId == Guid.Empty ? Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") : personId, "en", day, TimeOnly.Parse(time, CultureInfo.InvariantCulture), lastAt);
+        DateTime? lastAt = null,
+        TimeZoneInfo? timeZone = null)
+        => new(personId == Guid.Empty ? Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") : personId, "en", timeZone ?? TimeZoneInfo.Utc, day, TimeOnly.Parse(time, CultureInfo.InvariantCulture), lastAt);
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public WeeklySummaryJobTests()
@@ -220,5 +223,60 @@ public sealed class WeeklySummaryJobTests
         await _bus.Received(2).PublishAsync(
             Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Warsaw user, local Sunday already begun while UTC is still Saturday: <c>RunAsync</c> publishes for the local week.</summary>
+    [Fact]
+    public async Task RunAsync_LocalDayAheadOfUtc_PublishesForLocalWeek()
+    {
+        // Saturday 23:30 UTC = Sunday 01:30 CEST; summary configured Sunday 01:00 local
+        var now = new DateTime(2026, 4, 25, 23, 30, 0, DateTimeKind.Utc);
+        var candidate = MakeCandidate(time: "01:00", timeZone: Warsaw);
+        _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
+        _queries.GetStatsAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(DefaultStats);
+
+        await _sut.RunAsync(now, TestContext.Current.CancellationToken);
+
+        await _bus.Received(1).PublishAsync(
+            Arg.Is<WeeklySummaryDueIntegrationEvent>(e =>
+                e.WeekEnd == new DateOnly(2026, 4, 25) && e.WeekStart == new DateOnly(2026, 4, 19)),
+            Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Spring-forward week: <c>RunAsync</c> sends at the same local time although the UTC gap is an hour short of 7 days.</summary>
+    [Fact]
+    public async Task RunAsync_WeekAfterSpringForward_SendsAtSameLocalTime()
+    {
+        // Last sent Sun 2026-03-22 08:00 CET (07:00 UTC); now Sun 2026-03-29 08:00 CEST (06:00 UTC) —
+        // 7 days minus 1 hour in UTC, but a full week on the wall clock.
+        var lastAt = new DateTime(2026, 3, 22, 7, 0, 0, DateTimeKind.Utc);
+        var now = new DateTime(2026, 3, 29, 6, 0, 0, DateTimeKind.Utc);
+        var candidate = MakeCandidate(lastAt: lastAt, timeZone: Warsaw);
+        _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
+        _queries.GetStatsAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(DefaultStats);
+        _stateRepo.GetByPersonIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(WeeklySummaryState.Create(Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458"), lastAt));
+
+        await _sut.RunAsync(now, TestContext.Current.CancellationToken);
+
+        await _bus.Received(1).PublishAsync(
+            Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Fall-back day, before the local send time: <c>RunAsync</c> waits for the wall clock.</summary>
+    [Fact]
+    public async Task RunAsync_FallBackDayBeforeLocalTime_SkipsCandidate()
+    {
+        // Sun 2026-10-25, clocks went back at 03:00 CEST → CET. 06:30 UTC = 07:30 CET, summary at 08:00 local.
+        var now = new DateTime(2026, 10, 25, 6, 30, 0, DateTimeKind.Utc);
+        var candidate = MakeCandidate(timeZone: Warsaw);
+        _queries.GetCandidatesAsync(Arg.Any<CancellationToken>()).Returns([candidate]);
+
+        await _sut.RunAsync(now, TestContext.Current.CancellationToken);
+
+        await _bus.DidNotReceive().PublishAsync(
+            Arg.Any<WeeklySummaryDueIntegrationEvent>(), Arg.Any<CancellationToken>());
     }
 }

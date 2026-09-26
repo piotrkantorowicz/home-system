@@ -18,7 +18,7 @@ internal sealed class UpdateDietReminderSettingsCommandValidator : ICommandValid
         if (command.WaterReminderIntervalMinutes is < 15 or > 480)
             yield return new ValidationError(nameof(command.WaterReminderIntervalMinutes), "WaterReminderIntervalMinutes must be between 15 and 480.");
 
-        if (command.WaterWindowEndUtc <= command.WaterWindowStartUtc)
-            yield return new ValidationError(nameof(command.WaterWindowEndUtc), "WaterWindowEndUtc must be after WaterWindowStartUtc.");
+        if (command.WaterWindowEnd <= command.WaterWindowStart)
+            yield return new ValidationError(nameof(command.WaterWindowEnd), "WaterWindowEnd must be after WaterWindowStart.");
     }
 }

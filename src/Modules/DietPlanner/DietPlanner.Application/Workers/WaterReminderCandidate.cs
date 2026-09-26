@@ -3,7 +3,8 @@ namespace DietPlanner.Application.Workers;
 internal sealed record WaterReminderCandidate(
     Guid PersonId,
     string Locale,
+    TimeZoneInfo TimeZone,
     int WaterReminderIntervalMinutes,
-    TimeOnly WaterWindowStartUtc,
-    TimeOnly WaterWindowEndUtc,
+    TimeOnly WaterWindowStart,
+    TimeOnly WaterWindowEnd,
     DateTime? LastWaterReminderAt);

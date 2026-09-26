@@ -76,7 +76,9 @@ public static partial class InfrastructureDependencyInjection
 
         // Tick service options + hosted service
         services.AddOptions<DietReminderTickServiceOptions>()
-            .BindConfiguration(DietReminderTickServiceOptions.SectionName);
+            .BindConfiguration(DietReminderTickServiceOptions.SectionName)
+            .Validate(o => TimeZoneInfo.TryFindSystemTimeZoneById(o.TimeZoneId, out _), "TimeZoneId is not a known time zone.")
+            .ValidateOnStart();
         services.AddHostedService<DietReminderTickService>();
 
         return services;

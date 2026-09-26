@@ -3,11 +3,16 @@ namespace DietPlanner.Infrastructure.Workers;
 using DietPlanner.Application.Workers;
 using DietPlanner.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
-internal sealed class WaterReminderCandidateQueries(DietPlannerDbContext dbContext)
+internal sealed class WaterReminderCandidateQueries(
+    DietPlannerDbContext dbContext,
+    IOptions<DietReminderTickServiceOptions> options)
     : IWaterReminderCandidateQueries
 {
     private const string DefaultLocale = "en";
+
+    private readonly TimeZoneInfo _timeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.TimeZoneId);
 
     public async Task<IReadOnlyList<WaterReminderCandidate>> GetCandidatesAsync(
         DateTime nowUtc, CancellationToken ct)
@@ -22,8 +27,8 @@ internal sealed class WaterReminderCandidateQueries(DietPlannerDbContext dbConte
             {
                 settings.PersonId,
                 settings.WaterReminderIntervalMinutes,
-                settings.WaterWindowStartUtc,
-                settings.WaterWindowEndUtc,
+                settings.WaterWindowStart,
+                settings.WaterWindowEnd,
                 LastAt = state == null ? (DateTime?)null : state.LastWaterReminderAt
             }).ToListAsync(ct);
 
@@ -31,9 +36,10 @@ internal sealed class WaterReminderCandidateQueries(DietPlannerDbContext dbConte
             .Select(r => new WaterReminderCandidate(
                 r.PersonId,
                 DefaultLocale,
+                _timeZone,
                 r.WaterReminderIntervalMinutes,
-                r.WaterWindowStartUtc,
-                r.WaterWindowEndUtc,
+                r.WaterWindowStart,
+                r.WaterWindowEnd,
                 r.LastAt))
             .ToList();
     }

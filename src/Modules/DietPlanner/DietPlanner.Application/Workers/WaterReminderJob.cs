@@ -20,12 +20,12 @@ internal sealed class WaterReminderJob(
     {
         IReadOnlyList<WaterReminderCandidate> candidates = await queries.GetCandidatesAsync(nowUtc, ct);
 
-        var nowTime = TimeOnly.FromDateTime(nowUtc);
         var publishedAny = false;
 
         foreach (var c in candidates)
         {
-            if (!IsInWindow(nowTime, c.WaterWindowStartUtc, c.WaterWindowEndUtc))
+            var nowLocal = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(nowUtc, c.TimeZone));
+            if (!IsInWindow(nowLocal, c.WaterWindowStart, c.WaterWindowEnd))
                 continue;
 
             if (!IsIntervalPassed(nowUtc, c.LastWaterReminderAt, c.WaterReminderIntervalMinutes))

@@ -31,8 +31,9 @@ public sealed class WaterReminderJobTests
         int intervalMinutes = 60,
         string windowStart = "06:00",
         string windowEnd = "22:00",
-        DateTime? lastAt = null)
-        => new(personId == Guid.Empty ? Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") : personId, "en", intervalMinutes,
+        DateTime? lastAt = null,
+        TimeZoneInfo? timeZone = null)
+        => new(personId == Guid.Empty ? Guid.Parse("db6cd388-0abf-538a-8503-dd3358d93458") : personId, "en", timeZone ?? TimeZoneInfo.Utc, intervalMinutes,
             TimeOnly.Parse(windowStart, CultureInfo.InvariantCulture), TimeOnly.Parse(windowEnd, CultureInfo.InvariantCulture), lastAt);
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
@@ -164,5 +165,20 @@ public sealed class WaterReminderJobTests
         await _bus.Received(2).PublishAsync(
             Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Window in Warsaw time: <c>RunAsync</c> compares it with the local clock, not UTC.</summary>
+    [Fact]
+    public async Task RunAsync_WindowInWarsawTime_ComparesWithLocalClock()
+    {
+        // Now = 12:00 UTC = 14:00 CEST → inside 13:00–15:00 local, outside it in UTC
+        var warsaw = TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
+        var candidate = MakeCandidate(windowStart: "13:00", windowEnd: "15:00", timeZone: warsaw);
+        _queries.GetCandidatesAsync(Now, Arg.Any<CancellationToken>()).Returns([candidate]);
+
+        await _sut.RunAsync(Now, TestContext.Current.CancellationToken);
+
+        await _bus.Received(1).PublishAsync(
+            Arg.Any<WaterReminderDueIntegrationEvent>(), Arg.Any<CancellationToken>());
     }
 }

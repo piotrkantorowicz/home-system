@@ -28,10 +28,12 @@ public sealed class MealReminderJobIntegrationTests
         var factory = new DietPlannerWebApplicationFactory(_db.ConnectionString, userId);
 
         // The host clock is pinned by the factory, so "today" is deterministic
-        var todayUtc = TestClock.Today;
+        var today = TestClock.Today;
 
-        // nowUtc is set to 11:50 UTC so that PlannedAt = 12:00 UTC falls in (nowUtc, nowUtc + 15min]
-        var nowUtc = DateTime.SpecifyKind(todayUtc.ToDateTime(new TimeOnly(11, 50)), DateTimeKind.Utc);
+        // Meal times are Warsaw wall-clock (the default zone): now = 11:50 local, so the 12:00 local
+        // lunch falls in (now, now + 15min]. Read as UTC it would be an hour or two away.
+        var warsaw = TimeZoneInfo.FindSystemTimeZoneById("Europe/Warsaw");
+        var nowUtc = TimeZoneInfo.ConvertTimeToUtc(today.ToDateTime(new TimeOnly(11, 50)), warsaw);
         var mealTime = new TimeOnly(12, 0);
 
         MealSlotId seededSlotId;
@@ -85,7 +87,7 @@ public sealed class MealReminderJobIntegrationTests
             var entry = MealEntry.Create(
                 mealEntryId,
                 TestAuthHandler.PersonIdFor(userId),
-                todayUtc,
+                today,
                 seededSlotId,
                 recipe.Id,
                 servings: 1m,
