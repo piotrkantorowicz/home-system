@@ -17,7 +17,7 @@ public sealed class ResetMealEntryCommandHandlerTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public ResetMealEntryCommandHandlerTests()
-        => _sut = new ResetMealEntryCommandHandler(_repository, _unitOfWork);
+        => _sut = new ResetMealEntryCommandHandler(_repository, _unitOfWork, TestHouseholds.Solo());
 
     /// <summary><c>HandleAsync</c> resets entry and commits.</summary>
     [Fact]
@@ -29,7 +29,7 @@ public sealed class ResetMealEntryCommandHandlerTests
 
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
-        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), "user-1"), TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Planned);
         entry.ActualRecipeId.ShouldBeNull();
@@ -45,6 +45,6 @@ public sealed class ResetMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken));
+            _sut.HandleAsync(new ResetMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), "user-1"), TestContext.Current.CancellationToken));
     }
 }

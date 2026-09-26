@@ -1,5 +1,6 @@
 namespace Household.Infrastructure.Query;
 
+using System.Transactions;
 using Household.Application.Persistence;
 using Household.Contracts.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 /// <summary>
 /// Read-side implementation of <see cref="IHouseholdQueryService"/>. Projects with
 /// <c>AsNoTracking</c> — it never hydrates the <c>Household</c> aggregate for a write.
+/// Other modules call it from inside their own command's ambient transaction, so every
+/// lookup suppresses that transaction: enlisting the Household connection alongside the
+/// caller's would promote it to a distributed (two-phase) transaction.
 /// </summary>
 internal sealed class HouseholdQueryService : IHouseholdQueryService
 {
@@ -20,6 +24,8 @@ internal sealed class HouseholdQueryService : IHouseholdQueryService
     {
         if (string.IsNullOrWhiteSpace(authSubject))
             return null;
+
+        using var scope = SuppressAmbientTransaction();
 
         var meId = await _db.Persons.AsNoTracking()
             .Where(p => p.AuthSubject == authSubject)
@@ -62,9 +68,16 @@ internal sealed class HouseholdQueryService : IHouseholdQueryService
 
         return new HouseholdContext(household.Id.Value, meId.Value, myRole.ToString(), members);
     }
-    public Task<string?> GetAuthSubjectForPersonAsync(Guid personId, CancellationToken ct = default)
-        => _db.Persons.AsNoTracking()
+
+    public async Task<string?> GetAuthSubjectForPersonAsync(Guid personId, CancellationToken ct = default)
+    {
+        using var scope = SuppressAmbientTransaction();
+        return await _db.Persons.AsNoTracking()
             .Where(p => p.Id == Domain.ValueObjects.PersonId.From(personId))
             .Select(p => p.AuthSubject)
             .FirstOrDefaultAsync(ct);
+    }
+
+    private static TransactionScope SuppressAmbientTransaction()
+        => new(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled);
 }

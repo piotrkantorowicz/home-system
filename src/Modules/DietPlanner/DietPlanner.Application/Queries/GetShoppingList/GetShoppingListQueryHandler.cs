@@ -1,31 +1,24 @@
 namespace DietPlanner.Application.Queries.GetShoppingList;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.ValueObjects;
-using Household.Contracts.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed partial class GetShoppingListQueryHandler
-    : IQueryHandler<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>
+internal sealed class GetShoppingListQueryHandler(
+    IDietPlannerReadDbContext dbContext,
+    HouseholdRosterProvider households) : IQueryHandler<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>
 {
-    private readonly IDietPlannerReadDbContext _dbContext;
-    private readonly IHouseholdQueryService _households;
-    private readonly ILogger<GetShoppingListQueryHandler> _logger;
-
-    public GetShoppingListQueryHandler(
-        IDietPlannerReadDbContext dbContext,
-        IHouseholdQueryService households,
-        ILogger<GetShoppingListQueryHandler> logger)
-        => (_dbContext, _households, _logger) = (dbContext, households, logger);
 
     public async Task<IReadOnlyList<ShoppingListItemDto>> HandleAsync(
         GetShoppingListQuery query, CancellationToken ct = default)
     {
-        var personIds = await ResolveHouseholdPersonIdsAsync(query.PersonId, query.AuthSubject, ct);
+        // The shopping list is a shared household resource (#223): every member's planned meals.
+        HouseholdRoster roster = await households.GetAsync(query.PersonId, query.AuthSubject, ct);
+        var personIds = roster.Members.Select(m => m.PersonId).Append(query.PersonId).Distinct().ToList();
 
-        var entries = await _dbContext.MealEntries
+        var entries = await dbContext.MealEntries
             .AsNoTracking()
             .Where(me => personIds.Contains(me.PersonId)
                 && (query.From == null || me.Date >= query.From)
@@ -41,7 +34,7 @@ internal sealed partial class GetShoppingListQueryHandler
 
         var recipeIds = entries.Select(e => e.RecipeId).Distinct().ToList();
 
-        var recipes = await _dbContext.Recipes
+        var recipes = await dbContext.Recipes
             .AsNoTracking()
             .IgnoreQueryFilters()
             .Where(r => recipeIds.Contains(r.Id))
@@ -67,7 +60,7 @@ internal sealed partial class GetShoppingListQueryHandler
 
         if (productIds.Count == 0) return [];
 
-        var products = await _dbContext.Products
+        var products = await dbContext.Products
             .AsNoTracking()
             .IgnoreQueryFilters()
             .Where(p => productIds.Contains(p.Id))
@@ -110,37 +103,6 @@ internal sealed partial class GetShoppingListQueryHandler
             .ToList();
     }
 
-    /// <summary>
-    /// The shopping list is a shared household resource (#223): it aggregates the planned
-    /// meals of every member. Resolves the caller's household and returns every member's
-    /// person identifier, including managed members, plus the caller's own.
-    /// Falls back to the caller alone when they have no household or the Household module
-    /// is unavailable — the list must never fail because of a household lookup.
-    /// </summary>
-    private async Task<IReadOnlyList<Guid>> ResolveHouseholdPersonIdsAsync(
-        Guid callerPersonId, string authSubject, CancellationToken ct)
-    {
-        try
-        {
-            var context = await _households.GetHouseholdContextForUserAsync(authSubject, ct);
-            if (context is null)
-                return [callerPersonId];
-
-            var subjects = context.Members
-                .Select(m => m.PersonId)
-                .Append(callerPersonId)
-                .Distinct()
-                .ToList();
-
-            return subjects;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            LogHouseholdUnresolved(ex);
-            return [callerPersonId];
-        }
-    }
-
     private sealed class EntryProjection
     {
         public RecipeId RecipeId { get; init; } = default!;
@@ -166,10 +128,4 @@ internal sealed partial class GetShoppingListQueryHandler
         public ProductId Id { get; init; } = default!;
         public string Name { get; init; } = default!;
     }
-
-    [LoggerMessage(
-        EventId = 0,
-        Level = LogLevel.Warning,
-        Message = "Could not resolve the household for the shopping list; using the caller's own meals only.")]
-    private partial void LogHouseholdUnresolved(Exception exception);
 }

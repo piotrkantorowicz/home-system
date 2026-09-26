@@ -3,12 +3,17 @@ namespace DietPlanner.Application.Commands.BulkCompleteMealEntries;
 using Shared.Abstractions.Cqrs;
 
 /// <summary>
-/// Marks every still-planned meal of the caller on one day as done; entries already done or modified are left alone.
+/// Marks every still-planned meal of one person on one day as done; entries already done or modified are left alone.
 /// </summary>
-/// <param name="PersonId">Person identifier of the caller; the command only touches this user's data.</param>
+/// <param name="PersonId">Person identifier of the caller.</param>
 /// <param name="Date">The calendar day.</param>
-public sealed record BulkCompleteMealEntriesCommand(Guid PersonId, DateOnly Date)
-    : ICommand<BulkCompleteResult>;
+/// <param name="AuthSubject">Auth subject of the caller; resolves their household.</param>
+/// <param name="ForPersonId">Whose meals to complete: the caller when <see langword="null"/>, otherwise a managed member the caller (Owner/Adult) looks after.</param>
+public sealed record BulkCompleteMealEntriesCommand(
+    Guid PersonId,
+    DateOnly Date,
+    string AuthSubject,
+    Guid? ForPersonId = null) : ICommand<BulkCompleteResult>;
 
 /// <summary>
 /// Outcome of a bulk completion.

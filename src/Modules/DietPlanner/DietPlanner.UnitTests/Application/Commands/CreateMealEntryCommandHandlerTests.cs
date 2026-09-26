@@ -19,7 +19,7 @@ public sealed class CreateMealEntryCommandHandlerTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateMealEntryCommandHandlerTests()
-        => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork, _clock);
+        => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork, _clock, TestHouseholds.Solo());
 
     /// <summary>With valid command: <c>HandleAsync</c> adds meal entry and commits.</summary>
     [Fact]
@@ -36,7 +36,7 @@ public sealed class CreateMealEntryCommandHandlerTests
         var recipeId = Guid.NewGuid();
         var date = new DateOnly(2024, 3, 15);
         var command = new CreateMealEntryCommand(
-            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, slot.Id.Value, recipeId, 1.5m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), date, slot.Id.Value, recipeId, 1.5m, null, null, null, "user-1");
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -59,7 +59,7 @@ public sealed class CreateMealEntryCommandHandlerTests
         _scheduleRepository.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(schedule);
 
         var command = new CreateMealEntryCommand(
-            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null, "user-1");
 
         await Should.ThrowAsync<NotFoundException>(
             () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));
@@ -73,7 +73,7 @@ public sealed class CreateMealEntryCommandHandlerTests
             .Returns((MealScheduleConfig?)null);
 
         var command = new CreateMealEntryCommand(
-            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null);
+            Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), new DateOnly(2024, 3, 15), Guid.NewGuid(), Guid.NewGuid(), 1m, null, null, null, "user-1");
 
         await Should.ThrowAsync<NotFoundException>(
             () => _sut.HandleAsync(command, TestContext.Current.CancellationToken));

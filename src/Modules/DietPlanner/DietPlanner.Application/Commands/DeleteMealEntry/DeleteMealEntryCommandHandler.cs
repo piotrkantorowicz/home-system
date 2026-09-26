@@ -1,28 +1,25 @@
 namespace DietPlanner.Application.Commands.DeleteMealEntry;
 
-using DietPlanner.Domain.Exceptions;
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class DeleteMealEntryCommandHandler : ICommandHandler<DeleteMealEntryCommand>
+internal sealed class DeleteMealEntryCommandHandler(
+    IMealEntryRepository repository,
+    IUnitOfWork unitOfWork,
+    HouseholdRosterProvider households) : ICommandHandler<DeleteMealEntryCommand>
 {
-    private readonly IMealEntryRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public DeleteMealEntryCommandHandler(IMealEntryRepository repository, IUnitOfWork unitOfWork)
-        => (_repository, _unitOfWork) = (repository, unitOfWork);
-
     public async Task HandleAsync(DeleteMealEntryCommand command, CancellationToken ct = default)
     {
-        var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
+        var entry = await repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.PersonId != command.PersonId)
-            throw new DietPlannerDomainException("You can only delete your own meal entries.");
+        HouseholdRoster roster = await households.GetAsync(command.PersonId, command.AuthSubject, ct);
+        roster.Demand(entry.PersonId, roster.CanPlanFor(entry.PersonId), "MealEntry", command.Id);
 
-        _repository.Delete(entry);
-        await _unitOfWork.CommitAsync(ct);
+        repository.Delete(entry);
+        await unitOfWork.CommitAsync(ct);
     }
 }

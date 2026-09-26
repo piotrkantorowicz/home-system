@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.OverrideMealEntry;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
@@ -11,17 +12,20 @@ internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<Override
     private readonly IRecipeRepository _recipeRepository;
     private readonly IProductRepository _productRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly HouseholdRosterProvider _households;
 
     public OverrideMealEntryCommandHandler(
         IMealEntryRepository repository,
         IRecipeRepository recipeRepository,
         IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        HouseholdRosterProvider households)
     {
         _repository = repository;
         _recipeRepository = recipeRepository;
         _productRepository = productRepository;
         _unitOfWork = unitOfWork;
+        _households = households;
     }
 
     public async Task HandleAsync(OverrideMealEntryCommand command, CancellationToken ct = default)
@@ -29,8 +33,8 @@ internal sealed class OverrideMealEntryCommandHandler : ICommandHandler<Override
         var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.PersonId != command.PersonId)
-            throw new NotFoundException("MealEntry", command.Id);
+        HouseholdRoster roster = await _households.GetAsync(command.PersonId, command.AuthSubject, ct);
+        roster.Demand(entry.PersonId, roster.CanLogFor(entry.PersonId), "MealEntry", command.Id);
 
         RecipeId? actualRecipeId = null;
         if (command.ActualRecipeId is { } rawRecipeId)
