@@ -30,11 +30,11 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
             MealMissedGraceMinutes: 30,
             WaterRemindersEnabled: true,
             WaterReminderIntervalMinutes: 60,
-            WaterWindowStartUtc: new TimeOnly(6, 0),
-            WaterWindowEndUtc: new TimeOnly(22, 0),
+            WaterWindowStart: new TimeOnly(6, 0),
+            WaterWindowEnd: new TimeOnly(22, 0),
             WeeklySummaryEnabled: true,
-            WeeklySummaryDayOfWeekUtc: DayOfWeek.Sunday,
-            WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
+            WeeklySummaryDayOfWeek: DayOfWeek.Sunday,
+            WeeklySummaryTimeOfDay: new TimeOnly(8, 0),
             GoalAlertsEnabled: true);
 
     /// <summary>When no existing settings: <c>HandleAsync</c> creates new and commits.</summary>
@@ -55,7 +55,7 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
                 s.MealReminderLeadTimeMinutes == 15 &&
                 s.MealMissedGraceMinutes == 30 &&
                 s.WaterRemindersEnabled &&
-                s.WeeklySummaryDayOfWeekUtc == DayOfWeek.Sunday &&
+                s.WeeklySummaryDayOfWeek == DayOfWeek.Sunday &&
                 s.GoalAlertsEnabled),
             Arg.Any<CancellationToken>());
         _repository.DidNotReceive().Update(Arg.Any<DietReminderSettings>());
@@ -105,11 +105,11 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
             MealMissedGraceMinutes: 30,
             WaterRemindersEnabled: true,
             WaterReminderIntervalMinutes: 60,
-            WaterWindowStartUtc: new TimeOnly(6, 0),
-            WaterWindowEndUtc: new TimeOnly(22, 0),
+            WaterWindowStart: new TimeOnly(6, 0),
+            WaterWindowEnd: new TimeOnly(22, 0),
             WeeklySummaryEnabled: true,
-            WeeklySummaryDayOfWeekUtc: DayOfWeek.Sunday,
-            WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
+            WeeklySummaryDayOfWeek: DayOfWeek.Sunday,
+            WeeklySummaryTimeOfDay: new TimeOnly(8, 0),
             GoalAlertsEnabled: true);
 
     /// <summary>With valid command: <c>Validate</c> returns no errors.</summary>
@@ -169,10 +169,10 @@ public sealed class UpdateDietReminderSettingsCommandValidatorTests
     {
         var command = DefaultCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")) with
         {
-            WaterWindowStartUtc = new TimeOnly(12, 0),
-            WaterWindowEndUtc = new TimeOnly(11, 0),
+            WaterWindowStart = new TimeOnly(12, 0),
+            WaterWindowEnd = new TimeOnly(11, 0),
         };
         var errors = _sut.Validate(command).ToList();
-        errors.ShouldContain(e => e.PropertyName == nameof(command.WaterWindowEndUtc));
+        errors.ShouldContain(e => e.PropertyName == nameof(command.WaterWindowEnd));
     }
 }

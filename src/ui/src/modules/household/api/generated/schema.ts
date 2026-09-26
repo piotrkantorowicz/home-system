@@ -446,7 +446,7 @@ export interface paths {
         get: operations["GetDietReminderSettings"];
         /**
          * Update the current user's diet reminder settings
-         * @description Creates or updates diet reminder settings for the current user. All times are UTC; the frontend converts from user-local time.
+         * @description Creates or updates diet reminder settings for the current user. Times of day are local wall-clock values, read in the configured time zone.
          */
         put: operations["UpdateDietReminderSettings"];
         post?: never;
@@ -1098,7 +1098,8 @@ export interface components {
         DietReminderSettingsDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
+            /** Format: uuid */
+            personId: string;
             mealRemindersEnabled: boolean;
             /** Format: int32 */
             mealReminderLeadTimeMinutes: number | string;
@@ -1108,13 +1109,13 @@ export interface components {
             /** Format: int32 */
             waterReminderIntervalMinutes: number | string;
             /** Format: time */
-            waterWindowStartUtc: string;
+            waterWindowStart: string;
             /** Format: time */
-            waterWindowEndUtc: string;
+            waterWindowEnd: string;
             weeklySummaryEnabled: boolean;
-            weeklySummaryDayOfWeekUtc: components["schemas"]["DayOfWeek"];
+            weeklySummaryDayOfWeek: components["schemas"]["DayOfWeek"];
             /** Format: time */
-            weeklySummaryTimeOfDayUtc: string;
+            weeklySummaryTimeOfDay: string;
             goalAlertsEnabled: boolean;
             /** Format: date-time */
             createdAt: string;
@@ -1131,19 +1132,20 @@ export interface components {
             /** Format: int32 */
             waterReminderIntervalMinutes: number | string;
             /** Format: time */
-            waterWindowStartUtc: string;
+            waterWindowStart: string;
             /** Format: time */
-            waterWindowEndUtc: string;
+            waterWindowEnd: string;
             weeklySummaryEnabled: boolean;
-            weeklySummaryDayOfWeekUtc: components["schemas"]["DayOfWeek"];
+            weeklySummaryDayOfWeek: components["schemas"]["DayOfWeek"];
             /** Format: time */
-            weeklySummaryTimeOfDayUtc: string;
+            weeklySummaryTimeOfDay: string;
             goalAlertsEnabled: boolean;
         };
         GoalDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
+            /** Format: uuid */
+            personId: string;
             /** Format: int32 */
             dailyCalorieTarget: null | number | string;
             /** Format: double */
@@ -1200,7 +1202,8 @@ export interface components {
         HydrationConfigDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
+            /** Format: uuid */
+            personId: string;
             /** Format: int32 */
             dailyWaterTargetMl: number | string;
             /** Format: int32 */
@@ -1368,7 +1371,8 @@ export interface components {
         MealScheduleConfigDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
+            /** Format: uuid */
+            personId: string;
             slots: components["schemas"]["MealSlotDto"][];
             /** Format: date-time */
             createdAt: string;
@@ -1645,7 +1649,8 @@ export interface components {
         UserProfileDto: {
             /** Format: uuid */
             id: string;
-            userId: string;
+            /** Format: uuid */
+            personId: string;
             /** Format: date */
             dateOfBirth: null | string;
             gender: null | string;

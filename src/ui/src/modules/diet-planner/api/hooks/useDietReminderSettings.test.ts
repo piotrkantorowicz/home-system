@@ -23,11 +23,11 @@ const mockSettings = {
   mealMissedGraceMinutes: 30,
   waterRemindersEnabled: true,
   waterReminderIntervalMinutes: 60,
-  waterWindowStartUtc: '06:00:00',
-  waterWindowEndUtc: '22:00:00',
+  waterWindowStart: '06:00:00',
+  waterWindowEnd: '22:00:00',
   weeklySummaryEnabled: true,
-  weeklySummaryDayOfWeekUtc: 0,
-  weeklySummaryTimeOfDayUtc: '08:00:00',
+  weeklySummaryDayOfWeek: 0,
+  weeklySummaryTimeOfDay: '08:00:00',
   goalAlertsEnabled: true,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: null,
@@ -72,8 +72,8 @@ describe('useDietReminderSettings', () => {
     expect(result.current.data).toEqual(mockSettings);
     expect(result.current.data?.mealRemindersEnabled).toBe(true);
     expect(result.current.data?.mealMissedGraceMinutes).toBe(30);
-    expect(result.current.data?.waterWindowStartUtc).toBe('06:00:00');
-    expect(result.current.data?.weeklySummaryDayOfWeekUtc).toBe(0);
+    expect(result.current.data?.waterWindowStart).toBe('06:00:00');
+    expect(result.current.data?.weeklySummaryDayOfWeek).toBe(0);
   });
 
   it('exposes error when GET API fails', async () => {
@@ -102,11 +102,11 @@ describe('useUpdateDietReminderSettings', () => {
     mealMissedGraceMinutes: 45,
     waterRemindersEnabled: false,
     waterReminderIntervalMinutes: 120,
-    waterWindowStartUtc: '07:00:00',
-    waterWindowEndUtc: '21:00:00',
+    waterWindowStart: '07:00:00',
+    waterWindowEnd: '21:00:00',
     weeklySummaryEnabled: false,
-    weeklySummaryDayOfWeekUtc: 1,
-    weeklySummaryTimeOfDayUtc: '09:00:00',
+    weeklySummaryDayOfWeek: 1,
+    weeklySummaryTimeOfDay: '09:00:00',
     goalAlertsEnabled: false,
   };
 

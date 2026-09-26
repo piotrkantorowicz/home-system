@@ -3,12 +3,6 @@ import {
   useDietReminderSettings,
   useUpdateDietReminderSettings,
 } from '@modules/diet-planner/api/hooks/useDietReminderSettings';
-import {
-  localDayAndTimeToUtc,
-  localTimeToUtc,
-  utcDayAndTimeToLocal,
-  utcTimeToLocal,
-} from '@modules/diet-planner/utils/utcTime';
 import { Card, CardContent, Button, Input, Label, Checkbox, Select } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
@@ -28,6 +22,10 @@ type WaterInterval = (typeof WATER_INTERVAL_OPTIONS)[number];
 type DayOfWeek = (typeof DAY_OF_WEEK_OPTIONS)[number];
 
 const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Backend TimeOnly is "HH:mm:ss" local wall-clock time; the time inputs work in "HH:mm".
+const toHHmm = (time: string): string => time.slice(0, 5);
+const toTimeOnly = (hhmm: string): string => `${hhmm}:00`;
 
 const dietReminderSettingsSchema = z
   .object({
@@ -107,11 +105,6 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
       const inOptions = <T extends number>(opts: readonly T[], v: number, fallback: T): T =>
         (opts as readonly number[]).includes(v) ? (v as T) : fallback;
 
-      const summaryLocal = utcDayAndTimeToLocal(
-        settings.weeklySummaryDayOfWeekUtc,
-        settings.weeklySummaryTimeOfDayUtc,
-      );
-
       reset({
         mealRemindersEnabled: settings.mealRemindersEnabled,
         mealReminderLeadTimeMinutes: inOptions<MealLeadTime>(
@@ -130,22 +123,17 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
           Number(settings.waterReminderIntervalMinutes),
           60,
         ),
-        waterWindowStartLocal: utcTimeToLocal(settings.waterWindowStartUtc),
-        waterWindowEndLocal: utcTimeToLocal(settings.waterWindowEndUtc),
+        waterWindowStartLocal: toHHmm(settings.waterWindowStart),
+        waterWindowEndLocal: toHHmm(settings.waterWindowEnd),
         weeklySummaryEnabled: settings.weeklySummaryEnabled,
-        weeklySummaryDayOfWeekLocal: summaryLocal.localDayOfWeek,
-        weeklySummaryTimeOfDayLocal: summaryLocal.localHHmm,
+        weeklySummaryDayOfWeekLocal: settings.weeklySummaryDayOfWeek,
+        weeklySummaryTimeOfDayLocal: toHHmm(settings.weeklySummaryTimeOfDay),
         goalAlertsEnabled: settings.goalAlertsEnabled,
       });
     }
   }, [settings, reset]);
 
   const onSubmit = async (data: FormData) => {
-    const summaryUtc = localDayAndTimeToUtc(
-      data.weeklySummaryDayOfWeekLocal,
-      data.weeklySummaryTimeOfDayLocal,
-    );
-
     try {
       await updateMutation.mutateAsync({
         mealRemindersEnabled: data.mealRemindersEnabled,
@@ -153,11 +141,11 @@ export function DietReminderSettingsForm({ onSuccess }: DietReminderSettingsForm
         mealMissedGraceMinutes: data.mealMissedGraceMinutes,
         waterRemindersEnabled: data.waterRemindersEnabled,
         waterReminderIntervalMinutes: data.waterReminderIntervalMinutes,
-        waterWindowStartUtc: localTimeToUtc(data.waterWindowStartLocal),
-        waterWindowEndUtc: localTimeToUtc(data.waterWindowEndLocal),
+        waterWindowStart: toTimeOnly(data.waterWindowStartLocal),
+        waterWindowEnd: toTimeOnly(data.waterWindowEndLocal),
         weeklySummaryEnabled: data.weeklySummaryEnabled,
-        weeklySummaryDayOfWeekUtc: summaryUtc.dayOfWeekUtc,
-        weeklySummaryTimeOfDayUtc: summaryUtc.timeOfDayUtc,
+        weeklySummaryDayOfWeek: data.weeklySummaryDayOfWeekLocal,
+        weeklySummaryTimeOfDay: toTimeOnly(data.weeklySummaryTimeOfDayLocal),
         goalAlertsEnabled: data.goalAlertsEnabled,
       });
     } catch {

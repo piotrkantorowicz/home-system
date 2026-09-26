@@ -290,11 +290,11 @@ function toRequest(s: DietReminderSettingsDto): DietReminderSettingsRequest {
     mealMissedGraceMinutes: num2(s.mealMissedGraceMinutes),
     waterRemindersEnabled: s.waterRemindersEnabled,
     waterReminderIntervalMinutes: num2(s.waterReminderIntervalMinutes),
-    waterWindowStartUtc: s.waterWindowStartUtc,
-    waterWindowEndUtc: s.waterWindowEndUtc,
+    waterWindowStart: s.waterWindowStart,
+    waterWindowEnd: s.waterWindowEnd,
     weeklySummaryEnabled: s.weeklySummaryEnabled,
-    weeklySummaryDayOfWeekUtc: s.weeklySummaryDayOfWeekUtc,
-    weeklySummaryTimeOfDayUtc: s.weeklySummaryTimeOfDayUtc,
+    weeklySummaryDayOfWeek: s.weeklySummaryDayOfWeek,
+    weeklySummaryTimeOfDay: s.weeklySummaryTimeOfDay,
     goalAlertsEnabled: s.goalAlertsEnabled,
   };
 }
@@ -341,7 +341,7 @@ function RemindersCard({ onEditAll }: { onEditAll: () => void }) {
         {
           field: 'weeklySummaryEnabled',
           label: t('dietReminderSettings.weekly_summary_label'),
-          detail: String(settings.weeklySummaryDayOfWeekUtc),
+          detail: String(settings.weeklySummaryDayOfWeek),
           checked: settings.weeklySummaryEnabled,
         },
         {

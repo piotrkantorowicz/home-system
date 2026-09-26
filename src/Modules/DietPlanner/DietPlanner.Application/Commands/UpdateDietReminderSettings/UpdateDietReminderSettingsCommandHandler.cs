@@ -27,11 +27,11 @@ internal sealed class UpdateDietReminderSettingsCommandHandler(
                 command.MealMissedGraceMinutes,
                 command.WaterRemindersEnabled,
                 command.WaterReminderIntervalMinutes,
-                command.WaterWindowStartUtc,
-                command.WaterWindowEndUtc,
+                command.WaterWindowStart,
+                command.WaterWindowEnd,
                 command.WeeklySummaryEnabled,
-                command.WeeklySummaryDayOfWeekUtc,
-                command.WeeklySummaryTimeOfDayUtc,
+                command.WeeklySummaryDayOfWeek,
+                command.WeeklySummaryTimeOfDay,
                 command.GoalAlertsEnabled);
 
             await repository.AddAsync(settings, ct);
@@ -44,11 +44,11 @@ internal sealed class UpdateDietReminderSettingsCommandHandler(
                 command.MealMissedGraceMinutes,
                 command.WaterRemindersEnabled,
                 command.WaterReminderIntervalMinutes,
-                command.WaterWindowStartUtc,
-                command.WaterWindowEndUtc,
+                command.WaterWindowStart,
+                command.WaterWindowEnd,
                 command.WeeklySummaryEnabled,
-                command.WeeklySummaryDayOfWeekUtc,
-                command.WeeklySummaryTimeOfDayUtc,
+                command.WeeklySummaryDayOfWeek,
+                command.WeeklySummaryTimeOfDay,
                 command.GoalAlertsEnabled,
                 now);
 

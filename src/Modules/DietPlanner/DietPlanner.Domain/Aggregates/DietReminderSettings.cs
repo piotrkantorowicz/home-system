@@ -7,9 +7,9 @@ using Shared.Abstractions.Core.Domain;
 /// <summary>
 /// A user's notification preferences for the Diet Planner: meal reminders (lead time before the
 /// planned time, grace period before a meal counts as missed), water reminders (interval and the
-/// UTC window they may fire in), the weekly summary (UTC day and time) and goal alerts. One row per
-/// user, created with defaults on first access. All times are UTC — the user's locale is applied
-/// when the notification is rendered, not here.
+/// window they may fire in), the weekly summary (day and time) and goal alerts. One row per user,
+/// created with defaults on first access. Times of day are local wall-clock values; the reminder
+/// jobs read them in the configured time zone, so they stay put across DST changes.
 /// </summary>
 public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
 {
@@ -17,7 +17,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
 
     /// <summary>
     /// Creates the settings. Defaults: meal reminders 15 min ahead / missed after 30 min; water every
-    /// 60 min between 06:00 and 22:00 UTC; weekly summary Sunday 08:00 UTC; everything enabled.
+    /// 60 min between 06:00 and 22:00; weekly summary Sunday 08:00; everything enabled.
     /// </summary>
     /// <param name="id">Identifier for the new settings.</param>
     /// <param name="personId">Person identifier of the owner; required.</param>
@@ -26,11 +26,11 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// <param name="mealMissedGraceMinutes">Minutes after the planned time before a meal counts as missed; positive.</param>
     /// <param name="waterRemindersEnabled">Whether water reminders fire.</param>
     /// <param name="waterReminderIntervalMinutes">Minimum minutes between water reminders; positive.</param>
-    /// <param name="waterWindowStartUtc">Earliest UTC time of day a water reminder may fire; 06:00 if omitted.</param>
-    /// <param name="waterWindowEndUtc">Latest UTC time of day a water reminder may fire; 22:00 if omitted, must be after the start.</param>
+    /// <param name="waterWindowStart">Earliest local time of day a water reminder may fire; 06:00 if omitted.</param>
+    /// <param name="waterWindowEnd">Latest local time of day a water reminder may fire; 22:00 if omitted, must be after the start.</param>
     /// <param name="weeklySummaryEnabled">Whether the weekly summary is sent.</param>
-    /// <param name="weeklySummaryDayOfWeekUtc">UTC weekday the summary is sent on.</param>
-    /// <param name="weeklySummaryTimeOfDayUtc">UTC time of day the summary is sent at; 08:00 if omitted.</param>
+    /// <param name="weeklySummaryDayOfWeek">Local weekday the summary is sent on.</param>
+    /// <param name="weeklySummaryTimeOfDay">Local time of day the summary is sent at; 08:00 if omitted.</param>
     /// <param name="goalAlertsEnabled">Whether goal milestone notifications fire.</param>
     /// <exception cref="ArgumentException"><paramref name="personId"/> is empty.</exception>
     /// <exception cref="DietPlannerDomainException">A minute value is not positive or the water window is empty.</exception>
@@ -44,26 +44,26 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         int mealMissedGraceMinutes = 30,
         bool waterRemindersEnabled = true,
         int waterReminderIntervalMinutes = 60,
-        TimeOnly? waterWindowStartUtc = null,
-        TimeOnly? waterWindowEndUtc = null,
+        TimeOnly? waterWindowStart = null,
+        TimeOnly? waterWindowEnd = null,
         bool weeklySummaryEnabled = true,
-        DayOfWeek weeklySummaryDayOfWeekUtc = DayOfWeek.Sunday,
-        TimeOnly? weeklySummaryTimeOfDayUtc = null,
+        DayOfWeek weeklySummaryDayOfWeek = DayOfWeek.Sunday,
+        TimeOnly? weeklySummaryTimeOfDay = null,
         bool goalAlertsEnabled = true)
     {
         if (personId == Guid.Empty)
             throw new ArgumentException("PersonId is required.", nameof(personId));
 
-        var startUtc = waterWindowStartUtc ?? new TimeOnly(6, 0);
-        var endUtc = waterWindowEndUtc ?? new TimeOnly(22, 0);
-        var summaryTimeUtc = weeklySummaryTimeOfDayUtc ?? new TimeOnly(8, 0);
+        var start = waterWindowStart ?? new TimeOnly(6, 0);
+        var end = waterWindowEnd ?? new TimeOnly(22, 0);
+        var summaryTime = weeklySummaryTimeOfDay ?? new TimeOnly(8, 0);
 
         EnsureValid(
             mealReminderLeadTimeMinutes,
             mealMissedGraceMinutes,
             waterReminderIntervalMinutes,
-            startUtc,
-            endUtc);
+            start,
+            end);
 
         return new DietReminderSettings
         {
@@ -74,11 +74,11 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
             MealMissedGraceMinutes = mealMissedGraceMinutes,
             WaterRemindersEnabled = waterRemindersEnabled,
             WaterReminderIntervalMinutes = waterReminderIntervalMinutes,
-            WaterWindowStartUtc = startUtc,
-            WaterWindowEndUtc = endUtc,
+            WaterWindowStart = start,
+            WaterWindowEnd = end,
             WeeklySummaryEnabled = weeklySummaryEnabled,
-            WeeklySummaryDayOfWeekUtc = weeklySummaryDayOfWeekUtc,
-            WeeklySummaryTimeOfDayUtc = summaryTimeUtc,
+            WeeklySummaryDayOfWeek = weeklySummaryDayOfWeek,
+            WeeklySummaryTimeOfDay = summaryTime,
             GoalAlertsEnabled = goalAlertsEnabled,
             CreatedAt = now,
         };
@@ -96,16 +96,16 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     public bool WaterRemindersEnabled { get; private set; }
     /// <summary>Minimum minutes between two water reminders.</summary>
     public int WaterReminderIntervalMinutes { get; private set; }
-    /// <summary>Earliest UTC time of day a water reminder may fire.</summary>
-    public TimeOnly WaterWindowStartUtc { get; private set; }
-    /// <summary>Latest UTC time of day a water reminder may fire; always after the start.</summary>
-    public TimeOnly WaterWindowEndUtc { get; private set; }
+    /// <summary>Earliest local time of day a water reminder may fire.</summary>
+    public TimeOnly WaterWindowStart { get; private set; }
+    /// <summary>Latest local time of day a water reminder may fire; always after the start.</summary>
+    public TimeOnly WaterWindowEnd { get; private set; }
     /// <summary>Whether the weekly summary is sent.</summary>
     public bool WeeklySummaryEnabled { get; private set; }
-    /// <summary>UTC weekday the weekly summary is sent on.</summary>
-    public DayOfWeek WeeklySummaryDayOfWeekUtc { get; private set; }
-    /// <summary>UTC time of day the weekly summary is sent at.</summary>
-    public TimeOnly WeeklySummaryTimeOfDayUtc { get; private set; }
+    /// <summary>Local weekday the weekly summary is sent on.</summary>
+    public DayOfWeek WeeklySummaryDayOfWeek { get; private set; }
+    /// <summary>Local time of day the weekly summary is sent at.</summary>
+    public TimeOnly WeeklySummaryTimeOfDay { get; private set; }
     /// <summary>Whether goal milestone notifications fire.</summary>
     public bool GoalAlertsEnabled { get; private set; }
     /// <summary>Creation time, UTC.</summary>
@@ -119,11 +119,11 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
     /// <param name="mealMissedGraceMinutes">Minutes after the planned time before a meal counts as missed; positive.</param>
     /// <param name="waterRemindersEnabled">Whether water reminders fire.</param>
     /// <param name="waterReminderIntervalMinutes">Minimum minutes between water reminders; positive.</param>
-    /// <param name="waterWindowStartUtc">Earliest UTC time of day a water reminder may fire.</param>
-    /// <param name="waterWindowEndUtc">Latest UTC time of day a water reminder may fire; must be after the start.</param>
+    /// <param name="waterWindowStart">Earliest local time of day a water reminder may fire.</param>
+    /// <param name="waterWindowEnd">Latest local time of day a water reminder may fire; must be after the start.</param>
     /// <param name="weeklySummaryEnabled">Whether the weekly summary is sent.</param>
-    /// <param name="weeklySummaryDayOfWeekUtc">UTC weekday the summary is sent on.</param>
-    /// <param name="weeklySummaryTimeOfDayUtc">UTC time of day the summary is sent at.</param>
+    /// <param name="weeklySummaryDayOfWeek">Local weekday the summary is sent on.</param>
+    /// <param name="weeklySummaryTimeOfDay">Local time of day the summary is sent at.</param>
     /// <param name="goalAlertsEnabled">Whether goal milestone notifications fire.</param>
     /// <exception cref="DietPlannerDomainException">A minute value is not positive or the water window is empty.</exception>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
@@ -133,11 +133,11 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         int mealMissedGraceMinutes,
         bool waterRemindersEnabled,
         int waterReminderIntervalMinutes,
-        TimeOnly waterWindowStartUtc,
-        TimeOnly waterWindowEndUtc,
+        TimeOnly waterWindowStart,
+        TimeOnly waterWindowEnd,
         bool weeklySummaryEnabled,
-        DayOfWeek weeklySummaryDayOfWeekUtc,
-        TimeOnly weeklySummaryTimeOfDayUtc,
+        DayOfWeek weeklySummaryDayOfWeek,
+        TimeOnly weeklySummaryTimeOfDay,
         bool goalAlertsEnabled,
         DateTime now)
     {
@@ -145,19 +145,19 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
             mealReminderLeadTimeMinutes,
             mealMissedGraceMinutes,
             waterReminderIntervalMinutes,
-            waterWindowStartUtc,
-            waterWindowEndUtc);
+            waterWindowStart,
+            waterWindowEnd);
 
         MealRemindersEnabled = mealRemindersEnabled;
         MealReminderLeadTimeMinutes = mealReminderLeadTimeMinutes;
         MealMissedGraceMinutes = mealMissedGraceMinutes;
         WaterRemindersEnabled = waterRemindersEnabled;
         WaterReminderIntervalMinutes = waterReminderIntervalMinutes;
-        WaterWindowStartUtc = waterWindowStartUtc;
-        WaterWindowEndUtc = waterWindowEndUtc;
+        WaterWindowStart = waterWindowStart;
+        WaterWindowEnd = waterWindowEnd;
         WeeklySummaryEnabled = weeklySummaryEnabled;
-        WeeklySummaryDayOfWeekUtc = weeklySummaryDayOfWeekUtc;
-        WeeklySummaryTimeOfDayUtc = weeklySummaryTimeOfDayUtc;
+        WeeklySummaryDayOfWeek = weeklySummaryDayOfWeek;
+        WeeklySummaryTimeOfDay = weeklySummaryTimeOfDay;
         GoalAlertsEnabled = goalAlertsEnabled;
         UpdatedAt = now;
     }
@@ -166,8 +166,8 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         int mealReminderLeadTimeMinutes,
         int mealMissedGraceMinutes,
         int waterReminderIntervalMinutes,
-        TimeOnly waterWindowStartUtc,
-        TimeOnly waterWindowEndUtc)
+        TimeOnly waterWindowStart,
+        TimeOnly waterWindowEnd)
     {
         if (mealReminderLeadTimeMinutes <= 0)
             throw new DietPlannerDomainException("MealReminderLeadTimeMinutes must be greater than zero.");
@@ -178,7 +178,7 @@ public sealed class DietReminderSettings : AggregateRoot<DietReminderSettingsId>
         if (waterReminderIntervalMinutes <= 0)
             throw new DietPlannerDomainException("WaterReminderIntervalMinutes must be greater than zero.");
 
-        if (waterWindowEndUtc <= waterWindowStartUtc)
-            throw new DietPlannerDomainException("WaterWindowEndUtc must be after WaterWindowStartUtc.");
+        if (waterWindowEnd <= waterWindowStart)
+            throw new DietPlannerDomainException("WaterWindowEnd must be after WaterWindowStart.");
     }
 }

@@ -12,4 +12,10 @@ public sealed class DietReminderTickServiceOptions
     public bool Enabled { get; init; } = true;
     /// <summary>Seconds between ticks; clamped to at least 1.</summary>
     public int TickIntervalSeconds { get; init; } = 60;
+    /// <summary>
+    /// IANA time zone the reminder times of day (meal times, water window, weekly summary) are read
+    /// in. One zone for every user.
+    /// </summary>
+    // App-wide by design for now; per-user zone synced from the browser is #414.
+    public string TimeZoneId { get; init; } = "Europe/Warsaw";
 }

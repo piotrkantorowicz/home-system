@@ -4,18 +4,23 @@ using DietPlanner.Application.Workers;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
-internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContext)
+internal sealed class MealReminderCandidateQueries(
+    DietPlannerDbContext dbContext,
+    IOptions<DietReminderTickServiceOptions> options)
     : IMealReminderCandidateQueries
 {
     private const string DefaultLocale = "en";
     private static readonly TimeSpan MissedLookback = TimeSpan.FromHours(24);
 
+    private readonly TimeZoneInfo _timeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.TimeZoneId);
+
     public async Task<IReadOnlyList<MealReminderCandidate>> GetDueRemindersAsync(
         DateTime nowUtc, CancellationToken ct)
     {
-        var nowDate = DateOnly.FromDateTime(nowUtc);
-        var horizonDate = DateOnly.FromDateTime(nowUtc.AddDays(1));
+        var nowDate = LocalDate(nowUtc);
+        var horizonDate = nowDate.AddDays(1);
 
         var rows = await (
             from settings in dbContext.DietReminderSettings.AsNoTracking()
@@ -43,7 +48,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
         foreach (var r in rows)
         {
             var time = r.MealTime ?? r.SlotDefaultTime;
-            var plannedAt = DateTime.SpecifyKind(r.Date.ToDateTime(time), DateTimeKind.Utc);
+            var plannedAt = ToUtc(r.Date.ToDateTime(time));
             var leadEnd = nowUtc.AddMinutes(r.MealReminderLeadTimeMinutes);
             if (plannedAt > nowUtc && plannedAt <= leadEnd)
             {
@@ -58,8 +63,8 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
     public async Task<IReadOnlyList<MealReminderCandidate>> GetMissedRemindersAsync(
         DateTime nowUtc, CancellationToken ct)
     {
-        var lowerDate = DateOnly.FromDateTime(nowUtc.Subtract(MissedLookback));
-        var upperDate = DateOnly.FromDateTime(nowUtc);
+        var lowerDate = LocalDate(nowUtc.Subtract(MissedLookback));
+        var upperDate = LocalDate(nowUtc);
 
         var rows = await (
             from settings in dbContext.DietReminderSettings.AsNoTracking()
@@ -87,7 +92,7 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
         foreach (var r in rows)
         {
             var time = r.MealTime ?? r.SlotDefaultTime;
-            var plannedAt = DateTime.SpecifyKind(r.Date.ToDateTime(time), DateTimeKind.Utc);
+            var plannedAt = ToUtc(r.Date.ToDateTime(time));
             var missedAt = plannedAt.AddMinutes(r.MealMissedGraceMinutes);
             if (missedAt <= nowUtc && plannedAt > nowUtc.Subtract(MissedLookback))
             {
@@ -98,4 +103,12 @@ internal sealed class MealReminderCandidateQueries(DietPlannerDbContext dbContex
 
         return result;
     }
+
+    private DateOnly LocalDate(DateTime utc)
+        => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utc, _timeZone));
+
+    // A meal planned inside the spring-forward gap (02:30 on the change night) has no UTC instant;
+    // it is pushed forward past the gap (02:30 → 03:30). Ambiguous fall-back times take standard time.
+    private DateTime ToUtc(DateTime local)
+        => TimeZoneInfo.ConvertTimeToUtc(_timeZone.IsInvalidTime(local) ? local.AddHours(1) : local, _timeZone);
 }

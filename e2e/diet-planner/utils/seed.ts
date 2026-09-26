@@ -171,11 +171,11 @@ export interface DietReminderSettingsSeed {
   mealMissedGraceMinutes?: number;
   waterRemindersEnabled?: boolean;
   waterReminderIntervalMinutes?: number;
-  waterWindowStartUtc?: string;
-  waterWindowEndUtc?: string;
+  waterWindowStart?: string;
+  waterWindowEnd?: string;
   weeklySummaryEnabled?: boolean;
-  weeklySummaryDayOfWeekUtc?: number;
-  weeklySummaryTimeOfDayUtc?: string;
+  weeklySummaryDayOfWeek?: number;
+  weeklySummaryTimeOfDay?: string;
   goalAlertsEnabled?: boolean;
 }
 
@@ -185,11 +185,11 @@ const DEFAULT_DIET_REMINDER_SETTINGS: Required<DietReminderSettingsSeed> = {
   mealMissedGraceMinutes: 30,
   waterRemindersEnabled: false,
   waterReminderIntervalMinutes: 60,
-  waterWindowStartUtc: '06:00:00',
-  waterWindowEndUtc: '22:00:00',
+  waterWindowStart: '06:00:00',
+  waterWindowEnd: '22:00:00',
   weeklySummaryEnabled: false,
-  weeklySummaryDayOfWeekUtc: 0,
-  weeklySummaryTimeOfDayUtc: '08:00:00',
+  weeklySummaryDayOfWeek: 0,
+  weeklySummaryTimeOfDay: '08:00:00',
   goalAlertsEnabled: true,
 };
 

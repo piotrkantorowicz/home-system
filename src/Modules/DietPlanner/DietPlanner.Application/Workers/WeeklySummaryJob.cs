@@ -20,21 +20,23 @@ internal sealed class WeeklySummaryJob(
     {
         IReadOnlyList<WeeklySummaryCandidate> candidates = await queries.GetCandidatesAsync(ct);
 
-        var nowTime = TimeOnly.FromDateTime(nowUtc);
         var publishedAny = false;
 
         foreach (var c in candidates)
         {
-            if (nowUtc.DayOfWeek != c.WeeklySummaryDayOfWeekUtc)
+            var nowLocal = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, c.TimeZone);
+
+            if (nowLocal.DayOfWeek != c.WeeklySummaryDayOfWeek)
                 continue;
 
-            if (nowTime < c.WeeklySummaryTimeOfDayUtc)
+            if (TimeOnly.FromDateTime(nowLocal) < c.WeeklySummaryTimeOfDay)
                 continue;
 
-            if (!IsWeekElapsed(nowUtc, c.LastWeeklySummaryAt))
+            var today = DateOnly.FromDateTime(nowLocal);
+            if (!IsWeekElapsed(today, c.LastWeeklySummaryAt, c.TimeZone))
                 continue;
 
-            var weekEnd = DateOnly.FromDateTime(nowUtc).AddDays(-1);
+            var weekEnd = today.AddDays(-1);
             var weekStart = weekEnd.AddDays(-6);
 
             WeeklyStats stats = await queries.GetStatsAsync(c.PersonId, weekStart, weekEnd, ct);
@@ -69,6 +71,9 @@ internal sealed class WeeklySummaryJob(
             await unitOfWork.CommitAsync(ct);
     }
 
-    private static bool IsWeekElapsed(DateTime nowUtc, DateTime? lastAt)
-        => lastAt is null || lastAt.Value.AddDays(7) <= nowUtc;
+    // Compared on local dates, not UTC instants: across a DST change the same local send time is
+    // 7 days ± 1 hour later, and an instant check would hold the spring-forward summary back an hour.
+    private static bool IsWeekElapsed(DateOnly today, DateTime? lastAtUtc, TimeZoneInfo timeZone)
+        => lastAtUtc is null
+            || DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(lastAtUtc.Value, timeZone)) <= today.AddDays(-7);
 }

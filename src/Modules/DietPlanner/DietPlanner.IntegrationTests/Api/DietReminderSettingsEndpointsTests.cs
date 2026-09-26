@@ -29,11 +29,11 @@ public sealed class DietReminderSettingsEndpointsTests
         MealMissedGraceMinutes: 30,
         WaterRemindersEnabled: true,
         WaterReminderIntervalMinutes: 60,
-        WaterWindowStartUtc: new TimeOnly(6, 0),
-        WaterWindowEndUtc: new TimeOnly(22, 0),
+        WaterWindowStart: new TimeOnly(6, 0),
+        WaterWindowEnd: new TimeOnly(22, 0),
         WeeklySummaryEnabled: true,
-        WeeklySummaryDayOfWeekUtc: DayOfWeek.Sunday,
-        WeeklySummaryTimeOfDayUtc: new TimeOnly(8, 0),
+        WeeklySummaryDayOfWeek: DayOfWeek.Sunday,
+        WeeklySummaryTimeOfDay: new TimeOnly(8, 0),
         GoalAlertsEnabled: true);
 
     /// <summary><c>GET</c> when no settings exist returns 404.</summary>
@@ -67,10 +67,10 @@ public sealed class DietReminderSettingsEndpointsTests
             MealReminderLeadTimeMinutes = 30,
             MealMissedGraceMinutes = 45,
             WaterReminderIntervalMinutes = 120,
-            WaterWindowStartUtc = new TimeOnly(7, 0),
-            WaterWindowEndUtc = new TimeOnly(21, 0),
-            WeeklySummaryDayOfWeekUtc = DayOfWeek.Monday,
-            WeeklySummaryTimeOfDayUtc = new TimeOnly(9, 0),
+            WaterWindowStart = new TimeOnly(7, 0),
+            WaterWindowEnd = new TimeOnly(21, 0),
+            WeeklySummaryDayOfWeek = DayOfWeek.Monday,
+            WeeklySummaryTimeOfDay = new TimeOnly(9, 0),
             GoalAlertsEnabled = false,
         };
 
@@ -85,10 +85,10 @@ public sealed class DietReminderSettingsEndpointsTests
         dto.MealReminderLeadTimeMinutes.ShouldBe(30);
         dto.MealMissedGraceMinutes.ShouldBe(45);
         dto.WaterReminderIntervalMinutes.ShouldBe(120);
-        dto.WaterWindowStartUtc.ShouldBe(new TimeOnly(7, 0));
-        dto.WaterWindowEndUtc.ShouldBe(new TimeOnly(21, 0));
-        dto.WeeklySummaryDayOfWeekUtc.ShouldBe(DayOfWeek.Monday);
-        dto.WeeklySummaryTimeOfDayUtc.ShouldBe(new TimeOnly(9, 0));
+        dto.WaterWindowStart.ShouldBe(new TimeOnly(7, 0));
+        dto.WaterWindowEnd.ShouldBe(new TimeOnly(21, 0));
+        dto.WeeklySummaryDayOfWeek.ShouldBe(DayOfWeek.Monday);
+        dto.WeeklySummaryTimeOfDay.ShouldBe(new TimeOnly(9, 0));
         dto.GoalAlertsEnabled.ShouldBeFalse();
     }
 
@@ -145,8 +145,8 @@ public sealed class DietReminderSettingsEndpointsTests
     {
         var request = DefaultRequest() with
         {
-            WaterWindowStartUtc = new TimeOnly(12, 0),
-            WaterWindowEndUtc = new TimeOnly(11, 0),
+            WaterWindowStart = new TimeOnly(12, 0),
+            WaterWindowEnd = new TimeOnly(11, 0),
         };
 
         var response = await _client.PutAsJsonAsync(Path, request, cancellationToken: TestContext.Current.CancellationToken);
