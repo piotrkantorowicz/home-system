@@ -61,7 +61,13 @@ export function mealsOptions(params: MealsQueryParams = {}) {
 }
 
 export function useMeals(params: MealsQueryParams = {}) {
-  return useQuery({ ...mealsOptions(params), placeholderData: keepPreviousData });
+  return useQuery({
+    ...mealsOptions(params),
+    // Keep the previous range on screen while paging, but never another person's meals:
+    // the page's action controls already follow the newly selected person.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1].personId === params.personId ? previous : undefined,
+  });
 }
 
 export function useCreateMeal() {
