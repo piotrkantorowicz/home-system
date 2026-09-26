@@ -2,14 +2,22 @@ import { inviteeAuthStatePath, inviteeInvitationEmail } from '../shared/auth-pat
 
 import { test, expect } from './fixtures';
 import { HouseholdPage } from './pages/household.page';
-import { arrangeCleanInvitation, ensureNoHousehold, seedSharedShoppingListItem } from './utils/seed';
+import {
+  arrangeCleanInvitation,
+  ensureNoHousehold,
+  joinAsMember,
+  seedSharedShoppingListItem,
+} from './utils/seed';
+
+import type { Browser } from '@playwright/test';
+
+// Every spec in this file shares the one reserved invitee identity and its
+// household membership state — running them concurrently (this suite's
+// default) would race two tests over the same account. File-level so the
+// invitation and role describes never overlap either.
+test.describe.configure({ mode: 'serial' });
 
 test.describe('Household invitations', () => {
-  // All three specs share the one reserved invitee identity and its household
-  // membership state — running them concurrently (this suite's default) would
-  // race two tests over the same account.
-  test.describe.configure({ mode: 'serial' });
-
   test('owner invites a member, they accept, and both see the shared shopping list', async ({
     page,
     browser,
@@ -129,6 +137,81 @@ test.describe('Household invitations', () => {
     } finally {
       await ensureNoHousehold(inviteePage);
       await inviteeContext.close();
+    }
+  });
+});
+
+test.describe('Household roles', () => {
+  /** Opens the invitee's household page — a same-origin document the API seed helpers need. */
+  async function openInvitee(browser: Browser) {
+    const context = await browser.newContext({ storageState: inviteeAuthStatePath() });
+    const page = await context.newPage();
+    const household = new HouseholdPage(page);
+    await household.goto();
+    return { context, page, household };
+  }
+
+  for (const role of ['Adult', 'Child', 'Guest'] as const) {
+    test(`${role} member sees the household without owner controls`, async ({ page, browser }) => {
+      const ownerHousehold = new HouseholdPage(page);
+      await ownerHousehold.goto();
+      const invitee = await openInvitee(browser);
+
+      try {
+        const { household, memberName } = await joinAsMember(
+          page,
+          invitee.page,
+          inviteeInvitationEmail(),
+          role,
+        );
+
+        // The owner manages the member's role.
+        await ownerHousehold.goto();
+        await expect(ownerHousehold.roleSelectFor(memberName)).toHaveValue(role);
+
+        // The member sees the same household read-only.
+        await invitee.household.goto();
+        await expect(invitee.household.heading).toHaveText(household.name);
+        await expect(invitee.household.memberRow(memberName)).toContainText(role);
+        await expect(invitee.household.roleSelects).toHaveCount(0);
+        await expect(invitee.household.addMemberButton).toBeHidden();
+        await expect(invitee.household.settingsHeading).toBeHidden();
+        await expect(invitee.household.deleteButton).toBeHidden();
+        await expect(invitee.household.leaveButton).toBeEnabled();
+      } finally {
+        await ensureNoHousehold(invitee.page);
+        await invitee.context.close();
+      }
+    });
+  }
+
+  test('a member promoted to owner gains owner controls', async ({ page, browser }) => {
+    const ownerHousehold = new HouseholdPage(page);
+    await ownerHousehold.goto();
+    const invitee = await openInvitee(browser);
+
+    try {
+      const { memberName } = await joinAsMember(
+        page,
+        invitee.page,
+        inviteeInvitationEmail(),
+        'Adult',
+      );
+      await invitee.household.goto();
+      await expect(invitee.household.addMemberButton).toBeHidden();
+
+      await ownerHousehold.goto();
+      await ownerHousehold.changeRole(memberName, 'Owner');
+
+      await invitee.household.goto();
+      await expect(invitee.household.addMemberButton).toBeVisible();
+      await expect(invitee.household.settingsHeading).toBeVisible();
+      await expect(invitee.household.deleteButton).toBeVisible();
+      await expect(invitee.household.roleSelects).not.toHaveCount(0);
+    } finally {
+      // Two owners now, so the promoted invitee may leave.
+      await ensureNoHousehold(invitee.page);
+      await invitee.context.close();
     }
   });
 });

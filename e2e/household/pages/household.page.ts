@@ -8,6 +8,10 @@ export class HouseholdPage extends BasePage {
   readonly myInvitationsHeading: Locator;
   readonly leaveButton: Locator;
   readonly confirmButton: Locator;
+  readonly deleteButton: Locator;
+  readonly settingsHeading: Locator;
+  /** Per-member role selects — rendered for owners only; members see plain badges. */
+  readonly roleSelects: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -18,6 +22,26 @@ export class HouseholdPage extends BasePage {
     });
     this.leaveButton = page.getByRole('button', { name: /leave household/i });
     this.confirmButton = page.getByRole('button', { name: /^confirm$/i });
+    this.deleteButton = page.getByRole('button', { name: /delete household/i });
+    this.settingsHeading = page.getByRole('heading', { name: /household settings/i });
+    this.roleSelects = page.getByRole('combobox', { name: /^role for /i });
+  }
+
+  memberRow(name: string): Locator {
+    return this.page.getByRole('listitem').filter({ hasText: name });
+  }
+
+  roleSelectFor(name: string): Locator {
+    return this.page.getByRole('combobox', { name: `Role for ${name}` });
+  }
+
+  async changeRole(name: string, role: 'Owner' | 'Adult' | 'Child' | 'Guest') {
+    const saved = this.page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/role') && response.request().method() === 'PUT' && response.ok(),
+    );
+    await this.roleSelectFor(name).selectOption(role);
+    await saved;
   }
 
   async goto() {

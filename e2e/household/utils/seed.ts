@@ -90,6 +90,70 @@ export async function arrangeCleanInvitation(
   return household;
 }
 
+interface MemberDto {
+  personId: string;
+  displayName: string;
+}
+
+async function listMembers(page: Page): Promise<MemberDto[]> {
+  const api = await createApiContext(page);
+  try {
+    const mine = await api.get('/api/households/me');
+    if (!mine.ok()) {
+      throw new Error(`listMembers: GET /api/households/me returned ${mine.status()}`);
+    }
+    return ((await mine.json()) as { members: MemberDto[] }).members;
+  } finally {
+    await api.dispose();
+  }
+}
+
+/**
+ * Puts the invitee into the owner's household with `role` through the API —
+ * the invite/accept UI is covered by the invitation specs, role specs only
+ * need the resulting membership. Returns the household and the invitee's
+ * display name as the owner's member list shows it.
+ */
+export async function joinAsMember(
+  ownerPage: Page,
+  inviteePage: Page,
+  inviteeEmail: string,
+  role: 'Adult' | 'Child' | 'Guest',
+): Promise<{ household: { id: string; name: string }; memberName: string }> {
+  const household = await arrangeCleanInvitation(ownerPage, inviteePage, inviteeEmail);
+  const before = new Set((await listMembers(ownerPage)).map((member) => member.personId));
+
+  const ownerApi = await createApiContext(ownerPage);
+  let invitationId: string;
+  try {
+    const invite = await ownerApi.post(`/api/households/${household.id}/invitations`, {
+      data: { email: inviteeEmail, role },
+    });
+    if (!invite.ok()) {
+      throw new Error(`joinAsMember: inviting returned ${invite.status()}`);
+    }
+    ({ invitationId } = (await invite.json()) as { invitationId: string });
+  } finally {
+    await ownerApi.dispose();
+  }
+
+  const inviteeApi = await createApiContext(inviteePage);
+  try {
+    const accept = await inviteeApi.post(`/api/households/invitations/${invitationId}/accept`);
+    if (!accept.ok()) {
+      throw new Error(`joinAsMember: accepting returned ${accept.status()}`);
+    }
+  } finally {
+    await inviteeApi.dispose();
+  }
+
+  const joined = (await listMembers(ownerPage)).find((member) => !before.has(member.personId));
+  if (!joined) {
+    throw new Error('joinAsMember: the invitee is missing from the owner member list');
+  }
+  return { household, memberName: joined.displayName };
+}
+
 interface MealSlotDto {
   id: string;
   name: string;
