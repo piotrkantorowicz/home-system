@@ -27,6 +27,11 @@ export interface AppModule {
   description?: string;
   basePath: string;
   icon: LucideIcon;
+  /**
+   * Token role (the `roles` claim) required to see the module in the rail,
+   * switcher and command palette. Hiding is cosmetic — the API enforces access.
+   */
+  requiredRole?: string;
   routes: RouteObject[];
   navItems: NavItem[];
   dashboardWidgets?: ComponentType[];

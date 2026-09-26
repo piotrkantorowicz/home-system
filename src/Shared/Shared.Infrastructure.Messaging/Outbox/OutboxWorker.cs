@@ -82,7 +82,7 @@ public sealed partial class OutboxWorker<TDbContext>(
         }
 
         IReadOnlyList<OutboxMessage> pending =
-            await store.GetUnprocessedAsync(_options.BatchSize, ct).ConfigureAwait(false);
+            await store.GetUnprocessedAsync(_options.BatchSize, _options.MaxAttempts, ct).ConfigureAwait(false);
         if (pending.Count == 0) return;
 
         foreach (var message in pending)

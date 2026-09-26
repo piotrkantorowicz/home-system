@@ -1,0 +1,36 @@
+{
+  "title": "Martwe wiadomości",
+  "subtitle": "Wiadomości, którym skończyły się próby. Usuń przyczynę, a potem ponów.",
+  "forbidden_title": "Tylko dla administratorów",
+  "forbidden_body": "Ta strona jest dostępna dla administratorów Home System.",
+  "load_error": "Nie udało się wczytać martwych wiadomości.",
+  "reload": "Wczytaj ponownie",
+  "retry": "Ponów",
+  "retry_queued": "Dodano do ponownej wysyłki",
+  "retry_failed": "Nie udało się zlecić ponowienia",
+  "attempts": "Próby",
+  "last_attempt": "Ostatnia próba",
+  "last_error": "Ostatni błąd",
+  "tiles": {
+    "dead_deliveries": "Martwe dostarczenia",
+    "retrying_deliveries": "Ponawiane dostarczenia",
+    "dead_events": "Martwe zdarzenia",
+    "retrying_events": "Ponawiane zdarzenia"
+  },
+  "deliveries": {
+    "title": "Dostarczenia powiadomień",
+    "description": "Dostarczenia, z których zrezygnował worker ponowień. Ponowienie oddaje je z powrotem (w ciągu minuty).",
+    "empty": "Brak martwych dostarczeń",
+    "notification": "Powiadomienie",
+    "channel": "Kanał"
+  },
+  "events": {
+    "title": "Zdarzenia integracyjne",
+    "description": "Wiadomości outboxa, których nie udało się wysłać. Ponowienie wraca je do kolejki outboxa.",
+    "empty": "Brak martwych zdarzeń",
+    "module_heading": "{{module}} ({{count}})",
+    "module_table": "Martwe zdarzenia: {{module}}",
+    "event": "Zdarzenie",
+    "occurred_at": "Wystąpiło"
+  }
+}

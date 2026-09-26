@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Web;
+using Shared.Infrastructure.Web.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,7 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddAdminPolicy());
 
 // ==============================================
 // CORS
@@ -163,6 +164,8 @@ app.MapDietPlannerEndpoints();
 app.MapNotificationsEndpoints();
 app.MapNotificationChannelPreferencesEndpoints();
 app.MapHouseholdEndpoints();
+app.MapNotificationDeliveriesAdminEndpoints();
+app.MapOutboxAdminEndpoints();
 
 // ==============================================
 // Dev: auto-migrate on startup

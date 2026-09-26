@@ -2,6 +2,7 @@ namespace Notifications.UnitTests.Domain;
 
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 /// <summary>Unit tests for <c>NotificationDelivery</c> domain rules: in-memory only, no infrastructure and no mocks.</summary>
 public sealed class NotificationDeliveryTests
@@ -120,6 +121,32 @@ public sealed class NotificationDeliveryTests
         delivery.Status.ShouldBe(DeliveryStatus.Skipped);
         delivery.LastAttemptAt.ShouldBe(now);
         delivery.AttemptCount.ShouldBe(0);
+    }
+
+    /// <summary><c>Requeue</c> on a failed delivery resets attempts and keeps the failure reason.</summary>
+    [Fact]
+    public void Requeue_WhenFailed_ResetsAttemptsAndKeepsReason()
+    {
+        var delivery = NewPending();
+        for (var i = 0; i < 5; i++)
+            delivery.MarkFailed(TestClock.UtcNow, "smtp down");
+
+        delivery.Requeue();
+
+        delivery.Status.ShouldBe(DeliveryStatus.Failed);
+        delivery.AttemptCount.ShouldBe(0);
+        delivery.FailureReason.ShouldBe("smtp down");
+    }
+
+    /// <summary><c>Requeue</c> rejects a delivery that is not failed.</summary>
+    [Fact]
+    public void Requeue_WhenNotFailed_Throws()
+    {
+        var delivery = NewPending();
+        delivery.MarkSent(TestClock.UtcNow);
+
+        Should.Throw<DomainException>(delivery.Requeue);
+        delivery.AttemptCount.ShouldBe(1);
     }
 
     private static NotificationDelivery NewPending()

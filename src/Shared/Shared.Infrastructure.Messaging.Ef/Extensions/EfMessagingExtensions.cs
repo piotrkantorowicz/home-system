@@ -42,6 +42,14 @@ public static class EfMessagingExtensions
             return sp.GetRequiredKeyedService<IOutboxStore>(key);
         });
 
+        // Admin tooling: the dead-letter view of the same store, plus a registration entry so
+        // the admin endpoints can enumerate every publishing module.
+        services.AddKeyedScoped<IOutboxDeadLetterStore>(typeof(TDbContext),
+            (sp, _) => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
+        services.AddSingleton(new OutboxModule(
+            typeof(TDbContext).Name.Replace("DbContext", string.Empty, StringComparison.Ordinal),
+            typeof(TDbContext)));
+
         services.AddHostedService<OutboxWorker<TDbContext>>();
         return services;
     }

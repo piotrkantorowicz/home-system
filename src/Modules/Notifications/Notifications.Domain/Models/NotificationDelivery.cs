@@ -1,6 +1,7 @@
 namespace Notifications.Domain.Models;
 
 using Notifications.Domain.ValueObjects;
+using Shared.Abstractions.Core.Domain;
 
 /// <summary>
 /// One attempt-tracked delivery of a <see cref="Notification"/> over one channel. Starts
@@ -78,6 +79,19 @@ public sealed class NotificationDelivery
         LastAttemptAt = utcNow;
         FailureReason = reason;
         AttemptCount++;
+    }
+
+    /// <summary>
+    /// Puts a failed delivery back in the retry worker's queue by resetting its attempt count — the
+    /// admin way out of the dead-letter state. The failure reason is kept until the next attempt.
+    /// </summary>
+    /// <exception cref="DomainException">The delivery is not <see cref="DeliveryStatus.Failed"/>.</exception>
+    public void Requeue()
+    {
+        if (Status != DeliveryStatus.Failed)
+            throw new DomainException("Only failed deliveries can be retried.");
+
+        AttemptCount = 0;
     }
 
     /// <summary>Records that no sender exists for the channel; does not count as an attempt and is never retried.</summary>
