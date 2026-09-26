@@ -65,10 +65,22 @@ const notifications: AppModule = {
   routes: [],
 };
 
+const adminOnly: AppModule = {
+  name: 'admin',
+  translationKey: 'common.admin',
+  basePath: '/admin',
+  icon: OtherModIcon,
+  requiredRole: 'admin',
+  localeNamespaces: [],
+  i18nResources: { en: {}, pl: {} },
+  navItems: [],
+  routes: [],
+};
+
 vi.mock('@shared/lib/module-registry', async (orig) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await orig<typeof import('@shared/lib/module-registry')>();
-  return { ...actual, getModules: () => [dietPlanner, notifications] };
+  return { ...actual, getModules: () => [dietPlanner, notifications, adminOnly] };
 });
 
 const t = ((key: string) => key) as unknown as TFunction;
@@ -83,6 +95,12 @@ describe('getModuleTiles', () => {
     const tiles = getModuleTiles(t);
     expect(tiles.map((m) => m.name)).toEqual(['diet-planner', 'notifications']);
     expect(tiles[0]?.label).toBe('common.diet_planner');
+  });
+  it('hides a module whose required role the user lacks', () => {
+    expect(getModuleTiles(t, {}, ['editor']).map((m) => m.name)).not.toContain('admin');
+  });
+  it('shows a role-gated module to a user holding the role', () => {
+    expect(getModuleTiles(t, {}, ['admin']).map((m) => m.name)).toContain('admin');
   });
 });
 

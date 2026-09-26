@@ -1,0 +1,36 @@
+{
+  "title": "Dead letters",
+  "subtitle": "Messages that ran out of retries. Fix the cause, then retry them.",
+  "forbidden_title": "Admins only",
+  "forbidden_body": "This page is available to Home System administrators.",
+  "load_error": "Failed to load dead letters.",
+  "reload": "Reload",
+  "retry": "Retry",
+  "retry_queued": "Queued for retry",
+  "retry_failed": "Could not queue the retry",
+  "attempts": "Attempts",
+  "last_attempt": "Last attempt",
+  "last_error": "Last error",
+  "tiles": {
+    "dead_deliveries": "Dead deliveries",
+    "retrying_deliveries": "Retrying deliveries",
+    "dead_events": "Dead events",
+    "retrying_events": "Retrying events"
+  },
+  "deliveries": {
+    "title": "Notification deliveries",
+    "description": "Deliveries the retry worker gave up on. Retry hands them back to it (within a minute).",
+    "empty": "No dead-lettered deliveries",
+    "notification": "Notification",
+    "channel": "Channel"
+  },
+  "events": {
+    "title": "Integration events",
+    "description": "Outbox messages that could not be dispatched. Retry puts them back in the outbox queue.",
+    "empty": "No dead-lettered events",
+    "module_heading": "{{module}} ({{count}})",
+    "module_table": "{{module}} dead-lettered events",
+    "event": "Event",
+    "occurred_at": "Raised"
+  }
+}

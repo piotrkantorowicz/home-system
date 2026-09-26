@@ -48,17 +48,25 @@ function toRailNavItem(
   };
 }
 
-/** One tile per registered module, for the 64px module rail. */
+/** Whether a user holding `roles` may see the module (see `AppModule.requiredRole`). */
+export function isModuleVisible(mod: AppModule, roles: readonly string[]): boolean {
+  return !mod.requiredRole || roles.includes(mod.requiredRole);
+}
+
+/** One tile per module visible to `roles`, for the 64px module rail. */
 export function getModuleTiles(
   t: TFunction,
   labels: Readonly<Record<string, string>> = {},
+  roles: readonly string[] = [],
 ): ModuleTile[] {
-  return getModules().map((mod) => ({
-    name: mod.name,
-    basePath: mod.basePath,
-    icon: mod.icon,
-    label: labels[mod.name] ?? t(mod.translationKey),
-  }));
+  return getModules()
+    .filter((mod) => isModuleVisible(mod, roles))
+    .map((mod) => ({
+      name: mod.name,
+      basePath: mod.basePath,
+      icon: mod.icon,
+      label: labels[mod.name] ?? t(mod.translationKey),
+    }));
 }
 
 /** The registered module whose `basePath` the given pathname falls under. */
