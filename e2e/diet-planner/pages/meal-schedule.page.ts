@@ -9,12 +9,14 @@ export class MealSchedulePage extends BasePage {
   readonly addSlotButton: Locator;
   readonly saveButton: Locator;
   readonly successMessage: Locator;
+  readonly fieldError: Locator;
 
   constructor(page: Page) {
     super(page);
     this.addSlotButton = page.getByRole('button', { name: /add slot/i });
     this.saveButton = page.getByRole('button', { name: /save schedule/i });
     this.successMessage = page.getByText(/saved successfully/i);
+    this.fieldError = page.getByRole('alert');
   }
 
   async goto() {

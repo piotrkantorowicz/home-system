@@ -153,7 +153,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 )}
               />
               {errors.dateOfBirth && (
-                <p className="text-destructive text-11-5px mt-1">{errors.dateOfBirth.message}</p>
+                <p role="alert" className="text-destructive text-11-5px mt-1">
+                  {errors.dateOfBirth.message}
+                </p>
               )}
             </div>
             <div>
@@ -170,7 +172,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 <option value="Other">{t('profile.gender_other')}</option>
               </Select>
               {errors.gender && (
-                <p className="text-destructive text-11-5px mt-1">{errors.gender.message}</p>
+                <p role="alert" className="text-destructive text-11-5px mt-1">
+                  {errors.gender.message}
+                </p>
               )}
             </div>
             <div>
@@ -189,7 +193,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 <option value="ExtraActive">{t('profile.activity_extra')}</option>
               </Select>
               {errors.activityLevel && (
-                <p className="text-destructive text-11-5px mt-1">{errors.activityLevel.message}</p>
+                <p role="alert" className="text-destructive text-11-5px mt-1">
+                  {errors.activityLevel.message}
+                </p>
               )}
             </div>
           </div>
@@ -216,7 +222,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('heightCm')}
               />
               {errors.heightCm && (
-                <p className="text-destructive text-11-5px mt-1">{errors.heightCm.message}</p>
+                <p role="alert" className="text-destructive text-11-5px mt-1">
+                  {errors.heightCm.message}
+                </p>
               )}
             </div>
             <div>
@@ -231,7 +239,7 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('currentWeightKg')}
               />
               {errors.currentWeightKg && (
-                <p className="text-destructive text-11-5px mt-1">
+                <p role="alert" className="text-destructive text-11-5px mt-1">
                   {errors.currentWeightKg.message}
                 </p>
               )}
@@ -248,7 +256,9 @@ export function BodyStatsForm({ onSuccess }: BodyStatsFormProps) {
                 {...register('targetWeightKg')}
               />
               {errors.targetWeightKg && (
-                <p className="text-destructive text-11-5px mt-1">{errors.targetWeightKg.message}</p>
+                <p role="alert" className="text-destructive text-11-5px mt-1">
+                  {errors.targetWeightKg.message}
+                </p>
               )}
             </div>
           </div>
