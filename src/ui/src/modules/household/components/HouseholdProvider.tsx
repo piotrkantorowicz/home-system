@@ -16,6 +16,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       value={{
         household,
         myRole: household?.myRole ?? null,
+        myPersonId: query.data?.myPersonId ?? null,
         members: household?.members ?? [],
         isLoading: query.isPending,
         isError: query.isError,

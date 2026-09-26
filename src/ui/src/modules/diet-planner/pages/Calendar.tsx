@@ -39,7 +39,6 @@ import {
   useBulkCompleteMeals,
   type DailyNutrition,
 } from '../api/hooks/useMeals';
-import { useProfile } from '../api/hooks/useProfile';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
@@ -174,9 +173,9 @@ export default function Calendar() {
   }
 
   // Whose plan is shown: `?person=<id>` for another household member, absent = the caller.
-  const { members, myRole } = useHousehold();
-  const { data: profile } = useProfile();
-  const myPersonId = profile?.personId;
+  // From the household sync, not the diet profile — a caller without a profile still has a person id.
+  const { members, myRole, myPersonId: callerPersonId } = useHousehold();
+  const myPersonId = callerPersonId ?? undefined;
   const personParam = searchParams.get('person');
   const viewed = members.find((m) => m.personId === personParam && m.personId !== myPersonId);
   const personId = viewed?.personId;
