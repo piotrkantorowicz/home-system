@@ -3,7 +3,7 @@
 `test.describe.configure({ mode: 'serial', timeout: 180000 })` — all tests share
 state from the `setup:` import.
 
-**Purpose**: meal CRUD on the calendar week grid plus week navigation.
+**Purpose**: meal CRUD, week/day navigation, status changes, and consumed nutrition.
 
 > **#208 redesign — the week view was rebuilt as `WeekGrid`.** It is now a
 > single ARIA grid: `role="grid"`, day headers `role="columnheader"`
@@ -29,6 +29,9 @@ tests use `planData.recipeNames[1]` (Chicken Rice).
 - `deleteMeal(name)` — clicks the chip, then the `Delete` menuitem, then confirms
   in the `Delete Meal` dialog
 - `expectMealInDay(weekday, name)` — a `<weekday> …` gridcell contains the chip
+- `dayViewRadio` / `weekViewRadio` — switch the calendar while retaining its date
+- `openMealAction(weekday, slot, recipe, action)` — open a week chip's status menu
+- `dayAction(name)` / `dayEaten` — day-view action and consumed calorie value (`data-testid="day-summary-calories"`)
 
 ## Tests
 
@@ -44,16 +47,21 @@ tests use `planData.recipeNames[1]` (Chicken Rice).
   value read-back).
 - **`user can delete a meal and it disappears from the calendar`** — count
   `mealChips` before, `deleteMeal`, assert count is `before - 1`.
+- **`day navigation and meal status changes persist with consumed nutrition`** —
+  add a second Monday meal; switch week → day and use Back to restore week
+  with the same selected date. Mark breakfast done, record an actual recipe,
+  reload, and confirm Modified status and the day card's Eaten calories. Revert
+  to planned, reload, and confirm zero eaten calories. Bulk-complete Monday,
+  reload, and confirm both meals Done and the day card equals their sum.
+  Reads the real meals API to verify persisted status after each stage.
 
 ## Acceptance
 
-Calendar CRUD and week navigation work end-to-end against the WeekGrid.
+Calendar CRUD, week/day navigation, meal status actions, and consumed intake work against the real API.
 
 ## Gaps
 
-- Drag-and-drop between slots (blocked — no new deps per project overrides)
-- The chip dropdown's other actions (Mark done / Record actual / Revert / bulk-complete)
+- Drag-and-drop between slots (no UI currently offers this action)
 - Notes round-trip verification
 - Servings value read-back after edit
-- Day view (`view: 'day'`) — only the week grid is tested
 - Mobile layout, keyboard nav

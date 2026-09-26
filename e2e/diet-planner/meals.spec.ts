@@ -3,7 +3,7 @@ import { format, startOfWeek } from 'date-fns';
 import { test, expect } from './fixtures';
 import { CalendarPage, ImportPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
-import { clearMealsInSlot, seedMealSchedule } from './utils/seed';
+import { clearMealsInSlot, createApiContext, seedMealSchedule } from './utils/seed';
 
 test.describe.configure({ mode: 'serial', timeout: 180000 });
 
@@ -64,7 +64,9 @@ test.describe('Calendar CRUD & Navigation', () => {
       .click();
 
     // Week header should change
-    await expect(weekHeader).not.toHaveText(currentWeekText ?? '', { timeout: 5000 });
+    await expect(weekHeader).not.toHaveText(currentWeekText ?? '', {
+      timeout: 5000,
+    });
     const nextWeekText = await weekHeader.textContent();
 
     // Navigate back with previous button
@@ -75,7 +77,9 @@ test.describe('Calendar CRUD & Navigation', () => {
       .click();
 
     // Should be back to original week
-    await expect(weekHeader).toHaveText(currentWeekText ?? '', { timeout: 5000 });
+    await expect(weekHeader).toHaveText(currentWeekText ?? '', {
+      timeout: 5000,
+    });
 
     // Navigate forward again then use Today button to snap back
     await page
@@ -96,7 +100,9 @@ test.describe('Calendar CRUD & Navigation', () => {
     await expect(page.getByRole('heading', { name: todayHeading, exact: true })).toBeVisible();
 
     await page.getByRole('radio', { name: /^week$/i }).click();
-    await expect(weekHeader).toHaveText(currentWeekText ?? '', { timeout: 5000 });
+    await expect(weekHeader).toHaveText(currentWeekText ?? '', {
+      timeout: 5000,
+    });
   });
 
   // ── Add Meal ─────────────────────────────────────────────────────────────────
@@ -142,5 +148,96 @@ test.describe('Calendar CRUD & Navigation', () => {
     await expect(page.getByRole('button', { name: recipeName })).toHaveCount(countBefore - 1, {
       timeout: 5000,
     });
+  });
+
+  test('day navigation and meal status changes persist with consumed nutrition', async ({
+    page,
+  }) => {
+    const monday = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    const calendar = new CalendarPage(page);
+    await calendar.goto();
+    await clearMealsInSlot(page, monday, 'Snack');
+    await calendar.clickAddMeal('Mon', 'Lunch');
+    await calendar.fillMealForm(recipeName);
+    await calendar.submitMealForm();
+
+    await page.goto(`/diet-planner/calendar?view=week&date=${monday}`);
+    await expect(calendar.weekGrid).toBeVisible();
+    await calendar.dayViewRadio.click();
+    await expect(page).toHaveURL(new RegExp(`view=day&date=${monday}`));
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`view=week&date=${monday}`));
+    await expect(calendar.weekGrid).toBeVisible();
+
+    const completion = page.waitForResponse(
+      (response) => response.request().method() === 'PATCH' && response.url().endsWith('/complete'),
+    );
+    await calendar.openMealAction('Mon', 'Breakfast', planData.recipeNames[0], 'Mark done');
+    expect((await completion).ok()).toBe(true);
+    await calendar.dayViewRadio.click();
+    await expect(page.getByLabel('Done', { exact: true })).toHaveCount(1);
+
+    const api = await createApiContext(page);
+    type MealState = {
+      id: string;
+      recipeName: string;
+      status: string;
+      calories: number | string;
+    };
+    const readMeals = async (): Promise<MealState[]> => {
+      const response = await api.get('/api/v1/meals', {
+        params: { From: monday, To: monday },
+      });
+      expect(response.ok()).toBe(true);
+      return (await response.json()) as MealState[];
+    };
+    try {
+      const done = await readMeals();
+      expect(done.find((meal) => meal.recipeName === planData.recipeNames[0])?.status).toBe('Done');
+
+      await calendar.dayAction('Record what was actually eaten').first().click();
+      const override = page.getByRole('dialog', {
+        name: 'What did you eat instead?',
+      });
+      await override.getByPlaceholder('Search recipes…').fill(recipeName);
+      await expect(override.getByRole('button', { name: 'Save override' })).toBeEnabled();
+      await override.getByRole('button', { name: 'Save override' }).click();
+      await expect(override).toBeHidden();
+      await expect(page.getByLabel('Modified', { exact: true })).toHaveCount(1);
+
+      await page.reload();
+      await expect(page.getByLabel('Modified', { exact: true })).toHaveCount(1);
+      const modified = await readMeals();
+      const actual = modified.find((meal) => meal.recipeName === planData.recipeNames[0]);
+      expect(actual?.status).toBe('Modified');
+      await expect(calendar.dayEaten).toHaveText(String(Math.round(Number(actual?.calories))));
+
+      await calendar.dayAction('Revert to planned').click();
+      await expect(page.getByLabel('Planned', { exact: true })).toHaveCount(2);
+      await page.reload();
+      await expect(page.getByLabel('Planned', { exact: true })).toHaveCount(2);
+      await expect(calendar.dayEaten).toHaveText('0');
+
+      await calendar.weekViewRadio.click();
+      await expect(calendar.weekGrid).toBeVisible();
+      const bulkCompletion = page.waitForResponse(
+        (response) =>
+          response.request().method() === 'POST' && response.url().endsWith('/bulk-complete'),
+      );
+      await calendar.dayAction('✓ all').first().click();
+      expect((await bulkCompletion).ok()).toBe(true);
+      await calendar.dayViewRadio.click();
+      await expect(page.getByLabel('Done', { exact: true })).toHaveCount(2);
+      await page.reload();
+      await expect(page.getByLabel('Done', { exact: true })).toHaveCount(2);
+      const completed = await readMeals();
+      expect(completed).toHaveLength(2);
+      expect(completed.every((meal) => meal.status === 'Done')).toBe(true);
+      await expect(calendar.dayEaten).toHaveText(
+        String(Math.round(completed.reduce((total, meal) => total + Number(meal.calories), 0))),
+      );
+    } finally {
+      await api.dispose();
+    }
   });
 });
