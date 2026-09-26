@@ -14,6 +14,7 @@ export class DashboardPage extends BasePage {
   readonly logWaterLink: Locator;
   readonly logMealButton: Locator;
   readonly fullPlanLink: Locator;
+  readonly waterProgress: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -24,10 +25,15 @@ export class DashboardPage extends BasePage {
     // MealForm sheet; take the header's (first in DOM order).
     this.logMealButton = page.getByRole('button', { name: /log a meal/i }).first();
     this.fullPlanLink = page.getByRole('link', { name: /full plan/i });
+    this.waterProgress = page.getByRole('progressbar', { name: 'Water' });
   }
 
   async goto() {
     await this.page.goto('/diet-planner');
     await this.heading.waitFor();
+  }
+
+  waterTotal(amountMl: number) {
+    return this.page.getByText(String(amountMl), { exact: true });
   }
 }

@@ -20,6 +20,7 @@ the **Today** heading. No data setup.
   same label also appears on the Next up card's empty-state CTA; both open the
   MealForm sheet)
 - `fullPlanLink` — `getByRole('link', { name: /full plan/i })` (on the Next up card)
+- `waterTotal(amountMl)` and `waterProgress` — persisted Water card value and progress
 
 ## Tests
 
@@ -43,6 +44,10 @@ Clicking `Log water` navigates to `/diet-planner/hydration`.
 
 Clicking `Log a meal` opens a `role="dialog"` (the MealForm).
 
+### Hydration journey in `hydration.spec.ts`
+
+After adding and removing water on the hydration page, the test reloads and opens the dashboard. The Water card must show the persisted total and matching progress value.
+
 ## Acceptance
 
 The dashboard is reachable, the four cards render, and the quick-action
@@ -53,6 +58,6 @@ navigation contracts hold.
 - Today hero empty-state (no goals configured) — the "Set goals" CTA
 - Macro-bar values / progress against goal
 - Next up card meal completion ("Mark eaten") + optimistic toast
-- Water card glass-row add/remove (shared with [hydration](hydration.md))
+- Water card's own glass-row add/remove controls (hydration page logging and Water card total are covered in [hydration](hydration.md))
 - This week review bar chart values
 - Mobile layout
