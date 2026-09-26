@@ -110,11 +110,7 @@ async function tryRefreshTokens(authFile: string): Promise<OidcUser | null> {
 
 // ── Login fallback ────────────────────────────────────────────────────────────
 
-async function performLogin(
-  page: Page,
-  authFile: string,
-  workerIndex: number,
-): Promise<void> {
+async function performLogin(page: Page, authFile: string, workerIndex: number): Promise<void> {
   const { username, password } = credentialsFor(workerIndex);
 
   await loginViaAuthentik(page, username, password);
