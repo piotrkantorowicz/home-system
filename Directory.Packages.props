@@ -15,7 +15,7 @@
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 
     <!-- Dapper / Npgsql (Style-2 modules + messaging Dapper inbox executor) -->
-    <PackageVersion Include="Dapper" Version="2.1.86" />
+    <PackageVersion Include="Dapper" Version="2.1.89" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
 
     <!-- DbUp (Style-2 module migrations) -->
@@ -34,7 +34,7 @@
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.6" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.9" />
 
     <!-- Validation (legacy — used by existing DietPlanner.Api) -->
 
