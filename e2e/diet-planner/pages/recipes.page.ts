@@ -7,16 +7,19 @@ import type { Page, Locator } from '@playwright/test';
 export class RecipesPage extends BasePage {
   readonly createButton: Locator;
   readonly searchInput: Locator;
+  readonly visibilitySelect: Locator;
 
   constructor(page: Page) {
     super(page);
     this.createButton = page.getByRole('link', { name: /create recipe/i });
     this.searchInput = page.getByPlaceholder(/search/i);
+    this.visibilitySelect = page.getByLabel(/who can see it/i);
   }
 
   async goto() {
     await this.page.goto('/diet-planner/recipes');
-    await this.createButton.waitFor();
+    // Not the create button — a Guest never gets one.
+    await this.searchInput.waitFor();
   }
 
   // ── Create ──────────────────────────────────────────────────────────────────
@@ -27,6 +30,7 @@ export class RecipesPage extends BasePage {
     ingredients: { name: string; amount: number; unit: string }[];
     prepTime?: number;
     instructions?: string;
+    visibility?: 'Private' | 'Household' | 'Public';
   }) {
     await this.createButton.click();
     await this.page.waitForURL('**/recipes/new');
@@ -40,6 +44,10 @@ export class RecipesPage extends BasePage {
 
     if (data.instructions) {
       await this.page.getByLabel(/instructions/i).fill(data.instructions);
+    }
+
+    if (data.visibility) {
+      await this.visibilitySelect.selectOption(data.visibility);
     }
 
     for (const [index, ingredient] of data.ingredients.entries()) {
@@ -104,6 +112,11 @@ export class RecipesPage extends BasePage {
   async expectRecipeVisible(name: string) {
     await this.searchFor(name);
     await expect(this.recipeCardFor(name)).toBeVisible({ timeout: 10000 });
+  }
+
+  /** The visibility badge on the recipe card, e.g. "Private". */
+  visibilityBadgeFor(name: string, visibility: string): Locator {
+    return this.recipeCardFor(name).getByText(visibility, { exact: true });
   }
 
   async expectRecipeNotVisible(name: string) {

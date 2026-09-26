@@ -6,6 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import ProductList from './ProductList';
 
+import { HouseholdWrapper } from '@/test/utils/householdWrapper';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
 vi.mock('react-i18next', () => ({
@@ -39,6 +40,8 @@ vi.mock('@modules/diet-planner/api/hooks/useProducts', () => ({
           fiberPer100g: 0,
           defaultUnit: 'g',
           isOwner: true,
+          visibility: 'Public',
+          canEdit: true,
         },
         {
           id: 'b',
@@ -48,21 +51,25 @@ vi.mock('@modules/diet-planner/api/hooks/useProducts', () => ({
           carbsPer100g: null,
           fatPer100g: null,
           defaultUnit: 'g',
-          isOwner: true,
+          isOwner: false,
+          visibility: 'Household',
+          canEdit: false,
         },
       ],
     },
   }),
 }));
 
-function renderList() {
+function renderList(myRole = 'Owner') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const Wrapper = createWrapper(queryClient);
   const view = render(
     <Wrapper>
-      <MemoryRouter>
-        <ProductList />
-      </MemoryRouter>
+      <HouseholdWrapper myRole={myRole}>
+        <MemoryRouter>
+          <ProductList />
+        </MemoryRouter>
+      </HouseholdWrapper>
     </Wrapper>,
   );
   return { ...view, queryClient };
@@ -100,5 +107,29 @@ describe('ProductList', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'products.view_cards' }));
     // cards view shows the "kcal / 100 g" unit label
     expect(screen.getAllByText(/kcal \/ 100 g/).length).toBeGreaterThan(0);
+  });
+
+  it('shows each product visibility as a badge', () => {
+    renderList();
+    expect(screen.getByText('visibility.Public')).toBeInTheDocument();
+    expect(screen.getByText('visibility.Household')).toBeInTheDocument();
+  });
+
+  it('offers edit and delete only on products the caller can edit', async () => {
+    renderList();
+    const [editable, readOnly] = screen.getAllByRole('button', { name: 'common.actions' });
+    if (!editable || !readOnly) throw new Error('expected an actions menu per item');
+
+    await userEvent.click(readOnly);
+    expect(screen.queryByRole('menuitem', { name: 'common.edit' })).not.toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+
+    await userEvent.click(editable);
+    expect(await screen.findByRole('menuitem', { name: 'common.edit' })).toBeInTheDocument();
+  });
+
+  it('hides the add-product button from a guest', () => {
+    renderList('Guest');
+    expect(screen.queryByText('products.add_product')).not.toBeInTheDocument();
   });
 });

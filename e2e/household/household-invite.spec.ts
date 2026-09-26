@@ -1,3 +1,4 @@
+import { ProductsPage, RecipesPage } from '../diet-planner/pages';
 import { inviteeAuthStatePath, inviteeInvitationEmail } from '../shared/auth-paths';
 
 import { test, expect } from './fixtures';
@@ -212,6 +213,66 @@ test.describe('Household roles', () => {
       // Two owners now, so the promoted invitee may leave.
       await ensureNoHousehold(invitee.page);
       await invitee.context.close();
+    }
+  });
+});
+
+test.describe('Library visibility', () => {
+  test('a guest sees household recipes, never private ones, and cannot create', async ({
+    page,
+    browser,
+  }) => {
+    const stamp = Date.now();
+    const ingredient = `E2E Visibility base ${stamp}`;
+    const privateRecipe = `E2E Private recipe ${stamp}`;
+    const householdRecipe = `E2E Household recipe ${stamp}`;
+
+    // The owner creates one Private and one Household recipe through the form.
+    const products = new ProductsPage(page);
+    await products.goto();
+    await products.createProduct({
+      name: ingredient,
+      calories: 100,
+      protein: 10,
+      carbs: 5,
+      fat: 2,
+    });
+
+    const ownerRecipes = new RecipesPage(page);
+    await ownerRecipes.goto();
+    await ownerRecipes.createRecipe({
+      name: privateRecipe,
+      servings: 1,
+      ingredients: [{ name: ingredient, amount: 100, unit: 'g' }],
+      visibility: 'Private',
+    });
+    await ownerRecipes.createRecipe({
+      name: householdRecipe,
+      servings: 1,
+      ingredients: [{ name: ingredient, amount: 100, unit: 'g' }],
+    });
+    await ownerRecipes.searchFor(privateRecipe);
+    await expect(ownerRecipes.visibilityBadgeFor(privateRecipe, 'Private')).toBeVisible();
+
+    const inviteeContext = await browser.newContext({ storageState: inviteeAuthStatePath() });
+    const inviteePage = await inviteeContext.newPage();
+    await new HouseholdPage(inviteePage).goto();
+
+    try {
+      await joinAsMember(page, inviteePage, inviteeInvitationEmail(), 'Guest');
+
+      const guestRecipes = new RecipesPage(inviteePage);
+      await guestRecipes.goto();
+      await expect(guestRecipes.createButton).toBeHidden();
+
+      await guestRecipes.expectRecipeVisible(householdRecipe);
+      await expect(guestRecipes.visibilityBadgeFor(householdRecipe, 'Household')).toBeVisible();
+
+      await guestRecipes.searchFor(privateRecipe);
+      await guestRecipes.expectRecipeNotVisible(privateRecipe);
+    } finally {
+      await ensureNoHousehold(inviteePage);
+      await inviteeContext.close();
     }
   });
 });

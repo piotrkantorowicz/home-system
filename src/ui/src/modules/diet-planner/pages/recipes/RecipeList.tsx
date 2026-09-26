@@ -8,6 +8,8 @@ import {
   type RecipeCardData,
 } from '@modules/diet-planner/components/recipes/RecipeCard';
 import { useListLocation } from '@modules/diet-planner/hooks/useListLocation';
+import { canWriteLibrary } from '@modules/diet-planner/utils/householdAccess';
+import { useHousehold } from '@modules/household';
 import {
   Banner,
   Button,
@@ -37,6 +39,7 @@ const n = (v: number | string | null | undefined): number =>
 export default function RecipeList() {
   const { t } = useTranslation();
   const toast = useToast();
+  const canCreate = canWriteLibrary(useHousehold().myRole);
   const {
     params,
     search,
@@ -100,12 +103,14 @@ export default function RecipeList() {
           <h1 className="text-26px font-bold">{t('recipes.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('recipes.subtitle')}</p>
         </div>
-        <Button size="xl" asChild>
-          <Link to="/diet-planner/recipes/new">
-            <Plus className="size-4" />
-            {t('recipes.create_recipe')}
-          </Link>
-        </Button>
+        {canCreate ? (
+          <Button size="xl" asChild>
+            <Link to="/diet-planner/recipes/new">
+              <Plus className="size-4" />
+              {t('recipes.create_recipe')}
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
       <div className="border-border bg-card rounded-18px flex flex-wrap items-center gap-2.5 border p-3.5">
@@ -172,7 +177,9 @@ export default function RecipeList() {
                     update({ search: null, mine: null, filter: null, page: null });
                   },
                 }
-              : { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
+              : canCreate
+                ? { label: t('recipes.create_first_recipe'), href: '/diet-planner/recipes/new' }
+                : undefined
           }
         />
       ) : (
@@ -192,15 +199,17 @@ export default function RecipeList() {
               }}
             />
           ))}
-          <Link
-            to="/diet-planner/recipes/new"
-            className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-22px flex min-h-[200px] flex-col items-center justify-center gap-2 border border-dashed transition-colors"
-          >
-            <span className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-2xl">
-              <Plus className="size-5" />
-            </span>
-            <span className="text-13px font-semibold">{t('recipes.create_tile')}</span>
-          </Link>
+          {canCreate ? (
+            <Link
+              to="/diet-planner/recipes/new"
+              className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-22px flex min-h-[200px] flex-col items-center justify-center gap-2 border border-dashed transition-colors"
+            >
+              <span className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-2xl">
+                <Plus className="size-5" />
+              </span>
+              <span className="text-13px font-semibold">{t('recipes.create_tile')}</span>
+            </Link>
+          ) : null}
         </div>
       )}
 

@@ -22,6 +22,11 @@ export function mealAccess(
   return { canPlan: isAdult, canLog: isAdult && target.isManaged };
 }
 
+/** Create recipes / products. Mirrors LibraryAccess.CanWrite: a Guest is read-only. */
+export function canWriteLibrary(myRole: string | null): boolean {
+  return myRole !== 'Guest';
+}
+
 /** Members the caller may plan meals for, the caller first. */
 export function plannableMembers(
   members: HouseholdMember[],

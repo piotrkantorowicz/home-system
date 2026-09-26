@@ -6,6 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import RecipeList from './RecipeList';
 
+import { HouseholdWrapper } from '@/test/utils/householdWrapper';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
 vi.mock('react-i18next', () => ({
@@ -34,6 +35,8 @@ vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
           servings: 2,
           prepTimeMinutes: 40,
           isOwner: true,
+          visibility: 'Private',
+          canEdit: true,
           nutritionPerServing: { calories: 500, protein: 45, carbs: 30, fat: 12 },
         },
         {
@@ -41,7 +44,9 @@ vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
           name: 'Quick salad',
           servings: 1,
           prepTimeMinutes: 10,
-          isOwner: true,
+          isOwner: false,
+          visibility: 'Household',
+          canEdit: false,
           nutritionPerServing: { calories: 200, protein: 8, carbs: 15, fat: 9 },
         },
       ],
@@ -49,14 +54,16 @@ vi.mock('@modules/diet-planner/api/hooks/useRecipes', () => ({
   }),
 }));
 
-function renderList() {
+function renderList(myRole = 'Owner') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const Wrapper = createWrapper(queryClient);
   const view = render(
     <Wrapper>
-      <MemoryRouter>
-        <RecipeList />
-      </MemoryRouter>
+      <HouseholdWrapper myRole={myRole}>
+        <MemoryRouter>
+          <RecipeList />
+        </MemoryRouter>
+      </HouseholdWrapper>
     </Wrapper>,
   );
   return { ...view, queryClient };
@@ -95,5 +102,30 @@ describe('RecipeList', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'recipes.filter_quick' }));
     expect(screen.getByText('Quick salad')).toBeInTheDocument();
     expect(screen.queryByText('Protein bowl')).not.toBeInTheDocument();
+  });
+
+  it('shows each recipe visibility as a badge', () => {
+    renderList();
+    expect(screen.getByText('visibility.Private')).toBeInTheDocument();
+    expect(screen.getByText('visibility.Household')).toBeInTheDocument();
+  });
+
+  it('offers edit and delete only on recipes the caller can edit', async () => {
+    renderList();
+    const [editable, readOnly] = screen.getAllByRole('button', { name: 'common.actions' });
+    if (!editable || !readOnly) throw new Error('expected an actions menu per item');
+
+    await userEvent.click(readOnly);
+    expect(screen.queryByRole('menuitem', { name: 'common.edit' })).not.toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+
+    await userEvent.click(editable);
+    expect(await screen.findByRole('menuitem', { name: 'common.edit' })).toBeInTheDocument();
+  });
+
+  it('hides every create entry point from a guest', () => {
+    renderList('Guest');
+    expect(screen.queryByText('recipes.create_recipe')).not.toBeInTheDocument();
+    expect(screen.queryByText('recipes.create_tile')).not.toBeInTheDocument();
   });
 });

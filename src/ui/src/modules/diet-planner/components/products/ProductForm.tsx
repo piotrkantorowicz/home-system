@@ -5,6 +5,8 @@ import { useForm, useWatch, type FieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
+import { DEFAULT_VISIBILITY, VISIBILITIES } from '../../utils/visibility';
+
 import type { ReactNode } from 'react';
 
 const productSchema = z.object({
@@ -17,6 +19,7 @@ const productSchema = z.object({
   defaultUnit: z.string(),
   densityGramsPerMl: z.number().positive().optional(),
   gramPerPiece: z.number().positive().optional(),
+  visibility: z.enum(VISIBILITIES),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
@@ -26,6 +29,8 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormData) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
+  /** Only the creator may change who sees the product; others keep it as is. */
+  canChangeVisibility?: boolean;
 }
 
 const MACRO_LABEL_CLASS: Record<string, string> = {
@@ -40,6 +45,7 @@ export function ProductForm({
   onSubmit,
   isSubmitting,
   submitLabel,
+  canChangeVisibility = true,
 }: ProductFormProps) {
   const { t } = useTranslation();
   const {
@@ -49,7 +55,7 @@ export function ProductForm({
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { defaultUnit: 'g', ...defaultValues },
+    defaultValues: { defaultUnit: 'g', visibility: DEFAULT_VISIBILITY, ...defaultValues },
   });
 
   const calories = useWatch({ control, name: 'caloriesPer100g' }) || 0;
@@ -98,6 +104,26 @@ export function ProductForm({
                 <option value="piece">{t('product_form.units.piece')}</option>
               </select>
             </Field>
+            {canChangeVisibility ? (
+              <Field
+                id="visibility"
+                label={t('visibility.label')}
+                error={errors.visibility}
+                hint={t('visibility.hint')}
+              >
+                <select
+                  id="visibility"
+                  {...register('visibility')}
+                  className={inputClass(!!errors.visibility)}
+                >
+                  {VISIBILITIES.map((v) => (
+                    <option key={v} value={v}>
+                      {t(`visibility.${v}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
           </div>
         </div>
 

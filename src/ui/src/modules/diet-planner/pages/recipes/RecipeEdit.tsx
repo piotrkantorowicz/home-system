@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { RecipeForm, type RecipeFormData } from '../../components/recipes/RecipeForm';
+import { toVisibility } from '../../utils/visibility';
 
 export default function RecipeEdit() {
   const { t } = useTranslation();
@@ -21,6 +22,8 @@ export default function RecipeEdit() {
       instructions: data.instructions ?? null,
       servings: data.servings,
       prepTimeMinutes: data.prepTimeMinutes ?? null,
+      // null keeps the current visibility — only the creator may change it.
+      visibility: recipe?.isOwner ? data.visibility : null,
       ingredients: data.ingredients.map((ing) => ({
         productId: ing.productId,
         amount: ing.amount,
@@ -61,6 +64,7 @@ export default function RecipeEdit() {
           instructions: recipe.instructions ?? '',
           servings: Number(recipe.servings),
           prepTimeMinutes: recipe.prepTimeMinutes ? Number(recipe.prepTimeMinutes) : undefined,
+          visibility: toVisibility(recipe.visibility),
           ingredients: recipe.ingredients.map((ing) => ({
             productId: ing.productId,
             productName: ing.productName,
@@ -71,6 +75,7 @@ export default function RecipeEdit() {
         onSubmit={handleSubmit}
         isSubmitting={updateMutation.isPending}
         submitLabel={t('recipe_form.update_btn')}
+        canChangeVisibility={recipe.isOwner}
       />
     </div>
   );

@@ -43,4 +43,19 @@ describe('RecipeForm', () => {
 
     expect(after).toBe(before + 1);
   });
+
+  it('defaults a new recipe to Household visibility', () => {
+    render(<RecipeForm onSubmit={vi.fn()} />);
+    expect(screen.getByLabelText('visibility.label')).toHaveValue('Household');
+  });
+
+  it('keeps the saved visibility when editing', () => {
+    render(<RecipeForm onSubmit={vi.fn()} defaultValues={{ visibility: 'Public' }} />);
+    expect(screen.getByLabelText('visibility.label')).toHaveValue('Public');
+  });
+
+  it('hides the selector when the caller may not change visibility', () => {
+    render(<RecipeForm onSubmit={vi.fn()} canChangeVisibility={false} />);
+    expect(screen.queryByLabelText('visibility.label')).not.toBeInTheDocument();
+  });
 });

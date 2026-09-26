@@ -10,6 +10,8 @@ import { Clock, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { VisibilityBadge } from '../VisibilityBadge';
+
 type Macro = 'protein' | 'carbs' | 'fat';
 
 export interface RecipeCardData {
@@ -17,7 +19,8 @@ export interface RecipeCardData {
   name: string;
   servings: number | string;
   prepTimeMinutes?: number | string | null;
-  isOwner: boolean;
+  visibility: string;
+  canEdit: boolean;
   nutritionPerServing?: {
     calories: number | string;
     protein: number | string;
@@ -87,7 +90,7 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
               <DropdownMenuItem asChild>
                 <Link to={`/diet-planner/recipes/${recipe.id}`}>{t('common.view')}</Link>
               </DropdownMenuItem>
-              {recipe.isOwner ? (
+              {recipe.canEdit ? (
                 <>
                   <DropdownMenuItem asChild>
                     <Link to={`/diet-planner/recipes/${recipe.id}/edit`}>
@@ -120,8 +123,9 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
           >
             {recipe.name}
           </Link>
-          <div className="text-muted-foreground text-11-5px">
+          <div className="text-muted-foreground text-11-5px flex items-center gap-2">
             {t('recipes.servings', { count: n(recipe.servings) })}
+            <VisibilityBadge visibility={recipe.visibility} />
           </div>
         </div>
 
