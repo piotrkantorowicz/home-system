@@ -17,7 +17,15 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+export interface MealAssignee {
+  /** Empty string = the caller. */
+  value: string;
+  name: string;
+}
+
 interface MealFormData {
+  /** Empty string = the caller. */
+  personId: string;
   date: string;
   mealSlotId: string;
   recipeId: string;
@@ -29,7 +37,14 @@ interface MealFormData {
 interface MealFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<MealFormData, 'recipeName'>) => void;
+  /** `personId` null = the caller. */
+  onSubmit: (
+    data: Omit<MealFormData, 'recipeName' | 'personId'> & { personId: string | null },
+  ) => void;
+  /** People the caller may plan for; the picker shows when there is a choice (create only). */
+  assignees?: MealAssignee[] | undefined;
+  /** Whose plan the meal belongs to — also picks the schedule the slots come from. */
+  initialPersonId?: string | undefined;
   initialDate?: string | undefined;
   initialMealSlotId?: string | undefined;
   initialValues?:
@@ -50,6 +65,8 @@ export function MealForm({
   open,
   onClose,
   onSubmit,
+  assignees = [],
+  initialPersonId = '',
   initialDate,
   initialMealSlotId,
   initialValues,
@@ -57,12 +74,10 @@ export function MealForm({
   mode,
 }: MealFormProps) {
   const { t } = useTranslation();
-  const scheduleQuery = useMealSchedule();
-  const schedule = scheduleQuery.data;
-  const slots = schedule?.slots ?? [];
   const [recipeSearch, setRecipeSearch] = useState(initialValues?.recipeName ?? '');
   const [showRecipeList, setShowRecipeList] = useState(false);
   const [form, setForm] = useState<MealFormData>({
+    personId: initialPersonId,
     date: initialValues?.date ?? initialDate ?? '',
     mealSlotId: initialValues?.mealSlotId ?? initialMealSlotId ?? '',
     recipeId: initialValues?.recipeId ?? '',
@@ -70,6 +85,10 @@ export function MealForm({
     servings: initialValues?.servings ?? 1,
     notes: initialValues?.notes ?? '',
   });
+  // The slot belongs to the target person's schedule, not the caller's.
+  const scheduleQuery = useMealSchedule(form.personId || undefined);
+  const schedule = scheduleQuery.data;
+  const slots = schedule?.slots ?? [];
 
   const { data: recipesData } = useRecipes({ search: recipeSearch, pageSize: 20 });
   const recipes =
@@ -85,6 +104,7 @@ export function MealForm({
     e.preventDefault();
     if (!form.recipeId || !form.date || !form.mealSlotId) return;
     onSubmit({
+      personId: form.personId || null,
       date: form.date,
       mealSlotId: form.mealSlotId,
       recipeId: form.recipeId,
@@ -113,6 +133,25 @@ export function MealForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'create' && assignees.length > 1 && (
+            <div className="space-y-1.5">
+              <Label htmlFor="meal-person">{t('meal_form.person_label')}</Label>
+              <select
+                id="meal-person"
+                value={form.personId}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, personId: e.target.value, mealSlotId: '' }));
+                }}
+                className="border-input bg-background text-foreground flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-none"
+              >
+                {assignees.map((a) => (
+                  <option key={a.value} value={a.value}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {scheduleQuery.isPending ? (
             <p role="status" className="text-muted-foreground text-sm">
               {t('common.loading')}

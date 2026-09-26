@@ -207,7 +207,8 @@
     },
     "choose_day": "Wybierz dzień",
     "day_view": "Dzień",
-    "week_view": "Tydzień"
+    "week_view": "Tydzień",
+    "person_filter": "Osoba"
   },
   "override_dialog": {
     "title": "Co zjadłeś zamiast tego?",
@@ -425,7 +426,7 @@
     "macro_distribution": "Rozkład Makroskładników (Na Porcję)",
     "ingredients": "Składniki",
     "instructions": "Instrukcje",
-    "total_calories": "Całkowite Kalorie",
+    "total_calories": "Łącznie dla {{count}} porcji: {{calories}} kcal",
     "total_protein": "Całkowite Białko",
     "total_carbs": "Całkowite Węglowodany",
     "total_fat": "Całkowity Tłuszcz",
@@ -443,8 +444,7 @@
     "scale_note": "Ilości składników skalują się automatycznie.",
     "per_serving_note": "Wartości dla jednej porcji pozostają bez zmian przy skalowaniu składników.",
     "decrease_servings": "Zmniejsz liczbę porcji",
-    "increase_servings": "Zwiększ liczbę porcji",
-    "total_calories": "Łącznie dla {{count}} porcji: {{calories}} kcal"
+    "increase_servings": "Zwiększ liczbę porcji"
   },
   "day_view": {
     "summary": {
@@ -494,7 +494,8 @@
     "add_btn": "Dodaj Posiłek",
     "save_btn": "Zapisz Zmiany",
     "delete_title": "Usuń Posiłek",
-    "delete_description": "Czy na pewno chcesz usunąć \"{{name}}\" z tego dnia? Tej operacji nie można cofnąć."
+    "delete_description": "Czy na pewno chcesz usunąć \"{{name}}\" z tego dnia? Tej operacji nie można cofnąć.",
+    "person_label": "Zaplanuj dla"
   },
   "prediction": {
     "header": "Prognoza Wagi",

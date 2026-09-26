@@ -23,6 +23,10 @@ export interface DayViewProps {
   onCompleteMeal: (meal: MealEntryDto) => void;
   onResetMeal: (meal: MealEntryDto) => void;
   onOverrideMeal: (mealId: string) => void;
+  canPlan?: boolean;
+  canLog?: boolean;
+  /** Viewing someone else's plan: badge meals, hide the caller-only summary card. */
+  otherPerson?: boolean;
 }
 
 export function DayView({
@@ -35,6 +39,9 @@ export function DayView({
   onCompleteMeal,
   onResetMeal,
   onOverrideMeal,
+  canPlan = true,
+  canLog = true,
+  otherPerson = false,
 }: DayViewProps) {
   const { data: goals } = useGoals();
 
@@ -50,9 +57,12 @@ export function DayView({
           onCompleteMeal={onCompleteMeal}
           onResetMeal={onResetMeal}
           onOverrideMeal={onOverrideMeal}
+          canPlan={canPlan}
+          canLog={canLog}
+          showPerson={otherPerson}
         />
       </div>
-      <DaySummaryCard date={date} meals={meals} goals={goals ?? null} />
+      {!otherPerson && <DaySummaryCard date={date} meals={meals} goals={goals ?? null} />}
     </div>
   );
 }

@@ -1,5 +1,7 @@
+import { useHousehold } from '@modules/household';
 import {
   Banner,
+  Select,
   Skeleton,
   Button,
   Card,
@@ -37,6 +39,7 @@ import {
   useBulkCompleteMeals,
   type DailyNutrition,
 } from '../api/hooks/useMeals';
+import { useProfile } from '../api/hooks/useProfile';
 import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
 import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
 import { MacroProgressBar } from '../components/MacroProgressBar';
@@ -44,6 +47,8 @@ import { WeekGrid } from '../components/calendar/WeekGrid';
 import { DayView } from '../components/calendar-day/DayView';
 import { MealForm } from '../components/diet-plans/MealForm';
 import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog';
+import { consumedNutrition } from '../utils/consumedNutrition';
+import { mealAccess, plannableMembers } from '../utils/householdAccess';
 
 const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
 const ShoppingListPage = lazy(() => import('./ShoppingList'));
@@ -168,13 +173,26 @@ export default function Calendar() {
     updateParams({ view: next }, { replace: false });
   }
 
+  // Whose plan is shown: `?person=<id>` for another household member, absent = the caller.
+  const { members, myRole } = useHousehold();
+  const { data: profile } = useProfile();
+  const myPersonId = profile?.personId;
+  const personParam = searchParams.get('person');
+  const viewed = members.find((m) => m.personId === personParam && m.personId !== myPersonId);
+  const personId = viewed?.personId;
+  const { canPlan, canLog } = mealAccess(myRole, myPersonId, viewed);
+  const assignees = plannableMembers(members, myRole, myPersonId).map((m) => ({
+    value: m.personId === myPersonId ? '' : m.personId,
+    name: m.displayName,
+  }));
+
   const [mealFormOpen, setMealFormOpen] = useState(false);
   const [mealFormDate, setMealFormDate] = useState('');
   const [mealFormSlotId, setMealFormSlotId] = useState('');
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [deletingMeal, setDeletingMeal] = useState<Meal | null>(null);
 
-  const { data: schedule } = useMealSchedule();
+  const { data: schedule } = useMealSchedule(personId);
   const slots = [...(schedule?.slots ?? [])].sort(
     (a, b) => Number(a.sortOrder) - Number(b.sortOrder),
   );
@@ -201,15 +219,18 @@ export default function Calendar() {
   });
   const { data: goals } = useGoals();
 
-  const nutritionByDate = new Map<string, DailyNutrition>();
-  for (const day of nutritionSummary ?? []) nutritionByDate.set(day.date.slice(0, 10), day);
-
   const weeklyTotals = sumWeeklyTotals(nutritionSummary);
 
   const { data: meals, isLoading: mealsLoading } = useMeals({
     from: weekRange.from,
     to: weekRange.to,
+    ...(personId !== undefined ? { personId } : {}),
   });
+
+  // The nutrition summary endpoint is caller-only; another member's day totals come from their meals.
+  const nutritionByDate = new Map<string, DailyNutrition>();
+  for (const day of viewed ? consumedNutrition(meals ?? []) : (nutritionSummary ?? []))
+    nutritionByDate.set(day.date.slice(0, 10), day);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStartDate);
@@ -230,19 +251,21 @@ export default function Calendar() {
   };
 
   const handleFormSubmit = async (data: {
+    personId: string | null;
     date: string;
     mealSlotId: string;
     recipeId: string;
     servings: number;
     notes: string;
   }) => {
-    const payload = { ...data, mealTime: null, sequenceOrder: null };
+    const { personId: assignee, ...fields } = data;
+    const payload = { ...fields, mealTime: null, sequenceOrder: null };
     try {
       if (editingMeal) {
         await updateMeal.mutateAsync({ id: editingMeal.id, data: payload });
         toast.success(t('meal_form.edit_success'));
       } else {
-        await createMeal.mutateAsync(payload);
+        await createMeal.mutateAsync({ ...payload, personId: assignee });
         toast.success(t('meal_form.add_success'));
       }
       setMealFormOpen(false);
@@ -283,7 +306,7 @@ export default function Calendar() {
 
   const handleBulkComplete = async (date: string) => {
     try {
-      const result = await bulkCompleteMeals.mutateAsync(date);
+      const result = await bulkCompleteMeals.mutateAsync({ date, personId });
       const completed = Number(result.completed);
       if (completed > 0) {
         toast.success(t('calendar.bulk_complete.success', { count: completed }));
@@ -321,7 +344,11 @@ export default function Calendar() {
 
   const dayDateStr = formatLocalDate(selectedDay);
   const dayRange = view === 'day' ? { from: dayDateStr, to: dayDateStr } : weekRange;
-  const dayQuery = useMeals({ from: dayRange.from, to: dayRange.to });
+  const dayQuery = useMeals({
+    from: dayRange.from,
+    to: dayRange.to,
+    ...(personId !== undefined ? { personId } : {}),
+  });
   const dayMeals = dayQuery.data;
 
   return (
@@ -362,6 +389,28 @@ export default function Calendar() {
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
+              {members.length > 1 && (
+                <div className="w-44">
+                  <Select
+                    aria-label={t('calendar.person_filter')}
+                    value={personId ?? myPersonId ?? ''}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      updateParams(
+                        { person: next === myPersonId ? null : next },
+                        { replace: false },
+                      );
+                    }}
+                  >
+                    {/* Every member is readable; a null role only reuses the caller-first order. */}
+                    {plannableMembers(members, null, myPersonId).map((m) => (
+                      <option key={m.personId} value={m.personId}>
+                        {m.displayName}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
               <SegmentedControl
                 label={t('calendar.view_label')}
                 value={view}
@@ -459,6 +508,9 @@ export default function Calendar() {
                 onOverrideMeal={(mealId) => {
                   setOverrideMealId(mealId);
                 }}
+                canPlan={canPlan}
+                canLog={canLog}
+                otherPerson={viewed !== undefined}
               />
             ))}
 
@@ -468,7 +520,7 @@ export default function Calendar() {
               slots={slots.map((s) => ({ id: s.id, name: s.name, sortOrder: s.sortOrder }))}
               meals={meals ?? []}
               nutritionByDate={nutritionByDate}
-              calorieTarget={goals?.dailyCalorieTarget ?? null}
+              calorieTarget={viewed ? null : (goals?.dailyCalorieTarget ?? null)}
               loading={mealsLoading}
               bulkPending={bulkCompleteMeals.isPending}
               onAddMeal={openCreateForm}
@@ -484,11 +536,14 @@ export default function Calendar() {
                 setDeletingMeal(meal as unknown as Meal);
               }}
               onBulkComplete={(date) => void handleBulkComplete(date)}
+              canPlan={canPlan}
+              canLog={canLog}
+              showPerson={viewed !== undefined}
             />
           ) : null}
 
           {/* Weekly Nutrition Summary — hidden in day view (DayView has its own summary) */}
-          {view === 'week' && (
+          {view === 'week' && !viewed && (
             <Card className="animate-fade-in-up mt-6">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -564,7 +619,7 @@ export default function Calendar() {
           )}
 
           {/* Hydration Quick Add — week view only (DaySummaryCard already includes it) */}
-          {view === 'week' && <HydrationQuickAdd />}
+          {view === 'week' && !viewed && <HydrationQuickAdd />}
 
           <MealForm
             key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}
@@ -590,6 +645,8 @@ export default function Calendar() {
                   }
                 : undefined
             }
+            assignees={assignees}
+            initialPersonId={personId ?? ''}
             isSubmitting={isSubmitting}
             mode={editingMeal ? 'edit' : 'create'}
           />

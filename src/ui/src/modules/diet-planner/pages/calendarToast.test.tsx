@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, describe, it, expect, vi } from 'vitest';
 
+import { HouseholdWrapper } from '../../../test/utils/householdWrapper';
 import { createWrapper } from '../../../test/utils/queryWrapper';
 
 import Calendar from './Calendar';
@@ -112,9 +113,11 @@ function renderPage() {
   const Wrapper = createWrapper();
   return render(
     <Wrapper>
-      <ToastProvider>
-        <Calendar />
-      </ToastProvider>
+      <HouseholdWrapper>
+        <ToastProvider>
+          <Calendar />
+        </ToastProvider>
+      </HouseholdWrapper>
     </Wrapper>,
   );
 }

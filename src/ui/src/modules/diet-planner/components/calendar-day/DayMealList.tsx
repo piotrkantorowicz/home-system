@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@shared/components/ui';
+import { Badge, Card, CardContent } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
 import { Check, Pencil, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,12 @@ export interface DayMealListProps {
   onCompleteMeal: (meal: MealEntryDto) => void;
   onResetMeal: (meal: MealEntryDto) => void;
   onOverrideMeal: (mealId: string) => void;
+  /** Add, edit, delete controls (default true). */
+  canPlan?: boolean;
+  /** Complete, override, reset controls (default true). */
+  canLog?: boolean;
+  /** Badge each meal with its person — set when viewing someone else's plan. */
+  showPerson?: boolean;
 }
 
 function num(v: number | string | null | undefined): number {
@@ -40,6 +46,9 @@ export function DayMealList({
   onCompleteMeal,
   onResetMeal,
   onOverrideMeal,
+  canPlan = true,
+  canLog = true,
+  showPerson = false,
 }: DayMealListProps) {
   const { t } = useTranslation();
 
@@ -71,17 +80,19 @@ export function DayMealList({
                   {slot.defaultTime.slice(0, 5)}
                 </span>
               </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  onAddMeal(slot.id);
-                }}
-                className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded-md p-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                aria-label={t('meal_form.add_title')}
-                title={t('meal_form.add_title')}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              {canPlan && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAddMeal(slot.id);
+                  }}
+                  className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded-md p-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  aria-label={t('meal_form.add_title')}
+                  title={t('meal_form.add_title')}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {slotMeals.length === 0 ? (
@@ -93,6 +104,7 @@ export function DayMealList({
                 <MealRow
                   key={meal.id}
                   meal={meal}
+                  access={{ canPlan, canLog, showPerson }}
                   onEdit={() => {
                     onEditMeal(meal);
                   }}
@@ -120,6 +132,7 @@ export function DayMealList({
 
 interface MealRowProps {
   meal: MealEntryDto;
+  access: { canPlan: boolean; canLog: boolean; showPerson: boolean };
   onEdit: () => void;
   onDelete: () => void;
   onComplete: () => void;
@@ -127,7 +140,15 @@ interface MealRowProps {
   onOverride: () => void;
 }
 
-function MealRow({ meal, onEdit, onDelete, onComplete, onReset, onOverride }: MealRowProps) {
+function MealRow({
+  meal,
+  access: { canPlan, canLog, showPerson },
+  onEdit,
+  onDelete,
+  onComplete,
+  onReset,
+  onOverride,
+}: MealRowProps) {
   const { t } = useTranslation();
   const status = (meal.status as MealStatus | undefined) ?? 'Planned';
   const isModified = status === 'Modified' && meal.actualRecipe;
@@ -163,6 +184,11 @@ function MealRow({ meal, onEdit, onDelete, onComplete, onReset, onOverride }: Me
               {meal.recipeName}
             </Link>
           )}
+          {showPerson && meal.personName !== null && (
+            <Badge variant="secondary" className="mt-1">
+              {meal.personName}
+            </Badge>
+          )}
           <p className="text-muted-foreground mt-0.5 text-xs">
             {t('recipes.servings', { count: num(meal.servings) || 1 })}
             {meal.notes && ` · ${meal.notes}`}
@@ -183,7 +209,7 @@ function MealRow({ meal, onEdit, onDelete, onComplete, onReset, onOverride }: Me
             <span className="text-muted-foreground ml-1 text-xs font-normal">kcal</span>
           </span>
           <div className="flex items-center gap-1">
-            {status !== 'Done' && status !== 'Modified' && (
+            {canLog && status !== 'Done' && status !== 'Modified' && (
               <ActionButton
                 onClick={onComplete}
                 title={t('calendar.meal_actions.mark_done')}
@@ -192,14 +218,16 @@ function MealRow({ meal, onEdit, onDelete, onComplete, onReset, onOverride }: Me
                 <Check className="h-3.5 w-3.5" />
               </ActionButton>
             )}
-            <ActionButton
-              onClick={onOverride}
-              title={t('calendar.meal_actions.override')}
-              hoverColor="hover:text-amber-600"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-            </ActionButton>
-            {status !== 'Planned' && (
+            {canLog && (
+              <ActionButton
+                onClick={onOverride}
+                title={t('calendar.meal_actions.override')}
+                hoverColor="hover:text-amber-600"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </ActionButton>
+            )}
+            {canLog && status !== 'Planned' && (
               <ActionButton
                 onClick={onReset}
                 title={t('calendar.meal_actions.reset')}
@@ -208,20 +236,24 @@ function MealRow({ meal, onEdit, onDelete, onComplete, onReset, onOverride }: Me
                 <RotateCcw className="h-3.5 w-3.5" />
               </ActionButton>
             )}
-            <ActionButton
-              onClick={onEdit}
-              title={t('common.edit')}
-              hoverColor="hover:text-foreground"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </ActionButton>
-            <ActionButton
-              onClick={onDelete}
-              title={t('common.delete')}
-              hoverColor="hover:text-destructive"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </ActionButton>
+            {canPlan && (
+              <>
+                <ActionButton
+                  onClick={onEdit}
+                  title={t('common.edit')}
+                  hoverColor="hover:text-foreground"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </ActionButton>
+                <ActionButton
+                  onClick={onDelete}
+                  title={t('common.delete')}
+                  hoverColor="hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </ActionButton>
+              </>
+            )}
           </div>
         </div>
       </CardContent>
