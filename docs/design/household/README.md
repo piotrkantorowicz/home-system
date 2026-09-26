@@ -222,8 +222,10 @@ household" falls back to the caller alone.
   (`?personId=`; outside the household → 403).
 - Planning (create / edit / delete a meal): Owner / Adult for anyone in the
   household, Child for themselves, Guest for no one.
-- Meal actuals (complete / override / reset) and the meal schedule are
-  personal: the person themselves, or an Owner / Adult for a **managed** member.
+- Logging meal actuals (complete / override / reset / bulk-complete): the
+  person themselves, or an Owner / Adult for a **managed** member.
+- Updating the meal schedule (slots): same rule — the person themselves, or an
+  Owner / Adult for a **managed** member. Reading it follows the first bullet.
 - An entry outside the caller's household → 404; inside but not allowed → 403.
 
 ### Library visibility (#230)
