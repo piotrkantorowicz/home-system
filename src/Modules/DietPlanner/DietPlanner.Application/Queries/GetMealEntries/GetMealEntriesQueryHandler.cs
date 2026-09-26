@@ -1,33 +1,38 @@
 namespace DietPlanner.Application.Queries.GetMealEntries;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class GetMealEntriesQueryHandler
-    : IQueryHandler<GetMealEntriesQuery, IReadOnlyList<MealEntryDto>>
+internal sealed class GetMealEntriesQueryHandler(
+    IDietPlannerReadDbContext dbContext,
+    HouseholdRosterProvider households) : IQueryHandler<GetMealEntriesQuery, IReadOnlyList<MealEntryDto>>
 {
-    private readonly IDietPlannerReadDbContext _dbContext;
-
-    public GetMealEntriesQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
 
     public async Task<IReadOnlyList<MealEntryDto>> HandleAsync(
         GetMealEntriesQuery query, CancellationToken ct = default)
     {
+        var personId = query.ForPersonId ?? query.PersonId;
+        HouseholdRoster roster = await households.GetAsync(query.PersonId, query.AuthSubject, ct);
+        if (!roster.IsMember(personId))
+            throw new ForbiddenException("You can only view the meal plan of your own household members.");
+        var personName = roster.NameOf(personId);
+
         // Phase 1 — pull entries + denormalised slot/recipe/actual-recipe/actual-product data.
-        var rows = await _dbContext.MealEntries
+        var rows = await dbContext.MealEntries
             .AsNoTracking()
-            .Where(me => me.PersonId == query.PersonId
+            .Where(me => me.PersonId == personId
                 && (query.From == null || me.Date >= query.From)
                 && (query.To == null || me.Date <= query.To))
-            .Join(_dbContext.Recipes.AsNoTracking().IgnoreQueryFilters(),
+            .Join(dbContext.Recipes.AsNoTracking().IgnoreQueryFilters(),
                 me => me.RecipeId,
                 r => r.Id,
                 (me, r) => new { me, RecipeName = r.Name })
-            .Join(_dbContext.MealSlots.AsNoTracking(),
+            .Join(dbContext.MealSlots.AsNoTracking(),
                 x => x.me.MealSlotId,
                 s => s.Id,
                 (x, s) => new RowProjection
@@ -48,7 +53,7 @@ internal sealed class GetMealEntriesQueryHandler
                     Status = x.me.Status,
                     ActualRecipeId = x.me.ActualRecipeId,
                     ActualProducts = x.me.ActualProducts
-                        .Join(_dbContext.Products.AsNoTracking().IgnoreQueryFilters(),
+                        .Join(dbContext.Products.AsNoTracking().IgnoreQueryFilters(),
                             ap => ap.ProductId,
                             p => p.Id,
                             (ap, p) => new ActualProductRow
@@ -78,7 +83,7 @@ internal sealed class GetMealEntriesQueryHandler
 
         var actualRecipeNames = actualRecipeIds.Count == 0
             ? new Dictionary<RecipeId, string>()
-            : await _dbContext.Recipes
+            : await dbContext.Recipes
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(r => actualRecipeIds.Contains(r.Id))
@@ -94,7 +99,7 @@ internal sealed class GetMealEntriesQueryHandler
 
         var recipes = recipeIdsForMacros.Count == 0
             ? new Dictionary<RecipeId, RecipeMacrosSource>()
-            : await _dbContext.Recipes
+            : await dbContext.Recipes
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(r => recipeIdsForMacros.Contains(r.Id))
@@ -121,7 +126,7 @@ internal sealed class GetMealEntriesQueryHandler
 
         var products = productIds.Count == 0
             ? new Dictionary<ProductId, ProductMacrosSource>()
-            : await _dbContext.Products
+            : await dbContext.Products
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(p => productIds.Contains(p.Id))
@@ -140,7 +145,7 @@ internal sealed class GetMealEntriesQueryHandler
 
         // Phase 3 — project rows into DTOs with computed macros.
         return rows
-            .Select(row => BuildDto(row, actualRecipeNames, recipes, products))
+            .Select(row => BuildDto(row, personId, personName, actualRecipeNames, recipes, products))
             .ToList();
     }
 
@@ -149,6 +154,8 @@ internal sealed class GetMealEntriesQueryHandler
 
     private static MealEntryDto BuildDto(
         RowProjection row,
+        Guid personId,
+        string? personName,
         Dictionary<RecipeId, string> actualRecipeNames,
         IReadOnlyDictionary<RecipeId, RecipeMacrosSource> recipes,
         IReadOnlyDictionary<ProductId, ProductMacrosSource> products)
@@ -171,6 +178,8 @@ internal sealed class GetMealEntriesQueryHandler
 
         return new MealEntryDto(
             row.Id.Value,
+            personId,
+            personName,
             row.Date,
             row.MealSlotId.Value,
             row.SlotName,

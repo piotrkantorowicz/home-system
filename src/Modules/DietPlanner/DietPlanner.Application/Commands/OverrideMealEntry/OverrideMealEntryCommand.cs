@@ -13,11 +13,11 @@ public sealed record ActualProductInput(Guid ProductId, decimal Amount, string U
 /// <summary>
 /// Records that a meal was eaten differently from the plan — a replacement recipe, individual products, or both — and marks the entry as modified.
 /// </summary>
-/// <param name="Id">Identifier of the entry; must belong to the caller.</param>
-/// <param name="PersonId">Person identifier of the caller; the command only touches this user's data.</param>
+/// <param name="Id">Identifier of the entry; must belong to the caller or a managed member they look after.</param>
+/// <param name="PersonId">Person identifier of the caller.</param>
 /// <param name="ActualRecipeId">Recipe eaten instead of the planned one, or <see langword="null"/>.</param>
 /// <param name="ActualProducts">Products eaten; may be empty when a recipe is given, but not both.</param>
-/// <param name="AuthSubject">Auth subject of the caller; used to check ownership of the shared recipe/product rows referenced, which still key on it.</param>
+/// <param name="AuthSubject">Auth subject of the caller; resolves their household and checks ownership of the shared recipe/product rows referenced, which still key on it.</param>
 public sealed record OverrideMealEntryCommand(
     Guid Id,
     Guid PersonId,

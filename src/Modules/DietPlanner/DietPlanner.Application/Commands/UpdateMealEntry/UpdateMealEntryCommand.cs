@@ -5,15 +5,16 @@ using Shared.Abstractions.Cqrs;
 /// <summary>
 /// Re-plans a meal entry; completion state is untouched.
 /// </summary>
-/// <param name="Id">Identifier of the entry; must belong to the caller.</param>
-/// <param name="PersonId">Person identifier of the caller; the command only touches this user's data.</param>
+/// <param name="Id">Identifier of the entry; must belong to someone the caller may plan for.</param>
+/// <param name="PersonId">Person identifier of the caller.</param>
 /// <param name="Date">Calendar day of the meal.</param>
-/// <param name="MealSlotId">Slot of the caller's meal schedule.</param>
+/// <param name="MealSlotId">Slot of the entry owner's meal schedule.</param>
 /// <param name="RecipeId">Recipe to plan; must exist and be visible to the caller.</param>
 /// <param name="Servings">Servings of the recipe; positive.</param>
 /// <param name="Notes">Optional free-text note.</param>
 /// <param name="MealTime">Optional time overriding the slot's default.</param>
 /// <param name="SequenceOrder">Optional ordering among entries in the same slot.</param>
+/// <param name="AuthSubject">Auth subject of the caller; resolves their household.</param>
 public sealed record UpdateMealEntryCommand(
     Guid Id,
     Guid PersonId,
@@ -23,4 +24,5 @@ public sealed record UpdateMealEntryCommand(
     decimal Servings,
     string? Notes,
     TimeOnly? MealTime,
-    int? SequenceOrder) : ICommand;
+    int? SequenceOrder,
+    string AuthSubject) : ICommand;

@@ -133,13 +133,13 @@ export interface paths {
         };
         /**
          * Get meal entries for a date range
-         * @description Returns all meal entries logged by the current user within the specified date range. Omit `from`/`to` to return all entries.
+         * @description Returns the meal entries of the current user, or of the household member given by `personId`, within the specified date range. Omit `from`/`to` to return all entries. 403 when `personId` is not a household member.
          */
         get: operations["GetMeals"];
         put?: never;
         /**
          * Add a meal entry
-         * @description Records a recipe serving in the current user's meal log. `mealType` identifies the meal slot (e.g. Breakfast, Lunch, Dinner, Snack). `servings` is a multiplier applied to the recipe's nutritional values.
+         * @description Plans a recipe serving for the current user, or for the household member given by `personId` (Owner/Adult for anyone, Child for themselves, Guest never). `mealSlotId` must be a slot of that person's meal schedule. `servings` is a multiplier applied to the recipe's nutritional values.
          */
         post: operations["CreateMealEntry"];
         delete?: never;
@@ -198,13 +198,13 @@ export interface paths {
         get?: never;
         /**
          * Update a meal entry
-         * @description Updates the date, meal type, servings, and notes of an existing meal entry. Only the owner of the entry may update it.
+         * @description Updates the date, meal slot, servings, and notes of an existing meal entry. Allowed for anyone who may plan meals for the entry's person.
          */
         put: operations["UpdateMealEntry"];
         post?: never;
         /**
          * Delete a meal entry
-         * @description Permanently removes a meal entry from the log. Only the entry owner may delete it.
+         * @description Permanently removes a meal entry. Allowed for anyone who may plan meals for the entry's person.
          */
         delete: operations["DeleteMealEntry"];
         options?: never;
@@ -283,7 +283,7 @@ export interface paths {
         put?: never;
         /**
          * Mark all of the day's planned meals as done
-         * @description Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.
+         * @description Marks every Planned entry of the current user, or of the managed member given by `personId`, on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.
          */
         post: operations["BulkCompleteMeals"];
         delete?: never;
@@ -368,13 +368,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get the current user's meal schedule configuration
-         * @description Returns the configured meal slots for the current user. Returns `null` body when no schedule has been set yet.
+         * Get a household member's meal schedule configuration
+         * @description Returns the configured meal slots for the current user, or for the household member given by `personId`. Returns `null` body when no schedule has been set yet. 403 when `personId` is not a household member.
          */
         get: operations["GetMealSchedule"];
         /**
          * Create or update meal schedule configuration
-         * @description Sets the meal slots for the current user. Replaces all existing slots.
+         * @description Sets the meal slots for the current user, or for the managed member given by `personId` (Owner/Adult only). Replaces all existing slots.
          */
         put: operations["UpdateMealSchedule"];
         post?: never;
@@ -1001,6 +1001,8 @@ export interface components {
         BulkCompleteMealsRequest: {
             /** Format: date */
             date: string;
+            /** Format: uuid */
+            personId?: null | string;
         };
         BulkCompleteMealsResponse: {
             /** Format: int32 */
@@ -1043,6 +1045,8 @@ export interface components {
             mealTime: null | string;
             /** Format: int32 */
             sequenceOrder: null | number | string;
+            /** Format: uuid */
+            personId?: null | string;
         };
         CreateProductRequest: {
             name: string;
@@ -1333,6 +1337,9 @@ export interface components {
         MealEntryDto: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            personId: string;
+            personName: null | string;
             /** Format: date */
             date: string;
             /** Format: uuid */
@@ -2504,6 +2511,7 @@ export interface operations {
             query?: {
                 From?: string;
                 To?: string;
+                personId?: string;
             };
             header?: never;
             path?: never;
@@ -3513,7 +3521,9 @@ export interface operations {
     };
     GetMealSchedule: {
         parameters: {
-            query?: never;
+            query?: {
+                personId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3578,7 +3588,9 @@ export interface operations {
     };
     UpdateMealSchedule: {
         parameters: {
-            query?: never;
+            query?: {
+                personId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
