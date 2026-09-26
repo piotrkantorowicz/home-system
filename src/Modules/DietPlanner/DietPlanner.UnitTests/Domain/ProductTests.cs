@@ -24,6 +24,17 @@ public sealed class ProductTests
         product.IsDeleted.ShouldBeFalse();
     }
 
+    /// <summary>Without a visibility: <c>Create</c> shares the product with the household; <c>ChangeVisibility</c> changes it.</summary>
+    [Fact]
+    public void Create_WithoutVisibility_DefaultsToHousehold()
+    {
+        var product = Product.Create(ProductId.New(), "Rice", new NutritionPer100g(null, null, null, null, null), "g", null, null, "user-1", TestClock.UtcNow);
+
+        product.Visibility.ShouldBe(Visibility.Household);
+        product.ChangeVisibility(Visibility.Public);
+        product.Visibility.ShouldBe(Visibility.Public);
+    }
+
     /// <summary>With empty name: <c>Create</c> throws argument exception.</summary>
     [Theory]
     [InlineData("")]

@@ -22,6 +22,7 @@ public sealed class Product : AggregateRoot<ProductId>
     /// <param name="gramPerPiece">Grams per piece for converting <c>piece</c> amounts; 100 g is assumed when <see langword="null"/>.</param>
     /// <param name="createdByUserId">Auth subject of the creating user; required.</param>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    /// <param name="visibility">Who besides the creator can see the product.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> or <paramref name="createdByUserId"/> is blank.</exception>
     public static Product Create(
         ProductId id,
@@ -31,7 +32,8 @@ public sealed class Product : AggregateRoot<ProductId>
         decimal? densityGramsPerMl,
         decimal? gramPerPiece,
         string createdByUserId,
-        DateTime now)
+        DateTime now,
+        Visibility visibility = Visibility.Household)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(createdByUserId);
@@ -45,6 +47,7 @@ public sealed class Product : AggregateRoot<ProductId>
             DensityGramsPerMl = densityGramsPerMl,
             GramPerPiece = gramPerPiece,
             CreatedByUserId = createdByUserId,
+            Visibility = visibility,
             CreatedAt = now
         };
     }
@@ -61,6 +64,8 @@ public sealed class Product : AggregateRoot<ProductId>
     public decimal? GramPerPiece { get; private set; }
     /// <summary>Auth subject of the user who created the product.</summary>
     public string CreatedByUserId { get; private set; } = default!;
+    /// <summary>Who besides the creator can see the product.</summary>
+    public Visibility Visibility { get; private set; } = Visibility.Household;
     /// <summary>Creation time, UTC.</summary>
     public DateTime CreatedAt { get; private set; }
     /// <summary>Time of the last <see cref="Update"/> or <see cref="Restore"/>, UTC; <see langword="null"/> if never changed.</summary>
@@ -96,6 +101,10 @@ public sealed class Product : AggregateRoot<ProductId>
         GramPerPiece = gramPerPiece;
         UpdatedAt = now;
     }
+
+    /// <summary>Changes who besides the creator can see the product.</summary>
+    /// <param name="visibility">The new visibility.</param>
+    public void ChangeVisibility(Visibility visibility) => Visibility = visibility;
 
     /// <summary>Hides the product from lists and searches without breaking meals that reference it.</summary>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>

@@ -24,6 +24,17 @@ public sealed class RecipeTests
         recipe.IsDeleted.ShouldBeFalse();
     }
 
+    /// <summary>Without a visibility: <c>Create</c> shares the recipe with the household; <c>ChangeVisibility</c> changes it.</summary>
+    [Fact]
+    public void Create_WithoutVisibility_DefaultsToHousehold()
+    {
+        var recipe = Recipe.Create(RecipeId.New(), "Pasta", null, null, 2, null, "user-1", TestClock.UtcNow);
+
+        recipe.Visibility.ShouldBe(Visibility.Household);
+        recipe.ChangeVisibility(Visibility.Private);
+        recipe.Visibility.ShouldBe(Visibility.Private);
+    }
+
     /// <summary><c>AddIngredient</c> adds to collection.</summary>
     [Fact]
     public void AddIngredient_AddsToCollection()

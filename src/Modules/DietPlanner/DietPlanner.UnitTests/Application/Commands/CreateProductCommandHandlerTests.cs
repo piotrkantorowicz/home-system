@@ -19,14 +19,14 @@ public sealed class CreateProductCommandHandlerTests
     {
         _repository.GetByNameAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Product?)null);
-        _sut = new CreateProductCommandHandler(_repository, _unitOfWork, _clock);
+        _sut = new CreateProductCommandHandler(_repository, TestHouseholds.Solo(), _unitOfWork, _clock);
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds product and commits.</summary>
     [Fact]
     public async Task HandleAsync_WithValidCommand_AddsProductAndCommits()
     {
-        var command = new CreateProductCommand("Chicken", 165m, 31m, 0m, 3.6m, 0m, "g", null, null, "user-1");
+        var command = new CreateProductCommand("Chicken", 165m, 31m, 0m, 3.6m, 0m, "g", null, null, null, "user-1");
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -44,7 +44,7 @@ public sealed class CreateProductCommandHandlerTests
     [Fact]
     public async Task HandleAsync_CreatedProductHasCorrectNutrition()
     {
-        var command = new CreateProductCommand("Egg", 155m, 13m, 1.1m, 11m, 0m, "piece", null, 50m, "user-1");
+        var command = new CreateProductCommand("Egg", 155m, 13m, 1.1m, 11m, 0m, "piece", null, 50m, null, "user-1");
         Product? captured = null;
         await _repository.AddAsync(Arg.Do<Product>(p => captured = p), Arg.Any<CancellationToken>());
 

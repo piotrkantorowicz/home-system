@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateRecipe;
 
+using DietPlanner.Application.Households;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateRecipeCommandValidator : ICommandValidator<CreateRecipeCommand>
@@ -16,6 +17,9 @@ internal sealed class CreateRecipeCommandValidator : ICommandValidator<CreateRec
 
         if (string.IsNullOrWhiteSpace(command.UserId))
             yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+
+        if (!VisibilityInput.IsValid(command.Visibility))
+            yield return new ValidationError(nameof(command.Visibility), VisibilityInput.Error);
 
         if (command.Ingredients.Count == 0)
             yield return new ValidationError(nameof(command.Ingredients), "Recipe must have at least one ingredient.");

@@ -29,7 +29,7 @@ export interface paths {
         };
         /**
          * List products with optional search and pagination
-         * @description Returns a paginated list of products visible to the caller. Use `onlyMine=true` to restrict results to products created by the current user.
+         * @description Returns a paginated list of products visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to products created by the current user.
          */
         get: operations["ListProducts"];
         put?: never;
@@ -58,13 +58,13 @@ export interface paths {
         get: operations["GetProduct"];
         /**
          * Update a product
-         * @description Updates all fields of an existing product. Only the product owner may update it.
+         * @description Updates all fields of an existing product. Only the creator or an Owner/Adult of their household may update a non-private product.
          */
         put: operations["UpdateProduct"];
         post?: never;
         /**
          * Delete a product
-         * @description Permanently removes a product from the catalogue. Only the product owner may delete it.
+         * @description Soft-deletes a product. Only the creator or an Owner/Adult of their household may delete a non-private product.
          */
         delete: operations["DeleteProduct"];
         options?: never;
@@ -81,7 +81,7 @@ export interface paths {
         };
         /**
          * List recipes with optional search and pagination
-         * @description Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.
+         * @description Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user.
          */
         get: operations["ListRecipes"];
         put?: never;
@@ -110,13 +110,13 @@ export interface paths {
         get: operations["GetRecipe"];
         /**
          * Update a recipe
-         * @description Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.
+         * @description Replaces all fields and the full ingredient list of an existing recipe. Only the creator or an Owner/Adult of their household may update a non-private recipe.
          */
         put: operations["UpdateRecipe"];
         post?: never;
         /**
          * Delete a recipe
-         * @description Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.
+         * @description Soft-deletes a recipe. Only the creator or an Owner/Adult of their household may delete a non-private recipe.
          */
         delete: operations["DeleteRecipe"];
         options?: never;
@@ -1065,6 +1065,7 @@ export interface components {
             densityGramsPerMl: null | number | string;
             /** Format: double */
             gramPerPiece: null | number | string;
+            visibility?: null | string;
         };
         CreateRecipeRequest: {
             name: string;
@@ -1075,6 +1076,7 @@ export interface components {
             /** Format: int32 */
             prepTimeMinutes: null | number | string;
             ingredients: components["schemas"]["RecipeIngredientRequest"][];
+            visibility?: null | string;
         };
         CurrentPersonDto: {
             /** Format: uuid */
@@ -1526,6 +1528,8 @@ export interface components {
             /** Format: date-time */
             updatedAt: null | string;
             isOwner: boolean;
+            visibility: string;
+            canEdit: boolean;
         };
         ProfileRequest: {
             /** Format: date */
@@ -1555,6 +1559,8 @@ export interface components {
             /** Format: date-time */
             updatedAt: null | string;
             isOwner: boolean;
+            visibility: string;
+            canEdit: boolean;
             ingredients: components["schemas"]["RecipeIngredientDto"][];
             nutritionPerServing?: null | components["schemas"]["NutritionDto"];
             totalNutrition?: null | components["schemas"]["NutritionDto"];
@@ -1642,6 +1648,7 @@ export interface components {
             densityGramsPerMl: null | number | string;
             /** Format: double */
             gramPerPiece: null | number | string;
+            visibility?: null | string;
         };
         UpdateRecipeRequest: {
             name: string;
@@ -1652,6 +1659,7 @@ export interface components {
             /** Format: int32 */
             prepTimeMinutes: null | number | string;
             ingredients: components["schemas"]["RecipeIngredientRequest"][];
+            visibility?: null | string;
         };
         UserProfileDto: {
             /** Format: uuid */

@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Services;
@@ -12,14 +13,19 @@ internal sealed class SearchRecipesQueryHandler
     : IQueryHandler<SearchRecipesQuery, PagedList<RecipeDto>>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
+    private readonly HouseholdRosterProvider _households;
 
-    public SearchRecipesQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
+    public SearchRecipesQueryHandler(IDietPlannerReadDbContext dbContext, HouseholdRosterProvider households)
+    {
+        _dbContext = dbContext;
+        _households = households;
+    }
 
     public async Task<PagedList<RecipeDto>> HandleAsync(
         SearchRecipesQuery query, CancellationToken ct = default)
     {
-        var q = _dbContext.Recipes.AsNoTracking();
+        LibraryAccess access = await _households.GetLibraryAccessAsync(query.UserId, ct);
+        var q = access.Visible(_dbContext.Recipes.AsNoTracking());
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -55,12 +61,12 @@ internal sealed class SearchRecipesQueryHandler
             .Where(p => allProductIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, ct);
 
-        var items = recipes.Select(recipe => ToDto(recipe, products, query.UserId)).ToList();
+        var items = recipes.Select(recipe => ToDto(recipe, products, access)).ToList();
 
         return new PagedList<RecipeDto>(items, totalCount, query.Page, query.PageSize);
     }
 
-    private static RecipeDto ToDto(Recipe recipe, Dictionary<ProductId, Product> products, string userId)
+    private static RecipeDto ToDto(Recipe recipe, Dictionary<ProductId, Product> products, LibraryAccess access)
     {
         decimal calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
         foreach (var ingredient in recipe.Ingredients)
@@ -79,7 +85,8 @@ internal sealed class SearchRecipesQueryHandler
         return new RecipeDto(
             recipe.Id.Value, recipe.Name, recipe.Description, recipe.Instructions,
             recipe.Servings, recipe.PrepTimeMinutes, recipe.CreatedByUserId, recipe.CreatedAt,
-            recipe.UpdatedAt, recipe.CreatedByUserId == userId,
+            recipe.UpdatedAt, recipe.CreatedByUserId == access.CallerSubject,
+            recipe.Visibility.ToString(), access.CanEdit(recipe.CreatedByUserId, recipe.Visibility),
             recipe.Ingredients.Select(i => new RecipeIngredientDto(
                 i.Id.Value, i.ProductId.Value,
                 products.GetValueOrDefault(i.ProductId)?.Name ?? "Unknown", i.Amount, i.Unit)).ToList(),

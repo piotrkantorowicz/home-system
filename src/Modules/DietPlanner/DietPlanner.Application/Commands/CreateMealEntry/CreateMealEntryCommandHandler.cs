@@ -10,6 +10,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class CreateMealEntryCommandHandler(
     IMealEntryRepository repository,
     IMealScheduleConfigRepository scheduleRepository,
+    IRecipeRepository recipeRepository,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
     HouseholdRosterProvider households) : ICommandHandler<CreateMealEntryCommand, Guid>
@@ -20,6 +21,9 @@ internal sealed class CreateMealEntryCommandHandler(
         HouseholdRoster roster = await households.GetAsync(command.PersonId, command.AuthSubject, ct);
         if (!roster.CanPlanFor(personId))
             throw new ForbiddenException("Your household role does not allow planning meals for this person.");
+
+        LibraryAccess library = await households.GetLibraryAccessAsync(command.AuthSubject, ct);
+        library.DemandReadable(await recipeRepository.GetByIdAsync(RecipeId.From(command.RecipeId), ct), command.RecipeId);
 
         var now = clock.GetUtcNow().UtcDateTime;
         var slotId = MealSlotId.From(command.MealSlotId);

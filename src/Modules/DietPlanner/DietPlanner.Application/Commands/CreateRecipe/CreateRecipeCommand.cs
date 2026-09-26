@@ -22,6 +22,7 @@ public sealed record CreateRecipeIngredientRequest(
 /// <param name="Servings">Portions the ingredient amounts yield; positive.</param>
 /// <param name="PrepTimeMinutes">Optional preparation time.</param>
 /// <param name="Ingredients">The complete ingredient list; on update it replaces the existing lines.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; <see langword="null"/> means <c>Household</c>.</param>
 /// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
 public sealed record CreateRecipeCommand(
     string Name,
@@ -30,4 +31,5 @@ public sealed record CreateRecipeCommand(
     int Servings,
     int? PrepTimeMinutes,
     IReadOnlyList<CreateRecipeIngredientRequest> Ingredients,
+    string? Visibility,
     string UserId) : ICommand<Guid>;
