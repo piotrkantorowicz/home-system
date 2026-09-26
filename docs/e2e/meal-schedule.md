@@ -9,6 +9,7 @@
 - `addSlotButton`: `getByRole('button', { name: /add slot/i })`
 - `saveButton`: `getByRole('button', { name: /save schedule/i })`
 - `successMessage`: `getByText(/saved successfully/i)`
+- `fieldError`: `getByRole('alert')` — `MealScheduleForm`'s per-field error `<p>`s already carry `role="alert"`
 - `slotNameInput(i)`: `page.locator('#slot-${i}-name')` (id-based)
 - `slotTimeInput(i)`: `page.locator('#slot-${i}-time')`
 - `slotRemoveButton(i)`: `getByRole('button', { name: /remove slot/i }).nth(i)`
@@ -72,6 +73,20 @@
 - **Then** the remaining slot's Remove button is disabled
 - **Notes**: proves the lower bound `[1, 8]` is enforced via UI state, not just on save.
 
+### `empty slot name or time blocks save and does not persist`
+
+- **Given** a known-good baseline (toggled name ↔ `08:00` time) is saved
+- **When** the name is cleared and Save is clicked, then separately the time is cleared and Save is clicked
+- **Then** `fieldError` (`role="alert"`, the schema's literal `"Name is required"` / `"Time is required"`) appears and `successMessage` stays hidden each time; a reload confirms the baseline values persisted, not the empty ones
+- **Notes**: the baseline sets both name and time explicitly — a fresh worker's only slot can start with both empty (the component's own placeholder default), which would otherwise make one of the two "empty" assertions a no-op against an already-empty field.
+
+### `failed schedule save shows error feedback without persisting`
+
+- **Given** a known-good, guaranteed-dirty baseline (toggled name ↔ time `08:00`) is saved
+- **When** the meal-schedule `PUT` is route-mocked to `500` and the name is changed, then Save is clicked
+- **Then** the "Failed to save meal schedule" toast appears; after unrouting and reloading, the name reads the baseline value — the mocked failure never reached the real backend
+- **API**: route-mocked (`page.route('**/api/v1/meal-schedule', …)`) — the real backend cannot produce a 500 on demand
+
 ### `saving shows success message`
 
 - **Given** the form is loaded
@@ -82,10 +97,12 @@
 
 ## Acceptance
 
-Meal-slot CRUD is bounded by `[1, 8]` slots, the dirty-state UX correctly enables/disables Save, and the save flow shows feedback.
+Meal-slot CRUD is bounded by `[1, 8]` slots, the dirty-state UX correctly enables/disables Save, empty required fields are rejected without saving, and the save flow shows feedback on both success and failure.
 
 ## Gaps
 
-- Time-input validation (out-of-range hours, invalid HH:MM)
+- Time-input validation (out-of-range hours, invalid HH:MM — only emptiness is exercised)
 - Duplicate-slot-name handling (server-side validation)
-- Empty form submission (zero slots — should be impossible per the lower bound)
+- Drag-to-reorder slots
+- Resetting to defaults
+- Persisted state after delete-then-undo

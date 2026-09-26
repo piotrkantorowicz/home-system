@@ -87,6 +87,69 @@ test.describe('Meal Schedule', () => {
     await expect(schedulePage.slotRemoveButton(0)).toBeDisabled();
   });
 
+  test('empty slot name or time blocks save and does not persist', async ({ page }) => {
+    const schedulePage = new MealSchedulePage(page);
+    await schedulePage.goto();
+
+    // Known-good, guaranteed-dirty baseline first — a fresh worker's slot can
+    // start out empty (the component's own placeholder default), and toggling
+    // between two names guards against a leftover value from a previous run
+    // making the fill below a no-op that never marks the form dirty.
+    const currentName = await schedulePage.slotNameInput(0).inputValue();
+    const baselineName = currentName === 'Breakfast' ? 'Morning Meal' : 'Breakfast';
+    await schedulePage.slotNameInput(0).fill(baselineName);
+    await schedulePage.slotTimeInput(0).fill('08:00');
+    await schedulePage.save();
+    await expect(schedulePage.successMessage).toBeVisible({ timeout: 10000 });
+
+    await schedulePage.slotNameInput(0).fill('');
+    await schedulePage.save();
+    await expect(schedulePage.fieldError).toBeVisible();
+    await expect(schedulePage.successMessage).toBeHidden();
+
+    await page.goto('/diet-planner');
+    await schedulePage.goto();
+    await expect(schedulePage.slotNameInput(0)).toHaveValue(baselineName);
+
+    await schedulePage.slotTimeInput(0).fill('');
+    await schedulePage.save();
+    await expect(schedulePage.fieldError).toBeVisible();
+    await expect(schedulePage.successMessage).toBeHidden();
+
+    await page.goto('/diet-planner');
+    await schedulePage.goto();
+    await expect(schedulePage.slotTimeInput(0)).toHaveValue('08:00');
+  });
+
+  test('failed schedule save shows error feedback without persisting', async ({ page }) => {
+    const schedulePage = new MealSchedulePage(page);
+    await schedulePage.goto();
+
+    const currentName = await schedulePage.slotNameInput(0).inputValue();
+    const baselineName = currentName === 'Breakfast' ? 'Morning Meal' : 'Breakfast';
+    await schedulePage.slotNameInput(0).fill(baselineName);
+    // A fresh worker's slot can start with an empty time too — fill it so the
+    // baseline save below isn't blocked by the *other* field's own validation.
+    await schedulePage.slotTimeInput(0).fill('08:00');
+    await schedulePage.save();
+    await expect(schedulePage.successMessage).toBeVisible({ timeout: 10000 });
+
+    await page.route('**/api/v1/meal-schedule', (route) => {
+      if (route.request().method() === 'GET') return route.continue();
+      return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+    });
+
+    await schedulePage.slotNameInput(0).fill(`${baselineName} (edited)`);
+    await schedulePage.save();
+
+    await expect(page.getByText(/failed to save meal schedule/i)).toBeVisible();
+
+    await page.unroute('**/api/v1/meal-schedule');
+    await page.goto('/diet-planner');
+    await schedulePage.goto();
+    await expect(schedulePage.slotNameInput(0)).toHaveValue(baselineName);
+  });
+
   test('saving shows success message', async ({ page }) => {
     const schedulePage = new MealSchedulePage(page);
     await schedulePage.goto();
@@ -99,7 +162,9 @@ test.describe('Meal Schedule', () => {
 
     // Toggle between two names so the form is always dirty regardless of prior run state
     const currentName = await schedulePage.slotNameInput(0).inputValue();
-    await schedulePage.slotNameInput(0).fill(currentName === 'Morning Meal' ? 'Breakfast' : 'Morning Meal');
+    await schedulePage
+      .slotNameInput(0)
+      .fill(currentName === 'Morning Meal' ? 'Breakfast' : 'Morning Meal');
     await schedulePage.save();
 
     await expect(schedulePage.successMessage).toBeVisible({ timeout: 10_000 });

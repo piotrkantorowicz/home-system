@@ -14,6 +14,7 @@ export class ProfilePage extends BasePage {
   readonly activityLevelSelect: Locator;
   readonly saveButton: Locator;
   readonly successMessage: Locator;
+  readonly fieldError: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -25,6 +26,7 @@ export class ProfilePage extends BasePage {
     this.activityLevelSelect = page.getByLabel(/activity level/i);
     this.saveButton = page.getByRole('button', { name: /save profile/i });
     this.successMessage = page.getByText(/profile saved successfully/i);
+    this.fieldError = page.getByRole('alert');
   }
 
   async goto() {
@@ -101,7 +103,9 @@ export class ProfilePage extends BasePage {
 
     // Verify the trigger's data-value attribute reflects the selected date.
     // This confirms the React state update propagated successfully.
-    await expect(trigger).toHaveAttribute('data-value', dateStr, { timeout: 5000 });
+    await expect(trigger).toHaveAttribute('data-value', dateStr, {
+      timeout: 5000,
+    });
   }
 
   async fillForm(data: {
@@ -110,7 +114,8 @@ export class ProfilePage extends BasePage {
     heightCm?: number;
     currentWeightKg?: number;
     targetWeightKg?: number;
-    activityLevel?: 'Sedentary' | 'LightlyActive' | 'ModeratelyActive' | 'VeryActive' | 'ExtraActive';
+    activityLevel?:
+      'Sedentary' | 'LightlyActive' | 'ModeratelyActive' | 'VeryActive' | 'ExtraActive';
   }) {
     // Fill non-date fields first. Interacting with form controls can trigger
     // TanStack Query's refetchOnWindowFocus, which fires useEffect → reset()

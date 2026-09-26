@@ -58,7 +58,11 @@ test.describe('Profile', () => {
     await profilePage.save();
 
     // Update
-    await profilePage.fillForm({ currentWeightKg: 83, targetWeightKg: 78, activityLevel: 'VeryActive' });
+    await profilePage.fillForm({
+      currentWeightKg: 83,
+      targetWeightKg: 78,
+      activityLevel: 'VeryActive',
+    });
     await profilePage.save();
 
     await profilePage.expectFieldValue('currentWeightKg', 83);
@@ -79,5 +83,58 @@ test.describe('Profile', () => {
     await profilePage.heightInput.fill('182');
 
     await expect(profilePage.saveButton).toBeEnabled();
+  });
+
+  test('out-of-range body stats show field errors and do not save', async ({ page }) => {
+    const profilePage = new ProfilePage(page);
+    await profilePage.goto();
+
+    // Known-good baseline so the reload checks below prove the invalid
+    // attempts below were rejected, not merely unobserved.
+    await profilePage.fillForm({ heightCm: 180, currentWeightKg: 80 });
+    await profilePage.save();
+
+    // Height above the 300 cm bound (BodyStatsForm's zod schema).
+    await profilePage.heightInput.fill('301');
+    await profilePage.saveButton.click();
+    await expect(profilePage.fieldError).toBeVisible();
+    await expect(profilePage.successMessage).toBeHidden();
+
+    await page.goto('/diet-planner');
+    await profilePage.goto();
+    await profilePage.expectFieldValue('heightCm', 180);
+
+    // Weight above the 600 kg bound.
+    await profilePage.currentWeightInput.fill('601');
+    await profilePage.saveButton.click();
+    await expect(profilePage.fieldError).toBeVisible();
+    await expect(profilePage.successMessage).toBeHidden();
+
+    await page.goto('/diet-planner');
+    await profilePage.goto();
+    await profilePage.expectFieldValue('currentWeightKg', 80);
+  });
+
+  test('failed profile save shows error feedback without persisting', async ({ page }) => {
+    const profilePage = new ProfilePage(page);
+    await profilePage.goto();
+
+    await profilePage.fillForm({ heightCm: 190 });
+    await profilePage.save();
+
+    await page.route('**/api/v1/profile', (route) => {
+      if (route.request().method() === 'GET') return route.continue();
+      return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+    });
+
+    await profilePage.heightInput.fill('195');
+    await profilePage.saveButton.click();
+
+    await expect(page.getByText(/failed to save profile/i)).toBeVisible();
+
+    await page.unroute('**/api/v1/profile');
+    await page.goto('/diet-planner');
+    await profilePage.goto();
+    await profilePage.expectFieldValue('heightCm', 190);
   });
 });

@@ -1,6 +1,6 @@
 # E2E Tests
 
-The Playwright end-to-end suite at `e2e/` covers **94 tests across 16 spec
+The Playwright end-to-end suite at `e2e/` covers **98 tests across 16 spec
 files**, plus the auth setup (4 worker logins). It runs against a real backend,
 real frontend, and real Authentik; the two `notifications/` specs are fully
 route-mocked, and a few diet-planner tests mock one endpoint to force a
@@ -30,8 +30,8 @@ This README is the hub for cross-cutting concerns and spec discovery. Linked spe
 | [products](products.md) | Products CRUD and search | 5 |
 | [recipes](recipes.md) | Recipes CRUD with ingredients | 4 |
 | [nutrition](nutrition.md) | Nutrition summary — range presets, tiles, chart, table | 13 |
-| [profile](profile.md) | Biometrics form on the profile hub | 6 |
-| [meal-schedule](meal-schedule.md) | Meal slots on the profile hub | 9 |
+| [profile](profile.md) | Biometrics form on the profile hub | 8 |
+| [meal-schedule](meal-schedule.md) | Meal slots on the profile hub | 11 |
 | [hydration](hydration.md) | Hydration page + settings | 6 |
 | [notification-preferences](notification-preferences.md) | `diet-reminder-settings.spec.ts` — reminder prefs on the profile hub (now `serial`) | 8 |
 | [weight-prediction](weight-prediction.md) | Read-only "Energy model" card on Profile → Overview | 6 |
