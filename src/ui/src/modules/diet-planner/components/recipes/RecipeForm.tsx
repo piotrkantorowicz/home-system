@@ -18,6 +18,8 @@ import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
+import { DEFAULT_VISIBILITY, VISIBILITIES } from '../../utils/visibility';
+
 const ingredientSchema = z.object({
   productId: z.string().min(1, 'Select a product from the list'),
   productName: z.string().min(1, 'Select a product from the list'),
@@ -31,6 +33,7 @@ const recipeSchema = z.object({
   instructions: z.string().optional(),
   servings: z.number().int().min(1, 'Servings must be at least 1'),
   prepTimeMinutes: z.number().int().min(0).optional(),
+  visibility: z.enum(VISIBILITIES),
   ingredients: z.array(ingredientSchema).min(1, 'At least one ingredient is required'),
 });
 
@@ -41,6 +44,8 @@ interface RecipeFormProps {
   onSubmit: (data: RecipeFormData) => void | Promise<void>;
   isSubmitting?: boolean;
   submitLabel?: string;
+  /** Only the creator may change who sees the recipe; others keep it as is. */
+  canChangeVisibility?: boolean;
 }
 
 interface ProductPickerProps {
@@ -191,6 +196,7 @@ export function RecipeForm({
   onSubmit,
   isSubmitting,
   submitLabel,
+  canChangeVisibility = true,
 }: RecipeFormProps) {
   const { t } = useTranslation();
 
@@ -204,6 +210,7 @@ export function RecipeForm({
     resolver: zodResolver(recipeSchema),
     defaultValues: {
       servings: 1,
+      visibility: DEFAULT_VISIBILITY,
       ingredients: [{ productId: '', productName: '', amount: 0, unit: 'g' }],
       ...defaultValues,
     },
@@ -284,6 +291,20 @@ export function RecipeForm({
               )}
             </div>
           </div>
+
+          {canChangeVisibility ? (
+            <div>
+              <Label htmlFor="visibility">{t('visibility.label')}</Label>
+              <Select id="visibility" {...register('visibility')}>
+                {VISIBILITIES.map((v) => (
+                  <option key={v} value={v}>
+                    {t(`visibility.${v}`)}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-muted-foreground mt-1.5 text-xs">{t('visibility.hint')}</p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

@@ -1,4 +1,5 @@
 import { productOptions, useDeleteProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { VisibilityBadge } from '@modules/diet-planner/components/VisibilityBadge';
 import { unitLabel } from '@modules/diet-planner/unitLabel';
 import {
   Button,
@@ -99,10 +100,11 @@ export default function ProductDetail() {
             <StatusPill variant={product.isOwner ? 'good' : 'neutral'}>
               {product.isOwner ? t('common.you') : t('common.shared')}
             </StatusPill>
+            <VisibilityBadge visibility={product.visibility} />
           </div>
         </div>
 
-        {product.isOwner && (
+        {product.canEdit && (
           <div className="flex flex-wrap gap-2.5">
             <Button size="xl" asChild>
               <Link to={`/diet-planner/products/${id ?? ''}/edit`}>

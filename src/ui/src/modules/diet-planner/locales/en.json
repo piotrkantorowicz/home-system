@@ -890,5 +890,12 @@
     "plan": "Plan",
     "library": "Library",
     "track": "Track"
+  },
+  "visibility": {
+    "label": "Who can see it",
+    "Private": "Private",
+    "Household": "Household",
+    "Public": "Public",
+    "hint": "Private: only you. Household: members of your household. Public: everyone."
   }
 }

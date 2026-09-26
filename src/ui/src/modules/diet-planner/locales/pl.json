@@ -872,5 +872,12 @@
     "plan": "Plan",
     "library": "Biblioteka",
     "track": "Śledzenie"
+  },
+  "visibility": {
+    "label": "Kto widzi",
+    "Private": "Prywatny",
+    "Household": "Gospodarstwo",
+    "Public": "Publiczny",
+    "hint": "Prywatny: tylko ty. Gospodarstwo: członkowie twojego gospodarstwa. Publiczny: wszyscy."
   }
 }
