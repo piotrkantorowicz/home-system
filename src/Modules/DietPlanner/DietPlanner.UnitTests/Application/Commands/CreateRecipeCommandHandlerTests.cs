@@ -3,6 +3,7 @@ namespace DietPlanner.UnitTests.Application.Commands;
 using DietPlanner.Application.Commands.CreateRecipe;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
+using DietPlanner.Domain.ValueObjects;
 using Microsoft.Extensions.Time.Testing;
 using Shared.Abstractions.Core.Domain;
 
@@ -10,6 +11,7 @@ using Shared.Abstractions.Core.Domain;
 public sealed class CreateRecipeCommandHandlerTests
 {
     private readonly IRecipeRepository _repository = Substitute.For<IRecipeRepository>();
+    private readonly IProductRepository _products = Substitute.For<IProductRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly CreateRecipeCommandHandler _sut;
@@ -19,7 +21,11 @@ public sealed class CreateRecipeCommandHandlerTests
     {
         _repository.GetByNameAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Recipe?)null);
-        _sut = new CreateRecipeCommandHandler(_repository, _unitOfWork, _clock);
+        _products.GetByIdsAsync(Arg.Any<IReadOnlyCollection<ProductId>>(), Arg.Any<CancellationToken>())
+            .Returns(ci => ci.Arg<IReadOnlyCollection<ProductId>>()
+                .Select(id => Product.Create(id, $"p-{id}", new NutritionPer100g(null, null, null, null, null), "g", null, null, "user-1", TestClock.UtcNow))
+                .ToList());
+        _sut = new CreateRecipeCommandHandler(_repository, _products, TestHouseholds.Solo(), _unitOfWork, _clock);
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds recipe and commits.</summary>
@@ -31,7 +37,7 @@ public sealed class CreateRecipeCommandHandlerTests
             new(Guid.NewGuid(), 200m, "g"),
             new(Guid.NewGuid(), 100m, "ml")
         };
-        var command = new CreateRecipeCommand("Pasta Bolognese", "Classic pasta", null, 4, 30, ingredients, "user-1");
+        var command = new CreateRecipeCommand("Pasta Bolognese", "Classic pasta", null, 4, 30, ingredients, null, "user-1");
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -48,7 +54,7 @@ public sealed class CreateRecipeCommandHandlerTests
     {
         var productId = Guid.NewGuid();
         var ingredients = new List<CreateRecipeIngredientRequest> { new(productId, 300m, "g") };
-        var command = new CreateRecipeCommand("Salad", null, null, 1, null, ingredients, "user-1");
+        var command = new CreateRecipeCommand("Salad", null, null, 1, null, ingredients, null, "user-1");
         Recipe? captured = null;
         await _repository.AddAsync(Arg.Do<Recipe>(r => captured = r), Arg.Any<CancellationToken>());
 

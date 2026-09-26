@@ -25,6 +25,7 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     /// <param name="prepTimeMinutes">Optional preparation time.</param>
     /// <param name="createdByUserId">Auth subject of the creating user; required.</param>
     /// <param name="now">Current time, UTC; supplied by the caller.</param>
+    /// <param name="visibility">Who besides the creator can see the recipe.</param>
     /// <exception cref="ArgumentException"><paramref name="name"/> or <paramref name="createdByUserId"/> is blank.</exception>
     public static Recipe Create(
         RecipeId id,
@@ -34,7 +35,8 @@ public sealed class Recipe : AggregateRoot<RecipeId>
         int servings,
         int? prepTimeMinutes,
         string createdByUserId,
-        DateTime now)
+        DateTime now,
+        Visibility visibility = Visibility.Household)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(createdByUserId);
@@ -48,6 +50,7 @@ public sealed class Recipe : AggregateRoot<RecipeId>
             Servings = servings,
             PrepTimeMinutes = prepTimeMinutes,
             CreatedByUserId = createdByUserId,
+            Visibility = visibility,
             CreatedAt = now
         };
     }
@@ -64,6 +67,8 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     public int? PrepTimeMinutes { get; private set; }
     /// <summary>Auth subject of the user who created the recipe.</summary>
     public string CreatedByUserId { get; private set; } = default!;
+    /// <summary>Who besides the creator can see the recipe.</summary>
+    public Visibility Visibility { get; private set; } = Visibility.Household;
     /// <summary>Creation time, UTC.</summary>
     public DateTime CreatedAt { get; private set; }
     /// <summary>Time of the last <see cref="Update"/>, UTC; <see langword="null"/> if never changed.</summary>
@@ -101,6 +106,10 @@ public sealed class Recipe : AggregateRoot<RecipeId>
         PrepTimeMinutes = prepTimeMinutes;
         UpdatedAt = now;
     }
+
+    /// <summary>Changes who besides the creator can see the recipe.</summary>
+    /// <param name="visibility">The new visibility.</param>
+    public void ChangeVisibility(Visibility visibility) => Visibility = visibility;
 
     /// <summary>Appends an ingredient line. Callers replacing the whole list call <see cref="ClearIngredients"/> first.</summary>
     /// <param name="id">Identifier for the new line.</param>

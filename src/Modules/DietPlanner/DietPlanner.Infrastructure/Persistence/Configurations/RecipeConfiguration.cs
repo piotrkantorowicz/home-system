@@ -37,6 +37,11 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             .HasMaxLength(255)
             .HasColumnName("created_by_user_id");
 
+        builder.Property(x => x.Visibility)
+            .HasConversion<string>()
+            .HasMaxLength(16)
+            .HasColumnName("visibility");
+
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         builder.Property(x => x.DeletedAt).HasColumnName("deleted_at");

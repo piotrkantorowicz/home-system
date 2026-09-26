@@ -14,6 +14,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="DefaultUnit">Unit proposed when the product is used: <c>g</c>, <c>ml</c> or <c>piece</c>.</param>
 /// <param name="DensityGramsPerMl">Grams per millilitre, needed for volume units.</param>
 /// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; <see langword="null"/> means <c>Household</c>.</param>
 /// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
 public sealed record CreateProductCommand(
     string Name,
@@ -25,4 +26,5 @@ public sealed record CreateProductCommand(
     string DefaultUnit,
     decimal? DensityGramsPerMl,
     decimal? GramPerPiece,
+    string? Visibility,
     string UserId) : ICommand<Guid>;

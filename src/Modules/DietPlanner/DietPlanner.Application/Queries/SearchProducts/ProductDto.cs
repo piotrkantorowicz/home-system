@@ -16,7 +16,9 @@ namespace DietPlanner.Application.Queries.SearchProducts;
 /// <param name="CreatedByUserId">Auth subject of the creator.</param>
 /// <param name="CreatedAt">Creation time, UTC.</param>
 /// <param name="UpdatedAt">Time of the last change, UTC; <see langword="null"/> if never changed.</param>
-/// <param name="IsOwner">Whether the caller created it and may edit or delete it.</param>
+/// <param name="IsOwner">Whether the caller created it.</param>
+/// <param name="Visibility">Who besides the creator can see it: <c>Private</c>, <c>Household</c> or <c>Public</c>.</param>
+/// <param name="CanEdit">Whether the caller may edit or delete it (creator, or an adult of its household).</param>
 public sealed record ProductDto(
     Guid Id,
     string Name,
@@ -31,4 +33,6 @@ public sealed record ProductDto(
     string CreatedByUserId,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    bool IsOwner);
+    bool IsOwner,
+    string Visibility,
+    bool CanEdit);

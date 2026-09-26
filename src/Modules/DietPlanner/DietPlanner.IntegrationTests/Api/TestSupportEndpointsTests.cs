@@ -237,12 +237,13 @@ public sealed class TestSupportEndpointsTests
                 Instructions: null,
                 Servings: 1,
                 PrepTimeMinutes: 5,
-                Ingredients: [new RecipeIngredientRequest(productId, 80m, "g")]), cancellationToken: TestContext.Current.CancellationToken);
+                Ingredients: [new RecipeIngredientRequest(productId, 80m, "g")],
+                Visibility: "Public"), cancellationToken: TestContext.Current.CancellationToken);
         recipeResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var recipeId = Guid.Parse((await recipeResp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Trim('"'));
 
         // "Stale" user (different sub): create a meal_entry that references the
-        // current user's recipe. Mimics an orphan left over from a previous session.
+        // current user's (public, so referenceable) recipe. Mimics an orphan left over from a previous session.
         var staleSlotId = await EnsureBreakfastSlotAsync(staleClient);
         var staleMealResp = await staleClient.PostAsJsonAsync("/api/v1/meals", new CreateMealEntryRequest(
                 Date: TestClock.Today,
