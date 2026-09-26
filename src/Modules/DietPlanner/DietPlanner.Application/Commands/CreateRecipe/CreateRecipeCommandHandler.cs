@@ -9,11 +9,18 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateRecipeCommandHandler(
     IRecipeRepository repository,
+    IProductRepository productRepository,
+    HouseholdRosterProvider households,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<CreateRecipeCommand, Guid>
 {
     public async Task<Guid> HandleAsync(CreateRecipeCommand command, CancellationToken ct = default)
     {
+        LibraryAccess library = await households.GetLibraryAccessAsync(command.UserId, ct);
+        library.DemandWrite();
+        var productIds = command.Ingredients.Select(i => ProductId.From(i.ProductId)).Distinct().ToList();
+        library.DemandReadable(await productRepository.GetByIdsAsync(productIds, ct), productIds);
+
         var now = clock.GetUtcNow().UtcDateTime;
         var existing = await repository.GetByNameAsync(command.Name, command.UserId, ct);
         if (existing is not null)

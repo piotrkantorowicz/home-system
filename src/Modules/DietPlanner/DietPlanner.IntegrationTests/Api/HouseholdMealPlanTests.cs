@@ -83,7 +83,7 @@ public sealed class HouseholdMealPlanTests : IClassFixture<HouseholdShoppingList
         var adultSlot = await PutScheduleAsync(hh.Adult, null);
 
         await PlanAsync(hh.Child, adultSlot, hh.AdultId, HttpStatusCode.Forbidden);
-        await PlanAsync(hh.Guest, adultSlot, hh.AdultId, HttpStatusCode.Forbidden);
+        await PlanAsync(hh.Guest, adultSlot, hh.AdultId, HttpStatusCode.Forbidden, hh.RecipeId);
         var guestSchedule = await hh.Guest.PutAsJsonAsync("/api/v1/meal-schedule",
             new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00")]), TestContext.Current.CancellationToken);
 
@@ -181,12 +181,13 @@ public sealed class HouseholdMealPlanTests : IClassFixture<HouseholdShoppingList
         return schedule!.Slots[0].Id;
     }
 
-    private static async Task<Guid> PlanAsync(HttpClient client, Guid slotId, Guid? personId, HttpStatusCode expected)
+    private static async Task<Guid> PlanAsync(
+        HttpClient client, Guid slotId, Guid? personId, HttpStatusCode expected, Guid? recipeId = null)
     {
         var ct = TestContext.Current.CancellationToken;
-        var recipeId = await CreateRecipeAsync(client);
+        recipeId ??= await CreateRecipeAsync(client); // a Guest cannot create one
         var response = await client.PostAsJsonAsync("/api/v1/meals",
-            new CreateMealEntryRequest(Today, slotId, recipeId, 1m, null, null, 0, personId), ct);
+            new CreateMealEntryRequest(Today, slotId, recipeId.Value, 1m, null, null, 0, personId), ct);
 
         response.StatusCode.ShouldBe(expected);
         return expected == HttpStatusCode.Created ? await response.Content.ReadFromJsonAsync<Guid>(ct) : Guid.Empty;

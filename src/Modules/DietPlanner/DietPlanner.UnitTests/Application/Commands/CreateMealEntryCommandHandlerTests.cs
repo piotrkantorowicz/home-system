@@ -13,13 +13,19 @@ public sealed class CreateMealEntryCommandHandlerTests
     private readonly IMealEntryRepository _repository = Substitute.For<IMealEntryRepository>();
     private readonly IMealScheduleConfigRepository _scheduleRepository =
         Substitute.For<IMealScheduleConfigRepository>();
+    private readonly IRecipeRepository _recipeRepository = Substitute.For<IRecipeRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly FakeTimeProvider _clock = TestClock.Create();
     private readonly CreateMealEntryCommandHandler _sut;
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CreateMealEntryCommandHandlerTests()
-        => _sut = new CreateMealEntryCommandHandler(_repository, _scheduleRepository, _unitOfWork, _clock, TestHouseholds.Solo());
+    {
+        _recipeRepository.GetByIdAsync(Arg.Any<RecipeId>(), Arg.Any<CancellationToken>())
+            .Returns(ci => Recipe.Create(ci.Arg<RecipeId>(), "Oats", null, null, 1, null, "user-1", TestClock.UtcNow));
+        _sut = new CreateMealEntryCommandHandler(
+            _repository, _scheduleRepository, _recipeRepository, _unitOfWork, _clock, TestHouseholds.Solo());
+    }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds meal entry and commits.</summary>
     [Fact]

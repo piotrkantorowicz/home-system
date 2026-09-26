@@ -9,6 +9,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class UpdateMealEntryCommandHandler(
     IMealEntryRepository repository,
     IMealScheduleConfigRepository scheduleRepository,
+    IRecipeRepository recipeRepository,
     IUnitOfWork unitOfWork,
     HouseholdRosterProvider households) : ICommandHandler<UpdateMealEntryCommand>
 {
@@ -20,6 +21,13 @@ internal sealed class UpdateMealEntryCommandHandler(
         HouseholdRoster roster = await households.GetAsync(command.PersonId, command.AuthSubject, ct);
         roster.Demand(entry.PersonId, roster.CanPlanFor(entry.PersonId), "MealEntry", command.Id);
 
+        var recipeId = RecipeId.From(command.RecipeId);
+        if (recipeId != entry.RecipeId)
+        {
+            LibraryAccess library = await households.GetLibraryAccessAsync(command.AuthSubject, ct);
+            library.DemandReadable(await recipeRepository.GetByIdAsync(recipeId, ct), command.RecipeId);
+        }
+
         var slotId = MealSlotId.From(command.MealSlotId);
         var schedule = await scheduleRepository.GetByPersonIdAsync(entry.PersonId, ct)
             ?? throw new NotFoundException("MealScheduleConfig", entry.PersonId);
@@ -27,7 +35,7 @@ internal sealed class UpdateMealEntryCommandHandler(
         if (schedule.Slots.All(s => s.Id != slotId))
             throw new NotFoundException("MealSlot", command.MealSlotId);
 
-        entry.Update(command.Date, slotId, RecipeId.From(command.RecipeId),
+        entry.Update(command.Date, slotId, recipeId,
             command.Servings, command.Notes, command.MealTime, command.SequenceOrder);
 
         repository.Update(entry);

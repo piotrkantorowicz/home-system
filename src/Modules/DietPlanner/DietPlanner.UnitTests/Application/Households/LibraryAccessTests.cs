@@ -49,6 +49,17 @@ public sealed class LibraryAccessTests
         access.CanEdit(Outsider, Visibility.Public).ShouldBeFalse();
     }
 
+    /// <summary>A Guest only reads: no edits, not even of their own items, and no new ones.</summary>
+    [Fact]
+    public void Guest_IsReadOnly()
+    {
+        var access = As("Guest");
+
+        access.CanRead(Housemate, Visibility.Household).ShouldBeTrue();
+        access.CanEdit(Me, Visibility.Household).ShouldBeFalse();
+        Should.Throw<ForbiddenException>(access.DemandWrite);
+    }
+
     /// <summary><c>DemandEdit</c>: 404 for an item the caller cannot see, 403 for one they see but may not edit.</summary>
     [Fact]
     public void DemandEdit_InvisibleOrReadOnly_Throws404Or403()

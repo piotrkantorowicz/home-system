@@ -101,6 +101,37 @@ public sealed class HouseholdLibraryVisibilityTests : IClassFixture<HouseholdSho
         adultDelete.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    /// <summary>A Guest only reads the library: creating a product is 403.</summary>
+    [Fact]
+    public async Task POST_Product_AsGuest_Returns403()
+    {
+        var hh = await SetUpAsync();
+
+        var response = await hh.Guest.PostAsJsonAsync("/api/v1/products",
+            new CreateProductRequest($"lib-prod-{Guid.NewGuid():N}", 1m, 1m, 1m, 1m, 1m, "g", null, null), Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    /// <summary>A housemate's private recipe / product cannot be referenced by id: planning a meal or a recipe with it is 404.</summary>
+    [Fact]
+    public async Task POST_ReferencingHousematesPrivateItem_Returns404()
+    {
+        var hh = await SetUpAsync();
+        var secretProduct = await CreateProductAsync(hh.Owner, "Private");
+        var secretRecipe = await CreateRecipeAsync(hh.Owner, await CreateProductAsync(hh.Owner, null), "Private");
+        var slotId = await PutScheduleAsync(hh.Adult);
+
+        var meal = await hh.Adult.PostAsJsonAsync("/api/v1/meals",
+            new CreateMealEntryRequest(TestClock.Today, slotId, secretRecipe, 1m, null, null, 0, null), Ct);
+        var recipe = await hh.Adult.PostAsJsonAsync("/api/v1/recipes",
+            new CreateRecipeRequest($"lib-recipe-{Guid.NewGuid():N}", null, null, 1, null,
+                [new RecipeIngredientRequest(secretProduct, 100m, "g")]), Ct);
+
+        meal.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        recipe.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     /// <summary>Only the creator changes visibility; an Adult trying to make a housemate's item private gets 403.</summary>
     [Fact]
     public async Task PUT_VisibilityChangeByNonCreator_Returns403()
@@ -177,8 +208,9 @@ public sealed class HouseholdLibraryVisibilityTests : IClassFixture<HouseholdSho
 
         var adult = await JoinAsync("Adult");
         var child = await JoinAsync("Child");
+        var guest = await JoinAsync("Guest");
         var outsider = await NewHouseholdAsync(FactoryFor($"lib-outsider-{tag}").CreateClient());
-        return new Home(owner, adult, child, outsider);
+        return new Home(owner, adult, child, guest, outsider);
     }
 
     private static async Task<HttpClient> NewHouseholdAsync(HttpClient client)
@@ -205,14 +237,20 @@ public sealed class HouseholdLibraryVisibilityTests : IClassFixture<HouseholdSho
         return await response.Content.ReadFromJsonAsync<Guid>(Ct);
     }
 
-    private static async Task<Guid> PlanOwnMealAsync(HttpClient client)
+    private static async Task<Guid> PutScheduleAsync(HttpClient client)
     {
         (await client.PutAsJsonAsync("/api/v1/meal-schedule",
             new UpdateMealScheduleRequest([new MealSlotRequest(null, "Lunch", "12:00")]), Ct)).EnsureSuccessStatusCode();
         var schedule = await client.GetFromJsonAsync<MealScheduleConfigDto>("/api/v1/meal-schedule", Ct);
+        return schedule!.Slots[0].Id;
+    }
+
+    private static async Task<Guid> PlanOwnMealAsync(HttpClient client)
+    {
+        var slotId = await PutScheduleAsync(client);
         var recipeId = await CreateRecipeAsync(client, await CreateProductAsync(client, null), null);
         var response = await client.PostAsJsonAsync("/api/v1/meals",
-            new CreateMealEntryRequest(TestClock.Today, schedule!.Slots[0].Id, recipeId, 1m, null, null, 0, null), Ct);
+            new CreateMealEntryRequest(TestClock.Today, slotId, recipeId, 1m, null, null, 0, null), Ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Guid>(Ct);
     }
@@ -230,7 +268,7 @@ public sealed class HouseholdLibraryVisibilityTests : IClassFixture<HouseholdSho
     private static async Task<IReadOnlyList<ProductDto>> SearchProductsAsync(HttpClient client)
         => (await GetAsync<PagedList<ProductDto>>(client, "/api/v1/products?search=lib-prod-&pageSize=100")).Items;
 
-    private sealed record Home(HttpClient Owner, HttpClient Adult, HttpClient Child, HttpClient Outsider);
+    private sealed record Home(HttpClient Owner, HttpClient Adult, HttpClient Child, HttpClient Guest, HttpClient Outsider);
 
     private sealed record IdBody(Guid Id);
 

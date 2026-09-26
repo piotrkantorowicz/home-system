@@ -8,6 +8,7 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateRecipeCommandHandler(
     IRecipeRepository repository,
+    IProductRepository productRepository,
     HouseholdRosterProvider households,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<UpdateRecipeCommand>
@@ -20,6 +21,13 @@ internal sealed class UpdateRecipeCommandHandler(
 
         LibraryAccess access = await households.GetLibraryAccessAsync(command.UserId, ct);
         access.DemandEdit(recipe.CreatedByUserId, recipe.Visibility, "Recipe", command.Id);
+
+        // Only newly added products must be visible; kept lines stay valid even if their product went private.
+        var addedProductIds = command.Ingredients.Select(i => ProductId.From(i.ProductId))
+            .Except(recipe.Ingredients.Select(i => i.ProductId))
+            .ToList();
+        if (addedProductIds.Count > 0)
+            access.DemandReadable(await productRepository.GetByIdsAsync(addedProductIds, ct), addedProductIds);
 
         if (VisibilityInput.Parse(command.Visibility) is { } visibility && visibility != recipe.Visibility)
         {

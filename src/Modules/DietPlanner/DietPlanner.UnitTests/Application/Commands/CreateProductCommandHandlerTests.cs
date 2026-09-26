@@ -19,7 +19,7 @@ public sealed class CreateProductCommandHandlerTests
     {
         _repository.GetByNameAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Product?)null);
-        _sut = new CreateProductCommandHandler(_repository, _unitOfWork, _clock);
+        _sut = new CreateProductCommandHandler(_repository, TestHouseholds.Solo(), _unitOfWork, _clock);
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds product and commits.</summary>

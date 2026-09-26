@@ -9,11 +9,14 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateProductCommandHandler(
     IProductRepository repository,
+    HouseholdRosterProvider households,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<CreateProductCommand, Guid>
 {
     public async Task<Guid> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
     {
+        (await households.GetLibraryAccessAsync(command.UserId, ct)).DemandWrite();
+
         var now = clock.GetUtcNow().UtcDateTime;
         var existing = await repository.GetByNameAsync(command.Name, command.UserId, ct);
         if (existing is not null)
