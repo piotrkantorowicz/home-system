@@ -1,8 +1,8 @@
 # Household module — design & delivery plan
 
-Status: **draft / accepted for phase 1**
+Status: **accepted — phase 1 and phase 2 delivered**
 Owner: Piotr Kantorowicz
-Last updated: 2026-09-07
+Last updated: 2026-09-26
 
 ---
 
@@ -40,7 +40,7 @@ concerns grow, `Person` can be extracted into its own `Identity` module. Not now
 | **Person** | A human. May be linked to an Authentik account (`AuthSubject`) or *managed* (no login — e.g. a child). Carries `DisplayName`, `Email`, `AvatarUrl`. |
 | **Household** | The sharing boundary. Has a name and one or more members. |
 | **HouseholdMember** | A `Person` in a `Household` with a `Role`. |
-| **HouseholdInvitation** | A pending membership, addressed by email, by a known `Person`, or both. No email is sent in phase 1. Signing in never resolves it — the invitee must explicitly accept or decline (#251). |
+| **HouseholdInvitation** | A pending membership, addressed by email, by a known `Person`, or both. No email is ever sent — invitations are in-app only. Signing in never resolves it — the invitee must explicitly accept or decline (#251). |
 
 ### Roles
 
@@ -64,10 +64,9 @@ At least one `Owner` must exist in a household at all times.
    unlocked later without a schema change. See §9 for when that day comes.
 2. **Managed members ship in v1.** An owner/adult creates a `Person`
    (`IsManaged = true`, `AuthSubject = null`) and can log personal data for them.
-3. **No email in v1.** The Notifications module declares a
-   `NotificationChannel.Email` but has no sender (tracked in #164). Invitations
-   therefore go out *without* sending mail — the owner tells the invitee
-   verbally to sign in. Signing in alone never joins them to the household:
+3. **No email invitations.** Invitations are in-app only — the owner tells the
+   invitee to sign in. This is the final design, not a v1 stop-gap: email
+   invites (#231) and the Authentik user picker (#232) were dropped in phase 2. Signing in alone never joins them to the household:
    the invitee reviews the invitation on their own "Invitations for you" panel
    and explicitly accepts or declines it (#251) — a silent auto-add on login
    would grant household access (and visibility into shared resources) without
@@ -195,15 +194,21 @@ unlinked `Person` by email, calls `Person.LinkAuthSubject(sub)`, flips
 ## 6. Shared vs personal resources
 
 Rule of thumb: **shared if it is household logistics; personal if it is about one
-body or one person's private money.** Every shared row records `AddedByPersonId`
-for audit. Resources that need per-row control carry a `Visibility { Household |
-Personal }` flag.
+body or one person's private money.**
+
+**How sharing is scoped.** DietPlanner tables carry **no `household_id`
+column.** Rows stay keyed by their owner (`PersonId`, or the creator's auth
+subject for the library). On each request DietPlanner resolves the caller's
+household through `IHouseholdQueryService` (`HouseholdRosterProvider`) and
+widens the query to the members' ids. Membership changes therefore need no
+data migration, and a failed lookup fails closed — only a confirmed "no
+household" falls back to the caller alone.
 
 | Resource | Scope | Notes |
 |---|---|---|
-| Shopping list | Household | duplicate entries avoided by the live shared view |
-| Meal plan / calendar | Household | `AssignedToPersonId` per planned meal |
-| Recipes, Products (library) | Household | shared catalogue |
+| Shopping list | Household | members' entries; duplicate entries avoided by the live shared view |
+| Meal plan / calendar | Household | the entry's `PersonId` is the assignee (no extra column); read any member's plan, plan per role rules below |
+| Recipes, Products (library) | per-item `Visibility` | see *Library visibility* below |
 | Budget / expenses (future) | Household | `PaidByPersonId` + `AddedByPersonId` distinct; per-account `Visibility` for joint vs personal envelopes |
 | Weight entries | Personal | per body; adult may log for a managed member |
 | Water intake | Personal | per body |
@@ -211,17 +216,37 @@ Personal }` flag.
 | Meal actuals / consumption log | Personal | what *this* person actually ate |
 | Notification preferences | Personal | already is |
 
+### Meal plan rules (#229)
+
+- Any member reads another member's plan and meal schedule
+  (`?personId=`; outside the household → 403).
+- Planning (create / edit / delete a meal): Owner / Adult for anyone in the
+  household, Child for themselves, Guest for no one.
+- Logging meal actuals (complete / override / reset / bulk-complete): the
+  person themselves, or an Owner / Adult for a **managed** member.
+- Updating the meal schedule (slots): same rule — the person themselves, or an
+  Owner / Adult for a **managed** member. Reading it follows the first bullet.
+- An entry outside the caller's household → 404; inside but not allowed → 403.
+
+### Library visibility (#230)
+
+Recipes and products carry `Visibility { Private, Household, Public }`,
+default `Household`.
+
+| | Read | Edit / delete |
+|---|---|---|
+| `Private` | creator | creator |
+| `Household` | creator's household | creator, or an Owner / Adult of the creator's household |
+| `Public` | everyone | creator, or an Owner / Adult of the creator's household |
+
+A Guest never writes to the library. Only the creator changes an item's
+visibility. Responses carry `canEdit` so the UI hides actions the caller can't
+take.
+
 ### DietPlanner migration
 
-- Personal tables: replace `user_id` with `person_id`; backfill maps each
-  distinct `sub` to a `Person` (created during the same migration / on first
-  login).
-- One single-member `Household` (role `Owner`) is created per distinct existing
-  `sub`.
-- Shared tables (shopping list first, then plan / calendar / library) gain
-  `household_id`; backfill sets it to that person's household.
-- Personal DietPlanner queries switch from "current sub" to "current `person_id`"
-  (from the new claim).
+- Personal tables: replace `user_id` with `person_id` (#222).
+- Shared resources need no schema change — scoping is resolved per request (above).
 
 > **Pre-release note (#221).** The app has no production users, so there is no
 > historical data to back-fill. #221 ships nothing. A fresh account gets a `Person`
@@ -284,13 +309,18 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
 
 Prerequisite #234 (shared infra: support multiple Style-1 EF modules) lands first.
 
-### Phase 2 — shared planning & real invites (epic #228)
+### Phase 2 — shared planning (epic #228)
 
-- Scope meal plan / calendar / recipe & product library to the household.
-- `AssignedToPersonId` on planned meals; per-person filters in the UI.
-- Real email invitations once #164 (email channel sender) lands.
-- Authentik Admin API integration for a full user picker.
-- Convert-managed-member UX polish; unlink / re-manage flow.
+| Issue | |
+|---|---|
+| #229 | plan and read meals for household members |
+| #419 | household calendar — person filter and assign picker |
+| #230 | recipe and product visibility |
+| #420 | visibility selector and badges in the library |
+| #421 | align this design doc with phase 2 |
+
+Dropped: email invitations (#231) and the Authentik Admin API user picker
+(#232) — in-app invite + explicit accept (#251) is the final design.
 
 ### Phase 3 — budget module (epic #233)
 
@@ -316,8 +346,5 @@ shared endpoint picks one) and UI — not in data model.
 
 ## 10. Open items
 
-- Authentik Admin API: confirm a service account / token is available for the
-  phase-2 user picker.
-- Confirm the exact DietPlanner personal-table list before writing the backfill.
-- Decide claim transport: `ClaimsTransformation` vs a lightweight middleware that
-  stashes household context in `HttpContext.Items`.
+None. Resolved: claims travel via `HouseholdClaimsTransformation`; the
+backfill was not needed (#221, pre-release).
