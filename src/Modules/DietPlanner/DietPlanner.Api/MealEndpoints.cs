@@ -37,7 +37,7 @@ public static class MealEndpoints
         group.MapGet("/", GetMeals)
             .WithName("GetMeals")
             .WithSummary("Get meal entries for a date range")
-            .WithDescription("Returns all meal entries logged by the current user within the specified date range. Omit `from`/`to` to return all entries.");
+            .WithDescription("Returns the meal entries of the current user, or of the household member given by `personId`, within the specified date range. Omit `from`/`to` to return all entries. 403 when `personId` is not a household member.");
 
         group.MapGet("/nutrition-summary", GetNutritionSummary)
             .WithName("GetNutritionSummary")
@@ -52,17 +52,17 @@ public static class MealEndpoints
         group.MapPost("/", CreateMealEntry)
             .WithName("CreateMealEntry")
             .WithSummary("Add a meal entry")
-            .WithDescription("Records a recipe serving in the current user's meal log. `mealType` identifies the meal slot (e.g. Breakfast, Lunch, Dinner, Snack). `servings` is a multiplier applied to the recipe's nutritional values.");
+            .WithDescription("Plans a recipe serving for the current user, or for the household member given by `personId` (Owner/Adult for anyone, Child for themselves, Guest never). `mealSlotId` must be a slot of that person's meal schedule. `servings` is a multiplier applied to the recipe's nutritional values.");
 
         group.MapPut("/{id:guid}", UpdateMealEntry)
             .WithName("UpdateMealEntry")
             .WithSummary("Update a meal entry")
-            .WithDescription("Updates the date, meal type, servings, and notes of an existing meal entry. Only the owner of the entry may update it.");
+            .WithDescription("Updates the date, meal slot, servings, and notes of an existing meal entry. Allowed for anyone who may plan meals for the entry's person.");
 
         group.MapDelete("/{id:guid}", DeleteMealEntry)
             .WithName("DeleteMealEntry")
             .WithSummary("Delete a meal entry")
-            .WithDescription("Permanently removes a meal entry from the log. Only the entry owner may delete it.");
+            .WithDescription("Permanently removes a meal entry. Allowed for anyone who may plan meals for the entry's person.");
 
         group.MapPatch("/{id:guid}/complete", CompleteMealEntry)
             .WithName("CompleteMealEntry")
@@ -82,7 +82,7 @@ public static class MealEndpoints
         group.MapPost("/bulk-complete", BulkCompleteMeals)
             .WithName("BulkCompleteMeals")
             .WithSummary("Mark all of the day's planned meals as done")
-            .WithDescription("Marks every Planned entry on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.");
+            .WithDescription("Marks every Planned entry of the current user, or of the managed member given by `personId`, on the supplied date as Done. Skips Done (idempotent) and Modified (intentional override). Returns the number of entries that transitioned.");
 
         group.MapPost("/validate", ValidateImport)
             .WithName("ValidateImport")
@@ -99,13 +99,13 @@ public static class MealEndpoints
 
     private static async Task<Ok<IReadOnlyList<MealEntryDto>>> GetMeals(
         [AsParameters] MealDateRangeParams @params,
+        [FromQuery] Guid? personId,
         ClaimsPrincipal user,
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var personId = GetPersonId(user);
         IReadOnlyList<MealEntryDto> result = await dispatcher.SendAsync<GetMealEntriesQuery, IReadOnlyList<MealEntryDto>>(
-            new GetMealEntriesQuery(personId, @params.From, @params.To), ct);
+            new GetMealEntriesQuery(GetPersonId(user), @params.From, @params.To, PersonalDataClaims.GetAuthSubject(user), personId), ct);
         return TypedResults.Ok(result);
     }
 
@@ -143,7 +143,8 @@ public static class MealEndpoints
         var id = await dispatcher.SendAsync<CreateMealEntryCommand, Guid>(
             new CreateMealEntryCommand(
                 personId, request.Date, request.MealSlotId, request.RecipeId,
-                request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
+                request.Servings, request.Notes, request.MealTime, request.SequenceOrder,
+                PersonalDataClaims.GetAuthSubject(user), request.PersonId), ct);
         return TypedResults.Created($"/api/v1/meals/{id}", id);
     }
 
@@ -158,7 +159,8 @@ public static class MealEndpoints
         await dispatcher.SendAsync(
             new UpdateMealEntryCommand(
                 id, personId, request.Date, request.MealSlotId, request.RecipeId,
-                request.Servings, request.Notes, request.MealTime, request.SequenceOrder), ct);
+                request.Servings, request.Notes, request.MealTime, request.SequenceOrder,
+                PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.NoContent();
     }
 
@@ -169,7 +171,7 @@ public static class MealEndpoints
         CancellationToken ct)
     {
         var personId = GetPersonId(user);
-        await dispatcher.SendAsync(new DeleteMealEntryCommand(id, personId), ct);
+        await dispatcher.SendAsync(new DeleteMealEntryCommand(id, personId, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.NoContent();
     }
 
@@ -180,7 +182,7 @@ public static class MealEndpoints
         CancellationToken ct)
     {
         var personId = GetPersonId(user);
-        await dispatcher.SendAsync(new CompleteMealEntryCommand(id, personId), ct);
+        await dispatcher.SendAsync(new CompleteMealEntryCommand(id, personId, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.NoContent();
     }
 
@@ -208,7 +210,7 @@ public static class MealEndpoints
         CancellationToken ct)
     {
         var personId = GetPersonId(user);
-        await dispatcher.SendAsync(new ResetMealEntryCommand(id, personId), ct);
+        await dispatcher.SendAsync(new ResetMealEntryCommand(id, personId, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.NoContent();
     }
 
@@ -220,7 +222,7 @@ public static class MealEndpoints
     {
         var personId = GetPersonId(user);
         BulkCompleteResult result = await dispatcher.SendAsync<BulkCompleteMealEntriesCommand, BulkCompleteResult>(
-            new BulkCompleteMealEntriesCommand(personId, request.Date), ct);
+            new BulkCompleteMealEntriesCommand(personId, request.Date, PersonalDataClaims.GetAuthSubject(user), request.PersonId), ct);
         return TypedResults.Ok(new BulkCompleteMealsResponse(result.Completed));
     }
 
@@ -265,12 +267,13 @@ public sealed record MealDateRangeParams(
 /// Body of meal entry creation.
 /// </summary>
 /// <param name="Date">Calendar day of the meal.</param>
-/// <param name="MealSlotId">Slot of the caller's meal schedule.</param>
+/// <param name="MealSlotId">Slot of the planned-for person's meal schedule.</param>
 /// <param name="RecipeId">Recipe to plan.</param>
 /// <param name="Servings">Servings of the recipe; positive.</param>
 /// <param name="Notes">Optional free-text note.</param>
 /// <param name="MealTime">Optional time overriding the slot's default.</param>
 /// <param name="SequenceOrder">Optional ordering among entries in the same slot.</param>
+/// <param name="PersonId">Household member the meal is for; the caller when omitted.</param>
 public sealed record CreateMealEntryRequest(
     DateOnly Date,
     Guid MealSlotId,
@@ -278,13 +281,14 @@ public sealed record CreateMealEntryRequest(
     decimal Servings,
     string? Notes,
     TimeOnly? MealTime,
-    int? SequenceOrder);
+    int? SequenceOrder,
+    Guid? PersonId = null);
 
 /// <summary>
 /// Body of meal entry update; every field is replaced.
 /// </summary>
 /// <param name="Date">Calendar day of the meal.</param>
-/// <param name="MealSlotId">Slot of the caller's meal schedule.</param>
+/// <param name="MealSlotId">Slot of the entry owner's meal schedule.</param>
 /// <param name="RecipeId">Recipe to plan.</param>
 /// <param name="Servings">Servings of the recipe; positive.</param>
 /// <param name="Notes">Optional free-text note.</param>
@@ -320,7 +324,8 @@ public sealed record ActualProductRequest(Guid ProductId, decimal Amount, string
 /// Body of bulk completion.
 /// </summary>
 /// <param name="Date">The day whose planned meals are marked done.</param>
-public sealed record BulkCompleteMealsRequest(DateOnly Date);
+/// <param name="PersonId">Managed member whose meals to complete; the caller when omitted.</param>
+public sealed record BulkCompleteMealsRequest(DateOnly Date, Guid? PersonId = null);
 
 /// <summary>
 /// Result of bulk completion.

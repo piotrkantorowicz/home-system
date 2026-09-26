@@ -18,7 +18,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public BulkCompleteMealEntriesCommandHandlerTests()
-        => _sut = new BulkCompleteMealEntriesCommandHandler(_repository, _unitOfWork);
+        => _sut = new BulkCompleteMealEntriesCommandHandler(_repository, _unitOfWork, TestHouseholds.Solo());
 
     private static MealEntry NewEntry(MealEntryStatus status)
     {
@@ -45,7 +45,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
             .Returns([planned1, planned2, done, modified]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today), TestContext.Current.CancellationToken);
+            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, "user-1"), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(2);
         planned1.Status.ShouldBe(MealEntryStatus.Done);
@@ -62,7 +62,7 @@ public sealed class BulkCompleteMealEntriesCommandHandlerTests
             .Returns([NewEntry(MealEntryStatus.Done)]);
 
         var result = await _sut.HandleAsync(
-            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today), TestContext.Current.CancellationToken);
+            new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, "user-1"), TestContext.Current.CancellationToken);
 
         result.Completed.ShouldBe(0);
         await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
@@ -80,7 +80,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
     {
         var today = TestClock.Today;
 
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Empty, today)).ToList();
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Empty, today, "user-1")).ToList();
 
         errors.ShouldContain(e => e.PropertyName == nameof(BulkCompleteMealEntriesCommand.PersonId));
     }
@@ -94,7 +94,7 @@ public sealed class BulkCompleteMealEntriesCommandValidatorTests
         // because it only transitions Planned entries that already exist on that date.
         var future = TestClock.Today.AddDays(7);
 
-        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), future)).ToList();
+        var errors = _sut.Validate(new BulkCompleteMealEntriesCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), future, "user-1")).ToList();
 
         errors.ShouldBeEmpty();
     }

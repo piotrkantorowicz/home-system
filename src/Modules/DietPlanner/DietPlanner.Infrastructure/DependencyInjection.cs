@@ -1,6 +1,7 @@
 namespace DietPlanner.Infrastructure;
 
 using DietPlanner.Application;
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Workers;
 using DietPlanner.Domain.Repositories;
@@ -54,6 +55,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
+        services.AddScoped<HouseholdRosterProvider>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 

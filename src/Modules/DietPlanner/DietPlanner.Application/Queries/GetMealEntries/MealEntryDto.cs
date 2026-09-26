@@ -4,6 +4,8 @@ namespace DietPlanner.Application.Queries.GetMealEntries;
 /// A planned meal with its slot and recipe resolved, its completion state, and the macros it contributes — from the planned recipe, or from the override when the entry is modified.
 /// </summary>
 /// <param name="Id">Identifier of the entry.</param>
+/// <param name="PersonId">Household member the meal is planned for.</param>
+/// <param name="PersonName">Display name of that member, or <see langword="null"/> when the caller has no household.</param>
 /// <param name="Date">Calendar day of the meal.</param>
 /// <param name="MealSlotId">Slot of the user's schedule.</param>
 /// <param name="MealSlotName">Display name of the slot.</param>
@@ -26,6 +28,8 @@ namespace DietPlanner.Application.Queries.GetMealEntries;
 /// <param name="Fiber">Fibre this entry contributes, grams.</param>
 public sealed record MealEntryDto(
     Guid Id,
+    Guid PersonId,
+    string? PersonName,
     DateOnly Date,
     Guid MealSlotId,
     string MealSlotName,

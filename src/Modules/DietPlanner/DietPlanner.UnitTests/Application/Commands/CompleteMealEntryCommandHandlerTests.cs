@@ -17,7 +17,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public CompleteMealEntryCommandHandlerTests()
-        => _sut = new CompleteMealEntryCommandHandler(_repository, _unitOfWork);
+        => _sut = new CompleteMealEntryCommandHandler(_repository, _unitOfWork, TestHouseholds.Solo());
 
     private static MealEntry NewEntry(Guid personId = default)
         => MealEntry.Create(MealEntryId.New(), personId == Guid.Empty ? Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") : personId, new DateOnly(2026, 1, 1),
@@ -30,7 +30,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
         var entry = NewEntry();
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
-        await _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), "user-1"), TestContext.Current.CancellationToken);
 
         entry.Status.ShouldBe(MealEntryStatus.Done);
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
@@ -44,7 +44,7 @@ public sealed class CompleteMealEntryCommandHandlerTests
             .Returns((MealEntry?)null);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new CompleteMealEntryCommand(Guid.NewGuid(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken));
+            _sut.HandleAsync(new CompleteMealEntryCommand(Guid.NewGuid(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), "user-1"), TestContext.Current.CancellationToken));
     }
 
     /// <summary>When entry owned by other user: <c>HandleAsync</c> throws not found exception.</summary>
@@ -55,6 +55,6 @@ public sealed class CompleteMealEntryCommandHandlerTests
         _repository.GetByIdAsync(entry.Id, Arg.Any<CancellationToken>()).Returns(entry);
 
         await Should.ThrowAsync<NotFoundException>(() =>
-            _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb")), TestContext.Current.CancellationToken));
+            _sut.HandleAsync(new CompleteMealEntryCommand(entry.Id.Value, Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), "user-1"), TestContext.Current.CancellationToken));
     }
 }

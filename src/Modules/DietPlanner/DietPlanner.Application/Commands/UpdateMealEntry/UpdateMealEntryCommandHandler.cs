@@ -1,35 +1,28 @@
 namespace DietPlanner.Application.Commands.UpdateMealEntry;
 
-using DietPlanner.Domain.Exceptions;
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class UpdateMealEntryCommandHandler : ICommandHandler<UpdateMealEntryCommand>
+internal sealed class UpdateMealEntryCommandHandler(
+    IMealEntryRepository repository,
+    IMealScheduleConfigRepository scheduleRepository,
+    IUnitOfWork unitOfWork,
+    HouseholdRosterProvider households) : ICommandHandler<UpdateMealEntryCommand>
 {
-    private readonly IMealEntryRepository _repository;
-    private readonly IMealScheduleConfigRepository _scheduleRepository;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateMealEntryCommandHandler(
-        IMealEntryRepository repository,
-        IMealScheduleConfigRepository scheduleRepository,
-        IUnitOfWork unitOfWork)
-        => (_repository, _scheduleRepository, _unitOfWork)
-            = (repository, scheduleRepository, unitOfWork);
-
     public async Task HandleAsync(UpdateMealEntryCommand command, CancellationToken ct = default)
     {
-        var entry = await _repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
+        var entry = await repository.GetByIdAsync(MealEntryId.From(command.Id), ct)
             ?? throw new NotFoundException("MealEntry", command.Id);
 
-        if (entry.PersonId != command.PersonId)
-            throw new DietPlannerDomainException("You can only update your own meal entries.");
+        HouseholdRoster roster = await households.GetAsync(command.PersonId, command.AuthSubject, ct);
+        roster.Demand(entry.PersonId, roster.CanPlanFor(entry.PersonId), "MealEntry", command.Id);
 
         var slotId = MealSlotId.From(command.MealSlotId);
-        var schedule = await _scheduleRepository.GetByPersonIdAsync(command.PersonId, ct)
-            ?? throw new NotFoundException("MealScheduleConfig", command.PersonId);
+        var schedule = await scheduleRepository.GetByPersonIdAsync(entry.PersonId, ct)
+            ?? throw new NotFoundException("MealScheduleConfig", entry.PersonId);
 
         if (schedule.Slots.All(s => s.Id != slotId))
             throw new NotFoundException("MealSlot", command.MealSlotId);
@@ -37,7 +30,7 @@ internal sealed class UpdateMealEntryCommandHandler : ICommandHandler<UpdateMeal
         entry.Update(command.Date, slotId, RecipeId.From(command.RecipeId),
             command.Servings, command.Notes, command.MealTime, command.SequenceOrder);
 
-        _repository.Update(entry);
-        await _unitOfWork.CommitAsync(ct);
+        repository.Update(entry);
+        await unitOfWork.CommitAsync(ct);
     }
 }

@@ -1,6 +1,7 @@
 namespace DietPlanner.Application.Commands.UpdateMealSchedule;
 
 using System.Globalization;
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
@@ -12,12 +13,18 @@ internal sealed class UpdateMealScheduleCommandHandler(
     IMealScheduleConfigRepository repository,
     IMealEntryRepository mealEntryRepository,
     IUnitOfWork unitOfWork,
-    TimeProvider clock) : ICommandHandler<UpdateMealScheduleCommand>
+    TimeProvider clock,
+    HouseholdRosterProvider households) : ICommandHandler<UpdateMealScheduleCommand>
 {
     public async Task HandleAsync(UpdateMealScheduleCommand command, CancellationToken ct = default)
     {
+        var personId = command.ForPersonId ?? command.PersonId;
+        HouseholdRoster roster = await households.GetAsync(command.PersonId, command.AuthSubject, ct);
+        if (!roster.CanLogFor(personId))
+            throw new ForbiddenException("You can only change your own meal schedule or one of a managed member.");
+
         var now = clock.GetUtcNow().UtcDateTime;
-        MealScheduleConfig? config = await repository.GetByPersonIdAsync(command.PersonId, ct);
+        MealScheduleConfig? config = await repository.GetByPersonIdAsync(personId, ct);
 
         if (config is null)
         {
@@ -26,7 +33,7 @@ internal sealed class UpdateMealScheduleCommandHandler(
                 .Select(s => (s.Name, TimeOnly.Parse(s.DefaultTime, CultureInfo.InvariantCulture)))
                 .ToList();
 
-            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), command.PersonId, newSlots, now);
+            config = MealScheduleConfig.Create(MealScheduleConfigId.New(), personId, newSlots, now);
             await repository.AddAsync(config, ct);
         }
         else

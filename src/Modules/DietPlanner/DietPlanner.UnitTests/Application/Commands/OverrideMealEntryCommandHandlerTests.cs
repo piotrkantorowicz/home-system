@@ -20,7 +20,7 @@ public sealed class OverrideMealEntryCommandHandlerTests
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public OverrideMealEntryCommandHandlerTests()
         => _sut = new OverrideMealEntryCommandHandler(
-            _repository, _recipeRepository, _productRepository, _unitOfWork);
+            _repository, _recipeRepository, _productRepository, _unitOfWork, TestHouseholds.Solo());
 
     private static MealEntry NewEntry(Guid personId = default)
         => MealEntry.Create(MealEntryId.New(), personId == Guid.Empty ? Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb") : personId, new DateOnly(2026, 1, 1),
