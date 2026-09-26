@@ -31,7 +31,7 @@ public sealed class CreateRecipeCommandHandlerTests
             new(Guid.NewGuid(), 200m, "g"),
             new(Guid.NewGuid(), 100m, "ml")
         };
-        var command = new CreateRecipeCommand("Pasta Bolognese", "Classic pasta", null, 4, 30, ingredients, "user-1");
+        var command = new CreateRecipeCommand("Pasta Bolognese", "Classic pasta", null, 4, 30, ingredients, null, "user-1");
 
         var id = await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -48,7 +48,7 @@ public sealed class CreateRecipeCommandHandlerTests
     {
         var productId = Guid.NewGuid();
         var ingredients = new List<CreateRecipeIngredientRequest> { new(productId, 300m, "g") };
-        var command = new CreateRecipeCommand("Salad", null, null, 1, null, ingredients, "user-1");
+        var command = new CreateRecipeCommand("Salad", null, null, 1, null, ingredients, null, "user-1");
         Recipe? captured = null;
         await _repository.AddAsync(Arg.Do<Recipe>(r => captured = r), Arg.Any<CancellationToken>());
 

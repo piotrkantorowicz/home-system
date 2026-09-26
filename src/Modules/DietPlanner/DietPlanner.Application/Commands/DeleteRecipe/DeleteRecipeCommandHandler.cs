@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.DeleteRecipe;
 
-using DietPlanner.Domain.Exceptions;
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
@@ -8,6 +8,7 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class DeleteRecipeCommandHandler(
     IRecipeRepository repository,
+    HouseholdRosterProvider households,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<DeleteRecipeCommand>
 {
@@ -17,8 +18,8 @@ internal sealed class DeleteRecipeCommandHandler(
         var recipe = await repository.GetByIdAsync(RecipeId.From(command.Id), ct)
             ?? throw new NotFoundException("Recipe", command.Id);
 
-        if (recipe.CreatedByUserId != command.UserId)
-            throw new DietPlannerDomainException("You can only delete recipes you created.");
+        LibraryAccess access = await households.GetLibraryAccessAsync(command.UserId, ct);
+        access.DemandEdit(recipe.CreatedByUserId, recipe.Visibility, "Recipe", command.Id);
 
         recipe.SoftDelete(now);
         repository.Update(recipe);

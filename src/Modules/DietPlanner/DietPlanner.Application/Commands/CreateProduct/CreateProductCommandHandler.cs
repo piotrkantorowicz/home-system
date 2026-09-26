@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateProduct;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -22,7 +23,8 @@ internal sealed class CreateProductCommandHandler(
         var id = ProductId.New();
         var nutrition = new NutritionPer100g(command.Calories, command.Protein, command.Carbs, command.Fat, command.Fiber);
         var product = Product.Create(id, command.Name, nutrition, command.DefaultUnit,
-            command.DensityGramsPerMl, command.GramPerPiece, command.UserId, now);
+            command.DensityGramsPerMl, command.GramPerPiece, command.UserId, now,
+            VisibilityInput.Parse(command.Visibility) ?? Visibility.Household);
 
         await repository.AddAsync(product, ct);
         await unitOfWork.CommitAsync(ct);

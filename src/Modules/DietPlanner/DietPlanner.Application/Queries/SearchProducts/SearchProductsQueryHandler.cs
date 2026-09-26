@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Queries.SearchProducts;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Pagination;
@@ -9,14 +10,19 @@ internal sealed class SearchProductsQueryHandler
     : IQueryHandler<SearchProductsQuery, PagedList<ProductDto>>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
+    private readonly HouseholdRosterProvider _households;
 
-    public SearchProductsQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
+    public SearchProductsQueryHandler(IDietPlannerReadDbContext dbContext, HouseholdRosterProvider households)
+    {
+        _dbContext = dbContext;
+        _households = households;
+    }
 
     public async Task<PagedList<ProductDto>> HandleAsync(
         SearchProductsQuery query, CancellationToken ct = default)
     {
-        var q = _dbContext.Products.AsNoTracking();
+        LibraryAccess access = await _households.GetLibraryAccessAsync(query.UserId, ct);
+        var q = access.Visible(_dbContext.Products.AsNoTracking());
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -52,7 +58,9 @@ internal sealed class SearchProductsQueryHandler
                 p.CreatedByUserId,
                 p.CreatedAt,
                 p.UpdatedAt,
-                p.CreatedByUserId == query.UserId))
+                p.CreatedByUserId == query.UserId,
+                p.Visibility.ToString(),
+                access.CanEdit(p.CreatedByUserId, p.Visibility)))
             .ToListAsync(ct);
 
         return new PagedList<ProductDto>(items, totalCount, query.Page, query.PageSize);

@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateRecipe;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -21,7 +22,8 @@ internal sealed class CreateRecipeCommandHandler(
 
         var id = RecipeId.New();
         var recipe = Recipe.Create(id, command.Name, command.Description, command.Instructions,
-            command.Servings, command.PrepTimeMinutes, command.UserId, now);
+            command.Servings, command.PrepTimeMinutes, command.UserId, now,
+            VisibilityInput.Parse(command.Visibility) ?? Visibility.Household);
 
         foreach (var ing in command.Ingredients)
             recipe.AddIngredient(RecipeIngredientId.New(), ProductId.From(ing.ProductId), ing.Amount, ing.Unit);

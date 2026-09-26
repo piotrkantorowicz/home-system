@@ -31,7 +31,7 @@ public static class ProductEndpoints
         group.MapGet("/", ListProducts)
             .WithName("ListProducts")
             .WithSummary("List products with optional search and pagination")
-            .WithDescription("Returns a paginated list of products visible to the caller. Use `onlyMine=true` to restrict results to products created by the current user.");
+            .WithDescription("Returns a paginated list of products visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to products created by the current user.");
 
         group.MapGet("/{id:guid}", GetProduct)
             .WithName("GetProduct")
@@ -46,12 +46,12 @@ public static class ProductEndpoints
         group.MapPut("/{id:guid}", UpdateProduct)
             .WithName("UpdateProduct")
             .WithSummary("Update a product")
-            .WithDescription("Updates all fields of an existing product. Only the product owner may update it.");
+            .WithDescription("Updates all fields of an existing product. Only the creator or an Owner/Adult of their household may update a non-private product.");
 
         group.MapDelete("/{id:guid}", DeleteProduct)
             .WithName("DeleteProduct")
             .WithSummary("Delete a product")
-            .WithDescription("Permanently removes a product from the catalogue. Only the product owner may delete it.");
+            .WithDescription("Soft-deletes a product. Only the creator or an Owner/Adult of their household may delete a non-private product.");
 
         return app;
     }
@@ -91,7 +91,7 @@ public static class ProductEndpoints
             new CreateProductCommand(
                 request.Name, request.Calories, request.Protein, request.Carbs,
                 request.Fat, request.Fiber, request.DefaultUnit,
-                request.DensityGramsPerMl, request.GramPerPiece, userId), ct);
+                request.DensityGramsPerMl, request.GramPerPiece, request.Visibility, userId), ct);
         return TypedResults.Created($"/api/v1/products/{id}", id);
     }
 
@@ -107,7 +107,7 @@ public static class ProductEndpoints
             new UpdateProductCommand(
                 id, request.Name, request.Calories, request.Protein, request.Carbs,
                 request.Fat, request.Fiber, request.DefaultUnit,
-                request.DensityGramsPerMl, request.GramPerPiece, userId), ct);
+                request.DensityGramsPerMl, request.GramPerPiece, request.Visibility, userId), ct);
         return TypedResults.NoContent();
     }
 
@@ -153,6 +153,7 @@ public sealed record ListProductsParams(
 /// <param name="DefaultUnit">Unit proposed when the product is used: <c>g</c>, <c>ml</c> or <c>piece</c>.</param>
 /// <param name="DensityGramsPerMl">Grams per millilitre, needed for volume units.</param>
 /// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> (default) or <c>Public</c>.</param>
 public sealed record CreateProductRequest(
     string Name,
     decimal? Calories,
@@ -162,7 +163,8 @@ public sealed record CreateProductRequest(
     decimal? Fiber,
     string DefaultUnit,
     decimal? DensityGramsPerMl,
-    decimal? GramPerPiece);
+    decimal? GramPerPiece,
+    string? Visibility = null);
 
 /// <summary>
 /// Body of product update; every field is replaced.
@@ -176,6 +178,7 @@ public sealed record CreateProductRequest(
 /// <param name="DefaultUnit">Unit proposed when the product is used: <c>g</c>, <c>ml</c> or <c>piece</c>.</param>
 /// <param name="DensityGramsPerMl">Grams per millilitre, needed for volume units.</param>
 /// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; omitted keeps the current one. Only the creator may change it.</param>
 public sealed record UpdateProductRequest(
     string Name,
     decimal? Calories,
@@ -185,4 +188,5 @@ public sealed record UpdateProductRequest(
     decimal? Fiber,
     string DefaultUnit,
     decimal? DensityGramsPerMl,
-    decimal? GramPerPiece);
+    decimal? GramPerPiece,
+    string? Visibility = null);

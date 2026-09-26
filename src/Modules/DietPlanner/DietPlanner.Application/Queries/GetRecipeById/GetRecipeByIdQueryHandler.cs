@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Queries.GetRecipeById;
 
+using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.Domain.ValueObjects;
@@ -10,15 +11,19 @@ internal sealed class GetRecipeByIdQueryHandler
     : IQueryHandler<GetRecipeByIdQuery, RecipeDto?>
 {
     private readonly IDietPlannerReadDbContext _dbContext;
+    private readonly HouseholdRosterProvider _households;
 
-    public GetRecipeByIdQueryHandler(IDietPlannerReadDbContext dbContext)
-        => _dbContext = dbContext;
+    public GetRecipeByIdQueryHandler(IDietPlannerReadDbContext dbContext, HouseholdRosterProvider households)
+    {
+        _dbContext = dbContext;
+        _households = households;
+    }
 
     public async Task<RecipeDto?> HandleAsync(
         GetRecipeByIdQuery query, CancellationToken ct = default)
     {
-        var recipe = await _dbContext.Recipes
-            .AsNoTracking()
+        LibraryAccess access = await _households.GetLibraryAccessAsync(query.UserId, ct);
+        var recipe = await access.Visible(_dbContext.Recipes.AsNoTracking())
             .Include(r => r.Ingredients)
             .Where(r => r.Id == RecipeId.From(query.Id))
             .FirstOrDefaultAsync(ct);
@@ -77,6 +82,8 @@ internal sealed class GetRecipeByIdQueryHandler
             recipe.CreatedAt,
             recipe.UpdatedAt,
             recipe.CreatedByUserId == query.UserId,
+            recipe.Visibility.ToString(),
+            access.CanEdit(recipe.CreatedByUserId, recipe.Visibility),
             ingredientDtos,
             perServing,
             totalNutrition);

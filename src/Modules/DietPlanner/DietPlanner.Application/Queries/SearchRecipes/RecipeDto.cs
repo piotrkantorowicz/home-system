@@ -42,7 +42,9 @@ public sealed record NutritionDto(
 /// <param name="CreatedByUserId">Auth subject of the creator.</param>
 /// <param name="CreatedAt">Creation time, UTC.</param>
 /// <param name="UpdatedAt">Time of the last change, UTC; <see langword="null"/> if never changed.</param>
-/// <param name="IsOwner">Whether the caller created it and may edit or delete it.</param>
+/// <param name="IsOwner">Whether the caller created it.</param>
+/// <param name="Visibility">Who besides the creator can see it: <c>Private</c>, <c>Household</c> or <c>Public</c>.</param>
+/// <param name="CanEdit">Whether the caller may edit or delete it (creator, or an adult of its household).</param>
 /// <param name="Ingredients">The ingredient lines.</param>
 /// <param name="NutritionPerServing">Macros for one serving, when calculated.</param>
 /// <param name="TotalNutrition">Macros for the whole recipe, when calculated.</param>
@@ -57,6 +59,8 @@ public sealed record RecipeDto(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     bool IsOwner,
+    string Visibility,
+    bool CanEdit,
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     NutritionDto? NutritionPerServing = null,
     NutritionDto? TotalNutrition = null);

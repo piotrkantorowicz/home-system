@@ -31,7 +31,7 @@ public static class RecipeEndpoints
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")
             .WithSummary("List recipes with optional search and pagination")
-            .WithDescription("Returns a paginated list of recipes visible to the caller. Use `onlyMine=true` to restrict results to recipes created by the current user.");
+            .WithDescription("Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user.");
 
         group.MapGet("/{id:guid}", GetRecipe)
             .WithName("GetRecipe")
@@ -46,12 +46,12 @@ public static class RecipeEndpoints
         group.MapPut("/{id:guid}", UpdateRecipe)
             .WithName("UpdateRecipe")
             .WithSummary("Update a recipe")
-            .WithDescription("Replaces all fields and the full ingredient list of an existing recipe. Only the recipe owner may update it.");
+            .WithDescription("Replaces all fields and the full ingredient list of an existing recipe. Only the creator or an Owner/Adult of their household may update a non-private recipe.");
 
         group.MapDelete("/{id:guid}", DeleteRecipe)
             .WithName("DeleteRecipe")
             .WithSummary("Delete a recipe")
-            .WithDescription("Permanently removes a recipe and its ingredient list. Only the recipe owner may delete it.");
+            .WithDescription("Soft-deletes a recipe. Only the creator or an Owner/Adult of their household may delete a non-private recipe.");
 
         return app;
     }
@@ -93,7 +93,7 @@ public static class RecipeEndpoints
         var id = await dispatcher.SendAsync<CreateRecipeCommand, Guid>(
             new CreateRecipeCommand(
                 request.Name, request.Description, request.Instructions,
-                request.Servings, request.PrepTimeMinutes, ingredients, userId), ct);
+                request.Servings, request.PrepTimeMinutes, ingredients, request.Visibility, userId), ct);
         return TypedResults.Created($"/api/v1/recipes/{id}", id);
     }
 
@@ -111,7 +111,7 @@ public static class RecipeEndpoints
         await dispatcher.SendAsync(
             new UpdateRecipeCommand(
                 id, request.Name, request.Description, request.Instructions,
-                request.Servings, request.PrepTimeMinutes, ingredients, userId), ct);
+                request.Servings, request.PrepTimeMinutes, ingredients, request.Visibility, userId), ct);
         return TypedResults.NoContent();
     }
 
@@ -165,13 +165,15 @@ public sealed record RecipeIngredientRequest(
 /// <param name="Servings">Portions the ingredient amounts yield; positive.</param>
 /// <param name="PrepTimeMinutes">Optional preparation time.</param>
 /// <param name="Ingredients">The complete ingredient list.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> (default) or <c>Public</c>.</param>
 public sealed record CreateRecipeRequest(
     string Name,
     string? Description,
     string? Instructions,
     int Servings,
     int? PrepTimeMinutes,
-    IReadOnlyList<RecipeIngredientRequest> Ingredients);
+    IReadOnlyList<RecipeIngredientRequest> Ingredients,
+    string? Visibility = null);
 
 /// <summary>
 /// Body of recipe update; header fields and the whole ingredient list are replaced.
@@ -182,10 +184,12 @@ public sealed record CreateRecipeRequest(
 /// <param name="Servings">Portions the ingredient amounts yield; positive.</param>
 /// <param name="PrepTimeMinutes">Optional preparation time.</param>
 /// <param name="Ingredients">The complete ingredient list.</param>
+/// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; omitted keeps the current one. Only the creator may change it.</param>
 public sealed record UpdateRecipeRequest(
     string Name,
     string? Description,
     string? Instructions,
     int Servings,
     int? PrepTimeMinutes,
-    IReadOnlyList<RecipeIngredientRequest> Ingredients);
+    IReadOnlyList<RecipeIngredientRequest> Ingredients,
+    string? Visibility = null);

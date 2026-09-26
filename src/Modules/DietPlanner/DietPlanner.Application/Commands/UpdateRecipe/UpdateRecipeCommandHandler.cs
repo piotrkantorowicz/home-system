@@ -1,6 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateRecipe;
 
-using DietPlanner.Domain.Exceptions;
+using DietPlanner.Application.Households;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
@@ -8,6 +8,7 @@ using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateRecipeCommandHandler(
     IRecipeRepository repository,
+    HouseholdRosterProvider households,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<UpdateRecipeCommand>
 {
@@ -17,8 +18,15 @@ internal sealed class UpdateRecipeCommandHandler(
         var recipe = await repository.GetByIdAsync(RecipeId.From(command.Id), ct)
             ?? throw new NotFoundException("Recipe", command.Id);
 
-        if (recipe.CreatedByUserId != command.UserId)
-            throw new DietPlannerDomainException("You can only update recipes you created.");
+        LibraryAccess access = await households.GetLibraryAccessAsync(command.UserId, ct);
+        access.DemandEdit(recipe.CreatedByUserId, recipe.Visibility, "Recipe", command.Id);
+
+        if (VisibilityInput.Parse(command.Visibility) is { } visibility && visibility != recipe.Visibility)
+        {
+            if (recipe.CreatedByUserId != command.UserId)
+                throw new ForbiddenException("Only the creator can change who sees this recipe.");
+            recipe.ChangeVisibility(visibility);
+        }
 
         recipe.Update(command.Name, command.Description, command.Instructions,
             command.Servings, command.PrepTimeMinutes, now);

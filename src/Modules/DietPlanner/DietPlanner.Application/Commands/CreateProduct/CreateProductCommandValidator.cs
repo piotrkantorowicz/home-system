@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateProduct;
 
+using DietPlanner.Application.Households;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateProductCommandValidator : ICommandValidator<CreateProductCommand>
@@ -16,6 +17,9 @@ internal sealed class CreateProductCommandValidator : ICommandValidator<CreatePr
 
         if (string.IsNullOrWhiteSpace(command.UserId))
             yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+
+        if (!VisibilityInput.IsValid(command.Visibility))
+            yield return new ValidationError(nameof(command.Visibility), VisibilityInput.Error);
 
         if (command.Calories is < 0)
             yield return new ValidationError(nameof(command.Calories), "Calories must be non-negative.");

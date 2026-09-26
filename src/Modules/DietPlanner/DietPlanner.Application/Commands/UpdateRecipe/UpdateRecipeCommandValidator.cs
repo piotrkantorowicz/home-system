@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateRecipe;
 
+using DietPlanner.Application.Households;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateRecipeCommandValidator : ICommandValidator<UpdateRecipeCommand>
@@ -19,5 +20,8 @@ internal sealed class UpdateRecipeCommandValidator : ICommandValidator<UpdateRec
 
         if (string.IsNullOrWhiteSpace(command.UserId))
             yield return new ValidationError(nameof(command.UserId), "UserId is required.");
+
+        if (!VisibilityInput.IsValid(command.Visibility))
+            yield return new ValidationError(nameof(command.Visibility), VisibilityInput.Error);
     }
 }
