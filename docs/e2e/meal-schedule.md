@@ -88,7 +88,4 @@ Meal-slot CRUD is bounded by `[1, 8]` slots, the dirty-state UX correctly enable
 
 - Time-input validation (out-of-range hours, invalid HH:MM)
 - Duplicate-slot-name handling (server-side validation)
-- Drag-to-reorder slots
-- Resetting to defaults
-- Persisted state after delete-then-undo
 - Empty form submission (zero slots — should be impossible per the lower bound)

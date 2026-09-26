@@ -72,7 +72,5 @@ The mixed-unit journey in `recipes.spec.ts` also creates a product with `ml`, de
 - Macro percentage validation (e.g., protein + carbs + fat shouldn't exceed 100% of calories)
 - Server-side error display (e.g., 409 conflict on duplicate name)
 - Units beyond `g` and `ml`, and non-unit density conversion
-- Optional fields (description, brand, source URL) not exercised
-- Bulk operations (delete many, import from CSV)
 - Search debounce and clearing
 - URL-state preservation for active search query

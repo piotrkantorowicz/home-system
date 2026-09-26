@@ -22,9 +22,9 @@ $run-e2e [spec] [--ui | --debug | --headed] [--setup]
 
 ## Prerequisites (must be up before tests)
 
-1. **Docker infra, diet-planner profile** — Authentik + diet-planner Postgres:
+1. **Docker infra, all module profiles** — Authentik + three module databases:
    ```bash
-   cd infrastructure && docker compose --profile diet-planner up -d
+   cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household up -d
    ```
    `infrastructure/.env` must define `E2E_USER_PASSWORD` — the Authentik blueprint
    provisions `E2eWorker0..E2eWorker3` with it.
@@ -45,7 +45,7 @@ $run-e2e [spec] [--ui | --debug | --headed] [--setup]
   to set `TEST_USER_PASSWORD` to the **same value** as `E2E_USER_PASSWORD` in
   `infrastructure/.env`. The auth helpers throw (no committed default) if it is missing.
 - Infra healthy: `docker compose ps` in `infrastructure/` — `authentik-server` up,
-  `dietplanner-db` healthy. `curl -sf http://localhost:9000/-/health/ready/`.
+  all three module databases healthy. `curl -sf http://localhost:9000/-/health/ready/`.
 - Backend up: `curl -sf http://localhost:5050/openapi/v1.json > /dev/null`.
 - If a prerequisite is missing, stop and say exactly which — do not run the suite
   against a partial stack.
@@ -69,7 +69,8 @@ Plus, on `--setup` or first ever run: `npx playwright install --with-deps chromi
 | `--headed` | `npx playwright test <spec> --headed` |
 
 4-worker parallel — each worker logs in as its own `E2eWorker<n>`, writes
-`playwright/.auth/user-<n>.json`; the `setup` project logs all workers in first;
+`playwright/.auth/user-<n>.json`; setup also logs in a reserved invitee for
+household tests. The `setup` project logs all users in first;
 `shared/global-teardown.ts` purges each worker's data at the end.
 
 ### 4. Report

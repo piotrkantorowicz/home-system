@@ -72,8 +72,6 @@ to changes in the saved calorie goal.
 
 ## Gaps
 
-- **The whole interactive calculator is gone** — no coverage of a "what-if"
-  calorie target because the feature no longer exists
 - BMI category boundaries / colours
 - Estimated goal date (still rendered on the Identity card, not asserted)
 - Real 500 error from the prediction endpoint

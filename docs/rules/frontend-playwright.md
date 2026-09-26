@@ -1,7 +1,7 @@
 # Playwright — E2E Rules
 
 E2E tests cover **user journeys** through the real stack: Vite dev server, backend API,
-PostgreSQL, Authentik. One journey per spec beats ten specs that prod one button each.
+PostgreSQL, Authentik. A few meaningful journeys per spec beat button-level smoke tests.
 
 ## Setup that exists (`e2e/`)
 
@@ -9,26 +9,24 @@ PostgreSQL, Authentik. One journey per spec beats ten specs that prod one button
 e2e/
   playwright.config.ts        chromium only, 4 workers, fullyParallel, dotenv → e2e/.env
   shared/
-    auth.setup.ts             logs each worker's Authentik user in once, saves storage state
+    auth.setup.ts             logs in four worker users plus a reserved invitee, saves storage state
     auth-paths.ts             authStatePath(workerIndex), credentialsFor(workerIndex)
     global-teardown.ts
-  <module>/
-    fixtures/
-      index.ts                `test` / `expect` — import from HERE, never from @playwright/test
-      auth.fixture.ts         per-worker storageState + silent OIDC refresh when the token is stale
-      test-data.ts
-    pages/                    Page Object Models, one class per screen, `index.ts` barrel
-      BasePage.ts
-      products.page.ts
-    utils/                    seed.ts, cleanup.ts, data-generator.ts (API-level helpers)
+  diet-planner/
+    fixtures/                 `test` / `expect`, per-worker storageState and OIDC refresh
+    pages/                    Page Object Models and shared screen helpers
+    utils/                    API-level seed/cleanup helpers
     products.spec.ts
+  household/                  invitation flows; reuses diet-planner auth fixture
+  notifications/              route-mocked inbox and channel flows; reuses auth fixture
 docs/e2e/README.md            prerequisites, env vars, per-area notes
 ```
 
 - **Chromium only.** Cross-browser is not a goal for a self-hosted home app; do not add
   projects without a reason.
-- **One Authentik user per worker** (`E2eWorker0..3`). Tests in different workers never see
-  each other's data; tests in the same worker must still use unique names/ids.
+- **One Authentik user per worker** (`E2eWorker0..3`) plus a reserved invitee for
+  household invitation tests. Tests in different workers can still touch shared
+  household data; tests in the same worker must use unique names/ids.
 - `webServer` reuses a running Vite on `:5173`. Backend + Authentik must already be up —
   `/run-project` first, or see `docs/e2e/README.md`.
 - `timeout: 60s`, `actionTimeout: 15s`, `trace: on-first-retry`, `retries: 2` on CI.
@@ -36,22 +34,19 @@ docs/e2e/README.md            prerequisites, env vars, per-area notes
 ## Writing a spec
 
 ```ts
-import { expect, test } from '../fixtures';
-import { ProductsPage } from '../pages';
+import { expect, test } from './fixtures';
+import { DashboardPage } from './pages';
 
-test.describe('Products', () => {
-  test('owner creates a product and sees it in the list', async ({ page, testData }) => {
-    const products = new ProductsPage(page);
-    await products.goto();
+test('Log water opens hydration', async ({ page }) => {
+  const dashboard = new DashboardPage(page);
+  await dashboard.goto();
 
-    await products.create({ name: testData.unique('Oats'), calories: 380 });
-
-    await expect(products.row(testData.last)).toBeVisible();
-  });
+  await dashboard.logWaterLink.click();
+  await expect(page).toHaveURL('/diet-planner/hydration');
 });
 ```
 
-- `test` / `expect` from `../fixtures` — that is where auth state and helpers are wired.
+- `test` / `expect` from the local `./fixtures` — that is where auth state is wired.
 - Arrange through the API (`utils/seed.ts`) when the UI path is not what the test is about.
 - Clean up what you create (`utils/cleanup.ts` in `afterEach`) — the databases are shared
   across runs.
@@ -115,8 +110,9 @@ Route interception (`page.route`) is for edge cases the real backend cannot prod
 
 ## Environment
 
-`e2e/.env` (git-ignored, `.env.example` committed): `TEST_USER_PASSWORD` for the worker users,
-optional `PLAYWRIGHT_BASE_URL`. No secrets in specs.
+`e2e/.env` (git-ignored, `.env.example` committed): `TEST_USER_PASSWORD` for worker
+users and invitee, optional `API_BASE_URL`. Playwright's frontend URL is fixed at
+`http://localhost:5173` in `playwright.config.ts`. No secrets in specs.
 
 ## Running
 
