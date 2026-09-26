@@ -24,7 +24,7 @@ describe('useProfile', () => {
     });
 
     expect(result.current.data).not.toBeNull();
-    expect(result.current.data?.userId).toBe('user-1');
+    expect(result.current.data?.personId).toBe('person-1');
     expect(result.current.data?.heightCm).toBe(180);
     expect(result.current.data?.gender).toBe('Male');
   });
