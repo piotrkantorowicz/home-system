@@ -108,8 +108,10 @@ A non-admin who opens `/admin` directly gets an "Admins only" empty state and no
 
 `scripts/verify.sh --branch`: all 16 checks green.
 
-**Not done:** Playwright spec. The E2E pool users aren't admins, and the page needs an admin
-identity (see decision 4).
+E2E (`e2e/admin/dead-letters.spec.ts`, smoke only): a reserved `E2eAdmin` user (blueprint,
+member of `home-system-admins`, own setup step + household) sees the counters and both sections;
+a pool worker gets "Admins only". Seeding real dead letters would mean breaking a consumer on
+the shared stack, so retry stays covered by Vitest and the API integration tests.
 
 ## 4. Out of scope / known limits
 
@@ -120,24 +122,17 @@ identity (see decision 4).
 
 ---
 
-## 5. Decisions needed
+## 5. Decisions
 
-1. **Outbox has no backoff — is 10 attempts OK?** The outbox worker ticks every second, so a
-   message dead-letters after about **10 s** of failures. A short consumer-DB outage longer than
-   that now needs a manual retry, where before it retried forever. Options:
-   **(a)** keep 10 and just retry by hand; **(b)** raise the default (e.g. 60 ≈ 1 min);
-   **(c) recommended:** follow-up issue to add `last_attempt_at` + exponential backoff to
-   `outbox_messages` (EF migration in DietPlanner and Household), like the delivery retry worker
-   already does. I kept (a) so this PR has no migrations.
-2. **Admin = Authentik superusers *or* `home-system-admins` group.** Fine, or group only (then
-   add akadmin to the group explicitly)? Or a config allow-list of subjects instead of Authentik?
-3. **Retry semantics = requeue (reset attempts, wait for the worker).** Alternative: "send now"
-   (run the sender/handler inline and return the result). Requeue is simpler and safer; say if
-   you want immediate feedback instead.
-4. **E2E coverage.** Add an `E2eAdmin` user in the blueprint (member of `home-system-admins`)
-   plus a Playwright spec for `/admin`? It needs an extra auth-setup project for that user.
-5. **Bulk "retry all" + payload view** — wanted? Both are small follow-ups.
-6. **Where the admin endpoints live.** Outbox admin is in `Shared.Infrastructure.Web` and calls
-   the store directly (no CQRS dispatcher) because it's messaging infrastructure, not a module
-   use case. If you'd rather keep "endpoints only dispatch", it needs query/command types in
-   shared infra and a way to register their handlers.
+1. **Outbox backoff.** Keep 10 attempts in this PR; backoff (`last_attempt_at` + exponential
+   delay, EF migrations in DietPlanner and Household) is follow-up #431.
+2. **Admin = Authentik superusers or `home-system-admins` group.** Kept.
+3. **Retry = requeue** (reset attempts, worker picks it up). Kept. Requeue keeps the last error
+   and failure reason; only the attempt count restarts. Full attempt history would need its own
+   table — not worth it until backoff (#431) lands.
+4. **E2E coverage.** Lightweight smoke spec with a reserved `E2eAdmin` (see §3).
+5. **Bulk retry and payload view.** Follow-ups #432 and #433.
+6. **Outbox admin endpoints call the store directly** (no CQRS dispatcher). They are
+   infrastructure operations over every module's outbox, like health checks, not a module use
+   case — a query/command + handler per call would add types with no validation or transaction
+   to carry. Delivery retry, which *is* a Notifications use case, goes through the dispatcher.
