@@ -91,6 +91,7 @@ internal sealed class NotificationRepository : INotificationRepository
                 delivery.LastAttemptAt,
                 delivery.SentAt,
                 delivery.FailureReason,
+                RetryOf = delivery.RetryOf?.Value,
             },
             transaction: tx,
             cancellationToken: ct));

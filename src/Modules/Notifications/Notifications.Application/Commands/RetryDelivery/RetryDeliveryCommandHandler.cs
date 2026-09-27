@@ -15,8 +15,9 @@ internal sealed class RetryDeliveryCommandHandler(
         var delivery = await repository.GetDeliveryAsync(NotificationDeliveryId.From(command.DeliveryId), ct)
             ?? throw new NotFoundException("NotificationDelivery", command.DeliveryId);
 
-        delivery.Requeue();
+        var retry = delivery.Retry(NotificationDeliveryId.New());
         await repository.UpdateDeliveryAsync(delivery, ct);
+        await repository.AddDeliveryAsync(retry, ct);
         await unitOfWork.CommitAsync(ct);
     }
 }

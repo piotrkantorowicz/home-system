@@ -19,7 +19,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
         int batchSize, int maxAttempts, DateTime now, CancellationToken ct)
         => await _dbContext.Set<OutboxMessageEntity>()
             .AsNoTracking()
-            .Where(x => x.ProcessedAt == null && x.AttemptCount < maxAttempts
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount < maxAttempts
                 && (x.NextAttemptAt == null || x.NextAttemptAt <= now))
             .OrderBy(x => x.OccurredAt)
             .Take(batchSize)
@@ -55,7 +55,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new OutboxDeadLetter(
-                x.Id, x.EventId, x.EventType, x.OccurredAt, x.AttemptCount, x.LastError))
+                x.Id, x.EventId, x.EventType, x.OccurredAt, x.AttemptCount, x.LastError, x.RetryOf))
             .ToListAsync(ct);
 
         return new PagedList<OutboxDeadLetter>(items, total, page, pageSize);
@@ -65,27 +65,37 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
     {
         var failed = _dbContext.Set<OutboxMessageEntity>()
             .AsNoTracking()
-            .Where(x => x.ProcessedAt == null && x.AttemptCount > 0);
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount > 0);
 
         var deadLettered = await failed.CountAsync(x => x.AttemptCount >= maxAttempts, ct);
         var retrying = await failed.CountAsync(x => x.AttemptCount < maxAttempts, ct);
         return new OutboxBacklog(deadLettered, retrying);
     }
 
-    public async Task<bool> RequeueAsync(Guid messageId, CancellationToken ct)
+    public async Task<bool> RetryAsync(Guid messageId, DateTime now, CancellationToken ct)
     {
-        var updated = await _dbContext.Set<OutboxMessageEntity>()
-            .Where(x => x.Id == messageId && x.ProcessedAt == null)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.AttemptCount, 0)
-                .SetProperty(x => x.NextAttemptAt, (DateTime?)null), ct);
-        return updated > 0;
+        var original = await _dbContext.Set<OutboxMessageEntity>()
+            .FirstOrDefaultAsync(x => x.Id == messageId && x.ProcessedAt == null && x.RetriedAt == null, ct);
+        if (original is null) return false;
+
+        original.RetriedAt = now;
+        await _dbContext.Set<OutboxMessageEntity>().AddAsync(new OutboxMessageEntity
+        {
+            Id = Guid.CreateVersion7(),
+            EventId = original.EventId,
+            EventType = original.EventType,
+            Payload = original.Payload,
+            OccurredAt = original.OccurredAt,
+            RetryOf = original.Id,
+        }, ct);
+        await _dbContext.SaveChangesAsync(ct);
+        return true;
     }
 
     private IQueryable<OutboxMessageEntity> DeadLettered(int maxAttempts)
         => _dbContext.Set<OutboxMessageEntity>()
             .AsNoTracking()
-            .Where(x => x.ProcessedAt == null && x.AttemptCount >= maxAttempts);
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount >= maxAttempts);
 
     private static OutboxMessageEntity MapToEntity(OutboxMessage m) => new()
     {

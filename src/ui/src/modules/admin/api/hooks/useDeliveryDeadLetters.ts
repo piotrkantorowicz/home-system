@@ -23,6 +23,8 @@ export interface DeadLetterDelivery {
   attemptCount: number;
   lastAttemptAt: string | null;
   failureReason: string | null;
+  /** The earlier delivery this one retried; set when an admin retried it before. */
+  retryOf: string | null;
 }
 
 export interface Page<T> {
@@ -40,6 +42,7 @@ function toDelivery(d: DeadLetterDeliveryWire): DeadLetterDelivery {
     attemptCount: Number(d.attemptCount),
     lastAttemptAt: d.lastAttemptAt,
     failureReason: d.failureReason,
+    retryOf: d.retryOf,
   };
 }
 

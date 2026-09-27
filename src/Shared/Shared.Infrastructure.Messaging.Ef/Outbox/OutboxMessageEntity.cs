@@ -34,4 +34,10 @@ public sealed class OutboxMessageEntity
 
     /// <summary>Earliest time the worker may retry after a failure (backoff); <see langword="null"/> means now.</summary>
     public DateTime? NextAttemptAt { get; set; }
+
+    /// <summary>The dead-lettered row this one retries, when created by an admin retry.</summary>
+    public Guid? RetryOf { get; init; }
+
+    /// <summary>When an admin retried this row as a new one; set rows are history and never dispatched.</summary>
+    public DateTime? RetriedAt { get; set; }
 }

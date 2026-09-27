@@ -34,6 +34,7 @@ internal static class NotificationMapping
         Set(delivery, "LastAttemptAt", row.LastAttemptAt);
         Set(delivery, "SentAt", row.SentAt);
         Set(delivery, "FailureReason", row.FailureReason);
+        Set(delivery, "RetryOf", row.RetryOf is { } retryOf ? NotificationDeliveryId.From(retryOf) : null);
 
         return delivery;
     }

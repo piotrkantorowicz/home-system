@@ -25,6 +25,8 @@ public sealed class OutboxMessageEntityConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.AttemptCount).HasColumnName("attempt_count").HasDefaultValue(0);
         builder.Property(x => x.LastError).HasColumnName("last_error");
         builder.Property(x => x.NextAttemptAt).HasColumnName("next_attempt_at");
+        builder.Property(x => x.RetryOf).HasColumnName("retry_of");
+        builder.Property(x => x.RetriedAt).HasColumnName("retried_at");
 
         builder.HasIndex(x => x.ProcessedAt)
                .HasFilter("\"processed_at\" IS NULL")

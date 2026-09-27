@@ -8,6 +8,8 @@
   "retry": "Retry",
   "retry_queued": "Queued for retry",
   "retry_failed": "Could not queue the retry",
+  "retried": "Retried",
+  "retry_of": "Retry of {{id}} — the original failure is kept as history",
   "attempts": "Attempts",
   "last_attempt": "Last attempt",
   "last_error": "Last error",

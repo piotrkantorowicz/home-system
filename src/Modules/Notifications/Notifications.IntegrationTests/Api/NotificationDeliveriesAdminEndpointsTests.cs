@@ -2,6 +2,7 @@ namespace Notifications.IntegrationTests.Api;
 
 using System.Net;
 using System.Net.Http.Json;
+using Dapper;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 using Notifications.Infrastructure.Persistence;
@@ -47,9 +48,9 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    /// <summary>A dead-lettered delivery is counted and listed; retry takes it off the list.</summary>
+    /// <summary>A dead-lettered delivery is counted and listed; retry takes it off the list and keeps it as history.</summary>
     [Fact]
-    public async Task Admin_SeesDeadLetter_AndRetryRequeuesIt()
+    public async Task Admin_SeesDeadLetter_AndRetryReplacesIt()
     {
         var deliveryId = await SeedFailedAsync(MaxAttempts);
         var client = _factory.CreateClientWithRoles("admin");
@@ -68,6 +69,20 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
 
         var after = await client.GetFromJsonAsync<Page>("/api/admin/notifications/deliveries/dead-letters?pageSize=100", TestContext.Current.CancellationToken);
         after!.Items.ShouldNotContain(i => i.DeliveryId == deliveryId);
+
+        await using var uow = new DapperUnitOfWork(new NotificationsConnectionFactory(_fixture.ConnectionString));
+        var repo = new NotificationRepository(uow);
+        var original = await repo.GetDeliveryAsync(NotificationDeliveryId.From(deliveryId), TestContext.Current.CancellationToken);
+        original!.Status.ShouldBe(DeliveryStatus.Retried);
+        original.AttemptCount.ShouldBe(MaxAttempts);
+        original.FailureReason.ShouldBe("smtp down");
+
+        var connection = await uow.GetConnectionAsync(TestContext.Current.CancellationToken);
+        var replacements = await connection.QueryAsync<Guid>(new CommandDefinition(
+            "SELECT id FROM notification_deliveries WHERE retry_of = @Id",
+            new { Id = deliveryId },
+            cancellationToken: TestContext.Current.CancellationToken));
+        replacements.ShouldHaveSingleItem();
     }
 
     /// <summary>Retry of a delivery that is not failed is a 422; of an unknown one a 404.</summary>

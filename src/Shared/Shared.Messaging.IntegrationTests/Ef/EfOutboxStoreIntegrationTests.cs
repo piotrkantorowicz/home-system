@@ -126,34 +126,74 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         backlog.ShouldBe(new OutboxBacklog(DeadLettered: 1, Retrying: 1));
     }
 
-    /// <summary><c>RequeueAsync</c> resets attempts and backoff so the worker query picks the message up right away.</summary>
+    /// <summary>
+    /// <c>RetryAsync</c> adds a fresh row for the same event that the worker picks up right away, and
+    /// keeps the original (attempts, error) as history outside the dead-letter list and counters.
+    /// </summary>
     [Fact]
-    public async Task RequeueAsync_ResetsAttempts_AndMessageIsPendingAgain()
+    public async Task RetryAsync_AddsLinkedRow_AndKeepsOriginalAsHistory()
     {
         var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
-        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", """{"a":1}""", Now, null, 3, "boom");
         await sut.AddAsync(dead, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-
         await sut.RecordFailureAsync(dead.Id, "boom", Now.AddHours(1), TestContext.Current.CancellationToken);
 
-        var requeued = await sut.RequeueAsync(dead.Id, TestContext.Current.CancellationToken);
+        var retried = await sut.RetryAsync(dead.Id, Now, TestContext.Current.CancellationToken);
 
-        requeued.ShouldBeTrue();
-        var pending = await sut.GetUnprocessedAsync(10, 3, Now, TestContext.Current.CancellationToken);
-        pending.Single().AttemptCount.ShouldBe(0);
+        retried.ShouldBeTrue();
+        var pending = (await sut.GetUnprocessedAsync(10, 3, Now, TestContext.Current.CancellationToken)).Single();
+        pending.Id.ShouldNotBe(dead.Id);
+        pending.EventId.ShouldBe(dead.EventId);
+        pending.Payload.ShouldBe("""{"a": 1}"""); // jsonb normalises whitespace
+        pending.AttemptCount.ShouldBe(0);
+
+        _dbContext.ChangeTracker.Clear();
+        var original = await _dbContext.Set<OutboxMessageEntity>()
+            .SingleAsync(x => x.Id == dead.Id, TestContext.Current.CancellationToken);
+        original.AttemptCount.ShouldBe(4);
+        original.LastError.ShouldBe("boom");
+        original.RetriedAt.ShouldBe(Now);
+        var replacement = await _dbContext.Set<OutboxMessageEntity>()
+            .SingleAsync(x => x.Id == pending.Id, TestContext.Current.CancellationToken);
+        replacement.RetryOf.ShouldBe(dead.Id);
+
+        (await sut.ListAsync(3, 1, 10, TestContext.Current.CancellationToken)).TotalCount.ShouldBe(0);
+        (await sut.CountAsync(3, TestContext.Current.CancellationToken)).ShouldBe(new OutboxBacklog(0, 0));
     }
 
-    /// <summary><c>RequeueAsync</c> leaves processed messages alone and reports it.</summary>
+    /// <summary>A retry that dies again is listed with a link to the row it retried.</summary>
     [Fact]
-    public async Task RequeueAsync_ProcessedOrUnknown_ReturnsFalse()
+    public async Task RetryAsync_ReplacementThatDiesAgain_IsListedWithRetryOf()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 1, "boom");
+        await sut.AddAsync(dead, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await sut.RetryAsync(dead.Id, Now, TestContext.Current.CancellationToken);
+        var replacement = (await sut.GetUnprocessedAsync(10, 1, Now, TestContext.Current.CancellationToken)).Single();
+
+        await sut.RecordFailureAsync(replacement.Id, "boom again", Now, TestContext.Current.CancellationToken);
+
+        var listed = (await sut.ListAsync(1, 1, 10, TestContext.Current.CancellationToken)).Items.Single();
+        listed.Id.ShouldBe(replacement.Id);
+        listed.RetryOf.ShouldBe(dead.Id);
+    }
+
+    /// <summary><c>RetryAsync</c> leaves processed, already retried and unknown messages alone and reports it.</summary>
+    [Fact]
+    public async Task RetryAsync_ProcessedRetriedOrUnknown_ReturnsFalse()
     {
         var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
         var done = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, Now, 3, "boom");
+        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
         await sut.AddAsync(done, TestContext.Current.CancellationToken);
+        await sut.AddAsync(dead, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await sut.RetryAsync(dead.Id, Now, TestContext.Current.CancellationToken);
 
-        (await sut.RequeueAsync(done.Id, TestContext.Current.CancellationToken)).ShouldBeFalse();
-        (await sut.RequeueAsync(Guid.NewGuid(), TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await sut.RetryAsync(done.Id, Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await sut.RetryAsync(dead.Id, Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await sut.RetryAsync(Guid.NewGuid(), Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 }

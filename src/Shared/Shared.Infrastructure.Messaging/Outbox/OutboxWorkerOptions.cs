@@ -17,7 +17,7 @@ public sealed class OutboxWorkerOptions
 
     /// <summary>
     /// Failed dispatch attempts after which a message is dead-lettered: the worker stops picking it
-    /// up until an admin requeues it through <see cref="IOutboxDeadLetterStore.RequeueAsync"/>.
+    /// up until an admin retries it through <see cref="IOutboxDeadLetterStore.RetryAsync"/>.
     /// </summary>
     public int MaxAttempts { get; init; } = 10;
 

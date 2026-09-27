@@ -8,4 +8,5 @@ internal sealed record NotificationDeliveryRow(
     int AttemptCount,
     DateTime? LastAttemptAt,
     DateTime? SentAt,
-    string? FailureReason);
+    string? FailureReason,
+    Guid? RetryOf);
