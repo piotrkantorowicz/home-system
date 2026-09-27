@@ -25,6 +25,10 @@
     <Project Path="src/Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
     <Project Path="src/Modules/Notifications/Notifications.Api/Notifications.Api.csproj" />
   </Folder>
+  <Folder Name="/Modules/Operations/">
+    <Project Path="src/Modules/Operations/Operations.Application/Operations.Application.csproj" />
+    <Project Path="src/Modules/Operations/Operations.Api/Operations.Api.csproj" />
+  </Folder>
   <Folder Name="/Modules/Household/">
     <Project Path="src/Modules/Household/Household.Domain/Household.Domain.csproj" />
     <Project Path="src/Modules/Household/Household.Application/Household.Application.csproj" />

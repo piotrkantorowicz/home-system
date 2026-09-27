@@ -6,9 +6,9 @@ using global::Household.Infrastructure.Persistence;
 using Household.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Operations.Application.Commands.RetryAllOutboxDeadLetters;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
-using Shared.Infrastructure.Web.Admin;
 
 /// <summary>
 /// HTTP integration tests for the outbox admin endpoints, driven through the Household module's
