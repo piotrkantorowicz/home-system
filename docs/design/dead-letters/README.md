@@ -79,6 +79,22 @@ enforces access. The page shows:
 
 A non-admin who opens `/admin` directly gets an "Admins only" empty state and no API calls.
 
+### Why not a separate admin app or backend module
+
+- **No separate SPA.** Security lives on the server (`Admin` policy on every `/api/admin/*`
+  route), so a second app adds no protection. The admin page is lazy-loaded, so non-admins never
+  download it. A second app would mean another Vite project, OIDC client, build/deploy and a
+  copied shell (layout, theme, auth, i18n, API client) for a handful of pages. Revisit if admin
+  needs a different exposure (VPN-only / own domain), a different IdP or MFA flow, or grows into
+  a real back-office.
+- **Frontend: already its own module** (`modules/admin`, registered like any other, gated by
+  `requiredRole`).
+- **Backend: no `Admin` module.** Each module owns the admin endpoints for its own data —
+  generic outbox admin in shared messaging infra, delivery retry in Notifications (only it knows
+  `NotificationDelivery.Requeue()`). A central admin module would have to reach into other
+  modules' stores, breaking "no cross-module imports", or grow a Contracts pass-through per
+  module. If one place to browse the routes is wanted, group them by OpenAPI tag (`Admin`, done).
+
 ## 3. Tests
 
 | Suite | Added |
