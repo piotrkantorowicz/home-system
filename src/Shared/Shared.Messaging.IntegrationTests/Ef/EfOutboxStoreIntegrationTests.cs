@@ -196,4 +196,38 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         (await sut.RetryAsync(dead.Id, Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
         (await sut.RetryAsync(Guid.NewGuid(), Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
+
+    /// <summary>Concurrent retries of one dead letter stage exactly one replacement; the others report false.</summary>
+    [Fact]
+    public async Task RetryAsync_Concurrent_StagesSingleReplacement()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var options = new DbContextOptionsBuilder<MessagingTestDbContext>().UseNpgsql(_fixture.ConnectionString).Options;
+
+        // Several rounds with warmed-up connections so the retries really overlap.
+        for (var round = 0; round < 10; round++)
+        {
+            var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+            await new EfOutboxStore<MessagingTestDbContext>(_dbContext).AddAsync(dead, ct);
+            await _dbContext.SaveChangesAsync(ct);
+
+            var contexts = Enumerable.Range(0, 8).Select(_ => new MessagingTestDbContext(options)).ToList();
+            try
+            {
+                foreach (var c in contexts)
+                    await c.Set<OutboxMessageEntity>().AnyAsync(ct);
+
+                var results = await Task.WhenAll(contexts.Select(c =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAsync(dead.Id, Now, ct)));
+
+                results.Count(r => r).ShouldBe(1);
+            }
+            finally
+            {
+                foreach (var c in contexts) await c.DisposeAsync();
+            }
+
+            (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == dead.Id, ct)).ShouldBe(1);
+        }
+    }
 }

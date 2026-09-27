@@ -88,7 +88,18 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             OccurredAt = original.OccurredAt,
             RetryOf = original.Id,
         }, ct);
-        await _dbContext.SaveChangesAsync(ct);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A concurrent retry claimed the row first; its replacement is the only one.
+            _dbContext.ChangeTracker.Clear();
+            return false;
+        }
+
         return true;
     }
 

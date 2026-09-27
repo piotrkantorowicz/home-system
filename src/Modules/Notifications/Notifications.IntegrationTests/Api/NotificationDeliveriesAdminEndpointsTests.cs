@@ -99,6 +99,28 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
         unknown.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Concurrent retries of one delivery create exactly one replacement; the rest are a 422.</summary>
+    [Fact]
+    public async Task Admin_ConcurrentRetries_CreateSingleReplacement()
+    {
+        var deliveryId = await SeedFailedAsync(MaxAttempts);
+        var client = _factory.CreateClientWithRoles("admin");
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            client.PostAsync($"/api/admin/notifications/deliveries/{deliveryId}/retry", null, TestContext.Current.CancellationToken)));
+
+        responses.Count(r => r.StatusCode == HttpStatusCode.NoContent).ShouldBe(1);
+        responses.Count(r => r.StatusCode == HttpStatusCode.UnprocessableEntity).ShouldBe(7);
+
+        await using var connection = await new NotificationsConnectionFactory(_fixture.ConnectionString)
+            .OpenAsync(TestContext.Current.CancellationToken);
+        var replacements = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT count(*) FROM notification_deliveries WHERE retry_of = @Id",
+            new { Id = deliveryId },
+            cancellationToken: TestContext.Current.CancellationToken));
+        replacements.ShouldBe(1);
+    }
+
     private Task<Guid> SeedFailedAsync(int attempts)
         => SeedAsync(d =>
         {

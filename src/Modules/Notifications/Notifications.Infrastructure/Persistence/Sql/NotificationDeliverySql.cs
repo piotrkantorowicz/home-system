@@ -20,7 +20,8 @@ internal static class NotificationDeliverySql
                failure_reason  AS FailureReason,
                retry_of        AS RetryOf
         FROM notification_deliveries
-        WHERE id = @Id;
+        WHERE id = @Id
+        FOR UPDATE;
         """;
 
     internal const string Update = """

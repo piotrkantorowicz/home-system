@@ -26,7 +26,9 @@ public sealed class OutboxMessageEntityConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.LastError).HasColumnName("last_error");
         builder.Property(x => x.NextAttemptAt).HasColumnName("next_attempt_at");
         builder.Property(x => x.RetryOf).HasColumnName("retry_of");
-        builder.Property(x => x.RetriedAt).HasColumnName("retried_at");
+        // Concurrency token: marking a row as retried updates "WHERE retried_at IS NULL", so two
+        // concurrent retries of one dead letter cannot both stage a replacement.
+        builder.Property(x => x.RetriedAt).HasColumnName("retried_at").IsConcurrencyToken();
 
         builder.HasIndex(x => x.ProcessedAt)
                .HasFilter("\"processed_at\" IS NULL")
