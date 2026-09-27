@@ -128,11 +128,13 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
    delay, EF migrations in DietPlanner and Household) is follow-up #431.
 2. **Admin = Authentik superusers or `home-system-admins` group.** Kept.
 3. **Retry = requeue** (reset attempts, worker picks it up). Kept. Requeue keeps the last error
-   and failure reason; only the attempt count restarts. Full attempt history would need its own
-   table — not worth it until backoff (#431) lands.
+   and failure reason; only the attempt count restarts, so a later success hides that it ever
+   died. Follow-up #434: retry inserts a new record linked to the original, which stays as history.
 4. **E2E coverage.** Lightweight smoke spec with a reserved `E2eAdmin` (see §3).
 5. **Bulk retry and payload view.** Follow-ups #432 and #433.
 6. **Outbox admin endpoints call the store directly** (no CQRS dispatcher). They are
    infrastructure operations over every module's outbox, like health checks, not a module use
    case — a query/command + handler per call would add types with no validation or transaction
    to carry. Delivery retry, which *is* a Notifications use case, goes through the dispatcher.
+   When ops endpoints grow or gain real logic, move them to an `Operations` module with CQRS
+   (#435).
