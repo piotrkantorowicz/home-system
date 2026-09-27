@@ -181,6 +181,32 @@ describe('DeadLetters', () => {
     expect(retried).toHaveBeenCalledExactlyOnceWith('Household');
   });
 
+  it('loads an event payload only when its dialog opens and pretty-prints it', async () => {
+    const fetched = vi.fn();
+    server.use(
+      http.get(`${BASE}/outbox/:module/dead-letters/:id/payload`, ({ params }) => {
+        fetched(params.module, params.id);
+        return HttpResponse.json({
+          id: 'm-1',
+          eventType: 'Household.Contracts.Events.MemberJoined, Household.Contracts',
+          payload: '{"memberId":"p-9"}',
+        });
+      }),
+    );
+    renderPage();
+
+    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    await within(events).findByText('MemberJoined');
+    expect(fetched).not.toHaveBeenCalled();
+
+    await userEvent.click(within(events).getByRole('button', { name: 'View' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText(/"memberId": "p-9"/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/May contain personal data/)).toBeInTheDocument();
+    expect(fetched).toHaveBeenCalledExactlyOnceWith('Household', 'm-1');
+  });
+
   it('steps back a page when retrying empties the last delivery page', async () => {
     const ids = Array.from({ length: 26 }, (_, i) => `d-${String(i + 1)}`);
     server.use(

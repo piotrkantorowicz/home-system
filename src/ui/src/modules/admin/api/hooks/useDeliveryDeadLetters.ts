@@ -27,6 +27,13 @@ export interface DeadLetterDelivery {
   retryOf: string | null;
 }
 
+/** What the payload dialog shows: optional rendered text, then the raw JSON. */
+export interface PayloadView {
+  heading: string;
+  text: string | null;
+  json: string;
+}
+
 export interface Page<T> {
   items: T[];
   totalCount: number;
@@ -111,5 +118,20 @@ export function useRetryAllDeliveries() {
       toast.error(t('retry_failed'));
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: adminQueryKeys.all() }),
+  });
+}
+
+/** A delivery's notification (title, body, payload); fetched only when an admin opens it, never cached. */
+export function deliveryContentOptions(id: string) {
+  return queryOptions({
+    queryKey: adminQueryKeys.deliveries.content(id),
+    queryFn: async (): Promise<PayloadView> => {
+      const { data, error } = await api.GET('/api/admin/notifications/deliveries/{id}/content', {
+        params: { path: { id } },
+      });
+      if (error || !data) throw new Error('Failed to load delivery content');
+      return { heading: data.title, text: data.body, json: data.payload };
+    },
+    gcTime: 0,
   });
 }

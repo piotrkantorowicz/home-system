@@ -87,6 +87,16 @@ internal static class NotificationDeliverySql
         FOR UPDATE SKIP LOCKED;
         """;
 
+    internal const string SelectContent = """
+        SELECT d.id            AS DeliveryId,
+               n.title         AS Title,
+               n.body          AS Body,
+               n.payload::text AS Payload
+        FROM notification_deliveries d
+        INNER JOIN notifications n ON n.id = d.notification_id
+        WHERE d.id = @Id;
+        """;
+
     internal const string ListDeadLetteredPaged = """
         SELECT d.id              AS DeliveryId,
                n.id              AS NotificationId,

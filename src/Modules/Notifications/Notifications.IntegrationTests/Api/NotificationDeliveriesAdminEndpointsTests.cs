@@ -40,6 +40,7 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
     [InlineData("GET", "/api/admin/notifications/deliveries/dead-letters")]
     [InlineData("POST", "/api/admin/notifications/deliveries/0198f5a4-0000-7000-8000-000000000000/retry")]
     [InlineData("POST", "/api/admin/notifications/deliveries/retry-all")]
+    [InlineData("GET", "/api/admin/notifications/deliveries/0198f5a4-0000-7000-8000-000000000000/content")]
     public async Task NonAdmin_IsForbidden(string method, string url)
     {
         var client = _factory.CreateClientWithRoles();
@@ -125,6 +126,25 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
         stillRetrying!.Status.ShouldNotBe(DeliveryStatus.Retried);
     }
 
+    /// <summary>An admin can read a delivery's notification content; it is not cached, and unknown ids are 404.</summary>
+    [Fact]
+    public async Task Admin_GetsDeliveryContent_NotCached()
+    {
+        var deliveryId = await SeedFailedAsync(MaxAttempts);
+        var client = _factory.CreateClientWithRoles("admin");
+
+        var response = await client.GetAsync($"/api/admin/notifications/deliveries/{deliveryId}/content", TestContext.Current.CancellationToken);
+        var unknown = await client.GetAsync($"/api/admin/notifications/deliveries/{Guid.CreateVersion7()}/content", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.CacheControl!.NoStore.ShouldBeTrue();
+        var content = await response.Content.ReadFromJsonAsync<Content>(TestContext.Current.CancellationToken);
+        content!.Title.ShouldBe("Water");
+        content.Body.ShouldBe("Drink now");
+        content.Payload.ShouldBe("{}");
+        unknown.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     /// <summary>Concurrent retries of one delivery create exactly one replacement; the rest are a 422.</summary>
     [Fact]
     public async Task Admin_ConcurrentRetries_CreateSingleReplacement()
@@ -203,6 +223,8 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
     private sealed record Backlog(int DeadLettered, int Retrying);
 
     private sealed record RetryAllResult(int Retried);
+
+    private sealed record Content(Guid DeliveryId, string Title, string Body, string Payload);
 
     private sealed record Page(IReadOnlyList<Item> Items, int TotalCount);
 

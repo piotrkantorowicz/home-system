@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../client';
 import { adminQueryKeys } from '../queryKeys';
 
-import type { Backlog, Page } from './useDeliveryDeadLetters';
+import type { Backlog, Page, PayloadView } from './useDeliveryDeadLetters';
 
 export interface ModuleBacklog extends Backlog {
   module: string;
@@ -105,5 +105,23 @@ export function useRetryAllOutboxMessages() {
       toast.error(t('retry_failed'));
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: adminQueryKeys.all() }),
+  });
+}
+
+/** An outbox message's serialised event; fetched only when an admin opens it, never cached. */
+export function outboxPayloadOptions(module: string, id: string) {
+  return queryOptions({
+    queryKey: adminQueryKeys.outbox.payload(module, id),
+    queryFn: async (): Promise<PayloadView> => {
+      const { data, error } = await api.GET(
+        '/api/admin/outbox/{module}/dead-letters/{id}/payload',
+        {
+          params: { path: { module, id } },
+        },
+      );
+      if (error || !data) throw new Error('Failed to load payload');
+      return { heading: data.eventType, text: null, json: data.payload };
+    },
+    gcTime: 0,
   });
 }
