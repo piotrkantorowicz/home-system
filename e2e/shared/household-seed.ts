@@ -15,11 +15,14 @@ const API_ORIGIN = 'http://localhost:5050';
  * household is left untouched, so re-runs and the fixture's login fallback
  * never hit "You already belong to a household."
  */
-export async function ensureHousehold(workerIndex: number): Promise<void> {
-  const token = extractAccessToken(authStatePath(workerIndex));
+export async function ensureHousehold(
+  workerIndex: number,
+  statePath = authStatePath(workerIndex),
+): Promise<void> {
+  const token = extractAccessToken(statePath);
   if (!token) {
     throw new Error(
-      `[worker ${workerIndex}] No access token in ${authStatePath(workerIndex)} — cannot seed a household.`,
+      `[worker ${workerIndex}] No access token in ${statePath} — cannot seed a household.`,
     );
   }
 

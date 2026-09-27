@@ -1,3 +1,4 @@
+import { useUserRoles } from '@shared/auth/useUserRoles';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,7 @@ export function ModuleSwitcher({ children }: ModuleSwitcherProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const tiles = getModuleTiles(t, useModuleLabels());
+  const tiles = getModuleTiles(t, useModuleLabels(), useUserRoles());
   const access = useNavigationAccess();
 
   return (

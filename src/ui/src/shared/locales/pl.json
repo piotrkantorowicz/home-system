@@ -52,6 +52,8 @@
     "expand_nav": "Rozwiń",
     "no_modules_title": "Brak zainstalowanych modułów",
     "no_modules_body": "Poproś administratora o włączenie modułu dla Twojego konta.",
-    "no_matches": "Brak wyników"
+    "no_matches": "Brak wyników",
+    "admin": "Administracja",
+    "dead_letters": "Martwe wiadomości"
   }
 }

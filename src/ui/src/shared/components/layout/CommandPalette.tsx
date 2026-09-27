@@ -1,3 +1,4 @@
+import { useUserRoles } from '@shared/auth/useUserRoles';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,8 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+
+import { isModuleVisible } from './navModel';
 
 import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
@@ -28,9 +31,10 @@ interface Destination {
 function collectDestinations(
   labels: Readonly<Record<string, string>>,
   t: TFunction,
+  roles: readonly string[],
 ): Destination[] {
   const out: Destination[] = [];
-  for (const mod of getModules()) {
+  for (const mod of getModules().filter((m) => isModuleVisible(m, roles))) {
     const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
     for (const nav of mod.navItems) {
       out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
@@ -56,6 +60,7 @@ export function CommandPalette() {
   const { t } = useTranslation();
   const labels = useModuleLabels();
   const access = useNavigationAccess();
+  const roles = useUserRoles();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -83,7 +88,7 @@ export function CommandPalette() {
     if (!next) setQuery('');
   }
 
-  const destinations = collectDestinations(labels, t);
+  const destinations = collectDestinations(labels, t, roles);
   const filtered = filterDestinations(destinations, query);
 
   function go(href: string) {

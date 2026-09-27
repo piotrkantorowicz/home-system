@@ -14,4 +14,10 @@ public sealed class OutboxWorkerOptions
 
     /// <summary>Delay between ticks, in milliseconds; bounds delivery latency.</summary>
     public int PollIntervalMs { get; init; } = 1000;
+
+    /// <summary>
+    /// Failed dispatch attempts after which a message is dead-lettered: the worker stops picking it
+    /// up until an admin requeues it through <see cref="IOutboxDeadLetterStore.RequeueAsync"/>.
+    /// </summary>
+    public int MaxAttempts { get; init; } = 10;
 }

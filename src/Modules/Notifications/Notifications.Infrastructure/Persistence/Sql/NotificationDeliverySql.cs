@@ -65,4 +65,29 @@ internal static class NotificationDeliverySql
         ORDER BY last_attempt_at NULLS FIRST
         LIMIT @BatchSize;
         """;
+
+    internal const string ListDeadLetteredPaged = """
+        SELECT d.id              AS DeliveryId,
+               n.id              AS NotificationId,
+               n.user_id         AS UserId,
+               n.type            AS Type,
+               n.title           AS Title,
+               d.channel         AS Channel,
+               d.attempt_count   AS AttemptCount,
+               d.last_attempt_at AS LastAttemptAt,
+               d.failure_reason  AS FailureReason
+        FROM notification_deliveries d
+        INNER JOIN notifications n ON n.id = d.notification_id
+        WHERE d.status = 'Failed'
+          AND d.attempt_count >= @MaxAttempts
+        ORDER BY d.last_attempt_at DESC NULLS LAST, d.id
+        OFFSET @Offset LIMIT @Limit;
+        """;
+
+    internal const string CountFailedByState = """
+        SELECT (count(*) FILTER (WHERE attempt_count >= @MaxAttempts))::int AS DeadLettered,
+               (count(*) FILTER (WHERE attempt_count <  @MaxAttempts))::int AS Retrying
+        FROM notification_deliveries
+        WHERE status = 'Failed';
+        """;
 }

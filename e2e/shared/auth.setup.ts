@@ -1,6 +1,8 @@
 import { test as setup } from "@playwright/test";
 
 import {
+  adminAuthStatePath,
+  adminCredentials,
   authStatePath,
   credentialsFor,
   inviteeAuthStatePath,
@@ -45,4 +47,20 @@ setup("authenticate invitee", async ({ browser }) => {
   // Deliberately no ensureHousehold() — this identity stays outside the WORKER_COUNT
   // pool specifically so cross-user specs (e.g. household invitations) have a real
   // second Authentik user with no household of its own to accept into.
+});
+
+setup("authenticate admin", async ({ browser }) => {
+  const { username, password } = adminCredentials();
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await loginViaAuthentik(page, username, password);
+
+  await context.storageState({ path: adminAuthStatePath() });
+  await context.close();
+
+  // /admin sits behind HouseholdRequired like every module route. The index only
+  // labels log lines and names the seeded household; it isn't a pool slot.
+  await ensureHousehold(WORKER_COUNT, adminAuthStatePath());
 });

@@ -33,7 +33,8 @@ export const oidcConfig: UserManagerSettings = {
   // offline_access requests a refresh token from Authentik.
   // When available, signinSilent() uses the refresh token endpoint directly
   // instead of an iframe — no dependency on the Authentik session cookie.
-  scope: 'openid profile email offline_access',
+  // roles: custom Authentik scope that emits the `roles` claim (admin pages).
+  scope: 'openid profile email offline_access roles',
 
   // Token storage
   userStore: new WebStorageStateStore({ store: window.localStorage }),

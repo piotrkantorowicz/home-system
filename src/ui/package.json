@@ -15,6 +15,7 @@
     "generate:api:diet-planner": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/diet-planner/api/generated/schema.ts",
     "generate:api:notifications": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/notifications/api/generated/schema.ts",
     "generate:api:household": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/household/api/generated/schema.ts",
+    "generate:api:admin": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/admin/api/generated/schema.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",

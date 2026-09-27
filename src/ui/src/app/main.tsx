@@ -1,3 +1,4 @@
+import { adminModule } from '@modules/admin';
 import { dietPlannerModule } from '@modules/diet-planner';
 import { householdModule } from '@modules/household';
 import { notificationsModule } from '@modules/notifications';
@@ -20,6 +21,7 @@ import '../index.css';
 registerModule(householdModule);
 registerModule(dietPlannerModule);
 registerModule(notificationsModule);
+registerModule(adminModule);
 
 // 2. Init i18n with merged module translations
 initI18n(getModules());

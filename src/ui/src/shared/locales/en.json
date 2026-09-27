@@ -52,6 +52,8 @@
     "expand_nav": "Expand",
     "no_modules_title": "No modules installed",
     "no_modules_body": "Ask an administrator to enable a module for your account.",
-    "no_matches": "No matches"
+    "no_matches": "No matches",
+    "admin": "Admin",
+    "dead_letters": "Dead letters"
   }
 }

@@ -5,6 +5,28 @@ metadata:
     blueprints.goauthentik.io/description: "Home System - OIDC provider and application"
 
 entries:
+  # ── Admin role ───────────────────────────────────────────────────────────────
+  # Members of this group (and Authentik superusers such as akadmin) get
+  # `roles: ["admin"]` in their tokens, which the API's Admin policy checks
+  # (dead-letter admin pages, /api/admin/*). The SPA requests the `roles` scope.
+  - model: authentik_core.group
+    id: group-admins
+    state: present
+    identifiers:
+      name: home-system-admins
+
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-roles
+    state: present
+    identifiers:
+      name: "home-system: roles"
+    attrs:
+      scope_name: roles
+      description: "Home System roles"
+      expression: |
+        is_admin = request.user.is_superuser or ak_is_group_member(request.user, name="home-system-admins")
+        return {"roles": ["admin"] if is_admin else []}
+
   # ── OAuth2/OIDC Provider ─────────────────────────────────────────────────────
   # Public client (PKCE) used by the React SPA.
   # The API validates tokens issued by this provider — no separate API provider needed.
@@ -39,6 +61,7 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-profile"]]
         - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-email"]]
         - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-offline_access"]]
+        - !KeyOf scope-roles
 
   # ── E2E Test Users ───────────────────────────────────────────────────────────
   # Used exclusively by Playwright E2E tests. One user per Playwright worker so
@@ -108,6 +131,20 @@ entries:
       email: e2e-invitee@test.local
       is_active: true
       password: !Env E2E_USER_PASSWORD
+
+  # Admin identity for the /admin (dead letters) spec — the only E2E user in
+  # home-system-admins, so the worker pool keeps exercising the non-admin path.
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: E2eAdmin
+    attrs:
+      name: E2E Admin
+      email: e2e-admin@test.local
+      is_active: true
+      password: !Env E2E_USER_PASSWORD
+      groups:
+        - !KeyOf group-admins
 
   # ── Application ──────────────────────────────────────────────────────────────
   - model: authentik_core.application

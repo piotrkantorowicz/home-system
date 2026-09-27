@@ -46,7 +46,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.AddAsync(msg, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
         unprocessed.Count.ShouldBe(1);
         unprocessed[0].EventId.ShouldBe(msg.EventId);
     }
@@ -63,7 +63,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         await sut.MarkProcessedAsync(msg.Id, Now, TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
         unprocessed.ShouldBeEmpty();
     }
 
@@ -81,8 +81,61 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.RecordFailureAsync(msg.Id, "boom", TestContext.Current.CancellationToken);
         await sut.RecordFailureAsync(msg.Id, "boom2", TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
         unprocessed[0].AttemptCount.ShouldBe(2);
         unprocessed[0].LastError.ShouldBe("boom2");
+    }
+
+    /// <summary>A message at the attempt limit is dead-lettered: skipped by the worker query, listed and counted as dead.</summary>
+    [Fact]
+    public async Task MessageAtAttemptLimit_IsSkipped_ListedAndCounted()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+        var retrying = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(1), null, 1, "boom");
+        var fresh = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(2), null, 0, null);
+        await sut.AddAsync(dead, TestContext.Current.CancellationToken);
+        await sut.AddAsync(retrying, TestContext.Current.CancellationToken);
+        await sut.AddAsync(fresh, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var pending = await sut.GetUnprocessedAsync(10, 3, TestContext.Current.CancellationToken);
+        var list = await sut.ListAsync(3, 1, 10, TestContext.Current.CancellationToken);
+        var backlog = await sut.CountAsync(3, TestContext.Current.CancellationToken);
+
+        pending.Select(m => m.Id).ShouldBe([retrying.Id, fresh.Id]);
+        list.TotalCount.ShouldBe(1);
+        list.Items.Single().Id.ShouldBe(dead.Id);
+        list.Items.Single().LastError.ShouldBe("boom");
+        backlog.ShouldBe(new OutboxBacklog(DeadLettered: 1, Retrying: 1));
+    }
+
+    /// <summary><c>RequeueAsync</c> resets attempts so the worker query picks the message up again.</summary>
+    [Fact]
+    public async Task RequeueAsync_ResetsAttempts_AndMessageIsPendingAgain()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var dead = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+        await sut.AddAsync(dead, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var requeued = await sut.RequeueAsync(dead.Id, TestContext.Current.CancellationToken);
+
+        requeued.ShouldBeTrue();
+        var pending = await sut.GetUnprocessedAsync(10, 3, TestContext.Current.CancellationToken);
+        pending.Single().AttemptCount.ShouldBe(0);
+    }
+
+    /// <summary><c>RequeueAsync</c> leaves processed messages alone and reports it.</summary>
+    [Fact]
+    public async Task RequeueAsync_ProcessedOrUnknown_ReturnsFalse()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var done = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, Now, 3, "boom");
+        await sut.AddAsync(done, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        (await sut.RequeueAsync(done.Id, TestContext.Current.CancellationToken)).ShouldBeFalse();
+        (await sut.RequeueAsync(Guid.NewGuid(), TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 }

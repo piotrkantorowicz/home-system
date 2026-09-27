@@ -13,11 +13,12 @@ public interface IOutboxStore
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task AddAsync(OutboxMessage message, CancellationToken ct);
 
-    /// <summary>Reads the oldest messages that have not been delivered yet.</summary>
+    /// <summary>Reads the oldest messages that have not been delivered yet and still have attempts left.</summary>
     /// <param name="batchSize">Maximum number of messages to return.</param>
+    /// <param name="maxAttempts">Messages with this many failed attempts are dead-lettered and skipped.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns>Pending messages ordered by <see cref="OutboxMessage.OccurredAt"/>.</returns>
-    Task<IReadOnlyList<OutboxMessage>> GetUnprocessedAsync(int batchSize, CancellationToken ct);
+    Task<IReadOnlyList<OutboxMessage>> GetUnprocessedAsync(int batchSize, int maxAttempts, CancellationToken ct);
 
     /// <summary>Records a successful delivery so the message is never dispatched again.</summary>
     /// <param name="messageId">The <see cref="OutboxMessage.Id"/> that was delivered.</param>
