@@ -73,3 +73,23 @@ export function inviteeCredentials(): { username: string; password: string } {
 export function inviteeInvitationEmail(): string {
   return process.env["TEST_INVITEE_INVITATION_EMAIL"] ?? "e2e-invitee@test.local";
 }
+
+/** Storage state path for the reserved admin identity (`E2eAdmin`, in `home-system-admins`). */
+export function adminAuthStatePath(): string {
+  return "playwright/.auth/admin.json";
+}
+
+export function adminCredentials(): { username: string; password: string } {
+  const username = process.env["TEST_ADMIN_EMAIL"] ?? "E2eAdmin";
+  const password = process.env["TEST_ADMIN_PASSWORD"] ?? process.env["TEST_USER_PASSWORD"];
+
+  if (!password) {
+    throw new Error(
+      "TEST_ADMIN_PASSWORD (or TEST_USER_PASSWORD) is not set. " +
+        "Copy e2e/.env.example to e2e/.env and set the value — it must match " +
+        "infrastructure/.env → E2E_USER_PASSWORD used by the Authentik blueprint.",
+    );
+  }
+
+  return { username, password };
+}

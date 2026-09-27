@@ -10,6 +10,7 @@ entries:
   # `roles: ["admin"]` in their tokens, which the API's Admin policy checks
   # (dead-letter admin pages, /api/admin/*). The SPA requests the `roles` scope.
   - model: authentik_core.group
+    id: group-admins
     state: present
     identifiers:
       name: home-system-admins
@@ -130,6 +131,20 @@ entries:
       email: e2e-invitee@test.local
       is_active: true
       password: !Env E2E_USER_PASSWORD
+
+  # Admin identity for the /admin (dead letters) spec — the only E2E user in
+  # home-system-admins, so the worker pool keeps exercising the non-admin path.
+  - model: authentik_core.user
+    state: present
+    identifiers:
+      username: E2eAdmin
+    attrs:
+      name: E2E Admin
+      email: e2e-admin@test.local
+      is_active: true
+      password: !Env E2E_USER_PASSWORD
+      groups:
+        - !KeyOf group-admins
 
   # ── Application ──────────────────────────────────────────────────────────────
   - model: authentik_core.application
