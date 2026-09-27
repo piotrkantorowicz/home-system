@@ -50,4 +50,9 @@ public interface INotificationRepository
     /// <param name="maxAttempts">Deliveries with this many attempts or more are excluded.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task<IReadOnlyList<NotificationDelivery>> GetFailedDeliveriesForRetryAsync(int batchSize, int maxAttempts, CancellationToken ct = default);
+    /// <summary>Reads dead-lettered deliveries (failed, attempt count at or over the limit), oldest attempt first.</summary>
+    /// <param name="batchSize">Maximum rows to return.</param>
+    /// <param name="maxAttempts">The attempt limit that marks a delivery dead.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    Task<IReadOnlyList<NotificationDelivery>> GetDeadLetteredDeliveriesAsync(int batchSize, int maxAttempts, CancellationToken ct = default);
 }

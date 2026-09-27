@@ -115,7 +115,7 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
 
 ## 4. Out of scope / known limits
 
-- Retry is per row. No "retry all" / bulk action.
+- "Retry all" (#432) handles up to 500 dead letters per click; a bigger backlog needs another click.
 - Outbox payload isn't shown (it can contain personal data); only type, time, attempts, error.
 - Dead rows are never purged; they stay until retried.
 - No alerting: you only find out by opening the page / seeing the badge.
@@ -133,7 +133,8 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
    row linked through `retry_of` goes back to the worker. Retried originals leave the dead-letter
    list and counters; a retry that dies again shows a "Retried" badge on `/admin`.
 4. **E2E coverage.** Lightweight smoke spec with a reserved `E2eAdmin` (see §3).
-5. **Bulk retry and payload view.** Follow-ups #432 and #433.
+5. **Bulk retry and payload view.** Retry all per table done in #432 (`POST …/retry-all`, confirm
+   dialog, 500 per call); payload view is #433.
 6. **Outbox admin endpoints call the store directly** (no CQRS dispatcher). They are
    infrastructure operations over every module's outbox, like health checks, not a module use
    case — a query/command + handler per call would add types with no validation or transaction

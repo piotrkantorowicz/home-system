@@ -197,6 +197,29 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         (await sut.RetryAsync(Guid.NewGuid(), Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 
+    /// <summary><c>RetryAllAsync</c> retries dead-lettered rows only, up to the limit, oldest first.</summary>
+    [Fact]
+    public async Task RetryAllAsync_RetriesDeadLetteredRowsUpToLimit()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var oldest = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+        var newer = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(1), null, 3, "boom");
+        var newest = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(2), null, 3, "boom");
+        var retrying = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 1, "boom");
+        foreach (var m in new[] { oldest, newer, newest, retrying })
+            await sut.AddAsync(m, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var first = await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken);
+        var list = await sut.ListAsync(3, 1, 10, TestContext.Current.CancellationToken);
+
+        first.ShouldBe(2);
+        list.Items.Single().Id.ShouldBe(newest.Id);
+        (await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken)).ShouldBe(1);
+        (await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await sut.CountAsync(3, TestContext.Current.CancellationToken)).ShouldBe(new OutboxBacklog(DeadLettered: 0, Retrying: 1));
+    }
+
     /// <summary>Concurrent retries of one dead letter stage exactly one replacement; the others report false.</summary>
     [Fact]
     public async Task RetryAsync_Concurrent_StagesSingleReplacement()

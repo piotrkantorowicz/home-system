@@ -39,6 +39,7 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
     [InlineData("GET", "/api/admin/notifications/deliveries/summary")]
     [InlineData("GET", "/api/admin/notifications/deliveries/dead-letters")]
     [InlineData("POST", "/api/admin/notifications/deliveries/0198f5a4-0000-7000-8000-000000000000/retry")]
+    [InlineData("POST", "/api/admin/notifications/deliveries/retry-all")]
     public async Task NonAdmin_IsForbidden(string method, string url)
     {
         var client = _factory.CreateClientWithRoles();
@@ -99,6 +100,31 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
         unknown.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>Retry all takes every dead-lettered delivery off the list and leaves still-retrying ones alone.</summary>
+    [Fact]
+    public async Task Admin_RetryAll_RetriesDeadLettersOnly()
+    {
+        var dead1 = await SeedFailedAsync(MaxAttempts);
+        var dead2 = await SeedFailedAsync(MaxAttempts);
+        var retrying = await SeedFailedAsync(1);
+        var client = _factory.CreateClientWithRoles("admin");
+
+        var response = await client.PostAsync("/api/admin/notifications/deliveries/retry-all", null, TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<RetryAllResult>(TestContext.Current.CancellationToken);
+        result!.Retried.ShouldBeGreaterThanOrEqualTo(2);
+
+        await using var uow = new DapperUnitOfWork(new NotificationsConnectionFactory(_fixture.ConnectionString));
+        var repo = new NotificationRepository(uow);
+        (await repo.GetDeliveryAsync(NotificationDeliveryId.From(dead1), TestContext.Current.CancellationToken))!
+            .Status.ShouldBe(DeliveryStatus.Retried);
+        (await repo.GetDeliveryAsync(NotificationDeliveryId.From(dead2), TestContext.Current.CancellationToken))!
+            .Status.ShouldBe(DeliveryStatus.Retried);
+        var stillRetrying = await repo.GetDeliveryAsync(NotificationDeliveryId.From(retrying), TestContext.Current.CancellationToken);
+        stillRetrying!.Status.ShouldNotBe(DeliveryStatus.Retried);
+    }
+
     /// <summary>Concurrent retries of one delivery create exactly one replacement; the rest are a 422.</summary>
     [Fact]
     public async Task Admin_ConcurrentRetries_CreateSingleReplacement()
@@ -146,6 +172,8 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
     }
 
     private sealed record Backlog(int DeadLettered, int Retrying);
+
+    private sealed record RetryAllResult(int Retried);
 
     private sealed record Page(IReadOnlyList<Item> Items, int TotalCount);
 

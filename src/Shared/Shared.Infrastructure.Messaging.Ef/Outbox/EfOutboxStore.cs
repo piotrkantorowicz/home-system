@@ -78,20 +78,11 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             .FirstOrDefaultAsync(x => x.Id == messageId && x.ProcessedAt == null && x.RetriedAt == null, ct);
         if (original is null) return false;
 
-        original.RetriedAt = now;
-        await _dbContext.Set<OutboxMessageEntity>().AddAsync(new OutboxMessageEntity
-        {
-            Id = Guid.CreateVersion7(),
-            EventId = original.EventId,
-            EventType = original.EventType,
-            Payload = original.Payload,
-            OccurredAt = original.OccurredAt,
-            RetryOf = original.Id,
-        }, ct);
-
+        StageRetry(original, now);
         try
         {
             await _dbContext.SaveChangesAsync(ct);
+            return true;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -99,8 +90,36 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             _dbContext.ChangeTracker.Clear();
             return false;
         }
+    }
 
-        return true;
+    public async Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct)
+    {
+        var dead = await _dbContext.Set<OutboxMessageEntity>()
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount >= maxAttempts)
+            .OrderBy(x => x.OccurredAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
+        foreach (var original in dead)
+            StageRetry(original, now);
+
+        await _dbContext.SaveChangesAsync(ct);
+        return dead.Count;
+    }
+
+    // Marks the tracked original as history and stages its replacement: same event, fresh attempts.
+    private void StageRetry(OutboxMessageEntity original, DateTime now)
+    {
+        original.RetriedAt = now;
+        _dbContext.Set<OutboxMessageEntity>().Add(new OutboxMessageEntity
+        {
+            Id = Guid.CreateVersion7(),
+            EventId = original.EventId,
+            EventType = original.EventType,
+            Payload = original.Payload,
+            OccurredAt = original.OccurredAt,
+            RetryOf = original.Id,
+        });
     }
 
     private IQueryable<OutboxMessageEntity> DeadLettered(int maxAttempts)

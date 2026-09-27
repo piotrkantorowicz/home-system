@@ -11,7 +11,7 @@ using Shared.Infrastructure.Messaging.Outbox;
 
 /// <summary>
 /// Admin endpoints over every publishing module's outbox (<c>/api/admin/outbox</c>): backlog counts,
-/// dead-lettered messages and a retry that puts one back in the worker's queue.
+/// dead-lettered messages, and retry of one or all of them.
 /// </summary>
 /// <remarks>
 /// Messaging infrastructure rather than module behaviour, so these talk to the keyed
@@ -21,6 +21,7 @@ using Shared.Infrastructure.Messaging.Outbox;
 public static class OutboxAdminEndpoints
 {
     private const int MaxPageSize = 100;
+    private const int MaxRetryBatch = 500;
 
     /// <summary>Maps the outbox admin endpoints; all require <see cref="AdminAuthorization.PolicyName"/>.</summary>
     /// <param name="app">The host route builder.</param>
@@ -38,7 +39,10 @@ public static class OutboxAdminEndpoints
             .WithName("ListOutboxDeadLetters");
         group.MapPost("/{module}/dead-letters/{id:guid}/retry", Retry)
             .WithName("RetryOutboxDeadLetter")
-            .WithSummary("Reset a message's attempts so the outbox worker dispatches it again");
+            .WithSummary("Retry a message as a new outbox row; the original is kept as history");
+        group.MapPost("/{module}/dead-letters/retry-all", RetryAll)
+            .WithName("RetryAllOutboxDeadLetters")
+            .WithSummary("Retry every dead-lettered message of a module (up to 500 per call)");
 
         return app;
     }
@@ -90,6 +94,22 @@ public static class OutboxAdminEndpoints
         return await Store(services, match).RetryAsync(id, clock.GetUtcNow().UtcDateTime, ct)
             ? TypedResults.NoContent()
             : TypedResults.NotFound();
+    }
+
+    private static async Task<Results<Ok<OutboxRetryAllResult>, NotFound>> RetryAll(
+        string module,
+        IEnumerable<OutboxModule> modules,
+        IServiceProvider services,
+        IOptions<OutboxWorkerOptions> options,
+        TimeProvider clock,
+        CancellationToken ct)
+    {
+        var match = Find(modules, module);
+        if (match is null) return TypedResults.NotFound();
+
+        var retried = await Store(services, match).RetryAllAsync(
+            options.Value.MaxAttempts, clock.GetUtcNow().UtcDateTime, MaxRetryBatch, ct);
+        return TypedResults.Ok(new OutboxRetryAllResult(retried));
     }
 
     private static OutboxModule? Find(IEnumerable<OutboxModule> modules, string name)

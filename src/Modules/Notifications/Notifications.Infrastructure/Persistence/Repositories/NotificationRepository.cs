@@ -144,4 +144,16 @@ internal sealed class NotificationRepository : INotificationRepository
 
         return rows.Select(NotificationMapping.ToDomain).ToList();
     }
+
+    public async Task<IReadOnlyList<NotificationDelivery>> GetDeadLetteredDeliveriesAsync(
+        int batchSize, int maxAttempts, CancellationToken ct = default)
+    {
+        var connection = await _uow.GetConnectionAsync(ct);
+        var rows = await connection.QueryAsync<NotificationDeliveryRow>(new CommandDefinition(
+            NotificationDeliverySql.SelectDeadLettered,
+            new { BatchSize = batchSize, MaxAttempts = maxAttempts },
+            cancellationToken: ct));
+
+        return rows.Select(NotificationMapping.ToDomain).ToList();
+    }
 }
