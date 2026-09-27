@@ -263,7 +263,6 @@ namespace Household.Infrastructure.Persistence.Migrations
                         .HasColumnName("processed_at");
 
                     b.Property<DateTime?>("RetriedAt")
-                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("retried_at");
 

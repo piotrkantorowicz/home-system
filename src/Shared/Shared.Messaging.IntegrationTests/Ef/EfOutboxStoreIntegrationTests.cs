@@ -1,5 +1,6 @@
 namespace Shared.Messaging.IntegrationTests.Ef;
 
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
@@ -254,9 +255,15 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         }
     }
 
-    /// <summary>Overlapping bulk and single retries replace every dead letter exactly once.</summary>
-    [Fact]
-    public async Task RetryAllAsync_OverlappingRetries_ReplaceEachDeadLetterOnce()
+    /// <summary>
+    /// Overlapping bulk and single retries replace every dead letter exactly once, both standalone
+    /// and inside an ambient transaction like the command dispatcher's.
+    /// </summary>
+    /// <param name="ambient">Whether each call runs in its own ambient <see cref="TransactionScope"/>.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RetryAllAsync_OverlappingRetries_ReplaceEachDeadLetterOnce(bool ambient)
     {
         var ct = TestContext.Current.CancellationToken;
         var options = new DbContextOptionsBuilder<MessagingTestDbContext>().UseNpgsql(_fixture.ConnectionString).Options;
@@ -276,10 +283,10 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
                 foreach (var c in contexts)
                     await c.Set<OutboxMessageEntity>().AnyAsync(ct);
 
-                var bulk = contexts.Take(4).Select(c =>
-                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAllAsync(3, Now, 100, ct));
-                var single = contexts.Skip(4).Zip(dead, (c, m) =>
-                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAsync(m.Id, Now, ct));
+                var bulk = contexts.Take(4).Select(c => InScope(ambient, () =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAllAsync(3, Now, 100, ct)));
+                var single = contexts.Skip(4).Zip(dead, (c, m) => InScope(ambient, () =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAsync(m.Id, Now, ct)));
                 var bulkTask = Task.WhenAll(bulk);
                 var singleTask = Task.WhenAll(single);
 
@@ -294,5 +301,20 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
             foreach (var m in dead)
                 (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == m.Id, ct)).ShouldBe(1);
         }
+    }
+
+    // Mirrors TransactionCommandDispatcherDecorator: the call runs in an ambient scope that commits
+    // only when the call succeeds.
+    private static async Task<T> InScope<T>(bool ambient, Func<Task<T>> call)
+    {
+        if (!ambient) return await call();
+
+        using var scope = new TransactionScope(
+            TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+        var result = await call();
+        scope.Complete();
+        return result;
     }
 }
