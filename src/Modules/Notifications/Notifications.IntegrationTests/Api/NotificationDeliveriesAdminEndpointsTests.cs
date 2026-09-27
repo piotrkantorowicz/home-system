@@ -147,6 +147,35 @@ public sealed class NotificationDeliveriesAdminEndpointsTests : IDisposable
         replacements.ShouldBe(1);
     }
 
+    /// <summary>Overlapping retry-all and single retries replace every dead delivery exactly once.</summary>
+    [Fact]
+    public async Task Admin_OverlappingRetryAllAndRetry_ReplaceEachDeliveryOnce()
+    {
+        var ids = new List<Guid>();
+        for (var i = 0; i < 5; i++)
+            ids.Add(await SeedFailedAsync(MaxAttempts));
+        var client = _factory.CreateClientWithRoles("admin");
+
+        var requests = Enumerable.Range(0, 4)
+            .Select(_ => client.PostAsync("/api/admin/notifications/deliveries/retry-all", null, TestContext.Current.CancellationToken))
+            .Concat(ids.Select(id => client.PostAsync($"/api/admin/notifications/deliveries/{id}/retry", null, TestContext.Current.CancellationToken)));
+        var responses = await Task.WhenAll(requests);
+
+        responses.ShouldAllBe(r => r.StatusCode == HttpStatusCode.OK
+            || r.StatusCode == HttpStatusCode.NoContent
+            || r.StatusCode == HttpStatusCode.UnprocessableEntity);
+        await using var connection = await new NotificationsConnectionFactory(_fixture.ConnectionString)
+            .OpenAsync(TestContext.Current.CancellationToken);
+        foreach (var id in ids)
+        {
+            var replacements = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+                "SELECT count(*) FROM notification_deliveries WHERE retry_of = @Id",
+                new { Id = id },
+                cancellationToken: TestContext.Current.CancellationToken));
+            replacements.ShouldBe(1);
+        }
+    }
+
     private Task<Guid> SeedFailedAsync(int attempts)
         => SeedAsync(d =>
         {

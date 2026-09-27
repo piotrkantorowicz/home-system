@@ -253,4 +253,46 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
             (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == dead.Id, ct)).ShouldBe(1);
         }
     }
+
+    /// <summary>Overlapping bulk and single retries replace every dead letter exactly once.</summary>
+    [Fact]
+    public async Task RetryAllAsync_OverlappingRetries_ReplaceEachDeadLetterOnce()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var options = new DbContextOptionsBuilder<MessagingTestDbContext>().UseNpgsql(_fixture.ConnectionString).Options;
+
+        for (var round = 0; round < 5; round++)
+        {
+            var dead = Enumerable.Range(0, 5)
+                .Select(_ => new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom"))
+                .ToList();
+            var seed = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+            foreach (var m in dead) await seed.AddAsync(m, ct);
+            await _dbContext.SaveChangesAsync(ct);
+
+            var contexts = Enumerable.Range(0, 4 + dead.Count).Select(_ => new MessagingTestDbContext(options)).ToList();
+            try
+            {
+                foreach (var c in contexts)
+                    await c.Set<OutboxMessageEntity>().AnyAsync(ct);
+
+                var bulk = contexts.Take(4).Select(c =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAllAsync(3, Now, 100, ct));
+                var single = contexts.Skip(4).Zip(dead, (c, m) =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAsync(m.Id, Now, ct));
+                var bulkTask = Task.WhenAll(bulk);
+                var singleTask = Task.WhenAll(single);
+
+                var retried = (await bulkTask).Sum() + (await singleTask).Count(r => r);
+                retried.ShouldBe(dead.Count);
+            }
+            finally
+            {
+                foreach (var c in contexts) await c.DisposeAsync();
+            }
+
+            foreach (var m in dead)
+                (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == m.Id, ct)).ShouldBe(1);
+        }
+    }
 }

@@ -94,17 +94,30 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
 
     public async Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct)
     {
-        var dead = await _dbContext.Set<OutboxMessageEntity>()
-            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount >= maxAttempts)
-            .OrderBy(x => x.OccurredAt)
-            .Take(limit)
-            .ToListAsync(ct);
+        // A concurrent retry claiming one of these rows rolls the whole batch back; re-read what is
+        // still dead-lettered and try again. Each conflict means another retry committed rows of
+        // this batch, so the re-read shrinks and the loop ends.
+        while (true)
+        {
+            var dead = await _dbContext.Set<OutboxMessageEntity>()
+                .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount >= maxAttempts)
+                .OrderBy(x => x.OccurredAt)
+                .Take(limit)
+                .ToListAsync(ct);
 
-        foreach (var original in dead)
-            StageRetry(original, now);
+            foreach (var original in dead)
+                StageRetry(original, now);
 
-        await _dbContext.SaveChangesAsync(ct);
-        return dead.Count;
+            try
+            {
+                await _dbContext.SaveChangesAsync(ct);
+                return dead.Count;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                _dbContext.ChangeTracker.Clear();
+            }
+        }
     }
 
     // Marks the tracked original as history and stages its replacement: same event, fresh attempts.

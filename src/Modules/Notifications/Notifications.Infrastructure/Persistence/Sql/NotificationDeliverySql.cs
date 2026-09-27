@@ -83,7 +83,8 @@ internal static class NotificationDeliverySql
         WHERE status = 'Failed'
           AND attempt_count >= @MaxAttempts
         ORDER BY last_attempt_at NULLS FIRST, id
-        LIMIT @BatchSize;
+        LIMIT @BatchSize
+        FOR UPDATE SKIP LOCKED;
         """;
 
     internal const string ListDeadLetteredPaged = """
