@@ -151,4 +151,80 @@ describe('DeadLetters', () => {
     expect(await screen.findByText('Queued for retry')).toBeInTheDocument();
     expect(retried).toHaveBeenCalledExactlyOnceWith('Household', 'm-1');
   });
+
+  it('steps back a page when retrying empties the last delivery page', async () => {
+    const ids = Array.from({ length: 26 }, (_, i) => `d-${String(i + 1)}`);
+    server.use(
+      http.get(`${BASE}/notifications/deliveries/dead-letters`, ({ request }) => {
+        const url = new URL(request.url);
+        const page = Number(url.searchParams.get('page'));
+        const pageSize = Number(url.searchParams.get('pageSize'));
+        return HttpResponse.json({
+          items: ids.slice((page - 1) * pageSize, page * pageSize).map((id) => ({
+            deliveryId: id,
+            notificationId: 'n-1',
+            userId: 'user-7',
+            type: 'WaterReminder',
+            title: `Title ${id}`,
+            channel: 'Email',
+            attemptCount: 5,
+            lastAttemptAt: '2026-09-12T10:00:00Z',
+            failureReason: 'smtp down',
+          })),
+          totalCount: ids.length,
+          page,
+          pageSize,
+        });
+      }),
+      http.post(`${BASE}/notifications/deliveries/:id/retry`, ({ params }) => {
+        ids.splice(ids.indexOf(String(params.id)), 1);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+
+    const deliveries = await screen.findByRole('table', { name: 'Notification deliveries' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    await within(deliveries).findByText('Title d-26');
+    await userEvent.click(within(deliveries).getByRole('button', { name: 'Retry' }));
+
+    expect(await within(deliveries).findByText('Title d-1')).toBeInTheDocument();
+    expect(screen.queryByText('No dead-lettered deliveries')).toBeNull();
+  });
+
+  it('steps back a page when retrying empties the last event page', async () => {
+    const ids = Array.from({ length: 26 }, (_, i) => `m-${String(i + 1)}`);
+    server.use(
+      http.get(`${BASE}/outbox/Household/dead-letters`, ({ request }) => {
+        const url = new URL(request.url);
+        const page = Number(url.searchParams.get('page'));
+        const pageSize = Number(url.searchParams.get('pageSize'));
+        return HttpResponse.json({
+          items: ids.slice((page - 1) * pageSize, page * pageSize).map((id) => ({
+            id,
+            eventId: `e-${id}`,
+            eventType: `Household.Contracts.Events.Event${id}, Household.Contracts`,
+            occurredAt: '2026-09-12T09:00:00Z',
+            attemptCount: 10,
+            lastError: 'handler threw',
+          })),
+          totalCount: ids.length,
+          page,
+          pageSize,
+        });
+      }),
+      http.post(`${BASE}/outbox/:module/dead-letters/:id/retry`, ({ params }) => {
+        ids.splice(ids.indexOf(String(params.id)), 1);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+
+    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    await within(events).findByText('Eventm-26');
+    await userEvent.click(within(events).getByRole('button', { name: 'Retry' }));
+
+    expect(await within(events).findByText('Eventm-1')).toBeInTheDocument();
+  });
 });

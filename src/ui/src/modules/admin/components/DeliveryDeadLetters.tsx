@@ -28,6 +28,10 @@ export function DeliveryDeadLetters() {
   );
   const retry = useRetryDelivery();
 
+  // A retry can empty the last page; step back to the last page that still has rows.
+  const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
+  if (page > lastPage) setPage(lastPage);
+
   if (isError) {
     return (
       <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
@@ -36,7 +40,7 @@ export function DeliveryDeadLetters() {
     );
   }
 
-  if (!isLoading && data?.items.length === 0) {
+  if (data?.totalCount === 0) {
     return <EmptyState icon={CheckCircle2} title={t('deliveries.empty')} />;
   }
 

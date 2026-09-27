@@ -31,6 +31,10 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
   );
   const retry = useRetryOutboxMessage();
 
+  // A retry can empty the last page; step back to the last page that still has rows.
+  const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
+  if (page > lastPage) setPage(lastPage);
+
   if (isError) {
     return (
       <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
