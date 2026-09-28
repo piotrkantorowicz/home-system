@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using Notifications.Api;
+using Operations.Api;
 using Scalar.AspNetCore;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Web;
-using Shared.Infrastructure.Web.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +24,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddDietPlannerModule(builder.Configuration);
 builder.Services.AddNotificationsModule(builder.Configuration, builder.Environment);
 builder.Services.AddHouseholdModule(builder.Configuration);
+builder.Services.AddOperationsModule();
 
 // CQRS dispatcher chain — registered once, shared by every module's handlers.
 builder.Services.AddCqrsDispatchers();
@@ -165,7 +166,7 @@ app.MapNotificationsEndpoints();
 app.MapNotificationChannelPreferencesEndpoints();
 app.MapHouseholdEndpoints();
 app.MapNotificationDeliveriesAdminEndpoints();
-app.MapOutboxAdminEndpoints();
+app.MapOperationsEndpoints();
 
 // ==============================================
 // Dev: auto-migrate on startup

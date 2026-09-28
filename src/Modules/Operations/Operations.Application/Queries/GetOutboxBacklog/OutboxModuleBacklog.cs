@@ -1,4 +1,4 @@
-namespace Shared.Infrastructure.Web.Admin;
+namespace Operations.Application.Queries.GetOutboxBacklog;
 
 /// <summary>Undelivered outbox messages of one publishing module.</summary>
 /// <param name="Module">Module name, used in the per-module admin routes.</param>
