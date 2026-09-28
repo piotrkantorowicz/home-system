@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  outboxPayloadOptions,
   outboxDeadLettersOptions,
   useRetryAllOutboxMessages,
   useRetryOutboxMessage,
@@ -22,6 +23,7 @@ import { formatDateTime, shortEventType } from '../utils/format';
 import { RetriedBadge } from './RetriedBadge';
 import { RetryAllButton } from './RetryAllButton';
 import { RetryButton } from './RetryButton';
+import { ViewPayloadButton } from './ViewPayloadButton';
 
 interface OutboxDeadLettersProps {
   module: string;
@@ -85,7 +87,8 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
                 <RetriedBadge retryOf={m.retryOf} />
               </TableCell>
               <TableCell className="max-w-xs text-xs break-words">{m.lastError}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right whitespace-nowrap">
+                <ViewPayloadButton options={outboxPayloadOptions(module, m.id)} />
                 <RetryButton
                   pending={retry.isPending && retry.variables.id === m.id}
                   onRetry={() => {

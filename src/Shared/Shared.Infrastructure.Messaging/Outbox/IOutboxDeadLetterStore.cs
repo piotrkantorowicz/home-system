@@ -43,4 +43,10 @@ public interface IOutboxDeadLetterStore
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns>How many messages were retried.</returns>
     Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct);
+
+    /// <summary>Reads one message's serialised event for an admin to inspect. May contain personal data.</summary>
+    /// <param name="messageId">The outbox row to read.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    /// <returns>The payload, or <see langword="null"/> when no row has that id.</returns>
+    Task<OutboxPayload?> GetPayloadAsync(Guid messageId, CancellationToken ct);
 }

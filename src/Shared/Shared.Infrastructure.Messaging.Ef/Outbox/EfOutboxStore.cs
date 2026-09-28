@@ -82,6 +82,13 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
     public Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct)
         => RetryEachAsync(DeadLettered(maxAttempts).OrderBy(x => x.OccurredAt).Take(limit), now, ct);
 
+    public Task<OutboxPayload?> GetPayloadAsync(Guid messageId, CancellationToken ct)
+        => _dbContext.Set<OutboxMessageEntity>()
+            .AsNoTracking()
+            .Where(x => x.Id == messageId)
+            .Select(x => new OutboxPayload(x.Id, x.EventType, x.Payload))
+            .FirstOrDefaultAsync(ct);
+
     // Claims each candidate with a conditional UPDATE and stages a replacement (same event, fresh
     // attempts) only for the rows this call claimed; a concurrent retry that got there first leaves
     // 0 rows affected, so every dead letter gets one replacement. One transaction: it joins the
