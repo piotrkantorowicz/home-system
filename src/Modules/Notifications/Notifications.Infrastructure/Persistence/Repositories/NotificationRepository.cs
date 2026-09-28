@@ -144,4 +144,19 @@ internal sealed class NotificationRepository : INotificationRepository
 
         return rows.Select(NotificationMapping.ToDomain).ToList();
     }
+
+    public async Task<IReadOnlyList<NotificationDelivery>> GetDeadLetteredDeliveriesAsync(
+        int batchSize, int maxAttempts, CancellationToken ct = default)
+    {
+        // Loaded to be retried: lock the rows in the unit-of-work transaction and skip ones another
+        // retry holds, so overlapping single and bulk retries never replace the same delivery twice.
+        var tx = await _uow.BeginTransactionAsync(ct);
+        var rows = await tx.Connection!.QueryAsync<NotificationDeliveryRow>(new CommandDefinition(
+            NotificationDeliverySql.SelectDeadLettered,
+            new { BatchSize = batchSize, MaxAttempts = maxAttempts },
+            transaction: tx,
+            cancellationToken: ct));
+
+        return rows.Select(NotificationMapping.ToDomain).ToList();
+    }
 }

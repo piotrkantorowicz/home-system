@@ -157,6 +157,30 @@ describe('DeadLetters', () => {
     expect(retried).toHaveBeenCalledExactlyOnceWith('Household', 'm-1');
   });
 
+  it('retries all events of a module after confirming', async () => {
+    const retried = vi.fn();
+    server.use(
+      http.post(`${BASE}/outbox/:module/dead-letters/retry-all`, ({ params }) => {
+        retried(params.module);
+        return HttpResponse.json({ retried: 1 });
+      }),
+    );
+    renderPage();
+
+    await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = screen.getByRole('heading', { name: 'Integration events' }).closest('section');
+    await userEvent.click(
+      within(events ?? document.body).getByRole('button', { name: 'Retry all' }),
+    );
+    expect(retried).not.toHaveBeenCalled();
+
+    const dialog = await screen.findByRole('dialog', { name: 'Retry 1 dead letter?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Retry all' }));
+
+    expect(await screen.findByText('1 dead letter queued for retry')).toBeInTheDocument();
+    expect(retried).toHaveBeenCalledExactlyOnceWith('Household');
+  });
+
   it('steps back a page when retrying empties the last delivery page', async () => {
     const ids = Array.from({ length: 26 }, (_, i) => `d-${String(i + 1)}`);
     server.use(

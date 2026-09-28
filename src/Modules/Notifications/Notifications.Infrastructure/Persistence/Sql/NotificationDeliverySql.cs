@@ -69,6 +69,24 @@ internal static class NotificationDeliverySql
         LIMIT @BatchSize;
         """;
 
+    internal const string SelectDeadLettered = """
+        SELECT id              AS Id,
+               notification_id AS NotificationId,
+               channel         AS Channel,
+               status          AS Status,
+               attempt_count   AS AttemptCount,
+               last_attempt_at AS LastAttemptAt,
+               sent_at         AS SentAt,
+               failure_reason  AS FailureReason,
+               retry_of        AS RetryOf
+        FROM notification_deliveries
+        WHERE status = 'Failed'
+          AND attempt_count >= @MaxAttempts
+        ORDER BY last_attempt_at NULLS FIRST, id
+        LIMIT @BatchSize
+        FOR UPDATE SKIP LOCKED;
+        """;
+
     internal const string ListDeadLetteredPaged = """
         SELECT d.id              AS DeliveryId,
                n.id              AS NotificationId,

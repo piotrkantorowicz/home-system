@@ -12,10 +12,15 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { outboxDeadLettersOptions, useRetryOutboxMessage } from '../api/hooks/useOutboxDeadLetters';
+import {
+  outboxDeadLettersOptions,
+  useRetryAllOutboxMessages,
+  useRetryOutboxMessage,
+} from '../api/hooks/useOutboxDeadLetters';
 import { formatDateTime, shortEventType } from '../utils/format';
 
 import { RetriedBadge } from './RetriedBadge';
+import { RetryAllButton } from './RetryAllButton';
 import { RetryButton } from './RetryButton';
 
 interface OutboxDeadLettersProps {
@@ -31,6 +36,7 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
     outboxDeadLettersOptions(module, { page, pageSize }),
   );
   const retry = useRetryOutboxMessage();
+  const retryAll = useRetryAllOutboxMessages();
 
   // A retry can empty the last page; step back to the last page that still has rows.
   const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
@@ -46,6 +52,15 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
 
   return (
     <>
+      <div className="mb-3 flex justify-end">
+        <RetryAllButton
+          count={data?.totalCount ?? 0}
+          pending={retryAll.isPending}
+          onConfirm={() => {
+            retryAll.mutate(module);
+          }}
+        />
+      </div>
       <Table aria-label={t('events.module_table', { module })} aria-busy={isLoading}>
         <TableHeader>
           <TableRow>

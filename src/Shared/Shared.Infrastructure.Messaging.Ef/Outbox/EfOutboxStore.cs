@@ -1,5 +1,6 @@
 namespace Shared.Infrastructure.Messaging.Ef.Outbox;
 
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Infrastructure.Messaging.Outbox;
@@ -73,34 +74,51 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
     }
 
     public async Task<bool> RetryAsync(Guid messageId, DateTime now, CancellationToken ct)
+        => await RetryEachAsync(
+            _dbContext.Set<OutboxMessageEntity>().AsNoTracking()
+                .Where(x => x.Id == messageId && x.ProcessedAt == null && x.RetriedAt == null),
+            now, ct) == 1;
+
+    public Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct)
+        => RetryEachAsync(DeadLettered(maxAttempts).OrderBy(x => x.OccurredAt).Take(limit), now, ct);
+
+    // Claims each candidate with a conditional UPDATE and stages a replacement (same event, fresh
+    // attempts) only for the rows this call claimed; a concurrent retry that got there first leaves
+    // 0 rows affected, so every dead letter gets one replacement. One transaction: it joins the
+    // dispatcher's ambient scope, or is its own when called outside a command.
+    // ponytail: one UPDATE per row (<= the 500-row retry-all cap); batch the claim if that grows.
+    private async Task<int> RetryEachAsync(
+        IQueryable<OutboxMessageEntity> candidates, DateTime now, CancellationToken ct)
     {
-        var original = await _dbContext.Set<OutboxMessageEntity>()
-            .FirstOrDefaultAsync(x => x.Id == messageId && x.ProcessedAt == null && x.RetriedAt == null, ct);
-        if (original is null) return false;
+        using var scope = new TransactionScope(
+            TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
 
-        original.RetriedAt = now;
-        await _dbContext.Set<OutboxMessageEntity>().AddAsync(new OutboxMessageEntity
+        var set = _dbContext.Set<OutboxMessageEntity>();
+        var retried = 0;
+        foreach (var original in await candidates.ToListAsync(ct))
         {
-            Id = Guid.CreateVersion7(),
-            EventId = original.EventId,
-            EventType = original.EventType,
-            Payload = original.Payload,
-            OccurredAt = original.OccurredAt,
-            RetryOf = original.Id,
-        }, ct);
+            var claimed = await set
+                .Where(x => x.Id == original.Id && x.ProcessedAt == null && x.RetriedAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.RetriedAt, now), ct);
+            if (claimed == 0) continue;
 
-        try
-        {
-            await _dbContext.SaveChangesAsync(ct);
+            set.Add(new OutboxMessageEntity
+            {
+                Id = Guid.CreateVersion7(),
+                EventId = original.EventId,
+                EventType = original.EventType,
+                Payload = original.Payload,
+                OccurredAt = original.OccurredAt,
+                RetryOf = original.Id,
+            });
+            retried++;
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            // A concurrent retry claimed the row first; its replacement is the only one.
-            _dbContext.ChangeTracker.Clear();
-            return false;
-        }
 
-        return true;
+        await _dbContext.SaveChangesAsync(ct);
+        scope.Complete();
+        return retried;
     }
 
     private IQueryable<OutboxMessageEntity> DeadLettered(int maxAttempts)
