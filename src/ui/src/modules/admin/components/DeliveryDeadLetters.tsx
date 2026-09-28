@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { deliveryDeadLettersOptions, useRetryDelivery } from '../api/hooks/useDeliveryDeadLetters';
 import { formatDateTime } from '../utils/format';
 
+import { RetriedBadge } from './RetriedBadge';
 import { RetryButton } from './RetryButton';
 
 export function DeliveryDeadLetters() {
@@ -67,7 +68,10 @@ export function DeliveryDeadLetters() {
                 </div>
               </TableCell>
               <TableCell>{d.channel}</TableCell>
-              <TableCell className="tnum">{d.attemptCount}</TableCell>
+              <TableCell className="tnum whitespace-nowrap">
+                {d.attemptCount}
+                <RetriedBadge retryOf={d.retryOf} />
+              </TableCell>
               <TableCell className="whitespace-nowrap">
                 {formatDateTime(d.lastAttemptAt, i18n.language)}
               </TableCell>

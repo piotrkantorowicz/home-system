@@ -56,6 +56,7 @@ beforeEach(() => {
             attemptCount: 5,
             lastAttemptAt: '2026-09-12T10:00:00Z',
             failureReason: 'smtp down',
+            retryOf: null,
           },
         ],
         totalCount: 1,
@@ -79,6 +80,7 @@ beforeEach(() => {
             occurredAt: '2026-09-12T09:00:00Z',
             attemptCount: 10,
             lastError: 'handler threw',
+            retryOf: 'm-0',
           },
         ],
         totalCount: 1,
@@ -115,6 +117,9 @@ describe('DeadLetters', () => {
 
     const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
     expect(await within(events).findByText('MemberJoined')).toBeInTheDocument();
+    // Only the event that is itself an earlier retry carries the marker.
+    expect(within(events).getByText('Retried')).toBeInTheDocument();
+    expect(within(deliveries).queryByText('Retried')).toBeNull();
     expect(screen.queryByRole('table', { name: 'DietPlanner dead-lettered events' })).toBeNull();
   });
 

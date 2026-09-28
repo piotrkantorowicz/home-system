@@ -81,12 +81,13 @@ public static class OutboxAdminEndpoints
         Guid id,
         IEnumerable<OutboxModule> modules,
         IServiceProvider services,
+        TimeProvider clock,
         CancellationToken ct)
     {
         var match = Find(modules, module);
         if (match is null) return TypedResults.NotFound();
 
-        return await Store(services, match).RequeueAsync(id, ct)
+        return await Store(services, match).RetryAsync(id, clock.GetUtcNow().UtcDateTime, ct)
             ? TypedResults.NoContent()
             : TypedResults.NotFound();
     }

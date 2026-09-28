@@ -54,7 +54,9 @@ Another module's internals are as inaccessible as another service's database.
     → on failure: IOutboxStore.RecordFailureAsync (increments attempt_count, sets next_attempt_at:
       1 s doubling per failure, capped at 5 min — Messaging:Outbox RetryBaseDelayMs / RetryMaxDelayMs)
     → attempt_count >= Messaging:Outbox MaxAttempts (10) → dead-lettered: skipped until an
-      admin retries it (IOutboxDeadLetterStore, /api/admin/outbox, the SPA's /admin page)
+      admin retries it (IOutboxDeadLetterStore, /api/admin/outbox, the SPA's /admin page);
+      retry inserts a new row (same event_id, retry_of → original) and marks the original
+      retried_at, keeping it as history
 
 [Transport — InProcessIntegrationEventTransport (v1)]
     → resolves IIntegrationEventHandler<T> from a fresh DI scope

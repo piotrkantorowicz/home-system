@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { outboxDeadLettersOptions, useRetryOutboxMessage } from '../api/hooks/useOutboxDeadLetters';
 import { formatDateTime, shortEventType } from '../utils/format';
 
+import { RetriedBadge } from './RetriedBadge';
 import { RetryButton } from './RetryButton';
 
 interface OutboxDeadLettersProps {
@@ -64,7 +65,10 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
               <TableCell className="whitespace-nowrap">
                 {formatDateTime(m.occurredAt, i18n.language)}
               </TableCell>
-              <TableCell className="tnum">{m.attemptCount}</TableCell>
+              <TableCell className="tnum whitespace-nowrap">
+                {m.attemptCount}
+                <RetriedBadge retryOf={m.retryOf} />
+              </TableCell>
               <TableCell className="max-w-xs text-xs break-words">{m.lastError}</TableCell>
               <TableCell className="text-right">
                 <RetryButton

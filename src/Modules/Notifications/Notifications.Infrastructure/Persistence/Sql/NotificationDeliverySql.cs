@@ -4,9 +4,9 @@ internal static class NotificationDeliverySql
 {
     internal const string Insert = """
         INSERT INTO notification_deliveries
-            (id, notification_id, channel, status, attempt_count, last_attempt_at, sent_at, failure_reason)
+            (id, notification_id, channel, status, attempt_count, last_attempt_at, sent_at, failure_reason, retry_of)
         VALUES
-            (@Id, @NotificationId, @Channel, @Status, @AttemptCount, @LastAttemptAt, @SentAt, @FailureReason);
+            (@Id, @NotificationId, @Channel, @Status, @AttemptCount, @LastAttemptAt, @SentAt, @FailureReason, @RetryOf);
         """;
 
     internal const string SelectById = """
@@ -17,9 +17,11 @@ internal static class NotificationDeliverySql
                attempt_count   AS AttemptCount,
                last_attempt_at AS LastAttemptAt,
                sent_at         AS SentAt,
-               failure_reason  AS FailureReason
+               failure_reason  AS FailureReason,
+               retry_of        AS RetryOf
         FROM notification_deliveries
-        WHERE id = @Id;
+        WHERE id = @Id
+        FOR UPDATE;
         """;
 
     internal const string Update = """
@@ -56,7 +58,8 @@ internal static class NotificationDeliverySql
                attempt_count   AS AttemptCount,
                last_attempt_at AS LastAttemptAt,
                sent_at         AS SentAt,
-               failure_reason  AS FailureReason
+               failure_reason  AS FailureReason,
+               retry_of        AS RetryOf
         FROM notification_deliveries
         WHERE status = 'Failed'
           AND attempt_count < @MaxAttempts
@@ -75,7 +78,8 @@ internal static class NotificationDeliverySql
                d.channel         AS Channel,
                d.attempt_count   AS AttemptCount,
                d.last_attempt_at AS LastAttemptAt,
-               d.failure_reason  AS FailureReason
+               d.failure_reason  AS FailureReason,
+               d.retry_of        AS RetryOf
         FROM notification_deliveries d
         INNER JOIN notifications n ON n.id = d.notification_id
         WHERE d.status = 'Failed'

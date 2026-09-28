@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using global::Household.Infrastructure.Persistence;
 using Household.IntegrationTests.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
@@ -47,9 +48,9 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    /// <summary>A dead-lettered message is listed, retry resets it, and it leaves the list.</summary>
+    /// <summary>A dead-lettered message is listed; retry replaces it with a new row and keeps it as history.</summary>
     [Fact]
-    public async Task Admin_ListsDeadLetter_AndRetryRequeuesIt()
+    public async Task Admin_ListsDeadLetter_AndRetryReplacesIt()
     {
         var deadId = await SeedAsync(attemptCount: new OutboxWorkerOptions().MaxAttempts);
         var retryingId = await SeedAsync(attemptCount: 1);
@@ -66,8 +67,15 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
         var after = await client.GetFromJsonAsync<DeadLetterPage>(
             "/api/admin/outbox/household/dead-letters?pageSize=100", TestContext.Current.CancellationToken);
         after!.Items.ShouldNotContain(i => i.Id == deadId);
-        // The live outbox worker may already have retried (and failed) it once.
-        (await AttemptCountAsync(deadId)).ShouldBeLessThan(new OutboxWorkerOptions().MaxAttempts);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<HouseholdDbContext>();
+        var original = await db.Set<OutboxMessageEntity>()
+            .SingleAsync(x => x.Id == deadId, TestContext.Current.CancellationToken);
+        original.RetriedAt.ShouldNotBeNull();
+        original.AttemptCount.ShouldBe(new OutboxWorkerOptions().MaxAttempts);
+        (await db.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == deadId, TestContext.Current.CancellationToken))
+            .ShouldBe(1);
     }
 
     /// <summary>Retry of an unknown message or an unknown module is 404.</summary>
@@ -108,14 +116,6 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
         });
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         return id;
-    }
-
-    private async Task<int> AttemptCountAsync(Guid id)
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<HouseholdDbContext>();
-        var row = await db.Set<OutboxMessageEntity>().FindAsync([id], TestContext.Current.CancellationToken);
-        return row!.AttemptCount;
     }
 
     private sealed record DeadLetterPage(IReadOnlyList<OutboxDeadLetter> Items, int TotalCount);

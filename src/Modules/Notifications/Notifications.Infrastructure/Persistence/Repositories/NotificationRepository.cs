@@ -91,6 +91,7 @@ internal sealed class NotificationRepository : INotificationRepository
                 delivery.LastAttemptAt,
                 delivery.SentAt,
                 delivery.FailureReason,
+                RetryOf = delivery.RetryOf?.Value,
             },
             transaction: tx,
             cancellationToken: ct));
@@ -100,10 +101,13 @@ internal sealed class NotificationRepository : INotificationRepository
     {
         ArgumentNullException.ThrowIfNull(id);
 
-        var connection = await _uow.GetConnectionAsync(ct);
-        var row = await connection.QuerySingleOrDefaultAsync<NotificationDeliveryRow>(new CommandDefinition(
+        // Loaded to be modified (ack, retry): lock the row in the unit-of-work transaction so a
+        // concurrent command waits and then sees the committed status instead of a stale one.
+        var tx = await _uow.BeginTransactionAsync(ct);
+        var row = await tx.Connection!.QuerySingleOrDefaultAsync<NotificationDeliveryRow>(new CommandDefinition(
             NotificationDeliverySql.SelectById,
             new { Id = id.Value },
+            transaction: tx,
             cancellationToken: ct));
 
         return row is null ? null : NotificationMapping.ToDomain(row);

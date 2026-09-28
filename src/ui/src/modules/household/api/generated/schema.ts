@@ -1215,6 +1215,8 @@ export interface components {
             /** Format: date-time */
             lastAttemptAt: null | string;
             failureReason: null | string;
+            /** Format: uuid */
+            retryOf: null | string;
         };
         DeliveryBacklogDto: {
             /** Format: int32 */
@@ -1576,6 +1578,8 @@ export interface components {
             /** Format: int32 */
             attemptCount: number | string;
             lastError: null | string;
+            /** Format: uuid */
+            retryOf: null | string;
         };
         OutboxModuleBacklog: {
             module: string;
