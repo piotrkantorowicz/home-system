@@ -1004,8 +1004,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset a failed delivery's attempts so the retry worker sends it again */
+        /** Retry a failed delivery as a new one; the original is kept as history */
         post: operations["RetryNotificationDelivery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notifications/deliveries/retry-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry every dead-lettered delivery (up to 500 per call) */
+        post: operations["RetryAllNotificationDeliveries"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1054,8 +1071,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset a message's attempts so the outbox worker dispatches it again */
+        /** Retry a message as a new outbox row; the original is kept as history */
         post: operations["RetryOutboxDeadLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/outbox/{module}/dead-letters/retry-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry every dead-lettered message of a module (up to 500 per call) */
+        post: operations["RetryAllOutboxDeadLetters"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1588,6 +1622,10 @@ export interface components {
             /** Format: int32 */
             retrying: number | string;
         };
+        OutboxRetryAllResult: {
+            /** Format: int32 */
+            retried: number | string;
+        };
         OverrideMealEntryRequest: {
             /** Format: uuid */
             actualRecipeId: null | string;
@@ -1754,6 +1792,10 @@ export interface components {
         };
         RenameHouseholdRequest: {
             name: string;
+        };
+        RetryAllDeliveriesResultDto: {
+            /** Format: int32 */
+            retried: number | string;
         };
         ShoppingListItemDto: {
             /** Format: uuid */
@@ -6820,6 +6862,71 @@ export interface operations {
             };
         };
     };
+    RetryAllNotificationDeliveries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryAllDeliveriesResultDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     GetOutboxBacklog: {
         parameters: {
             query?: never;
@@ -6971,6 +7078,71 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RetryAllOutboxDeadLetters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                module: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutboxRetryAllResult"];
+                };
             };
             /** @description Validation failed */
             400: {

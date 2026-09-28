@@ -1,5 +1,6 @@
 namespace Shared.Messaging.IntegrationTests.Ef;
 
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
@@ -197,6 +198,29 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         (await sut.RetryAsync(Guid.NewGuid(), Now, TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 
+    /// <summary><c>RetryAllAsync</c> retries dead-lettered rows only, up to the limit, oldest first.</summary>
+    [Fact]
+    public async Task RetryAllAsync_RetriesDeadLetteredRowsUpToLimit()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var oldest = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom");
+        var newer = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(1), null, 3, "boom");
+        var newest = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now.AddMinutes(2), null, 3, "boom");
+        var retrying = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 1, "boom");
+        foreach (var m in new[] { oldest, newer, newest, retrying })
+            await sut.AddAsync(m, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var first = await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken);
+        var list = await sut.ListAsync(3, 1, 10, TestContext.Current.CancellationToken);
+
+        first.ShouldBe(2);
+        list.Items.Single().Id.ShouldBe(newest.Id);
+        (await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken)).ShouldBe(1);
+        (await sut.RetryAllAsync(3, Now, 2, TestContext.Current.CancellationToken)).ShouldBe(0);
+        (await sut.CountAsync(3, TestContext.Current.CancellationToken)).ShouldBe(new OutboxBacklog(DeadLettered: 0, Retrying: 1));
+    }
+
     /// <summary>Concurrent retries of one dead letter stage exactly one replacement; the others report false.</summary>
     [Fact]
     public async Task RetryAsync_Concurrent_StagesSingleReplacement()
@@ -229,5 +253,68 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
 
             (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == dead.Id, ct)).ShouldBe(1);
         }
+    }
+
+    /// <summary>
+    /// Overlapping bulk and single retries replace every dead letter exactly once, both standalone
+    /// and inside an ambient transaction like the command dispatcher's.
+    /// </summary>
+    /// <param name="ambient">Whether each call runs in its own ambient <see cref="TransactionScope"/>.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RetryAllAsync_OverlappingRetries_ReplaceEachDeadLetterOnce(bool ambient)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var options = new DbContextOptionsBuilder<MessagingTestDbContext>().UseNpgsql(_fixture.ConnectionString).Options;
+
+        for (var round = 0; round < 5; round++)
+        {
+            var dead = Enumerable.Range(0, 5)
+                .Select(_ => new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 3, "boom"))
+                .ToList();
+            var seed = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+            foreach (var m in dead) await seed.AddAsync(m, ct);
+            await _dbContext.SaveChangesAsync(ct);
+
+            var contexts = Enumerable.Range(0, 4 + dead.Count).Select(_ => new MessagingTestDbContext(options)).ToList();
+            try
+            {
+                foreach (var c in contexts)
+                    await c.Set<OutboxMessageEntity>().AnyAsync(ct);
+
+                var bulk = contexts.Take(4).Select(c => InScope(ambient, () =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAllAsync(3, Now, 100, ct)));
+                var single = contexts.Skip(4).Zip(dead, (c, m) => InScope(ambient, () =>
+                    new EfOutboxStore<MessagingTestDbContext>(c).RetryAsync(m.Id, Now, ct)));
+                var bulkTask = Task.WhenAll(bulk);
+                var singleTask = Task.WhenAll(single);
+
+                var retried = (await bulkTask).Sum() + (await singleTask).Count(r => r);
+                retried.ShouldBe(dead.Count);
+            }
+            finally
+            {
+                foreach (var c in contexts) await c.DisposeAsync();
+            }
+
+            foreach (var m in dead)
+                (await _dbContext.Set<OutboxMessageEntity>().CountAsync(x => x.RetryOf == m.Id, ct)).ShouldBe(1);
+        }
+    }
+
+    // Mirrors TransactionCommandDispatcherDecorator: the call runs in an ambient scope that commits
+    // only when the call succeeds.
+    private static async Task<T> InScope<T>(bool ambient, Func<Task<T>> call)
+    {
+        if (!ambient) return await call();
+
+        using var scope = new TransactionScope(
+            TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+        var result = await call();
+        scope.Complete();
+        return result;
     }
 }

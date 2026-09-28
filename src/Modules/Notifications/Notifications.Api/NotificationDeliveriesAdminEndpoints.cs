@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Notifications.Application.Commands.RetryAllDeliveries;
 using Notifications.Application.Commands.RetryDelivery;
 using Notifications.Application.Queries.GetDeliveryBacklog;
 using Notifications.Application.Queries.ListDeadLetterDeliveries;
@@ -14,7 +15,7 @@ using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Admin endpoints over failed notification deliveries (<c>/api/admin/notifications/deliveries</c>):
-/// backlog counts, the dead-letter list and a retry that hands a delivery back to the retry worker.
+/// backlog counts, the dead-letter list, and retry of one or all dead-lettered deliveries.
 /// </summary>
 public static class NotificationDeliveriesAdminEndpoints
 {
@@ -34,7 +35,10 @@ public static class NotificationDeliveriesAdminEndpoints
             .WithName("ListDeadLetterDeliveries");
         group.MapPost("/{id:guid}/retry", Retry)
             .WithName("RetryNotificationDelivery")
-            .WithSummary("Reset a failed delivery's attempts so the retry worker sends it again");
+            .WithSummary("Retry a failed delivery as a new one; the original is kept as history");
+        group.MapPost("/retry-all", RetryAll)
+            .WithName("RetryAllNotificationDeliveries")
+            .WithSummary("Retry every dead-lettered delivery (up to 500 per call)");
 
         return app;
     }
@@ -66,5 +70,14 @@ public static class NotificationDeliveriesAdminEndpoints
     {
         await dispatcher.SendAsync(new RetryDeliveryCommand(id), ct);
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<RetryAllDeliveriesResultDto>> RetryAll(
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<RetryAllDeliveriesCommand, RetryAllDeliveriesResultDto>(
+            new RetryAllDeliveriesCommand(), ct);
+        return TypedResults.Ok(result);
     }
 }

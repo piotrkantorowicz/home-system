@@ -14,10 +14,15 @@ import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { deliveryDeadLettersOptions, useRetryDelivery } from '../api/hooks/useDeliveryDeadLetters';
+import {
+  deliveryDeadLettersOptions,
+  useRetryAllDeliveries,
+  useRetryDelivery,
+} from '../api/hooks/useDeliveryDeadLetters';
 import { formatDateTime } from '../utils/format';
 
 import { RetriedBadge } from './RetriedBadge';
+import { RetryAllButton } from './RetryAllButton';
 import { RetryButton } from './RetryButton';
 
 export function DeliveryDeadLetters() {
@@ -28,6 +33,7 @@ export function DeliveryDeadLetters() {
     deliveryDeadLettersOptions({ page, pageSize }),
   );
   const retry = useRetryDelivery();
+  const retryAll = useRetryAllDeliveries();
 
   // A retry can empty the last page; step back to the last page that still has rows.
   const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
@@ -47,6 +53,15 @@ export function DeliveryDeadLetters() {
 
   return (
     <>
+      <div className="mb-3 flex justify-end">
+        <RetryAllButton
+          count={data?.totalCount ?? 0}
+          pending={retryAll.isPending}
+          onConfirm={() => {
+            retryAll.mutate();
+          }}
+        />
+      </div>
       <Table aria-label={t('deliveries.title')} aria-busy={isLoading}>
         <TableHeader>
           <TableRow>

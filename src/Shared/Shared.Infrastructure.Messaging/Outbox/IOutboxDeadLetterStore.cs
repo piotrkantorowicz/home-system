@@ -32,4 +32,15 @@ public interface IOutboxDeadLetterStore
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns><see langword="false"/> when no undelivered, not yet retried row has that id.</returns>
     Task<bool> RetryAsync(Guid messageId, DateTime now, CancellationToken ct);
+
+    /// <summary>
+    /// Retries up to <paramref name="limit"/> dead-lettered messages, oldest first, each exactly like
+    /// <see cref="RetryAsync"/>, in one save.
+    /// </summary>
+    /// <param name="maxAttempts">The attempt limit that marks a message dead.</param>
+    /// <param name="now">Current time, UTC; recorded as each original's <c>retried_at</c>.</param>
+    /// <param name="limit">Most messages retried by one call.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    /// <returns>How many messages were retried.</returns>
+    Task<int> RetryAllAsync(int maxAttempts, DateTime now, int limit, CancellationToken ct);
 }

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Web.Admin;
 
 /// <summary>
 /// HTTP integration tests for the outbox admin endpoints, driven through the Household module's
@@ -30,6 +31,7 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
     [InlineData("GET", "/api/admin/outbox/summary")]
     [InlineData("GET", "/api/admin/outbox/household/dead-letters")]
     [InlineData("POST", "/api/admin/outbox/household/dead-letters/0198f5a4-0000-7000-8000-000000000000/retry")]
+    [InlineData("POST", "/api/admin/outbox/household/dead-letters/retry-all")]
     public async Task NonAdmin_IsForbidden(string method, string url)
     {
         var client = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}");
@@ -89,6 +91,27 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
 
         unknownMessage.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         unknownModule.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    /// <summary>Retry all retries every dead-lettered message of the module; an unknown module is 404.</summary>
+    [Fact]
+    public async Task Admin_RetryAll_RetriesDeadLetters()
+    {
+        var deadId = await SeedAsync(attemptCount: new OutboxWorkerOptions().MaxAttempts);
+        var client = AdminClient();
+
+        var response = await client.PostAsync("/api/admin/outbox/household/dead-letters/retry-all", null, TestContext.Current.CancellationToken);
+        var unknown = await client.PostAsync("/api/admin/outbox/nope/dead-letters/retry-all", null, TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<OutboxRetryAllResult>(TestContext.Current.CancellationToken))!
+            .Retried.ShouldBeGreaterThanOrEqualTo(1);
+        unknown.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<HouseholdDbContext>();
+        (await db.Set<OutboxMessageEntity>().SingleAsync(x => x.Id == deadId, TestContext.Current.CancellationToken))
+            .RetriedAt.ShouldNotBeNull();
     }
 
     private HttpClient AdminClient()

@@ -758,7 +758,6 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasColumnName("processed_at");
 
                     b.Property<DateTime?>("RetriedAt")
-                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("retried_at");
 

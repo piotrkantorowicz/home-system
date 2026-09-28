@@ -84,3 +84,26 @@ export function useRetryOutboxMessage() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: adminQueryKeys.all() }),
   });
 }
+
+export function useRetryAllOutboxMessages() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { t } = useTranslation('admin');
+
+  return useMutation({
+    mutationFn: async (module: string): Promise<number> => {
+      const { data, error } = await api.POST('/api/admin/outbox/{module}/dead-letters/retry-all', {
+        params: { path: { module } },
+      });
+      if (error || !data) throw new Error('Retry all failed');
+      return Number(data.retried);
+    },
+    onSuccess: (retried) => {
+      toast.success(t('retry_all_queued', { count: retried }));
+    },
+    onError: () => {
+      toast.error(t('retry_failed'));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: adminQueryKeys.all() }),
+  });
+}
