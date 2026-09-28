@@ -12,6 +12,7 @@ namespace Notifications.Application.Queries.ListDeadLetterDeliveries;
 /// <param name="AttemptCount">Attempts made.</param>
 /// <param name="LastAttemptAt">Time of the last attempt, UTC.</param>
 /// <param name="FailureReason">Why the last attempt failed.</param>
+/// <param name="RetryOf">The earlier delivery this one retried, when an admin retried it before.</param>
 public sealed record DeadLetterDeliveryDto(
     Guid DeliveryId,
     Guid NotificationId,
@@ -21,4 +22,5 @@ public sealed record DeadLetterDeliveryDto(
     string Channel,
     int AttemptCount,
     DateTime? LastAttemptAt,
-    string? FailureReason);
+    string? FailureReason,
+    Guid? RetryOf);

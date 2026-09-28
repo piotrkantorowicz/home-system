@@ -4,7 +4,7 @@ using Shared.Abstractions.Core.Pagination;
 
 /// <summary>
 /// Admin view of one publishing module's dead-lettered outbox rows: undelivered messages whose
-/// failed attempts reached <see cref="OutboxWorkerOptions.MaxAttempts"/>, which the
+/// failed attempts reached <see cref="OutboxWorkerOptions.MaxAttempts"/> and that were not retried yet, which the
 /// <see cref="OutboxWorker{TDbContext}"/> no longer picks up. Keyed by the module's
 /// <c>DbContext</c> type, like <see cref="IOutboxStore"/>.
 /// </summary>
@@ -23,11 +23,13 @@ public interface IOutboxDeadLetterStore
     Task<OutboxBacklog> CountAsync(int maxAttempts, CancellationToken ct);
 
     /// <summary>
-    /// Resets the attempt count of an undelivered message so the worker dispatches it again on its
-    /// next tick. The last error is kept for diagnostics until the next attempt overwrites it.
+    /// Retries an undelivered message as a new outbox row (same event id and payload, linked back via
+    /// <c>retry_of</c>) that the worker dispatches on its next tick. The original row is marked retried
+    /// and kept, with its attempts and last error, as history; it no longer counts as dead-lettered.
     /// </summary>
-    /// <param name="messageId">The outbox row to requeue.</param>
+    /// <param name="messageId">The outbox row to retry.</param>
+    /// <param name="now">Current time, UTC; recorded as the original's <c>retried_at</c>.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
-    /// <returns><see langword="false"/> when no undelivered row has that id.</returns>
-    Task<bool> RequeueAsync(Guid messageId, CancellationToken ct);
+    /// <returns><see langword="false"/> when no undelivered, not yet retried row has that id.</returns>
+    Task<bool> RetryAsync(Guid messageId, DateTime now, CancellationToken ct);
 }

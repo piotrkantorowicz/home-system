@@ -8,6 +8,8 @@
   "retry": "Ponów",
   "retry_queued": "Dodano do ponownej wysyłki",
   "retry_failed": "Nie udało się zlecić ponowienia",
+  "retried": "Ponowiona",
+  "retry_of": "Ponowienie {{id}} — pierwotny błąd zachowano w historii",
   "attempts": "Próby",
   "last_attempt": "Ostatnia próba",
   "last_error": "Ostatni błąd",

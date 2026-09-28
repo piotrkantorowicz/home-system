@@ -15,4 +15,6 @@ public enum DeliveryStatus
     Failed,
     /// <summary>No sender is registered for the channel; will not be retried.</summary>
     Skipped,
+    /// <summary>Failed and handed to a new delivery by an admin retry; kept as history, never retried again.</summary>
+    Retried,
 }

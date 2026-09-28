@@ -123,30 +123,42 @@ public sealed class NotificationDeliveryTests
         delivery.AttemptCount.ShouldBe(0);
     }
 
-    /// <summary><c>Requeue</c> on a failed delivery resets attempts and keeps the failure reason.</summary>
+    /// <summary><c>Retry</c> keeps the failed delivery as history and returns a fresh failed one linked to it.</summary>
     [Fact]
-    public void Requeue_WhenFailed_ResetsAttemptsAndKeepsReason()
+    public void Retry_WhenFailed_KeepsHistoryAndReturnsLinkedReplacement()
     {
         var delivery = NewPending();
         for (var i = 0; i < 5; i++)
             delivery.MarkFailed(TestClock.UtcNow, "smtp down");
+        var newId = NotificationDeliveryId.New();
 
-        delivery.Requeue();
+        var retry = delivery.Retry(newId);
 
-        delivery.Status.ShouldBe(DeliveryStatus.Failed);
-        delivery.AttemptCount.ShouldBe(0);
+        delivery.Status.ShouldBe(DeliveryStatus.Retried);
+        delivery.AttemptCount.ShouldBe(5);
         delivery.FailureReason.ShouldBe("smtp down");
+        retry.Id.ShouldBe(newId);
+        retry.RetryOf.ShouldBe(delivery.Id);
+        retry.NotificationId.ShouldBe(delivery.NotificationId);
+        retry.Channel.ShouldBe(delivery.Channel);
+        retry.Status.ShouldBe(DeliveryStatus.Failed);
+        retry.AttemptCount.ShouldBe(0);
+        retry.LastAttemptAt.ShouldBeNull();
     }
 
-    /// <summary><c>Requeue</c> rejects a delivery that is not failed.</summary>
+    /// <summary><c>Retry</c> rejects a delivery that is not failed, including one already retried.</summary>
     [Fact]
-    public void Requeue_WhenNotFailed_Throws()
+    public void Retry_WhenNotFailed_Throws()
     {
-        var delivery = NewPending();
-        delivery.MarkSent(TestClock.UtcNow);
+        var sent = NewPending();
+        sent.MarkSent(TestClock.UtcNow);
+        var retried = NewPending();
+        retried.MarkFailed(TestClock.UtcNow, "boom");
+        retried.Retry(NotificationDeliveryId.New());
 
-        Should.Throw<DomainException>(delivery.Requeue);
-        delivery.AttemptCount.ShouldBe(1);
+        Should.Throw<DomainException>(() => sent.Retry(NotificationDeliveryId.New()));
+        Should.Throw<DomainException>(() => retried.Retry(NotificationDeliveryId.New()));
+        sent.Status.ShouldBe(DeliveryStatus.Sent);
     }
 
     private static NotificationDelivery NewPending()

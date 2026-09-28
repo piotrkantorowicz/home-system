@@ -17,6 +17,8 @@ export interface OutboxDeadLetter {
   occurredAt: string;
   attemptCount: number;
   lastError: string | null;
+  /** The earlier outbox row this one retried; set when an admin retried it before. */
+  retryOf: string | null;
 }
 
 export function outboxBacklogOptions() {
@@ -53,6 +55,7 @@ export function outboxDeadLettersOptions(
           occurredAt: m.occurredAt,
           attemptCount: Number(m.attemptCount),
           lastError: m.lastError,
+          retryOf: m.retryOf,
         })),
         totalCount: Number(data.totalCount),
       };

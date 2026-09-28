@@ -45,6 +45,8 @@ public sealed class NotificationDelivery
     public DateTime? SentAt { get; private set; }
     /// <summary>Why the last attempt failed, if it did.</summary>
     public string? FailureReason { get; private set; }
+    /// <summary>The failed delivery this one retries, when created by <see cref="Retry"/>.</summary>
+    public NotificationDeliveryId? RetryOf { get; private set; }
 
     /// <summary>Records a successful delivery. Idempotent once sent.</summary>
     /// <param name="utcNow">The current time, UTC.</param>
@@ -82,16 +84,29 @@ public sealed class NotificationDelivery
     }
 
     /// <summary>
-    /// Puts a failed delivery back in the retry worker's queue by resetting its attempt count — the
-    /// admin way out of the dead-letter state. The failure reason is kept until the next attempt.
+    /// The admin way out of the dead-letter state: this delivery becomes <see cref="DeliveryStatus.Retried"/>
+    /// and keeps its attempts and failure reason as history, and a new failed delivery with no
+    /// attempts takes its place in the retry worker's queue.
     /// </summary>
+    /// <param name="newId">Identifier for the replacement delivery.</param>
+    /// <returns>The replacement delivery, linked back through <see cref="RetryOf"/>.</returns>
     /// <exception cref="DomainException">The delivery is not <see cref="DeliveryStatus.Failed"/>.</exception>
-    public void Requeue()
+    public NotificationDelivery Retry(NotificationDeliveryId newId)
     {
         if (Status != DeliveryStatus.Failed)
             throw new DomainException("Only failed deliveries can be retried.");
 
-        AttemptCount = 0;
+        Status = DeliveryStatus.Retried;
+
+        return new NotificationDelivery
+        {
+            Id = newId,
+            NotificationId = NotificationId,
+            Channel = Channel,
+            Status = DeliveryStatus.Failed,
+            AttemptCount = 0,
+            RetryOf = Id,
+        };
     }
 
     /// <summary>Records that no sender exists for the channel; does not count as an attempt and is never retried.</summary>

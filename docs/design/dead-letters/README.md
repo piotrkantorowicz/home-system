@@ -128,9 +128,10 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
    capped at 5 min (`Messaging:Outbox:RetryBaseDelayMs` / `RetryMaxDelayMs`). With 10 attempts a
    message dead-letters after ~8.5 min instead of ~10 s. Retry clears the schedule.
 2. **Admin = Authentik superusers or `home-system-admins` group.** Kept.
-3. **Retry = requeue** (reset attempts, worker picks it up). Kept. Requeue keeps the last error
-   and failure reason; only the attempt count restarts, so a later success hides that it ever
-   died. Follow-up #434: retry inserts a new record linked to the original, which stays as history.
+3. **Retry = new record** (#434). Retry no longer resets the row: the original keeps its attempts
+   and error and is marked as history (outbox `retried_at`, delivery status `Retried`), and a new
+   row linked through `retry_of` goes back to the worker. Retried originals leave the dead-letter
+   list and counters; a retry that dies again shows a "Retried" badge on `/admin`.
 4. **E2E coverage.** Lightweight smoke spec with a reserved `E2eAdmin` (see §3).
 5. **Bulk retry and payload view.** Follow-ups #432 and #433.
 6. **Outbox admin endpoints call the store directly** (no CQRS dispatcher). They are

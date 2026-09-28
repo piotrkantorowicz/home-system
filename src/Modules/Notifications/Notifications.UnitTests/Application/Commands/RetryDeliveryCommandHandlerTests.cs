@@ -17,9 +17,9 @@ public sealed class RetryDeliveryCommandHandlerTests
     public RetryDeliveryCommandHandlerTests()
         => _sut = new RetryDeliveryCommandHandler(_repository, _uow);
 
-    /// <summary>For a dead-lettered delivery: <c>Handle</c> resets its attempts and commits.</summary>
+    /// <summary>For a dead-lettered delivery: <c>Handle</c> marks it retried, adds the replacement and commits.</summary>
     [Fact]
-    public async Task Handle_WhenFailed_RequeuesAndCommits()
+    public async Task Handle_WhenFailed_AddsReplacementAndCommits()
     {
         var delivery = NotificationDelivery.Create(
             NotificationDeliveryId.New(), NotificationId.New(), NotificationChannel.Console);
@@ -29,8 +29,11 @@ public sealed class RetryDeliveryCommandHandlerTests
 
         await _sut.HandleAsync(new RetryDeliveryCommand(delivery.Id.Value), TestContext.Current.CancellationToken);
 
-        delivery.AttemptCount.ShouldBe(0);
+        delivery.Status.ShouldBe(DeliveryStatus.Retried);
         await _repository.Received(1).UpdateDeliveryAsync(delivery, Arg.Any<CancellationToken>());
+        await _repository.Received(1).AddDeliveryAsync(
+            Arg.Is<NotificationDelivery>(d => d.RetryOf == delivery.Id && d.AttemptCount == 0),
+            Arg.Any<CancellationToken>());
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
