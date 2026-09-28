@@ -47,7 +47,7 @@ export function outboxDeadLettersOptions(
       const { data, error } = await api.GET('/api/admin/outbox/{module}/dead-letters', {
         params: { path: { module }, query: params },
       });
-      if (error || !data) throw new Error('Failed to load dead-lettered events');
+      if (error) throw new Error('Failed to load dead-lettered events');
       return {
         items: data.items.map((m) => ({
           id: m.id,
@@ -95,7 +95,7 @@ export function useRetryAllOutboxMessages() {
       const { data, error } = await api.POST('/api/admin/outbox/{module}/dead-letters/retry-all', {
         params: { path: { module } },
       });
-      if (error || !data) throw new Error('Retry all failed');
+      if (error) throw new Error('Retry all failed');
       return Number(data.retried);
     },
     onSuccess: (retried) => {
@@ -119,7 +119,7 @@ export function outboxPayloadOptions(module: string, id: string) {
           params: { path: { module, id } },
         },
       );
-      if (error || !data) throw new Error('Failed to load payload');
+      if (error) throw new Error('Failed to load payload');
       return { heading: data.eventType, text: null, json: data.payload };
     },
     gcTime: 0,

@@ -26,8 +26,8 @@ There was no way to see either, and no way to push a row back once the cause was
 |---|---|
 | Outbox attempt cap: `Messaging:Outbox:MaxAttempts` (default **10**). The worker skips rows at the cap — they are "dead-lettered". `OutboxWorkerOptions` is now actually bound from config (it was documented as bound but wasn't). | `Shared.Infrastructure.Messaging/Outbox` |
 | `IOutboxDeadLetterStore` — list / count / requeue, implemented by `EfOutboxStore`, keyed per module like `IOutboxStore`. `AddOutbox<TDbContext>()` also registers an `OutboxModule(Name, Key)` so admin code can enumerate modules (`DietPlanner`, `Household`). | `Shared.Infrastructure.Messaging(.Ef)` |
-| `AdminAuthorization` — `Admin` policy: token has `roles` claim with `admin` (accepts both raw `roles` and the mapped `ClaimTypes.Role`). | `Shared.Infrastructure.Web` |
-| Outbox admin endpoints (store-direct, no dispatcher — pure infra, one store call each). | `Shared.Infrastructure.Web/Admin/OutboxAdminEndpoints.cs` |
+| `AdminAuthorization` — `Admin` policy: token has `roles` claim with `admin` (accepts both raw `roles` and the mapped `ClaimTypes.Role`). | `Operations` module |
+| Outbox admin endpoints (queries/commands through the dispatcher; see decision 6). | `Operations.Api/OutboxAdminEndpoints.cs` |
 | `NotificationDelivery.Requeue()` (Failed only → `AttemptCount = 0`, reason kept), `RetryDeliveryCommand`, `ListDeadLetterDeliveriesQuery`, `GetDeliveryBacklogQuery`, admin endpoints. | Notifications module |
 
 No schema changes: both tables already had `attempt_count`; the existing partial index
@@ -137,9 +137,9 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
 4. **E2E coverage.** Lightweight smoke spec with a reserved `E2eAdmin` (see §3).
 5. **Bulk retry and payload view.** Retry all per table done in #432 (`POST …/retry-all`, confirm
    dialog, 500 per call); payload view per row done in #433.
-6. **Outbox admin endpoints call the store directly** (no CQRS dispatcher). They are
-   infrastructure operations over every module's outbox, like health checks, not a module use
-   case — a query/command + handler per call would add types with no validation or transaction
-   to carry. Delivery retry, which *is* a Notifications use case, goes through the dispatcher.
-   When ops endpoints grow or gain real logic, move them to an `Operations` module with CQRS
-   (#435).
+6. **Outbox admin endpoints live in the `Operations` module** (#435). With five endpoints after
+   #432/#433 they moved out of `Shared.Infrastructure.Web` into `src/Modules/Operations`
+   (Application + Api only — it owns no data and reads each module's keyed
+   `IOutboxDeadLetterStore`). Endpoints now only dispatch queries/commands, like every other
+   module; unknown module/message → `NotFoundException` → 404 ProblemDetails. Routes unchanged.
+   Delivery admin stays in Notifications, since it is that module's use case.
