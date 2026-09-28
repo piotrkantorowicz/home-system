@@ -48,10 +48,11 @@ Another module's internals are as inaccessible as another service's database.
         → aggregate row + outbox row committed atomically
 
 [Outbox worker — BackgroundService, every ~1 s]
-    → IOutboxStore.GetUnprocessedAsync(batchSize, maxAttempts)
+    → IOutboxStore.GetUnprocessedAsync(batchSize, maxAttempts, now)  (skips rows whose next_attempt_at is later)
     → for each message: IIntegrationEventTransport.DispatchAsync(message)
     → on success: IOutboxStore.MarkProcessedAsync
-    → on failure: IOutboxStore.RecordFailureAsync (increments attempt_count)
+    → on failure: IOutboxStore.RecordFailureAsync (increments attempt_count, sets next_attempt_at:
+      1 s doubling per failure, capped at 5 min — Messaging:Outbox RetryBaseDelayMs / RetryMaxDelayMs)
     → attempt_count >= Messaging:Outbox MaxAttempts (10) → dead-lettered: skipped until an
       admin retries it (IOutboxDeadLetterStore, /api/admin/outbox, the SPA's /admin page)
 
