@@ -32,6 +32,7 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
     [InlineData("GET", "/api/admin/outbox/household/dead-letters")]
     [InlineData("POST", "/api/admin/outbox/household/dead-letters/0198f5a4-0000-7000-8000-000000000000/retry")]
     [InlineData("POST", "/api/admin/outbox/household/dead-letters/retry-all")]
+    [InlineData("GET", "/api/admin/outbox/household/dead-letters/0198f5a4-0000-7000-8000-000000000000/payload")]
     public async Task NonAdmin_IsForbidden(string method, string url)
     {
         var client = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}");
@@ -112,6 +113,25 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
         var db = scope.ServiceProvider.GetRequiredService<HouseholdDbContext>();
         (await db.Set<OutboxMessageEntity>().SingleAsync(x => x.Id == deadId, TestContext.Current.CancellationToken))
             .RetriedAt.ShouldNotBeNull();
+    }
+
+    /// <summary>An admin can read a message's payload; it is not cached, and unknown ids are 404.</summary>
+    [Fact]
+    public async Task Admin_GetsPayload_NotCached()
+    {
+        var deadId = await SeedAsync(attemptCount: new OutboxWorkerOptions().MaxAttempts);
+        var client = AdminClient();
+
+        var response = await client.GetAsync($"/api/admin/outbox/household/dead-letters/{deadId}/payload", TestContext.Current.CancellationToken);
+        var unknown = await client.GetAsync($"/api/admin/outbox/household/dead-letters/{Guid.CreateVersion7()}/payload", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.CacheControl!.NoStore.ShouldBeTrue();
+        var payload = await response.Content.ReadFromJsonAsync<OutboxPayload>(TestContext.Current.CancellationToken);
+        payload!.Id.ShouldBe(deadId);
+        payload.EventType.ShouldBe("Missing.Event, Missing");
+        payload.Payload.ShouldBe("{}");
+        unknown.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     private HttpClient AdminClient()

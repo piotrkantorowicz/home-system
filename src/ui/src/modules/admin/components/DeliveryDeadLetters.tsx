@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  deliveryContentOptions,
   deliveryDeadLettersOptions,
   useRetryAllDeliveries,
   useRetryDelivery,
@@ -24,6 +25,7 @@ import { formatDateTime } from '../utils/format';
 import { RetriedBadge } from './RetriedBadge';
 import { RetryAllButton } from './RetryAllButton';
 import { RetryButton } from './RetryButton';
+import { ViewPayloadButton } from './ViewPayloadButton';
 
 export function DeliveryDeadLetters() {
   const { t, i18n } = useTranslation('admin');
@@ -91,7 +93,8 @@ export function DeliveryDeadLetters() {
                 {formatDateTime(d.lastAttemptAt, i18n.language)}
               </TableCell>
               <TableCell className="max-w-xs text-xs break-words">{d.failureReason}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right whitespace-nowrap">
+                <ViewPayloadButton options={deliveryContentOptions(d.deliveryId)} />
                 <RetryButton
                   pending={retry.isPending && retry.variables === d.deliveryId}
                   onRetry={() => {
