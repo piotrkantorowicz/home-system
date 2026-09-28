@@ -31,4 +31,7 @@ public sealed class OutboxMessageEntity
 
     /// <summary>Message of the most recent dispatch failure, if any.</summary>
     public string? LastError { get; set; }
+
+    /// <summary>Earliest time the worker may retry after a failure (backoff); <see langword="null"/> means now.</summary>
+    public DateTime? NextAttemptAt { get; set; }
 }

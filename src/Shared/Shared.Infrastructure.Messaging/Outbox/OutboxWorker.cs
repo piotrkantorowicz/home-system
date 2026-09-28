@@ -16,9 +16,9 @@ using Shared.Infrastructure.Messaging.Transport;
 /// </summary>
 /// <typeparam name="TDbContext">The publishing module's <c>DbContext</c>, which keys its outbox store.</typeparam>
 /// <param name="scopeFactory">Opens a DI scope per tick so the store uses a fresh <c>DbContext</c>.</param>
-/// <param name="options">Batch size and poll interval.</param>
+/// <param name="options">Batch size, poll interval, attempt limit and retry backoff.</param>
 /// <param name="logger">Receives tick and dispatch failures.</param>
-/// <param name="clock">Supplies the <c>processed_at</c> timestamp.</param>
+/// <param name="clock">Supplies the <c>processed_at</c> timestamp and the retry schedule.</param>
 public sealed partial class OutboxWorker<TDbContext>(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxWorkerOptions> options,
@@ -82,7 +82,8 @@ public sealed partial class OutboxWorker<TDbContext>(
         }
 
         IReadOnlyList<OutboxMessage> pending =
-            await store.GetUnprocessedAsync(_options.BatchSize, _options.MaxAttempts, ct).ConfigureAwait(false);
+            await store.GetUnprocessedAsync(
+                _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
         if (pending.Count == 0) return;
 
         foreach (var message in pending)
@@ -95,10 +96,17 @@ public sealed partial class OutboxWorker<TDbContext>(
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
-                await store.RecordFailureAsync(message.Id, ex.Message, ct).ConfigureAwait(false);
+                var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
+                await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
             }
         }
     }
+
+    /// <summary>Exponential backoff: base × 2^(failures − 1), capped at <see cref="OutboxWorkerOptions.RetryMaxDelayMs"/>.</summary>
+    /// <param name="failures">Failed attempts including the one just recorded (1-based).</param>
+    internal TimeSpan RetryDelay(int failures)
+        => TimeSpan.FromMilliseconds(
+            Math.Min(_options.RetryBaseDelayMs * Math.Pow(2, failures - 1), _options.RetryMaxDelayMs));
 
     [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
     private partial void LogTickFailed(Exception exception, string dbContext);

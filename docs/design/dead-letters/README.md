@@ -124,8 +124,9 @@ the shared stack, so retry stays covered by Vitest and the API integration tests
 
 ## 5. Decisions
 
-1. **Outbox backoff.** Keep 10 attempts in this PR; backoff (`last_attempt_at` + exponential
-   delay, EF migrations in DietPlanner and Household) is follow-up #431.
+1. **Outbox backoff.** Done in #431: `next_attempt_at` column, delay 1 s doubling per failure,
+   capped at 5 min (`Messaging:Outbox:RetryBaseDelayMs` / `RetryMaxDelayMs`). With 10 attempts a
+   message dead-letters after ~8.5 min instead of ~10 s. Retry clears the schedule.
 2. **Admin = Authentik superusers or `home-system-admins` group.** Kept.
 3. **Retry = requeue** (reset attempts, worker picks it up). Kept. Requeue keeps the last error
    and failure reason; only the attempt count restarts, so a later success hides that it ever

@@ -46,7 +46,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.AddAsync(msg, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, Now, TestContext.Current.CancellationToken);
         unprocessed.Count.ShouldBe(1);
         unprocessed[0].EventId.ShouldBe(msg.EventId);
     }
@@ -63,7 +63,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         await sut.MarkProcessedAsync(msg.Id, Now, TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, Now, TestContext.Current.CancellationToken);
         unprocessed.ShouldBeEmpty();
     }
 
@@ -78,12 +78,28 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.AddAsync(msg, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await sut.RecordFailureAsync(msg.Id, "boom", TestContext.Current.CancellationToken);
-        await sut.RecordFailureAsync(msg.Id, "boom2", TestContext.Current.CancellationToken);
+        await sut.RecordFailureAsync(msg.Id, "boom", Now, TestContext.Current.CancellationToken);
+        await sut.RecordFailureAsync(msg.Id, "boom2", Now, TestContext.Current.CancellationToken);
 
-        var unprocessed = await sut.GetUnprocessedAsync(10, 10, TestContext.Current.CancellationToken);
+        var unprocessed = await sut.GetUnprocessedAsync(10, 10, Now, TestContext.Current.CancellationToken);
         unprocessed[0].AttemptCount.ShouldBe(2);
         unprocessed[0].LastError.ShouldBe("boom2");
+    }
+
+    /// <summary>A failed message is skipped until its scheduled retry time, then picked up again.</summary>
+    [Fact]
+    public async Task RecordFailureAsync_SkipsMessageUntilNextAttemptAt()
+    {
+        var sut = new EfOutboxStore<MessagingTestDbContext>(_dbContext);
+        var msg = new OutboxMessage(Guid.NewGuid(), Guid.NewGuid(), "X.Y", "{}", Now, null, 0, null);
+        await sut.AddAsync(msg, TestContext.Current.CancellationToken);
+        await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        await sut.RecordFailureAsync(msg.Id, "boom", Now.AddSeconds(30), TestContext.Current.CancellationToken);
+
+        (await sut.GetUnprocessedAsync(10, 10, Now.AddSeconds(29), TestContext.Current.CancellationToken)).ShouldBeEmpty();
+        (await sut.GetUnprocessedAsync(10, 10, Now.AddSeconds(30), TestContext.Current.CancellationToken))
+            .Single().Id.ShouldBe(msg.Id);
     }
 
     /// <summary>A message at the attempt limit is dead-lettered: skipped by the worker query, listed and counted as dead.</summary>
@@ -99,7 +115,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.AddAsync(fresh, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var pending = await sut.GetUnprocessedAsync(10, 3, TestContext.Current.CancellationToken);
+        var pending = await sut.GetUnprocessedAsync(10, 3, Now, TestContext.Current.CancellationToken);
         var list = await sut.ListAsync(3, 1, 10, TestContext.Current.CancellationToken);
         var backlog = await sut.CountAsync(3, TestContext.Current.CancellationToken);
 
@@ -110,7 +126,7 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         backlog.ShouldBe(new OutboxBacklog(DeadLettered: 1, Retrying: 1));
     }
 
-    /// <summary><c>RequeueAsync</c> resets attempts so the worker query picks the message up again.</summary>
+    /// <summary><c>RequeueAsync</c> resets attempts and backoff so the worker query picks the message up right away.</summary>
     [Fact]
     public async Task RequeueAsync_ResetsAttempts_AndMessageIsPendingAgain()
     {
@@ -119,10 +135,12 @@ public sealed class EfOutboxStoreIntegrationTests : IAsyncLifetime
         await sut.AddAsync(dead, TestContext.Current.CancellationToken);
         await _dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
+        await sut.RecordFailureAsync(dead.Id, "boom", Now.AddHours(1), TestContext.Current.CancellationToken);
+
         var requeued = await sut.RequeueAsync(dead.Id, TestContext.Current.CancellationToken);
 
         requeued.ShouldBeTrue();
-        var pending = await sut.GetUnprocessedAsync(10, 3, TestContext.Current.CancellationToken);
+        var pending = await sut.GetUnprocessedAsync(10, 3, Now, TestContext.Current.CancellationToken);
         pending.Single().AttemptCount.ShouldBe(0);
     }
 

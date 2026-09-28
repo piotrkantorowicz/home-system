@@ -15,10 +15,12 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
         => _dbContext.Set<OutboxMessageEntity>()
             .AddAsync(MapToEntity(message), ct).AsTask();
 
-    public async Task<IReadOnlyList<OutboxMessage>> GetUnprocessedAsync(int batchSize, int maxAttempts, CancellationToken ct)
+    public async Task<IReadOnlyList<OutboxMessage>> GetUnprocessedAsync(
+        int batchSize, int maxAttempts, DateTime now, CancellationToken ct)
         => await _dbContext.Set<OutboxMessageEntity>()
             .AsNoTracking()
-            .Where(x => x.ProcessedAt == null && x.AttemptCount < maxAttempts)
+            .Where(x => x.ProcessedAt == null && x.AttemptCount < maxAttempts
+                && (x.NextAttemptAt == null || x.NextAttemptAt <= now))
             .OrderBy(x => x.OccurredAt)
             .Take(batchSize)
             .Select(x => new OutboxMessage(
@@ -33,12 +35,13 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.ProcessedAt, processedAt), ct);
     }
 
-    public async Task RecordFailureAsync(Guid messageId, string errorMessage, CancellationToken ct)
+    public async Task RecordFailureAsync(Guid messageId, string errorMessage, DateTime nextAttemptAt, CancellationToken ct)
     {
         await _dbContext.Set<OutboxMessageEntity>()
             .Where(x => x.Id == messageId)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.LastError, errorMessage)
+                .SetProperty(x => x.NextAttemptAt, nextAttemptAt)
                 .SetProperty(x => x.AttemptCount, x => x.AttemptCount + 1), ct);
     }
 
@@ -73,7 +76,9 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
     {
         var updated = await _dbContext.Set<OutboxMessageEntity>()
             .Where(x => x.Id == messageId && x.ProcessedAt == null)
-            .ExecuteUpdateAsync(s => s.SetProperty(x => x.AttemptCount, 0), ct);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.AttemptCount, 0)
+                .SetProperty(x => x.NextAttemptAt, (DateTime?)null), ct);
         return updated > 0;
     }
 

@@ -55,7 +55,7 @@ public sealed class OutboxWorkerTests
     {
         var msg = MakePending(Guid.NewGuid());
         var store = Substitute.For<IOutboxStore>();
-        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
         var transport = Substitute.For<IIntegrationEventTransport>();
 
         await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
@@ -64,17 +64,17 @@ public sealed class OutboxWorkerTests
         await store.Received(1).MarkProcessedAsync(msg.Id, Now.UtcDateTime, Arg.Any<CancellationToken>());
     }
 
-    /// <summary><c>RunOnceAsync</c> asks the store only for messages below the configured attempt limit.</summary>
+    /// <summary><c>RunOnceAsync</c> asks the store only for messages below the attempt limit whose backoff has elapsed.</summary>
     [Fact]
     public async Task RunOnceAsync_PassesMaxAttemptsToStore()
     {
         var store = Substitute.For<IOutboxStore>();
-        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([]);
 
         await SutWith(store, Substitute.For<IIntegrationEventTransport>()).RunOnceAsync(TestContext.Current.CancellationToken);
 
         await store.Received(1).GetUnprocessedAsync(
-            Arg.Any<int>(), new OutboxWorkerOptions().MaxAttempts, Arg.Any<CancellationToken>());
+            Arg.Any<int>(), new OutboxWorkerOptions().MaxAttempts, Now.UtcDateTime, Arg.Any<CancellationToken>());
     }
 
     /// <summary>When transport throws: <c>RunOnceAsync</c> records failure and continues.</summary>
@@ -84,26 +84,53 @@ public sealed class OutboxWorkerTests
         var m1 = MakePending(Guid.NewGuid());
         var m2 = MakePending(Guid.NewGuid());
         var store = Substitute.For<IOutboxStore>();
-        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([m1, m2]);
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([m1, m2]);
         var transport = Substitute.For<IIntegrationEventTransport>();
         transport.When(t => t.DispatchAsync(m1, Arg.Any<CancellationToken>()))
                  .Throw(new InvalidOperationException("boom"));
 
         await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
 
-        await store.Received(1).RecordFailureAsync(m1.Id, "boom", Arg.Any<CancellationToken>());
+        await store.Received(1).RecordFailureAsync(m1.Id, "boom", Now.UtcDateTime.AddSeconds(1), Arg.Any<CancellationToken>());
         await store.DidNotReceive().MarkProcessedAsync(m1.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
         await transport.Received(1).DispatchAsync(m2, Arg.Any<CancellationToken>());
         await store.Received(1).MarkProcessedAsync(m2.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
     }
 
-    /// <summary>With no pending messages: <c>RunOnceAsync</c> does nothing.</summary>
+    /// <summary>A failure schedules the retry with exponential backoff from the message's attempt count.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenTransportThrows_SchedulesRetryWithBackoff()
+    {
+        var msg = MakePending(Guid.NewGuid()) with { AttemptCount = 3 };
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        var transport = Substitute.For<IIntegrationEventTransport>();
+        transport.When(t => t.DispatchAsync(msg, Arg.Any<CancellationToken>())).Throw(new InvalidOperationException("boom"));
+
+        await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);
+
+        // Fourth failure: 1 s × 2^3.
+        await store.Received(1).RecordFailureAsync(msg.Id, "boom", Now.UtcDateTime.AddSeconds(8), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>The retry delay doubles per failure and stops at the configured maximum.</summary>
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(2, 2)]
+    [InlineData(5, 16)]
+    [InlineData(9, 256)]
+    [InlineData(10, 300)]
+    [InlineData(40, 300)]
+    public void RetryDelay_DoublesAndCaps(int failures, int expectedSeconds)
+        => SutWith(null, null).RetryDelay(failures).ShouldBe(TimeSpan.FromSeconds(expectedSeconds));
+
+    /// <summary>When transport throws: <c>RunOnceAsync</c> logs one error with the exception and message id.</summary>
     [Fact]
     public async Task RunOnceAsync_WhenTransportThrows_LogsOneErrorWithExceptionAndMessageId()
     {
         var msg = MakePending(Guid.NewGuid());
         var store = Substitute.For<IOutboxStore>();
-        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
         var transport = Substitute.For<IIntegrationEventTransport>();
         var boom = new InvalidOperationException("boom");
         transport.When(t => t.DispatchAsync(msg, Arg.Any<CancellationToken>())).Throw(boom);
@@ -126,7 +153,7 @@ public sealed class OutboxWorkerTests
     public async Task RunOnceAsync_WithNoPendingMessages_DoesNothing()
     {
         var store = Substitute.For<IOutboxStore>();
-        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns([]);
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([]);
         var transport = Substitute.For<IIntegrationEventTransport>();
 
         await SutWith(store, transport).RunOnceAsync(TestContext.Current.CancellationToken);

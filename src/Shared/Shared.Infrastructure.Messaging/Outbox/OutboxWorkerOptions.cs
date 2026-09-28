@@ -20,4 +20,13 @@ public sealed class OutboxWorkerOptions
     /// up until an admin requeues it through <see cref="IOutboxDeadLetterStore.RequeueAsync"/>.
     /// </summary>
     public int MaxAttempts { get; init; } = 10;
+
+    /// <summary>
+    /// Delay before the first retry, in milliseconds; doubles after each further failure up to
+    /// <see cref="RetryMaxDelayMs"/>. With the defaults a message dead-letters after ~8.5 minutes.
+    /// </summary>
+    public int RetryBaseDelayMs { get; init; } = 1000;
+
+    /// <summary>Upper bound for the retry delay, in milliseconds.</summary>
+    public int RetryMaxDelayMs { get; init; } = 300_000;
 }
