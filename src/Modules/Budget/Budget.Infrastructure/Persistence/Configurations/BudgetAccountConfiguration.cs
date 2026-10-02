@@ -34,5 +34,10 @@ internal sealed class BudgetAccountConfiguration : IEntityTypeConfiguration<Budg
 
         builder.Property(x => x.OwnerPersonId).HasColumnName("owner_person_id");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
+        builder.Property(x => x.IsArchived).HasColumnName("is_archived").HasDefaultValue(false);
+        builder.Property(x => x.Revision).HasColumnName("revision").HasDefaultValue(1);
+
+        // Maps to PostgreSQL's xmin system column — no schema change. See BudgetAccount.Version.
+        builder.Property(x => x.Version).IsRowVersion();
     }
 }
