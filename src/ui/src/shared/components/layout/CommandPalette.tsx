@@ -5,6 +5,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@shared/components/ui/Dialog';
+import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
 import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { getModules } from '@shared/lib/module-registry';
@@ -13,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { isModuleVisible } from './navModel';
+import { isModuleVisible, isNavItemVisible } from './navModel';
 
 import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
@@ -32,11 +33,12 @@ function collectDestinations(
   labels: Readonly<Record<string, string>>,
   t: TFunction,
   roles: readonly string[],
+  householdRole: string | null,
 ): Destination[] {
   const out: Destination[] = [];
-  for (const mod of getModules().filter((m) => isModuleVisible(m, roles))) {
+  for (const mod of getModules().filter((m) => isModuleVisible(m, roles, householdRole))) {
     const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
-    for (const nav of mod.navItems) {
+    for (const nav of mod.navItems.filter((n) => isNavItemVisible(n, householdRole))) {
       out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
     }
   }
@@ -61,6 +63,7 @@ export function CommandPalette() {
   const labels = useModuleLabels();
   const access = useNavigationAccess();
   const roles = useUserRoles();
+  const householdRole = useHouseholdRole();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -88,7 +91,7 @@ export function CommandPalette() {
     if (!next) setQuery('');
   }
 
-  const destinations = collectDestinations(labels, t, roles);
+  const destinations = collectDestinations(labels, t, roles, householdRole);
   const filtered = filterDestinations(destinations, query);
 
   function go(href: string) {

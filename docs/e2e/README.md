@@ -113,6 +113,9 @@ Most specs are independent and can run in any order. A few share state and must 
 | [notification-preferences](notification-preferences.md) (`diet-reminder-settings.spec.ts`) | Every test writes the same per-user reminder-settings record — made `serial` during the audit. |
 | [weight-prediction](weight-prediction.md) | Every test writes the same per-user profile + goals record — `serial` + per-test profile seeding. |
 | `household/household-invite.spec.ts` | All tests use the reserved invitee and modify their household membership. |
+| `budget/budget-two-adults.spec.ts` | Same reserved invitee, moved into a worker household as an adult (privacy, repayment, demotion and removal journeys). |
+
+Both invitee files run in their own Playwright projects (`chromium-invitee-household`, then `chromium-invitee-budget`), kept out of `chromium`, so two files never move the invitee at once. Run one with `npx playwright test --no-deps --project=chromium-invitee-budget`. Budget supported scope: equal splits, adult-only shared ledger, repayments recorded not executed; refunds, import, forgiveness and custom splits stay deferred.
 
 Cross-spec state: a `dailyCalorieTarget` goal configured by `nutrition.spec.ts`
 (and by `weight-prediction.spec.ts`) persists for the rest of the run (it's

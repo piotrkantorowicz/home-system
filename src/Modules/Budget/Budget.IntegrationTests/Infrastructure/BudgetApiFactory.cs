@@ -32,11 +32,12 @@ public sealed class BudgetApiFactory(BudgetDatabaseFixture databases) : WebAppli
     /// <summary>Creates a client whose every request authenticates as the given subject via the test headers.</summary>
     /// <param name="sub">The Authentik subject to impersonate; unique per test to keep data isolated.</param>
     /// <param name="name">Display name claim.</param>
-    public HttpClient CreateClientFor(string sub, string name)
+    /// <param name="email">Email claim; a unique address when omitted.</param>
+    public HttpClient CreateClientFor(string sub, string name, string? email = null)
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Add("X-Test-Sub", sub);
-        client.DefaultRequestHeaders.Add("X-Test-Email", $"{Guid.NewGuid():N}@x.com");
+        client.DefaultRequestHeaders.Add("X-Test-Email", email ?? $"{Guid.NewGuid():N}@x.com");
         client.DefaultRequestHeaders.Add("X-Test-Name", name);
         return client;
     }

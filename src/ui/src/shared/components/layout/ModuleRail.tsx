@@ -1,5 +1,6 @@
 import { useUserRoles } from '@shared/auth/useUserRoles';
 import { UserProfileDropdown } from '@shared/components/ui';
+import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
 import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { useTheme } from '@shared/context/ThemeContext';
@@ -25,7 +26,7 @@ export function ModuleRail() {
   const location = useLocation();
   const access = useNavigationAccess();
 
-  const tiles = getModuleTiles(t, useModuleLabels(), useUserRoles());
+  const tiles = getModuleTiles(t, useModuleLabels(), useUserRoles(), useHouseholdRole());
   const profile = auth.user?.profile;
   const displayName = profile?.name ?? profile?.preferred_username ?? profile?.email ?? 'User';
 
