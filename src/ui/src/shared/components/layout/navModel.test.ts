@@ -124,6 +124,32 @@ describe('getModuleTiles', () => {
   });
 });
 
+describe('nav items gated by household role', () => {
+  const gated: AppModule = {
+    ...dietPlanner,
+    navItems: [
+      { name: 'Open', href: '/x', icon: DashIcon, translationKey: 'open' },
+      {
+        name: 'Adults',
+        href: '/x/adults',
+        icon: DashIcon,
+        translationKey: 'adults',
+        householdRoles: ['Owner', 'Adult'],
+      },
+    ],
+  };
+
+  it('hides an item from roles it does not list, in the panel and the mobile bar', () => {
+    const labels = (role: string | null) =>
+      getSectionGroups(t, gated, role).groups.flatMap((g) => g.items.map((i) => i.label));
+    expect(labels('Adult')).toEqual(['open', 'adults']);
+    expect(labels('Child')).toEqual(['open']);
+    expect(labels(null)).toEqual(['open']);
+    expect(getMobileNavItems(t, gated, 'Child').map((i) => i.label)).toEqual(['open']);
+    expect(getMobileNavItems(t, gated, 'Owner').map((i) => i.label)).toEqual(['open', 'adults']);
+  });
+});
+
 describe('getActiveModule', () => {
   it('matches a pathname under a module basePath', () => {
     expect(getActiveModule('/diet-planner/products')?.name).toBe('diet-planner');

@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { isModuleVisible } from './navModel';
+import { isModuleVisible, isNavItemVisible } from './navModel';
 
 import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
@@ -38,7 +38,7 @@ function collectDestinations(
   const out: Destination[] = [];
   for (const mod of getModules().filter((m) => isModuleVisible(m, roles, householdRole))) {
     const moduleLabel = labels[mod.name] ?? t(mod.translationKey);
-    for (const nav of mod.navItems) {
+    for (const nav of mod.navItems.filter((n) => isNavItemVisible(n, householdRole))) {
       out.push({ moduleLabel, href: nav.href, label: t(nav.translationKey), Icon: nav.icon });
     }
   }

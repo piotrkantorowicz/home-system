@@ -1155,6 +1155,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/budget/settlement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outstanding balances and suggested payments across all recorded entries (Owner/Adult only) */
+        get: operations["GetBudgetSettlement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications/deliveries/summary": {
         parameters: {
             query?: never;
@@ -2189,6 +2206,28 @@ export interface components {
             amount: string;
             /** Format: int32 */
             expectedRevision: null | number | string;
+        };
+        SettlementBalanceDto: {
+            /** Format: uuid */
+            personId: string;
+            displayName: string;
+            isFormerAdult: boolean;
+            net: string;
+        };
+        SettlementDto: {
+            currency: string;
+            isSettled: boolean;
+            balances: components["schemas"]["SettlementBalanceDto"][];
+            suggestions: components["schemas"]["SettlementTransferDto"][];
+        };
+        SettlementTransferDto: {
+            /** Format: uuid */
+            fromPersonId: string;
+            fromDisplayName: string;
+            /** Format: uuid */
+            toPersonId: string;
+            toDisplayName: string;
+            amount: string;
         };
         ShoppingListItemDto: {
             /** Format: uuid */
@@ -8255,6 +8294,71 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetBudgetSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementDto"];
+                };
             };
             /** @description Validation failed */
             400: {

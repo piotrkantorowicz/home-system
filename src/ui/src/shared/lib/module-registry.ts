@@ -19,6 +19,11 @@ export interface NavItem {
    * `NAV_GROUP_SETTINGS` to pin the item at the bottom instead.
    */
   group?: string;
+  /**
+   * Household roles that see this item; omit for every role the module admits. Hiding is
+   * cosmetic — the API enforces access.
+   */
+  householdRoles?: readonly string[];
 }
 
 export interface AppModule {
