@@ -9,7 +9,7 @@ using Shared.Abstractions.Cqrs;
 /// <summary>
 /// Maps the exceptions defined in <c>Shared.Abstractions</c> to <c>application/problem+json</c> responses in one
 /// place: <see cref="CommandValidationException"/> → 400 (with an <c>errors</c> extension grouped by property),
-/// <see cref="ForbiddenException"/> → 403, <see cref="NotFoundException"/> → 404, <see cref="DomainException"/> → 422,
+/// <see cref="ForbiddenException"/> → 403, <see cref="NotFoundException"/> → 404, <see cref="ConflictException"/> → 409, <see cref="DomainException"/> → 422,
 /// <see cref="OperationCanceledException"/> → 499 (empty body), anything else → 500 with no exception detail.
 /// Endpoints and handlers never build problem details themselves.
 /// </summary>
@@ -70,6 +70,7 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
         => exception is CommandValidationException
             or ForbiddenException
             or NotFoundException
+            or ConflictException
             or DomainException
             or OperationCanceledException;
 
@@ -92,6 +93,12 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
             {
                 Status = StatusCodes.Status404NotFound,
                 Title = "Not found",
+                Detail = exception.Message,
+            },
+            ConflictException => new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Conflict",
                 Detail = exception.Message,
             },
             DomainException => new ProblemDetails
