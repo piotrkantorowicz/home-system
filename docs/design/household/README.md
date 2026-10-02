@@ -2,15 +2,15 @@
 
 Status: **accepted — phase 1 and phase 2 delivered**
 Owner: Piotr Kantorowicz
-Last updated: 2026-09-26
+Last updated: 2026-10-02
 
 ---
 
 ## 1. Problem
 
-The app is single-user today. Every DietPlanner aggregate is keyed by a raw
-Authentik subject string (`string UserId`). There is no concept of a shared home,
-no user registry (so no display names / avatars), and nothing can be shared
+Original problem before phases 1 and 2: the app was single-user. Every DietPlanner aggregate was keyed by a raw
+Authentik subject string (`string UserId`). There was no concept of a shared home,
+no user registry (so no display names / avatars), and nothing could be shared
 between people who live together.
 
 The goal is to turn the app into a **home system**: a household groups the people
@@ -49,10 +49,15 @@ concerns grow, `Person` can be extracted into its own `Identity` module. Not now
 | Capability | Owner | Adult | Child | Guest |
 |---|---|---|---|---|
 | Manage members / roles / rename / delete household | ✅ | — | — | — |
-| Read shared resources (list, plan, calendar, budget) | ✅ | ✅ | ✅ | ✅ |
+| Read shared resources (list, plan, calendar) | ✅ | ✅ | ✅ | ✅ |
 | Write shared resources | ✅ | ✅ | — | — |
 | Write own personal resources | ✅ | ✅ | ✅ | — |
 | Have personal resources managed *for* them by an adult | ✅ | ✅ | ✅ | — |
+
+Budget exception (approved 2026-09-29): shared financial data is visible only to
+Owner/Adult. A Child sees only their own personal Budget data; Guest has no Budget
+access. See [Budget permissions](../budget/README.md#5-access-and-membership-lifecycle).
+This is accepted design; enforcement ships with the Budget module.
 
 At least one `Owner` must exist in a household at all times.
 
@@ -112,7 +117,8 @@ Household.Application/
   Commands/
     CreateHousehold, RenameHousehold, DeleteHousehold
     AddExistingPersonAsMember, CreateManagedMember
-    InvitePersonByEmail, RevokeInvitation
+    InvitePersonByEmail, RevokeInvitation, AcceptInvitation, DeclineInvitation
+    SyncCurrentPerson                      # login-time person upsert
     RemoveMember, ChangeMemberRole, LeaveHousehold
     ConvertManagedMemberToAccount           # creates pending link
   Queries/
@@ -122,12 +128,11 @@ Household.Application/
     ListPickablePersons       -> PickablePersonDto[]   # for the "add member" picker
   EventHandlers/
     *DomainEventHandler -> map to integration events, publish via IIntegrationEventBus
-  Identity/
-    UpsertPersonOnLogin       # called by the host claims transformer / login hook
 
 Household.Contracts/
   Interfaces/
-    IHouseholdQueryService     # GetHouseholdContextForUser(authSubject) -> { HouseholdId, PersonId, Role, Members[] }
+    IHouseholdQueryService     # GetHouseholdContextForUserAsync(authSubject) -> HouseholdContext?
+                              # GetAuthSubjectForPersonAsync(personId) -> string?
   Events/
     HouseholdCreatedIntegrationEvent
     MemberJoinedHouseholdIntegrationEvent
@@ -164,7 +169,8 @@ Household.Api/
      case — `TargetPersonId` alone still addresses it.
    - Either way this only ever creates `HouseholdInvitation { Pending, ExpiresAt = +30d }`
      — never immediate membership.
-2. On every OIDC login the host calls `UpsertPersonOnLogin(claims)`, which
+2. The login flow calls `POST /api/persons/me/sync`, dispatched to
+   `SyncCurrentPersonCommand`, which
    upserts the `Person` by `AuthSubject` and links a matching managed person by
    email. It does **not** touch invitations — signing in is not consent.
 3. The invitee sees their pending invitations (`GET /api/households/invitations/mine`,
@@ -179,7 +185,7 @@ Household.Api/
 ### Managed member → real account
 
 `ConvertManagedMemberToAccount(personId, email)` sets a pending link on the
-`Person`. On that person's first login, `UpsertPersonOnLogin` finds the managed
+`Person`. On that person's first login, `SyncCurrentPerson` finds the managed
 unlinked `Person` by email, calls `Person.LinkAuthSubject(sub)`, flips
 `IsManaged = false`. All personal data — keyed by `PersonId` — is untouched.
 
@@ -209,7 +215,7 @@ household" falls back to the caller alone.
 | Shopping list | Household | members' entries; duplicate entries avoided by the live shared view |
 | Meal plan / calendar | Household | the entry's `PersonId` is the assignee (no extra column); read any member's plan, plan per role rules below |
 | Recipes, Products (library) | per-item `Visibility` | see *Library visibility* below |
-| Budget / expenses (future) | Household | `PaidByPersonId` + `AddedByPersonId` distinct; per-account `Visibility` for joint vs personal envelopes |
+| Budget / expenses (planned) | Household or personal envelope | Shared: Owner/Adult only; Child: own data only; Guest: none. Adults may manage personal data for managed members only. Payer and recorder remain distinct. |
 | Weight entries | Personal | per body; adult may log for a managed member |
 | Water intake | Personal | per body |
 | Diet goals, profile (age / activity / TDEE) | Personal | per body |
@@ -279,7 +285,8 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
   of a household. Existing members go directly to their requested page.
 - **State**
   - `HouseholdProvider` mounted in the app shell; `useHousehold()` exported from
-    the module `index.ts` returning `{ household, myRole, members, isLoading }`.
+    the module `index.ts` returning `{ household, myRole, myPersonId, members,
+    isLoading, isError, refetch }`.
   - Other modules (DietPlanner) consume `useHousehold()` for member pickers,
     "assigned to" selectors and "shared with the household" badges.
 - **Nav** — a `Household` item in the settings area of the sidebar.
@@ -292,14 +299,14 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
 
 | Issue | |
 |---|---|
-| #214 | scaffold module (this PR) |
+| #214 | scaffold module (delivered) |
 | #215 | Person registry + login upsert + claims transformer |
 | #216 | Household + HouseholdMember aggregate + role rules |
 | #217 | commands, queries, API endpoints |
-| #218 | HouseholdInvitation + login-time resolution (no email) |
+| #218 | HouseholdInvitation foundation; explicit accept/decline added in #251 (no email) |
 | #219 | Contracts — IHouseholdQueryService + integration events |
 | #220 | convert managed member to real account |
-| #221 | backfill one Person + Household per existing user |
+| #221 | provisioning decision: no backfill needed; person sync plus explicit household creation |
 | #222 | re-key DietPlanner personal data on PersonId |
 | #223 | scope DietPlanner shopping list to household |
 | #224 | UI — household module |
@@ -307,7 +314,7 @@ Follows the module-registry pattern (`shared/lib/module-registry.ts`).
 | #226 | integration tests |
 | #227 | e2e — owner adds member, member sees shared shopping list |
 
-Prerequisite #234 (shared infra: support multiple Style-1 EF modules) lands first.
+Prerequisite #234 (shared infra: support multiple Style-1 EF modules) is delivered.
 
 ### Phase 2 — shared planning (epic #228)
 
@@ -324,10 +331,16 @@ Dropped: email invitations (#231) and the Authentik Admin API user picker
 
 ### Phase 3 — budget module (epic #233)
 
+Accepted plan: [Budget design and delivery plan](../budget/README.md)
+(approved 2026-09-29; review amendments accepted 2026-10-02). Expense log with categorization, monthly envelope limits,
+private/shared visibility, and settlement. Includes approved delivery slices and
+the owner decision log.
+
 - New `Budget` module, household-scoped, `BudgetAccount` envelopes with
-  `Visibility`, `PaidByPersonId` vs `AddedByPersonId`, soft duplicate detection
-  on create.
-- Bank / CSV import as the real fix for double entry — deferred within the epic.
+  `Visibility`, `PaidByPersonId` vs `AddedByPersonId`, soft duplicate hints
+  through the existing visible expense list before save.
+- Bank / CSV import and merchant refunds are follow-ups outside this epic’s v1
+  completion gate. The Budget plan explains proposed refund behavior.
 
 ## 9. When multi-household becomes worth it
 
@@ -342,7 +355,10 @@ Revisit the "one household per person" decision when a real case appears:
 
 The schema already allows it (join table). The cost is entirely in request
 scoping (an active-household switcher, `household_id` becomes a list, every
-shared endpoint picks one) and UI — not in data model.
+shared endpoint picks one) and UI — not in data model. Budget rows are explicitly
+keyed by `HouseholdId`; multi-household support would still require replacing its
+single-context `GetHouseholdContextForUserAsync` access lookup with an active-household
+contract and updating authorization accordingly.
 
 ## 10. Open items
 
