@@ -3,6 +3,7 @@ namespace Budget.Infrastructure.Persistence;
 using Budget.Application.Persistence;
 using Budget.Domain.Abstractions;
 using Budget.Domain.Aggregates;
+using Budget.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
@@ -14,6 +15,8 @@ internal sealed class BudgetDbContext : DbContext, IBudgetUnitOfWork, IBudgetRea
 
     public DbSet<BudgetAggregate> Budgets => Set<BudgetAggregate>();
     public DbSet<BudgetAccount> BudgetAccounts => Set<BudgetAccount>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<ExpenseRevision> ExpenseRevisions => Set<ExpenseRevision>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -15,4 +15,7 @@ public interface IBudgetReadDbContext
 
     /// <summary>Every envelope, in every budget.</summary>
     DbSet<BudgetAccount> BudgetAccounts { get; }
+
+    /// <summary>Every expense, in every budget.</summary>
+    DbSet<Expense> Expenses { get; }
 }

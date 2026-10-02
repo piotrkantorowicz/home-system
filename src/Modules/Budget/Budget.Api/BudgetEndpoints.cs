@@ -1,14 +1,18 @@
 namespace Budget.Api;
 
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 using Budget.Application.Commands.ArchiveAccount;
 using Budget.Application.Commands.CreateAccount;
+using Budget.Application.Commands.CreateExpense;
 using Budget.Application.Commands.InitializeBudget;
 using Budget.Application.Commands.RenameAccount;
 using Budget.Application.Commands.RestoreAccount;
 using Budget.Application.Queries.GetAccount;
 using Budget.Application.Queries.GetBudget;
+using Budget.Application.Queries.GetExpense;
 using Budget.Application.Queries.ListAccounts;
+using Budget.Application.Queries.ListExpenses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -51,7 +55,42 @@ internal static class BudgetEndpoints
             .WithName("RestoreBudgetAccount")
             .WithSummary("Make an archived envelope available again");
 
+        group.MapGet("/expenses", ListExpenses)
+            .WithName("ListBudgetExpenses")
+            .WithSummary("Page visible expenses; filter by envelope, category, exact amount and date range");
+        group.MapGet("/expenses/{id:guid}", GetExpense)
+            .WithName("GetBudgetExpense")
+            .WithSummary("Get one visible expense with its stored shares");
+        group.MapPost("/expenses", CreateExpense)
+            .WithName("CreateBudgetExpense")
+            .WithSummary("Record an expense; a retry with the same clientRequestId returns the original result");
+
         return app;
+    }
+
+    private static async Task<Ok<PagedList<ExpenseDto>>> ListExpenses(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? accountId = null,
+        [FromQuery] string? category = null, [FromQuery] string? amount = null,
+        [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null, [FromQuery] Guid? excludeId = null)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListExpensesQuery, PagedList<ExpenseDto>>(
+            new ListExpensesQuery(Sub(user), page, pageSize, accountId, category, amount, from, to, excludeId), ct));
+
+    private static async Task<Ok<ExpenseDto>> GetExpense(
+        Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetExpenseQuery, ExpenseDto>(new GetExpenseQuery(Sub(user), id), ct));
+
+    private static async Task<Results<Created<ExpenseMutationResult>, Ok<ExpenseMutationResult>>> CreateExpense(
+        CreateExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<CreateExpenseCommand, ExpenseMutationResult>(
+            new CreateExpenseCommand(
+                Sub(user), request.ClientRequestId, request.AccountId, request.Amount, request.OccurredOn, request.Category,
+                request.FundingSource, request.PaidByPersonId, request.ParticipantIds), ct);
+
+        return result.Created
+            ? TypedResults.Created($"/api/budget/expenses/{result.ExpenseId}", result)
+            : TypedResults.Ok(result);
     }
 
     private static async Task<Ok<PagedList<AccountDto>>> ListAccounts(
@@ -128,3 +167,26 @@ internal sealed record RenameAccountRequest(string Name, int ExpectedRevision);
 /// <summary>Body of the archive and restore routes.</summary>
 /// <param name="ExpectedRevision">The revision the client last saw.</param>
 internal sealed record AccountRevisionRequest(int ExpectedRevision);
+
+/// <summary>
+/// Body of <c>POST /api/budget/expenses</c>. Unknown members — an actor, a share amount — are
+/// rejected with 400: the server decides who acts and computes the equal shares itself.
+/// </summary>
+/// <param name="ClientRequestId">Idempotency key; reuse it when retrying the same submission.</param>
+/// <param name="AccountId">The envelope.</param>
+/// <param name="Amount">Positive decimal string such as <c>"123.45"</c>, at most two decimals.</param>
+/// <param name="OccurredOn">Purchase date, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Category">Category code.</param>
+/// <param name="FundingSource"><c>Individual</c> (default) or <c>HouseholdFunds</c>.</param>
+/// <param name="PaidByPersonId">Payer of an individually funded shared expense.</param>
+/// <param name="ParticipantIds">Adults sharing the cost equally.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record CreateExpenseRequest(
+    Guid ClientRequestId,
+    Guid AccountId,
+    string Amount,
+    DateOnly OccurredOn,
+    string Category,
+    string? FundingSource,
+    Guid? PaidByPersonId,
+    IReadOnlyList<Guid>? ParticipantIds);
