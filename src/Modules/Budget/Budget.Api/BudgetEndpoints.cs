@@ -22,7 +22,8 @@ internal static class BudgetEndpoints
             .WithSummary("Get the household's budget; 404 until it is initialised");
         group.MapPost("/", Initialize)
             .WithName("InitializeBudget")
-            .WithSummary("Create the household's budget and default envelope, or return the existing one");
+            .WithSummary("Create the household's budget and default envelope, or return the existing one")
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return app;
     }
@@ -49,7 +50,3 @@ internal static class BudgetEndpoints
         => user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub")
            ?? throw new UnauthorizedAccessException("Missing subject claim.");
 }
-
-/// <summary>Body of <c>POST /api/budget</c>.</summary>
-/// <param name="Currency"><c>PLN</c> (default when omitted), <c>EUR</c> or <c>USD</c>; immutable once the budget exists.</param>
-internal sealed record InitializeBudgetRequest(string? Currency);
