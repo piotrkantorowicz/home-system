@@ -15,6 +15,7 @@ using Budget.Application.Commands.VoidExpense;
 using Budget.Application.Queries.GetAccount;
 using Budget.Application.Queries.GetBudget;
 using Budget.Application.Queries.GetExpense;
+using Budget.Application.Queries.GetSettlement;
 using Budget.Application.Queries.GetSummary;
 using Budget.Application.Queries.ListAccounts;
 using Budget.Application.Queries.ListExpenses;
@@ -89,6 +90,9 @@ internal static class BudgetEndpoints
         group.MapDelete("/accounts/{id:guid}/limits/{month}", ClearLimit)
             .WithName("ClearBudgetLimit")
             .WithSummary("Remove an envelope's limit for a month");
+        group.MapGet("/settlement", GetSettlement)
+            .WithName("GetBudgetSettlement")
+            .WithSummary("Outstanding balances and suggested payments across all recorded entries (Owner/Adult only)");
 
         return app;
     }
@@ -104,6 +108,10 @@ internal static class BudgetEndpoints
     private static async Task<Ok<ExpenseDto>> GetExpense(
         Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
         => TypedResults.Ok(await dispatcher.SendAsync<GetExpenseQuery, ExpenseDto>(new GetExpenseQuery(Sub(user), id), ct));
+
+    private static async Task<Ok<SettlementDto>> GetSettlement(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetSettlementQuery, SettlementDto>(new GetSettlementQuery(Sub(user)), ct));
 
     private static async Task<Ok<SummaryDto>> GetSummary(
         ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,

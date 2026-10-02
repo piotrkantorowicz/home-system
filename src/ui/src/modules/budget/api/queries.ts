@@ -107,6 +107,27 @@ export function useExpenseQuery(id: string) {
   });
 }
 
+export function settlementOptions(subject: string | undefined, householdId: string | undefined) {
+  return queryOptions({
+    queryKey: budgetQueryKeys.settlement(subject, householdId),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/budget/settlement', { signal });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing settlement response');
+      return result.data;
+    },
+  });
+}
+
+export function useSettlementQuery(enabled = true) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...settlementOptions(auth.user?.profile.sub, household?.id),
+    enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
 export type SummaryScope = 'shared' | 'personal';
 
 export function summaryOptions(

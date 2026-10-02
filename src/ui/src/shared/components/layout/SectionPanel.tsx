@@ -1,3 +1,4 @@
+import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
 import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { cn } from '@shared/lib/utils';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -41,10 +42,11 @@ export function SectionPanel() {
     persistCollapsed(collapsed);
   }, [collapsed]);
 
+  const householdRole = useHouseholdRole();
   const mod = getActiveModule(location.pathname);
   if (!mod) return null;
 
-  const { groups, pinned } = getSectionGroups(t, mod);
+  const { groups, pinned } = getSectionGroups(t, mod, householdRole);
   const Icon = mod.icon;
 
   return (

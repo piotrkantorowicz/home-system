@@ -18,6 +18,8 @@ export const budgetQueryKeys = {
     scope: string,
     owner: string | null,
   ) => ['budget', 'summary', subject, householdId, month, scope, owner] as const,
+  settlement: (subject: string | undefined, householdId: string | undefined) =>
+    ['budget', 'settlement', subject, householdId] as const,
   expense: (subject: string | undefined, householdId: string | undefined, id: string) =>
     ['budget', 'expense', subject, householdId, id] as const,
 } as const;
