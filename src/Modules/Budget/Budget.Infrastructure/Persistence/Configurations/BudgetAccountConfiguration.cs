@@ -15,6 +15,7 @@ internal sealed class BudgetAccountConfiguration : IEntityTypeConfiguration<Budg
             "(visibility = 'Personal') = (owner_person_id IS NOT NULL)"));
 
         builder.HasKey(x => x.Id);
+        builder.HasAlternateKey(x => new { x.Id, x.BudgetId }); // target of expenses' composite FK
         builder.Property(x => x.Id)
             .HasConversion(id => id.Value, value => BudgetAccountId.From(value))
             .HasColumnName("id");

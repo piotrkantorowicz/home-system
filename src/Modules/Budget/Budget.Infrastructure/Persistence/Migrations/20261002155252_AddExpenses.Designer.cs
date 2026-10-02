@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Budget.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Budget.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(BudgetDbContext))]
-    partial class BudgetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261002155252_AddExpenses")]
+    partial class AddExpenses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,12 +156,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("funding_source");
 
-                    b.Property<bool>("IsVoided")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_voided");
-
                     b.Property<DateOnly>("OccurredOn")
                         .HasColumnType("date")
                         .HasColumnName("occurred_on");
@@ -175,16 +172,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
                     b.Property<int>("Revision")
                         .HasColumnType("integer")
                         .HasColumnName("revision");
-
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.Property<DateTime?>("VoidedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_at");
 
                     b.HasKey("Id");
 
@@ -208,16 +195,9 @@ namespace Budget.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Budget.Domain.Entities.ExpenseRevision", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<string>("ActorDisplayName")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasDefaultValue("")
-                        .HasColumnName("actor_display_name");
 
                     b.Property<Guid>("ActorPersonId")
                         .HasColumnType("uuid")
@@ -245,11 +225,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("operation");
 
-                    b.Property<string>("Reason")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("reason");
-
                     b.Property<int>("RevisionNumber")
                         .HasColumnType("integer")
                         .HasColumnName("revision_number");
@@ -268,10 +243,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
 
                             b1.Property<int>("Category");
 
-                            b1.Property<int?>("ExpectedRevision");
-
-                            b1.Property<Guid?>("ExpenseId");
-
                             b1.Property<int>("FundingSource");
 
                             b1.Property<DateOnly>("OccurredOn");
@@ -280,8 +251,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
 
                             b1.PrimitiveCollection<string>("ParticipantIds")
                                 .IsRequired();
-
-                            b1.Property<string>("Reason");
 
                             b1
                                 .ToJson("request")
@@ -302,8 +271,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
                             b1.Property<int>("Category");
 
                             b1.Property<int>("FundingSource");
-
-                            b1.Property<bool>("IsVoided");
 
                             b1.Property<DateOnly>("OccurredOn");
 
