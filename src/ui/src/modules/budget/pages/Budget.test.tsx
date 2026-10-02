@@ -98,6 +98,19 @@ beforeEach(() => {
     http.get(`${BASE}/api/budget`, () =>
       budget ? HttpResponse.json(budget) : new HttpResponse(null, { status: 404 }),
     ),
+    http.get(`${BASE}/api/budget/summary`, () =>
+      HttpResponse.json({
+        month: '2026-10',
+        scope: 'Shared',
+        currency: 'PLN',
+        totalSpent: '0.00',
+        envelopes: [],
+        categories: [],
+      }),
+    ),
+    http.get(`${BASE}/api/budget/expenses`, () =>
+      HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 5 }),
+    ),
     http.get(`${BASE}/api/budget/accounts`, () =>
       HttpResponse.json({ items: accounts, totalCount: accounts.length, page: 1, pageSize: 100 }),
     ),
@@ -119,7 +132,7 @@ describe('Budget gate', () => {
     await screen.findByRole('heading', { name: 'Set up Budget' });
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'EUR');
     await userEvent.click(screen.getByRole('button', { name: 'Set up Budget' }));
-    await screen.findByText('Currency: EUR');
+    await screen.findByRole('heading', { name: 'Envelopes' });
     expect(initialize).toHaveBeenCalledWith({ currency: 'EUR' });
   });
 
@@ -160,12 +173,12 @@ describe('Budget gate', () => {
 
     server.use(http.get(`${BASE}/api/budget`, () => HttpResponse.json(budget)));
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    await screen.findByText('Currency: PLN');
+    await screen.findByRole('heading', { name: 'Envelopes' });
   });
 
   it('drops cached Budget data when the household changes', async () => {
     const view = renderAt();
-    await screen.findByText('Currency: PLN');
+    await screen.findByRole('heading', { name: 'Envelopes' });
     expect(client.getQueryCache().findAll({ queryKey: ['budget'] }).length).toBeGreaterThan(0);
 
     household.household = { id: 'h2' };

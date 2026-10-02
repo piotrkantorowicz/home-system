@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { isIsoDate, shiftDays, todayLocal } from './dates';
-import { normalizeAmount } from './money';
+import { currentMonth, isIsoDate, isMonth, shiftDays, shiftMonth, todayLocal } from './dates';
+import { normalizeAmount, normalizeLimit } from './money';
 
 describe('normalizeAmount', () => {
   it.each([
@@ -39,5 +39,36 @@ describe('dates', () => {
     expect(isIsoDate('2026-02-30')).toBe(false);
     expect(isIsoDate('26-02-28')).toBe(false);
     expect(isIsoDate('')).toBe(false);
+  });
+});
+
+describe('months', () => {
+  it('moves across year ends and leap years with date parts only', () => {
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01');
+    expect(shiftMonth('2027-01', -1)).toBe('2026-12');
+    expect(shiftMonth('2028-03', -1)).toBe('2028-02');
+    expect(shiftMonth('2026-10', 0)).toBe('2026-10');
+    expect(shiftMonth('2026-01', -13)).toBe('2024-12');
+  });
+
+  it('formats the local current month and validates months', () => {
+    expect(currentMonth(new Date(2026, 9, 31, 23, 59))).toBe('2026-10');
+    expect(isMonth('2026-02')).toBe(true);
+    expect(isMonth('2026-13')).toBe(false);
+    expect(isMonth('2026-2')).toBe(false);
+  });
+});
+
+describe('normalizeLimit', () => {
+  it.each([
+    ['0', '0'],
+    ['0,00', '0.00'],
+    ['25.5', '25.5'],
+  ])('accepts %s', (input, expected) => {
+    expect(normalizeLimit(input)).toBe(expected);
+  });
+
+  it.each(['', '-1', '1.005', '1e2', 'abc'])('rejects %s', (input) => {
+    expect(normalizeLimit(input)).toBeNull();
   });
 });
