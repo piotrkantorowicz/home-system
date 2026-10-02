@@ -5,6 +5,8 @@ import { config as loadDotenv } from 'dotenv';
 // TEST_USER_PASSWORD is required — see e2e/.env.example.
 loadDotenv();
 
+const INVITEE_SPECS = /(household-invite|budget-two-adults)\.spec\.ts/;
+
 export default defineConfig({
   testDir: '.',
   fullyParallel: true,
@@ -33,7 +35,22 @@ export default defineConfig({
       // storageState is resolved per-worker inside auth.fixture.ts using
       // testInfo.workerIndex, so there is no global setting here.
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: INVITEE_SPECS,
       dependencies: ['setup'],
+    },
+    // Specs that borrow the one reserved invitee identity must never overlap: each file moves
+    // that account in and out of households. Chained projects run one file set after the other.
+    {
+      name: 'chromium-invitee-household',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /household-invite\.spec\.ts/,
+      dependencies: ['setup'],
+    },
+    {
+      name: 'chromium-invitee-budget',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /budget-two-adults\.spec\.ts/,
+      dependencies: ['chromium-invitee-household'],
     },
   ],
 

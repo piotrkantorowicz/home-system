@@ -25,6 +25,7 @@ internal sealed class ListExpensesQueryHandler(BudgetAccessService access, IBudg
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
 
         var expenses = db.VisibleTo(caller);
+        if (!query.IncludeVoided) expenses = expenses.Where(e => !e.IsVoided);
         if (query.AccountId is { } accountId)
         {
             var id = BudgetAccountId.From(accountId);

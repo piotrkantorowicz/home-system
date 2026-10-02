@@ -1,4 +1,5 @@
 import { adminModule } from '@modules/admin';
+import { budgetModule } from '@modules/budget';
 import { dietPlannerModule } from '@modules/diet-planner';
 import { householdModule } from '@modules/household';
 import { notificationsModule } from '@modules/notifications';
@@ -20,6 +21,7 @@ import '../index.css';
 // 1. Register all modules
 registerModule(householdModule);
 registerModule(dietPlannerModule);
+registerModule(budgetModule);
 registerModule(notificationsModule);
 registerModule(adminModule);
 

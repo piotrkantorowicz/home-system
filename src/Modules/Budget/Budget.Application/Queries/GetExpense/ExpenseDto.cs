@@ -13,7 +13,9 @@ namespace Budget.Application.Queries.GetExpense;
 /// <param name="AddedByDisplayName">Current roster name when the recorder is a member, else the stored snapshot.</param>
 /// <param name="Revision">Current revision number.</param>
 /// <param name="CreatedAt">Creation time, UTC.</param>
+/// <param name="IsVoided">Voided expenses no longer count and cannot be edited.</param>
 /// <param name="Shares">Exact stored shares; empty when not shared.</param>
+/// <param name="History">Immutable revision history, oldest first; only on the detail response (<see langword="null"/> in lists).</param>
 public sealed record ExpenseDto(
     Guid Id,
     Guid AccountId,
@@ -27,4 +29,6 @@ public sealed record ExpenseDto(
     string AddedByDisplayName,
     int Revision,
     DateTime CreatedAt,
-    IReadOnlyList<ExpenseShareDto> Shares);
+    bool IsVoided,
+    IReadOnlyList<ExpenseShareDto> Shares,
+    IReadOnlyList<ExpenseRevisionDto>? History = null);

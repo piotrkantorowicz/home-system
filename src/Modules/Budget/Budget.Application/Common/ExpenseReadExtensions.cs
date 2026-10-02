@@ -26,7 +26,7 @@ internal static class ExpenseReadExtensions
 
     public static readonly Expression<Func<Expense, ExpenseRow>> ToRow = e => new ExpenseRow(
         e.Id.Value, e.BudgetAccountId.Value, e.Amount, e.Category.ToString(), e.OccurredOn, e.FundingSource.ToString(),
-        e.PaidByPersonId, e.PaidByDisplayName, e.AddedByPersonId, e.AddedByDisplayName, e.Revision, e.CreatedAt,
+        e.PaidByPersonId, e.PaidByDisplayName, e.AddedByPersonId, e.AddedByDisplayName, e.Revision, e.CreatedAt, e.IsVoided,
         e.Shares.OrderBy(s => s.PersonId).Select(s => new ShareRow(s.PersonId, s.PersonDisplayName, s.Amount)).ToList());
 
     /// <summary>Maps a row to its DTO: current roster names for members, stored snapshots for everyone else.</summary>
@@ -37,7 +37,7 @@ internal static class ExpenseReadExtensions
         return new ExpenseDto(
             r.Id, r.AccountId, r.Amount.ToString("F2", CultureInfo.InvariantCulture), r.Category, r.OccurredOn, r.FundingSource,
             r.PaidByPersonId, r.PaidByPersonId is { } payer ? Name(payer, r.PaidByDisplayName ?? "") : null,
-            r.AddedByPersonId, Name(r.AddedByPersonId, r.AddedByDisplayName), r.Revision, r.CreatedAt,
+            r.AddedByPersonId, Name(r.AddedByPersonId, r.AddedByDisplayName), r.Revision, r.CreatedAt, r.IsVoided,
             [.. r.Shares.Select(s => new ExpenseShareDto(s.PersonId, Name(s.PersonId, s.DisplayName), s.Amount.ToString("F2", CultureInfo.InvariantCulture)))]);
     }
 }
@@ -47,4 +47,4 @@ internal sealed record ShareRow(Guid PersonId, string DisplayName, decimal Amoun
 internal sealed record ExpenseRow(
     Guid Id, Guid AccountId, decimal Amount, string Category, DateOnly OccurredOn, string FundingSource,
     Guid? PaidByPersonId, string? PaidByDisplayName, Guid AddedByPersonId, string AddedByDisplayName,
-    int Revision, DateTime CreatedAt, List<ShareRow> Shares);
+    int Revision, DateTime CreatedAt, bool IsVoided, List<ShareRow> Shares);

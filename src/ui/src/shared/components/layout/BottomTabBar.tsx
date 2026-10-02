@@ -1,3 +1,4 @@
+import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
 import { cn } from '@shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -13,10 +14,11 @@ import { getActiveModule, getMobileNavItems } from './navModel';
 export function BottomTabBar() {
   const { t } = useTranslation();
   const location = useLocation();
+  const householdRole = useHouseholdRole();
   const mod = getActiveModule(location.pathname);
   if (!mod) return null;
 
-  const items = getMobileNavItems(t, mod);
+  const items = getMobileNavItems(t, mod, householdRole);
 
   return (
     <nav

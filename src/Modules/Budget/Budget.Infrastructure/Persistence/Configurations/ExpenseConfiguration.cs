@@ -37,6 +37,11 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.Property(x => x.AddedByDisplayName).IsRequired().HasMaxLength(200).HasColumnName("added_by_display_name");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.Revision).HasColumnName("revision");
+        builder.Property(x => x.IsVoided).HasColumnName("is_voided").HasDefaultValue(false);
+        builder.Property(x => x.VoidedAt).HasColumnName("voided_at");
+
+        // Maps to PostgreSQL's xmin system column — no schema change. See Expense.Version.
+        builder.Property(x => x.Version).IsRowVersion();
 
         builder.HasIndex(x => new { x.BudgetId, x.OccurredOn, x.Id }).IsDescending(false, true, true)
             .HasDatabaseName("ix_expenses_budget_date_id");
@@ -48,7 +53,7 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
             share.WithOwner().HasForeignKey(s => s.ExpenseId);
             share.Property(s => s.ExpenseId).HasConversion(id => id.Value, v => ExpenseId.From(v)).HasColumnName("expense_id");
             share.HasKey(s => new { s.ExpenseId, s.PersonId });
-            share.Property(s => s.PersonId).HasColumnName("person_id");
+            share.Property(s => s.PersonId).ValueGeneratedNever().HasColumnName("person_id"); // client-set: a new share must be INSERTed, not treated as modified
             share.Property(s => s.PersonDisplayName).IsRequired().HasMaxLength(200).HasColumnName("person_display_name");
             share.Property(s => s.Amount).HasColumnType("numeric(18,2)").HasColumnName("amount");
             share.HasIndex(s => s.PersonId);

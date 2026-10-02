@@ -65,6 +65,18 @@ const notifications: AppModule = {
   routes: [],
 };
 
+const familyOnly: AppModule = {
+  name: 'family-money',
+  translationKey: 'common.family_money',
+  basePath: '/family-money',
+  icon: OtherModIcon,
+  householdRoles: ['Owner', 'Adult', 'Child'],
+  localeNamespaces: [],
+  i18nResources: { en: {}, pl: {} },
+  navItems: [],
+  routes: [],
+};
+
 const adminOnly: AppModule = {
   name: 'admin',
   translationKey: 'common.admin',
@@ -80,7 +92,7 @@ const adminOnly: AppModule = {
 vi.mock('@shared/lib/module-registry', async (orig) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await orig<typeof import('@shared/lib/module-registry')>();
-  return { ...actual, getModules: () => [dietPlanner, notifications, adminOnly] };
+  return { ...actual, getModules: () => [dietPlanner, notifications, adminOnly, familyOnly] };
 });
 
 const t = ((key: string) => key) as unknown as TFunction;
@@ -101,6 +113,40 @@ describe('getModuleTiles', () => {
   });
   it('shows a role-gated module to a user holding the role', () => {
     expect(getModuleTiles(t, {}, ['admin']).map((m) => m.name)).toContain('admin');
+  });
+  it('hides a household-role-gated module without a household or for a disallowed role', () => {
+    expect(getModuleTiles(t).map((m) => m.name)).not.toContain('family-money');
+    expect(getModuleTiles(t, {}, [], 'Guest').map((m) => m.name)).not.toContain('family-money');
+  });
+  it('shows a household-role-gated module to an allowed role', () => {
+    for (const role of ['Owner', 'Adult', 'Child'])
+      expect(getModuleTiles(t, {}, [], role).map((m) => m.name)).toContain('family-money');
+  });
+});
+
+describe('nav items gated by household role', () => {
+  const gated: AppModule = {
+    ...dietPlanner,
+    navItems: [
+      { name: 'Open', href: '/x', icon: DashIcon, translationKey: 'open' },
+      {
+        name: 'Adults',
+        href: '/x/adults',
+        icon: DashIcon,
+        translationKey: 'adults',
+        householdRoles: ['Owner', 'Adult'],
+      },
+    ],
+  };
+
+  it('hides an item from roles it does not list, in the panel and the mobile bar', () => {
+    const labels = (role: string | null) =>
+      getSectionGroups(t, gated, role).groups.flatMap((g) => g.items.map((i) => i.label));
+    expect(labels('Adult')).toEqual(['open', 'adults']);
+    expect(labels('Child')).toEqual(['open']);
+    expect(labels(null)).toEqual(['open']);
+    expect(getMobileNavItems(t, gated, 'Child').map((i) => i.label)).toEqual(['open']);
+    expect(getMobileNavItems(t, gated, 'Owner').map((i) => i.label)).toEqual(['open', 'adults']);
   });
 });
 

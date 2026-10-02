@@ -12,12 +12,14 @@ internal sealed class ExpenseRevisionConfiguration : IEntityTypeConfiguration<Ex
         builder.ToTable("expense_revisions");
 
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.Id).ValueGeneratedNever().HasColumnName("id");
         builder.Property(x => x.ExpenseId).HasConversion(id => id.Value, v => ExpenseId.From(v)).HasColumnName("expense_id");
         builder.Property(x => x.BudgetId).HasConversion(id => id.Value, v => BudgetId.From(v)).HasColumnName("budget_id");
         builder.Property(x => x.RevisionNumber).HasColumnName("revision_number");
         builder.Property(x => x.Operation).IsRequired().HasMaxLength(16).HasColumnName("operation");
         builder.Property(x => x.ActorPersonId).HasColumnName("actor_person_id");
+        builder.Property(x => x.ActorDisplayName).IsRequired().HasMaxLength(200).HasDefaultValue("").HasColumnName("actor_display_name");
+        builder.Property(x => x.Reason).HasMaxLength(Budget.Domain.Aggregates.Expense.MaxReasonLength).HasColumnName("reason");
         builder.Property(x => x.ClientRequestId).HasColumnName("client_request_id");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
 

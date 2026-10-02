@@ -1,3 +1,4 @@
+import { HouseholdRoleContext } from '@shared/context/HouseholdRoleContext';
 import { ModuleLabelsContext } from '@shared/context/ModuleLabelsContext';
 import { NavigationAccessContext } from '@shared/context/NavigationAccessContext';
 import { useTranslation } from 'react-i18next';
@@ -25,22 +26,24 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
-      <ModuleLabelsContext value={household ? { household: household.name } : {}}>
-        <NavigationAccessContext
-          value={
-            household
-              ? null
-              : {
-                  allowedPath: '/household',
-                  reason: t(
-                    query.isPending ? 'loading' : query.isError ? 'load_error' : 'setup_required',
-                  ),
-                }
-          }
-        >
-          {children}
-        </NavigationAccessContext>
-      </ModuleLabelsContext>
+      <HouseholdRoleContext value={household?.myRole ?? null}>
+        <ModuleLabelsContext value={household ? { household: household.name } : {}}>
+          <NavigationAccessContext
+            value={
+              household
+                ? null
+                : {
+                    allowedPath: '/household',
+                    reason: t(
+                      query.isPending ? 'loading' : query.isError ? 'load_error' : 'setup_required',
+                    ),
+                  }
+            }
+          >
+            {children}
+          </NavigationAccessContext>
+        </ModuleLabelsContext>
+      </HouseholdRoleContext>
     </HouseholdContext>
   );
 }
