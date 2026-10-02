@@ -3,18 +3,26 @@ namespace Budget.Api;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Budget.Application.Commands.ArchiveAccount;
+using Budget.Application.Commands.ClearMonthlyLimit;
 using Budget.Application.Commands.CreateAccount;
 using Budget.Application.Commands.CreateExpense;
 using Budget.Application.Commands.InitializeBudget;
+using Budget.Application.Commands.RecordRepayment;
 using Budget.Application.Commands.RenameAccount;
 using Budget.Application.Commands.RestoreAccount;
+using Budget.Application.Commands.SetMonthlyLimit;
 using Budget.Application.Commands.UpdateExpense;
 using Budget.Application.Commands.VoidExpense;
+using Budget.Application.Commands.VoidRepayment;
 using Budget.Application.Queries.GetAccount;
 using Budget.Application.Queries.GetBudget;
 using Budget.Application.Queries.GetExpense;
+using Budget.Application.Queries.GetSettlement;
+using Budget.Application.Queries.GetSummary;
 using Budget.Application.Queries.ListAccounts;
 using Budget.Application.Queries.ListExpenses;
+using Budget.Application.Queries.ListLimits;
+using Budget.Application.Queries.ListRepayments;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -73,6 +81,30 @@ internal static class BudgetEndpoints
         group.MapPost("/expenses/{id:guid}/void", VoidExpense)
             .WithName("VoidBudgetExpense")
             .WithSummary("Void an expense with a reason and expected revision; repeating adds no revision");
+        group.MapGet("/summary", GetSummary)
+            .WithName("GetBudgetSummary")
+            .WithSummary("Monthly spending by envelope and category for the shared or a personal scope");
+        group.MapGet("/limits", ListLimits)
+            .WithName("ListBudgetLimits")
+            .WithSummary("Monthly limits on the envelopes the caller can see");
+        group.MapPut("/accounts/{id:guid}/limits/{month}", SetLimit)
+            .WithName("SetBudgetLimit")
+            .WithSummary("Set or change an envelope's limit for a month (expected revision when changing)");
+        group.MapDelete("/accounts/{id:guid}/limits/{month}", ClearLimit)
+            .WithName("ClearBudgetLimit")
+            .WithSummary("Remove an envelope's limit for a month");
+        group.MapGet("/settlement", GetSettlement)
+            .WithName("GetBudgetSettlement")
+            .WithSummary("Outstanding balances and suggested payments across all recorded entries (Owner/Adult only)");
+        group.MapGet("/settlements", ListRepayments)
+            .WithName("ListBudgetRepayments")
+            .WithSummary("Page recorded repayments, newest payment first (Owner/Adult only)");
+        group.MapPost("/settlements", RecordRepayment)
+            .WithName("RecordBudgetRepayment")
+            .WithSummary("Record that one person paid another; a retry with the same clientRequestId returns the original result");
+        group.MapPost("/settlements/{id:guid}/void", VoidRepayment)
+            .WithName("VoidBudgetRepayment")
+            .WithSummary("Void a recorded repayment with a reason and expected revision; repeating is a no-op");
 
         return app;
     }
@@ -88,6 +120,56 @@ internal static class BudgetEndpoints
     private static async Task<Ok<ExpenseDto>> GetExpense(
         Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
         => TypedResults.Ok(await dispatcher.SendAsync<GetExpenseQuery, ExpenseDto>(new GetExpenseQuery(Sub(user), id), ct));
+
+    private static async Task<Ok<PagedList<RepaymentDto>>> ListRepayments(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListRepaymentsQuery, PagedList<RepaymentDto>>(
+            new ListRepaymentsQuery(Sub(user), page, pageSize), ct));
+
+    private static async Task<Results<Created<RepaymentMutationResult>, Ok<RepaymentMutationResult>>> RecordRepayment(
+        RecordRepaymentRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<RecordRepaymentCommand, RepaymentMutationResult>(
+            new RecordRepaymentCommand(
+                Sub(user), request.ClientRequestId, request.FromPersonId, request.ToPersonId, request.Amount, request.PaidOn, request.Note), ct);
+
+        return result.Created
+            ? TypedResults.Created($"/api/budget/settlements/{result.RepaymentId}", result)
+            : TypedResults.Ok(result);
+    }
+
+    private static async Task<Ok<RepaymentMutationResult>> VoidRepayment(
+        Guid id, VoidRepaymentRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<VoidRepaymentCommand, RepaymentMutationResult>(
+            new VoidRepaymentCommand(Sub(user), id, request.ExpectedRevision, request.Reason), ct));
+
+    private static async Task<Ok<SettlementDto>> GetSettlement(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetSettlementQuery, SettlementDto>(new GetSettlementQuery(Sub(user)), ct));
+
+    private static async Task<Ok<SummaryDto>> GetSummary(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] string month = "", [FromQuery] string scope = "", [FromQuery] Guid? ownerPersonId = null)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetSummaryQuery, SummaryDto>(
+            new GetSummaryQuery(Sub(user), month, scope, ownerPersonId), ct));
+
+    private static async Task<Ok<IReadOnlyList<MonthlyLimitDto>>> ListLimits(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct, [FromQuery] string month = "")
+        => TypedResults.Ok(await dispatcher.SendAsync<ListLimitsQuery, IReadOnlyList<MonthlyLimitDto>>(
+            new ListLimitsQuery(Sub(user), month), ct));
+
+    private static async Task<Ok<MonthlyLimitDto>> SetLimit(
+        Guid id, string month, SetLimitRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<SetMonthlyLimitCommand, MonthlyLimitDto>(
+            new SetMonthlyLimitCommand(Sub(user), id, month, request.Amount, request.ExpectedRevision), ct));
+
+    private static async Task<NoContent> ClearLimit(
+        Guid id, string month, [FromQuery] int expectedRevision, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new ClearMonthlyLimitCommand(Sub(user), id, month, expectedRevision), ct);
+        return TypedResults.NoContent();
+    }
 
     private static async Task<Ok<ExpenseMutationResult>> UpdateExpense(
         Guid id, UpdateExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
@@ -236,3 +318,34 @@ internal sealed record UpdateExpenseRequest(
 /// <param name="Reason">Short reason, 1–200 characters.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record VoidExpenseRequest(Guid ClientRequestId, int ExpectedRevision, string Reason);
+
+/// <summary>Body of <c>PUT /api/budget/accounts/{id}/limits/{month}</c>.</summary>
+/// <param name="Amount">Decimal string, at most two decimals; <c>"0.00"</c> is allowed and differs from no limit.</param>
+/// <param name="ExpectedRevision">Revision of the existing limit when changing it; omit when setting for the first time.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record SetLimitRequest(string Amount, int? ExpectedRevision);
+
+/// <summary>
+/// Body of <c>POST /api/budget/settlements</c>. Unknown members are rejected with 400: the server
+/// decides who is recording.
+/// </summary>
+/// <param name="ClientRequestId">Idempotency key; reuse it when retrying.</param>
+/// <param name="FromPersonId">Who paid.</param>
+/// <param name="ToPersonId">Who received; must differ.</param>
+/// <param name="Amount">Positive decimal string such as <c>"25.00"</c>.</param>
+/// <param name="PaidOn">Date of the payment, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Note">Optional note, up to 200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record RecordRepaymentRequest(
+    Guid ClientRequestId,
+    Guid FromPersonId,
+    Guid ToPersonId,
+    string Amount,
+    DateOnly PaidOn,
+    string? Note);
+
+/// <summary>Body of <c>POST /api/budget/settlements/{id}/void</c>.</summary>
+/// <param name="ExpectedRevision">The revision the client last saw.</param>
+/// <param name="Reason">Short reason, 1–200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record VoidRepaymentRequest(int ExpectedRevision, string Reason);

@@ -48,9 +48,29 @@ function toRailNavItem(
   };
 }
 
-/** Whether a user holding `roles` may see the module (see `AppModule.requiredRole`). */
-export function isModuleVisible(mod: AppModule, roles: readonly string[]): boolean {
-  return !mod.requiredRole || roles.includes(mod.requiredRole);
+/**
+ * Whether a user holding token `roles` and household role `householdRole` may see the module
+ * (see `AppModule.requiredRole` / `AppModule.householdRoles`).
+ */
+export function isModuleVisible(
+  mod: AppModule,
+  roles: readonly string[],
+  householdRole: string | null = null,
+): boolean {
+  if (mod.requiredRole && !roles.includes(mod.requiredRole)) return false;
+  return (
+    !mod.householdRoles || (householdRole !== null && mod.householdRoles.includes(householdRole))
+  );
+}
+
+/** Whether the household role may see a nav item (see `NavItem.householdRoles`). */
+export function isNavItemVisible(
+  nav: { householdRoles?: readonly string[] | undefined },
+  householdRole: string | null,
+): boolean {
+  return (
+    !nav.householdRoles || (householdRole !== null && nav.householdRoles.includes(householdRole))
+  );
 }
 
 /** One tile per module visible to `roles`, for the 64px module rail. */
@@ -58,9 +78,10 @@ export function getModuleTiles(
   t: TFunction,
   labels: Readonly<Record<string, string>> = {},
   roles: readonly string[] = [],
+  householdRole: string | null = null,
 ): ModuleTile[] {
   return getModules()
-    .filter((mod) => isModuleVisible(mod, roles))
+    .filter((mod) => isModuleVisible(mod, roles, householdRole))
     .map((mod) => ({
       name: mod.name,
       basePath: mod.basePath,
@@ -83,12 +104,13 @@ export function getActiveModule(pathname: string): AppModule | undefined {
 export function getSectionGroups(
   t: TFunction,
   mod: AppModule,
+  householdRole: string | null = null,
 ): { groups: NavGroup[]; pinned: RailNavItem[] } {
   const groups: NavGroup[] = [];
   const groupIndex = new Map<string | null, number>();
   const pinned: RailNavItem[] = [];
 
-  for (const nav of mod.navItems) {
+  for (const nav of mod.navItems.filter((n) => isNavItemVisible(n, householdRole))) {
     const item = toRailNavItem(t, mod, nav.href, nav.icon, nav.translationKey, nav.Badge);
 
     if (nav.group === NAV_GROUP_SETTINGS) {
@@ -111,8 +133,12 @@ export function getSectionGroups(
 
 /** Every item of the active module, flattened in registration order — for the
  * mobile bottom tab bar (module-scoped, horizontally scrollable). */
-export function getMobileNavItems(t: TFunction, mod: AppModule): RailNavItem[] {
-  return mod.navItems.map((nav) =>
-    toRailNavItem(t, mod, nav.href, nav.icon, nav.translationKey, nav.Badge),
-  );
+export function getMobileNavItems(
+  t: TFunction,
+  mod: AppModule,
+  householdRole: string | null = null,
+): RailNavItem[] {
+  return mod.navItems
+    .filter((nav) => isNavItemVisible(nav, householdRole))
+    .map((nav) => toRailNavItem(t, mod, nav.href, nav.icon, nav.translationKey, nav.Badge));
 }

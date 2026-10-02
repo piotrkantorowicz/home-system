@@ -205,6 +205,170 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Budget.Domain.Aggregates.MonthlyLimit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid>("BudgetAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("budget_account_id");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("budget_id");
+
+                    b.Property<DateOnly>("MonthStart")
+                        .HasColumnType("date")
+                        .HasColumnName("month_start");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer")
+                        .HasColumnName("revision");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetAccountId", "BudgetId");
+
+                    b.HasIndex("BudgetAccountId", "MonthStart")
+                        .IsUnique()
+                        .HasDatabaseName("ux_monthly_limits_account_month");
+
+                    b.ToTable("monthly_limits", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_monthly_limits_amount_range", "amount >= 0 AND amount <= 9999999999.99");
+
+                            t.HasCheckConstraint("ck_monthly_limits_month_start", "EXTRACT(DAY FROM month_start) = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Budget.Domain.Aggregates.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AddedByDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("added_by_display_name");
+
+                    b.Property<Guid>("AddedByPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("added_by_person_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("budget_id");
+
+                    b.Property<Guid>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FromDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("from_display_name");
+
+                    b.Property<Guid>("FromPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_person_id");
+
+                    b.Property<bool>("IsVoided")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_voided");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("note");
+
+                    b.Property<DateOnly>("PaidOn")
+                        .HasColumnType("date")
+                        .HasColumnName("paid_on");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer")
+                        .HasColumnName("revision");
+
+                    b.Property<string>("ToDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("to_display_name");
+
+                    b.Property<Guid>("ToPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_person_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_at");
+
+                    b.Property<string>("VoidedByDisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("voided_by_display_name");
+
+                    b.Property<Guid?>("VoidedByPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voided_by_person_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetId", "PaidOn")
+                        .HasDatabaseName("ix_settlements_budget_date");
+
+                    b.HasIndex("BudgetId", "AddedByPersonId", "ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_settlements_request_identity");
+
+                    b.ToTable("settlements", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_settlements_amount_range", "amount > 0 AND amount <= 9999999999.99");
+
+                            t.HasCheckConstraint("ck_settlements_distinct_people", "from_person_id <> to_person_id");
+                        });
+                });
+
             modelBuilder.Entity("Budget.Domain.Entities.ExpenseRevision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -448,7 +612,6 @@ namespace Budget.Infrastructure.Persistence.Migrations
                                 .HasColumnName("expense_id");
 
                             b1.Property<Guid>("PersonId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid")
                                 .HasColumnName("person_id");
 
@@ -476,6 +639,25 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Shares");
+                });
+
+            modelBuilder.Entity("Budget.Domain.Aggregates.MonthlyLimit", b =>
+                {
+                    b.HasOne("Budget.Domain.Aggregates.BudgetAccount", null)
+                        .WithMany()
+                        .HasForeignKey("BudgetAccountId", "BudgetId")
+                        .HasPrincipalKey("Id", "BudgetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Budget.Domain.Aggregates.Settlement", b =>
+                {
+                    b.HasOne("Budget.Domain.Aggregates.Budget", null)
+                        .WithMany()
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Budget.Domain.Entities.ExpenseRevision", b =>
