@@ -25,4 +25,7 @@ public interface IBudgetReadDbContext
 
     /// <summary>Every monthly limit, in every budget.</summary>
     DbSet<MonthlyLimit> MonthlyLimits { get; }
+
+    /// <summary>Every recorded repayment, in every budget.</summary>
+    DbSet<Settlement> Settlements { get; }
 }
