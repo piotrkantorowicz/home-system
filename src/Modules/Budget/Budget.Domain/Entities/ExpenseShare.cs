@@ -7,8 +7,9 @@ public sealed class ExpenseShare
 {
     private ExpenseShare() { }
 
-    internal ExpenseShare(PersonRef person, Money amount)
+    internal ExpenseShare(ExpenseId expenseId, PersonRef person, Money amount)
     {
+        ExpenseId = expenseId;
         PersonId = person.PersonId;
         PersonDisplayName = person.DisplayName;
         Amount = amount.Amount;
@@ -25,4 +26,10 @@ public sealed class ExpenseShare
 
     /// <summary>Exact amount, two decimals.</summary>
     public decimal Amount { get; private set; }
+
+    internal void Update(PersonRef person, Money amount)
+    {
+        PersonDisplayName = person.DisplayName;
+        Amount = amount.Amount;
+    }
 }

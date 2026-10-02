@@ -12,8 +12,8 @@ public sealed class ExpenseRevision
     private ExpenseRevision() { }
 
     internal ExpenseRevision(
-        ExpenseId expenseId, BudgetId budgetId, int revisionNumber, Guid actorPersonId, Guid clientRequestId,
-        ExpenseRequest request, ExpenseSnapshot snapshot, DateTime createdAt)
+        ExpenseId expenseId, BudgetId budgetId, int revisionNumber, Guid actorPersonId, string actorDisplayName, Guid clientRequestId,
+        ExpenseRequest request, string? reason, ExpenseSnapshot snapshot, DateTime createdAt)
     {
         Id = Guid.CreateVersion7();
         ExpenseId = expenseId;
@@ -21,6 +21,8 @@ public sealed class ExpenseRevision
         RevisionNumber = revisionNumber;
         Operation = request.Action;
         ActorPersonId = actorPersonId;
+        ActorDisplayName = actorDisplayName;
+        Reason = reason;
         ClientRequestId = clientRequestId;
         Request = request;
         Snapshot = snapshot;
@@ -44,6 +46,12 @@ public sealed class ExpenseRevision
 
     /// <summary>Who submitted it.</summary>
     public Guid ActorPersonId { get; private set; }
+
+    /// <summary>Actor name snapshot.</summary>
+    public string ActorDisplayName { get; private set; } = default!;
+
+    /// <summary>Why an update or void was made; <see langword="null"/> for creation.</summary>
+    public string? Reason { get; private set; }
 
     /// <summary>Client-generated idempotency key.</summary>
     public Guid ClientRequestId { get; private set; }

@@ -23,10 +23,25 @@ public interface IExpenseRepository
     /// <param name="ct">Cancellation token.</param>
     Task LockRequestAsync(BudgetId budgetId, Guid actorPersonId, Guid clientRequestId, CancellationToken ct);
 
+    /// <summary>
+    /// Serialises writers of one expense for the rest of the transaction. Call it <em>before</em>
+    /// loading the expense, so a waiting writer reads the winner's committed revision and fails the
+    /// expected-revision check cleanly instead of racing at the database.
+    /// </summary>
+    /// <param name="expenseId">The expense about to be modified.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task LockExpenseAsync(Guid expenseId, CancellationToken ct);
+
     /// <summary>Finds the revision a request identity already produced, if any.</summary>
     /// <param name="budgetId">The budget.</param>
     /// <param name="actorPersonId">The submitting person; other actors' keys are never matched.</param>
     /// <param name="clientRequestId">The idempotency key.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<ExpenseRevision?> FindRevisionByRequestAsync(BudgetId budgetId, Guid actorPersonId, Guid clientRequestId, CancellationToken ct);
+
+    /// <summary>Loads an expense with its shares for modification, or <see langword="null"/> when it is not in the budget.</summary>
+    /// <param name="id">The expense.</param>
+    /// <param name="budgetId">The budget it must belong to.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<Expense?> GetAsync(ExpenseId id, BudgetId budgetId, CancellationToken ct);
 }

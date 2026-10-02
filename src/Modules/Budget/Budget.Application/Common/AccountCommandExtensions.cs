@@ -24,7 +24,7 @@ internal static class AccountCommandExtensions
             : throw new NotFoundException("Envelope", id);
     }
 
-    /// <summary>Commits, turning a lost race on the row's concurrency token into a 409.</summary>
+    /// <summary>Commits, turning a lost race on a row's concurrency token into a 409.</summary>
     public static async Task CommitOrThrowConflictAsync(this IBudgetUnitOfWork unitOfWork, CancellationToken ct)
     {
         try
@@ -33,7 +33,7 @@ internal static class AccountCommandExtensions
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new ConflictException("This envelope was changed by someone else. Reload and try again.");
+            throw new ConflictException("This record was changed by someone else. Reload and try again.");
         }
     }
 }

@@ -8,6 +8,8 @@ using Budget.Application.Commands.CreateExpense;
 using Budget.Application.Commands.InitializeBudget;
 using Budget.Application.Commands.RenameAccount;
 using Budget.Application.Commands.RestoreAccount;
+using Budget.Application.Commands.UpdateExpense;
+using Budget.Application.Commands.VoidExpense;
 using Budget.Application.Queries.GetAccount;
 using Budget.Application.Queries.GetBudget;
 using Budget.Application.Queries.GetExpense;
@@ -64,6 +66,12 @@ internal static class BudgetEndpoints
         group.MapPost("/expenses", CreateExpense)
             .WithName("CreateBudgetExpense")
             .WithSummary("Record an expense; a retry with the same clientRequestId returns the original result");
+        group.MapPut("/expenses/{id:guid}", UpdateExpense)
+            .WithName("UpdateBudgetExpense")
+            .WithSummary("Correct an expense in place with a reason and expected revision; appends a history revision");
+        group.MapPost("/expenses/{id:guid}/void", VoidExpense)
+            .WithName("VoidBudgetExpense")
+            .WithSummary("Void an expense with a reason and expected revision; repeating adds no revision");
 
         return app;
     }
@@ -72,13 +80,25 @@ internal static class BudgetEndpoints
         ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? accountId = null,
         [FromQuery] string? category = null, [FromQuery] string? amount = null,
-        [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null, [FromQuery] Guid? excludeId = null)
+        [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null, [FromQuery] Guid? excludeId = null, [FromQuery] bool includeVoided = false)
         => TypedResults.Ok(await dispatcher.SendAsync<ListExpensesQuery, PagedList<ExpenseDto>>(
-            new ListExpensesQuery(Sub(user), page, pageSize, accountId, category, amount, from, to, excludeId), ct));
+            new ListExpensesQuery(Sub(user), page, pageSize, accountId, category, amount, from, to, excludeId, includeVoided), ct));
 
     private static async Task<Ok<ExpenseDto>> GetExpense(
         Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
         => TypedResults.Ok(await dispatcher.SendAsync<GetExpenseQuery, ExpenseDto>(new GetExpenseQuery(Sub(user), id), ct));
+
+    private static async Task<Ok<ExpenseMutationResult>> UpdateExpense(
+        Guid id, UpdateExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<UpdateExpenseCommand, ExpenseMutationResult>(
+            new UpdateExpenseCommand(
+                Sub(user), id, request.ClientRequestId, request.ExpectedRevision, request.Reason, request.Amount, request.OccurredOn,
+                request.Category, request.FundingSource, request.PaidByPersonId, request.ParticipantIds), ct));
+
+    private static async Task<Ok<ExpenseMutationResult>> VoidExpense(
+        Guid id, VoidExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<VoidExpenseCommand, ExpenseMutationResult>(
+            new VoidExpenseCommand(Sub(user), id, request.ClientRequestId, request.ExpectedRevision, request.Reason), ct));
 
     private static async Task<Results<Created<ExpenseMutationResult>, Ok<ExpenseMutationResult>>> CreateExpense(
         CreateExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
@@ -190,3 +210,32 @@ internal sealed record CreateExpenseRequest(
     string? FundingSource,
     Guid? PaidByPersonId,
     IReadOnlyList<Guid>? ParticipantIds);
+
+/// <summary>Body of <c>PUT /api/budget/expenses/{id}</c>; the envelope and recorder cannot be changed.</summary>
+/// <param name="ClientRequestId">Idempotency key; reuse it when retrying the same submission.</param>
+/// <param name="ExpectedRevision">The revision the client last saw.</param>
+/// <param name="Reason">Short reason, 1–200 characters.</param>
+/// <param name="Amount">Positive decimal string such as <c>"123.45"</c>.</param>
+/// <param name="OccurredOn">Purchase date, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Category">Category code.</param>
+/// <param name="FundingSource"><c>Individual</c> (default) or <c>HouseholdFunds</c>.</param>
+/// <param name="PaidByPersonId">Payer of an individually funded shared expense.</param>
+/// <param name="ParticipantIds">Adults sharing the cost equally.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record UpdateExpenseRequest(
+    Guid ClientRequestId,
+    int ExpectedRevision,
+    string Reason,
+    string Amount,
+    DateOnly OccurredOn,
+    string Category,
+    string? FundingSource,
+    Guid? PaidByPersonId,
+    IReadOnlyList<Guid>? ParticipantIds);
+
+/// <summary>Body of <c>POST /api/budget/expenses/{id}/void</c>.</summary>
+/// <param name="ClientRequestId">Idempotency key; reuse it when retrying.</param>
+/// <param name="ExpectedRevision">The revision the client last saw.</param>
+/// <param name="Reason">Short reason, 1–200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record VoidExpenseRequest(Guid ClientRequestId, int ExpectedRevision, string Reason);

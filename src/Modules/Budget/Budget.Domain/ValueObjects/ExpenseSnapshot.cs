@@ -30,6 +30,9 @@ public sealed record ExpenseSnapshot
     /// <summary>Recorder name snapshot.</summary>
     public required string AddedByDisplayName { get; init; }
 
+    /// <summary>Whether the expense was void in this state.</summary>
+    public bool IsVoided { get; init; }
+
     /// <summary>The stored shares.</summary>
     public required List<ShareSnapshot> Shares { get; init; }
 }

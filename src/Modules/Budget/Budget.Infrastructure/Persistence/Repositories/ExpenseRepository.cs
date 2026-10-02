@@ -18,8 +18,18 @@ internal sealed class ExpenseRepository(BudgetDbContext dbContext) : IExpenseRep
             $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
     }
 
+    public async Task LockExpenseAsync(Guid expenseId, CancellationToken ct)
+    {
+        var key = $"expense:{expenseId}";
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
+    }
+
     public async Task<ExpenseRevision?> FindRevisionByRequestAsync(
         BudgetId budgetId, Guid actorPersonId, Guid clientRequestId, CancellationToken ct)
         => await dbContext.ExpenseRevisions.AsNoTracking().FirstOrDefaultAsync(
             r => r.BudgetId == budgetId && r.ActorPersonId == actorPersonId && r.ClientRequestId == clientRequestId, ct);
+
+    public async Task<Expense?> GetAsync(ExpenseId id, BudgetId budgetId, CancellationToken ct)
+        => await dbContext.Expenses.Include(e => e.Shares).FirstOrDefaultAsync(e => e.Id == id && e.BudgetId == budgetId, ct);
 }
