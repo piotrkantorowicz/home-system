@@ -1,3 +1,5 @@
+using Budget.Api;
+using Budget.Infrastructure;
 using DietPlanner.Api;
 using DietPlanner.Infrastructure;
 using HomeSystem.REST;
@@ -24,6 +26,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddDietPlannerModule(builder.Configuration);
 builder.Services.AddNotificationsModule(builder.Configuration, builder.Environment);
 builder.Services.AddHouseholdModule(builder.Configuration);
+builder.Services.AddBudgetModule(builder.Configuration);
 builder.Services.AddOperationsModule();
 
 // CQRS dispatcher chain — registered once, shared by every module's handlers.
@@ -165,6 +168,7 @@ app.MapDietPlannerEndpoints();
 app.MapNotificationsEndpoints();
 app.MapNotificationChannelPreferencesEndpoints();
 app.MapHouseholdEndpoints();
+app.MapBudgetEndpoints();
 app.MapNotificationDeliveriesAdminEndpoints();
 app.MapOperationsEndpoints();
 
@@ -176,6 +180,7 @@ if (app.Environment.IsDevelopment())
     await app.Services.MigrateDietPlannerDatabaseAsync(app.Logger);
     app.Services.MigrateNotificationsDatabase();
     await app.Services.MigrateHouseholdDatabaseAsync(app.Logger);
+    await app.Services.MigrateBudgetDatabaseAsync(app.Logger);
 }
 
 await app.RunAsync();
