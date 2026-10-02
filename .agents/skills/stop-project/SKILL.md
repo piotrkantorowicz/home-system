@@ -18,7 +18,7 @@ $stop-project [--app-only | --infra-only | --volumes]
 - no args: stop app processes **and** Docker infra
 - `--app-only`: only the local processes (backend, frontend, Playwright) — leave Docker up
 - `--infra-only`: only `docker compose down` — leave local processes running
-- `--volumes`: also `docker compose down -v` (**destroys** all Postgres data — Authentik config, diet-planner + notifications DBs). Confirm with the user before running this.
+- `--volumes`: also `docker compose down -v` (**destroys** all Postgres data — Authentik config, diet-planner, notifications, household + budget DBs). Confirm with the user before running this.
 
 ## Ports in play
 
@@ -53,7 +53,7 @@ $stop-project [--app-only | --infra-only | --volumes]
 ### 2. Docker infra (skip if `--app-only`)
 
 ```bash
-cd infrastructure && docker compose --profile diet-planner --profile notifications down
+cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household --profile budget down
 ```
 
 - Add `-v` only for `--volumes` (after explicit user confirmation) — this wipes every

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Budget.Application\Budget.Application.csproj" />
+    <ProjectReference Include="..\Budget.Infrastructure\Budget.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -50,4 +50,4 @@ Run `scripts/verify.sh --branch` before each PR. Its path selection determines b
 
 The docs-only #450 change needs local-link and consistency checks plus `git diff --check`; path-aware verify should select no application suites. Do not claim application tests ran for documentation.
 
-Use Conventional Commits and the PR template, one issue/PR, explicit `Closes #n`. Owner reviews and merges. PRs target main; no epic integration branch is needed. Keep child tracking in GitHub sub-issues and update this table only when dependencies change.
+Use Conventional Commits and the PR template, one issue/PR, explicit `Closes #n`. Owner reviews and merges. PRs target the epic branch `epic/233-budget-module-household-scoped-expenses` (a dependent child whose parent is still in review stacks on the parent's branch and is retargeted when the parent merges); `ship-epic` rebase-merges the epic into `main`. Keep child tracking in GitHub sub-issues and update this table only when dependencies change.

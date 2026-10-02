@@ -30,6 +30,7 @@ $run-project [--infra-only | --no-frontend | --stop]
 | DietPlanner Postgres | localhost:5432 |
 | Notifications Postgres | localhost:5433 |
 | Household Postgres | localhost:5434 |
+| Budget Postgres | localhost:5435 |
 
 ## Instructions
 
@@ -42,12 +43,12 @@ $run-project [--infra-only | --no-frontend | --stop]
 ### 2. Infrastructure (Docker)
 
 ```bash
-cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household up -d
+cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household --profile budget up -d
 ```
 
 - This starts the always-on services plus all three module databases.
-- Check `DIETPLANNER_DB_PASSWORD`, `NOTIFICATIONS_DB_PASSWORD`, and `HOUSEHOLD_DB_PASSWORD` are set in `infrastructure/.env`; older local files may lack Household configuration.
-- Wait for `authentik-db`, `authentik-redis`, `dietplanner-db`, `notifications-db`, and `household-db` to report `healthy` in `docker compose ps`.
+- Check `DIETPLANNER_DB_PASSWORD`, `NOTIFICATIONS_DB_PASSWORD`, `HOUSEHOLD_DB_PASSWORD`, and `BUDGET_DB_PASSWORD` are set in `infrastructure/.env`; older local files may lack Household or Budget configuration.
+- Wait for `authentik-db`, `authentik-redis`, `dietplanner-db`, `notifications-db`, `household-db`, and `budget-db` to report `healthy` in `docker compose ps`.
 - The host wires all three modules. Keep all three databases running; HTTP health alone does not prove database readiness.
 - Stop here if `--infra-only`.
 
@@ -63,12 +64,13 @@ ASPNETCORE_ENVIRONMENT=Development \
 ConnectionStrings__DietPlanner="Host=localhost;Port=5432;Database=dietplanner;Username=dietplanner;Password=${DIETPLANNER_DB_PASSWORD}" \
 ConnectionStrings__Notifications="Host=localhost;Port=5433;Database=notifications;Username=notifications;Password=${NOTIFICATIONS_DB_PASSWORD}" \
 ConnectionStrings__Household="Host=localhost;Port=5434;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}" \
+ConnectionStrings__Budget="Host=localhost;Port=5435;Database=budget;Username=budget;Password=${BUDGET_DB_PASSWORD}" \
 dotnet run --project src/Apis/HomeSystem.REST
 ```
 
 Run this in the background (it is long-lived). Notes:
 
-- Development auto-applies EF Core migrations (DietPlanner and Household) and DbUp scripts (Notifications). Confirm successful migration messages: the host may keep serving HTTP after migration failure.
+- Development auto-applies EF Core migrations (DietPlanner, Household and Budget) and DbUp scripts (Notifications). Confirm successful migration messages: the host may keep serving HTTP after migration failure.
 - If the user has set user-secrets or their own `ConnectionStrings__*` env, the plain `dotnet run --project src/Apis/HomeSystem.REST` is enough — try it first, fall back to the block above on `Npgsql ... No password has been provided`.
 - Readiness check: `curl -sf http://localhost:5050/openapi/v1.json > /dev/null`.
 - Stop here if `--no-frontend`.

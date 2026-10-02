@@ -1,0 +1,18 @@
+namespace Budget.Application.Persistence;
+
+using Budget.Domain.Aggregates;
+using Microsoft.EntityFrameworkCore;
+using BudgetAggregate = Budget.Domain.Aggregates.Budget;
+
+/// <summary>
+/// Read-side surface over the module's <c>DbContext</c>. Query handlers project with
+/// <c>AsNoTracking()</c> + <c>Select()</c> — they never load aggregates.
+/// </summary>
+public interface IBudgetReadDbContext
+{
+    /// <summary>Every household's budget.</summary>
+    DbSet<BudgetAggregate> Budgets { get; }
+
+    /// <summary>Every envelope, in every budget.</summary>
+    DbSet<BudgetAccount> BudgetAccounts { get; }
+}

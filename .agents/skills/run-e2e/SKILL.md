@@ -24,7 +24,7 @@ $run-e2e [spec] [--ui | --debug | --headed] [--setup]
 
 1. **Docker infra, all module profiles** — Authentik + three module databases:
    ```bash
-   cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household up -d
+   cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household --profile budget up -d
    ```
    `infrastructure/.env` must define `E2E_USER_PASSWORD` — the Authentik blueprint
    provisions `E2eWorker0..E2eWorker3` with it.

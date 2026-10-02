@@ -86,20 +86,21 @@ jobs:
           DIETPLANNER_DB_PASSWORD=$(openssl rand -hex 16)
           NOTIFICATIONS_DB_PASSWORD=$(openssl rand -hex 16)
           HOUSEHOLD_DB_PASSWORD=$(openssl rand -hex 16)
+          BUDGET_DB_PASSWORD=$(openssl rand -hex 16)
           AUTHENTIK_BOOTSTRAP_PASSWORD=$(openssl rand -hex 16)
           AUTHENTIK_BOOTSTRAP_EMAIL=akadmin@e2e.invalid
           AUTHENTIK_BOOTSTRAP_TOKEN=
           E2E_USER_PASSWORD=$TEST_USER_PASSWORD
           EOF
 
-      # The host wires DietPlanner + Notifications + Household, so all three module
-      # databases are needed. --wait blocks on the healthchecks (Postgres, Redis);
+      # The host wires DietPlanner + Notifications + Household + Budget, so every module
+      # database is needed. --wait blocks on the healthchecks (Postgres, Redis);
       # authentik-server has none, hence the explicit readiness loop below.
       - name: Start Docker stack
         working-directory: infrastructure
         run: |
           docker compose \
-            --profile diet-planner --profile notifications --profile household \
+            --profile diet-planner --profile notifications --profile household --profile budget \
             up -d --wait --quiet-pull
 
       # First boot runs Authentik's migrations, then the worker applies
@@ -139,6 +140,7 @@ jobs:
           export ConnectionStrings__DietPlanner="Host=localhost;Port=5432;Database=dietplanner;Username=dietplanner;Password=${DIETPLANNER_DB_PASSWORD}"
           export ConnectionStrings__Notifications="Host=localhost;Port=5433;Database=notifications;Username=notifications;Password=${NOTIFICATIONS_DB_PASSWORD}"
           export ConnectionStrings__Household="Host=localhost;Port=5434;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}"
+          export ConnectionStrings__Budget="Host=localhost;Port=5435;Database=budget;Username=budget;Password=${BUDGET_DB_PASSWORD}"
           nohup dotnet run --project src/Apis/HomeSystem.REST --no-build --no-launch-profile --configuration Release \
             > backend.log 2>&1 &
           echo "backend pid $!"
@@ -193,7 +195,7 @@ jobs:
           mkdir -p stack-logs
           cp backend.log stack-logs/ 2>/dev/null || true
           (cd infrastructure && docker compose \
-            --profile diet-planner --profile notifications --profile household \
+            --profile diet-planner --profile notifications --profile household --profile budget \
             logs --no-color) > stack-logs/docker-compose.log 2>&1 || true
 
       - name: Upload Playwright report
