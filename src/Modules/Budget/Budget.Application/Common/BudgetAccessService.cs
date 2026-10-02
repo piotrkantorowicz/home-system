@@ -35,7 +35,6 @@ internal sealed class BudgetAccessService(IHouseholdQueryService households)
         var context = await households.GetHouseholdContextForUserAsync(authSubject, ct)
             ?? throw new NotFoundException("Household", authSubject);
 
-        var managed = context.Members.Where(m => m.IsManaged).Select(m => m.PersonId).ToArray();
-        return new BudgetCaller(context.HouseholdId, context.PersonId, context.Role, managed);
+        return new BudgetCaller(context.HouseholdId, context.PersonId, context.Role, context.Members);
     }
 }

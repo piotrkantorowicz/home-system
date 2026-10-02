@@ -5,7 +5,7 @@ import { useAuth } from 'react-oidc-context';
 import { api, checkResponse } from './client';
 import { budgetQueryKeys } from './queryKeys';
 
-import type { AccountVisibility, BudgetCurrency } from '../types';
+import type { AccountVisibility, BudgetCurrency, ExpenseFilters, ExpenseInput } from '../types';
 
 export function budgetOptions(subject: string | undefined, householdId: string | undefined) {
   return queryOptions({
@@ -51,6 +51,120 @@ export function useAccountsQuery(enabled = true) {
   return useQuery({
     ...accountsOptions(auth.user?.profile.sub, household?.id),
     enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+export function expensesOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  filters: ExpenseFilters,
+) {
+  return queryOptions({
+    queryKey: budgetQueryKeys.expenses(subject, householdId, { ...filters }),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/budget/expenses', { params: { query: filters }, signal });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing expenses response');
+      return result.data;
+    },
+  });
+}
+
+export function useExpensesQuery(filters: ExpenseFilters, enabled = true) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...expensesOptions(auth.user?.profile.sub, household?.id, filters),
+    enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+export function expenseOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  id: string,
+) {
+  return queryOptions({
+    queryKey: budgetQueryKeys.expense(subject, householdId, id),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/budget/expenses/{id}', {
+        params: { path: { id } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing expense response');
+      return result.data;
+    },
+  });
+}
+
+export function useExpenseQuery(id: string) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...expenseOptions(auth.user?.profile.sub, household?.id, id),
+    enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+type ExpenseAction =
+  | { kind: 'create'; requestId: string; input: ExpenseInput }
+  | {
+      kind: 'update';
+      requestId: string;
+      id: string;
+      expectedRevision: number;
+      reason: string;
+      input: ExpenseInput;
+    }
+  | { kind: 'void'; requestId: string; id: string; expectedRevision: number; reason: string };
+
+async function mutateExpense(action: ExpenseAction) {
+  const result = await (() => {
+    if (action.kind === 'void')
+      return api.POST('/api/budget/expenses/{id}/void', {
+        params: { path: { id: action.id } },
+        body: {
+          clientRequestId: action.requestId,
+          expectedRevision: action.expectedRevision,
+          reason: action.reason,
+        },
+      });
+    const { input } = action;
+    const fields = {
+      amount: input.amount,
+      occurredOn: input.occurredOn,
+      category: input.category,
+      fundingSource: input.fundingSource,
+      paidByPersonId: input.paidByPersonId,
+      participantIds: input.participantIds,
+    };
+    return action.kind === 'create'
+      ? api.POST('/api/budget/expenses', {
+          body: { clientRequestId: action.requestId, accountId: input.accountId, ...fields },
+        })
+      : api.PUT('/api/budget/expenses/{id}', {
+          params: { path: { id: action.id } },
+          body: {
+            clientRequestId: action.requestId,
+            expectedRevision: action.expectedRevision,
+            reason: action.reason,
+            ...fields,
+          },
+        });
+  })();
+  checkResponse(result);
+  return result.data;
+}
+
+export function useExpenseMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: mutateExpense,
+    // Lists, details and (later) summaries all hang off the budget key; a 409 refreshes them too.
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: budgetQueryKeys.all() });
+    },
   });
 }
 

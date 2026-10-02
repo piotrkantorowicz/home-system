@@ -22,6 +22,9 @@ export default function BudgetPage() {
           <Link to="/budget/envelopes" className="text-primary font-medium underline">
             {t('manage_envelopes')}
           </Link>
+          <Link to="/budget/expenses" className="text-primary ml-4 font-medium underline">
+            {t('view_expenses')}
+          </Link>
         </CardContent>
       </Card>
     </div>

@@ -1,6 +1,7 @@
 namespace Budget.Application.Persistence;
 
 using Budget.Domain.Aggregates;
+using Budget.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using BudgetAggregate = Budget.Domain.Aggregates.Budget;
 
@@ -15,4 +16,10 @@ public interface IBudgetReadDbContext
 
     /// <summary>Every envelope, in every budget.</summary>
     DbSet<BudgetAccount> BudgetAccounts { get; }
+
+    /// <summary>Every expense, in every budget.</summary>
+    DbSet<Expense> Expenses { get; }
+
+    /// <summary>Every expense revision, in every budget.</summary>
+    DbSet<ExpenseRevision> ExpenseRevisions { get; }
 }
