@@ -1050,6 +1050,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/budget/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Page visible expenses; filter by envelope, category, exact amount and date range */
+        get: operations["ListBudgetExpenses"];
+        put?: never;
+        /** Record an expense; a retry with the same clientRequestId returns the original result */
+        post: operations["CreateBudgetExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budget/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one visible expense with its stored shares */
+        get: operations["GetBudgetExpense"];
+        /** Correct an expense in place with a reason and expected revision; appends a history revision */
+        put: operations["UpdateBudgetExpense"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budget/expenses/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void an expense with a reason and expected revision; repeating adds no revision */
+        post: operations["VoidBudgetExpense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications/deliveries/summary": {
         parameters: {
             query?: never;
@@ -1306,6 +1359,20 @@ export interface components {
             /** Format: uuid */
             ownerPersonId: null | string;
         };
+        CreateExpenseRequest: {
+            /** Format: uuid */
+            clientRequestId: string;
+            /** Format: uuid */
+            accountId: string;
+            amount: string;
+            /** Format: date */
+            occurredOn: string;
+            category: string;
+            fundingSource: null | string;
+            /** Format: uuid */
+            paidByPersonId: null | string;
+            participantIds: null | string[];
+        };
         CreateHouseholdRequest: {
             name: string;
         };
@@ -1460,6 +1527,70 @@ export interface components {
             /** Format: time */
             weeklySummaryTimeOfDay: string;
             goalAlertsEnabled: boolean;
+        };
+        ExpenseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            accountId: string;
+            amount: string;
+            category: string;
+            /** Format: date */
+            occurredOn: string;
+            fundingSource: string;
+            /** Format: uuid */
+            paidByPersonId: null | string;
+            paidByDisplayName: null | string;
+            /** Format: uuid */
+            addedByPersonId: string;
+            addedByDisplayName: string;
+            /** Format: int32 */
+            revision: number | string;
+            /** Format: date-time */
+            createdAt: string;
+            isVoided: boolean;
+            shares: components["schemas"]["ExpenseShareDto"][];
+            history?: null | components["schemas"]["ExpenseRevisionDto"][];
+        };
+        ExpenseMutationResult: {
+            /** Format: uuid */
+            expenseId: string;
+            /** Format: int32 */
+            revision: number | string;
+            created: boolean;
+        };
+        ExpenseRevisionDto: {
+            /** Format: int32 */
+            revisionNumber: number | string;
+            operation: string;
+            /** Format: uuid */
+            actorPersonId: string;
+            actorDisplayName: string;
+            reason: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            snapshot: components["schemas"]["ExpenseSnapshotDto"];
+        };
+        ExpenseShareDto: {
+            /** Format: uuid */
+            personId: string;
+            personDisplayName: string;
+            amount: string;
+        };
+        ExpenseSnapshotDto: {
+            amount: string;
+            category: string;
+            /** Format: date */
+            occurredOn: string;
+            fundingSource: string;
+            /** Format: uuid */
+            paidByPersonId: null | string;
+            paidByDisplayName: null | string;
+            /** Format: uuid */
+            addedByPersonId: string;
+            addedByDisplayName: string;
+            isVoided: boolean;
+            shares: components["schemas"]["ExpenseShareDto"][];
         };
         GoalDto: {
             /** Format: uuid */
@@ -1823,6 +1954,19 @@ export interface components {
             hasNextPage?: boolean;
             hasPreviousPage?: boolean;
         };
+        PagedListOfExpenseDto: {
+            items: components["schemas"]["ExpenseDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
+            totalPages?: number | string;
+            hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
+        };
         PagedListOfNotificationDto: {
             items: components["schemas"]["NotificationDto"][];
             /** Format: int32 */
@@ -2002,6 +2146,21 @@ export interface components {
             emailEnabled: boolean;
             webSocketEnabled: boolean;
         };
+        UpdateExpenseRequest: {
+            /** Format: uuid */
+            clientRequestId: string;
+            /** Format: int32 */
+            expectedRevision: number | string;
+            reason: string;
+            amount: string;
+            /** Format: date */
+            occurredOn: string;
+            category: string;
+            fundingSource: null | string;
+            /** Format: uuid */
+            paidByPersonId: null | string;
+            participantIds: null | string[];
+        };
         UpdateHydrationConfigRequest: {
             /** Format: int32 */
             dailyWaterTargetMl: number | string;
@@ -2099,6 +2258,13 @@ export interface components {
             warnings: number | string;
             /** Format: int32 */
             info: number | string;
+        };
+        VoidExpenseRequest: {
+            /** Format: uuid */
+            clientRequestId: string;
+            /** Format: int32 */
+            expectedRevision: number | string;
+            reason: string;
         };
         WaterIntakeEntryDto: {
             /** Format: uuid */
@@ -7358,6 +7524,368 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListBudgetExpenses: {
+        parameters: {
+            query?: {
+                page?: number | string;
+                pageSize?: number | string;
+                accountId?: string;
+                category?: string;
+                amount?: string;
+                from?: string;
+                to?: string;
+                excludeId?: string;
+                includeVoided?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedListOfExpenseDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CreateBudgetExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseMutationResult"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseMutationResult"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetBudgetExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateBudgetExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseMutationResult"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    VoidBudgetExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidExpenseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseMutationResult"];
                 };
             };
             /** @description Validation failed */

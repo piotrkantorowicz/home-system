@@ -1,4 +1,4 @@
-import { Wallet } from 'lucide-react';
+import { Receipt, Wallet } from 'lucide-react';
 import { lazy } from 'react';
 
 import { BudgetLayout } from './components/BudgetLayout';
@@ -9,6 +9,8 @@ import type { AppModule } from '@shared/lib/module-registry';
 
 const BudgetPage = lazy(() => import('./pages/BudgetPage'));
 const EnvelopesPage = lazy(() => import('./pages/EnvelopesPage'));
+const ExpensesPage = lazy(() => import('./pages/ExpensesPage'));
+const ExpenseDetailPage = lazy(() => import('./pages/ExpenseDetailPage'));
 
 export const budgetModule: AppModule = {
   name: 'budget',
@@ -22,6 +24,7 @@ export const budgetModule: AppModule = {
   i18nResources: { en: { budget: en }, pl: { budget: pl } },
   navItems: [
     { name: 'Overview', href: '/budget', icon: Wallet, translationKey: 'overview_nav' },
+    { name: 'Expenses', href: '/budget/expenses', icon: Receipt, translationKey: 'expenses_nav' },
     { name: 'Envelopes', href: '/budget/envelopes', icon: Wallet, translationKey: 'envelopes_nav' },
   ],
   routes: [
@@ -29,6 +32,8 @@ export const budgetModule: AppModule = {
       Component: BudgetLayout,
       children: [
         { index: true, Component: BudgetPage },
+        { path: 'expenses', Component: ExpensesPage },
+        { path: 'expenses/:id', Component: ExpenseDetailPage },
         { path: 'envelopes', Component: EnvelopesPage },
       ],
     },
