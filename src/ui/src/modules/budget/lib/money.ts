@@ -10,3 +10,9 @@ export function normalizeAmount(text: string): string | null {
   if (!AMOUNT_PATTERN.test(trimmed) || !/[1-9]/.test(trimmed)) return null;
   return trimmed.replace(',', '.');
 }
+
+/** Like `normalizeAmount` but zero is allowed — a limit of `0` is a real limit, unlike no limit. */
+export function normalizeLimit(text: string): string | null {
+  const trimmed = text.trim();
+  return AMOUNT_PATTERN.test(trimmed) ? trimmed.replace(',', '.') : null;
+}

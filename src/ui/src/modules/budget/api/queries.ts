@@ -107,6 +107,78 @@ export function useExpenseQuery(id: string) {
   });
 }
 
+export type SummaryScope = 'shared' | 'personal';
+
+export function summaryOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  month: string,
+  scope: SummaryScope,
+  owner: string | null,
+) {
+  return queryOptions({
+    queryKey: budgetQueryKeys.summary(subject, householdId, month, scope, owner),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/budget/summary', {
+        params: { query: { month, scope, ...(owner ? { ownerPersonId: owner } : {}) } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing summary response');
+      return result.data;
+    },
+  });
+}
+
+export function useSummaryQuery(
+  month: string,
+  scope: SummaryScope,
+  owner: string | null,
+  enabled = true,
+) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...summaryOptions(auth.user?.profile.sub, household?.id, month, scope, owner),
+    enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+type LimitAction =
+  | {
+      kind: 'set';
+      accountId: string;
+      month: string;
+      amount: string;
+      expectedRevision: number | null;
+    }
+  | { kind: 'clear'; accountId: string; month: string; expectedRevision: number };
+
+async function mutateLimit(action: LimitAction) {
+  const params = { path: { id: action.accountId, month: action.month } };
+  const result =
+    action.kind === 'set'
+      ? await api.PUT('/api/budget/accounts/{id}/limits/{month}', {
+          params,
+          body: { amount: action.amount, expectedRevision: action.expectedRevision },
+        })
+      : await api.DELETE('/api/budget/accounts/{id}/limits/{month}', {
+          params: { ...params, query: { expectedRevision: action.expectedRevision } },
+        });
+  checkResponse(result);
+}
+
+export function useLimitMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: mutateLimit,
+    // The summary carries each limit and its revision; a 409 refreshes it too.
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: budgetQueryKeys.all() });
+    },
+  });
+}
+
 type ExpenseAction =
   | { kind: 'create'; requestId: string; input: ExpenseInput }
   | {

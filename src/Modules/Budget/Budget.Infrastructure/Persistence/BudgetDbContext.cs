@@ -15,6 +15,7 @@ internal sealed class BudgetDbContext : DbContext, IBudgetUnitOfWork, IBudgetRea
 
     public DbSet<BudgetAggregate> Budgets => Set<BudgetAggregate>();
     public DbSet<BudgetAccount> BudgetAccounts => Set<BudgetAccount>();
+    public DbSet<MonthlyLimit> MonthlyLimits => Set<MonthlyLimit>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseRevision> ExpenseRevisions => Set<ExpenseRevision>();
 

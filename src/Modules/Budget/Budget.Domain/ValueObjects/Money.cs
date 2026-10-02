@@ -34,6 +34,16 @@ public readonly partial record struct Money
     /// <param name="money">The parsed amount on success.</param>
     /// <returns>Whether <paramref name="text"/> was a valid positive amount.</returns>
     public static bool TryParsePositive(string? text, out Money money)
+        => TryParse(text, allowZero: false, out money);
+
+    /// <summary>Like <see cref="TryParsePositive"/> but also accepts zero (a limit of <c>0.00</c> is meaningful).</summary>
+    /// <param name="text">Request text.</param>
+    /// <param name="money">The parsed amount on success.</param>
+    /// <returns>Whether <paramref name="text"/> was a valid amount ≥ 0.</returns>
+    public static bool TryParseNonNegative(string? text, out Money money)
+        => TryParse(text, allowZero: true, out money);
+
+    private static bool TryParse(string? text, bool allowZero, out Money money)
     {
         money = default;
         if (text is null || !AmountPattern().IsMatch(text))
@@ -41,7 +51,7 @@ public readonly partial record struct Money
 
         var value = decimal.Parse(text, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
         var minor = decimal.ToInt64(value * 100m);
-        if (minor is <= 0 or > MaxMinorUnits)
+        if (minor < (allowZero ? 0 : 1) || minor > MaxMinorUnits)
             return false;
 
         money = new Money(minor);

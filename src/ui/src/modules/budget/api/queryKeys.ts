@@ -11,6 +11,13 @@ export const budgetQueryKeys = {
     householdId: string | undefined,
     filters: Record<string, unknown>,
   ) => ['budget', 'expenses', subject, householdId, filters] as const,
+  summary: (
+    subject: string | undefined,
+    householdId: string | undefined,
+    month: string,
+    scope: string,
+    owner: string | null,
+  ) => ['budget', 'summary', subject, householdId, month, scope, owner] as const,
   expense: (subject: string | undefined, householdId: string | undefined, id: string) =>
     ['budget', 'expense', subject, householdId, id] as const,
 } as const;

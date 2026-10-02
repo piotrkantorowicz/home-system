@@ -48,7 +48,7 @@ interface Person {
 
 const MAX_REASON = 200;
 
-export function ExpenseFormDialog({ expense, onClose, onReload }: ExpenseFormDialogProps) {
+function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDialogProps) {
   const { t } = useTranslation('budget');
   const toast = useToast();
   const mutation = useExpenseMutation();
@@ -448,6 +448,44 @@ export function ExpenseFormDialog({ expense, onClose, onReload }: ExpenseFormDia
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * The form's defaults (envelope, payer) depend on the envelope list, so wait for it — otherwise a
+ * form opened before the list arrived would start with no envelope chosen.
+ */
+export function ExpenseFormDialog(props: ExpenseFormDialogProps) {
+  const { t } = useTranslation('budget');
+  const accounts = useAccountsQuery();
+  if (accounts.isSuccess) return <ExpenseFormDialogContent {...props} />;
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) props.onClose();
+      }}
+    >
+      <DialogContent aria-describedby="expense-loading">
+        <DialogTitle>{props.expense ? t('correct_expense') : t('add_expense')}</DialogTitle>
+        <DialogDescription id="expense-loading" className="sr-only">
+          {t('add_description')}
+        </DialogDescription>
+        {accounts.isError ? (
+          <Banner
+            variant="error"
+            onRetry={() => {
+              void accounts.refetch();
+            }}
+            retryLabel={t('retry')}
+          >
+            {t('load_error')}
+          </Banner>
+        ) : (
+          <p role="status">{t('loading')}</p>
+        )}
       </DialogContent>
     </Dialog>
   );

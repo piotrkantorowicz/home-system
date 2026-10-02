@@ -3,7 +3,7 @@ import { initI18n } from '@shared/lib/i18n';
 import { QueryClient } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -242,6 +242,25 @@ describe('Add expense', () => {
     await userEvent.clear(within(dialog).getByLabelText('Purchase date'));
     await userEvent.type(within(dialog).getByLabelText('Purchase date'), '2999-01-01');
     expect(await within(dialog).findByText('This date is in the future.')).toBeVisible();
+  });
+});
+
+describe('Add expense before envelopes arrive', () => {
+  it('waits for the envelope list so an envelope is always chosen', async () => {
+    server.use(
+      http.get(`${BASE}/api/budget/accounts`, async () => {
+        await delay(150);
+        return HttpResponse.json({ items: [shared, mine], totalCount: 2, page: 1, pageSize: 100 });
+      }),
+    );
+    client.clear();
+    renderAt('/budget/expenses');
+    await userEvent.click(await screen.findByRole('button', { name: 'Add expense' }));
+    // The loading dialog is replaced by the form once envelopes arrive, so look the dialog up again.
+    const envelope = await waitFor(() =>
+      within(screen.getByRole('dialog')).getByLabelText('Envelope'),
+    );
+    expect(envelope).toHaveValue('a1');
   });
 });
 
