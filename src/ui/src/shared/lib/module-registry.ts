@@ -32,6 +32,11 @@ export interface AppModule {
    * switcher and command palette. Hiding is cosmetic — the API enforces access.
    */
   requiredRole?: string;
+  /**
+   * Household roles (`Owner`, `Adult`, `Child`, `Guest`) that may see the module. Omit for every
+   * role. Hiding is cosmetic — the API enforces access.
+   */
+  householdRoles?: readonly string[];
   routes: RouteObject[];
   navItems: NavItem[];
   dashboardWidgets?: ComponentType[];
