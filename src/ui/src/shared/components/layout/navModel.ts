@@ -48,9 +48,19 @@ function toRailNavItem(
   };
 }
 
-/** Whether a user holding `roles` may see the module (see `AppModule.requiredRole`). */
-export function isModuleVisible(mod: AppModule, roles: readonly string[]): boolean {
-  return !mod.requiredRole || roles.includes(mod.requiredRole);
+/**
+ * Whether a user holding token `roles` and household role `householdRole` may see the module
+ * (see `AppModule.requiredRole` / `AppModule.householdRoles`).
+ */
+export function isModuleVisible(
+  mod: AppModule,
+  roles: readonly string[],
+  householdRole: string | null = null,
+): boolean {
+  if (mod.requiredRole && !roles.includes(mod.requiredRole)) return false;
+  return (
+    !mod.householdRoles || (householdRole !== null && mod.householdRoles.includes(householdRole))
+  );
 }
 
 /** One tile per module visible to `roles`, for the 64px module rail. */
@@ -58,9 +68,10 @@ export function getModuleTiles(
   t: TFunction,
   labels: Readonly<Record<string, string>> = {},
   roles: readonly string[] = [],
+  householdRole: string | null = null,
 ): ModuleTile[] {
   return getModules()
-    .filter((mod) => isModuleVisible(mod, roles))
+    .filter((mod) => isModuleVisible(mod, roles, householdRole))
     .map((mod) => ({
       name: mod.name,
       basePath: mod.basePath,
