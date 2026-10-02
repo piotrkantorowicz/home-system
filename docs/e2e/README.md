@@ -127,7 +127,7 @@ user-level data). `weight-prediction.spec.ts`'s empty-state test route-mocks
 
 ```bash
 # 1. Backend infra (Authentik + module databases)
-cd infrastructure && docker compose --profile diet-planner --profile household --profile notifications up -d
+cd infrastructure && docker compose --profile diet-planner --profile household --profile notifications --profile budget up -d
 
 # 2. Backend API (inject DB passwords from infrastructure/.env)
 # Follow $run-project --no-frontend, step 3
@@ -189,7 +189,7 @@ What the job does, in order:
 1. Writes `infrastructure/.env` with **generated** values for everything the compose
    file interpolates (`AUTHENTIK_SECRET_KEY`, DB / Redis passwords, bootstrap account) —
    the runner is throwaway, so nothing but the E2E password needs to be a real secret.
-2. `docker compose --profile diet-planner --profile notifications --profile household up -d --wait`
+2. `docker compose --profile diet-planner --profile notifications --profile household --profile budget up -d --wait`
    in `infrastructure/`, then polls `/-/health/ready/` and the
    `home-system` OIDC discovery document (bounded, 5 min each). The discovery document
    only exists once the worker has applied `authentik/blueprints/home-system.yaml`, and
