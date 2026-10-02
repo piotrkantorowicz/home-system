@@ -1,3 +1,4 @@
+import { ToastProvider } from '@shared/context/ToastContext';
 import { initI18n } from '@shared/lib/i18n';
 import { QueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
@@ -20,8 +21,11 @@ import { createWrapper } from '@/test/utils/queryWrapper';
 const household: FakeHouseholdState = {
   household: { id: 'h1' },
   myRole: 'Owner',
-  myPersonId: 'me',
-  members: [{ personId: 'me', displayName: 'Alex', role: 'Owner', isManaged: false }],
+  myPersonId: 'a',
+  members: [
+    { personId: 'a', displayName: 'Alex', role: 'Owner', isManaged: false },
+    { personId: 'b', displayName: 'Bea', role: 'Adult', isManaged: false },
+  ],
 };
 vi.mock('@modules/household', async () => {
   const { useFakeHousehold } = await import('@/test/utils/householdState');
@@ -48,20 +52,25 @@ let client: QueryClient;
 let body: Record<string, unknown>;
 let status: number;
 let requested: number;
+let repayments: Record<string, unknown>[];
+let posted: Record<string, unknown>[];
+let voidStatus: number;
 
 function renderPage() {
   const Wrapper = createWrapper(client);
   return render(
     <Wrapper>
-      <HouseholdStateContext value={{ ...household }}>
-        <MemoryRouter initialEntries={['/budget/settlement']}>
-          <Routes>
-            <Route path="/budget" element={<BudgetLayout />}>
-              <Route path="settlement" element={<SettlementPage />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      </HouseholdStateContext>
+      <ToastProvider>
+        <HouseholdStateContext value={{ ...household }}>
+          <MemoryRouter initialEntries={['/budget/settlement']}>
+            <Routes>
+              <Route path="/budget" element={<BudgetLayout />}>
+                <Route path="settlement" element={<SettlementPage />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </HouseholdStateContext>
+      </ToastProvider>
     </Wrapper>,
   );
 }
@@ -72,6 +81,9 @@ beforeEach(() => {
   household.myRole = 'Owner';
   status = 200;
   requested = 0;
+  repayments = [];
+  posted = [];
+  voidStatus = 200;
   body = {
     currency: 'PLN',
     isSettled: false,
@@ -88,6 +100,24 @@ beforeEach(() => {
   };
   server.use(
     http.get(`${BASE}/api/budget`, () => HttpResponse.json({ id: 'b1', currency: 'PLN' })),
+    http.get(`${BASE}/api/budget/settlements`, () =>
+      HttpResponse.json({
+        items: repayments,
+        totalCount: repayments.length,
+        page: 1,
+        pageSize: 10,
+      }),
+    ),
+    http.post(`${BASE}/api/budget/settlements`, async ({ request }) => {
+      posted.push((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ repaymentId: 'r1', revision: 1, created: true }, { status: 201 });
+    }),
+    http.post(`${BASE}/api/budget/settlements/:id/void`, async ({ request }) => {
+      posted.push((await request.json()) as Record<string, unknown>);
+      return voidStatus === 200
+        ? HttpResponse.json({ repaymentId: 'r1', revision: 2, created: false })
+        : new HttpResponse(null, { status: voidStatus });
+    }),
     http.get(`${BASE}/api/budget/settlement`, () => {
       requested += 1;
       return status === 200 ? HttpResponse.json(body) : new HttpResponse(null, { status });
@@ -181,5 +211,127 @@ describe('Settle up', () => {
     status = 200;
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await screen.findByText('Is owed 40.00 PLN');
+  });
+
+  describe('repayments', () => {
+    // The header button comes first, the per-suggestion one second.
+    const recordButton = (index: number) => {
+      const button = screen.getAllByRole('button', { name: 'Record payment' })[index];
+      if (!button) throw new Error(`no record button at ${String(index)}`);
+      return button;
+    };
+    const suggestionRecordButton = async () => {
+      await screen.findByText('Bea pays Alex 40.00 PLN');
+      return recordButton(1);
+    };
+
+    const repayment = (over: Record<string, unknown> = {}) => ({
+      id: 'r1',
+      fromPersonId: 'b',
+      fromDisplayName: 'Bea',
+      toPersonId: 'a',
+      toDisplayName: 'Alex',
+      amount: '15.00',
+      paidOn: '2026-05-01',
+      note: 'Cash',
+      addedByPersonId: 'a',
+      addedByDisplayName: 'Alex',
+      revision: 1,
+      isVoided: false,
+      voidedAt: null,
+      voidReason: null,
+      createdAt: '2026-05-01T10:00:00Z',
+      ...over,
+    });
+
+    it('records a suggested payment after a review step that says no money moves', async () => {
+      renderPage();
+      await screen.findByText('Bea pays Alex 40.00 PLN');
+      await userEvent.click(await suggestionRecordButton());
+      expect(await screen.findByLabelText(/Amount/)).toHaveValue('40.00');
+      await userEvent.click(screen.getByRole('button', { name: 'Review' }));
+      expect(screen.getByText('Bea paid Alex 40.00 PLN')).toBeInTheDocument();
+      expect(screen.getByText(/doesn't move money/)).toBeInTheDocument();
+      expect(screen.queryByText(/more than is currently owed/)).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Confirm payment' }));
+      await screen.findByText('Payment recorded.');
+      expect(posted[0]).toMatchObject({
+        fromPersonId: 'b',
+        toPersonId: 'a',
+        amount: '40.00',
+        note: null,
+      });
+      expect(posted[0]).toHaveProperty('clientRequestId');
+    });
+
+    it('rejects the same person on both sides and a bad amount before the review step', async () => {
+      renderPage();
+      await screen.findByText('Bea pays Alex 40.00 PLN');
+      await userEvent.click(recordButton(0));
+      await userEvent.selectOptions(await screen.findByLabelText('Paid to'), 'a');
+      await userEvent.type(screen.getByLabelText(/Amount/), '0');
+      await userEvent.click(screen.getByRole('button', { name: 'Review' }));
+      expect(screen.getByText('Choose two different people.')).toBeInTheDocument();
+      expect(screen.getByText(/positive amount/)).toBeInTheDocument();
+      expect(posted).toHaveLength(0);
+    });
+
+    it('warns, without blocking, when the payment is more than is owed', async () => {
+      renderPage();
+      await screen.findByText('Bea pays Alex 40.00 PLN');
+      await userEvent.click(await suggestionRecordButton());
+      const amount = await screen.findByLabelText(/Amount/);
+      await userEvent.clear(amount);
+      await userEvent.type(amount, '40,01');
+      await userEvent.click(screen.getByRole('button', { name: 'Review' }));
+      expect(screen.getByText(/more than is currently owed/)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Confirm payment' }));
+      await screen.findByText('Payment recorded.');
+      expect(posted[0]).toMatchObject({ amount: '40.01' });
+    });
+
+    it('keeps the history and the record button when everyone is settled', async () => {
+      body = { currency: 'PLN', isSettled: true, balances: [], suggestions: [] };
+      repayments = [repayment()];
+      renderPage();
+      await screen.findByText('Everyone is settled up');
+      expect(screen.getByRole('button', { name: 'Record payment' })).toBeInTheDocument();
+      expect(await screen.findByText('Bea paid Alex 15.00 PLN on 2026-05-01')).toBeInTheDocument();
+    });
+
+    it('marks voided payments with their reason and offers no second void', async () => {
+      repayments = [
+        repayment(),
+        repayment({ id: 'r2', isVoided: true, voidReason: 'Wrong person', amount: '5.00' }),
+      ];
+      renderPage();
+      await screen.findByText('Bea paid Alex 5.00 PLN on 2026-05-01');
+      expect(screen.getByText('Voided')).toBeInTheDocument();
+      expect(screen.getByText(/Reason: Wrong person/)).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Void payment' })).toHaveLength(1);
+    });
+
+    it('requires a reason to void a payment, then sends the revision', async () => {
+      repayments = [repayment({ revision: 3 })];
+      renderPage();
+      await userEvent.click(await screen.findByRole('button', { name: 'Void payment' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Void payment' }));
+      expect(screen.getByText('Enter a reason.')).toBeInTheDocument();
+      expect(posted).toHaveLength(0);
+      await userEvent.type(screen.getByLabelText('Reason'), 'Entered twice');
+      await userEvent.click(screen.getByRole('button', { name: 'Void payment' }));
+      await screen.findByText('Payment voided.');
+      expect(posted[0]).toEqual({ expectedRevision: 3, reason: 'Entered twice' });
+    });
+
+    it('explains a stale void instead of failing silently', async () => {
+      repayments = [repayment()];
+      voidStatus = 409;
+      renderPage();
+      await userEvent.click(await screen.findByRole('button', { name: 'Void payment' }));
+      await userEvent.type(screen.getByLabelText('Reason'), 'Oops');
+      await userEvent.click(screen.getByRole('button', { name: 'Void payment' }));
+      await screen.findByText(/Someone else changed this payment/);
+    });
   });
 });

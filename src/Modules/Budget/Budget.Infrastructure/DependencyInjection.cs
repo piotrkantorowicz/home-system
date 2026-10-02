@@ -48,6 +48,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IBudgetAccountRepository, BudgetAccountRepository>();
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IMonthlyLimitRepository, MonthlyLimitRepository>();
+        services.AddScoped<ISettlementRepository, SettlementRepository>();
         services.AddScoped<BudgetAccessService>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);

@@ -16,11 +16,12 @@ internal sealed class GetSettlementQueryHandler(BudgetAccessService access, IBud
     {
         var caller = await access.RequireAdultAsync(query.AuthSubject, ct);
 
-        var currency = await db.Budgets.AsNoTracking()
+        var budget = await db.Budgets.AsNoTracking()
             .Where(b => b.HouseholdId == caller.HouseholdId)
-            .Select(b => (BudgetCurrency?)b.Currency)
+            .Select(b => new { b.Id, b.Currency })
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException("Budget", caller.HouseholdId);
+        var currency = budget.Currency;
 
         // Only shared envelopes carry debt; personal expenses have a payer but no shares and must not count.
         var sharedAccountIds = db.BudgetAccounts
@@ -51,10 +52,21 @@ internal sealed class GetSettlementQueryHandler(BudgetAccessService access, IBud
             .GroupBy(x => x.Person)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id.Value).First().Name);
 
+        // Active repayments reduce debt; voided ones simply drop out. They never enter spending.
+        var repayments = await db.Settlements.AsNoTracking()
+            .Where(r => r.BudgetId == budget.Id && !r.IsVoided)
+            .Select(r => new { r.FromPersonId, r.FromDisplayName, r.ToPersonId, r.ToDisplayName, r.Amount, r.CreatedAt, r.Id })
+            .ToListAsync(ct);
+        foreach (var r in repayments)
+        {
+            if (!storedNames.ContainsKey(r.FromPersonId)) storedNames[r.FromPersonId] = r.FromDisplayName;
+            if (!storedNames.ContainsKey(r.ToPersonId)) storedNames[r.ToPersonId] = r.ToDisplayName;
+        }
+
         var net = SettlementCalculator.Net(
             payments.Select(p => (p.Person, Minor: ToMinor(p.Total))),
             shares.Select(s => (s.Person, Minor: ToMinor(s.Total))),
-            []);
+            repayments.Select(r => (r.FromPersonId, r.ToPersonId, Minor: ToMinor(r.Amount))));
 
         string Name(Guid person)
             => caller.Members.FirstOrDefault(m => m.PersonId == person)?.DisplayName ?? storedNames.GetValueOrDefault(person, string.Empty);
@@ -68,7 +80,7 @@ internal sealed class GetSettlementQueryHandler(BudgetAccessService access, IBud
             .Select(t => new SettlementTransferDto(t.From, Name(t.From), t.To, Name(t.To), Format(t.MinorUnits)))
             .ToList();
 
-        return new SettlementDto(currency.ToString()!, net.Values.All(v => v == 0), balances, suggestions);
+        return new SettlementDto(currency.ToString(), net.Values.All(v => v == 0), balances, suggestions);
     }
 
     private static long ToMinor(decimal amount) => decimal.ToInt64(amount * 100m);

@@ -23,6 +23,10 @@ test.describe('Budget settle up', () => {
     // A one-adult household has nobody to owe: a real settled state, not an error or a blank.
     await expect(page.getByText('Everyone is settled up')).toBeVisible();
 
+    // Recording stays available when settled, with an empty history. Two-adult payment journeys: #456.
+    await expect(page.getByRole('button', { name: 'Record payment' })).toBeVisible();
+    await expect(page.getByText('No payments recorded yet.')).toBeVisible();
+
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(
       page.getByRole('heading', { name: 'Outstanding balance — all recorded entries' }),
