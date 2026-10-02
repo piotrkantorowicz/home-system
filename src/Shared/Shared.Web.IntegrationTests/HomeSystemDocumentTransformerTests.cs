@@ -59,6 +59,10 @@ public sealed class HomeSystemDocumentTransformerTests
         SchemaRef(health, "400").ShouldEndWith("/HttpValidationProblemDetails");
         SchemaRef(health, "404").ShouldEndWith("/ProblemDetails");
 
+        // Budget init throws ConflictException on a currency mismatch; the contract must say so.
+        SchemaRef(paths.GetProperty("/api/budget").GetProperty("post").GetProperty("responses"), "409")
+            .ShouldEndWith("/ProblemDetails");
+
         document.RootElement.GetProperty("components").GetProperty("securitySchemes")
             .TryGetProperty("Bearer", out _).ShouldBeTrue();
     }
