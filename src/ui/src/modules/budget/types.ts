@@ -41,3 +41,14 @@ export interface ExpenseInput {
   paidByPersonId: string | null;
   participantIds: string[];
 }
+
+export type Settlement = components['schemas']['SettlementDto'];
+export type Repayment = components['schemas']['RepaymentDto'];
+
+export interface RepaymentInput {
+  fromPersonId: string;
+  toPersonId: string;
+  amount: string;
+  paidOn: string;
+  note: string | null;
+}

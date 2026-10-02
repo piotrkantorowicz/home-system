@@ -1,15 +1,26 @@
-import { Badge, Banner, EmptyState } from '@shared/components/ui';
+import { Badge, Banner, Button, EmptyState, Pagination } from '@shared/components/ui';
 import { Lock, Scale } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { errorStatus } from '../api/client';
-import { useSettlementQuery } from '../api/queries';
+import { useRepaymentsQuery, useSettlementQuery } from '../api/queries';
+import { RecordRepaymentDialog } from '../components/RecordRepaymentDialog';
+import { VoidRepaymentDialog } from '../components/VoidRepaymentDialog';
 import { useBudgetAccess } from '../hooks/useBudgetAccess';
+
+import type { RepaymentPrefill } from '../components/RecordRepaymentDialog';
+import type { Repayment } from '../types';
 
 export default function SettlementPage() {
   const { t } = useTranslation('budget');
   const { level } = useBudgetAccess();
   const query = useSettlementQuery(level === 'adult');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const repayments = useRepaymentsQuery(page, pageSize, level === 'adult');
+  const [recording, setRecording] = useState<{ prefill?: RepaymentPrefill } | null>(null);
+  const [voiding, setVoiding] = useState<Repayment | null>(null);
 
   if (level !== 'adult' || errorStatus(query.error) === 403)
     return (
@@ -22,9 +33,20 @@ export default function SettlementPage() {
 
   return (
     <div className="space-y-6">
-      <header className="max-w-2xl">
-        <h2 className="text-xl font-semibold">{t('settlement_title')}</h2>
-        <p className="text-text-2 mt-1 text-sm">{t('settlement_intro')}</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-2xl">
+          <h2 className="text-xl font-semibold">{t('settlement_title')}</h2>
+          <p className="text-text-2 mt-1 text-sm">{t('settlement_intro')}</p>
+        </div>
+        {query.isSuccess && (
+          <Button
+            onClick={() => {
+              setRecording({});
+            }}
+          >
+            {t('record_payment')}
+          </Button>
+        )}
       </header>
 
       {query.isPending && <p role="status">{t('loading')}</p>}
@@ -89,7 +111,7 @@ export default function SettlementPage() {
                   {query.data.suggestions.map((s) => (
                     <li
                       key={`${s.fromPersonId}-${s.toPersonId}`}
-                      className="border-border rounded-xl border p-4 text-sm"
+                      className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
                     >
                       {t('suggestion', {
                         from: s.fromDisplayName,
@@ -97,6 +119,21 @@ export default function SettlementPage() {
                         amount: s.amount,
                         currency: query.data.currency,
                       })}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setRecording({
+                            prefill: {
+                              fromPersonId: s.fromPersonId,
+                              toPersonId: s.toPersonId,
+                              amount: s.amount,
+                            },
+                          });
+                        }}
+                      >
+                        {t('record_payment')}
+                      </Button>
                     </li>
                   ))}
                 </ol>
@@ -107,6 +144,84 @@ export default function SettlementPage() {
               </section>
             </>
           )}
+
+          <section aria-labelledby="repayments-title" className="space-y-3">
+            <h3 id="repayments-title" className="font-semibold">
+              {t('repayments_title')}
+            </h3>
+            {repayments.isPending && <p role="status">{t('loading')}</p>}
+            {repayments.isError && (
+              <Banner
+                variant="error"
+                onRetry={() => {
+                  void repayments.refetch();
+                }}
+                retryLabel={t('retry')}
+              >
+                {t('repayments_error')}
+              </Banner>
+            )}
+            {repayments.isSuccess &&
+              (repayments.data.items.length === 0 ? (
+                <p className="text-text-2 text-sm">{t('repayments_empty')}</p>
+              ) : (
+                <>
+                  <ul className="space-y-2">
+                    {repayments.data.items.map((r) => (
+                      <li
+                        key={r.id}
+                        className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
+                      >
+                        <div className="space-y-1">
+                          <p className={r.isVoided ? 'line-through' : undefined}>
+                            {t('repayment_line', {
+                              from: r.fromDisplayName,
+                              to: r.toDisplayName,
+                              amount: r.amount,
+                              currency: query.data.currency,
+                              date: r.paidOn,
+                            })}
+                            {r.isVoided && (
+                              <Badge variant="outline" className="ml-2 no-underline">
+                                {t('voided')}
+                              </Badge>
+                            )}
+                          </p>
+                          {r.note && <p className="text-text-2">{r.note}</p>}
+                          <p className="text-text-2">
+                            {t('repayment_added_by', { name: r.addedByDisplayName })}
+                            {r.isVoided && r.voidReason
+                              ? ` · ${t('reason_is', { reason: r.voidReason })}`
+                              : ''}
+                          </p>
+                        </div>
+                        {!r.isVoided && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setVoiding(r);
+                            }}
+                          >
+                            {t('void_repayment')}
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <Pagination
+                    page={Number(repayments.data.page)}
+                    pageSize={Number(repayments.data.pageSize)}
+                    totalCount={Number(repayments.data.totalCount)}
+                    onPageChange={setPage}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setPage(1);
+                    }}
+                  />
+                </>
+              ))}
+          </section>
 
           <section aria-labelledby="how-title" className="space-y-2">
             <h3 id="how-title" className="font-semibold">
@@ -120,6 +235,24 @@ export default function SettlementPage() {
             </ul>
           </section>
         </>
+      )}
+
+      {recording && query.isSuccess && (
+        <RecordRepaymentDialog
+          settlement={query.data}
+          {...(recording.prefill ? { prefill: recording.prefill } : {})}
+          onClose={() => {
+            setRecording(null);
+          }}
+        />
+      )}
+      {voiding && (
+        <VoidRepaymentDialog
+          repayment={voiding}
+          onClose={() => {
+            setVoiding(null);
+          }}
+        />
       )}
     </div>
   );

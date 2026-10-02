@@ -16,3 +16,11 @@ export function normalizeLimit(text: string): string | null {
   const trimmed = text.trim();
   return AMOUNT_PATTERN.test(trimmed) ? trimmed.replace(',', '.') : null;
 }
+
+/** An API amount (`"12.5"`, `"-40.00"`) in minor units, so amounts compare without floats. */
+export function toMinor(amount: string): number {
+  const negative = amount.startsWith('-');
+  const [whole = '0', fraction = ''] = amount.replace('-', '').split('.');
+  const minor = Number(whole) * 100 + Number(fraction.padEnd(2, '0').slice(0, 2));
+  return negative ? -minor : minor;
+}

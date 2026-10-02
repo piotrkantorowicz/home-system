@@ -1172,6 +1172,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/budget/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Page recorded repayments, newest payment first (Owner/Adult only) */
+        get: operations["ListBudgetRepayments"];
+        put?: never;
+        /** Record that one person paid another; a retry with the same clientRequestId returns the original result */
+        post: operations["RecordBudgetRepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budget/settlements/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void a recorded repayment with a reason and expected revision; repeating is a no-op */
+        post: operations["VoidBudgetRepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications/deliveries/summary": {
         parameters: {
             query?: never;
@@ -2096,6 +2131,19 @@ export interface components {
             hasNextPage?: boolean;
             hasPreviousPage?: boolean;
         };
+        PagedListOfRepaymentDto: {
+            items: components["schemas"]["RepaymentDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
+            totalPages?: number | string;
+            hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
+        };
         PickablePersonDto: {
             /** Format: uuid */
             personId: string;
@@ -2190,6 +2238,18 @@ export interface components {
             amount: number | string;
             unit: string;
         };
+        RecordRepaymentRequest: {
+            /** Format: uuid */
+            clientRequestId: string;
+            /** Format: uuid */
+            fromPersonId: string;
+            /** Format: uuid */
+            toPersonId: string;
+            amount: string;
+            /** Format: date */
+            paidOn: string;
+            note: null | string;
+        };
         RenameAccountRequest: {
             name: string;
             /** Format: int32 */
@@ -2197,6 +2257,38 @@ export interface components {
         };
         RenameHouseholdRequest: {
             name: string;
+        };
+        RepaymentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fromPersonId: string;
+            fromDisplayName: string;
+            /** Format: uuid */
+            toPersonId: string;
+            toDisplayName: string;
+            amount: string;
+            /** Format: date */
+            paidOn: string;
+            note: null | string;
+            /** Format: uuid */
+            addedByPersonId: string;
+            addedByDisplayName: string;
+            /** Format: int32 */
+            revision: number | string;
+            isVoided: boolean;
+            /** Format: date-time */
+            voidedAt: null | string;
+            voidReason: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RepaymentMutationResult: {
+            /** Format: uuid */
+            repaymentId: string;
+            /** Format: int32 */
+            revision: number | string;
+            created: boolean;
         };
         RetryAllDeliveriesResultDto: {
             /** Format: int32 */
@@ -2393,6 +2485,11 @@ export interface components {
         VoidExpenseRequest: {
             /** Format: uuid */
             clientRequestId: string;
+            /** Format: int32 */
+            expectedRevision: number | string;
+            reason: string;
+        };
+        VoidRepaymentRequest: {
             /** Format: int32 */
             expectedRevision: number | string;
             reason: string;
@@ -8358,6 +8455,223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettlementDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListBudgetRepayments: {
+        parameters: {
+            query?: {
+                page?: number | string;
+                pageSize?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedListOfRepaymentDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RecordBudgetRepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRepaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepaymentMutationResult"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepaymentMutationResult"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    VoidBudgetRepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidRepaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepaymentMutationResult"];
                 };
             };
             /** @description Validation failed */

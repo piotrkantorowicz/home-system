@@ -5,7 +5,13 @@ import { useAuth } from 'react-oidc-context';
 import { api, checkResponse } from './client';
 import { budgetQueryKeys } from './queryKeys';
 
-import type { AccountVisibility, BudgetCurrency, ExpenseFilters, ExpenseInput } from '../types';
+import type {
+  AccountVisibility,
+  BudgetCurrency,
+  ExpenseFilters,
+  ExpenseInput,
+  RepaymentInput,
+} from '../types';
 
 export function budgetOptions(subject: string | undefined, householdId: string | undefined) {
   return queryOptions({
@@ -125,6 +131,64 @@ export function useSettlementQuery(enabled = true) {
   return useQuery({
     ...settlementOptions(auth.user?.profile.sub, household?.id),
     enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+export function repaymentsOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  page: number,
+  pageSize: number,
+) {
+  return queryOptions({
+    queryKey: budgetQueryKeys.repayments(subject, householdId, page, pageSize),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/budget/settlements', {
+        params: { query: { page, pageSize } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing repayments response');
+      return result.data;
+    },
+  });
+}
+
+export function useRepaymentsQuery(page: number, pageSize: number, enabled = true) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...repaymentsOptions(auth.user?.profile.sub, household?.id, page, pageSize),
+    enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+type RepaymentAction =
+  | { kind: 'record'; requestId: string; input: RepaymentInput }
+  | { kind: 'void'; id: string; expectedRevision: number; reason: string };
+
+async function mutateRepayment(action: RepaymentAction) {
+  const result =
+    action.kind === 'record'
+      ? await api.POST('/api/budget/settlements', {
+          body: { clientRequestId: action.requestId, ...action.input },
+        })
+      : await api.POST('/api/budget/settlements/{id}/void', {
+          params: { path: { id: action.id } },
+          body: { expectedRevision: action.expectedRevision, reason: action.reason },
+        });
+  checkResponse(result);
+  return result.data;
+}
+
+export function useRepaymentMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: mutateRepayment,
+    // Balances, suggestions and the history all hang off the budget key; a 409 refreshes them too.
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: budgetQueryKeys.all() });
+    },
   });
 }
 
