@@ -19,6 +19,11 @@ export interface NavItem {
    * `NAV_GROUP_SETTINGS` to pin the item at the bottom instead.
    */
   group?: string;
+  /**
+   * Household roles that see this item; omit for every role the module admits. Hiding is
+   * cosmetic — the API enforces access.
+   */
+  householdRoles?: readonly string[];
 }
 
 export interface AppModule {
@@ -32,6 +37,11 @@ export interface AppModule {
    * switcher and command palette. Hiding is cosmetic — the API enforces access.
    */
   requiredRole?: string;
+  /**
+   * Household roles (`Owner`, `Adult`, `Child`, `Guest`) that may see the module. Omit for every
+   * role. Hiding is cosmetic — the API enforces access.
+   */
+  householdRoles?: readonly string[];
   routes: RouteObject[];
   navItems: NavItem[];
   dashboardWidgets?: ComponentType[];

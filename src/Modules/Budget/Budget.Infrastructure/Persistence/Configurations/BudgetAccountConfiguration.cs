@@ -15,6 +15,7 @@ internal sealed class BudgetAccountConfiguration : IEntityTypeConfiguration<Budg
             "(visibility = 'Personal') = (owner_person_id IS NOT NULL)"));
 
         builder.HasKey(x => x.Id);
+        builder.HasAlternateKey(x => new { x.Id, x.BudgetId }); // target of expenses' composite FK
         builder.Property(x => x.Id)
             .HasConversion(id => id.Value, value => BudgetAccountId.From(value))
             .HasColumnName("id");
@@ -34,5 +35,10 @@ internal sealed class BudgetAccountConfiguration : IEntityTypeConfiguration<Budg
 
         builder.Property(x => x.OwnerPersonId).HasColumnName("owner_person_id");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
+        builder.Property(x => x.IsArchived).HasColumnName("is_archived").HasDefaultValue(false);
+        builder.Property(x => x.Revision).HasColumnName("revision").HasDefaultValue(1);
+
+        // Maps to PostgreSQL's xmin system column — no schema change. See BudgetAccount.Version.
+        builder.Property(x => x.Version).IsRowVersion();
     }
 }

@@ -35,6 +35,6 @@ internal sealed class BudgetAccessService(IHouseholdQueryService households)
         var context = await households.GetHouseholdContextForUserAsync(authSubject, ct)
             ?? throw new NotFoundException("Household", authSubject);
 
-        return new BudgetCaller(context.HouseholdId, context.PersonId, context.Role);
+        return new BudgetCaller(context.HouseholdId, context.PersonId, context.Role, context.Members);
     }
 }
