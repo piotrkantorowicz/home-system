@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import ControlKit from './ControlKit';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
 }));
 
 describe('ControlKit', () => {
@@ -30,5 +30,12 @@ describe('ControlKit', () => {
     expect(screen.getByRole('button', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'demo switch' })).toBeInTheDocument();
     expect(screen.getByText('Could not load.')).toBeInTheDocument();
+  });
+
+  it('shows preference-aware formatting samples', () => {
+    render(<ControlKit />);
+
+    expect(screen.getByText(/2.100 kcal/)).toBeInTheDocument();
+    expect(screen.getByText('1.3 of 2.5 L')).toBeInTheDocument();
   });
 });

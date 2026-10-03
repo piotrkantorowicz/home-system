@@ -7,6 +7,7 @@ import {
   Input,
   MacroBar,
   MetricTile,
+  Num,
   Ring,
   SegmentedControl,
   Select,
@@ -14,6 +15,8 @@ import {
   Switch,
   Textarea,
 } from '@shared/components/ui';
+import { useFormat } from '@shared/hooks/useFormat';
+import { goalStatus } from '@shared/lib/format';
 import { formatNumber, formatSigned } from '@shared/lib/utils';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +37,7 @@ function Group({ title, sub, children }: { title: string; sub: string; children:
 
 export default function ControlKit() {
   const { t } = useTranslation();
+  const f = useFormat();
   const [segment, setSegment] = useState('table');
   const [on, setOn] = useState(true);
 
@@ -150,6 +154,25 @@ export default function ControlKit() {
             Could not load.
           </Banner>
           <Banner variant="info">Formats apply on this device only.</Banner>
+        </Group>
+        <Group
+          title="Formatting"
+          sub="useFormat() · Num · goalStatus — follows language and unit preferences"
+        >
+          <div className="text-body flex flex-col gap-1">
+            <Num>{f.energy(2100)}</Num>
+            <Num>{f.grams(4.54)}</Num>
+            <Num>{f.weight(72.46)}</Num>
+            <Num>{f.volume(250)}</Num>
+            <Num>{f.waterProgress(1330, 2500)}</Num>
+            <Num>{f.money('4114.65')}</Num>
+            <Num>{f.quantity(0.5, 'Piece')}</Num>
+            <Num>{f.dayShort('2026-10-03')}</Num>
+          </div>
+          <div className="text-meta text-muted-foreground">
+            2200 / 2000 kcal: {goalStatus(2200, 2000, 'limit').state} · 100 / 150 g protein:{' '}
+            {goalStatus(100, 150, 'min').state}
+          </div>
         </Group>
       </div>
     </div>
