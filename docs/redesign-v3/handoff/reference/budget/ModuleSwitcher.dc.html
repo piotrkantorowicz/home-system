@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Module switcher — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 400px; height: 520px; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; font-family: Outfit, system-ui, sans-serif; color: #1f1c25; display: flex; flex-direction: column; gap: 8px">
+  <button type="button" aria-expanded="true" aria-controls="mods" style="display: flex; align-items: center; gap: 10px; width: 240px; min-height: 52px; padding: 8px; border: 0; border-radius: 10px; background: #ece6fd; font: inherit; color: inherit; text-align: left; cursor: pointer">
+    <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+    <span style="display: flex; flex-direction: column; flex: 1; min-width: 0"><span style="font-size: 15px; font-weight: 600">Budget</span><span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span></span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4b1aa3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg>
+  </button>
+  <div id="mods" role="menu" aria-label="Switch module" style="width: 340px; background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; box-shadow: 0 16px 40px -12px rgba(20,10,40,0.25); padding: 8px; display: flex; flex-direction: column; gap: 2px">
+    <span style="padding: 8px 10px 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b">HomeSystem</span>
+    <a href="/proposal/Today.dc.html" role="menuitem" style="display: grid; grid-template-columns: 40px 1fr 20px; align-items: center; gap: 12px; min-height: 60px; padding: 0 10px; border-radius: 10px; color: #1f1c25; text-decoration: none">
+      <span style="width: 40px; height: 40px; border-radius: 10px; background: #f1eff4; color: #4d4856; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg></span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 600">Diet planner</span><span style="font-size: 13px; color: #625d6b">Meals, recipes, nutrition, water</span></span>
+      <span></span>
+    </a>
+    <a href="Overview.dc.html" role="menuitem" aria-current="true" style="display: grid; grid-template-columns: 40px 1fr 20px; align-items: center; gap: 12px; min-height: 60px; padding: 0 10px; border-radius: 10px; background: #f8f5ff; color: #1f1c25; text-decoration: none">
+      <span style="width: 40px; height: 40px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg></span>
+      <span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 600">Budget</span><span style="font-size: 13px; color: #625d6b">Envelopes, expenses, settle up</span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6f32e2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+    </a>
+    <div style="height: 1px; margin: 6px 10px; background: #efedf2"></div>
+    <a href="/proposal/Household.dc.html" role="menuitem" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Kantorowicz Home · 3 people</a>
+  </div>
+  <p style="margin: 8px 4px 0; max-width: 340px; font-size: 13px; line-height: 1.5; color: #625d6b">Replaces the icon rail. New modules slot in here without adding another column of navigation. Admin stays in the sidebar footer, visible only to admins.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":400,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

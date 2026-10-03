@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Water — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+
+  <nav aria-label="Main" style="flex: 1 1 240px; max-width: 100%; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; border-right: 1px solid #e4e1ea; display: flex; flex-direction: column; gap: 16px">
+    <a href="ModuleSwitcher.dc.html" style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px; border-radius: 10px; color: inherit; text-decoration: none">
+      <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">Diet planner</span>
+        <span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#625d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </a>
+    <button type="button" style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 1px solid #e4e1ea; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #625d6b; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="flex: 1; text-align: left">Search</span>
+      <kbd style="font-family: inherit; font-size: 12px; color: #625d6b; background: #f1eff4; border-radius: 6px; padding: 2px 6px">⌘K</kbd>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="Today.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Today</a>
+      <a href="MealPlan.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Meal plan</a>
+      <a href="Shopping.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Shopping list</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Library</span>
+      <a href="Recipes.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>Recipes</a>
+      <a href="Products.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 8.7 5 8.7-5"></path></svg>Products</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Track</span>
+      <a href="Nutrition.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Nutrition</a>
+      <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; text-decoration: none; font-size: 14.5px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>Water</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid #e4e1ea">
+      <a href="Household.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Household</a>
+      <a href="Notifications.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex: 1">Notifications</span>
+        <span style="font-size: 12px; font-weight: 600; color: #ffffff; background: #6f32e2; border-radius: 6px; padding: 1px 7px">2</span></a>
+      <a href="Settings.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</a>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+        <span style="font-size: 14px; font-weight: 500">Paweł K.</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px 64px">
+    <div style="max-width: 1120px; display: flex; flex-direction: column; gap: 24px">
+      <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Water</h1>
+          <p style="margin: 0; font-size: 15px; color: #625d6b">Sat 3 Oct · goal 2.5 L</p>
+        </div>
+        <a href="Settings.dc.html" style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font-size: 14.5px; font-weight: 500; color: #1f1c25; text-decoration: none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Water settings</a>
+      </header>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 24px; align-items: start">
+        <section aria-labelledby="td-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 id="td-h" style="margin: 0; font-size: 18px; font-weight: 600">Today</h2>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap">
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span aria-live="polite" style="font-size: 44px; line-height: 1; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">{{totalL}}</span>
+              <span style="font-size: 15px; color: #625d6b">of 2.5 L</span>
+            </div>
+            <span style="font-size: 14px; font-weight: {{leftWeight}}; color: {{leftColor}}">{{leftText}}</span>
+          </div>
+          <div style="height: 10px; border-radius: 6px; background: #ebe8f0"><div style="width: {{pct}}%; height: 10px; border-radius: 6px; background: #2a8db0"></div></div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+            <button type="button" onClick="{{add250}}" style="height: 48px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 600; color: #1f1c25; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15">+250 ml<span style="font-size: 12px; font-weight: 400; color: #625d6b">glass</span></button>
+            <button type="button" onClick="{{add330}}" style="height: 48px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 600; color: #1f1c25; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15">+330 ml<span style="font-size: 12px; font-weight: 400; color: #625d6b">can</span></button>
+            <button type="button" onClick="{{add500}}" style="height: 48px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 600; color: #1f1c25; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15">+500 ml<span style="font-size: 12px; font-weight: 400; color: #625d6b">bottle</span></button>
+            <button type="button" style="height: 48px; border: 1px dashed #c9c4d2; border-radius: 10px; background: transparent; font: inherit; font-size: 15px; font-weight: 500; color: #3b3742; cursor: pointer">Other…</button>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 600">Entries</h3>
+              <span style="font-size: 13px; color: #625d6b">{{countLabel}}</span>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none">
+              <sc-for list="{{entries}}" as="e" hint-placeholder-count="4">
+                <li style="display: grid; grid-template-columns: 60px 1fr 44px; align-items: center; min-height: 48px; border-top: 1px solid #efedf2; font-size: 15px; font-variant-numeric: tabular-nums">
+                  <span style="color: #625d6b">{{e.time}}</span>
+                  <span style="font-weight: 500">{{e.amount}}</span>
+                  <button type="button" onClick="{{e.remove}}" aria-label="Delete {{e.amount}} at {{e.time}}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #625d6b; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+              <p style="margin: 0; padding: 14px 0; border-top: 1px solid #efedf2; font-size: 14.5px; color: #625d6b">Nothing logged yet today.</p>
+            </sc-if>
+          </div>
+        </section>
+
+        <div style="display: flex; flex-direction: column; gap: 24px">
+          <section aria-labelledby="wk-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 18px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <h2 id="wk-h" style="margin: 0; font-size: 18px; font-weight: 600">Last 7 days</h2>
+              <span style="font-size: 13.5px; color: #625d6b">Goal met 3 of 6 days</span>
+            </div>
+            <div style="position: relative; height: 170px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end">
+              <div style="position: absolute; left: 0; right: 0; bottom: {{goalBottom}}px; border-top: 1.5px dashed #8a8494"></div>
+              <span style="position: absolute; right: 0; bottom: {{goalLabelBottom}}px; font-size: 12px; font-weight: 500; color: #4d4856; background: #ffffff; padding-left: 6px">2.5 L goal</span>
+              <sc-for list="{{week}}" as="w" hint-placeholder-count="7">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; z-index: 1">
+                  <span style="font-size: 12px; font-weight: 600; color: #4d4856; font-variant-numeric: tabular-nums">{{w.label}}</span>
+                  <div style="width: 100%; max-width: 36px; height: {{w.h}}px; border-radius: 6px 6px 2px 2px; background: {{w.fill}}"></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: -10px">
+              <sc-for list="{{week}}" as="w" hint-placeholder-count="7">
+                <span style="text-align: center; font-size: 12.5px; color: {{w.dayColor}}; font-weight: {{w.dayWeight}}">{{w.day}}</span>
+              </sc-for>
+            </div>
+          </section>
+
+          <section aria-labelledby="set-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px">
+            <h2 id="set-h" style="margin: 0 0 6px; font-size: 18px; font-weight: 600">Your setup</h2>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px"><span style="color: #4d4856">Daily goal</span><span style="font-weight: 500">2.5 L</span></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><span style="color: #4d4856">Glass size</span><span style="font-weight: 500">250 ml</span></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><span style="color: #4d4856">Reminders</span><span style="font-weight: 500">Every 90 min, 08:00–20:00</span></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { entries: [
+      { id: 1, ml: 250, time: '07:40' }, { id: 2, ml: 330, time: '09:15' },
+      { id: 3, ml: 250, time: '11:00' }, { id: 4, ml: 500, time: '13:45' }
+    ], nextId: 5 };
+  }
+  add(ml) {
+    return () => {
+      const d = new Date();
+      const t = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      this.setState({ entries: [...this.state.entries, { id: this.state.nextId, ml, time: t }], nextId: this.state.nextId + 1 });
+    };
+  }
+  renderVals() {
+    const goal = 2500;
+    const list = this.state.entries || [];
+    const total = list.reduce((a, e) => a + e.ml, 0);
+    const left = goal - total;
+    const L = (ml) => (Math.round(ml / 100) / 10).toFixed(1);
+    const max = 3000, H = 130;
+    const days = [['Sun', 2400], ['Mon', 2600], ['Tue', 2100], ['Wed', 2500], ['Thu', 1900], ['Fri', 2700], ['Today', total]];
+    return {
+      totalL: L(total),
+      pct: Math.min(100, Math.round(total / goal * 100)),
+      leftText: left > 0 ? L(left) + ' L to go' : 'Goal reached',
+      leftColor: left > 0 ? '#625d6b' : '#22704a',
+      leftWeight: left > 0 ? 500 : 600,
+      empty: list.length === 0,
+      countLabel: list.length + (list.length === 1 ? ' drink' : ' drinks'),
+      entries: list.slice().reverse().map((e) => ({
+        time: e.time, amount: e.ml + ' ml',
+        remove: () => this.setState({ entries: this.state.entries.filter((x) => x.id !== e.id) })
+      })),
+      add250: this.add(250), add330: this.add(330), add500: this.add(500),
+      week: days.map((d, i) => ({
+        day: d[0], label: L(d[1]),
+        h: Math.max(4, Math.round(Math.min(d[1], max) / max * H)),
+        fill: i === days.length - 1 ? '#2a8db0' : '#b5dbe8',
+        dayColor: i === days.length - 1 ? '#1f6e8a' : '#625d6b',
+        dayWeight: i === days.length - 1 ? 600 : 400
+      })),
+      goalBottom: Math.round(goal / max * H),
+      goalLabelBottom: Math.round(goal / max * H) + 4
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settle up — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+
+  <nav aria-label="Main" style="flex: 1 1 240px; max-width: 100%; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; border-right: 1px solid #e4e1ea; display: flex; flex-direction: column; gap: 16px">
+    <a href="ModuleSwitcher.dc.html" style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px; border-radius: 10px; color: inherit; text-decoration: none">
+      <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">Budget</span>
+        <span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#625d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </a>
+    <button type="button" style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 1px solid #e4e1ea; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #625d6b; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="flex: 1; text-align: left">Search</span>
+      <kbd style="font-family: inherit; font-size: 12px; color: #625d6b; background: #f1eff4; border-radius: 6px; padding: 2px 6px">⌘K</kbd>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>Overview</a>
+      <a href="Expenses.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>Expenses</a>
+      <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; text-decoration: none; font-size: 14.5px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg>Settle up</a>
+      <a href="Envelopes.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>Envelopes</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid #e4e1ea">
+      <a href="/proposal/Household.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Household</a>
+      <a href="/proposal/Notifications.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex: 1">Notifications</span>
+        <span style="font-size: 12px; font-weight: 600; color: #ffffff; background: #6f32e2; border-radius: 6px; padding: 1px 7px">2</span></a>
+      <a href="Admin.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+        <span style="flex: 1">Admin</span>
+        <span style="font-size: 12px; font-weight: 600; color: #b42b31; background: #fbe9ea; border-radius: 6px; padding: 1px 7px">4</span></a>
+      <a href="/proposal/Settings.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</a>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+        <span style="font-size: 14px; font-weight: 500">Paweł K.</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px 64px">
+    <div style="max-width: 760px; display: flex; flex-direction: column; gap: 24px">
+      <header style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Settle up</h1>
+        <p style="margin: 0; font-size: 15px; color: #625d6b">Shared costs one person paid for, between the adults · PLN</p>
+      </header>
+
+      <sc-if value="{{open}}" hint-placeholder-val="{{true}}">
+        <section aria-label="Suggested payment" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px">
+          <div style="display: flex; align-items: center; gap: 16px">
+            <span style="display: flex; align-items: center">
+              <span style="width: 44px; height: 44px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px #ffffff">PK</span>
+              <svg width="28" height="20" viewBox="0 0 28 20" fill="none" stroke="#8a8494" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin: 0 4px"><path d="M2 10h22M18 4l6 6-6 6"></path></svg>
+              <span style="width: 44px; height: 44px; border-radius: 50%; background: #d6e4f7; color: #1f4f91; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center">AK</span>
+            </span>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 15px; color: #4d4856">You owe Ania</span>
+              <span style="font-size: 36px; line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">505.73</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+            <button type="button" onClick="{{record}}" style="height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: #6f32e2; font: inherit; font-size: 15px; font-weight: 600; color: #ffffff; cursor: pointer">I've paid Ania 505.73</button>
+            <button type="button" style="height: 32px; padding: 0 6px; border: 0; background: transparent; font: inherit; font-size: 13.5px; font-weight: 500; color: #5720b6; cursor: pointer">Record a different amount</button>
+          </div>
+          <p style="flex-basis: 100%; margin: 0; padding-top: 14px; border-top: 1px solid #efedf2; font-size: 13.5px; line-height: 1.5; color: #625d6b">Recording a payment only updates the balance — no money moves from here.</p>
+        </section>
+      </sc-if>
+      <sc-if value="{{settled}}" hint-placeholder-val="{{false}}">
+        <section aria-label="Settled" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 28px; display: flex; align-items: center; gap: 16px">
+          <span style="width: 44px; height: 44px; border-radius: 50%; background: #e6f3ec; color: #22704a; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+            <span style="font-size: 20px; font-weight: 600">You're all settled up</span>
+            <span style="font-size: 14.5px; color: #625d6b">Payment of 505.73 to Ania recorded today.</span>
+          </div>
+          <button type="button" onClick="{{undo}}" style="height: 40px; padding: 0 14px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14.5px; font-weight: 500; color: #1f1c25; cursor: pointer">Undo</button>
+        </section>
+      </sc-if>
+
+      <section aria-labelledby="bal-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 20px 24px 12px">
+        <h2 id="bal-h" style="margin: 0 0 8px; font-size: 18px; font-weight: 600">Balances</h2>
+        <sc-for list="{{balances}}" as="b" hint-placeholder-count="2">
+          <div style="display: grid; grid-template-columns: 110px 1fr 150px; align-items: center; gap: 14px; min-height: 52px; border-top: 1px solid #efedf2">
+            <span style="font-size: 15px; font-weight: 600">{{b.name}}</span>
+            <div style="position: relative; height: 10px">
+              <div style="position: absolute; left: 50%; top: -6px; width: 1px; height: 22px; background: #c9c4d2"></div>
+              <div style="position: absolute; top: 0; height: 10px; border-radius: 6px; left: {{b.left}}%; width: {{b.width}}%; background: {{b.fill}}"></div>
+            </div>
+            <span style="text-align: right; font-size: 14.5px; font-weight: {{b.weight}}; color: {{b.color}}; font-variant-numeric: tabular-nums">{{b.text}}</span>
+          </div>
+        </sc-for>
+      </section>
+
+      <section aria-labelledby="pay-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 20px 24px 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px">
+          <h2 id="pay-h" style="margin: 0; font-size: 18px; font-weight: 600">Payments recorded</h2>
+          <a href="#" style="font-size: 14px; font-weight: 500; text-decoration: none">Show all</a>
+        </div>
+        <ul style="margin: 0; padding: 0; list-style: none">
+          <sc-for list="{{payments}}" as="p" hint-placeholder-count="1">
+            <li style="display: grid; grid-template-columns: 1fr auto 44px; align-items: center; gap: 10px; min-height: 56px; border-top: 1px solid #efedf2">
+              <span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 500">{{p.what}}</span><span style="font-size: 13px; color: #625d6b">{{p.meta}}</span></span>
+              <span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums">{{p.amount}}</span>
+              <button type="button" aria-label="Actions for this payment" style="width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: #625d6b; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+
+      <details style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 4px 24px">
+        <summary style="min-height: 48px; display: list-item; padding-top: 12px; cursor: pointer; font-size: 15.5px; font-weight: 600">How this is worked out</summary>
+        <ul style="margin: 4px 0 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; line-height: 1.5; color: #3b3742">
+          <li>Counts expenses one person paid from their own money and split between adults, plus recorded payments.</li>
+          <li>Personal envelopes, the household account and voided expenses never change a balance.</li>
+          <li>Future-dated entries count straight away; there's no date cut-off.</li>
+          <li>Someone who leaves keeps their balance until it's settled.</li>
+        </ul>
+      </details>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { paid: false };
+  }
+  renderVals() {
+    const paid = this.state.paid;
+    const owed = paid ? 0 : 505.73;
+    const w = paid ? 0 : 42;
+    const balances = [
+      { name: 'You', left: 50 - w, width: w, fill: '#4d4856', text: paid ? 'Settled' : 'owes 505.73', color: paid ? '#22704a' : '#1f1c25', weight: 600 },
+      { name: 'Ania', left: 50, width: w, fill: '#6f32e2', text: paid ? 'Settled' : 'is owed 505.73', color: paid ? '#22704a' : '#1f1c25', weight: 600 }
+    ];
+    const payments = (paid ? [{ what: 'You paid Ania', meta: 'Today · added by you', amount: '505.73' }] : []).concat([
+      { what: 'You paid Ania', meta: 'Mon 28 Sep · BLIK · added by you', amount: '412.35' }
+    ]);
+    return {
+      open: !paid, settled: paid, balances, payments,
+      record: () => this.setState({ paid: true }), undo: () => this.setState({ paid: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
