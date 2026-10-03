@@ -59,6 +59,18 @@ describe('grams / weight / volume', () => {
     expect(formatVolume(250, { ...en, volumeUnit: 'L' })).toBe('0.25 L');
     expect(formatVolume(250, { ...en, volumeUnit: 'oz' })).toBe('8 oz');
   });
+  it('never shows a valid small intake as zero', () => {
+    const L = { ...en, volumeUnit: 'L' } as const;
+    const oz = { ...en, volumeUnit: 'oz' } as const;
+    expect(formatVolume(1, L)).toBe('1 ml');
+    expect(formatVolume(1, oz)).toBe('1 ml');
+    expect(formatVolume(5, L)).toBe('0.01 L');
+    expect(formatVolume(0, L)).toBe('0 L');
+    expect(formatWaterProgress(1, 2500, en)).toBe(`1 of 2${N}500 ml`);
+    expect(formatWaterProgress(1, 2500, oz)).toBe(`1 of 2${N}500 ml`);
+    expect(formatWaterProgress(0, 2500, en)).toBe('0.0 of 2.5 L');
+    expect(formatWaterProgress(60, 2500, en)).toBe('0.1 of 2.5 L');
+  });
   it('water progress is litres, or fluid ounces when preferred', () => {
     expect(formatLitres(1330, en)).toBe('1.3');
     expect(formatWaterProgress(1330, 2500, en)).toBe('1.3 of 2.5 L');

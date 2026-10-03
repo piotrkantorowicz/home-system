@@ -94,12 +94,22 @@ export function formatWeight(kg: number | null | undefined, prefs: FormatPrefs):
   return `${grouped(Math.round(kg * 10) / 10, prefs, 0, 1)} kg`;
 }
 
-/** A single drink amount in the preferred volume unit: 250 → "250 ml" / "0.3 L" / "8 oz". */
+/** A single drink amount in the preferred volume unit: 250 → "250 ml" / "0.25 L" / "8 oz". */
 export function formatVolume(ml: number | null | undefined, prefs: FormatPrefs): string {
   if (!finite(ml)) return NO_VALUE;
-  if (prefs.volumeUnit === 'oz') return `${grouped(Math.round(ml / ML_PER_FL_OZ), prefs, 0, 0)} oz`;
-  if (prefs.volumeUnit === 'L') return `${grouped(Math.round(ml / 10) / 100, prefs, 0, 2)} L`;
-  return `${grouped(Math.round(ml), prefs, 0, 0)} ml`;
+  const asMl = `${grouped(Math.round(ml), prefs, 0, 0)} ml`;
+  // A valid small intake must never read as zero: fall back to ml when the unit would round it away.
+  if (prefs.volumeUnit === 'oz') {
+    return ml > 0 && Math.round(ml / ML_PER_FL_OZ) === 0
+      ? asMl
+      : `${grouped(Math.round(ml / ML_PER_FL_OZ), prefs, 0, 0)} oz`;
+  }
+  if (prefs.volumeUnit === 'L') {
+    return ml > 0 && Math.round(ml / 10) === 0
+      ? asMl
+      : `${grouped(Math.round(ml / 10) / 100, prefs, 0, 2)} L`;
+  }
+  return asMl;
 }
 
 /** Litres with one decimal: 1330 → "1.3". */
@@ -116,9 +126,17 @@ export function formatWaterProgress(
   ofWord = 'of',
 ): string {
   if (!finite(ml) || !finite(goalMl)) return NO_VALUE;
-  if (prefs.volumeUnit === 'oz') {
-    const oz = (v: number) => grouped(Math.round(v / ML_PER_FL_OZ), prefs, 0, 0);
-    return `${oz(ml)} ${ofWord} ${oz(goalMl)} oz`;
+  const oz = prefs.volumeUnit === 'oz';
+  // The water API accepts entries from 1 ml; if the progress would round to 0 in the display
+  // unit, show both amounts in ml rather than hiding real intake.
+  const hidden = ml > 0 && (oz ? Math.round(ml / ML_PER_FL_OZ) === 0 : Math.round(ml / 100) === 0);
+  if (hidden) {
+    const m = (v: number) => grouped(Math.round(v), prefs, 0, 0);
+    return `${m(ml)} ${ofWord} ${m(goalMl)} ml`;
+  }
+  if (oz) {
+    const o = (v: number) => grouped(Math.round(v / ML_PER_FL_OZ), prefs, 0, 0);
+    return `${o(ml)} ${ofWord} ${o(goalMl)} oz`;
   }
   return `${formatLitres(ml, prefs)} ${ofWord} ${formatLitres(goalMl, prefs)} L`;
 }
