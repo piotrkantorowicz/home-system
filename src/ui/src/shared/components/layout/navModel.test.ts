@@ -5,7 +5,7 @@ import {
   getModuleTiles,
   getActiveModule,
   getSectionGroups,
-  getMobileNavItems,
+  getMobileNav,
   getFooterDestinations,
   resolveShellModule,
 } from './navModel';
@@ -205,8 +205,12 @@ describe('nav items gated by household role', () => {
     expect(labels('Adult')).toEqual(['open', 'adults']);
     expect(labels('Child')).toEqual(['open']);
     expect(labels(null)).toEqual(['open']);
-    expect(getMobileNavItems(t, gated, 'Child').map((i) => i.label)).toEqual(['open']);
-    expect(getMobileNavItems(t, gated, 'Owner').map((i) => i.label)).toEqual(['open', 'adults']);
+    const reachable = (role: string) => {
+      const nav = getMobileNav(t, gated, role);
+      return [...nav.tabs, ...nav.moreGroups.flatMap((g) => g.items)].map((i) => i.label);
+    };
+    expect(reachable('Child')).toEqual(['open']);
+    expect(reachable('Owner')).toEqual(['open', 'adults']);
   });
 });
 
@@ -246,14 +250,69 @@ describe('getSectionGroups', () => {
   });
 });
 
-describe('getMobileNavItems', () => {
-  it('flattens every nav item of the module, in registration order', () => {
-    const items = getMobileNavItems(t, dietPlanner);
-    expect(items.map((i) => i.href)).toEqual([
+describe('getMobileNav', () => {
+  const item = (n: number, extra: object = {}) => ({
+    name: `Item ${String(n)}`,
+    href: `/m/${String(n)}`,
+    icon: DashIcon,
+    translationKey: `item${String(n)}`,
+    ...extra,
+  });
+  const mod = (navItems: AppModule['navItems'], extra: Partial<AppModule> = {}): AppModule => ({
+    ...dietPlanner,
+    navItems,
+    ...extra,
+  });
+
+  it('uses the flagged items as tabs and puts the rest in More, grouped', () => {
+    const nav = getMobileNav(t, dietPlanner);
+    expect(nav.tabs).toEqual([]);
+    expect(nav.moreGroups.flatMap((g) => g.items.map((i) => i.href))).toEqual([
       '/diet-planner',
       '/diet-planner/calendar',
       '/diet-planner/products',
-      '/diet-planner/preferences',
     ]);
+    expect(nav.moreGroups.map((g) => g.label)).toEqual(['nav_groups.plan', 'nav_groups.library']);
+  });
+
+  it('keeps the settings link out of More (the footer has it)', () => {
+    const hrefs = getMobileNav(t, dietPlanner).moreGroups.flatMap((g) =>
+      g.items.map((i) => i.href),
+    );
+    expect(hrefs).not.toContain('/diet-planner/preferences');
+  });
+
+  it('caps tabs at four without an action and three with one; overflow goes to More', () => {
+    const items = [1, 2, 3, 4, 5].map((n) => item(n, { mobileTab: true }));
+    const plain = getMobileNav(t, mod(items));
+    expect(plain.tabs.map((i) => i.href)).toEqual(['/m/1', '/m/2', '/m/3', '/m/4']);
+    expect(plain.moreGroups[0]?.items.map((i) => i.href)).toEqual(['/m/5']);
+
+    const withAction = getMobileNav(
+      t,
+      mod(items, { mobileAction: { translationKey: 'add', href: '/m/add', icon: DashIcon } }),
+    );
+    expect(withAction.tabs).toHaveLength(3);
+    expect(withAction.action).toMatchObject({ href: '/m/add', label: 'add' });
+    expect(withAction.moreGroups[0]?.items.map((i) => i.href)).toEqual(['/m/4', '/m/5']);
+  });
+
+  it('never loses a destination: tabs plus More cover every visible item except settings', () => {
+    const nav = getMobileNav(
+      t,
+      mod([1, 2, 3].map((n) => item(n, n === 1 ? { mobileTab: true } : {}))),
+    );
+    const all = [...nav.tabs, ...nav.moreGroups.flatMap((g) => g.items)].map((i) => i.href);
+    expect(all.sort()).toEqual(['/m/1', '/m/2', '/m/3']);
+  });
+
+  it('drops a flagged tab the household role cannot see', () => {
+    const nav = getMobileNav(
+      t,
+      mod([item(1, { mobileTab: true, householdRoles: ['Owner'] })]),
+      'Child',
+    );
+    expect(nav.tabs).toEqual([]);
+    expect(nav.moreGroups).toEqual([]);
   });
 });

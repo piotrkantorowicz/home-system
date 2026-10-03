@@ -164,6 +164,15 @@ async function openAddForm() {
 }
 
 describe('Add expense', () => {
+  it('opens the form from ?add=1 (the phone tab bar action) and drops the flag on close', async () => {
+    renderAt('/budget/expenses?add=1');
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.keyboard('{Escape}');
+    expect(dialog).not.toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: 'Add expense' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
   it('records a shared expense with the caller as recorder and an explicit payer and split', async () => {
     const create = vi.fn();
     server.use(

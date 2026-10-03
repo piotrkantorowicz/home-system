@@ -53,6 +53,7 @@ export const dietPlannerModule: AppModule = {
     {
       name: 'Dashboard',
       href: '/diet-planner',
+      mobileTab: true,
       icon: Home,
       translationKey: 'common.dashboard',
       group: 'nav_groups.plan',
@@ -60,6 +61,7 @@ export const dietPlannerModule: AppModule = {
     {
       name: 'Meal plan',
       href: '/diet-planner/calendar',
+      mobileTab: true,
       icon: CalendarDays,
       translationKey: 'common.meal_plan',
       group: 'nav_groups.plan',
@@ -82,6 +84,7 @@ export const dietPlannerModule: AppModule = {
     {
       name: 'Recipes',
       href: '/diet-planner/recipes',
+      mobileTab: true,
       icon: BookOpen,
       translationKey: 'common.recipes',
       group: 'nav_groups.library',
@@ -89,6 +92,7 @@ export const dietPlannerModule: AppModule = {
     {
       name: 'Shopping list',
       href: '/diet-planner/shopping-list',
+      mobileTab: true,
       icon: ShoppingCart,
       translationKey: 'common.shopping_list',
       group: 'nav_groups.library',
