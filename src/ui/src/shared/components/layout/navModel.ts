@@ -4,6 +4,15 @@ import { getModules, NAV_GROUP_SETTINGS } from '@shared/lib/module-registry';
  * reads from to send `/` back to the module last actually visited. */
 export const LAST_MODULE_STORAGE_KEY = 'home-system-last-module';
 
+/** The last product module visited, or `null` when none is stored or storage is unavailable. */
+export function readLastModule(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_MODULE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 import type { AppModule } from '@shared/lib/module-registry';
 import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
@@ -29,6 +38,20 @@ export interface ModuleTile {
   basePath: string;
   icon: LucideIcon;
   label: string;
+  /** One-line summary for the module switcher; absent when the module declares none. */
+  description?: string;
+}
+
+/** A sidebar footer destination backed by a `placement: 'footer'` module. */
+export interface FooterDestination {
+  name: string;
+  /** The module's first nav item (its landing page). */
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  Badge?: ComponentType;
+  /** Exact-match the route, so `/household` is not active on `/household/anything`. */
+  end: boolean;
 }
 
 function toRailNavItem(
@@ -73,7 +96,12 @@ export function isNavItemVisible(
   );
 }
 
-/** One tile per module visible to `roles`, for the 64px module rail. */
+/** Whether the module is a product module listed in the module switcher (not a footer destination). */
+export function isSwitcherModule(mod: AppModule): boolean {
+  return mod.placement !== 'footer';
+}
+
+/** One tile per product module visible to `roles`, for the sidebar's module switcher. */
 export function getModuleTiles(
   t: TFunction,
   labels: Readonly<Record<string, string>> = {},
@@ -81,13 +109,55 @@ export function getModuleTiles(
   householdRole: string | null = null,
 ): ModuleTile[] {
   return getModules()
-    .filter((mod) => isModuleVisible(mod, roles, householdRole))
+    .filter((mod) => isSwitcherModule(mod) && isModuleVisible(mod, roles, householdRole))
     .map((mod) => ({
       name: mod.name,
       basePath: mod.basePath,
       icon: mod.icon,
       label: labels[mod.name] ?? t(mod.translationKey),
+      ...(mod.descriptionKey ? { description: t(mod.descriptionKey) } : {}),
     }));
+}
+
+/** Footer destinations (Household, Notifications, Admin…) visible to the caller, in registration order. */
+export function getFooterDestinations(
+  t: TFunction,
+  labels: Readonly<Record<string, string>> = {},
+  roles: readonly string[] = [],
+  householdRole: string | null = null,
+): FooterDestination[] {
+  return getModules()
+    .filter((mod) => !isSwitcherModule(mod) && isModuleVisible(mod, roles, householdRole))
+    .map((mod) => {
+      const landing = mod.navItems.find((n) => n.href === mod.basePath) ?? mod.navItems[0];
+      const href = landing?.href ?? mod.basePath;
+      return {
+        name: mod.name,
+        href,
+        icon: mod.icon,
+        label: labels[mod.name] ?? t(mod.translationKey),
+        end: href === mod.basePath,
+        ...(landing?.Badge ? { Badge: landing.Badge } : {}),
+      };
+    });
+}
+
+/**
+ * The product module the sidebar shows nav for. A footer page (Household, Notifications…) keeps the
+ * module you came from: the remembered one when still visible, else the first visible product module.
+ */
+export function resolveShellModule(
+  pathname: string,
+  roles: readonly string[],
+  householdRole: string | null,
+  lastModuleName: string | null,
+): AppModule | undefined {
+  const visible = getModules().filter(
+    (mod) => isSwitcherModule(mod) && isModuleVisible(mod, roles, householdRole),
+  );
+  const active = getActiveModule(pathname);
+  if (active && visible.includes(active)) return active;
+  return visible.find((mod) => mod.name === lastModuleName) ?? visible[0];
 }
 
 /** The registered module whose `basePath` the given pathname falls under. */
@@ -98,8 +168,8 @@ export function getActiveModule(pathname: string): AppModule | undefined {
 }
 
 /**
- * The active module's nav items as ordered groups for the 216px section
- * panel, plus the items pinned below the divider (`NAV_GROUP_SETTINGS`).
+ * The module's nav items as ordered groups for the sidebar, plus the items marked
+ * `NAV_GROUP_SETTINGS` (the sidebar's footer "Settings" link points at the first).
  */
 export function getSectionGroups(
   t: TFunction,

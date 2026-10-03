@@ -16,6 +16,7 @@ export const notificationsModule: AppModule = {
   translationKey: 'common.notifications',
   description: 'View and manage your notifications',
   basePath: '/notifications',
+  placement: 'footer',
   icon: Bell,
   localeNamespaces: ['notifications'],
   i18nResources: {

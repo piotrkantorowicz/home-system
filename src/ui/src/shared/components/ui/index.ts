@@ -33,6 +33,12 @@ export { DatePicker, type DatePickerProps } from './DatePicker';
 export { ToastContainer, type ToastContainerProps } from './Toast';
 export { Skeleton, type SkeletonProps } from './Skeleton';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
+export {
+  PageContainer,
+  PageHeader,
+  type PageContainerProps,
+  type PageHeaderProps,
+} from './PageHeader';
 export { Select, type SelectProps } from './Select';
 export { Checkbox, type CheckboxProps } from './Checkbox';
 export { Badge, type BadgeProps } from './Badge';

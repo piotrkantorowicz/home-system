@@ -27,6 +27,7 @@
     "user_menu": "Menu użytkownika",
     "profile": "Profil",
     "welcome_back": "Witaj ponownie, {{name}}!",
+    "current": "Bieżący",
     "modules": "Moduły",
     "diet_planner": "Planer Diety",
     "notifications": "Powiadomienia",
@@ -55,6 +56,10 @@
     "no_matches": "Brak wyników",
     "admin": "Administracja",
     "dead_letters": "Martwe wiadomości",
+    "shell": {
+      "settings": "Ustawienia",
+      "destinations": "Gospodarstwo i konto"
+    },
     "route_error": {
       "title": "Coś poszło nie tak",
       "message": "Nie udało się załadować tej strony. Spróbuj ponownie lub wróć na stronę główną.",

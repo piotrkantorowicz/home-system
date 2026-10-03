@@ -7,9 +7,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { BottomTabBar } from './BottomTabBar';
 import { CommandPalette } from './CommandPalette';
 import { Header } from './Header';
-import { ModuleRail } from './ModuleRail';
-import { SectionPanel } from './SectionPanel';
-import { getActiveModule, LAST_MODULE_STORAGE_KEY } from './navModel';
+import { Sidebar } from './Sidebar';
+import { getActiveModule, isSwitcherModule, LAST_MODULE_STORAGE_KEY } from './navModel';
 
 export function AppShell() {
   const auth = useAuth();
@@ -21,7 +20,7 @@ export function AppShell() {
   // Remember the last module actually visited, so `/` can redirect back to it.
   useEffect(() => {
     const mod = getActiveModule(location.pathname);
-    if (!mod) return;
+    if (!mod || !isSwitcherModule(mod)) return;
     try {
       window.localStorage.setItem(LAST_MODULE_STORAGE_KEY, mod.name);
     } catch {
@@ -31,12 +30,9 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Desktop: 64px module rail + 216px section panel. Below md they
-          collapse to the bottom tab bar + a module switcher in the header. */}
-      <div className="hidden md:flex">
-        <ModuleRail />
-        <SectionPanel />
-      </div>
+      {/* Desktop: one 240px sidebar. Below md it gives way to the bottom tab bar and the
+          mobile header (which holds the module switcher). */}
+      <Sidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />

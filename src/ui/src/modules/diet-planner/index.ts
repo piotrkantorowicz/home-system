@@ -40,6 +40,7 @@ export const dietPlannerModule: AppModule = {
   name: 'diet-planner',
   translationKey: 'common.diet_planner',
   description: 'Track your diet, plan meals, and monitor nutrition',
+  descriptionKey: 'diet_planner_description',
   basePath: '/diet-planner',
   icon: CalendarDays,
   localeNamespaces: ['diet-planner'],
