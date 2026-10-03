@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { formatNumber, formatSigned, getInitials } from './utils';
+import { cn, formatNumber, formatSigned, getInitials } from './utils';
 
 const THIN = String.fromCharCode(0x2009);
 
@@ -32,5 +32,12 @@ describe('getInitials', () => {
   it('falls back for a single word or empty input', () => {
     expect(getInitials('ada')).toBe('AD');
     expect(getInitials('   ')).toBe('?');
+  });
+});
+
+describe('cn', () => {
+  it('keeps a semantic text size next to a text colour', () => {
+    expect(cn('text-label', 'text-muted-foreground')).toBe('text-label text-muted-foreground');
+    expect(cn('text-body', 'text-section')).toBe('text-section');
   });
 });
