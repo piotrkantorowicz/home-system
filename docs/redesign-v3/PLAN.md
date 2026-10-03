@@ -34,15 +34,11 @@ Each child is one independently mergeable PR; default target main. Five source p
 Required backend implementation tickets: products_api, recipes_api, description, shopping_api, totals_api.
 Decision-only backend scope: account_decision. Reuse existing #414, #164 and #166 instead of duplicating/reparenting.
 
-## Decisions to settle before dependent implementation
+## Decisions
 
-- High protein: choose and document threshold and null behavior before recipe API work.
-- goalStatus helper uses 3% tolerance; monetary overspend remains exact. Confirm nutrition tolerance in source decision record.
-- Unit preferences must work truthfully; canonical backend units unchanged.
-- Shopping checks: product+unit rows need deliberate identity; choose per-row checks or product-wide behavior.
-- Recipe photos/author byline lack direct fields: omit unsupported photo space; author only when permitted identity resolution exists.
-- Account deletion: separate decision ticket, not presumed functional in v3.
-- Budget nav/title mismatch in spec: choose consistent Budget/Overview wording in source record.
+Settled choices (high-protein rule, goal tolerance, shopping-check identity, Budget/Overview naming, unit preferences, author fallback) live in [DECISIONS.md](DECISIONS.md), the single source of truth for dependent tickets.
+
+Still open: account deletion is a separate decision ticket (#513), not presumed functional in v3.
 
 ## Acceptance baseline
 
