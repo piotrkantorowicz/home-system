@@ -12,6 +12,7 @@ import { MoreSheet } from './MoreSheet';
 import {
   getFooterDestinations,
   getMobileNav,
+  getSectionGroups,
   readLastModule,
   resolveShellModule,
 } from './navModel';
@@ -42,6 +43,9 @@ export function BottomTabBar() {
   const nav = getMobileNav(t, mod, householdRole);
   const moreActive =
     nav.moreGroups.some((g) => g.items.some((i) => isUnder(location.pathname, i.href))) ||
+    getSectionGroups(t, mod, householdRole).pinned.some((i) =>
+      isUnder(location.pathname, i.href),
+    ) ||
     getFooterDestinations(t, labels, roles, householdRole).some((d) =>
       isUnder(location.pathname, d.href),
     );

@@ -232,6 +232,14 @@ describe('BottomTabBar', () => {
     );
   });
 
+  it('marks More active on the pinned module settings page', () => {
+    renderBar('/diet-planner/preferences');
+    expect(screen.getByRole('button', { name: 'common.shell.more' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
   it('disables tabs before household setup', async () => {
     renderBar('/household', { restricted: true });
     const disabled = screen.getByText('nav.today').closest('[aria-disabled="true"]');
