@@ -54,6 +54,14 @@
     "no_modules_body": "Poproś administratora o włączenie modułu dla Twojego konta.",
     "no_matches": "Brak wyników",
     "admin": "Administracja",
-    "dead_letters": "Martwe wiadomości"
+    "dead_letters": "Martwe wiadomości",
+    "route_error": {
+      "title": "Coś poszło nie tak",
+      "message": "Nie udało się załadować tej strony. Spróbuj ponownie lub wróć na stronę główną.",
+      "retry": "Spróbuj ponownie",
+      "home": "Przejdź do początku",
+      "not_found_title": "Nie znaleziono strony",
+      "not_found_message": "Ta strona nie istnieje lub została przeniesiona."
+    }
   }
 }

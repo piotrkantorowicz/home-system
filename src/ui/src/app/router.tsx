@@ -2,6 +2,7 @@ import { HouseholdProvider, HouseholdRequired } from '@modules/household';
 import { AuthCallback } from '@shared/auth/AuthCallback';
 import { ProtectedRoute } from '@shared/auth/ProtectedRoute';
 import { SilentRenew } from '@shared/auth/SilentRenew';
+import { RouteError } from '@shared/components/RouteError';
 import { AppShell } from '@shared/components/layout/AppShell';
 import { getModules } from '@shared/lib/module-registry';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
@@ -39,13 +40,16 @@ export function createRouter() {
     {
       path: '/callback',
       element: <AuthCallback />,
+      errorElement: <RouteError />,
     },
     {
       path: '/silent-renew',
       element: <SilentRenew />,
+      errorElement: <RouteError />,
     },
     // Protected routes
     {
+      errorElement: <RouteError />,
       element: (
         <ProtectedRoute>
           <HouseholdProvider>
@@ -54,15 +58,22 @@ export function createRouter() {
         </ProtectedRoute>
       ),
       children: [
+        // Pathless boundary: a failing page renders inside the shell, not instead of it.
         {
-          path: '/',
-          element: (
-            <HouseholdRequired>
-              <RootRedirect />
-            </HouseholdRequired>
-          ),
+          errorElement: <RouteError />,
+          children: [
+            {
+              path: '/',
+              element: (
+                <HouseholdRequired>
+                  <RootRedirect />
+                </HouseholdRequired>
+              ),
+            },
+            ...buildModuleRoutes(),
+            { path: '*', element: <RouteError /> },
+          ],
         },
-        ...buildModuleRoutes(),
       ],
     },
   ]);
