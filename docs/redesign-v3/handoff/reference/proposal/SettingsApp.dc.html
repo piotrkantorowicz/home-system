@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings, app and account — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+
+  <nav aria-label="Main" style="flex: 1 1 240px; max-width: 100%; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; border-right: 1px solid #e4e1ea; display: flex; flex-direction: column; gap: 16px">
+    <a href="ModuleSwitcher.dc.html" style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px; border-radius: 10px; color: inherit; text-decoration: none">
+      <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">Diet planner</span>
+        <span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#625d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </a>
+    <button type="button" style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 1px solid #e4e1ea; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #625d6b; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="flex: 1; text-align: left">Search</span>
+      <kbd style="font-family: inherit; font-size: 12px; color: #625d6b; background: #f1eff4; border-radius: 6px; padding: 2px 6px">⌘K</kbd>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="Today.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Today</a>
+      <a href="MealPlan.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Meal plan</a>
+      <a href="Shopping.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Shopping list</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Library</span>
+      <a href="Recipes.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>Recipes</a>
+      <a href="Products.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 8.7 5 8.7-5"></path></svg>Products</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Track</span>
+      <a href="Nutrition.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Nutrition</a>
+      <a href="Water.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>Water</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid #e4e1ea">
+      <a href="Household.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Household</a>
+      <a href="Notifications.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex: 1">Notifications</span>
+        <span style="font-size: 12px; font-weight: 600; color: #ffffff; background: #6f32e2; border-radius: 6px; padding: 1px 7px">2</span></a>
+      <a href="Settings.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; text-decoration: none; font-size: 14.5px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</a>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+        <span style="font-size: 14px; font-weight: 500">Paweł K.</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px 64px">
+    <div style="max-width: 880px; display: flex; flex-direction: column; gap: 24px">
+      <header style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Settings</h1>
+          <p style="margin: 0; font-size: 15px; color: #625d6b">Your profile, goals and reminders</p>
+        </div>
+        <nav aria-label="Sections" style="display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid #e4e1ea">
+          <a href="Settings.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Profile</a>
+          <a href="Settings.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Goals</a>
+          <a href="Settings.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Meal times</a>
+          <a href="Settings.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Water</a>
+          <a href="Settings.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Reminders</a>
+          <a href="#" aria-current="page" style="padding: 10px 12px; font-size: 14.5px; font-weight: 600; color: #4b1aa3; text-decoration: none; border-bottom: 2px solid #6f32e2; margin-bottom: -1px">App &amp; account</a>
+        </nav>
+      </header>
+
+      <section aria-labelledby="ch-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px">
+          <h2 id="ch-h" style="margin: 0; font-size: 18px; font-weight: 600">Where notifications go</h2>
+          <span style="font-size: 13.5px; color: #625d6b">Which reminders you get is set under <a href="Settings.dc.html" style="font-weight: 500">Reminders</a>.</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; min-height: 64px; border-top: 1px solid #efedf2">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 500">In the app</span>
+            <span style="font-size: 13.5px; color: #625d6b">Shows up instantly in Notifications while HomeSystem is open</span>
+          </div>
+          <button type="button" role="switch" aria-checked="{{rtStr}}" aria-label="In-app notifications" onClick="{{toggleRt}}" style="width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: {{rtTrack}}; cursor: pointer; display: flex; justify-content: {{rtAlign}}"><span style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(30,20,50,0.2)"></span></button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; min-height: 64px; border-top: 1px solid #efedf2">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500">Email <span style="font-size: 12px; font-weight: 600; color: #4d4856; background: #f1eff4; border-radius: 6px; padding: 2px 7px">Coming soon</span></span>
+            <span style="font-size: 13.5px; color: #625d6b">pawel@example.com</span>
+          </div>
+          <button type="button" role="switch" aria-checked="false" aria-label="Email notifications" disabled style="width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: #e4e1ea; cursor: not-allowed; display: flex; justify-content: flex-start"><span style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff"></span></button>
+        </div>
+      </section>
+
+      <section aria-labelledby="ap-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+        <h2 id="ap-h" style="margin: 0; font-size: 18px; font-weight: 600">Appearance</h2>
+        <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 10px">
+          <legend style="padding: 0 0 10px; font-size: 14px; font-weight: 600">Theme</legend>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+              <button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="display: flex; flex-direction: column; gap: 10px; padding: 10px; border: {{t.border}}; border-radius: 10px; background: #ffffff; font: inherit; text-align: left; cursor: pointer">
+                <span style="display: flex; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid #e4e1ea">
+                  <span style="flex: 1; background: {{t.left}}; display: flex; flex-direction: column; gap: 5px; padding: 8px"><span style="width: 60%; height: 6px; border-radius: 3px; background: {{t.inkL}}"></span><span style="width: 80%; height: 6px; border-radius: 3px; background: {{t.inkL}}; opacity: 0.5"></span></span>
+                  <span style="flex: 1; background: {{t.right}}; display: flex; flex-direction: column; gap: 5px; padding: 8px"><span style="width: 60%; height: 6px; border-radius: 3px; background: {{t.inkR}}"></span><span style="width: 80%; height: 6px; border-radius: 3px; background: {{t.inkR}}; opacity: 0.5"></span></span>
+                </span>
+                <span style="font-size: 14.5px; font-weight: {{t.weight}}; color: {{t.color}}">{{t.label}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </fieldset>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Language
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 400; color: #1f1c25"><option>English</option><option>Polski</option></select>
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 14px; font-weight: 600">Compact layout</span>
+              <span style="font-size: 13.5px; color: #625d6b">Tighter rows in tables and lists</span>
+            </div>
+            <button type="button" role="switch" aria-checked="{{dStr}}" aria-label="Compact layout" onClick="{{toggleD}}" style="width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: {{dTrack}}; cursor: pointer; display: flex; justify-content: {{dAlign}}"><span style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(30,20,50,0.2)"></span></button>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="un-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+          <h2 id="un-h" style="margin: 0; font-size: 18px; font-weight: 600">Units and numbers</h2>
+          <span style="font-size: 13.5px; color: #625d6b">Example: <strong style="font-weight: 600; color: #1f1c25; font-variant-numeric: tabular-nums">{{example}}</strong></span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 16px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Energy
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 400; color: #1f1c25"><option>kcal</option><option>kJ</option></select></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Weight
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 400; color: #1f1c25"><option>kg</option><option>lb</option></select></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Liquids
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 400; color: #1f1c25"><option>ml and L</option><option>fl oz</option></select></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Week starts on
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; font-weight: 400; color: #1f1c25"><option>Monday</option><option>Sunday</option></select></label>
+        </div>
+        <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+          <legend style="padding: 0 0 8px; font-size: 14px; font-weight: 600">Thousands separator</legend>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <sc-for list="{{seps}}" as="s" hint-placeholder-count="2">
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: {{s.border}}; border-radius: 10px; background: {{s.bg}}; font-size: 15px; cursor: pointer; font-variant-numeric: tabular-nums">
+                <input type="radio" name="sep" checked="{{s.checked}}" onChange="{{s.pick}}" style="width: 18px; height: 18px; margin: 0; accent-color: #6f32e2">{{s.label}}</label>
+            </sc-for>
+          </div>
+        </fieldset>
+      </section>
+
+      <section aria-labelledby="ac-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 4px">
+        <h2 id="ac-h" style="margin: 0 0 12px; font-size: 18px; font-weight: 600">Account</h2>
+        <div style="display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 14px; min-height: 64px; border-top: 1px solid #efedf2">
+          <span style="width: 44px; height: 44px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+          <span style="display: flex; flex-direction: column"><span style="font-size: 15.5px; font-weight: 600">Paweł K.</span><span style="font-size: 13.5px; color: #625d6b">pawel@example.com</span></span>
+          <button type="button" style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14.5px; font-weight: 500; color: #1f1c25; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></svg>Sign out</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; min-height: 72px; border-top: 1px solid #efedf2">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 600">Delete account</span>
+            <span style="font-size: 13.5px; line-height: 1.45; color: #625d6b">Removes your profile, logs and private recipes. Shared household items stay with the household.</span>
+          </div>
+          <button type="button" style="height: 40px; padding: 0 16px; border: 1px solid #d8a2a6; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14.5px; font-weight: 600; color: #b42b31; cursor: pointer">Delete…</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1560}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: 'system', rt: true, dense: true, sep: 'space' };
+  }
+  renderVals() {
+    const st = this.state;
+    const sw = (on) => ({ str: on ? 'true' : 'false', track: on ? '#6f32e2' : '#c9c4d2', align: on ? 'flex-end' : 'flex-start' });
+    const rt = sw(st.rt), d = sw(st.dense);
+    const themeDefs = [
+      ['light', 'Light', '#ffffff', '#f6f5f8', '#1f1c25', '#1f1c25'],
+      ['dark', 'Dark', '#2a2932', '#212027', '#f1f0f5', '#f1f0f5'],
+      ['system', 'Match device', '#ffffff', '#2a2932', '#1f1c25', '#f1f0f5']
+    ];
+    const themes = themeDefs.map((t) => {
+      const on = st.theme === t[0];
+      return {
+        label: t[1], left: t[2], right: t[3], inkL: t[4], inkR: t[5],
+        pressed: on ? 'true' : 'false', border: on ? '2px solid #6f32e2' : '1px solid #e4e1ea',
+        weight: on ? 600 : 500, color: on ? '#4b1aa3' : '#1f1c25',
+        pick: () => this.setState({ theme: t[0] })
+      };
+    });
+    const sepDefs = [['space', '2 150'], ['comma', '2,150']];
+    const seps = sepDefs.map((s) => {
+      const on = st.sep === s[0];
+      return {
+        label: s[1], checked: on, border: on ? '1.5px solid #6f32e2' : '1px solid #d9d5e1', bg: on ? '#f8f5ff' : '#ffffff',
+        pick: () => this.setState({ sep: s[0] })
+      };
+    });
+    return {
+      rtStr: rt.str, rtTrack: rt.track, rtAlign: rt.align, toggleRt: () => this.setState({ rt: !st.rt }),
+      dStr: d.str, dTrack: d.track, dAlign: d.align, toggleD: () => this.setState({ dense: !st.dense }),
+      themes, seps,
+      example: st.sep === 'space' ? '2 150 kcal · 84.2 kg · 1.3 L' : '2,150 kcal · 84.2 kg · 1.3 L'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recipes — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+
+  <nav aria-label="Main" style="flex: 1 1 240px; max-width: 100%; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; border-right: 1px solid #e4e1ea; display: flex; flex-direction: column; gap: 16px">
+    <a href="ModuleSwitcher.dc.html" style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px; border-radius: 10px; color: inherit; text-decoration: none">
+      <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">Diet planner</span>
+        <span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#625d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </a>
+    <button type="button" style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 1px solid #e4e1ea; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #625d6b; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="flex: 1; text-align: left">Search</span>
+      <kbd style="font-family: inherit; font-size: 12px; color: #625d6b; background: #f1eff4; border-radius: 6px; padding: 2px 6px">⌘K</kbd>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="Today.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Today</a>
+      <a href="MealPlan.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Meal plan</a>
+      <a href="Shopping.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Shopping list</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Library</span>
+      <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; text-decoration: none; font-size: 14.5px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>Recipes</a>
+      <a href="Products.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 8.7 5 8.7-5"></path></svg>Products</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Track</span>
+      <a href="Nutrition.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Nutrition</a>
+      <a href="Water.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>Water</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid #e4e1ea">
+      <a href="Household.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Household</a>
+      <a href="Notifications.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex: 1">Notifications</span>
+        <span style="font-size: 12px; font-weight: 600; color: #ffffff; background: #6f32e2; border-radius: 6px; padding: 1px 7px">2</span></a>
+      <a href="Settings.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</a>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+        <span style="font-size: 14px; font-weight: 500">Paweł K.</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px 64px">
+    <div style="max-width: 1120px; display: flex; flex-direction: column; gap: 20px">
+      <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Recipes</h1>
+          <p style="margin: 0; font-size: 15px; color: #625d6b">12 recipes · nutrition per serving</p>
+        </div>
+        <button type="button" style="display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #6f32e2; font: inherit; font-size: 14.5px; font-weight: 600; color: #ffffff; cursor: pointer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg>Add recipe</button>
+      </header>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <label style="flex: 1 1 280px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; color: #625d6b">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search recipes</span>
+          <input type="search" placeholder="Search recipes or ingredients" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 14.5px; color: #1f1c25">
+        </label>
+        <div role="group" aria-label="Filter" style="display: flex; gap: 6px; flex-wrap: wrap">
+          <button type="button" aria-pressed="true" style="height: 36px; padding: 0 12px; border: 1px solid #6f32e2; border-radius: 6px; background: #f1ecfe; font: inherit; font-size: 14px; font-weight: 600; color: #4b1aa3; cursor: pointer">All</button>
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 12px; border: 1px solid #d9d5e1; border-radius: 6px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #3b3742; cursor: pointer">Mine</button>
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 12px; border: 1px solid #d9d5e1; border-radius: 6px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #3b3742; cursor: pointer">High protein</button>
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 12px; border: 1px solid #d9d5e1; border-radius: 6px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #3b3742; cursor: pointer">Under 15 min</button>
+        </div>
+        <span style="display: flex; align-items: center; gap: 12px; margin-left: auto; font-size: 13px; color: #4d4856">
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #2f6fca"></span>Protein</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #d08a1f"></span>Carbs</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #b8458c"></span>Fat</span>
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 16px">
+        <sc-for list="{{recipes}}" as="r" hint-placeholder-count="12">
+          <article style="position: relative; display: flex; flex-direction: column; gap: 12px; padding: 18px 18px 16px; background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding-right: 32px">
+              <h2 style="margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600"><a href="RecipeDetail.dc.html" style="color: #1f1c25; text-decoration: none">{{r.name}}</a></h2>
+              <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #625d6b">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>{{r.time}} · 1 serving</span>
+            </div>
+            <button type="button" aria-label="Actions for {{r.name}}" style="position: absolute; top: 10px; right: 8px; width: 36px; height: 36px; border: 0; border-radius: 10px; background: transparent; color: #625d6b; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; align-items: baseline; gap: 6px">
+                <span style="font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums">{{r.kcal}}</span>
+                <span style="font-size: 13px; color: #625d6b">kcal</span>
+              </div>
+              <div style="display: flex; height: 6px; border-radius: 6px; overflow: hidden; gap: 2px" role="img" aria-label="{{r.split}}">
+                <span style="width: {{r.pP}}%; background: #2f6fca"></span>
+                <span style="width: {{r.pC}}%; background: #d08a1f"></span>
+                <span style="width: {{r.pF}}%; background: #b8458c"></span>
+              </div>
+              <span style="font-size: 13px; color: #4d4856; font-variant-numeric: tabular-nums">{{r.macros}}</span>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const data = [
+      ['Overnight oats with blueberries', 420, 18, 62, 11, 10], ['Greek yogurt, honey & walnuts', 310, 20, 24, 15, 5],
+      ['Chicken & quinoa bowl', 610, 46, 58, 19, 30], ['Hummus with carrot sticks', 220, 8, 22, 11, 5],
+      ['Salmon, roasted potatoes & greens', 640, 42, 48, 28, 35], ['Scrambled eggs on rye', 450, 26, 34, 22, 10],
+      ['Lentil soup', 380, 22, 52, 7, 40], ['Turkey wrap', 520, 38, 46, 18, 15],
+      ['Apple & peanut butter', 260, 7, 28, 14, 2], ['Beef stir-fry with rice', 690, 40, 72, 22, 25],
+      ['Cottage cheese with tomatoes', 240, 24, 10, 10, 5], ['Pasta primavera', 580, 20, 88, 16, 25]
+    ];
+    const recipes = data.map((d) => {
+      const kp = d[2] * 4, kc = d[3] * 4, kf = d[4] * 9, t = kp + kc + kf;
+      const pP = Math.round(kp / t * 100), pC = Math.round(kc / t * 100), pF = 100 - pP - pC;
+      return {
+        name: d[0], kcal: String(d[1]), time: d[5] + ' min',
+        pP, pC, pF,
+        split: 'Calories from protein ' + pP + '%, carbs ' + pC + '%, fat ' + pF + '%',
+        macros: d[2] + ' g protein · ' + d[3] + ' g carbs · ' + d[4] + ' g fat'
+      };
+    });
+    return { recipes };
+  }
+}
+</script>
+</body>
+</html>

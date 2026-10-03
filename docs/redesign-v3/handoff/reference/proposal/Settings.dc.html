@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+
+  <nav aria-label="Main" style="flex: 1 1 240px; max-width: 100%; box-sizing: border-box; padding: 16px 12px; background: #fbfafc; border-right: 1px solid #e4e1ea; display: flex; flex-direction: column; gap: 16px">
+    <a href="ModuleSwitcher.dc.html" style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px; border-radius: 10px; color: inherit; text-decoration: none">
+      <span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #6f32e2; color: #ffffff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center">H</span>
+      <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">Diet planner</span>
+        <span style="font-size: 12.5px; color: #625d6b">Kantorowicz Home</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#625d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </a>
+    <button type="button" style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border: 1px solid #e4e1ea; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; color: #625d6b; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="flex: 1; text-align: left">Search</span>
+      <kbd style="font-family: inherit; font-size: 12px; color: #625d6b; background: #f1eff4; border-radius: 6px; padding: 2px 6px">⌘K</kbd>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a href="Today.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Today</a>
+      <a href="MealPlan.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Meal plan</a>
+      <a href="Shopping.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Shopping list</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Library</span>
+      <a href="Recipes.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>Recipes</a>
+      <a href="Products.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 8.7 5 8.7-5"></path></svg>Products</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b; padding: 0 12px 6px">Track</span>
+      <a href="Nutrition.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9M13 17V5M8 17v-3"></path></svg>Nutrition</a>
+      <a href="Water.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>Water</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid #e4e1ea">
+      <a href="Household.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Household</a>
+      <a href="Notifications.dc.html" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; color: #3b3742; text-decoration: none; font-size: 14.5px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex: 1">Notifications</span>
+        <span style="font-size: 12px; font-weight: 600; color: #ffffff; background: #6f32e2; border-radius: 6px; padding: 1px 7px">2</span></a>
+      <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 10px; background: #ece6fd; color: #4b1aa3; text-decoration: none; font-size: 14.5px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg>Settings</a>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #e0d6fb; color: #4b1aa3; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">PK</span>
+        <span style="font-size: 14px; font-weight: 500">Paweł K.</span>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px 64px">
+    <div style="max-width: 880px; display: flex; flex-direction: column; gap: 24px">
+      <header style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Settings</h1>
+          <p style="margin: 0; font-size: 15px; color: #625d6b">Your profile, goals and reminders</p>
+        </div>
+        <nav aria-label="Sections" style="display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid #e4e1ea">
+          <a href="#profile" aria-current="true" style="padding: 10px 12px; font-size: 14.5px; font-weight: 600; color: #4b1aa3; text-decoration: none; border-bottom: 2px solid #6f32e2; margin-bottom: -1px">Profile</a>
+          <a href="#goals" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Goals</a>
+          <a href="#schedule" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Meal times</a>
+          <a href="#water" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Water</a>
+          <a href="#reminders" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">Reminders</a>
+          <a href="SettingsApp.dc.html" style="padding: 10px 12px; font-size: 14.5px; font-weight: 500; color: #4d4856; text-decoration: none">App &amp; account</a>
+        </nav>
+      </header>
+
+      <section id="profile" aria-labelledby="profile-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 id="profile-h" style="margin: 0; font-size: 18px; font-weight: 600">Profile</h2>
+          <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #1f1c25; cursor: pointer">Edit</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px 40px">
+          <dl style="margin: 0; display: flex; flex-direction: column">
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px"><dt style="color: #4d4856">Height</dt><dd style="margin: 0; font-weight: 500; font-variant-numeric: tabular-nums">182 cm</dd></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><dt style="color: #4d4856">Weight</dt><dd style="margin: 0; font-weight: 500; font-variant-numeric: tabular-nums">84.2 kg <span style="font-weight: 400; color: #625d6b">· 3 Oct</span></dd></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><dt style="color: #4d4856">Target weight</dt><dd style="margin: 0; font-weight: 500; font-variant-numeric: tabular-nums">79 kg</dd></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><dt style="color: #4d4856">Birth date</dt><dd style="margin: 0; font-weight: 500; color: {{birthColor}}">{{birth}}</dd></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><dt style="color: #4d4856">Sex</dt><dd style="margin: 0; font-weight: 500; color: {{birthColor}}">{{sex}}</dd></div>
+            <div style="display: flex; justify-content: space-between; min-height: 40px; align-items: center; font-size: 15px; border-top: 1px solid #efedf2"><dt style="color: #4d4856">Activity</dt><dd style="margin: 0; font-weight: 500">Moderately active</dd></div>
+          </dl>
+
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; background: #fbfafc; border: 1px solid #efedf2; border-radius: 10px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 600">Energy model</h3>
+              <span style="font-size: 12.5px; color: #625d6b">updated daily</span>
+            </div>
+            <sc-if value="{{complete}}" hint-placeholder-val="{{true}}">
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px">
+                  <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #625d6b">Resting (BMR)</span><span style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">1 805 kcal</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #625d6b">Daily burn (TDEE)</span><span style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">2 797 kcal</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #625d6b">BMI now → target</span><span style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">25.4 → 23.8</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; color: #625d6b">At 2 100 kcal a day</span><span style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">−0.6 kg / week</span></div>
+                </div>
+                <p style="margin: 0; padding-top: 12px; border-top: 1px solid #efedf2; font-size: 14px; line-height: 1.5; color: #3b3742">About 8 weeks to reach 79 kg — around the end of November.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{incomplete}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start">
+                <p style="margin: 0; font-size: 14.5px; line-height: 1.5; color: #3b3742">Add your birth date and sex to see your resting and daily calorie burn, and how fast you'll reach your target weight.</p>
+                <button type="button" style="height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #6f32e2; font: inherit; font-size: 14.5px; font-weight: 600; color: #ffffff; cursor: pointer">Add details</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 1px solid #efedf2">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px">
+            <h3 style="margin: 0; font-size: 15px; font-weight: 600">Weight</h3>
+            <span style="display: flex; gap: 16px; align-items: baseline; font-size: 13.5px; color: #625d6b"><span><strong style="font-weight: 600; color: #1f1c25">−4.1 kg</strong> since 1 Aug</span><a href="#" style="font-weight: 500; text-decoration: none">Log weight</a></span>
+          </div>
+          <svg viewBox="0 0 800 120" width="100%" height="120" role="img" aria-label="Weight from 88.3 kg on 1 Aug to 84.2 kg on 3 Oct" style="display: block; overflow: visible">
+            <line x1="0" y1="{{targetY}}" x2="800" y2="{{targetY}}" stroke="#8a8494" stroke-width="1.5" stroke-dasharray="5 5"></line>
+            <polyline points="{{weightPts}}" fill="none" stroke="#6f32e2" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+            <circle cx="800" cy="{{lastY}}" r="4.5" fill="#6f32e2"></circle>
+          </svg>
+          <div style="display: flex; justify-content: space-between; font-size: 12.5px; color: #625d6b"><span>1 Aug · 88.3 kg</span><span>Target 79 kg (dashed)</span><span>3 Oct · 84.2 kg</span></div>
+        </div>
+      </section>
+
+      <section id="goals" aria-labelledby="goals-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 id="goals-h" style="margin: 0; font-size: 18px; font-weight: 600">Daily goals</h2>
+            <span style="font-size: 13.5px; color: #625d6b">Limits turn red when you go over; minimums turn green when you reach them.</span>
+          </div>
+          <button type="button" style="height: 36px; padding: 0 14px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #1f1c25; cursor: pointer">Edit</button>
+        </div>
+        <ul style="margin: 0; padding: 0; list-style: none">
+          <sc-for list="{{goals}}" as="g" hint-placeholder-count="5">
+            <li style="display: grid; grid-template-columns: 18px 1fr auto 96px; align-items: center; gap: 10px; min-height: 48px; border-top: {{g.divider}}; font-size: 15px">
+              <span style="width: 10px; height: 10px; border-radius: 3px; background: {{g.color}}"></span>
+              <span style="font-weight: 500">{{g.name}}</span>
+              <span style="font-weight: 600; font-variant-numeric: tabular-nums">{{g.value}}</span>
+              <span style="justify-self: end; font-size: 12.5px; font-weight: 600; color: #4d4856; background: #f1eff4; border-radius: 6px; padding: 3px 8px">{{g.kind}}</span>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+
+      <section id="schedule" aria-labelledby="sched-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 id="sched-h" style="margin: 0; font-size: 18px; font-weight: 600">Meal times</h2>
+          <button type="button" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 14px; font-weight: 500; color: #1f1c25; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg>Add meal</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+          <sc-for list="{{slots}}" as="s" hint-placeholder-count="5">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 500; color: #4d4856">{{s.name}}
+              <input type="time" value="{{s.time}}" style="height: 40px; padding: 0 10px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; font: inherit; font-size: 15px; color: #1f1c25">
+            </label>
+          </sc-for>
+        </div>
+      </section>
+
+      <section id="water" aria-labelledby="water-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 id="water-h" style="margin: 0; font-size: 18px; font-weight: 600">Water</h2>
+          <button type="button" role="switch" aria-checked="true" aria-label="Track water" style="width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: #6f32e2; cursor: pointer; display: flex; justify-content: flex-end"><span style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff"></span></button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 500; color: #4d4856">Daily goal
+            <span style="display: flex; align-items: center; height: 40px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; padding: 0 12px; gap: 6px"><input type="text" value="2.5" inputmode="decimal" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 15px; color: #1f1c25"><span style="font-size: 14px; color: #625d6b">L</span></span>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 500; color: #4d4856">Glass size
+            <span style="display: flex; align-items: center; height: 40px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; padding: 0 12px; gap: 6px"><input type="text" value="250" inputmode="numeric" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 15px; color: #1f1c25"><span style="font-size: 14px; color: #625d6b">ml</span></span>
+          </label>
+        </div>
+      </section>
+
+      <section id="reminders" aria-labelledby="rem-h" style="background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 4px">
+        <h2 id="rem-h" style="margin: 0 0 8px; font-size: 18px; font-weight: 600">Reminders</h2>
+        <sc-for list="{{reminders}}" as="r" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; min-height: 60px; border-top: {{r.divider}}">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 15px; font-weight: 500">{{r.name}}</span>
+              <span style="font-size: 13.5px; color: #625d6b">{{r.detail}}</span>
+            </div>
+            <button type="button" role="switch" aria-checked="{{r.onStr}}" aria-label="{{r.name}}" onClick="{{r.toggle}}" style="width: 48px; height: 28px; padding: 3px; border: 0; border-radius: 14px; background: {{r.track}}; cursor: pointer; display: flex; justify-content: {{r.align}}"><span style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 2px rgba(30,20,50,0.2)"></span></button>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"profileComplete":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":2100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: { meal: true, water: true, weekly: false, milestone: true } };
+  }
+  renderVals() {
+    const complete = this.props.profileComplete ?? true;
+    const weights = [88.3, 87.8, 87.6, 87.0, 86.6, 86.1, 85.7, 85.2, 84.9, 84.2];
+    const hi = 89, lo = 79, H = 120;
+    const y = (w) => Math.round((hi - w) / (hi - lo) * H * 10) / 10;
+    const weightPts = weights.map((w, i) => Math.round(i * 800 / (weights.length - 1)) + ',' + y(w)).join(' ');
+    const goals = [
+      ['Calories', '2 100 kcal', 'Limit', '#6f32e2'], ['Protein', '140 g', 'At least', '#2f6fca'],
+      ['Carbs', '230 g', 'Limit', '#d08a1f'], ['Fat', '70 g', 'Limit', '#b8458c'], ['Fiber', '30 g', 'At least', '#2e8a6d']
+    ].map((g, i) => ({ name: g[0], value: g[1], kind: g[2], color: g[3], divider: i === 0 ? '0' : '1px solid #efedf2' }));
+    const slots = [['Breakfast', '07:30'], ['Second breakfast', '10:30'], ['Lunch', '13:30'], ['Snack', '16:30'], ['Dinner', '19:00']]
+      .map((s) => ({ name: s[0], time: s[1] }));
+    const on = this.state.on;
+    const defs = [
+      ['meal', 'Meal reminders', '15 min before each planned meal'],
+      ['water', 'Water reminders', 'Every 90 min between 08:00 and 20:00, until you reach your goal'],
+      ['weekly', 'Weekly summary', 'Sunday at 19:00 — intake, protein and weight for the week'],
+      ['milestone', 'Goal milestones', 'When you hit a weight milestone or a 7-day streak']
+    ];
+    const reminders = defs.map((d, i) => ({
+      name: d[1], detail: d[2], onStr: on[d[0]] ? 'true' : 'false',
+      track: on[d[0]] ? '#6f32e2' : '#c9c4d2', align: on[d[0]] ? 'flex-end' : 'flex-start',
+      divider: i === 0 ? '0' : '1px solid #efedf2',
+      toggle: () => this.setState({ on: { ...this.state.on, [d[0]]: !this.state.on[d[0]] } })
+    }));
+    return {
+      complete, incomplete: !complete,
+      birth: complete ? '12 May 1990' : 'Not set', sex: complete ? 'Male' : 'Not set',
+      birthColor: complete ? '#1f1c25' : '#8a5300',
+      weightPts, targetY: y(79), lastY: y(84.2),
+      goals, slots, reminders
+    };
+  }
+}
+</script>
+</body>
+</html>

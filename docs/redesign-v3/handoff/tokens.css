@@ -1,0 +1,66 @@
+/*
+ * HomeSystem redesign — theme token changes (Tailwind v4).
+ *
+ * Merge into the existing global stylesheet where `:root` and `.dark` already
+ * define --color-* tokens. Token NAMES below match the current build; only
+ * values change unless marked NEW. Anything not listed stays as it is.
+ */
+
+@theme {
+  /* ---- Type scale (NEW) — replaces the 20+ arbitrary text-[Npx] sizes ---- */
+  --text-label: 12px;          /* uppercase section labels, badges. Minimum size anywhere. */
+  --text-label--line-height: 1.35;
+  --text-meta: 13px;           /* secondary lines: "Lunch · 13:30 · 520 kcal" */
+  --text-meta--line-height: 1.4;
+  --text-body: 15px;           /* default UI and body text */
+  --text-body--line-height: 1.5;
+  --text-section: 18px;        /* section / card headings */
+  --text-section--line-height: 1.3;
+  --text-title: 28px;          /* page titles (one per page) */
+  --text-title--line-height: 1.2;
+  --text-display: 44px;        /* hero numbers: kcal left, totals */
+  --text-display--line-height: 1;
+
+  /* ---- Radii — collapse to three ---- */
+  --radius-sm: 6px;            /* chips, checkboxes, badges */
+  --radius-md: 10px;           /* buttons, inputs, rows, nav items */
+  --radius-lg: 16px;           /* surfaces (cards / sections) */
+  /* Remove --radius-6px … --radius-26px, --radius-xl, --radius-2xl after the
+     codemod in SPEC.md § Foundations › Radii. */
+}
+
+:root {
+  /* Text contrast: #908b98 on white is 3.3:1 — fails WCAG AA for body text. */
+  --color-muted-foreground: #6e6977;   /* was #908b98 → ~5.3:1 on #fff */
+
+  /* Fat no longer shares red with "over"/"delete". */
+  --color-fat: #b8458c;                /* was #d94a51 */
+
+  /* Status colours — use ONLY for state, always with an icon or a word. */
+  --color-over: #b42b31;               /* NEW — text/icon for "over a limit" (5.9:1) */
+  --color-over-soft: #fbe9ea;          /* NEW — tinted background behind over badges */
+  --color-good: #22704a;               /* was #2d8659 — darker so it passes as text (5.9:1) */
+  --color-good-soft: #e6f3ec;          /* NEW */
+  --color-warning: #8a5300;            /* was #d98e26 (that value stays on --color-carbs) */
+  --color-warning-soft: #fdf6ea;       /* NEW — "Not logged" cells */
+
+  /* Meter track used by every progress bar */
+  --color-track: #ebe8f0;              /* NEW */
+
+  /* Surfaces are flat: border, no shadow. Keep --shadow for popovers/dialogs only. */
+}
+
+.dark {
+  --color-muted-foreground: #9a94a3;   /* was #8b8593 → ~5:1 on #2a2932 */
+  --color-fat: #e08abf;                /* was #ec797d */
+  --color-over: #f09094;               /* NEW */
+  --color-over-soft: #4a2328;          /* NEW */
+  --color-good: #6fd3a3;               /* was #57c794 */
+  --color-good-soft: #1f3a2d;          /* NEW */
+  --color-warning: #e9b86a;            /* was #e5ac57 */
+  --color-warning-soft: #3a2f1c;       /* NEW */
+  --color-track: #3a3843;              /* NEW */
+}
+
+/* Numbers line up in every table, meter and total. */
+.tabular-nums-all :where(td, [data-numeric]) { font-variant-numeric: tabular-nums; }

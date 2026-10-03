@@ -1,0 +1,537 @@
+[
+  [
+    "source",
+    "docs(ui): archive redesign v3 handoff and resolve contract mismatches",
+    "documentation",
+    "frontend,ui-shell",
+    "0\u20138",
+    [],
+    "Publish handoff, before/after assets, comparison and decision record under docs/redesign-v3.",
+    "Record backend/UI scope; decide high-protein threshold, goal tolerance (helper uses 3%, budget uses exact overspend), unit preferences, author-name fallback and account-deletion disposition. Resolve Budget/Overview label contradiction. Default: preserve current API semantics; do not invent working delete or photo-upload features.",
+    "docs/redesign-v3; docs/rules/frontend-styling.md",
+    "Review every screenshot mapping; check all source links; record unresolved choices explicitly."
+  ],
+  [
+    "tokens",
+    "feat(ui): establish redesign v3 tokens and surface primitives",
+    "enhancement",
+    "frontend,ui-shell,accessibility",
+    "1.1\u20131.3, 1.5, 6",
+    [
+      "source"
+    ],
+    "Adapt existing theme tokens, semantic type scale, three radii and flat surfaces; update Card/Button/Field variants and Control kit.",
+    "Keep Outfit and current .dark ThemeContext integration; minimum 12px text, 44px mobile targets, readable focus/contrast. Reuse token work completed in #279. Migrate shared primitives first; screen tickets remove remaining legacy sizes.",
+    "src/ui/src/index.css; src/ui/src/shared/components/ui; src/ui/src/modules/diet-planner/pages/ControlKit.tsx",
+    "Primitive tests; manual light/dark contrast and 390/1024/1440 checks."
+  ],
+  [
+    "format",
+    "feat(ui): add preference-aware formatting and goal status",
+    "enhancement",
+    "frontend,shared",
+    "1.4, 0.5",
+    [
+      "source"
+    ],
+    "Adapt supplied pure formatting helpers into shared/lib and existing preferences; expose goal status and numeric text primitives.",
+    "Handle missing/nonfinite data, decimal API strings, date-only versus instant values, en/pl plurals and fractional pieces without quantity loss. Preserve stored unit choices or document approved changes. Budget uses exact minor-unit overspend; money arithmetic never uses floats. Adopt in Control kit; screen tickets migrate consumers.",
+    "src/ui/src/shared/lib/utils.ts; src/ui/src/shared/hooks/usePreferences.ts; handoff/src/lib/format.ts",
+    "Unit cases for en/pl, 4-digit grouping, zero/missing targets, 3% boundary decision, date boundaries and decimal money."
+  ],
+  [
+    "errors",
+    "fix(ui): show recoverable route errors",
+    "bug",
+    "frontend,ui-shell",
+    "1.6 B6",
+    [],
+    "Add friendly route error boundary with Retry and safe navigation.",
+    "No React Router developer screen for route failures. Retry reattempts failed data/render path; authentication callbacks retain correct behavior.",
+    "src/ui/src/app/router.tsx; src/ui/src/shared/components/ErrorBoundary.tsx",
+    "Route failure/retry component test and focused E2E."
+  ],
+  [
+    "robust",
+    "fix(diet-planner): handle incomplete profile and translated settings states",
+    "bug",
+    "frontend,diet-planner",
+    "1.6 B1\u2013B5, B7",
+    [
+      "format"
+    ],
+    "Fix namespace collision in preferences, remove development copy, guard missing prediction fields, default reminder hints, recipe plurals and section deep links.",
+    "Missing birth date/sex or null predictions show Add details state; no NaN, undefined or raw interpolation. Reminder hints disappear when off. Existing ?section= selects correct section pending redirects.",
+    "src/ui/src/modules/diet-planner/pages/Preferences.tsx; pages/Profile.tsx; components/WeightPredictionCard.tsx; components/settings; locales",
+    "Regression cases for empty/partial API payloads, en/pl counts 1/2/5 and deep links; reproduce handoff reports before fixing."
+  ],
+  [
+    "shell",
+    "feat(ui-shell): replace rail navigation with a module sidebar",
+    "enhancement",
+    "frontend,ui-shell",
+    "2 desktop",
+    [
+      "tokens"
+    ],
+    "One 240px sidebar, registry-driven module switcher, search and footer destinations; shared PageHeader and stable content container.",
+    "Remove rail/duplicate brand; retain role gates, remembered module, command palette and unread/admin badges. Use module-provided components/public APIs; shared code never imports module internals. Keep legacy settings links until replacement exists.",
+    "src/ui/src/shared/components/layout; src/ui/src/shared/lib/module-registry.ts; src/ui/src/modules/*/index.ts",
+    "Registry/nav tests across Owner/Adult/Child/Guest/admin; keyboard switcher; desktop/tablet layout."
+  ],
+  [
+    "mobile",
+    "feat(ui-shell): add module mobile tabs and More sheet",
+    "enhancement",
+    "frontend,ui-shell,accessibility",
+    "2 mobile",
+    [
+      "shell"
+    ],
+    "At most five tabs per module; More sheet exposes remaining routes and module switcher; Budget add action opens existing expense form.",
+    "All existing destinations remain reachable; active states and back navigation work. Safe-area padding and 44px targets; sheet traps focus and closes on Escape.",
+    "src/ui/src/shared/components/layout/BottomTabBar.tsx; module navigation definitions",
+    "390px E2E for Diet/Budget navigation, More and add action; keyboard/focus checks."
+  ],
+  [
+    "products_api",
+    "feat(diet-planner): support product completeness filters and sorting",
+    "enhancement",
+    "backend,diet-planner",
+    "3.6",
+    [
+      "source"
+    ],
+    "Add incomplete-nutrition filtering and whitelisted stable column sorting before pagination.",
+    "All/Mine/Incomplete combine with search; totalCount matches filtered dataset. Null nutrition has defined sort order and completeness meaning; visibility enforced. Regenerate schema.",
+    "src/Modules/DietPlanner/DietPlanner.Application/Queries/SearchProducts; DietPlanner.Api/ProductEndpoints.cs; generated schema",
+    "Integration tests with >1 page, null fields, ownership and inaccessible products."
+  ],
+  [
+    "recipes_api",
+    "feat(diet-planner): support recipe nutrition and preparation filters",
+    "enhancement",
+    "backend,diet-planner",
+    "3.7",
+    [
+      "source"
+    ],
+    "Add high-protein and under-15-minute filters before pagination using approved high-protein definition.",
+    "Unknown preparation times do not match under-15; nutrition filtering uses per-serving computed nutrition and documented threshold. Counts and visibility correct across pages; regenerate schema.",
+    "src/Modules/DietPlanner/DietPlanner.Application/Queries/SearchRecipes; DietPlanner.Api/RecipeEndpoints.cs",
+    "Integration tests at threshold, 14/15 minutes, missing nutrition, page boundaries and visibility."
+  ],
+  [
+    "description",
+    "feat(budget): persist expense descriptions and search",
+    "enhancement",
+    "backend",
+    "7.1",
+    [],
+    "Optional description up to 80 characters across create/correct/list/detail/search and immutable revision snapshots.",
+    "Old expenses/history remain readable with null description; whitespace normalization and length validated; search is server-side before paging and authorization. Correction concurrency and duplicate detection preserved; additive migration and regenerated schema.",
+    "src/Modules/Budget/Budget.Domain; Budget.Application/Commands; Queries/GetExpense; Queries/ListExpenses; Budget.Infrastructure; Budget.Api",
+    "Unit/integration tests for 0/80/81 chars, description correction/history, search privacy and legacy snapshots."
+  ],
+  [
+    "shopping_api",
+    "feat(diet-planner): persist household shopping check-offs",
+    "enhancement",
+    "backend,diet-planner,household",
+    "7.2",
+    [
+      "source"
+    ],
+    "Add authorized idempotent check/uncheck persistence and expose bought state in household shopping query.",
+    "Scope derives from authenticated household and normalized date range. Resolve existing product+unit rows: use product+unit key or explicitly check all units together. Cross-household reads/writes denied; range isolation and uncheck-all defined; additive migration and schema.",
+    "src/Modules/DietPlanner/DietPlanner.Application/Queries/GetShoppingList; DietPlanner.Domain; DietPlanner.Infrastructure; DietPlanner.Api/MealEndpoints.cs",
+    "Two-member shared reads, isolation, repeated writes, same product in two units, range changes, membership removal and concurrency."
+  ],
+  [
+    "totals_api",
+    "feat(budget): expose filtered expense totals and monthly counts",
+    "enhancement",
+    "backend",
+    "5.1, 5.2, 5.6",
+    [
+      "description"
+    ],
+    "Expose exact full-filter expense totals, caller split-share totals and daily totals; add monthly expense counts to summary/envelopes.",
+    "Aggregates share list authorization/search/category/envelope/date/void filters and cover all pages. Monthly active counts exclude voids; personal spending never leaks. Define voided aggregate treatment; do not total first 20/100 loaded rows. Regenerate schema.",
+    "src/Modules/Budget/Budget.Application/Queries/ListExpenses; Queries/GetSummary; Budget.Api/BudgetEndpoints.cs",
+    "Integration >100 expenses, multi-day pagination, personal/shared/child access, search and void filters; exact cents."
+  ],
+  [
+    "today",
+    "feat(diet-planner): redesign Today summary and meal list",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.1",
+    [
+      "shell",
+      "mobile",
+      "format"
+    ],
+    "Unified calorie/macros/water surface, all today slots, next meal emphasis and check toggles; planned footer.",
+    "Use real goals/completion/water data; no meal strikethrough. Show missing-goal and empty-day states; mutations refresh existing queries. Match 10/11 screenshots.",
+    "src/ui/src/modules/diet-planner/pages/Dashboard.tsx; components/dashboard",
+    "Completion/undo and water tests; desktop/phone E2E and goal direction cases."
+  ],
+  [
+    "charts",
+    "feat(diet-planner): add labelled daily charts and Today history",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.1 last 7 days, 6",
+    [
+      "today"
+    ],
+    "Reusable daily bars with value/date labels, target line and today highlight; replace Today weekly review.",
+    "Full-day average excludes current incomplete day; zero and missing logs distinguished; textual over markers and accessible equivalent data. Handle no target/no data.",
+    "src/ui/src/modules/diet-planner/components/dashboard/WeekReviewCard.tsx; chart components",
+    "Known seven-day fixtures, midnight/week-start cases, empty data and accessible labels."
+  ],
+  [
+    "calendar",
+    "feat(diet-planner): redesign week meal plan states",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.2 desktop",
+    [
+      "shell",
+      "format"
+    ],
+    "Week grid, person/day-week controls, Import/Add actions, eaten/planned/missed/next states and daily/weekly meters.",
+    "Remove duplicate CalendarTabBar and macro-led tint B8. Preserve household assignment, swap/reset/edit/delete and overrides. Protein/fiber minima differ from calorie/fat/carb limits.",
+    "src/ui/src/modules/diet-planner/pages/Calendar.tsx; components/calendar; components/CalendarTabBar.tsx",
+    "Existing household calendar and completion scenarios; past/future/today state fixtures, weekly totals and no goals."
+  ],
+  [
+    "calendar_mobile",
+    "feat(diet-planner): simplify mobile meal actions",
+    "enhancement",
+    "frontend,diet-planner,accessibility",
+    "3.2 phone",
+    [
+      "calendar",
+      "mobile"
+    ],
+    "Day meal rows with one 44px completion control and overflow menu for swap/reset/edit/delete.",
+    "Actions remain available without hover; mobile day/week navigation and selected person preserved; dialogs restore focus.",
+    "src/ui/src/modules/diet-planner/components/calendar-day; components/diet-plans",
+    "390px meal completion, edit/swap/reset/delete E2E; keyboard menu and focus."
+  ],
+  [
+    "shopping",
+    "feat(diet-planner): redesign shared shopping list",
+    "enhancement",
+    "frontend,diet-planner,household",
+    "3.3",
+    [
+      "shell",
+      "format",
+      "shopping_api"
+    ],
+    "One scrolling list, bought progress/section, date range, Copy and export menu; integrate shared check-offs.",
+    "Preserve CSV/JSON/copy correctness and quantities. Fallback checks isolated by household/range and visibly local when shared API unavailable; API errors never silently appear saved. No pagination; uncheck-all works.",
+    "src/ui/src/modules/diet-planner/pages/ShoppingList.tsx; api/hooks/useShoppingList.ts",
+    "Two-member check/uncheck E2E, range switching, mixed units, optimistic rollback and export tests."
+  ],
+  [
+    "nutrition",
+    "feat(diet-planner): redesign nutrition summaries and charts",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.4",
+    [
+      "charts",
+      "format"
+    ],
+    "7/30/90-day selector, neutral summaries, calories chart, kcal-based macro comparison and daily totals.",
+    "Use actual logged totals; no misleading red data fills. <=31 rows show without pagination; 90 days remain accessible. Goal statuses and missing-data denominators explicit.",
+    "src/ui/src/modules/diet-planner/pages/NutritionSummary.tsx; components/MacroDistributionCard.tsx",
+    "Known meal totals, 7/30/90 ranges, goal limits/minima, macro kcal percentages and en/pl."
+  ],
+  [
+    "water",
+    "feat(diet-planner): redesign water logging and history",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.5",
+    [
+      "charts",
+      "format"
+    ],
+    "Today progress, 250/330/500/custom actions, newest-first entries, 7-day goal chart and setup summary.",
+    "Keep existing daily intake queries (seven bounded days suffice; no backend endpoint required). Delete errors recover; disabled tracking/no goal represented; settings deep link remains valid.",
+    "src/ui/src/modules/diet-planner/pages/Hydration.tsx; api/hooks/useHydration.ts",
+    "Quick/custom add and delete E2E; history denominators, local timestamps and empty data."
+  ],
+  [
+    "products",
+    "feat(diet-planner): redesign product table and filters",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.6",
+    [
+      "shell",
+      "format",
+      "products_api"
+    ],
+    "Neutral sortable sticky-header table with All/Mine/Incomplete chips, unit labels and permission-aware actions.",
+    "Wire server sorting/filtering with pagination reset. Nutrition is currently per 100g: do not relabel as per 100ml without density conversion; missing density stays explicit. Preserve Public visibility and product CRUD.",
+    "src/ui/src/modules/diet-planner/pages/products; api/hooks/useProducts.ts",
+    "Multi-page sort/filter tests, null values, per100g/ml conversion decisions, visibility/edit permissions."
+  ],
+  [
+    "recipes",
+    "feat(diet-planner): redesign compact recipe library",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.7",
+    [
+      "shell",
+      "format",
+      "recipes_api"
+    ],
+    "Compact cards without placeholder photo space, kcal-based macro bar, plural servings, chip filters and menu actions.",
+    "No photo API exists: omit images rather than invent uploads. Filters cover server dataset; zero nutrition and missing prep time handled; preserve Public badges and CRUD.",
+    "src/ui/src/modules/diet-planner/pages/recipes/RecipeList.tsx; components/recipes/RecipeCard.tsx",
+    "Multi-page filters, 1/2/5 servings in en/pl, zero kcal and permission cases."
+  ],
+  [
+    "recipe_detail",
+    "feat(diet-planner): redesign recipe detail and plan context",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.8",
+    [
+      "recipes"
+    ],
+    "Scaled ingredient list with product links, method, per-serving nutrition, Add to plan, danger action and this-week meal context.",
+    "Fetch complete bounded week meal data and filter recipeId. No creator display name/photo in RecipeDto: show permitted roster name only when resolvable, otherwise omit byline; never expose auth subject as name. Preserve decimal ingredient quantities.",
+    "src/ui/src/modules/diet-planner/pages/recipes/RecipeDetail.tsx; api/hooks/useMeals.ts",
+    "Serving scaling, fractional pieces, no goal/no meals, authorized product links, add-to-plan and deletion."
+  ],
+  [
+    "import",
+    "feat(diet-planner): redesign file-first plan import",
+    "enhancement",
+    "frontend,diet-planner",
+    "3.9",
+    [
+      "shell",
+      "format"
+    ],
+    "Choose-file/dropzone, optional JSON paste/format, review counts/warnings and actionable success.",
+    "Reuse existing validation/create/reuse counts; import preserves planned meals per actual contract, not mock copy. Invalid files, choose another and server failure recover; dynamic meal count.",
+    "src/ui/src/modules/diet-planner/pages/diet-plans/ImportWizard.tsx",
+    "File/sample/paste, invalid JSON, reuse counts, warnings and failure/retry E2E."
+  ],
+  [
+    "settings_diet",
+    "feat(diet-planner): consolidate profile and diet settings",
+    "enhancement",
+    "frontend,diet-planner",
+    "4.1 diet",
+    [
+      "shell",
+      "robust"
+    ],
+    "One scrolling Settings route with Profile/Goals/Meal times/Water/Reminders anchors and existing forms.",
+    "Preserve weight history/logging and energy model; add direction labels. Redirect profile including ?section= to matching anchor. Per-user timezone remains #414, no duplicate backend task.",
+    "src/ui/src/modules/diet-planner/pages/Profile.tsx; components/settings; module routes",
+    "Each settings save flow, anchors/deep-link redirects, incomplete profile and reminder defaults."
+  ],
+  [
+    "settings_app",
+    "feat(ui-shell): consolidate app and account settings",
+    "enhancement",
+    "frontend,ui-shell,notifications",
+    "4.1 app/account",
+    [
+      "settings_diet",
+      "format"
+    ],
+    "App/account route combines channel preferences, theme previews, language/density/unit preferences and sign out.",
+    "Redirect both old preferences routes with correct destination. Email disabled with Coming soon (#164). No functional account deletion without separate approved lifecycle design; show honest unavailable state/omit action per decision ticket. Units and number examples reflect actual behavior.",
+    "src/ui/src/modules/diet-planner/pages/Preferences.tsx; src/ui/src/modules/notifications/pages/ChannelPreferences.tsx; app/router.tsx",
+    "Route redirects, preferences persistence, en/pl, light/dark/system, channel mutation and logout."
+  ],
+  [
+    "household",
+    "feat(household): redesign people and household settings",
+    "enhancement",
+    "frontend,household",
+    "4.2",
+    [
+      "shell",
+      "tokens"
+    ],
+    "People rows, initials, permission-aware roles/actions, invitations/name save and separate leave/delete danger rows.",
+    "Keep Guest and managed-person backend semantics despite abbreviated mock role list. Last-owner explanation appears once; unchanged name cannot save; existing invitation and ownership flows retained.",
+    "src/ui/src/modules/household/pages/HouseholdPage.tsx; household components",
+    "Owner/Adult/Child/Guest and last-owner states, managed people, name save and invitation E2E."
+  ],
+  [
+    "notifications",
+    "feat(notifications): redesign grouped notification inbox",
+    "enhancement",
+    "frontend,notifications",
+    "4.3",
+    [
+      "shell",
+      "settings_app"
+    ],
+    "All/Unread chips, Today/Earlier groups, semantic item action and mark-all-read; remove selection checkboxes.",
+    "Keep SSE/cache behavior, real unread total and full-list mark-all semantics. No nested button/link controls; read items remain legible without strikethrough; destinations authorized.",
+    "src/ui/src/modules/notifications/pages/Inbox.tsx; api/hooks",
+    "Incoming SSE, read/open/mark-all, filtered paging, empty state and keyboard navigation."
+  ],
+  [
+    "budget_overview",
+    "feat(budget): redesign monthly budget overview",
+    "enhancement",
+    "frontend",
+    "5.1",
+    [
+      "shell",
+      "format",
+      "totals_api"
+    ],
+    "Monthly summary, limit meters, settlement prompt, category bars and latest expenses.",
+    "Map Shared/Just mine to actual API Shared/Personal values. Hide settlement for children/personal/settled state; exact overspend (including zero limit), not helper tolerance. Reuse limits and settlement endpoints.",
+    "src/ui/src/modules/budget/pages/BudgetPage.tsx; api/queries.ts",
+    "Personal/shared isolation, child view, zero/no/over limits, month navigation and settlement state."
+  ],
+  [
+    "expenses",
+    "feat(budget): redesign grouped expense history",
+    "enhancement",
+    "frontend",
+    "5.2",
+    [
+      "budget_overview",
+      "description"
+    ],
+    "Month/search/envelope/category filters, day groups, server totals and description-first rows.",
+    "Use full-filter aggregates and daily totals; paging never misrepresents total spend/shares. Category fallback for null description, Show voided, payer/share metadata and detail links.",
+    "src/ui/src/modules/budget/pages/ExpensesPage.tsx; budget row components; types.ts",
+    "Search/filter/paging totals, same day across pages, voided state and unauthorized rows."
+  ],
+  [
+    "expense_form",
+    "feat(budget): redesign expense entry with sticky mobile save",
+    "enhancement",
+    "frontend,accessibility",
+    "5.3, B9",
+    [
+      "shell",
+      "format",
+      "description"
+    ],
+    "Amount-first create/correct form, category chips, payer and split cards, description, duplicate panel and phone sheet.",
+    "390x844 Save stays reachable with keyboard and scroll; comma/dot input; required correction reason; exact integer-cent preview matches backend ascending PersonId order, not visual order. Preserve revisions/conflicts and duplicate choices.",
+    "src/ui/src/modules/budget/components; expense mutations",
+    "100/3 and reordered participant parity, household-funded path, duplicate bypass, correction concurrency, phone keyboard/save E2E."
+  ],
+  [
+    "expense_detail",
+    "feat(budget): redesign expense detail and revision timeline",
+    "enhancement",
+    "frontend",
+    "5.4",
+    [
+      "expenses",
+      "expense_form"
+    ],
+    "Description/amount header, split summary, details and client-side changed-field revision timeline; separate Void row.",
+    "Sort history newest first but compare consecutive snapshots chronologically; handle old missing descriptions and zero changes. Local times, exact cents, permission-aware Correct/Void.",
+    "src/ui/src/modules/budget/pages/ExpenseDetailPage.tsx",
+    "History diff unit cases (amount, payer, shares, description, void), legacy snapshots and correction/void E2E."
+  ],
+  [
+    "settlement",
+    "feat(budget): redesign settlement actions and payment history",
+    "enhancement",
+    "frontend",
+    "5.5",
+    [
+      "budget_overview"
+    ],
+    "Suggested payment cards, prefilled confirmation, different amount, neutral balances and recent/history expansion.",
+    "Reuse Suggestions for optional nav badge; no new count API. Three-plus-person language reflects actual payer/payee; Undo voids only just-recorded authorized repayment; stale suggestions/conflicts recover. Explicit no-money-transfer note.",
+    "src/ui/src/modules/budget/pages/SettlementPage.tsx; api/queries.ts; module nav badge",
+    "2/3-person settlement, partial payments, just-recorded undo, unauthorized access and stale suggestion tests."
+  ],
+  [
+    "envelopes",
+    "feat(budget): redesign shared and personal envelope lists",
+    "enhancement",
+    "frontend",
+    "5.6",
+    [
+      "budget_overview"
+    ],
+    "Shared/personal rows with monthly counts/limits, menus and collapsed archived section.",
+    "Preserve create/rename/set-clear-limit/archive/restore and privacy; counts from server month summary; zero limit differs from no limit; archived rows remain reachable.",
+    "src/ui/src/modules/budget/pages/EnvelopesPage.tsx; envelope components",
+    "Archive/restore, rename, counts/month boundary, zero limit and personal visibility E2E."
+  ],
+  [
+    "admin",
+    "feat(admin): redesign failed-message monitoring",
+    "enhancement",
+    "frontend,shared",
+    "5.7",
+    [
+      "shell",
+      "format"
+    ],
+    "Neutral summaries, source display names, local times, one-line error previews, payload/history panel and retry actions.",
+    "Reuse delivery/outbox retry-all/history endpoints completed in #432\u2013#435. Admin-only access preserved, source counts accurate, full errors accessible, empty sections readable.",
+    "src/ui/src/modules/admin/pages/DeadLetters.tsx; api/hooks",
+    "Admin gate, per-item/bulk retry success/failure, payload/history and long errors."
+  ],
+  [
+    "qa",
+    "test(e2e): validate redesign v3 across screens and themes",
+    "chore",
+    "e2e,frontend,accessibility",
+    "8",
+    [
+      "calendar_mobile",
+      "shopping",
+      "nutrition",
+      "water",
+      "products",
+      "recipe_detail",
+      "import",
+      "settings_app",
+      "household",
+      "notifications",
+      "expense_detail",
+      "settlement",
+      "envelopes",
+      "admin"
+    ],
+    "Final cross-screen acceptance sweep and stable regression fixtures after per-slice tests.",
+    "Cover all supplied targets at 1440/1024/390 in light/dark and en/pl; all legacy routes resolve; no tiny text/legacy radius/format remnants, raw keys or NaN. Control kit covers reused/new primitives; update E2E docs.",
+    "e2e; docs/e2e; src/ui/src/modules/diet-planner/pages/ControlKit.tsx",
+    "Run path-aware verify plus real-stack E2E; visual/manual screenshot comparison with Outfit loaded; record evidence, avoid pixel equality to fallback-font mockups."
+  ],
+  [
+    "account_decision",
+    "docs(account): decide account deletion lifecycle for redesign v3",
+    "documentation",
+    "backend,ui-shell",
+    "4.1 account",
+    [
+      "source"
+    ],
+    "Document whether deletion belongs in v3 and design Authentik, household ownership, shared budget history and per-module cleanup responsibilities.",
+    "No production delete-account endpoint found; test-support purge is not account deletion. Decide retention/anonymization, last-owner transfer, reauthentication, async failures and module contracts; split approved implementation into later PR tickets. V3 account UI uses explicit unavailable/omitted action meanwhile.",
+    "docs/design; src/Modules/Household; src/Modules/Budget; Authentik integration",
+    "Owner review of decision record; no application code or data deletion in this ticket."
+  ]
+]
