@@ -1,5 +1,6 @@
 namespace Budget.Application.Commands.CreateExpense;
 
+using Budget.Domain.Aggregates;
 using Budget.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 
@@ -24,7 +25,13 @@ internal sealed class CreateExpenseCommandValidator : ICommandValidator<CreateEx
 
         if (command.ParticipantIds is { } ids && ids.Distinct().Count() != ids.Count)
             yield return new ValidationError(nameof(command.ParticipantIds), "A participant can only be listed once.");
+
+        if (!ValidDescription(command.Description))
+            yield return new ValidationError(nameof(command.Description), $"A description can be at most {Expense.MaxDescriptionLength} characters.");
     }
+
+    internal static bool ValidDescription(string? description)
+        => Expense.TryNormalizeDescription(description, out _);
 
     internal static bool TryParseCategory(string? value, out ExpenseCategory category)
         => TryParseEnum(value, out category);

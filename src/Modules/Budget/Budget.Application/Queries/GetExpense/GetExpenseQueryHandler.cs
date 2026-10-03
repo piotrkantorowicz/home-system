@@ -32,7 +32,7 @@ internal sealed class GetExpenseQueryHandler(BudgetAccessService access, IBudget
         return new ExpenseRevisionDto(
             r.RevisionNumber, r.Operation, r.ActorPersonId, r.ActorDisplayName, r.Reason, r.CreatedAt,
             new ExpenseSnapshotDto(
-                s.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture), s.Category.ToString(), s.OccurredOn,
+                s.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture), s.Category.ToString(), s.OccurredOn, s.Description,
                 s.FundingSource.ToString(), s.PaidByPersonId, s.PaidByDisplayName, s.AddedByPersonId, s.AddedByDisplayName, s.IsVoided,
                 [.. s.Shares.Select(x => new ExpenseShareDto(
                     x.PersonId, x.PersonDisplayName, x.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)))]));
