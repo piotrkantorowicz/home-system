@@ -2,7 +2,7 @@ import { cn } from '@shared/lib/utils';
 export function Table({ ref, className, ...props }: React.ComponentProps<'table'>) {
   return (
     <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn('text-0-9rem w-full caption-bottom', className)} {...props} />
+      <table ref={ref} className={cn('text-body w-full caption-bottom', className)} {...props} />
     </div>
   );
 }

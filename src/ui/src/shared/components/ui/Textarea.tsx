@@ -7,7 +7,7 @@ export function Textarea({ ref, className, ...props }: TextareaProps) {
   return (
     <textarea
       className={cn(
-        'border-border bg-secondary placeholder:text-muted-foreground/70 aria-[invalid=true]:border-destructive min-h-100px rounded-13px text-13px focus-visible:ring-ring flex w-full resize-y border px-3 py-2.5 transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        'border-border bg-secondary placeholder:text-muted-foreground/70 aria-[invalid=true]:border-destructive min-h-100px text-meta focus-visible:ring-ring flex w-full resize-y rounded-md border px-3 py-2.5 transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       ref={ref}

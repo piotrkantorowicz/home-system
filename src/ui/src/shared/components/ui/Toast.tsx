@@ -89,7 +89,7 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
       role={config.role}
       aria-live={config.ariaLive}
       className={cn(
-        'relative flex w-80 items-start gap-3 overflow-hidden rounded-xl border p-4 shadow-lg backdrop-blur-sm',
+        'relative flex w-80 items-start gap-3 overflow-hidden rounded-lg border p-4 shadow-lg backdrop-blur-sm',
         'transition-[transform,opacity] ease-in-out',
         config.containerClass,
         exiting
@@ -110,7 +110,7 @@ function ToastItemComponent({ toast, onDismiss }: ToastItemProps) {
               toast.action?.onClick();
               handleDismiss();
             }}
-            className="border-border text-foreground hover:bg-muted rounded-9px mt-2 h-7 border px-2.5 text-xs font-bold transition-colors"
+            className="border-border text-foreground hover:bg-muted mt-2 h-7 rounded-sm border px-2.5 text-xs font-bold transition-colors"
           >
             {toast.action.label}
           </button>

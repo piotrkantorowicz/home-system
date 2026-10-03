@@ -56,7 +56,7 @@ export function UserProfileDropdown({
         {compact ? (
           <button
             aria-label={t('common.user_menu')}
-            className="focus-visible:ring-primary size-34px rounded-11px text-12px grid place-items-center font-bold text-white transition-[filter] duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:outline-none"
+            className="focus-visible:ring-primary size-34px text-label grid place-items-center rounded-md font-bold text-white transition-[filter] duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:outline-none"
             style={{ background: 'var(--gradient-avatar)' }}
           >
             {getInitials(displayName)}

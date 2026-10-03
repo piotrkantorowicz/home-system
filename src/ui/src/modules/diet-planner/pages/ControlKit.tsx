@@ -24,8 +24,8 @@ function Group({ title, sub, children }: { title: string; sub: string; children:
   return (
     <Card className="p-22px flex flex-col gap-4">
       <div>
-        <div className="text-15px font-bold">{title}</div>
-        <div className="text-muted-foreground text-12-5px">{sub}</div>
+        <div className="text-body font-bold">{title}</div>
+        <div className="text-muted-foreground text-label">{sub}</div>
       </div>
       {children}
     </Card>
@@ -40,7 +40,7 @@ export default function ControlKit() {
   return (
     <div className="animate-fade-in mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 md:px-8">
       <div>
-        <h1 className="text-26px font-bold tracking-tight">{t('control_kit.title')}</h1>
+        <h1 className="text-title font-bold tracking-tight">{t('control_kit.title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('control_kit.subtitle')}</p>
       </div>
 
@@ -96,7 +96,7 @@ export default function ControlKit() {
         <Group title={t('control_kit.toggles')} sub="Switch · SegmentedControl">
           <div className="flex items-center gap-3">
             <Switch checked={on} onCheckedChange={setOn} aria-label="demo switch" />
-            <span className="text-13px">{on ? 'On' : 'Off'}</span>
+            <span className="text-meta">{on ? 'On' : 'Off'}</span>
           </div>
           <SegmentedControl
             label="View"
@@ -135,10 +135,10 @@ export default function ControlKit() {
         <Group title={t('control_kit.ring')} sub="conic progress">
           <div className="flex items-center gap-4">
             <Ring percent={72} size={110} thickness={11}>
-              <span className="numeral text-20px font-bold">72%</span>
+              <span className="numeral text-section font-bold">72%</span>
             </Ring>
             <Ring percent={112} size={110} thickness={11} color="fat">
-              <span className="numeral text-20px font-bold">112%</span>
+              <span className="numeral text-section font-bold">112%</span>
             </Ring>
           </div>
         </Group>
