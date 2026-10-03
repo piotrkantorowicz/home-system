@@ -15,6 +15,9 @@ public sealed record ExpenseSnapshot
     /// <summary>Purchase date.</summary>
     public required DateOnly OccurredOn { get; init; }
 
+    /// <summary>Description in this state; <see langword="null"/> when none (and for revisions written before descriptions existed).</summary>
+    public string? Description { get; init; }
+
     /// <summary>Funding source.</summary>
     public required FundingSource FundingSource { get; init; }
 

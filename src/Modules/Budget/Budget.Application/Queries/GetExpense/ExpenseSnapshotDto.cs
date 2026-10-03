@@ -4,6 +4,7 @@ namespace Budget.Application.Queries.GetExpense;
 /// <param name="Amount">Decimal string with two fractional digits.</param>
 /// <param name="Category">Category code.</param>
 /// <param name="OccurredOn">Purchase date.</param>
+/// <param name="Description">Description in this state; <see langword="null"/> when none or recorded before descriptions existed.</param>
 /// <param name="FundingSource"><c>Individual</c> or <c>HouseholdFunds</c>.</param>
 /// <param name="PaidByPersonId">Payer, or <see langword="null"/>.</param>
 /// <param name="PaidByDisplayName">Payer name snapshot.</param>
@@ -15,6 +16,7 @@ public sealed record ExpenseSnapshotDto(
     string Amount,
     string Category,
     DateOnly OccurredOn,
+    string? Description,
     string FundingSource,
     Guid? PaidByPersonId,
     string? PaidByDisplayName,

@@ -30,6 +30,7 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.Property(x => x.Amount).HasColumnType("numeric(18,2)").HasColumnName("amount");
         builder.Property(x => x.Category).HasConversion<string>().HasMaxLength(16).HasColumnName("category");
         builder.Property(x => x.OccurredOn).HasColumnName("occurred_on");
+        builder.Property(x => x.Description).HasMaxLength(Expense.MaxDescriptionLength).HasColumnName("description");
         builder.Property(x => x.FundingSource).HasConversion<string>().HasMaxLength(16).HasColumnName("funding_source");
         builder.Property(x => x.PaidByPersonId).HasColumnName("paid_by_person_id");
         builder.Property(x => x.PaidByDisplayName).HasMaxLength(200).HasColumnName("paid_by_display_name");

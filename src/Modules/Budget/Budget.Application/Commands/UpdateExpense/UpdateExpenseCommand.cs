@@ -18,6 +18,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="FundingSource"><c>Individual</c> (default) or <c>HouseholdFunds</c>.</param>
 /// <param name="PaidByPersonId">Payer of an individually funded shared expense.</param>
 /// <param name="ParticipantIds">Adults sharing the cost equally.</param>
+/// <param name="Description">New optional short note, at most 80 characters; omitted or blank clears it.</param>
 public sealed record UpdateExpenseCommand(
     string AuthSubject,
     Guid ExpenseId,
@@ -29,4 +30,5 @@ public sealed record UpdateExpenseCommand(
     string Category,
     string? FundingSource,
     Guid? PaidByPersonId,
-    IReadOnlyList<Guid>? ParticipantIds) : ICommand<ExpenseMutationResult>;
+    IReadOnlyList<Guid>? ParticipantIds,
+    string? Description = null) : ICommand<ExpenseMutationResult>;

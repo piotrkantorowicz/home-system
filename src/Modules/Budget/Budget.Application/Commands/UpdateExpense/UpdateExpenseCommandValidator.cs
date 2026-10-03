@@ -30,5 +30,8 @@ internal sealed class UpdateExpenseCommandValidator : ICommandValidator<UpdateEx
 
         if (command.ParticipantIds is { } ids && ids.Distinct().Count() != ids.Count)
             yield return new ValidationError(nameof(command.ParticipantIds), "A participant can only be listed once.");
+
+        if (!CreateExpenseCommandValidator.ValidDescription(command.Description))
+            yield return new ValidationError(nameof(command.Description), $"A description can be at most {Expense.MaxDescriptionLength} characters.");
     }
 }

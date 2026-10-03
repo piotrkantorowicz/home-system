@@ -33,8 +33,10 @@ internal sealed class CreateExpenseCommandHandler(
         var participantIds = (command.ParticipantIds ?? []).Order().ToList();
         var payerId = isPersonal ? account.OwnerPersonId : command.PaidByPersonId;
 
+        var description = Expense.NormalizeDescription(command.Description);
         var request = new ExpenseRequest(
-            "Create", account.Id.Value, amount.ToString(), category, command.OccurredOn, funding, payerId, participantIds);
+            "Create", account.Id.Value, amount.ToString(), category, command.OccurredOn, funding, payerId, participantIds,
+            Description: description);
 
         // Authorised above; now recognise a retry before any current-roster or archive validation.
         await expenses.LockRequestAsync(account.BudgetId, caller.PersonId, command.ClientRequestId, ct);
@@ -52,7 +54,7 @@ internal sealed class CreateExpenseCommandHandler(
 
         var expense = Expense.Create(
             ExpenseId.New(), account, amount, category, command.OccurredOn, funding, paidBy, caller.Self, participants,
-            command.ClientRequestId, clock.GetUtcNow().UtcDateTime);
+            command.ClientRequestId, clock.GetUtcNow().UtcDateTime, description);
 
         await expenses.AddAsync(expense, ct);
         await unitOfWork.CommitAsync(ct);

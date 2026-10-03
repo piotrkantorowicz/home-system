@@ -18,6 +18,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="From">Earliest purchase date, inclusive.</param>
 /// <param name="To">Latest purchase date, inclusive.</param>
 /// <param name="ExcludeId">Leave this expense out (the one being corrected).</param>
+/// <param name="Search">Case-insensitive text matched against the description, after visibility and before paging.</param>
 /// <param name="IncludeVoided">Also return voided expenses; by default only active ones, so they never count as duplicates.</param>
 public sealed record ListExpensesQuery(
     string AuthSubject,
@@ -29,4 +30,5 @@ public sealed record ListExpensesQuery(
     DateOnly? From = null,
     DateOnly? To = null,
     Guid? ExcludeId = null,
-    bool IncludeVoided = false) : IQuery<PagedList<ExpenseDto>>;
+    bool IncludeVoided = false,
+    string? Search = null) : IQuery<PagedList<ExpenseDto>>;

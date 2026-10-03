@@ -36,6 +36,14 @@ internal sealed class ListExpensesQueryHandler(BudgetAccessService access, IBudg
         if (amount is { } a) expenses = expenses.Where(e => e.Amount == a.Amount);
         if (query.From is { } from) expenses = expenses.Where(e => e.OccurredOn >= from);
         if (query.To is { } to) expenses = expenses.Where(e => e.OccurredOn <= to);
+        if (query.Search?.Trim() is { Length: > 0 } search)
+        {
+            var pattern = $"%{search.ToLowerInvariant().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+#pragma warning disable CA1304, CA1311 // translated to SQL lower(); EF cannot translate ToLowerInvariant or a culture overload
+            expenses = expenses.Where(e => e.Description != null && EF.Functions.Like(e.Description.ToLower(), pattern, "\\"));
+#pragma warning restore CA1304, CA1311
+        }
+
         if (query.ExcludeId is { } exclude)
         {
             var id = ExpenseId.From(exclude);

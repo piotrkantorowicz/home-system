@@ -14,6 +14,9 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <summary>Maximum length of an update/void reason.</summary>
     public const int MaxReasonLength = 200;
 
+    /// <summary>Maximum length of the optional description.</summary>
+    public const int MaxDescriptionLength = 80;
+
     private readonly List<ExpenseShare> _shares = [];
     private readonly List<ExpenseRevision> _revisions = [];
 
@@ -31,7 +34,8 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <param name="participants">Adults sharing the cost equally; empty for household funds and personal expenses.</param>
     /// <param name="clientRequestId">Idempotency key of the submission.</param>
     /// <param name="now">Current time, UTC.</param>
-    /// <exception cref="BudgetDomainException">The envelope is archived or the funding/payer/participants combination is invalid.</exception>
+    /// <param name="description">Optional short note, already normalised with <see cref="NormalizeDescription"/>.</param>
+    /// <exception cref="BudgetDomainException">The envelope is archived, the description is too long, or the funding/payer/participants combination is invalid.</exception>
     public static Expense Create(
         ExpenseId id,
         BudgetAccount account,
@@ -43,12 +47,14 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         PersonRef addedBy,
         IReadOnlyCollection<PersonRef> participants,
         Guid clientRequestId,
-        DateTime now)
+        DateTime now,
+        string? description = null)
     {
         if (account.IsArchived)
             throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
 
         ValidateFunding(funding, paidBy, participants);
+        description = NormalizeDescription(description);
 
         var expense = new Expense
         {
@@ -58,6 +64,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
             Amount = amount.Amount,
             Category = category,
             OccurredOn = occurredOn,
+            Description = description,
             FundingSource = funding,
             PaidByPersonId = paidBy?.PersonId,
             PaidByDisplayName = paidBy?.DisplayName,
@@ -73,7 +80,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
 
         var request = new ExpenseRequest(
             "Create", account.Id.Value, amount.ToString(), category, occurredOn, funding,
-            paidBy?.PersonId, [.. participants.Select(p => p.PersonId).Order()]);
+            paidBy?.PersonId, [.. participants.Select(p => p.PersonId).Order()], Description: description);
         expense._revisions.Add(new ExpenseRevision(id, account.BudgetId, 1, addedBy.PersonId, addedBy.DisplayName, clientRequestId, request, null, expense.ToSnapshot(), now));
 
         return expense;
@@ -96,8 +103,9 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <param name="clientRequestId">Idempotency key of the submission.</param>
     /// <param name="request">The normalised request, stored with the revision.</param>
     /// <param name="now">Current time, UTC.</param>
+    /// <param name="description">New description (replaces the old one; <see langword="null"/> clears it).</param>
     /// <exception cref="ConflictException">The expense changed since <paramref name="expectedRevision"/>.</exception>
-    /// <exception cref="BudgetDomainException">The expense is void, the reason is invalid, or the funding combination is invalid.</exception>
+    /// <exception cref="BudgetDomainException">The expense is void, the reason or description is invalid, or the funding combination is invalid.</exception>
     public void Update(
         int expectedRevision,
         string reason,
@@ -110,11 +118,13 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         PersonRef actor,
         Guid clientRequestId,
         ExpenseRequest request,
-        DateTime now)
+        DateTime now,
+        string? description = null)
     {
         EnsureEditable(expectedRevision);
         var trimmedReason = NormalizeReason(reason);
         ValidateFunding(funding, paidBy, participants);
+        var normalizedDescription = NormalizeDescription(description);
 
         var sameShares = amount.Amount == Amount
             && participants.Select(p => p.PersonId).Order().SequenceEqual(_shares.Select(s => s.PersonId).Order());
@@ -122,6 +132,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         Amount = amount.Amount;
         Category = category;
         OccurredOn = occurredOn;
+        Description = normalizedDescription;
         FundingSource = funding;
         PaidByPersonId = paidBy?.PersonId;
         PaidByDisplayName = paidBy?.DisplayName;
@@ -178,6 +189,29 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         }
     }
 
+    /// <summary>Collapses whitespace runs to single spaces and trims; blank becomes <see langword="null"/>.</summary>
+    /// <param name="description">Raw input.</param>
+    /// <exception cref="BudgetDomainException">Longer than <see cref="MaxDescriptionLength"/> after normalising.</exception>
+    public static string? NormalizeDescription(string? description)
+        => TryNormalizeDescription(description, out var normalized)
+            ? normalized
+            : throw new BudgetDomainException($"A description can be at most {MaxDescriptionLength} characters.");
+
+    /// <summary>Like <see cref="NormalizeDescription"/> but reports an over-long description instead of throwing.</summary>
+    /// <param name="description">Raw input.</param>
+    /// <param name="normalized">The normalised text, or <see langword="null"/> when blank or too long.</param>
+    public static bool TryNormalizeDescription(string? description, out string? normalized)
+    {
+        normalized = string.IsNullOrWhiteSpace(description)
+            ? null
+            : string.Join(' ', description.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (normalized is not { Length: > MaxDescriptionLength })
+            return true;
+
+        normalized = null;
+        return false;
+    }
+
     private static string NormalizeReason(string? reason)
     {
         var trimmed = reason?.Trim();
@@ -213,6 +247,9 @@ public sealed class Expense : AggregateRoot<ExpenseId>
 
     /// <summary>Purchase date.</summary>
     public DateOnly OccurredOn { get; private set; }
+
+    /// <summary>Optional short note, at most <see cref="MaxDescriptionLength"/> characters; <see langword="null"/> when none.</summary>
+    public string? Description { get; private set; }
 
     /// <summary>Where the money came from.</summary>
     public FundingSource FundingSource { get; private set; }
@@ -258,6 +295,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         Amount = Amount,
         Category = Category,
         OccurredOn = OccurredOn,
+        Description = Description,
         FundingSource = FundingSource,
         PaidByPersonId = PaidByPersonId,
         PaidByDisplayName = PaidByDisplayName,
