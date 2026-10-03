@@ -54,6 +54,14 @@
     "no_modules_body": "Ask an administrator to enable a module for your account.",
     "no_matches": "No matches",
     "admin": "Admin",
-    "dead_letters": "Dead letters"
+    "dead_letters": "Dead letters",
+    "route_error": {
+      "title": "Something went wrong",
+      "message": "We couldn't load this page. Try again, or go back to the start.",
+      "retry": "Try again",
+      "home": "Go to start",
+      "not_found_title": "Page not found",
+      "not_found_message": "This page doesn't exist or has moved."
+    }
   }
 }
