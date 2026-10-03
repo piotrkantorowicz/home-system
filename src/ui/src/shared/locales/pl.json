@@ -58,6 +58,8 @@
     "dead_letters": "Martwe wiadomości",
     "shell": {
       "settings": "Ustawienia",
+      "more": "Więcej",
+      "more_hint": "Pozostałe strony, moduły i konto",
       "destinations": "Gospodarstwo i konto"
     },
     "route_error": {

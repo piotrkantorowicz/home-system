@@ -20,6 +20,11 @@ export interface NavItem {
    */
   group?: string;
   /**
+   * Show the item as a bottom tab on phones (at most five slots including the module's
+   * `mobileAction` and the More button; extra tabs overflow into More). Items without it live in More.
+   */
+  mobileTab?: boolean;
+  /**
    * Household roles that see this item; omit for every role the module admits. Hiding is
    * cosmetic — the API enforces access.
    */
@@ -38,6 +43,8 @@ export interface AppModule {
    * sidebar footer (Household, Notifications, Admin); its first nav item's `Badge` is the counter.
    */
   placement?: 'switcher' | 'footer';
+  /** A primary action shown as the raised centre button of the phone tab bar (e.g. Budget → Add expense). */
+  mobileAction?: { translationKey: string; href: string; icon: LucideIcon };
   basePath: string;
   icon: LucideIcon;
   /**

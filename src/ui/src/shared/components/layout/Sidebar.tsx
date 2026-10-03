@@ -2,14 +2,14 @@ import { useUserRoles } from '@shared/auth/useUserRoles';
 import { UserProfileDropdown } from '@shared/components/ui';
 import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
 import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
-import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { cn } from '@shared/lib/utils';
 import { ChevronsUpDown, Search, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { OPEN_COMMAND_PALETTE_EVENT } from './CommandPalette';
+import { GatedNavLink } from './GatedNavLink';
 import { ModuleSwitcher } from './ModuleSwitcher';
 import {
   getFooterDestinations,
@@ -37,7 +37,6 @@ export function Sidebar() {
   const { t } = useTranslation();
   const auth = useAuth();
   const location = useLocation();
-  const access = useNavigationAccess();
   const labels = useModuleLabels();
   const roles = useUserRoles();
   const householdRole = useHouseholdRole();
@@ -54,27 +53,16 @@ export function Sidebar() {
   const moduleLabel = mod ? (labels[mod.name] ?? t(mod.translationKey)) : t('common.modules');
   const ModuleIcon = mod?.icon;
 
-  // Hiding is cosmetic: while the household is not set up, only the allowed route is reachable.
   const link = (
     href: string,
     className: (active: boolean) => string,
     end: boolean,
     content: ReactNode,
-  ) =>
-    access.canNavigate(href) ? (
-      <NavLink key={href} to={href} end={end} className={({ isActive }) => className(isActive)}>
-        {content}
-      </NavLink>
-    ) : (
-      <span
-        key={href}
-        aria-disabled="true"
-        title={access.reason}
-        className={cn(className(false), 'cursor-not-allowed opacity-40')}
-      >
-        {content}
-      </span>
-    );
+  ) => (
+    <GatedNavLink key={href} href={href} end={end} className={className}>
+      {content}
+    </GatedNavLink>
+  );
 
   return (
     <aside className="border-border bg-secondary sticky top-0 hidden h-screen w-[240px] flex-none flex-col self-start border-r px-3 py-4 md:flex">

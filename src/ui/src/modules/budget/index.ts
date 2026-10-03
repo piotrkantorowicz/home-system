@@ -1,4 +1,4 @@
-import { Receipt, Scale, Wallet } from 'lucide-react';
+import { Plus, Receipt, Scale, Wallet } from 'lucide-react';
 import { lazy } from 'react';
 
 import { BudgetLayout } from './components/BudgetLayout';
@@ -20,18 +20,32 @@ export const budgetModule: AppModule = {
   icon: Wallet,
   description: 'Household envelopes and spending',
   descriptionKey: 'budget_description',
+  mobileAction: { translationKey: 'add_expense', href: '/budget/expenses?add=1', icon: Plus },
   // Guests have no Budget access (server-enforced); this only hides the entry.
   householdRoles: ['Owner', 'Adult', 'Child'],
   localeNamespaces: ['budget'],
   i18nResources: { en: { budget: en }, pl: { budget: pl } },
   navItems: [
-    { name: 'Overview', href: '/budget', icon: Wallet, translationKey: 'overview_nav' },
-    { name: 'Expenses', href: '/budget/expenses', icon: Receipt, translationKey: 'expenses_nav' },
+    {
+      name: 'Overview',
+      href: '/budget',
+      icon: Wallet,
+      translationKey: 'overview_nav',
+      mobileTab: true,
+    },
+    {
+      name: 'Expenses',
+      href: '/budget/expenses',
+      icon: Receipt,
+      translationKey: 'expenses_nav',
+      mobileTab: true,
+    },
     {
       name: 'Settle up',
       href: '/budget/settlement',
       icon: Scale,
       translationKey: 'settlement_nav',
+      mobileTab: true,
       // Shared debt is adult-only; children never see it.
       householdRoles: ['Owner', 'Adult'],
     },
