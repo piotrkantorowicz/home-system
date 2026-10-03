@@ -248,7 +248,7 @@ What the #208 audit changed, and what it surfaced.
 |---|---|---|
 | `/` route | Rendered a "Welcome back" launcher (`SystemDashboard`) | Redirects into a module (`RootRedirect`); `SystemDashboard` deleted |
 | Dashboard | Products / Recipes / Calendar quick-stat cards linking out | Today hero + Next up + Water + This week cards; no quick-stat cards |
-| Nav | Flat icon rail | 64px `ModuleRail` + 216px grouped `SectionPanel`, `ModuleSwitcher`, ⌘K `CommandPalette` (replaced the dead header search) |
+| Nav | Flat icon rail | 240px `Sidebar` (module switcher, grouped module nav, footer destinations; replaced the 64px `ModuleRail` + 216px `SectionPanel`), ⌘K `CommandPalette` (replaced the dead header search) |
 | Nutrition summary | Custom from/to `DatePicker` + Apply; "Totals" / "Daily average" / "Goal progress" panels | `7 / 30 / 90 days` `SegmentedControl`; `MetricTile`s + bar chart + macro split |
 | Import wizard | 3 steps (Continue → Validate → Confirm Import) | 2 steps (Continue auto-validates → `Import N days`) |
 | Calendar week view | Day "cards", meals as links, hover-reveal edit/delete icons | `WeekGrid` ARIA grid; meals are chip `<button>`s with a "…" dropdown |

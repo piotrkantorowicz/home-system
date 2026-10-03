@@ -8,6 +8,7 @@ import {
   MacroBar,
   MetricTile,
   Num,
+  PageHeader,
   Ring,
   SegmentedControl,
   Select,
@@ -43,10 +44,11 @@ export default function ControlKit() {
 
   return (
     <div className="animate-fade-in mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 md:px-8">
-      <div>
-        <h1 className="text-title font-bold tracking-tight">{t('control_kit.title')}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">{t('control_kit.subtitle')}</p>
-      </div>
+      <PageHeader
+        title={t('control_kit.title')}
+        subtitle={t('control_kit.subtitle')}
+        className="mb-0"
+      />
 
       <div className="gap-18px grid [grid-template-columns:repeat(auto-fit,minmax(330px,1fr))] items-start">
         <Group
@@ -154,6 +156,25 @@ export default function ControlKit() {
             Could not load.
           </Banner>
           <Banner variant="info">Formats apply on this device only.</Banner>
+        </Group>
+        <Group
+          title="Page header"
+          sub="PageHeader · PageContainer — title = nav label, one primary action, 1120px body"
+        >
+          <PageHeader
+            title="Expenses"
+            subtitle="Sat 3 Oct"
+            breadcrumb={[{ label: 'Budget', href: '/budget' }, { label: 'Expenses' }]}
+            actions={
+              <>
+                <Button size="xl" variant="secondary">
+                  Export
+                </Button>
+                <Button size="xl">Add expense</Button>
+              </>
+            }
+            className="mb-0"
+          />
         </Group>
         <Group
           title="Formatting"

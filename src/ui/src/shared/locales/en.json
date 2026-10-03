@@ -27,6 +27,7 @@
     "user_menu": "User menu",
     "profile": "Profile",
     "welcome_back": "Welcome back, {{name}}!",
+    "current": "Current",
     "modules": "Modules",
     "diet_planner": "Diet Planner",
     "notifications": "Notifications",
@@ -55,6 +56,10 @@
     "no_matches": "No matches",
     "admin": "Admin",
     "dead_letters": "Dead letters",
+    "shell": {
+      "settings": "Settings",
+      "destinations": "Household and account"
+    },
     "route_error": {
       "title": "Something went wrong",
       "message": "We couldn't load this page. Try again, or go back to the start.",

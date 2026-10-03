@@ -34,7 +34,7 @@ shared/                      # Domain-agnostic — never imports from modules/
   auth/                      # userManager, ProtectedRoute, authConfig
   components/
     ui/                      # primitives: Button, Card, Dialog, Sheet, Field, Select, … + index.ts
-    layout/                  # AppShell, ModuleRail, SectionPanel, Header, BottomTabBar, CommandPalette
+    layout/                  # AppShell, Sidebar, ModuleSwitcher, Header (mobile), BottomTabBar, CommandPalette
     ErrorBoundary.tsx
   context/                   # ThemeContext, ToastContext
   hooks/                     # usePreferences, …
