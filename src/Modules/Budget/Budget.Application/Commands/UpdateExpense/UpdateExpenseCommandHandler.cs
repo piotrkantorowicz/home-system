@@ -31,10 +31,11 @@ internal sealed class UpdateExpenseCommandHandler(
 
         var isPersonal = account.Visibility == AccountVisibility.Personal;
         var participantIds = (command.ParticipantIds ?? []).Order().ToList();
+        var description = Expense.NormalizeDescription(command.Description);
         var request = new ExpenseRequest(
             "Update", account.Id.Value, amount.ToString(), category, command.OccurredOn, funding,
             isPersonal ? account.OwnerPersonId : command.PaidByPersonId, participantIds,
-            expense.Id.Value, command.ExpectedRevision, command.Reason.Trim());
+            expense.Id.Value, command.ExpectedRevision, command.Reason.Trim(), description);
 
         var replay = await ExpenseMutationSupport.FindReplayAsync(expenses, caller, expense, command.ClientRequestId, request, ct);
         if (replay is not null)
@@ -46,7 +47,7 @@ internal sealed class UpdateExpenseCommandHandler(
 
         expense.Update(
             command.ExpectedRevision, command.Reason, amount, category, command.OccurredOn, funding, paidBy, participants,
-            caller.Self, command.ClientRequestId, request, clock.GetUtcNow().UtcDateTime);
+            caller.Self, command.ClientRequestId, request, clock.GetUtcNow().UtcDateTime, description);
 
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 

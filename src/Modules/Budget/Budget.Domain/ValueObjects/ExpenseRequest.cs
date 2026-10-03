@@ -16,6 +16,7 @@ namespace Budget.Domain.ValueObjects;
 /// <param name="ExpenseId">Target expense of an update or void; <see langword="null"/> for a create.</param>
 /// <param name="ExpectedRevision">Revision the caller based an update or void on.</param>
 /// <param name="Reason">Trimmed reason of an update or void.</param>
+/// <param name="Description">Normalised description of a create or update; <see langword="null"/> when none.</param>
 public sealed record ExpenseRequest(
     string Action,
     Guid AccountId,
@@ -27,7 +28,8 @@ public sealed record ExpenseRequest(
     IReadOnlyList<Guid> ParticipantIds,
     Guid? ExpenseId = null,
     int? ExpectedRevision = null,
-    string? Reason = null)
+    string? Reason = null,
+    string? Description = null)
 {
     /// <summary>Whether <paramref name="other"/> is the same logical request.</summary>
     /// <param name="other">A stored or incoming request.</param>
@@ -36,7 +38,8 @@ public sealed record ExpenseRequest(
            && Category == other.Category && OccurredOn == other.OccurredOn
            && FundingSource == other.FundingSource && PaidByPersonId == other.PaidByPersonId
            && ParticipantIds.SequenceEqual(other.ParticipantIds)
-           && ExpenseId == other.ExpenseId && ExpectedRevision == other.ExpectedRevision && Reason == other.Reason;
+           && ExpenseId == other.ExpenseId && ExpectedRevision == other.ExpectedRevision && Reason == other.Reason
+           && Description == other.Description;
 
     /// <summary>The request identity of voiding <paramref name="expenseId"/>; financial fields are neutral because a void carries none.</summary>
     /// <param name="accountId">The expense's envelope.</param>

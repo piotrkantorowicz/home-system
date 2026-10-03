@@ -16,6 +16,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="FundingSource"><c>Individual</c> (default) or <c>HouseholdFunds</c>.</param>
 /// <param name="PaidByPersonId">Payer of an individually funded shared expense; omitted for personal envelopes and household funds.</param>
 /// <param name="ParticipantIds">Adults sharing the cost equally; required for individually funded shared expenses, empty otherwise.</param>
+/// <param name="Description">Optional short note, at most 80 characters after whitespace normalisation.</param>
 public sealed record CreateExpenseCommand(
     string AuthSubject,
     Guid ClientRequestId,
@@ -25,7 +26,8 @@ public sealed record CreateExpenseCommand(
     string Category,
     string? FundingSource,
     Guid? PaidByPersonId,
-    IReadOnlyList<Guid>? ParticipantIds) : ICommand<ExpenseMutationResult>;
+    IReadOnlyList<Guid>? ParticipantIds,
+    string? Description = null) : ICommand<ExpenseMutationResult>;
 
 /// <summary>Outcome of a create (or its replay).</summary>
 /// <param name="ExpenseId">The expense.</param>

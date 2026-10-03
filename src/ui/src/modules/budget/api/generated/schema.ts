@@ -1476,6 +1476,7 @@ export interface components {
             /** Format: uuid */
             paidByPersonId: null | string;
             participantIds: null | string[];
+            description?: null | string;
         };
         CreateHouseholdRequest: {
             name: string;
@@ -1641,6 +1642,7 @@ export interface components {
             category: string;
             /** Format: date */
             occurredOn: string;
+            description: null | string;
             fundingSource: string;
             /** Format: uuid */
             paidByPersonId: null | string;
@@ -1686,6 +1688,7 @@ export interface components {
             category: string;
             /** Format: date */
             occurredOn: string;
+            description: null | string;
             fundingSource: string;
             /** Format: uuid */
             paidByPersonId: null | string;
@@ -2383,6 +2386,7 @@ export interface components {
             /** Format: uuid */
             paidByPersonId: null | string;
             participantIds: null | string[];
+            description?: null | string;
         };
         UpdateHydrationConfigRequest: {
             /** Format: int32 */
@@ -7372,6 +7376,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
             /** @description Business rule violation */
             422: {
                 headers: {
@@ -7813,6 +7826,7 @@ export interface operations {
                 to?: string;
                 excludeId?: string;
                 includeVoided?: boolean;
+                search?: string;
             };
             header?: never;
             path?: never;
