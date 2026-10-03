@@ -40,7 +40,7 @@
   --color-secondary: hsl(270 20% 99%);
   --color-secondary-foreground: hsl(264 12% 15%);
   --color-muted: hsl(264 14% 93%);
-  --color-muted-foreground: hsl(264 6% 57%);
+  --color-muted-foreground: #6e6977;
   --color-accent: hsl(258 88% 96%);
   --color-accent-foreground: hsl(262 70% 42%);
   --color-destructive: hsl(357 65% 57%);
@@ -48,8 +48,8 @@
   --color-border: hsl(258 14% 89%);
   --color-input: hsl(258 14% 89%);
   --color-ring: hsl(261 75% 54%);
-  --color-success: hsl(150 50% 35%);
-  --color-warning: hsl(35 70% 50%);
+  --color-success: #22704a;
+  --color-warning: #8a5300;
 
   /* New tokens — refresh */
   --color-text-2: hsl(264 6% 41%);
@@ -58,16 +58,37 @@
   --color-primary-ink: hsl(262 70% 42%);
   --color-protein: hsl(215 60% 52%);
   --color-carbs: hsl(35 70% 50%);
-  --color-fat: hsl(357 65% 57%);
+  --color-fat: #b8458c;
   --color-fiber: hsl(162 50% 38%);
   --color-water: hsl(195 60% 46%);
-  --color-good: hsl(150 50% 35%);
+  --color-good: #22704a;
+  /* v3 status + meter tokens — state only, always with an icon or a word */
+  --color-over: #b42b31;
+  --color-over-soft: #fbe9ea;
+  --color-good-soft: #e6f3ec;
+  --color-warning-soft: #fdf6ea;
+  --color-track: #ebe8f0;
 
-  /* Radii — cards 22px, controls 12–13px */
-  --radius-xl: 1.375rem;
-  --radius-lg: 0.8125rem;
-  --radius-md: 0.6875rem;
-  --radius-sm: 0.5rem;
+  /* v3 radii — three steps: chips 6, controls 10, surfaces 16. xl is a legacy alias for lg
+     until the screen tickets drop it. */
+  --radius-xl: 16px;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  /* v3 semantic type scale — 12px is the floor. Legacy --text-Npx keys below go as screens migrate. */
+  --text-label: 12px;
+  --text-label--line-height: 1.35;
+  --text-meta: 13px;
+  --text-meta--line-height: 1.4;
+  --text-body: 15px;
+  --text-body--line-height: 1.5;
+  --text-section: 18px;
+  --text-section--line-height: 1.3;
+  --text-title: 28px;
+  --text-title--line-height: 1.2;
+  --text-display: 44px;
+  --text-display--line-height: 1;
 
   /*
    * Redesign scale — recurring arbitrary values promoted to named theme
@@ -129,9 +150,9 @@
 
   --tracking-0-05em: 0.05em;
 
-  /* Exactly one shadow level on cards */
-  --shadow-sm: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
-  --shadow-md: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
+  /* Surfaces are flat in v3: only popovers, dialogs and menus (shadow-lg) float. */
+  --shadow-sm: none;
+  --shadow-md: none;
   --shadow-lg: 0 2px 4px oklch(20% 0.02 286 / 0.06), 0 24px 48px -20px oklch(20% 0.02 286 / 0.28);
 }
 
@@ -149,7 +170,7 @@
   --color-secondary: hsl(270 20% 99%);
   --color-secondary-foreground: hsl(264 12% 15%);
   --color-muted: hsl(264 14% 93%);
-  --color-muted-foreground: hsl(264 6% 57%);
+  --color-muted-foreground: #6e6977;
   --color-accent: hsl(258 88% 96%);
   --color-accent-foreground: hsl(262 70% 42%);
   --color-destructive: hsl(357 65% 57%);
@@ -157,8 +178,8 @@
   --color-border: hsl(258 14% 89%);
   --color-input: hsl(258 14% 89%);
   --color-ring: hsl(261 75% 54%);
-  --color-success: hsl(150 50% 35%);
-  --color-warning: hsl(35 70% 50%);
+  --color-success: #22704a;
+  --color-warning: #8a5300;
 
   --color-text-2: hsl(264 6% 41%);
   --color-border-strong: hsl(258 14% 83%);
@@ -166,10 +187,16 @@
   --color-primary-ink: hsl(262 70% 42%);
   --color-protein: hsl(215 60% 52%);
   --color-carbs: hsl(35 70% 50%);
-  --color-fat: hsl(357 65% 57%);
+  --color-fat: #b8458c;
   --color-fiber: hsl(162 50% 38%);
   --color-water: hsl(195 60% 46%);
-  --color-good: hsl(150 50% 35%);
+  --color-good: #22704a;
+  /* v3 status + meter tokens — state only, always with an icon or a word */
+  --color-over: #b42b31;
+  --color-over-soft: #fbe9ea;
+  --color-good-soft: #e6f3ec;
+  --color-warning-soft: #fdf6ea;
+  --color-track: #ebe8f0;
 
   --shadow: 0 1px 2px oklch(20% 0.02 286 / 0.05), 0 8px 24px -12px oklch(20% 0.02 286 / 0.18);
   --shadow-lg: 0 2px 4px oklch(20% 0.02 286 / 0.06), 0 24px 48px -20px oklch(20% 0.02 286 / 0.28);
@@ -198,7 +225,7 @@
   --color-secondary: hsl(255 8% 21%);
   --color-secondary-foreground: hsl(260 21% 95%);
   --color-muted: hsl(248 9% 17%);
-  --color-muted-foreground: hsl(266 6% 55%);
+  --color-muted-foreground: #9a94a3;
   --color-accent: hsl(256 44% 25%);
   --color-accent-foreground: hsl(258 90% 85%);
   --color-destructive: hsl(358 75% 70%);
@@ -206,8 +233,8 @@
   --color-border: hsl(251 9% 25%);
   --color-input: hsl(251 9% 25%);
   --color-ring: hsl(257 78% 74%);
-  --color-success: hsl(153 50% 56%);
-  --color-warning: hsl(36 73% 62%);
+  --color-success: #6fd3a3;
+  --color-warning: #e9b86a;
 
   --color-text-2: hsl(265 8% 71%);
   --color-border-strong: hsl(250 7% 31%);
@@ -215,14 +242,19 @@
   --color-primary-ink: hsl(258 90% 85%);
   --color-protein: hsl(211 67% 65%);
   --color-carbs: hsl(36 73% 62%);
-  --color-fat: hsl(358 75% 70%);
+  --color-fat: #e08abf;
   --color-fiber: hsl(157 48% 58%);
   --color-water: hsl(197 61% 62%);
-  --color-good: hsl(153 50% 56%);
+  --color-good: #6fd3a3;
+  --color-over: #f09094;
+  --color-over-soft: #4a2328;
+  --color-good-soft: #1f3a2d;
+  --color-warning-soft: #3a2f1c;
+  --color-track: #3a3843;
 
   --shadow: 0 1px 2px #0006, 0 8px 24px -12px #0009;
-  --shadow-sm: 0 1px 2px #0006, 0 8px 24px -12px #0009;
-  --shadow-md: 0 1px 2px #0006, 0 8px 24px -12px #0009;
+  --shadow-sm: none;
+  --shadow-md: none;
   --shadow-lg: 0 2px 4px #0006, 0 24px 48px -20px #000c;
 
   --glass-bg: color-mix(in oklab, var(--color-background) 88%, transparent);
