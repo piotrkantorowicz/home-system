@@ -1,0 +1,568 @@
+{
+  "source": {
+    "number": 478,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/478",
+    "title": "docs(ui): archive redesign v3 handoff and resolve contract mismatches",
+    "labels": [
+      "documentation",
+      "frontend",
+      "ui-shell",
+      "priority:high",
+      "ux"
+    ],
+    "dependencies": []
+  },
+  "tokens": {
+    "number": 479,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/479",
+    "title": "feat(ui): establish redesign v3 tokens and surface primitives",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "ui-shell",
+      "accessibility",
+      "priority:high",
+      "ux"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  },
+  "format": {
+    "number": 480,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/480",
+    "title": "feat(ui): add preference-aware formatting and goal status",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "shared",
+      "priority:high",
+      "ux"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  },
+  "errors": {
+    "number": 481,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/481",
+    "title": "fix(ui): show recoverable route errors",
+    "labels": [
+      "bug",
+      "frontend",
+      "ui-shell",
+      "priority:high",
+      "ux"
+    ],
+    "dependencies": []
+  },
+  "robust": {
+    "number": 482,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/482",
+    "title": "fix(diet-planner): handle incomplete profile and translated settings states",
+    "labels": [
+      "bug",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "format"
+    ]
+  },
+  "shell": {
+    "number": 483,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/483",
+    "title": "feat(ui-shell): replace rail navigation with a module sidebar",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "ui-shell",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "tokens"
+    ]
+  },
+  "mobile": {
+    "number": 484,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/484",
+    "title": "feat(ui-shell): add module mobile tabs and More sheet",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "ui-shell",
+      "accessibility",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell"
+    ]
+  },
+  "products_api": {
+    "number": 485,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/485",
+    "title": "feat(diet-planner): support product completeness filters and sorting",
+    "labels": [
+      "enhancement",
+      "backend",
+      "diet-planner",
+      "priority:high"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  },
+  "recipes_api": {
+    "number": 486,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/486",
+    "title": "feat(diet-planner): support recipe nutrition and preparation filters",
+    "labels": [
+      "enhancement",
+      "backend",
+      "diet-planner",
+      "priority:high"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  },
+  "description": {
+    "number": 487,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/487",
+    "title": "feat(budget): persist expense descriptions and search",
+    "labels": [
+      "enhancement",
+      "backend",
+      "priority:high"
+    ],
+    "dependencies": []
+  },
+  "shopping_api": {
+    "number": 488,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/488",
+    "title": "feat(diet-planner): persist household shopping check-offs",
+    "labels": [
+      "enhancement",
+      "backend",
+      "diet-planner",
+      "household",
+      "priority:high"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  },
+  "totals_api": {
+    "number": 489,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/489",
+    "title": "feat(budget): expose filtered expense totals and monthly counts",
+    "labels": [
+      "enhancement",
+      "backend",
+      "priority:high"
+    ],
+    "dependencies": [
+      "description"
+    ]
+  },
+  "today": {
+    "number": 490,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/490",
+    "title": "feat(diet-planner): redesign Today summary and meal list",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "mobile",
+      "format"
+    ]
+  },
+  "charts": {
+    "number": 491,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/491",
+    "title": "feat(diet-planner): add labelled daily charts and Today history",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "today"
+    ]
+  },
+  "calendar": {
+    "number": 492,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/492",
+    "title": "feat(diet-planner): redesign week meal plan states",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format"
+    ]
+  },
+  "calendar_mobile": {
+    "number": 493,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/493",
+    "title": "feat(diet-planner): simplify mobile meal actions",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "accessibility",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "calendar",
+      "mobile"
+    ]
+  },
+  "shopping": {
+    "number": 494,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/494",
+    "title": "feat(diet-planner): redesign shared shopping list",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "household",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format",
+      "shopping_api"
+    ]
+  },
+  "nutrition": {
+    "number": 495,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/495",
+    "title": "feat(diet-planner): redesign nutrition summaries and charts",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "charts",
+      "format"
+    ]
+  },
+  "water": {
+    "number": 496,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/496",
+    "title": "feat(diet-planner): redesign water logging and history",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "charts",
+      "format"
+    ]
+  },
+  "products": {
+    "number": 497,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/497",
+    "title": "feat(diet-planner): redesign product table and filters",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format",
+      "products_api"
+    ]
+  },
+  "recipes": {
+    "number": 498,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/498",
+    "title": "feat(diet-planner): redesign compact recipe library",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format",
+      "recipes_api"
+    ]
+  },
+  "recipe_detail": {
+    "number": 499,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/499",
+    "title": "feat(diet-planner): redesign recipe detail and plan context",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "recipes"
+    ]
+  },
+  "import": {
+    "number": 500,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/500",
+    "title": "feat(diet-planner): redesign file-first plan import",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format"
+    ]
+  },
+  "settings_diet": {
+    "number": 501,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/501",
+    "title": "feat(diet-planner): consolidate profile and diet settings",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "diet-planner",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "robust"
+    ]
+  },
+  "settings_app": {
+    "number": 502,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/502",
+    "title": "feat(ui-shell): consolidate app and account settings",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "ui-shell",
+      "notifications",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "settings_diet",
+      "format"
+    ]
+  },
+  "household": {
+    "number": 503,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/503",
+    "title": "feat(household): redesign people and household settings",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "household",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "tokens"
+    ]
+  },
+  "notifications": {
+    "number": 504,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/504",
+    "title": "feat(notifications): redesign grouped notification inbox",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "notifications",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "settings_app"
+    ]
+  },
+  "budget_overview": {
+    "number": 505,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/505",
+    "title": "feat(budget): redesign monthly budget overview",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format",
+      "totals_api"
+    ]
+  },
+  "expenses": {
+    "number": 506,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/506",
+    "title": "feat(budget): redesign grouped expense history",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "budget_overview",
+      "description"
+    ]
+  },
+  "expense_form": {
+    "number": 507,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/507",
+    "title": "feat(budget): redesign expense entry with sticky mobile save",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "accessibility",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format",
+      "description"
+    ]
+  },
+  "expense_detail": {
+    "number": 508,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/508",
+    "title": "feat(budget): redesign expense detail and revision timeline",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "expenses",
+      "expense_form"
+    ]
+  },
+  "settlement": {
+    "number": 509,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/509",
+    "title": "feat(budget): redesign settlement actions and payment history",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "budget_overview"
+    ]
+  },
+  "envelopes": {
+    "number": 510,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/510",
+    "title": "feat(budget): redesign shared and personal envelope lists",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "budget_overview"
+    ]
+  },
+  "admin": {
+    "number": 511,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/511",
+    "title": "feat(admin): redesign failed-message monitoring",
+    "labels": [
+      "enhancement",
+      "frontend",
+      "shared",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "shell",
+      "format"
+    ]
+  },
+  "qa": {
+    "number": 512,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/512",
+    "title": "test(e2e): validate redesign v3 across screens and themes",
+    "labels": [
+      "chore",
+      "e2e",
+      "frontend",
+      "accessibility",
+      "priority:medium",
+      "ux"
+    ],
+    "dependencies": [
+      "calendar_mobile",
+      "shopping",
+      "nutrition",
+      "water",
+      "products",
+      "recipe_detail",
+      "import",
+      "settings_app",
+      "household",
+      "notifications",
+      "expense_detail",
+      "settlement",
+      "envelopes",
+      "admin"
+    ]
+  },
+  "account_decision": {
+    "number": 513,
+    "url": "https://github.com/piotrkantorowicz/home-system/issues/513",
+    "title": "docs(account): decide account deletion lifecycle for redesign v3",
+    "labels": [
+      "documentation",
+      "backend",
+      "ui-shell",
+      "priority:medium",
+      "needs-decision"
+    ],
+    "dependencies": [
+      "source"
+    ]
+  }
+}

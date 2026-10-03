@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Expenses on phone — proposed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5720b6}a:hover{color:#3f1690}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 1060px; overflow: hidden; background: #f6f5f8; font-family: Outfit, system-ui, sans-serif; color: #1f1c25">
+  <div style="box-sizing: border-box; padding: 16px 16px 108px; display: flex; flex-direction: column; gap: 14px">
+    <header style="display: flex; justify-content: space-between; align-items: center">
+      <h1 style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em">Expenses</h1>
+      <div style="display: flex; align-items: center; gap: 2px">
+        <button type="button" aria-label="Previous month" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #1f1c25; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <span style="font-size: 15px; font-weight: 600">October</span>
+        <button type="button" aria-label="Next month" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #1f1c25; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+      </div>
+    </header>
+
+    <div style="display: flex; gap: 8px">
+      <label style="flex: 1; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; color: #625d6b">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search expenses</span>
+        <input type="search" placeholder="Search" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 16px; color: #1f1c25">
+      </label>
+      <button type="button" aria-label="Filters" style="width: 44px; height: 44px; border: 1px solid #d9d5e1; border-radius: 10px; background: #ffffff; color: #1f1c25; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"></path></svg></button>
+    </div>
+
+    <p style="margin: 0; padding: 0 2px; font-size: 13.5px; color: #625d6b; font-variant-numeric: tabular-nums"><strong style="font-weight: 600; color: #1f1c25">4 457.25 PLN</strong> · 6 expenses · your share 878.63</p>
+
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px">
+          <h2 style="margin: 0; font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #625d6b">{{d.label}}</h2>
+          <span style="font-size: 12.5px; color: #625d6b; font-variant-numeric: tabular-nums">{{d.total}}</span>
+        </div>
+        <ul style="margin: 0; padding: 2px 14px; list-style: none; background: #ffffff; border: 1px solid #e4e1ea; border-radius: 16px">
+          <sc-for list="{{d.items}}" as="x" hint-placeholder-count="2">
+            <li style="border-top: {{x.divider}}">
+              <a href="ExpenseDetail.dc.html" style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; min-height: 62px; color: #1f1c25; text-decoration: none">
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 15px; font-weight: 500">{{x.what}}</span><span style="font-size: 13px; color: #625d6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{x.meta}}</span></span>
+                <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px"><span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums">{{x.amount}}</span><span style="font-size: 12px; color: #625d6b; font-variant-numeric: tabular-nums">{{x.share}}</span></span>
+              </a>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+    </sc-for>
+  </div>
+
+  <nav aria-label="Budget" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 6px 8px 22px; background: #ffffff; border-top: 1px solid #e4e1ea; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center">
+    <a href="PhoneOverview.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; text-decoration: none; color: #625d6b; font-size: 12px; font-weight: 500">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>Overview</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; text-decoration: none; color: #4b1aa3; font-size: 12px; font-weight: 600">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>Expenses</a>
+    <a href="AddExpensePhone.dc.html" aria-label="Add expense" style="justify-self: center; width: 52px; height: 52px; border-radius: 16px; background: #6f32e2; color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -6px rgba(111,50,226,0.6)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"></path></svg></a>
+    <a href="PhoneSettle.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; text-decoration: none; color: #625d6b; font-size: 12px; font-weight: 500">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg>Settle up</a>
+    <a href="Envelopes.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; text-decoration: none; color: #625d6b; font-size: 12px; font-weight: 500">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg>More</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const fmt = (n) => {
+      const [i, d] = n.toFixed(2).split('.');
+      return i.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + '.' + d;
+    };
+    const data = [
+      ['Today', [['Electricity, September', 'Utilities · Everyday · household account', 249.99, null]]],
+      ['Yesterday', [['Lidl', 'Groceries · Ania paid', 184.36, 92.18], ['Fuel, Orlen', 'Transport · Car · you paid', 310, 155]]],
+      ['Thu 1 Oct', [['Rent, October', 'Housing · household account', 2450, null], ['Biedronka', 'Groceries · you paid', 62.9, 31.45], ['Ferry deposit, Hel trip', 'Leisure · Holidays · Ania paid', 1200, 600]]]
+    ];
+    const days = data.map((d) => ({
+      label: d[0], total: fmt(d[1].reduce((a, x) => a + x[2], 0)),
+      items: d[1].map((x, i) => ({ what: x[0], meta: x[1], amount: fmt(x[2]), share: x[3] === null ? 'not split' : 'yours ' + fmt(x[3]), divider: i === 0 ? '0' : '1px solid #efedf2' }))
+    }));
+    return { days };
+  }
+}
+</script>
+</body>
+</html>
