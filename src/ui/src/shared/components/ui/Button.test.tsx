@@ -29,4 +29,10 @@ describe('Button', () => {
     expect(ref.current).toBe(button);
     expect(childRef.current).toBe(button);
   });
+
+  it('keeps a 44px touch target on phones for compact sizes', () => {
+    render(<Button size="xs">Row</Button>);
+
+    expect(screen.getByRole('button', { name: 'Row' })).toHaveClass('max-md:h-11');
+  });
 });

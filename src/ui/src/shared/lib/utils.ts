@@ -74,6 +74,13 @@ const twMerge = extendTailwindMerge({
             '0-7rem',
             '0-9rem',
             '0-95rem',
+            // v3 semantic scale
+            'label',
+            'meta',
+            'body',
+            'section',
+            'title',
+            'display',
           ],
         },
       ],

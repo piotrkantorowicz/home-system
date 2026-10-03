@@ -4,8 +4,8 @@ export function Card({ ref, className, ...props }: React.ComponentProps<'div'>) 
     <div
       ref={ref}
       className={cn(
-        // Refresh: 22px radius (rounded-xl), 1px --border hairline, exactly one shadow level.
-        'bg-card text-card-foreground rounded-xl border shadow-sm transition-colors duration-200',
+        // Refresh: 22px radius (rounded-lg), 1px --border hairline, exactly one shadow level.
+        'bg-card text-card-foreground rounded-lg border transition-colors duration-200',
         className,
       )}
       {...props}
@@ -19,11 +19,7 @@ export function CardHeader({ ref, className, ...props }: React.ComponentProps<'d
 
 export function CardTitle({ ref, className, children, ...props }: React.ComponentProps<'h3'>) {
   return (
-    <h3
-      ref={ref}
-      className={cn('text-xl leading-tight font-semibold tracking-tight', className)}
-      {...props}
-    >
+    <h3 ref={ref} className={cn('text-section font-semibold tracking-tight', className)} {...props}>
       {children}
     </h3>
   );
@@ -33,7 +29,7 @@ export function CardDescription({ ref, className, ...props }: React.ComponentPro
   return (
     <p
       ref={ref}
-      className={cn('text-muted-foreground text-0-9rem leading-relaxed', className)}
+      className={cn('text-muted-foreground text-body leading-relaxed', className)}
       {...props}
     />
   );
