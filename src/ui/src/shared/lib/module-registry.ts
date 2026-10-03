@@ -30,6 +30,14 @@ export interface AppModule {
   name: string;
   translationKey: string;
   description?: string;
+  /** i18n key of the one-line summary shown under the module name in the module switcher. */
+  descriptionKey?: string;
+  /**
+   * Where the app shell lists the module. `switcher` (default): a product module in the sidebar's
+   * module switcher, with its `navItems` as the sidebar nav. `footer`: a destination pinned in the
+   * sidebar footer (Household, Notifications, Admin); its first nav item's `Badge` is the counter.
+   */
+  placement?: 'switcher' | 'footer';
   basePath: string;
   icon: LucideIcon;
   /**

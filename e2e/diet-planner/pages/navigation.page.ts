@@ -14,20 +14,13 @@ export class NavigationPage extends BasePage {
     return this.page.getByRole('navigation', { name: 'Diet Planner' });
   }
 
-  get moduleRail() {
-    return this.page.getByRole('navigation', { name: 'Modules' });
+  /** The desktop (md+) 240px sidebar; hidden on phones. */
+  get sidebar() {
+    return this.page.getByRole('complementary');
   }
 
   get palette() {
     return this.page.getByRole('dialog', { name: 'Search everything' });
-  }
-
-  get collapseButton() {
-    return this.page.getByRole('button', { name: 'Collapse' });
-  }
-
-  get expandButton() {
-    return this.page.getByRole('button', { name: 'Expand' });
   }
 
   get mobileModuleSwitcher() {
@@ -35,11 +28,13 @@ export class NavigationPage extends BasePage {
   }
 
   get householdMenuItem() {
-    return this.page.getByRole('menu', { name: 'Switch module' }).getByRole('menuitem').first();
+    return this.page
+      .getByRole('menu', { name: 'Switch module' })
+      .getByRole('menuitem', { name: /^E2E worker \d+ home$/ });
   }
 
-  get notificationsModule() {
-    return this.moduleRail.getByRole('button', { name: 'Notifications' });
+  get notificationsLink() {
+    return this.sidebar.getByRole('link', { name: 'Notifications' });
   }
 
   get productsSectionLink() {
@@ -63,7 +58,7 @@ export class NavigationPage extends BasePage {
   }
 
   get moduleSwitcherTrigger() {
-    return this.moduleRail.getByRole('button', { name: 'Switch module' });
+    return this.sidebar.getByRole('button', { name: 'Switch module' });
   }
 
   get switcherMenu() {

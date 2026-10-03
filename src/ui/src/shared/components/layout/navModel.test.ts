@@ -1,7 +1,14 @@
 import { NAV_GROUP_SETTINGS } from '@shared/lib/module-registry';
 import { describe, it, expect, vi } from 'vitest';
 
-import { getModuleTiles, getActiveModule, getSectionGroups, getMobileNavItems } from './navModel';
+import {
+  getModuleTiles,
+  getActiveModule,
+  getSectionGroups,
+  getMobileNavItems,
+  getFooterDestinations,
+  resolveShellModule,
+} from './navModel';
 
 import type { AppModule } from '@shared/lib/module-registry';
 import type { TFunction } from 'i18next';
@@ -11,6 +18,8 @@ const DashIcon = (() => null) as unknown as LucideIcon;
 const PlanIcon = (() => null) as unknown as LucideIcon;
 const PrefIcon = (() => null) as unknown as LucideIcon;
 const OtherModIcon = (() => null) as unknown as LucideIcon;
+
+const UnreadBadge = () => null;
 
 const dietPlanner: AppModule = {
   name: 'diet-planner',
@@ -56,11 +65,18 @@ const notifications: AppModule = {
   name: 'notifications',
   translationKey: 'common.notifications',
   basePath: '/notifications',
+  placement: 'footer',
   icon: OtherModIcon,
   localeNamespaces: [],
   i18nResources: { en: {}, pl: {} },
   navItems: [
-    { name: 'Inbox', href: '/notifications', icon: OtherModIcon, translationKey: 'common.inbox' },
+    {
+      name: 'Inbox',
+      href: '/notifications',
+      icon: OtherModIcon,
+      translationKey: 'common.inbox',
+      Badge: UnreadBadge,
+    },
   ],
   routes: [],
 };
@@ -81,6 +97,7 @@ const adminOnly: AppModule = {
   name: 'admin',
   translationKey: 'common.admin',
   basePath: '/admin',
+  placement: 'footer',
   icon: OtherModIcon,
   requiredRole: 'admin',
   localeNamespaces: [],
@@ -101,18 +118,61 @@ describe('getModuleTiles', () => {
   it('uses live module labels and preserves translated fallbacks', () => {
     const tiles = getModuleTiles(t, { 'diet-planner': 'My label' });
     expect(tiles[0]?.label).toBe('My label');
-    expect(tiles[1]?.label).toBe('common.notifications');
   });
-  it('returns one tile per registered module', () => {
-    const tiles = getModuleTiles(t);
-    expect(tiles.map((m) => m.name)).toEqual(['diet-planner', 'notifications']);
+  it('lists only product modules, never footer destinations', () => {
+    const tiles = getModuleTiles(t, {}, ['admin']);
+    expect(tiles.map((m) => m.name)).toEqual(['diet-planner']);
     expect(tiles[0]?.label).toBe('common.diet_planner');
   });
-  it('hides a module whose required role the user lacks', () => {
-    expect(getModuleTiles(t, {}, ['editor']).map((m) => m.name)).not.toContain('admin');
+  it('carries the translated description when the module declares one', () => {
+    expect(getModuleTiles(t)[0]?.description).toBeUndefined();
   });
-  it('shows a role-gated module to a user holding the role', () => {
-    expect(getModuleTiles(t, {}, ['admin']).map((m) => m.name)).toContain('admin');
+});
+
+describe('getFooterDestinations', () => {
+  it('lists footer modules with their landing page and badge, hiding role-gated ones', () => {
+    const items = getFooterDestinations(t);
+    expect(items.map((i) => i.name)).toEqual(['notifications']);
+    expect(items[0]).toMatchObject({
+      href: '/notifications',
+      label: 'common.notifications',
+      end: true,
+    });
+    expect(items[0]?.Badge).toBe(UnreadBadge);
+  });
+  it('shows Admin only to the admin role', () => {
+    expect(getFooterDestinations(t, {}, ['editor']).map((i) => i.name)).not.toContain('admin');
+    expect(getFooterDestinations(t, {}, ['admin']).map((i) => i.name)).toEqual([
+      'notifications',
+      'admin',
+    ]);
+  });
+  it('uses live module labels', () => {
+    expect(getFooterDestinations(t, { notifications: 'Inbox!' })[0]?.label).toBe('Inbox!');
+  });
+});
+
+describe('resolveShellModule', () => {
+  it('is the product module the path belongs to', () => {
+    expect(resolveShellModule('/diet-planner/products', [], null, null)?.name).toBe('diet-planner');
+  });
+  it('keeps the remembered module on a footer page, else the first visible one', () => {
+    expect(resolveShellModule('/notifications', [], 'Owner', 'family-money')?.name).toBe(
+      'family-money',
+    );
+    expect(resolveShellModule('/notifications', [], 'Guest', 'family-money')?.name).toBe(
+      'diet-planner',
+    );
+    expect(resolveShellModule('/admin', ['admin'], null, null)?.name).toBe('diet-planner');
+  });
+  it('never returns a role-gated product module the user cannot see', () => {
+    expect(resolveShellModule('/family-money', [], 'Guest', null)?.name).toBe('diet-planner');
+  });
+});
+
+describe('module visibility', () => {
+  it('hides a module whose required role the user lacks', () => {
+    expect(getFooterDestinations(t, {}, ['editor']).map((m) => m.name)).not.toContain('admin');
   });
   it('hides a household-role-gated module without a household or for a disallowed role', () => {
     expect(getModuleTiles(t).map((m) => m.name)).not.toContain('family-money');

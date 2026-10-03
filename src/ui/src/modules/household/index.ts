@@ -18,6 +18,7 @@ export const householdModule: AppModule = {
   name: 'household',
   translationKey: 'household_nav',
   basePath: '/household',
+  placement: 'footer',
   icon: House,
   description: 'Manage the people in your home',
   localeNamespaces: ['household'],

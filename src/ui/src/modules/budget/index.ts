@@ -19,6 +19,7 @@ export const budgetModule: AppModule = {
   basePath: '/budget',
   icon: Wallet,
   description: 'Household envelopes and spending',
+  descriptionKey: 'budget_description',
   // Guests have no Budget access (server-enforced); this only hides the entry.
   householdRoles: ['Owner', 'Adult', 'Child'],
   localeNamespaces: ['budget'],

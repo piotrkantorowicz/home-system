@@ -15,6 +15,7 @@ export const adminModule: AppModule = {
   translationKey: 'common.admin',
   description: 'Operational tools for administrators',
   basePath: '/admin',
+  placement: 'footer',
   icon: ShieldCheck,
   requiredRole: ADMIN_ROLE,
   localeNamespaces: ['admin'],

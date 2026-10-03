@@ -5,17 +5,14 @@ test('desktop navigation switches modules and finds destinations', async ({ page
   const nav = new NavigationPage(page);
   await nav.goto();
 
-  await nav.collapseButton.click();
-  await expect(nav.expandButton).toBeVisible();
   await expect(nav.productsSectionLink).toBeVisible();
-  await page.reload();
-  await expect(nav.expandButton).toBeVisible();
 
-  await nav.notificationsModule.click();
+  // Footer destinations (Notifications) are pages, not modules: `/` returns to the last product module.
+  await nav.waitForLastModule('diet-planner');
+  await nav.notificationsLink.click();
   await expect(page).toHaveURL('/notifications');
-  await nav.waitForLastModule('notifications');
   await page.goto('/');
-  await expect(page).toHaveURL('/notifications');
+  await expect(page).toHaveURL('/diet-planner');
 
   await page.keyboard.press('Control+k');
   await expect(nav.palette).toBeVisible();
@@ -29,7 +26,7 @@ test('mobile tabs and module switcher navigate between modules', async ({ page }
   const nav = new NavigationPage(page);
   await nav.goto();
 
-  await expect(nav.moduleRail).toBeHidden();
+  await expect(nav.sidebar).toBeHidden();
   await nav.productsMobileLink.click();
   await expect(page).toHaveURL('/diet-planner/products');
 

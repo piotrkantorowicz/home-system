@@ -28,8 +28,10 @@ export class NotificationsPage {
   }
 
   async expectUnreadCount(total: number) {
+    // The unread counter lives on the sidebar's Notifications link (the header bell is mobile-only).
     const badge = this.page
-      .getByRole('button', { name: /open notifications/i })
+      .getByRole('complementary')
+      .getByRole('link', { name: /notifications/i })
       .getByLabel(/\d+ unread/);
     if (total === 0) await expect(badge).toHaveCount(0);
     else await expect(badge).toHaveAttribute('aria-label', `${total} unread`);
