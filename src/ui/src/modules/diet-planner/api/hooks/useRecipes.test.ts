@@ -15,6 +15,33 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
   redirectToLogin: vi.fn(),
 }));
 
+describe('useRecipes server filters', () => {
+  it('sends high-protein and quick filters to the API', async () => {
+    let url = '';
+    server.use(
+      http.get('http://localhost:5050/api/v1/recipes', ({ request }) => {
+        url = request.url;
+        return HttpResponse.json({
+          items: [],
+          page: 1,
+          pageSize: 50,
+          totalCount: 0,
+          totalPages: 0,
+        });
+      }),
+    );
+    const { result } = renderHook(() => useRecipes({ onlyHighProtein: true, onlyQuick: true }), {
+      wrapper: createWrapper(),
+    });
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    const q = new URL(url).searchParams;
+    expect(q.get('OnlyHighProtein')).toBe('true');
+    expect(q.get('OnlyQuick')).toBe('true');
+  });
+});
+
 describe('useRecipes', () => {
   it('returns the paged list on success', async () => {
     server.use(
@@ -40,7 +67,14 @@ describe('useRecipes', () => {
 
   it('builds its key from the queryKeys factory with the defaults applied', () => {
     expect(recipeListOptions({ onlyMine: true }).queryKey).toEqual(
-      queryKeys.recipes.list({ search: '', onlyMine: true, page: 1, pageSize: 50 }),
+      queryKeys.recipes.list({
+        search: '',
+        onlyMine: true,
+        onlyHighProtein: false,
+        onlyQuick: false,
+        page: 1,
+        pageSize: 50,
+      }),
     );
   });
 });

@@ -32,8 +32,14 @@ export const queryKeys = {
   },
   recipes: {
     all: () => ['recipes'] as const,
-    list: (params: { search?: string; onlyMine?: boolean; page?: number; pageSize?: number }) =>
-      ['recipes', params] as const,
+    list: (params: {
+      search?: string;
+      onlyMine?: boolean;
+      onlyHighProtein?: boolean;
+      onlyQuick?: boolean;
+      page?: number;
+      pageSize?: number;
+    }) => ['recipes', params] as const,
     detail: (id: string) => ['recipes', id] as const,
   },
   profile: {
