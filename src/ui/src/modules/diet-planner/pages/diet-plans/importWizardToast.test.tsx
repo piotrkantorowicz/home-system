@@ -80,8 +80,8 @@ async function advanceToReview() {
   // Continue parses the JSON then runs the validate dry-run (MSW → canProceed: true).
   await userEvent.click(screen.getByRole('button', { name: /import_wizard\.upload\.continue/i }));
 
-  // Review step renders the detected panel and the Import button.
-  await screen.findByText('import_wizard.review.detected');
+  // Review step renders the counts, warnings and the Import button.
+  await screen.findByText('import_wizard.review.back');
 }
 
 // ── tests ─────────────────────────────────────────────────────────────────────
@@ -98,7 +98,7 @@ describe('ImportWizard — import failure feedback', () => {
     await advanceToReview();
 
     await userEvent.click(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     );
 
     // The inline error is a <p role="alert"> inside the step 3 card
@@ -120,7 +120,7 @@ describe('ImportWizard — import failure feedback', () => {
     await advanceToReview();
 
     await userEvent.click(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     );
 
     await waitFor(() => {
@@ -140,7 +140,7 @@ describe('ImportWizard — import failure feedback', () => {
     await advanceToReview();
 
     const confirmButton = screen.getByRole('button', {
-      name: /import_wizard\.review\.import_days/i,
+      name: /import_wizard\.review\.import_meals/i,
     });
 
     await userEvent.click(confirmButton);
@@ -153,7 +153,7 @@ describe('ImportWizard — import failure feedback', () => {
 
     // Button must be re-enabled (not disabled) so user can retry
     expect(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     ).not.toBeDisabled();
   });
 
@@ -168,7 +168,7 @@ describe('ImportWizard — import failure feedback', () => {
     await advanceToReview();
 
     await userEvent.click(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     );
 
     await waitFor(() => {
@@ -199,7 +199,7 @@ describe('ImportWizard — import failure feedback', () => {
 
     // First click — fails
     await userEvent.click(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     );
 
     await waitFor(() => {
@@ -210,7 +210,7 @@ describe('ImportWizard — import failure feedback', () => {
 
     // Second click — succeeds; error banner should disappear
     await userEvent.click(
-      screen.getByRole('button', { name: /import_wizard\.review\.import_days/i }),
+      screen.getByRole('button', { name: /import_wizard\.review\.import_meals/i }),
     );
 
     await waitFor(() => {
