@@ -25,7 +25,7 @@ export const adminModule: AppModule = {
   },
   navItems: [
     {
-      name: 'Dead letters',
+      name: 'Failed messages',
       href: '/admin',
       icon: MailWarning,
       translationKey: 'common.dead_letters',

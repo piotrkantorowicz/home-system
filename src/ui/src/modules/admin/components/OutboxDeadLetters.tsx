@@ -1,13 +1,4 @@
-import {
-  Banner,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@shared/components/ui';
+import { Banner, Pagination, Skeleton } from '@shared/components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,18 +9,22 @@ import {
   useRetryAllOutboxMessages,
   useRetryOutboxMessage,
 } from '../api/hooks/useOutboxDeadLetters';
-import { formatDateTime, shortEventType } from '../utils/format';
+import {
+  eventDisplayName,
+  formatDateTime,
+  shortEventType,
+  sourceDisplayName,
+} from '../utils/format';
 
-import { RetriedBadge } from './RetriedBadge';
+import { DeadLetterRow } from './DeadLetterRow';
+import { DeadLetterSection } from './DeadLetterSection';
 import { RetryAllButton } from './RetryAllButton';
-import { RetryButton } from './RetryButton';
-import { ViewPayloadButton } from './ViewPayloadButton';
 
 interface OutboxDeadLettersProps {
   module: string;
 }
 
-/** Dead-lettered integration events of one publishing module. */
+/** Dead-lettered integration events of one publishing module, as one section named after it. */
 export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
   const { t, i18n } = useTranslation('admin');
   const [page, setPage] = useState(1);
@@ -44,74 +39,72 @@ export function OutboxDeadLetters({ module }: OutboxDeadLettersProps) {
   const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
   if (page > lastPage) setPage(lastPage);
 
-  if (isError) {
-    return (
-      <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
-        {t('load_error')}
-      </Banner>
-    );
-  }
+  const total = data?.totalCount ?? 0;
+  const source = sourceDisplayName(module);
 
   return (
-    <>
-      <div className="mb-3 flex justify-end">
-        <RetryAllButton
-          count={data?.totalCount ?? 0}
-          pending={retryAll.isPending}
-          onConfirm={() => {
-            retryAll.mutate(module);
-          }}
-        />
-      </div>
-      <Table aria-label={t('events.module_table', { module })} aria-busy={isLoading}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('events.event')}</TableHead>
-            <TableHead>{t('events.occurred_at')}</TableHead>
-            <TableHead>{t('attempts')}</TableHead>
-            <TableHead>{t('last_error')}</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.items.map((m) => (
-            <TableRow key={m.id}>
-              <TableCell title={m.eventType} className="font-medium">
-                {shortEventType(m.eventType)}
-              </TableCell>
-              <TableCell className="whitespace-nowrap">
-                {formatDateTime(m.occurredAt, i18n.language)}
-              </TableCell>
-              <TableCell className="tnum whitespace-nowrap">
-                {m.attemptCount}
-                <RetriedBadge retryOf={m.retryOf} />
-              </TableCell>
-              <TableCell className="max-w-xs text-xs break-words">{m.lastError}</TableCell>
-              <TableCell className="text-right whitespace-nowrap">
-                <ViewPayloadButton options={outboxPayloadOptions(module, m.id)} />
-                <RetryButton
-                  pending={retry.isPending && retry.variables.id === m.id}
-                  onRetry={() => {
-                    retry.mutate({ module, id: m.id });
-                  }}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {data && data.totalCount > pageSize && (
-        <Pagination
-          page={page}
-          pageSize={pageSize}
-          totalCount={data.totalCount}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
+    <DeadLetterSection
+      title={t('events.source_title', { source })}
+      count={total}
+      action={
+        total > 0 ? (
+          <RetryAllButton
+            count={total}
+            pending={retryAll.isPending}
+            onConfirm={() => {
+              retryAll.mutate(module);
+            }}
+          />
+        ) : null
+      }
+    >
+      {isError ? (
+        <div className="px-4 pb-4 md:px-6">
+          <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
+            {t('load_error')}
+          </Banner>
+        </div>
+      ) : (
+        <>
+          <ul aria-label={t('events.module_table', { module: source })} aria-busy={isLoading}>
+            {data === undefined ? (
+              <li className="px-4 pb-4 md:px-6">
+                <Skeleton className="h-14 w-full" />
+              </li>
+            ) : null}
+            {data?.items.map((m) => (
+              <DeadLetterRow
+                key={m.id}
+                name={eventDisplayName(m.eventType)}
+                detail={shortEventType(m.eventType)}
+                time={formatDateTime(m.occurredAt, i18n.language)}
+                attempts={m.attemptCount}
+                retryOf={m.retryOf}
+                error={m.lastError}
+                payloadOptions={outboxPayloadOptions(module, m.id)}
+                pending={retry.isPending && retry.variables.id === m.id}
+                onRetry={() => {
+                  retry.mutate({ module, id: m.id });
+                }}
+              />
+            ))}
+          </ul>
+          {total > pageSize && (
+            <div className="border-border border-t px-4 py-3 md:px-6">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                totalCount={total}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
-    </>
+    </DeadLetterSection>
   );
 }

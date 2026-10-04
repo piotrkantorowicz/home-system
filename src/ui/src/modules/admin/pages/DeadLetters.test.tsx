@@ -105,23 +105,23 @@ describe('DeadLetters', () => {
 
     const tile = (label: string) => screen.getByText(label).parentElement ?? document.body;
 
-    expect(await within(tile('Retrying events')).findByText('3')).toBeInTheDocument();
-    expect(await within(tile('Dead deliveries')).findByText('1')).toBeInTheDocument();
+    expect(await within(tile('Events retrying')).findByText('3')).toBeInTheDocument();
+    expect(await within(tile('Failed deliveries')).findByText('1')).toBeInTheDocument();
   });
 
   it('lists dead-lettered deliveries and events of modules that have any', async () => {
     renderPage();
 
-    const deliveries = await screen.findByRole('table', { name: 'Notification deliveries' });
+    const deliveries = await screen.findByRole('list', { name: 'Notification deliveries' });
     expect(await within(deliveries).findByText('Drink water')).toBeInTheDocument();
     expect(within(deliveries).getByText('smtp down')).toBeInTheDocument();
 
-    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
     expect(await within(events).findByText('MemberJoined')).toBeInTheDocument();
     // Only the event that is itself an earlier retry carries the marker.
     expect(within(events).getByText('Retried')).toBeInTheDocument();
     expect(within(deliveries).queryByText('Retried')).toBeNull();
-    expect(screen.queryByRole('table', { name: 'DietPlanner dead-lettered events' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Diet planner failed events' })).toBeNull();
   });
 
   it('retries a delivery and confirms it was queued', async () => {
@@ -134,7 +134,7 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    const deliveries = await screen.findByRole('table', { name: 'Notification deliveries' });
+    const deliveries = await screen.findByRole('list', { name: 'Notification deliveries' });
     await userEvent.click(await within(deliveries).findByRole('button', { name: 'Retry' }));
 
     expect(await screen.findByText('Queued for retry')).toBeInTheDocument();
@@ -151,7 +151,7 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
     await userEvent.click(await within(events).findByRole('button', { name: 'Retry' }));
 
     expect(await screen.findByText('Queued for retry')).toBeInTheDocument();
@@ -168,10 +168,10 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    await screen.findByRole('table', { name: 'Household dead-lettered events' });
-    const events = screen.getByRole('heading', { name: 'Integration events' }).closest('section');
+    await screen.findByRole('list', { name: 'Household failed events' });
+    const events = screen.getByRole('list', { name: 'Household failed events' }).parentElement;
     await userEvent.click(
-      within(events ?? document.body).getByRole('button', { name: 'Retry all' }),
+      await within(events ?? document.body).findByRole('button', { name: 'Retry all' }),
     );
     expect(retried).not.toHaveBeenCalled();
 
@@ -196,7 +196,7 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
     await within(events).findByText('MemberJoined');
     expect(fetched).not.toHaveBeenCalled();
 
@@ -219,7 +219,7 @@ describe('DeadLetters', () => {
     const cached = () =>
       client.getQueryCache().findAll({ queryKey: ['admin', 'outbox', 'Household', 'payload'] });
 
-    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
     await userEvent.click(await within(events).findByRole('button', { name: 'View' }));
     await within(await screen.findByRole('dialog')).findByText(/"memberId": "p-9"/);
     expect(cached()).toHaveLength(1);
@@ -229,6 +229,70 @@ describe('DeadLetters', () => {
     await waitFor(() => {
       expect(cached()).toHaveLength(0);
     });
+  });
+
+  it('names each source, shows local times and counts tries', async () => {
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Household events' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Notification deliveries' })).toBeInTheDocument();
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
+    expect(await within(events).findByText(/^\d{1,2} Sep, \d{2}:\d{2}$/)).toBeInTheDocument();
+    expect(within(events).getByText('10 tries')).toBeInTheDocument();
+    expect(screen.getByText('Member joined')).toBeInTheDocument();
+  });
+
+  it('colours only failed counts above zero and keeps retrying counts neutral', async () => {
+    renderPage();
+
+    const value = (label: string) => screen.getByText(label).nextElementSibling;
+    await waitFor(() => {
+      expect(value('Failed deliveries')).toHaveTextContent('1');
+    });
+    await waitFor(() => {
+      expect(value('Deliveries retrying')).toHaveTextContent('2');
+    });
+    expect(value('Failed deliveries')?.className).toContain('text-over');
+    expect(value('Deliveries retrying')?.className).not.toContain('text-over');
+  });
+
+  it('keeps a long error on one truncated line and shows it in full in the View panel', async () => {
+    const longError = `Npgsql.PostgresException: duplicate key value ${'x'.repeat(300)}`;
+    server.use(
+      http.get(`${BASE}/notifications/deliveries/dead-letters`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              deliveryId: 'd-1',
+              notificationId: 'n-1',
+              userId: 'user-7',
+              type: 'WaterReminder',
+              title: 'Drink water',
+              channel: 'Email',
+              attemptCount: 5,
+              lastAttemptAt: '2026-09-12T10:00:00Z',
+              failureReason: longError,
+              retryOf: null,
+            },
+          ],
+          totalCount: 1,
+          page: 1,
+          pageSize: 25,
+        }),
+      ),
+      http.get(`${BASE}/notifications/deliveries/:id/content`, () =>
+        HttpResponse.json({ deliveryId: 'd-1', title: 'Drink water', body: 'Hi', payload: '{}' }),
+      ),
+    );
+    renderPage();
+
+    const deliveries = await screen.findByRole('list', { name: 'Notification deliveries' });
+    const line = await within(deliveries).findByTitle(longError);
+    expect(line.className).toContain('truncate');
+
+    await userEvent.click(within(deliveries).getByRole('button', { name: 'View' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(longError)).toBeInTheDocument();
   });
 
   it('steps back a page when retrying empties the last delivery page', async () => {
@@ -262,13 +326,13 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    const deliveries = await screen.findByRole('table', { name: 'Notification deliveries' });
+    const deliveries = await screen.findByRole('list', { name: 'Notification deliveries' });
     await userEvent.click(await screen.findByRole('button', { name: 'Next' }));
     await within(deliveries).findByText('Title d-26');
     await userEvent.click(within(deliveries).getByRole('button', { name: 'Retry' }));
 
     expect(await within(deliveries).findByText('Title d-1')).toBeInTheDocument();
-    expect(screen.queryByText('No dead-lettered deliveries')).toBeNull();
+    expect(screen.queryByText('Nothing waiting.')).toBeNull();
   });
 
   it('steps back a page when retrying empties the last event page', async () => {
@@ -299,11 +363,11 @@ describe('DeadLetters', () => {
     );
     renderPage();
 
-    const events = await screen.findByRole('table', { name: 'Household dead-lettered events' });
+    const events = await screen.findByRole('list', { name: 'Household failed events' });
     await userEvent.click(await screen.findByRole('button', { name: 'Next' }));
-    await within(events).findByText('Eventm-26');
+    await within(events).findAllByText('Eventm-26');
     await userEvent.click(within(events).getByRole('button', { name: 'Retry' }));
 
-    expect(await within(events).findByText('Eventm-1')).toBeInTheDocument();
+    expect((await within(events).findAllByText('Eventm-1')).length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 {
-  "title": "Martwe wiadomości",
-  "subtitle": "Wiadomości, którym skończyły się próby. Usuń przyczynę, a potem ponów.",
+  "title": "Nieudane wiadomości",
+  "subtitle": "Wiadomości, którym skończyły się próby. Usuń przyczynę i wyślij je ponownie. Tylko dla administratorów.",
   "forbidden_title": "Tylko dla administratorów",
   "forbidden_body": "Ta strona jest dostępna dla administratorów Home System.",
   "load_error": "Nie udało się wczytać martwych wiadomości.",
@@ -25,29 +25,24 @@
   "payload_title": "Zawartość",
   "payload_notice": "Może zawierać dane osobowe. Nie jest zapisywana w przeglądarce.",
   "payload_error": "Nie udało się wczytać zawartości.",
-  "attempts": "Próby",
-  "last_attempt": "Ostatnia próba",
   "last_error": "Ostatni błąd",
   "tiles": {
-    "dead_deliveries": "Martwe dostarczenia",
-    "retrying_deliveries": "Ponawiane dostarczenia",
-    "dead_events": "Martwe zdarzenia",
-    "retrying_events": "Ponawiane zdarzenia"
+    "dead_deliveries": "Nieudane dostarczenia",
+    "retrying_deliveries": "Dostarczenia w ponawianiu",
+    "dead_events": "Nieudane zdarzenia",
+    "retrying_events": "Zdarzenia w ponawianiu"
   },
   "deliveries": {
-    "title": "Dostarczenia powiadomień",
-    "description": "Dostarczenia, z których zrezygnował worker ponowień. Ponowienie oddaje je z powrotem (w ciągu minuty).",
-    "empty": "Brak martwych dostarczeń",
-    "notification": "Powiadomienie",
-    "channel": "Kanał"
+    "title": "Dostarczenia powiadomień"
   },
   "events": {
     "title": "Zdarzenia integracyjne",
-    "description": "Wiadomości outboxa, których nie udało się wysłać. Ponowienie wraca je do kolejki outboxa.",
-    "empty": "Brak martwych zdarzeń",
-    "module_heading": "{{module}} ({{count}})",
-    "module_table": "Martwe zdarzenia: {{module}}",
-    "event": "Zdarzenie",
-    "occurred_at": "Wystąpiło"
-  }
+    "module_table": "Nieudane zdarzenia: {{module}}",
+    "source_title": "Zdarzenia: {{source}}"
+  },
+  "nothing_waiting": "Nic nie czeka.",
+  "tries_one": "{{count}} próba",
+  "tries_few": "{{count}} próby",
+  "tries_many": "{{count}} prób",
+  "tries_other": "{{count}} próby"
 }
