@@ -20,6 +20,7 @@ export function useFormat() {
     grams: (g: number | null | undefined) => format.formatGrams(g, fp),
     weight: (kg: number | null | undefined) => format.formatWeight(kg, fp),
     volume: (ml: number | null | undefined) => format.formatVolume(ml, fp),
+    litres: (ml: number | null | undefined) => format.formatLitres(ml, fp),
     waterProgress: (
       ml: number | null | undefined,
       goalMl: number | null | undefined,

@@ -6,6 +6,7 @@ import { ToastProvider } from '@shared/context/ToastContext';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
 import { createWrapper } from '../../../test/utils/queryWrapper';
@@ -32,7 +33,9 @@ function renderPage(ui: ReactNode) {
   const Wrapper = createWrapper();
   return render(
     <Wrapper>
-      <ToastProvider>{ui}</ToastProvider>
+      <ToastProvider>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </ToastProvider>
     </Wrapper>,
   );
 }
@@ -45,7 +48,7 @@ describe('Hydration page — quick-add toast feedback', () => {
     // Wait for page to load (entries header is a reliable landmark)
     await screen.findByText('hydration.entries_header');
 
-    await userEvent.click(screen.getByRole('button', { name: 'hydration.add_glass' }));
+    await userEvent.click(screen.getByRole('button', { name: /\+250/ }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_success')).toBeInTheDocument();
@@ -61,7 +64,7 @@ describe('Hydration page — quick-add toast feedback', () => {
 
     await screen.findByText('hydration.entries_header');
 
-    await userEvent.click(screen.getByRole('button', { name: 'hydration.add_glass' }));
+    await userEvent.click(screen.getByRole('button', { name: /\+250/ }));
 
     await waitFor(() => {
       expect(screen.getByText('hydration.log_error')).toBeInTheDocument();
