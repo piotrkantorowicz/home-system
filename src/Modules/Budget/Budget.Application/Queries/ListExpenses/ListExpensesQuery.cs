@@ -1,7 +1,5 @@
 namespace Budget.Application.Queries.ListExpenses;
 
-using Budget.Application.Queries.GetExpense;
-using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
 /// <summary>
@@ -31,4 +29,4 @@ public sealed record ListExpensesQuery(
     DateOnly? To = null,
     Guid? ExcludeId = null,
     bool IncludeVoided = false,
-    string? Search = null) : IQuery<PagedList<ExpenseDto>>;
+    string? Search = null) : IQuery<ExpenseListDto>;

@@ -68,7 +68,7 @@ internal static class BudgetEndpoints
 
         group.MapGet("/expenses", ListExpenses)
             .WithName("ListBudgetExpenses")
-            .WithSummary("Page visible expenses; filter by envelope, category, exact amount, date range and description text (search)");
+            .WithSummary("Page visible expenses with exact totals over the whole filter; filter by envelope, category, exact amount, date range and description text (search)");
         group.MapGet("/expenses/{id:guid}", GetExpense)
             .WithName("GetBudgetExpense")
             .WithSummary("Get one visible expense with its stored shares");
@@ -109,13 +109,13 @@ internal static class BudgetEndpoints
         return app;
     }
 
-    private static async Task<Ok<PagedList<ExpenseDto>>> ListExpenses(
+    private static async Task<Ok<ExpenseListDto>> ListExpenses(
         ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? accountId = null,
         [FromQuery] string? category = null, [FromQuery] string? amount = null,
         [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null, [FromQuery] Guid? excludeId = null, [FromQuery] bool includeVoided = false,
         [FromQuery] string? search = null)
-        => TypedResults.Ok(await dispatcher.SendAsync<ListExpensesQuery, PagedList<ExpenseDto>>(
+        => TypedResults.Ok(await dispatcher.SendAsync<ListExpensesQuery, ExpenseListDto>(
             new ListExpensesQuery(Sub(user), page, pageSize, accountId, category, amount, from, to, excludeId, includeVoided, search), ct));
 
     private static async Task<Ok<ExpenseDto>> GetExpense(
