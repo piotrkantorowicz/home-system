@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Banner, Button, Field, Input } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
+import { cn } from '@shared/lib/utils';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -21,14 +22,17 @@ export function HouseholdNameForm({ household }: HouseholdNameFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { name: household?.name ?? t('suggested_name') },
   });
+  // An unchanged name is not a change: Save stays disabled until the trimmed value differs.
+  const unchanged = household?.name === watch('name').trim();
   return (
     <form
-      className="space-y-4"
+      className={cn(household ? 'flex flex-wrap items-start gap-3' : 'space-y-4')}
       noValidate
       onSubmit={(event) => {
         void handleSubmit((data) => {
@@ -44,6 +48,7 @@ export function HouseholdNameForm({ household }: HouseholdNameFormProps) {
       }}
     >
       <Field
+        className={household ? 'min-w-0 flex-1' : undefined}
         id="household-name"
         label={t('name')}
         error={errors.name?.message}
@@ -56,8 +61,16 @@ export function HouseholdNameForm({ household }: HouseholdNameFormProps) {
           aria-invalid={!!errors.name}
         />
       </Field>
-      {mutation.isError && <Banner variant="error">{t('save_error')}</Banner>}
-      <Button type="submit" disabled={mutation.isPending}>
+      {mutation.isError && (
+        <Banner variant="error" className="basis-full">
+          {t('save_error')}
+        </Banner>
+      )}
+      <Button
+        type="submit"
+        className={household ? 'mt-7' : undefined}
+        disabled={mutation.isPending || unchanged}
+      >
         {t(mutation.isPending ? 'saving' : household ? 'save_name' : 'start')}
       </Button>
     </form>
