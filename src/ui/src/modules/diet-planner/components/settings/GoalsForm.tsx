@@ -33,10 +33,25 @@ export interface GoalsFormProps {
 }
 
 const MACRO_FIELDS = [
-  { id: 'proteinGrams', labelKey: 'goals.protein_label', phKey: 'goals.protein_placeholder' },
-  { id: 'carbsGrams', labelKey: 'goals.carbs_label', phKey: 'goals.carbs_placeholder' },
-  { id: 'fatGrams', labelKey: 'goals.fat_label', phKey: 'goals.fat_placeholder' },
-  { id: 'fiberGrams', labelKey: 'goals.fiber_label', phKey: 'goals.fiber_placeholder' },
+  {
+    id: 'proteinGrams',
+    labelKey: 'goals.protein_label',
+    phKey: 'goals.protein_placeholder',
+    kind: 'min',
+  },
+  {
+    id: 'carbsGrams',
+    labelKey: 'goals.carbs_label',
+    phKey: 'goals.carbs_placeholder',
+    kind: 'limit',
+  },
+  { id: 'fatGrams', labelKey: 'goals.fat_label', phKey: 'goals.fat_placeholder', kind: 'limit' },
+  {
+    id: 'fiberGrams',
+    labelKey: 'goals.fiber_label',
+    phKey: 'goals.fiber_placeholder',
+    kind: 'min',
+  },
 ] as const;
 
 export function GoalsForm({ onSuccess }: GoalsFormProps) {
@@ -113,12 +128,15 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-15px">{t('goals.nutrition_header')}</CardTitle>
-          <CardDescription>{t('goals.nutrition_desc')}</CardDescription>
+          <CardDescription>
+            {t('goals.nutrition_desc')} {t('goals.direction_explainer')}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <Field
             id="dailyCalorieTarget"
             label={t('goals.calories_label')}
+            hint={t('goals.direction_limit')}
             error={errors.dailyCalorieTarget?.message}
             className="max-w-xs"
           >
@@ -135,7 +153,13 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {MACRO_FIELDS.map((f) => (
-              <Field key={f.id} id={f.id} label={t(f.labelKey)} error={errors[f.id]?.message}>
+              <Field
+                key={f.id}
+                id={f.id}
+                label={t(f.labelKey)}
+                hint={t(f.kind === 'limit' ? 'goals.direction_limit' : 'goals.direction_min')}
+                error={errors[f.id]?.message}
+              >
                 <Input
                   id={f.id}
                   type="number"
