@@ -159,13 +159,8 @@
     "create_tile": "Create a recipe"
   },
   "calendar": {
-    "title": "Calendar",
-    "subtitle": "Plan and track your meals week by week",
+    "title": "Meal plan",
     "today": "Today",
-    "tab_calendar": "Calendar",
-    "tab_nutrition": "Nutrition",
-    "tab_shopping": "Shopping list",
-    "tab_import": "Import",
     "no_schedule": "Configure your meal schedule in Profile to see meal slots here.",
     "meal_status": {
       "planned": "Planned",
@@ -195,17 +190,30 @@
     },
     "week_grid": {
       "day_total": "Day total",
-      "gap": "gap",
-      "legend": "Legend",
-      "carb_led": "Carb-led",
-      "protein_led": "Protein-led",
-      "veg_led": "Veg-led",
-      "today": "today"
+      "today": "today",
+      "not_logged": "Not logged",
+      "next": "Next",
+      "total_over": "{{amount}} over",
+      "total_onTarget": "on target",
+      "total_under": "{{amount}} under"
     },
     "choose_day": "Choose a day",
     "day_view": "Day",
     "week_view": "Week",
-    "person_filter": "Person"
+    "person_filter": "Person",
+    "subtitle_target": "{{range}} · target {{kcal}} a day",
+    "import": "Import",
+    "add_meal": "Add meal",
+    "person_for": "For",
+    "this_week": "This week",
+    "week_meters_title": "This week, planned and eaten",
+    "week_status": {
+      "over": "{{amount}} over",
+      "onTarget": "On target",
+      "under": "{{amount}} left",
+      "met": "Goal met",
+      "short": "{{amount}} to go"
+    }
   },
   "override_dialog": {
     "title": "What did you eat instead?",
