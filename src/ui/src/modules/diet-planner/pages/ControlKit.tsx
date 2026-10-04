@@ -236,6 +236,44 @@ export default function ControlKit() {
           />
         </Group>
 
+        <Group title="DailyBars · water" sub="tone=water · goal line · missing vs logged">
+          <DailyBars
+            tone="water"
+            ariaLabel="Last 3 days of water"
+            overLabel=""
+            missingText="—"
+            target={2500}
+            targetLabel="2.5 L goal"
+            days={[
+              {
+                key: 'w1',
+                label: 'Mon',
+                sublabel: '28.9',
+                value: 2600,
+                text: '2.6',
+                srText: 'Mon: 2.6 L',
+              },
+              {
+                key: 'w2',
+                label: 'Tue',
+                sublabel: '29.9',
+                value: null,
+                text: '',
+                srText: 'Tue: nothing logged',
+              },
+              {
+                key: 'w3',
+                label: 'Wed',
+                sublabel: '30.9',
+                value: 1300,
+                text: '1.3',
+                isToday: true,
+                srText: 'Wed: 1.3 L',
+              },
+            ]}
+          />
+        </Group>
+
         <Group title={t('control_kit.ring')} sub="conic progress">
           <div className="flex items-center gap-4">
             <Ring percent={72} size={110} thickness={11}>

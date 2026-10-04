@@ -27,6 +27,8 @@ export interface DailyBarsProps {
   ariaLabel: string;
   /** Long ranges (30/90 days): no figure above each bar and a tighter gap; blank labels stay blank. */
   compact?: boolean;
+  /** Bar colour family; `water` for hydration. Over-target days always use the destructive colour. */
+  tone?: 'primary' | 'water';
   className?: string;
 }
 
@@ -42,6 +44,7 @@ export function DailyBars({
   missingText,
   ariaLabel,
   compact = false,
+  tone = 'primary',
   className,
 }: DailyBarsProps) {
   const scaleMax = Math.max(target ?? 0, ...days.map((d) => d.value ?? 0), 1);
@@ -89,8 +92,8 @@ export function DailyBars({
                       : day.over
                         ? 'var(--color-destructive)'
                         : day.isToday
-                          ? 'var(--color-primary)'
-                          : 'color-mix(in oklab, var(--color-primary) 32%, transparent)',
+                          ? `var(--color-${tone})`
+                          : `color-mix(in oklab, var(--color-${tone}) 32%, transparent)`,
                 }}
               />
             </div>

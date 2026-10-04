@@ -1,4 +1,10 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { api } from '../client';
 import { queryKeys } from '../queryKeys';
@@ -135,6 +141,11 @@ export function waterIntakeOptions(date: string) {
 
 export function useWaterIntake(date: string) {
   return useQuery(waterIntakeOptions(date));
+}
+
+/** One intake query per day (existing endpoint, seven bounded days); shares cache keys with `useWaterIntake`. */
+export function useWaterDays(dates: string[]) {
+  return useQueries({ queries: dates.map((date) => waterIntakeOptions(date)) });
 }
 
 export function useLogWaterIntake() {

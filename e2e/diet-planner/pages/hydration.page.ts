@@ -5,7 +5,7 @@ import { BasePage } from './BasePage';
 import type { Page, Locator } from '@playwright/test';
 
 export class HydrationPage extends BasePage {
-  /** The bottle-fill visual — role="meter" + aria-valuenow (see Hydration.tsx). */
+  /** Today's progress bar — role="progressbar" + aria-valuenow (see Hydration.tsx). */
   readonly levelMeter: Locator;
   readonly addGlassButton: Locator;
   readonly customButton: Locator;
@@ -16,9 +16,9 @@ export class HydrationPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.levelMeter = page.getByRole('meter');
-    this.addGlassButton = page.getByRole('button', { name: /\+1 glass \(250 ml\)/i });
-    this.customButton = page.getByRole('button', { name: 'Custom' });
+    this.levelMeter = page.getByRole('progressbar', { name: "Today's water progress" });
+    this.addGlassButton = page.getByRole('button', { name: /^\+250 ml/ });
+    this.customButton = page.getByRole('button', { name: 'Other…' });
     this.customNoteInput = page.getByPlaceholder('e.g. morning glass');
     this.customAddButton = page.getByRole('button', { name: 'Add', exact: true });
     this.deleteEntryButtons = page.getByRole('button', { name: 'Delete entry' });
@@ -38,7 +38,11 @@ export class HydrationPage extends BasePage {
     return this.page.getByText(note, { exact: true });
   }
 
-  total(amountMl: number) {
-    return this.page.getByText(`${String(amountMl)} ml`, { exact: true });
+  /** Today's total, read from the progress bar (capped at the daily goal). */
+  expectProgress(amountMl: number, goalMl: number) {
+    return expect(this.levelMeter).toHaveAttribute(
+      'aria-valuenow',
+      String(Math.min(amountMl, goalMl)),
+    );
   }
 }
