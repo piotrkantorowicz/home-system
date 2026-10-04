@@ -167,13 +167,8 @@
     "create_tile": "Utwórz przepis"
   },
   "calendar": {
-    "title": "Kalendarz",
-    "subtitle": "Planuj i śledź swoje posiłki tydzień po tygodniu",
+    "title": "Plan posiłków",
     "today": "Dziś",
-    "tab_calendar": "Kalendarz",
-    "tab_nutrition": "Odżywianie",
-    "tab_shopping": "Lista zakupów",
-    "tab_import": "Import",
     "no_schedule": "Skonfiguruj plan posiłków w Profilu, aby zobaczyć tu pory posiłków.",
     "view_label": "Widok",
     "view": {
@@ -208,17 +203,30 @@
     },
     "week_grid": {
       "day_total": "Suma dnia",
-      "gap": "brak",
-      "legend": "Legenda",
-      "carb_led": "Węglowodanowe",
-      "protein_led": "Białkowe",
-      "veg_led": "Warzywne",
-      "today": "dziś"
+      "today": "dziś",
+      "not_logged": "Nie zapisano",
+      "next": "Następny",
+      "total_over": "{{amount}} powyżej",
+      "total_onTarget": "zgodnie z celem",
+      "total_under": "{{amount}} poniżej"
     },
     "choose_day": "Wybierz dzień",
     "day_view": "Dzień",
     "week_view": "Tydzień",
-    "person_filter": "Osoba"
+    "person_filter": "Osoba",
+    "subtitle_target": "{{range}} · cel {{kcal}} dziennie",
+    "import": "Importuj",
+    "add_meal": "Dodaj posiłek",
+    "person_for": "Dla",
+    "this_week": "Ten tydzień",
+    "week_meters_title": "Ten tydzień: zaplanowane i zjedzone",
+    "week_status": {
+      "over": "{{amount}} powyżej",
+      "onTarget": "Zgodnie z celem",
+      "under": "zostało {{amount}}",
+      "met": "Cel osiągnięty",
+      "short": "brakuje {{amount}}"
+    }
   },
   "override_dialog": {
     "title": "Co zjadłeś zamiast tego?",

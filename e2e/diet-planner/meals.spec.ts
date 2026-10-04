@@ -58,7 +58,7 @@ test.describe('Calendar CRUD & Navigation', () => {
 
     // Navigate to next week
     await page
-      .getByRole('button', { name: /next/i })
+      .getByRole('button', { name: /^next$/i })
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
       .last()
       .click();
@@ -71,7 +71,7 @@ test.describe('Calendar CRUD & Navigation', () => {
 
     // Navigate back with previous button
     await page
-      .getByRole('button', { name: /previous/i })
+      .getByRole('button', { name: /^previous$/i })
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }))
       .last()
       .click();
@@ -81,25 +81,15 @@ test.describe('Calendar CRUD & Navigation', () => {
       timeout: 5000,
     });
 
-    // Navigate forward again then use Today button to snap back
+    // Navigate forward again; "This week" snaps back to the current week
+    // without leaving the week view.
     await page
-      .getByRole('button', { name: /next/i })
+      .getByRole('button', { name: /^next$/i })
       .or(page.locator('button').filter({ has: page.locator('svg.lucide-chevron-right') }))
       .last()
       .click();
     await expect(weekHeader).toHaveText(nextWeekText ?? '');
-
-    // "Today" snaps to the day view for the current date (#241); switching
-    // back to the week view must land on the week we started from.
-    await page.getByRole('button', { name: /today/i }).click();
-    const todayHeading = new Date().toLocaleDateString('en', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-    await expect(page.getByRole('heading', { name: todayHeading, exact: true })).toBeVisible();
-
-    await page.getByRole('radio', { name: /^week$/i }).click();
+    await page.getByRole('button', { name: /this week/i }).click();
     await expect(weekHeader).toHaveText(currentWeekText ?? '', {
       timeout: 5000,
     });
