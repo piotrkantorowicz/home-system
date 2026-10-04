@@ -25,7 +25,7 @@ import { Link } from 'react-router-dom';
 import { errorStatus } from '../api/client';
 import {
   useBudgetQuery,
-  useExpensesQuery,
+  useLatestExpensesQuery,
   useSettlementQuery,
   useSummaryQuery,
 } from '../api/queries';
@@ -58,17 +58,14 @@ export default function BudgetPage() {
   // Settle up is household-wide: never in "Just mine", never for children.
   const showSettle = level === 'adult' && !personal;
   const settlement = useSettlementQuery(showSettle);
-  // The list endpoint has no scope filter, so ask for the month and keep only the envelopes this
-  // view covers. ponytail: one page of 20; a month with many foreign rows could show fewer than 5.
-  const accountIds = new Set(summary.data?.envelopes.map((e) => e.accountId));
   const lastDay = shiftDays(`${shiftMonth(month, 1)}-01`, -1);
-  const latest = useExpensesQuery(
-    { page: 1, pageSize: 20, from: `${month}-01`, to: lastDay },
+  const latest = useLatestExpensesQuery(
+    summary.data?.envelopes.map((e) => e.accountId) ?? [],
+    { from: `${month}-01`, to: lastDay },
+    5,
     summary.isSuccess,
   );
-  const latestRows = (latest.data?.items ?? [])
-    .filter((x) => accountIds.has(x.accountId))
-    .slice(0, 5);
+  const latestRows = latest.items;
   const currency = summary.data?.currency ?? budget.data?.currency ?? '';
   const managed = members.filter((m) => m.isManaged);
   const monthLabel = new Intl.DateTimeFormat(i18n.language, {
@@ -370,14 +367,14 @@ export default function BudgetPage() {
               <Banner
                 variant="error"
                 onRetry={() => {
-                  void latest.refetch();
+                  latest.refetch();
                 }}
                 retryLabel={t('retry')}
               >
                 {t('load_error')}
               </Banner>
             )}
-            {latest.isSuccess && latestRows.length === 0 && (
+            {!latest.isPending && !latest.isError && latestRows.length === 0 && (
               <p className="text-text-2 text-sm">{t('no_expenses_body')}</p>
             )}
             <ul>

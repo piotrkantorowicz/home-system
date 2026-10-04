@@ -140,14 +140,11 @@ beforeEach(() => {
           })
         : new HttpResponse(null, { status: summaryStatus });
     }),
-    http.get(`${BASE}/api/budget/expenses`, () =>
-      HttpResponse.json({
-        items: expenseItems,
-        totalCount: expenseItems.length,
-        page: 1,
-        pageSize: 20,
-      }),
-    ),
+    http.get(`${BASE}/api/budget/expenses`, ({ request }) => {
+      const accountId = new URL(request.url).searchParams.get('accountId');
+      const items = expenseItems.filter((x) => !accountId || x.accountId === accountId);
+      return HttpResponse.json({ items, totalCount: items.length, page: 1, pageSize: 5 });
+    }),
     http.get(`${BASE}/api/budget/settlement`, () => {
       settlementCalls += 1;
       return HttpResponse.json({ currency: 'PLN', balances: [], ...settlement });
