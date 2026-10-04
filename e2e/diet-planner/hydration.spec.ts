@@ -10,7 +10,7 @@ test.describe('Hydration', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
-  test('the water-level meter is visible on the page', async ({ page }) => {
+  test('the water progress bar is visible on the page', async ({ page }) => {
     const hydrationPage = new HydrationPage(page);
     await hydrationPage.goto();
 
@@ -88,7 +88,7 @@ test.describe('Hydration', () => {
 
     await page.reload();
     await expect(hydration.entryNote(note)).toBeVisible();
-    await expect(hydration.total(baseline.totalMl + 580)).toBeVisible();
+    await hydration.expectProgress(baseline.totalMl + 580, 2500);
     await hydration.deleteEntryButtons.first().click();
     const deletion = page.waitForResponse(
       (response) =>
