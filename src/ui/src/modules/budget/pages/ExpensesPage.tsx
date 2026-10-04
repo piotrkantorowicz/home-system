@@ -12,7 +12,7 @@ import {
 import { Plus, Receipt } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAccountsQuery, useBudgetQuery, useExpensesQuery } from '../api/queries';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
@@ -25,7 +25,12 @@ export default function ExpensesPage() {
   const { t } = useTranslation('budget');
   const budget = useBudgetQuery();
   const accounts = useAccountsQuery();
-  const [adding, setAdding] = useState(false);
+  // `?add=1` opens the form: the phone tab bar's raised "Add expense" button links here.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const adding = searchParams.get('add') === '1';
+  const setAdding = (open: boolean) => {
+    setSearchParams(open ? { add: '1' } : {}, { replace: true });
+  };
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [category, setCategory] = useState('');

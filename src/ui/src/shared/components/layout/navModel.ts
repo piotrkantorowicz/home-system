@@ -201,14 +201,53 @@ export function getSectionGroups(
   return { groups, pinned };
 }
 
-/** Every item of the active module, flattened in registration order — for the
- * mobile bottom tab bar (module-scoped, horizontally scrollable). */
-export function getMobileNavItems(
+export interface MobileNav {
+  /** Tab items in bar order; the raised `action` sits after the first two. */
+  tabs: RailNavItem[];
+  action?: { href: string; icon: LucideIcon; label: string };
+  /** Everything else, grouped like the sidebar, for the More sheet (settings link excluded: the footer has it). */
+  moreGroups: NavGroup[];
+}
+
+/** Most phone tab slots: tabs + the raised action + the More button. */
+const MAX_MOBILE_SLOTS = 5;
+
+/**
+ * The phone bottom bar for a module: its `mobileTab` items (capped so tabs, the optional raised
+ * action and More fit in five slots), and the remaining destinations for the More sheet.
+ */
+export function getMobileNav(
   t: TFunction,
   mod: AppModule,
   householdRole: string | null = null,
-): RailNavItem[] {
-  return mod.navItems
-    .filter((nav) => isNavItemVisible(nav, householdRole))
-    .map((nav) => toRailNavItem(t, mod, nav.href, nav.icon, nav.translationKey, nav.Badge));
+): MobileNav {
+  const { groups } = getSectionGroups(t, mod, householdRole);
+  const flagged = new Set(
+    mod.navItems
+      .filter((n) => n.mobileTab && isNavItemVisible(n, householdRole))
+      .map((n) => n.href),
+  );
+  const maxTabs = MAX_MOBILE_SLOTS - 1 - (mod.mobileAction ? 1 : 0);
+  const tabs = groups
+    .flatMap((g) => g.items)
+    .filter((i) => flagged.has(i.href))
+    .slice(0, maxTabs);
+  const inBar = new Set(tabs.map((i) => i.href));
+  const moreGroups = groups
+    .map((g) => ({ ...g, items: g.items.filter((i) => !inBar.has(i.href)) }))
+    .filter((g) => g.items.length > 0);
+
+  return {
+    tabs,
+    moreGroups,
+    ...(mod.mobileAction
+      ? {
+          action: {
+            href: mod.mobileAction.href,
+            icon: mod.mobileAction.icon,
+            label: t(mod.mobileAction.translationKey),
+          },
+        }
+      : {}),
+  };
 }

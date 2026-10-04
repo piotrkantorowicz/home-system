@@ -41,8 +41,8 @@ export class NavigationPage extends BasePage {
     return this.sectionNav.getByRole('link', { name: 'Products' });
   }
 
-  get productsMobileLink() {
-    return this.mobileNav.getByRole('link', { name: 'Products' });
+  get recipesMobileLink() {
+    return this.mobileNav.getByRole('link', { name: 'Recipes' });
   }
 
   get paletteSearch() {
@@ -53,8 +53,12 @@ export class NavigationPage extends BasePage {
     return this.palette.getByRole('option', { name: /Products.*Diet Planner/ });
   }
 
-  get householdMobileNav() {
-    return this.page.getByRole('navigation', { name: 'Household' });
+  get moreButton() {
+    return this.mobileNav.getByRole('button', { name: 'More' });
+  }
+
+  get moreSheet() {
+    return this.page.getByRole('dialog', { name: 'More' });
   }
 
   get moduleSwitcherTrigger() {
