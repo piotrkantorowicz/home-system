@@ -26,7 +26,6 @@
   "overview_count_other": "{{count}} active envelopes you can see",
   "manage_envelopes": "Manage envelopes",
   "envelopes": "Envelopes",
-  "envelopes_intro": "An envelope is a named bucket for spending, such as Everyday or Holidays. It groups purpose or ownership; it is not a bank account.",
   "new_envelope": "New envelope",
   "new_description": "Choose a name and who can see it.",
   "rename_envelope": "Rename envelope",
@@ -295,5 +294,13 @@
   "show_all": "Show all ({{count}})",
   "show_recent": "Show recent only",
   "payment_actions": "Payment actions",
-  "undo_hint": "You just recorded a payment. You can still undo it."
+  "undo_hint": "You just recorded a payment. You can still undo it.",
+  "envelopes_subtitle": "Buckets for spending, like Everyday or Holidays — not bank accounts",
+  "shared_note": "Owners and adults can see these",
+  "personal_note": "Only you can see these",
+  "personal_note_mixed": "Private to their owner. You also see envelopes of members you manage.",
+  "expenses_in_month_one": "{{count}} expense in {{month}}",
+  "expenses_in_month_other": "{{count}} expenses in {{month}}",
+  "limit_per_month": "{{limit}} / month",
+  "envelope_actions": "Actions for {{name}}"
 }
