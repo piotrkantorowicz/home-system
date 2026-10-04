@@ -5,9 +5,9 @@ import type { Page, Locator } from '@playwright/test';
 /**
  * The dashboard was rebuilt for the #208 redesign: it no longer shows
  * product/recipe/calendar quick-stat cards (that entry point moved into the
- * two-tier nav's grouped section panel). It now shows a "Today" hero
- * (calories left/eaten/target + macro bars), a "Next up" meal card, a water
- * card, and a "This week" review card.
+ * two-tier nav's grouped section panel). It now shows one "Today"
+ * summary surface (calories, macros and water), a "Meals" list with check
+ * toggles, and a "This week" review card.
  */
 export class DashboardPage extends BasePage {
   readonly heading: Locator;
@@ -24,7 +24,7 @@ export class DashboardPage extends BasePage {
     // same label, the Next up card's empty-state CTA. Both open the same
     // MealForm sheet; take the header's (first in DOM order).
     this.logMealButton = page.getByRole('button', { name: /log a meal/i }).first();
-    this.fullPlanLink = page.getByRole('link', { name: /full plan/i });
+    this.fullPlanLink = page.getByRole('link', { name: /open meal plan/i });
     this.waterProgress = page.getByRole('progressbar', { name: 'Water' });
   }
 

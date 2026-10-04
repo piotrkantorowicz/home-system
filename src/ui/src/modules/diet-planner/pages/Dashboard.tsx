@@ -1,8 +1,7 @@
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
 import { useCreateMeal, useMeals } from '@modules/diet-planner/api/hooks/useMeals';
-import { NextUpCard } from '@modules/diet-planner/components/dashboard/NextUpCard';
-import { TodayHero } from '@modules/diet-planner/components/dashboard/TodayHero';
-import { WaterCard } from '@modules/diet-planner/components/dashboard/WaterCard';
+import { TodayMeals } from '@modules/diet-planner/components/dashboard/TodayMeals';
+import { TodaySummary } from '@modules/diet-planner/components/dashboard/TodaySummary';
 import { WeekReviewCard } from '@modules/diet-planner/components/dashboard/WeekReviewCard';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
 import { GoalsForm } from '@modules/diet-planner/components/settings';
@@ -101,45 +100,44 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="gap-18px grid grid-cols-1 items-start xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
-        {goalsQuery.isError || mealsQuery.isError ? (
-          <Banner
-            variant="error"
-            className="col-span-full"
-            onRetry={() => {
-              void goalsQuery.refetch();
-              void mealsQuery.refetch();
-            }}
-            retryLabel={t('dashboard.retry')}
-          >
-            {t('dashboard.data_error')}
-          </Banner>
-        ) : goalsQuery.isPending || mealsLoading ? (
-          <Skeleton className="col-span-full h-52" />
-        ) : (
-          <TodayHero
-            goals={goalsData}
-            nutrition={todayNutrition}
-            onSetGoals={() => {
-              setGoalsSheetOpen(true);
-            }}
-          />
-        )}
+      {goalsQuery.isError || mealsQuery.isError ? (
+        <Banner
+          variant="error"
+          onRetry={() => {
+            void goalsQuery.refetch();
+            void mealsQuery.refetch();
+          }}
+          retryLabel={t('dashboard.retry')}
+        >
+          {t('dashboard.data_error')}
+        </Banner>
+      ) : goalsQuery.isPending || mealsLoading ? (
+        <Skeleton className="h-52 w-full" />
+      ) : (
+        <TodaySummary
+          goals={goalsData}
+          nutrition={todayNutrition}
+          date={today}
+          onSetGoals={() => {
+            setGoalsSheetOpen(true);
+          }}
+        />
+      )}
+
+      <div className="gap-18px grid grid-cols-1 items-start xl:grid-cols-2">
         {!mealsQuery.isError && (
-          <NextUpCard
+          <TodayMeals
             meals={todayMeals}
+            target={goalsData?.dailyCalorieTarget ?? null}
             loading={mealsLoading}
             onAddMeal={() => {
               setMealFormOpen(true);
             }}
           />
         )}
-        <div className="flex min-w-0 flex-col gap-6">
-          <WaterCard />
-          {!mealsQuery.isError && !mealsLoading && (
-            <WeekReviewCard week={week} target={goalsData?.dailyCalorieTarget ?? null} />
-          )}
-        </div>
+        {!mealsQuery.isError && !mealsLoading && (
+          <WeekReviewCard week={week} target={goalsData?.dailyCalorieTarget ?? null} />
+        )}
       </div>
 
       <Sheet open={goalsSheetOpen} onOpenChange={setGoalsSheetOpen}>
