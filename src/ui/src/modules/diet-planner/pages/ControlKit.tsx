@@ -218,6 +218,24 @@ export default function ControlKit() {
           />
         </Group>
 
+        <Group title="DailyBars · compact" sub="30/90 days: no figures, weekly labels">
+          <DailyBars
+            compact
+            ariaLabel="Last 30 days"
+            overLabel="over target"
+            missingText="—"
+            target={2100}
+            days={Array.from({ length: 30 }, (_, i) => ({
+              key: String(i),
+              label: i % 7 === 0 ? `${String(i + 1)}.9` : '',
+              sublabel: '',
+              value: i % 6 === 5 ? null : 1700 + ((i * 137) % 700),
+              text: '',
+              srText: `Day ${String(i + 1)}`,
+            }))}
+          />
+        </Group>
+
         <Group title={t('control_kit.ring')} sub="conic progress">
           <div className="flex items-center gap-4">
             <Ring percent={72} size={110} thickness={11}>

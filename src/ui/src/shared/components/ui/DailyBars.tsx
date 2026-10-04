@@ -25,6 +25,8 @@ export interface DailyBarsProps {
   overLabel: string;
   missingText: string;
   ariaLabel: string;
+  /** Long ranges (30/90 days): no figure above each bar and a tighter gap; blank labels stay blank. */
+  compact?: boolean;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export function DailyBars({
   overLabel,
   missingText,
   ariaLabel,
+  compact = false,
   className,
 }: DailyBarsProps) {
   const scaleMax = Math.max(target ?? 0, ...days.map((d) => d.value ?? 0), 1);
@@ -54,11 +57,17 @@ export function DailyBars({
             style={{ bottom: px(target) }}
           />
         )}
-        <div className="relative flex h-full items-end gap-1.5 sm:gap-2.5">
+        <div
+          className={cn(
+            'relative flex h-full items-end',
+            compact ? 'gap-px' : 'gap-1.5 sm:gap-2.5',
+          )}
+        >
           {days.map((day) => (
             <div key={day.key} className="flex min-w-0 flex-1 flex-col items-center justify-end">
               <span
                 className={cn(
+                  compact && 'hidden',
                   'numeral text-11px mb-0.5 leading-none whitespace-nowrap',
                   day.over && 'text-destructive font-bold',
                   day.value === null && 'text-text-3',
@@ -68,7 +77,8 @@ export function DailyBars({
               </span>
               <div
                 className={cn(
-                  'w-full max-w-[46px] rounded-t-md',
+                  'w-full rounded-t-md',
+                  !compact && 'max-w-[46px]',
                   day.value === null && 'border-border-strong border border-dashed',
                 )}
                 style={{
@@ -87,7 +97,10 @@ export function DailyBars({
           ))}
         </div>
       </div>
-      <div aria-hidden="true" className="mt-1.5 flex gap-1.5 sm:gap-2.5">
+      <div
+        aria-hidden="true"
+        className={cn('mt-1.5 flex', compact ? 'gap-px' : 'gap-1.5 sm:gap-2.5')}
+      >
         {days.map((day) => (
           <div key={day.key} className="min-w-0 flex-1 text-center">
             <div

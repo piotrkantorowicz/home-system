@@ -126,39 +126,22 @@ test.describe('Nutrition Summary — with meal data', () => {
     await goalsSaved;
 
     // Once a calorie goal exists, the "Avg intake" tile's hint switches from
-    // the generic "kcal" unit to a signed delta against the goal ("+123", "−45" or "0").
+    // "No goal set" to a status against the goal.
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
     const tile = page.getByText('Avg intake', { exact: true }).locator('xpath=..');
     await expect(tile).toBeVisible({ timeout: 10000 });
-    const hint = tile.locator('> div').nth(2);
-    await expect(hint).toHaveText(/^(0|[+\u2212-]\d[\d\s.,]*)$/);
+    // The hint states the goal status in words and repeats the 2 000 kcal target.
+    await expect(tile.locator('> div').nth(2)).toHaveText(/2\s?000 kcal/);
   });
 
-  test('pagination defaults to page size 25', async ({ page }) => {
+  test('a 7-day range lists daily totals without pagination', async ({ page }) => {
     const nutritionPage = new NutritionPage(page);
     await nutritionPage.goto();
 
-    await expect(nutritionPage.pageSizeSelect).toHaveValue('25');
-  });
-
-  test('pagination: changing page size updates the selector value', async ({ page }) => {
-    const nutritionPage = new NutritionPage(page);
-    await nutritionPage.goto();
-
-    await nutritionPage.setPageSize(10);
-    await expect(nutritionPage.pageSizeSelect).toHaveValue('10');
-
-    await nutritionPage.setPageSize(50);
-    await expect(nutritionPage.pageSizeSelect).toHaveValue('50');
-  });
-
-  test('previous page button is disabled when on the first page', async ({ page }) => {
-    const nutritionPage = new NutritionPage(page);
-    await nutritionPage.goto();
-
-    await expect(nutritionPage.previousButton).toBeDisabled();
+    expect(await nutritionPage.getTableRowCount()).toBeLessThanOrEqual(7);
+    await expect(nutritionPage.nextButton).toHaveCount(0);
   });
 });
 
@@ -184,12 +167,20 @@ test.describe('Nutrition Summary — known totals', () => {
     await nutritionPage.goto();
     await nutritionPage.selectRange('30');
 
-    await expect(nutritionPage.dayCell(dayA, 'calories')).toHaveText(String(perServing.calories));
-    await expect(nutritionPage.dayCell(dayA, 'protein')).toHaveText(perServing.protein.toFixed(1));
-    await expect(nutritionPage.dayCell(dayA, 'carbs')).toHaveText(perServing.carbs.toFixed(1));
-    await expect(nutritionPage.dayCell(dayA, 'fat')).toHaveText(perServing.fat.toFixed(1));
-    await expect(nutritionPage.dayCell(dayA, 'fiber')).toHaveText(perServing.fiber.toFixed(1));
-    await expect(nutritionPage.chartBar(dayA, perServing.calories)).toBeVisible();
+    await expect(nutritionPage.dayCell(dayA, 'calories')).toHaveText(
+      `${String(perServing.calories)} kcal`,
+    );
+    await expect(nutritionPage.dayCell(dayA, 'protein')).toHaveText(
+      String(Math.round(perServing.protein)),
+    );
+    await expect(nutritionPage.dayCell(dayA, 'carbs')).toHaveText(
+      String(Math.round(perServing.carbs)),
+    );
+    await expect(nutritionPage.dayCell(dayA, 'fat')).toHaveText(String(Math.round(perServing.fat)));
+    await expect(nutritionPage.dayCell(dayA, 'fiber')).toHaveText(
+      String(Math.round(perServing.fiber)),
+    );
+    await expect(nutritionPage.chartBar(perServing.calories)).toBeAttached();
 
     const doubled = {
       calories: perServing.calories * 2,
@@ -198,9 +189,13 @@ test.describe('Nutrition Summary — known totals', () => {
       fat: perServing.fat * 2,
       fiber: perServing.fiber * 2,
     };
-    await expect(nutritionPage.dayCell(dayB, 'calories')).toHaveText(String(doubled.calories));
-    await expect(nutritionPage.dayCell(dayB, 'protein')).toHaveText(doubled.protein.toFixed(1));
-    await expect(nutritionPage.chartBar(dayB, doubled.calories)).toBeVisible();
+    await expect(nutritionPage.dayCell(dayB, 'calories')).toHaveText(
+      `${String(doubled.calories)} kcal`,
+    );
+    await expect(nutritionPage.dayCell(dayB, 'protein')).toHaveText(
+      String(Math.round(doubled.protein)),
+    );
+    await expect(nutritionPage.chartBar(doubled.calories)).toBeAttached();
 
     // The average tile is checked against the API's own aggregate rather than
     // a hardcoded guess — other specs on this worker also log meals within
@@ -215,6 +210,10 @@ test.describe('Nutrition Summary — known totals', () => {
     const logged = summary.filter((d) => d.calories > 0);
     const expectedAvg = Math.round(logged.reduce((sum, d) => sum + d.calories, 0) / logged.length);
 
-    await expect(nutritionPage.tileValue('Avg intake')).toHaveText(String(expectedAvg));
+    await expect
+      .poll(async () =>
+        ((await nutritionPage.tileValue('Avg intake').textContent()) ?? '').replace(/\D/g, ''),
+      )
+      .toBe(String(expectedAvg));
   });
 });
