@@ -222,5 +222,15 @@
   "repayment_added_by": "Added by {{name}}",
   "void_repayment": "Void payment",
   "void_repayment_description": "A voided payment stops counting and the balances go back. Its history stays.",
-  "repayment_voided": "Payment voided."
+  "repayment_voided": "Payment voided.",
+  "amount_label": "Amount",
+  "what_for": "What for",
+  "what_for_optional": "(optional)",
+  "what_for_limit": "Use at most 80 characters.",
+  "envelope_shared": "{{name}} · shared",
+  "envelope_personal": "{{name}} · only you",
+  "who_paid": "Who paid?",
+  "household_account": "Household account",
+  "household_account_initial": "H",
+  "save_amount": "Save {{amount}}"
 }

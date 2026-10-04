@@ -226,5 +226,15 @@
   "repayment_added_by": "Dodał(a): {{name}}",
   "void_repayment": "Anuluj spłatę",
   "void_repayment_description": "Anulowana spłata przestaje się liczyć, a salda wracają. Historia zostaje.",
-  "repayment_voided": "Anulowano spłatę."
+  "repayment_voided": "Anulowano spłatę.",
+  "amount_label": "Kwota",
+  "what_for": "Na co",
+  "what_for_optional": "(opcjonalnie)",
+  "what_for_limit": "Użyj najwyżej 80 znaków.",
+  "envelope_shared": "{{name}} · wspólna",
+  "envelope_personal": "{{name}} · tylko Ty",
+  "who_paid": "Kto zapłacił?",
+  "household_account": "Konto domowe",
+  "household_account_initial": "D",
+  "save_amount": "Zapisz {{amount}}"
 }
