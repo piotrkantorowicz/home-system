@@ -61,7 +61,7 @@ internal sealed class GetSummaryQueryHandler(BudgetAccessService access, IBudget
         var sums = await db.Expenses.AsNoTracking()
             .Where(e => ids.Contains(e.BudgetAccountId) && !e.IsVoided && e.OccurredOn >= start && e.OccurredOn < next)
             .GroupBy(e => new { e.BudgetAccountId, e.Category })
-            .Select(g => new { g.Key.BudgetAccountId, g.Key.Category, Total = g.Sum(e => e.Amount) })
+            .Select(g => new { g.Key.BudgetAccountId, g.Key.Category, Total = g.Sum(e => e.Amount), Count = g.Count() })
             .ToListAsync(ct);
         var limits = await db.MonthlyLimits.AsNoTracking()
             .Where(l => ids.Contains(l.BudgetAccountId) && l.MonthStart == start)
@@ -69,6 +69,7 @@ internal sealed class GetSummaryQueryHandler(BudgetAccessService access, IBudget
             .ToListAsync(ct);
 
         var spentByAccount = sums.GroupBy(s => s.BudgetAccountId).ToDictionary(g => g.Key, g => g.Sum(s => s.Total));
+        var countByAccount = sums.GroupBy(s => s.BudgetAccountId).ToDictionary(g => g.Key, g => g.Sum(s => s.Count));
         var limitByAccount = limits.ToDictionary(l => l.BudgetAccountId);
 
         static string F(decimal value) => value.ToString("F2", CultureInfo.InvariantCulture);
@@ -85,6 +86,7 @@ internal sealed class GetSummaryQueryHandler(BudgetAccessService access, IBudget
             .Select(x => new SummaryEnvelopeDto(
                 x.Account.Id.Value, x.Account.Name, x.Account.Visibility.ToString(), x.Account.OwnerPersonId, x.Account.IsArchived,
                 F(x.Spent),
+                countByAccount.GetValueOrDefault(x.Account.Id),
                 x.Limit is null ? null : F(x.Limit.Amount),
                 x.Limit?.Revision,
                 x.Limit is null ? null : F(x.Limit.Amount - x.Spent),
@@ -98,6 +100,6 @@ internal sealed class GetSummaryQueryHandler(BudgetAccessService access, IBudget
             .Select(c => new SummaryCategoryDto(c.Category.ToString(), F(c.Total)))
             .ToList();
 
-        return new SummaryDto(month.ToString(), shared ? "Shared" : "Personal", currency.ToString(), F(spentByAccount.Values.Sum()), envelopes, categories);
+        return new SummaryDto(month.ToString(), shared ? "Shared" : "Personal", currency.ToString(), F(spentByAccount.Values.Sum()), countByAccount.Values.Sum(), envelopes, categories);
     }
 }
