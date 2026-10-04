@@ -138,7 +138,14 @@
     "clear_filters": "Clear filters",
     "view_label": "View",
     "view_table": "Table",
-    "view_cards": "Cards"
+    "view_cards": "Cards",
+    "subtitle_per100_one": "{{count}} product · nutrition per 100 g",
+    "subtitle_per100_other": "{{count}} products · nutrition per 100 g",
+    "no_density": "No density set: per 100 ml cannot be shown",
+    "filter_label": "Filter",
+    "filter_all": "All",
+    "filter_incomplete": "Incomplete",
+    "sort_by": "Sort by {{column}}"
   },
   "recipes": {
     "title": "Recipes",
