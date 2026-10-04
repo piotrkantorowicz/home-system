@@ -28,15 +28,15 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
 }));
 
 const seed = [
-  { productId: 'p-1', productName: 'Flour', totalAmount: 1200, unit: 'Gram', isChecked: false },
+  { productId: 'p-1', productName: 'Flour', totalAmount: 1200, unit: 'g', isChecked: false },
   {
     productId: 'p-2',
     productName: 'Milk',
     totalAmount: 1000,
-    unit: 'Milliliter',
+    unit: 'ml',
     isChecked: false,
   },
-  { productId: 'p-3', productName: 'Eggs', totalAmount: 8, unit: 'Piece', isChecked: true },
+  { productId: 'p-3', productName: 'Eggs', totalAmount: 8, unit: 'piece', isChecked: true },
 ];
 
 function renderPage() {
@@ -98,7 +98,7 @@ describe('ShoppingList', () => {
     await waitFor(() => {
       expect(screen.getByTestId('shopping-list-progress')).toHaveTextContent('2/3');
     });
-    expect(body).toMatchObject({ productId: 'p-1', unit: 'Gram', isChecked: true });
+    expect(body).toMatchObject({ productId: 'p-1', unit: 'g', isChecked: true });
   });
 
   it('rolls the row back and says so when the API refuses', async () => {
