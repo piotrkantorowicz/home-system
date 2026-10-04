@@ -10,7 +10,7 @@ export class NotificationsPage {
   }
 
   async preferences() {
-    await this.page.goto('/diet-planner/settings/app');
+    await this.page.goto('/settings/app');
     await expect(this.realTimeSwitch()).toBeEnabled();
   }
 

@@ -46,7 +46,7 @@ test.describe('Notifications channel preferences', () => {
       });
     });
 
-    await page.goto('/diet-planner/settings/app');
+    await page.goto('/settings/app');
 
     await page.getByRole('switch', { name: /real-time/i }).click();
 

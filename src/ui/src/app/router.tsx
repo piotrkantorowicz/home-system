@@ -5,10 +5,13 @@ import { SilentRenew } from '@shared/auth/SilentRenew';
 import { RouteError } from '@shared/components/RouteError';
 import { AppShell } from '@shared/components/layout/AppShell';
 import { getModules } from '@shared/lib/module-registry';
+import { lazy } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 import RootRedirect from './RootRedirect';
 import { SuspenseWrapper } from './SuspenseWrapper';
+
+const Preferences = lazy(() => import('./pages/Preferences'));
 
 import type { RouteObject } from 'react-router-dom';
 
@@ -68,6 +71,14 @@ export function createRouter() {
                 <HouseholdRequired>
                   <RootRedirect />
                 </HouseholdRequired>
+              ),
+            },
+            {
+              path: '/settings/app',
+              element: (
+                <SuspenseWrapper>
+                  <Preferences />
+                </SuspenseWrapper>
               ),
             },
             ...buildModuleRoutes(),
