@@ -11,19 +11,19 @@ test.describe('Dashboard', () => {
     await expect(dashboard.logMealButton).toBeVisible();
   });
 
-  test('water card and week review card are visible', async ({ page }) => {
+  test('water summary and week review card are visible', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    await expect(page.getByText('Water', { exact: true })).toBeVisible();
+    await expect(dashboard.waterProgress).toBeVisible();
     await expect(page.getByText('This week', { exact: true })).toBeVisible();
   });
 
-  test('the "Full plan" link on the Next up card opens the calendar', async ({ page }) => {
+  test('the "Open meal plan" link on the Meals card opens the calendar', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
 
-    await expect(page.getByText('Next up', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Meals', level: 2 })).toBeVisible();
     await dashboard.fullPlanLink.click();
     await expect(page).toHaveURL('/diet-planner/calendar');
   });

@@ -13,6 +13,8 @@ export interface MacroBarProps {
   /** Override the right-aligned "value / target unit" text. */
   valueText?: string;
   loading?: boolean;
+  /** Mark the end of the bar when the value passes the target; off for minimum goals such as protein and fibre. */
+  showOverflow?: boolean;
   className?: string;
 }
 
@@ -32,10 +34,11 @@ export function MacroBar({
   macro,
   valueText,
   loading = false,
+  showOverflow = true,
   className,
 }: MacroBarProps) {
   const pct = target > 0 ? Math.min(100, Math.max(0, (value / target) * 100)) : 0;
-  const over = target > 0 && value > target;
+  const over = showOverflow && target > 0 && value > target;
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>

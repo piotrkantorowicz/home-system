@@ -20,14 +20,11 @@ vi.mock('@modules/diet-planner/api/hooks/useMeals', () => ({
   useCreateMeal: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-vi.mock('@modules/diet-planner/components/dashboard/TodayHero', () => ({
-  TodayHero: () => <div data-testid="today-hero" />,
+vi.mock('@modules/diet-planner/components/dashboard/TodaySummary', () => ({
+  TodaySummary: () => <div data-testid="today-summary" />,
 }));
-vi.mock('@modules/diet-planner/components/dashboard/NextUpCard', () => ({
-  NextUpCard: () => <div data-testid="next-up" />,
-}));
-vi.mock('@modules/diet-planner/components/dashboard/WaterCard', () => ({
-  WaterCard: () => <div data-testid="water-card" />,
+vi.mock('@modules/diet-planner/components/dashboard/TodayMeals', () => ({
+  TodayMeals: () => <div data-testid="today-meals" />,
 }));
 vi.mock('@modules/diet-planner/components/dashboard/WeekReviewCard', () => ({
   WeekReviewCard: () => <div data-testid="week-review" />,
@@ -40,7 +37,7 @@ vi.mock('@modules/diet-planner/components/settings', () => ({
 }));
 
 describe('Dashboard', () => {
-  it('renders the Today screen with all four cards', async () => {
+  it('renders the Today screen with the summary, meals and week review', async () => {
     const Dashboard = (await import('./Dashboard')).default;
     render(
       <MemoryRouter>
@@ -49,9 +46,8 @@ describe('Dashboard', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'dashboard.today_title' })).toBeInTheDocument();
-    expect(screen.getByTestId('today-hero')).toBeInTheDocument();
-    expect(screen.getByTestId('next-up')).toBeInTheDocument();
-    expect(screen.getByTestId('water-card')).toBeInTheDocument();
+    expect(screen.getByTestId('today-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('today-meals')).toBeInTheDocument();
     expect(screen.getByTestId('week-review')).toBeInTheDocument();
   });
 });
