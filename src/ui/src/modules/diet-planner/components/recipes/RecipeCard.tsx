@@ -5,37 +5,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@shared/components/ui';
-import { cn } from '@shared/lib/utils';
+import { useFormat } from '@shared/hooks/useFormat';
 import { Clock, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { VisibilityBadge } from '../VisibilityBadge';
 
-type Macro = 'protein' | 'carbs' | 'fat';
+type NumLike = number | string | null | undefined;
 
 export interface RecipeCardData {
   id: string;
   name: string;
   servings: number | string;
-  prepTimeMinutes?: number | string | null;
+  prepTimeMinutes?: NumLike;
   visibility: string;
   canEdit: boolean;
   nutritionPerServing?: {
-    calories: number | string;
-    protein: number | string;
-    carbs: number | string;
-    fat: number | string;
+    calories: NumLike;
+    protein: NumLike;
+    carbs: NumLike;
+    fat: NumLike;
   } | null;
 }
 
-const n = (v: number | string | null | undefined): number =>
-  typeof v === 'number' ? v : Number(v ?? 0);
+const num = (v: NumLike): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const x = Number(v);
+  return Number.isFinite(x) ? x : null;
+};
 
-function dominant(r: RecipeCardData): Macro {
-  const p = r.nutritionPerServing;
-  const v = { protein: n(p?.protein), carbs: n(p?.carbs), fat: n(p?.fat) };
-  return (['protein', 'carbs', 'fat'] as const).reduce((a, b) => (v[b] > v[a] ? b : a));
+/** Share of energy from each macro (protein/carbs 4 kcal/g, fat 9 kcal/g); null when it cannot be computed. */
+function macroEnergyShares(
+  per: RecipeCardData['nutritionPerServing'],
+): { protein: number; carbs: number; fat: number } | null {
+  const protein = num(per?.protein);
+  const carbs = num(per?.carbs);
+  const fat = num(per?.fat);
+  if (protein === null || carbs === null || fat === null) return null;
+  const p = protein * 4;
+  const c = carbs * 4;
+  const f = fat * 9;
+  const total = p + c + f;
+  if (total <= 0) return null;
+  return { protein: (p / total) * 100, carbs: (c / total) * 100, fat: (f / total) * 100 };
 }
 
 export interface RecipeCardProps {
@@ -47,41 +60,39 @@ export interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
   const { t } = useTranslation();
-  const macro = dominant(recipe);
+  const fmt = useFormat();
   const per = recipe.nutritionPerServing;
+  const shares = macroEnergyShares(per);
+  const prep = num(recipe.prepTimeMinutes);
+  const servings = num(recipe.servings) ?? 1;
 
-  const strip: { key: 'kcal' | Macro; value: string; label: string }[] = [
-    { key: 'kcal', value: n(per?.calories).toFixed(0), label: 'kcal' },
-    { key: 'protein', value: n(per?.protein).toFixed(0), label: 'P' },
-    { key: 'carbs', value: n(per?.carbs).toFixed(0), label: 'C' },
-    { key: 'fat', value: n(per?.fat).toFixed(0), label: 'F' },
-  ];
+  const meta = [
+    prep !== null && prep > 0 ? t('recipes.prep_minutes', { count: prep }) : null,
+    t('recipes.servings', { count: servings }),
+  ].filter((x): x is string => x !== null);
 
   return (
     <div
       role="listitem"
       aria-label={recipe.name}
-      className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px relative flex flex-col overflow-hidden border shadow-sm focus-within:ring-2"
+      className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px relative flex flex-col gap-2.5 border p-4 shadow-sm focus-within:ring-2"
     >
-      <div
-        className="h-132px relative"
-        style={{
-          background: `linear-gradient(140deg, color-mix(in oklab, var(--color-${macro}) 45%, transparent), color-mix(in oklab, var(--color-${macro}) 12%, transparent))`,
-        }}
-      >
-        {recipe.prepTimeMinutes ? (
-          <span className="bg-card rounded-8px text-11px absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 font-semibold shadow-sm">
-            <Clock className="size-3" />
-            {n(recipe.prepTimeMinutes)} {t('recipes.prep_time')}
-          </span>
-        ) : null}
-        <div className="absolute top-2.5 right-2.5 z-10">
+      <div className="flex items-start justify-between gap-2">
+        <Link
+          to={`/diet-planner/recipes/${recipe.id}`}
+          className="after:rounded-22px line-clamp-2 text-[14.5px] font-bold after:absolute after:inset-0 focus:outline-none"
+          onMouseEnter={onPrefetch}
+          onFocus={onPrefetch}
+        >
+          {recipe.name}
+        </Link>
+        <div className="relative z-10 -mt-2 -mr-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
                 aria-label={t('common.actions')}
-                className="bg-card grid size-11 place-items-center rounded-full shadow-sm"
+                className="text-muted-foreground hover:text-foreground grid size-11 place-items-center rounded-full"
               >
                 <MoreVertical className="size-4" />
               </button>
@@ -113,43 +124,40 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 p-4">
-        <div>
-          <Link
-            to={`/diet-planner/recipes/${recipe.id}`}
-            className="after:rounded-22px text-[14.5px] font-bold after:absolute after:inset-0 focus:outline-none"
-            onMouseEnter={onPrefetch}
-            onFocus={onPrefetch}
-          >
-            {recipe.name}
-          </Link>
-          <div className="text-muted-foreground text-11-5px flex items-center gap-2">
-            {t('recipes.servings', { count: n(recipe.servings) })}
-            <VisibilityBadge visibility={recipe.visibility} />
-          </div>
-        </div>
+      <div className="text-muted-foreground text-11-5px flex flex-wrap items-center gap-2">
+        {prep !== null && prep > 0 ? <Clock className="size-3" aria-hidden /> : null}
+        <span>{meta.join(' · ')}</span>
+        {recipe.visibility === 'Household' ? null : (
+          <VisibilityBadge visibility={recipe.visibility} />
+        )}
+      </div>
 
-        <div className="grid grid-cols-4 gap-1.5">
-          {strip.map((cell) => (
-            <div
-              key={cell.key}
-              className={cn(
-                'rounded-9px p-1.5 text-center',
-                cell.key === 'kcal' && 'bg-secondary border-border border',
-              )}
-              style={
-                cell.key === 'kcal'
-                  ? undefined
-                  : {
-                      background: `color-mix(in oklab, var(--color-${cell.key}) 12%, transparent)`,
-                    }
-              }
-            >
-              <div className="tnum text-13px font-bold">{cell.value}</div>
-              <div className="text-muted-foreground text-9-5px">{cell.label}</div>
-            </div>
-          ))}
+      <div className="tnum text-[22px] leading-none font-bold">
+        {fmt.energy(num(per?.calories))}
+      </div>
+
+      {shares ? (
+        <div
+          role="img"
+          aria-label={t('recipes.macro_bar_aria', {
+            protein: Math.round(shares.protein),
+            carbs: Math.round(shares.carbs),
+            fat: Math.round(shares.fat),
+          })}
+          className="bg-muted flex h-2 overflow-hidden rounded-full"
+        >
+          <span className="bg-protein" style={{ width: `${String(shares.protein)}%` }} />
+          <span className="bg-carbs" style={{ width: `${String(shares.carbs)}%` }} />
+          <span className="bg-fat" style={{ width: `${String(shares.fat)}%` }} />
         </div>
+      ) : null}
+
+      <div className="text-text-2 text-12px tnum">
+        {t('recipes.macro_line', {
+          protein: fmt.grams(num(per?.protein)),
+          carbs: fmt.grams(num(per?.carbs)),
+          fat: fmt.grams(num(per?.fat)),
+        })}
       </div>
     </div>
   );

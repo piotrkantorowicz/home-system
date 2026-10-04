@@ -25,13 +25,16 @@ import {
   Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
+import { cn } from '@shared/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-type Filter = 'all' | 'high_protein' | 'quick';
+type Filter = 'all' | 'mine' | 'high_protein' | 'quick';
+
+const DOT = { protein: 'bg-protein', carbs: 'bg-carbs', fat: 'bg-fat' } as const;
 
 const n = (v: number | string | null | undefined): number =>
   typeof v === 'number' ? v : Number(v ?? 0);
@@ -51,13 +54,8 @@ export default function RecipeList() {
     setSearch,
     update,
   } = useListLocation();
-  const onlyMine = params.get('mine') === 'true';
-  const filter: Filter =
-    params.get('filter') === 'high_protein'
-      ? 'high_protein'
-      : params.get('filter') === 'quick'
-        ? 'quick'
-        : 'all';
+  const raw = params.get('filter');
+  const filter: Filter = raw === 'mine' || raw === 'high_protein' || raw === 'quick' ? raw : 'all';
   const setFilter = (filter: Filter) => {
     update({ filter: filter === 'all' ? null : filter, page: null });
   };
@@ -71,20 +69,16 @@ export default function RecipeList() {
 
   const { data, isLoading, error } = useRecipes({
     search: debouncedSearch,
-    onlyMine,
+    onlyMine: filter === 'mine',
+    onlyHighProtein: filter === 'high_protein',
+    onlyQuick: filter === 'quick',
     page,
     pageSize,
   });
   const deleteMutation = useDeleteRecipe();
 
   const items = (data?.items ?? []) as RecipeCardData[];
-  const filtered =
-    filter === 'high_protein'
-      ? items.filter((recipe) => n(recipe.nutritionPerServing?.protein) >= 20)
-      : filter === 'quick'
-        ? items.filter((recipe) => n(recipe.prepTimeMinutes) > 0 && n(recipe.prepTimeMinutes) <= 20)
-        : items;
-  const hasFilters = !!search || onlyMine || filter !== 'all';
+  const hasFilters = !!search || filter !== 'all';
 
   const handleDelete = async () => {
     if (!toDelete) return;
@@ -127,44 +121,39 @@ export default function RecipeList() {
           />
         </div>
 
-        <button
-          type="button"
-          aria-pressed={onlyMine}
-          onClick={() => {
-            update({ mine: onlyMine ? null : 'true', page: null });
-          }}
-          className={
-            onlyMine
-              ? 'bg-accent text-accent-foreground text-12px inline-flex h-8 items-center gap-1.5 rounded-full px-3 font-semibold'
-              : 'bg-secondary border-border text-text-2 hover:text-foreground text-12px inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-semibold'
-          }
-        >
-          {t('recipes.my_recipes')}
-          {onlyMine ? <span aria-hidden>×</span> : null}
-        </button>
-
         <SegmentedControl
-          className="ml-auto"
           label={t('recipes.filter_label')}
           value={filter}
           onChange={setFilter}
           options={[
             { value: 'all', label: t('recipes.filter_all') },
+            { value: 'mine', label: t('recipes.filter_mine') },
             { value: 'high_protein', label: t('recipes.filter_high_protein') },
             { value: 'quick', label: t('recipes.filter_quick') },
           ]}
         />
+        <ul
+          aria-label={t('recipes.legend_label')}
+          className="text-muted-foreground text-12px ml-auto flex items-center gap-3"
+        >
+          {(['protein', 'carbs', 'fat'] as const).map((macro) => (
+            <li key={macro} className="flex items-center gap-1.5">
+              <span className={cn(DOT[macro], 'size-2 rounded-full')} aria-hidden />
+              {t(`recipes.legend_${macro}`)}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {error ? <Banner variant="error">{error.message}</Banner> : null}
 
       {isLoading ? (
-        <div className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))]">
+        <div className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="rounded-22px h-[264px]" />
+            <Skeleton key={i} className="rounded-22px h-[170px]" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : items.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title={t('recipes.no_recipes_found')}
@@ -174,7 +163,7 @@ export default function RecipeList() {
               ? {
                   label: t('products.clear_filters'),
                   onClick: () => {
-                    update({ search: null, mine: null, filter: null, page: null });
+                    update({ search: null, filter: null, page: null });
                   },
                 }
               : canCreate
@@ -185,9 +174,9 @@ export default function RecipeList() {
       ) : (
         <div
           role="list"
-          className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(268px,1fr))]"
+          className="gap-18px grid [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]"
         >
-          {filtered.map((recipe) => (
+          {items.map((recipe) => (
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
@@ -202,7 +191,7 @@ export default function RecipeList() {
           {canCreate ? (
             <Link
               to="/diet-planner/recipes/new"
-              className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-22px flex min-h-[200px] flex-col items-center justify-center gap-2 border border-dashed transition-colors"
+              className="border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded-22px flex min-h-[170px] flex-col items-center justify-center gap-2 border border-dashed transition-colors"
             >
               <span className="bg-accent text-accent-foreground grid size-11 place-items-center rounded-2xl">
                 <Plus className="size-5" />
