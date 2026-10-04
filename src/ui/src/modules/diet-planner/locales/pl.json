@@ -340,7 +340,7 @@
   },
   "shopping_list": {
     "title": "Lista Zakupów",
-    "subtitle": "Zagregowane składniki z zaplanowanych posiłków — modyfikacje są ignorowane.",
+    "subtitle": "Z posiłków zaplanowanych {{range}}",
     "shared_with": "Udostępniona: {{household}}",
     "from": "Od",
     "to": "Do",
@@ -356,7 +356,15 @@
     "copied": "Lista zakupów skopiowana",
     "copy_failed": "Nie udało się skopiować do schowka",
     "export_csv": "Eksport CSV",
-    "export_json": "Eksport JSON"
+    "export_json": "Eksport JSON",
+    "subtitle_shared": "Udostępniona: {{household}} · z posiłków zaplanowanych {{range}}",
+    "more": "Więcej akcji",
+    "progress": "Kupiono {{done}} z {{total}}",
+    "bought": "Kupione · {{count}}",
+    "uncheck_all": "Odznacz wszystko",
+    "check_failed": "Nie udało się zapisać zmiany. Nie została zapisana.",
+    "load_failed": "Nie udało się wczytać listy zakupów.",
+    "retry": "Spróbuj ponownie"
   },
   "import_wizard": {
     "title": "Importuj plan",

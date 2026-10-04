@@ -1,27 +1,34 @@
-import { useShoppingList } from '@modules/diet-planner/api/hooks/useShoppingList';
+import {
+  useClearShoppingChecks,
+  useSetShoppingCheck,
+  useShoppingList,
+} from '@modules/diet-planner/api/hooks/useShoppingList';
 import { useHousehold } from '@modules/household';
 import {
-  Badge,
+  Banner,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  Checkbox,
   DatePicker,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   EmptyState,
   Label,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  PageContainer,
+  PageHeader,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { Clipboard, Download, FileJson, ShoppingCart } from 'lucide-react';
+import { useFormat } from '@shared/hooks/useFormat';
+import { CalendarDays, Clipboard, Download, Ellipsis, FileJson, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import type { ShoppingListItemDto } from '@modules/diet-planner/api/hooks/useShoppingList';
 
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
@@ -68,30 +75,47 @@ function csvEscape(value: string) {
 export default function ShoppingList() {
   const { t } = useTranslation();
   const toast = useToast();
+  const { quantity, dayRange } = useFormat();
   const { household } = useHousehold();
   const defaultRange = getDefaultRange();
 
   const [draftFrom, setDraftFrom] = useState(defaultRange.from);
   const [draftTo, setDraftTo] = useState(defaultRange.to);
   const [appliedRange, setAppliedRange] = useState(defaultRange);
-  const [tablePage, setTablePage] = useState(1);
-  const [tablePageSize, setTablePageSize] = useState(25);
+  const [rangeOpen, setRangeOpen] = useState(false);
 
-  const { data, isLoading } = useShoppingList({
-    from: appliedRange.from,
-    to: appliedRange.to,
-  });
+  const { data, isLoading, isError, refetch } = useShoppingList(appliedRange);
+  const setCheck = useSetShoppingCheck(appliedRange);
+  const clearChecks = useClearShoppingChecks(appliedRange);
 
   const items = data ?? [];
-
-  const pageStart = (tablePage - 1) * tablePageSize;
-  const pagedItems = items.slice(pageStart, pageStart + tablePageSize);
+  const todo = items.filter((i) => !i.isChecked);
+  const bought = items.filter((i) => i.isChecked);
+  const rangeInvalid = !draftFrom || !draftTo || draftFrom > draftTo;
 
   const handleApply = () => {
-    if (draftFrom && draftTo && draftFrom <= draftTo) {
-      setAppliedRange({ from: draftFrom, to: draftTo });
-      setTablePage(1);
-    }
+    if (rangeInvalid) return;
+    setAppliedRange({ from: draftFrom, to: draftTo });
+    setRangeOpen(false);
+  };
+
+  const toggle = (item: ShoppingListItemDto, isChecked: boolean) => {
+    setCheck.mutate(
+      { productId: item.productId, unit: item.unit, isChecked },
+      {
+        onError: () => {
+          toast.error(t('shopping_list.check_failed'));
+        },
+      },
+    );
+  };
+
+  const uncheckAll = () => {
+    clearChecks.mutate(undefined, {
+      onError: () => {
+        toast.error(t('shopping_list.check_failed'));
+      },
+    });
   };
 
   const handleCopy = async () => {
@@ -137,63 +161,143 @@ export default function ShoppingList() {
     );
   };
 
+  const renderRow = (item: ShoppingListItemDto) => (
+    <li key={`${item.productId}-${item.unit}`}>
+      <label
+        className="hover:bg-accent/40 flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg px-3"
+        data-testid="shopping-list-row"
+      >
+        <Checkbox
+          className="size-[22px]"
+          checked={item.isChecked}
+          onChange={(e) => {
+            toggle(item, e.target.checked);
+          }}
+        />
+        <span
+          className={`min-w-0 flex-1 truncate font-medium ${item.isChecked ? 'text-muted-foreground line-through' : ''}`}
+        >
+          {item.productName}
+        </span>
+        <span className="text-muted-foreground tabular-nums">
+          {quantity(Number(item.totalAmount), item.unit)}
+        </span>
+      </label>
+    </li>
+  );
+
   return (
-    <div className="animate-fade-in-up mx-auto max-w-5xl p-8 lg:p-10">
-      <div className="mb-8">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <div className="rounded-xl bg-emerald-500/10 p-2.5">
-            <ShoppingCart className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('shopping_list.title')}</h1>
-          {household && (
-            <Badge variant="secondary" data-testid="shopping-list-household-badge">
-              {t('shopping_list.shared_with', { household: household.name })}
-            </Badge>
-          )}
-        </div>
-        <p className="text-muted-foreground">{t('shopping_list.subtitle')}</p>
-      </div>
-
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap items-end gap-4">
-            <div>
-              <Label>{t('shopping_list.from')}</Label>
-              <DatePicker
-                testId="shopping-list-from"
-                value={draftFrom}
-                onChange={(v) => {
-                  setDraftFrom(v ?? '');
-                }}
-                className="w-44"
-              />
-            </div>
-            <div>
-              <Label>{t('shopping_list.to')}</Label>
-              <DatePicker
-                testId="shopping-list-to"
-                value={draftTo}
-                onChange={(v) => {
-                  setDraftTo(v ?? '');
-                }}
-                className="w-44"
-              />
-            </div>
-            <Button onClick={handleApply} disabled={!draftFrom || !draftTo || draftFrom > draftTo}>
-              {t('shopping_list.apply')}
+    <PageContainer width="narrow">
+      <PageHeader
+        title={t('shopping_list.title')}
+        subtitle={
+          household
+            ? t('shopping_list.subtitle_shared', {
+                household: household.name,
+                range: dayRange(appliedRange.from, appliedRange.to),
+              })
+            : t('shopping_list.subtitle', { range: dayRange(appliedRange.from, appliedRange.to) })
+        }
+        actions={
+          <>
+            <Popover open={rangeOpen} onOpenChange={setRangeOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" data-testid="shopping-list-range">
+                  <CalendarDays className="mr-2 size-4" />
+                  {dayRange(appliedRange.from, appliedRange.to)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 space-y-3">
+                <div>
+                  <Label>{t('shopping_list.from')}</Label>
+                  <DatePicker
+                    testId="shopping-list-from"
+                    value={draftFrom}
+                    onChange={(v) => {
+                      setDraftFrom(v ?? '');
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>{t('shopping_list.to')}</Label>
+                  <DatePicker
+                    testId="shopping-list-to"
+                    value={draftTo}
+                    onChange={(v) => {
+                      setDraftTo(v ?? '');
+                    }}
+                  />
+                </div>
+                {draftFrom && draftTo && draftFrom > draftTo ? (
+                  <p role="alert" className="text-destructive text-sm">
+                    {t('shopping_list.date_range_error')}
+                  </p>
+                ) : null}
+                <Button className="w-full" onClick={handleApply} disabled={rangeInvalid}>
+                  {t('shopping_list.apply')}
+                </Button>
+              </PopoverContent>
+            </Popover>
+            <Button
+              variant="outline"
+              disabled={items.length === 0}
+              onClick={() => {
+                void handleCopy();
+              }}
+              data-testid="shopping-list-copy"
+            >
+              <Clipboard className="mr-2 size-4" />
+              {t('shopping_list.copy')}
             </Button>
-          </div>
-          {draftFrom && draftTo && draftFrom > draftTo && (
-            <p role="alert" className="text-destructive mt-2 text-sm">
-              {t('shopping_list.date_range_error')}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={t('shopping_list.more')}
+                  data-testid="shopping-list-more"
+                >
+                  <Ellipsis className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={items.length === 0}
+                  onSelect={handleExportCsv}
+                  data-testid="shopping-list-export-csv"
+                >
+                  <Download />
+                  {t('shopping_list.export_csv')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={items.length === 0}
+                  onSelect={handleExportJson}
+                  data-testid="shopping-list-export-json"
+                >
+                  <FileJson />
+                  {t('shopping_list.export_json')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
-      {isLoading ? (
-        <div className="text-muted-foreground flex items-center justify-center py-16">
-          {t('common.loading')}
+      {isError ? (
+        <Banner
+          variant="error"
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel={t('shopping_list.retry')}
+        >
+          {t('shopping_list.load_failed')}
+        </Banner>
+      ) : isLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          <Skeleton className="h-[52px]" />
+          <Skeleton className="h-[52px]" />
+          <Skeleton className="h-[52px]" />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
@@ -202,79 +306,49 @@ export default function ShoppingList() {
           description={t('shopping_list.empty_desc')}
         />
       ) : (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">
-              {t('shopping_list.items_count', { count: items.length })}
-            </CardTitle>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  void handleCopy();
-                }}
-                data-testid="shopping-list-copy"
-              >
-                <Clipboard className="mr-2 h-4 w-4" />
-                {t('shopping_list.copy')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportCsv}
-                data-testid="shopping-list-export-csv"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {t('shopping_list.export_csv')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportJson}
-                data-testid="shopping-list-export-json"
-              >
-                <FileJson className="mr-2 h-4 w-4" />
-                {t('shopping_list.export_json')}
-              </Button>
+        <>
+          <div className="mb-4" data-testid="shopping-list-progress">
+            <p className="text-muted-foreground mb-1.5 text-sm">
+              {t('shopping_list.progress', { done: bought.length, total: items.length })}
+            </p>
+            <div
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={items.length}
+              aria-valuenow={bought.length}
+              aria-label={t('shopping_list.progress', { done: bought.length, total: items.length })}
+              className="bg-muted h-1.5 overflow-hidden rounded-full"
+            >
+              <div
+                className="bg-primary h-full"
+                style={{ width: `${String((bought.length / items.length) * 100)}%` }}
+              />
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30">
-                  <TableHead>{t('shopping_list.product')}</TableHead>
-                  <TableHead className="text-right">{t('shopping_list.amount')}</TableHead>
-                  <TableHead>{t('shopping_list.unit')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pagedItems.map((item) => (
-                  <TableRow key={`${item.productId}-${item.unit}`}>
-                    <TableCell className="font-medium">{item.productName}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatAmount(Number(item.totalAmount))}
-                    </TableCell>
-                    <TableCell>{item.unit}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <div className="px-6 pb-4">
-            <Pagination
-              page={tablePage}
-              pageSize={tablePageSize}
-              totalCount={items.length}
-              onPageChange={setTablePage}
-              onPageSizeChange={(size) => {
-                setTablePageSize(size);
-                setTablePage(1);
-              }}
-            />
           </div>
-        </Card>
+          <ul>{todo.map(renderRow)}</ul>
+          {bought.length > 0 ? (
+            <section
+              className="mt-6"
+              aria-label={t('shopping_list.bought', { count: bought.length })}
+            >
+              <div className="mb-1 flex items-center justify-between px-3">
+                <h2 className="text-muted-foreground text-sm font-semibold">
+                  {t('shopping_list.bought', { count: bought.length })}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={uncheckAll}
+                  data-testid="shopping-list-uncheck-all"
+                >
+                  {t('shopping_list.uncheck_all')}
+                </Button>
+              </div>
+              <ul>{bought.map(renderRow)}</ul>
+            </section>
+          ) : null}
+        </>
       )}
-    </div>
+    </PageContainer>
   );
 }

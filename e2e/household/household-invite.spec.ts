@@ -71,6 +71,18 @@ test.describe('Household invitations', () => {
 
       await page.goto('/diet-planner/shopping-list');
       await expect(page.getByText(productName)).toBeVisible();
+
+      // The invitee ticks the item; the owner sees it as bought, then unticks everything.
+      const inviteeRow = inviteePage
+        .getByTestId('shopping-list-row')
+        .filter({ hasText: productName });
+      await inviteeRow.getByRole('checkbox').check();
+      await expect(inviteeRow.getByRole('checkbox')).toBeChecked();
+      await page.reload();
+      const ownerRow = page.getByTestId('shopping-list-row').filter({ hasText: productName });
+      await expect(ownerRow.getByRole('checkbox')).toBeChecked();
+      await page.getByTestId('shopping-list-uncheck-all').click();
+      await expect(ownerRow.getByRole('checkbox')).not.toBeChecked();
     } finally {
       // Cleanup: the invitee leaves so the next run starts from a clean slate.
       await ensureNoHousehold(inviteePage);
