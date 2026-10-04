@@ -1,5 +1,7 @@
+import { NavigationAccessContext } from '@shared/context/NavigationAccessContext';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import { NotificationListItem } from './NotificationListItem';
@@ -21,88 +23,89 @@ const baseNotification: NotificationDto = {
   readAt: null,
 };
 
-interface RenderOptions {
-  notification?: NotificationDto;
-  onActivate?: (id: string) => void;
-  selected?: boolean;
-  onToggleSelect?: (id: string, next: boolean) => void;
-}
-
-function renderItem(options: RenderOptions = {}) {
-  const {
-    notification = baseNotification,
-    onActivate = vi.fn(),
-    selected = false,
-    onToggleSelect = vi.fn(),
-  } = options;
-
-  return render(
-    <NotificationListItem
-      notification={notification}
-      onActivate={onActivate}
-      now={NOW}
-      selected={selected}
-      onToggleSelect={onToggleSelect}
-    />,
+function renderItem(
+  notification = baseNotification,
+  onActivate = vi.fn(),
+  restriction: { allowedPath: string; reason: string } | null = null,
+) {
+  render(
+    <NavigationAccessContext value={restriction}>
+      <MemoryRouter initialEntries={['/notifications']}>
+        <Routes>
+          <Route
+            path="/notifications"
+            element={
+              <ul>
+                <NotificationListItem
+                  notification={notification}
+                  onActivate={onActivate}
+                  now={NOW}
+                />
+              </ul>
+            }
+          />
+          <Route path="/diet-planner" element={<div>today-page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </NavigationAccessContext>,
   );
+  return onActivate;
 }
 
 describe('NotificationListItem', () => {
-  it('renders the title and body', () => {
+  it('is one button holding the title, body and action, with no nested controls', () => {
     renderItem();
-
-    expect(screen.getByText('Time for lunch')).toBeInTheDocument();
-    expect(screen.getByText('Lunch is starting')).toBeInTheDocument();
-  });
-
-  it('marks unread items with aria-pressed=false and a label', () => {
-    renderItem();
-
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-pressed', 'false');
-    expect(button).toHaveAccessibleName('inbox.mark_read_aria');
+    expect(button).toHaveTextContent('Time for lunch');
+    expect(button).toHaveTextContent('Lunch is starting');
+    expect(button).toHaveTextContent('actions.open_today');
+    expect(button.querySelector('button, a, input')).toBeNull();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
-  it('marks read items with aria-pressed=true', () => {
-    renderItem({ notification: { ...baseNotification, readAt: '2026-05-01T11:30:00Z' } });
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+  it('shows an unread dot only while unread', () => {
+    renderItem();
+    expect(screen.getByRole('img', { name: 'inbox.unread_aria' })).toBeInTheDocument();
   });
 
-  it('calls onActivate with the id when an unread row is clicked', async () => {
-    const onActivate = vi.fn();
-    renderItem({ onActivate });
+  it('keeps read items legible: no strikethrough, no dimming, no dot', () => {
+    renderItem({ ...baseNotification, readAt: '2026-05-01T11:30:00Z' });
+    expect(screen.queryByRole('img', { name: 'inbox.unread_aria' })).not.toBeInTheDocument();
+    const html = screen.getByRole('button').outerHTML;
+    expect(html).not.toMatch(/line-through|opacity-/);
+    expect(screen.getByText('Time for lunch')).toHaveClass('font-medium');
+  });
+
+  it('marks unread read and opens the destination on click', async () => {
+    const onActivate = renderItem();
     await userEvent.click(screen.getByRole('button'));
     expect(onActivate).toHaveBeenCalledWith(baseNotification.id);
+    expect(screen.getByText('today-page')).toBeInTheDocument();
   });
 
-  it('does not call onActivate when an already-read row is clicked', async () => {
-    const onActivate = vi.fn();
-    renderItem({
-      notification: { ...baseNotification, readAt: '2026-05-01T11:30:00Z' },
-      onActivate,
-    });
+  it('opens the destination of a read item without marking it read again', async () => {
+    const onActivate = renderItem({ ...baseNotification, readAt: '2026-05-01T11:30:00Z' });
     await userEvent.click(screen.getByRole('button'));
     expect(onActivate).not.toHaveBeenCalled();
+    expect(screen.getByText('today-page')).toBeInTheDocument();
   });
 
   it('responds to keyboard activation (Enter)', async () => {
-    const onActivate = vi.fn();
-    renderItem({ onActivate });
-    const button = screen.getByRole('button');
-    button.focus();
+    const onActivate = renderItem();
+    screen.getByRole('button').focus();
     await userEvent.keyboard('{Enter}');
     expect(onActivate).toHaveBeenCalledWith(baseNotification.id);
   });
 
-  it('disables the checkbox when the row is already read', () => {
-    renderItem({ notification: { ...baseNotification, readAt: '2026-05-01T11:30:00Z' } });
-    expect(screen.getByRole('checkbox')).toBeDisabled();
-  });
-
-  it('toggles selection through the checkbox', async () => {
-    const onToggleSelect = vi.fn();
-    renderItem({ onToggleSelect });
-    await userEvent.click(screen.getByRole('checkbox'));
-    expect(onToggleSelect).toHaveBeenCalledWith(baseNotification.id, true);
+  it('hides the action and does not navigate when the destination is not authorized', async () => {
+    const onActivate = renderItem(baseNotification, vi.fn(), {
+      allowedPath: '/household',
+      reason: 'Join a household first',
+    });
+    const button = screen.getByRole('button');
+    expect(button).not.toHaveTextContent('actions.open_today');
+    await userEvent.click(button);
+    expect(onActivate).toHaveBeenCalled();
+    expect(screen.queryByText('today-page')).not.toBeInTheDocument();
   });
 });

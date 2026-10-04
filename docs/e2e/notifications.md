@@ -28,22 +28,20 @@ Route: `/notifications`.
   list, asserts the `h1` "Notifications" (`{ name: 'Notifications', level: 1 }`
   — the empty-state's own "No notifications yet" is also a heading and matches
   a loose substring) and the empty-state text.
-- **`clicking an unread row marks it read`** — a **stateful** list mock
-  (returns `readAt` set once the `POST .../read` was called, so the mutation's
-  `onSettled` refetch doesn't revert the optimistic update). The row button is
-  located via its stable title text (`getByText('Time for lunch').locator('xpath=ancestor::button[1]')`)
-  — `NotificationListItem` drops the button's `aria-label` once read, so a
-  name-scoped role locator would stop matching the instant the click lands.
+- **`opening an unread item marks it read`** — a **stateful** list mock
+  (returns `readAt` set once the `POST .../read` was called). Each item is one
+  button (located by its title) with an `Unread` dot; opening it marks it read
+  and navigates to its destination, so the test polls for the read POST.
 
 ## real-inbox.spec.ts — Real preferences and inbox
 
-`real preferences and meal-missed inbox support single and bulk read`:
+`real preferences and meal-missed inbox support reading items`:
 
 - Toggles **Real-time**, waits for the real preference PUT, reloads, and verifies the saved state.
 - Enables WebSocket delivery and creates a uniquely named meal slot, product, recipe, and three meals planned two hours ago in UTC.
 - Enables meal reminders with a one-minute missed grace period. Polls the real inbox API for three `MealMissed` notifications from the scheduler, outbox, and notification handler. No route mocks or test-support seed endpoint.
 - Opens the inbox, verifies three unread rows and the badge total, reads one, and verifies the reduced count and read state after reload.
-- Selects the remaining two rows, bulk marks them read, then reloads to verify all three read states and the count reduced by three.
+- Opens the remaining two unread rows (returning to the inbox after each navigation), then reloads to verify all three read and the count reduced by three. The checkbox multi-select was removed in #504.
 - Keeps existing notifications in the count baseline. Restores channel preferences, reminder settings, and the previous meal schedule; deletes created meals, recipe, and product. Notifications have no delete endpoint, so created rows remain read. Existing global teardown purges DietPlanner worker data.
 
 The scheduler must be enabled (`DietPlanner:DietReminderTick:Enabled=true`, default).

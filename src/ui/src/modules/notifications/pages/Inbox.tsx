@@ -1,22 +1,45 @@
-import { Banner, Button, Checkbox, EmptyState } from '@shared/components/ui';
-import { Inbox as InboxIcon } from 'lucide-react';
+import {
+  Banner,
+  Button,
+  EmptyState,
+  PageContainer,
+  PageHeader,
+  SegmentedControl,
+} from '@shared/components/ui';
+import { CheckCheck, Inbox as InboxIcon, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { useBulkMarkRead } from '../api/hooks/useBulkMarkRead';
+import { useMarkAllRead } from '../api/hooks/useMarkAllRead';
 import { useMarkRead } from '../api/hooks/useMarkRead';
 import { useNotifications } from '../api/hooks/useNotifications';
+import { useUnreadCount } from '../api/hooks/useUnreadCount';
+import { useUnreadNotifications } from '../api/hooks/useUnreadNotifications';
 import { NotificationListItem } from '../components/NotificationListItem';
+
+import type { NotificationDto } from '../api/hooks/useNotifications';
 
 const PAGE_SIZE = 20;
 
+type Filter = 'all' | 'unread';
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.toDateString() === b.toDateString();
+}
+
 export default function Inbox() {
   const { t } = useTranslation('notifications');
+  const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useNotifications({ page, pageSize: PAGE_SIZE });
   const markRead = useMarkRead();
-  const bulkMarkRead = useBulkMarkRead();
+  const markAll = useMarkAllRead();
+
+  // "All" pages on the server; "Unread" has no server filter, so it loads every unread row and pages locally.
+  const all = useNotifications({ page, pageSize: PAGE_SIZE, enabled: filter === 'all' });
+  const unread = useUnreadNotifications(filter === 'unread');
+  const { data: unreadCount } = useUnreadCount();
+  const unreadTotal = unreadCount ? Number(unreadCount.total) : 0;
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -28,64 +51,87 @@ export default function Inbox() {
     };
   }, []);
 
-  const items = data?.items ?? [];
-  const totalPages = Number(data?.totalPages ?? 0);
+  const active = filter === 'all' ? all : unread;
+  // Filtering on readAt lets a row leave the Unread view the moment it is marked read (optimistic update).
+  const unreadItems = (unread.data?.items ?? []).filter((n) => !n.readAt);
+  const items: NotificationDto[] =
+    filter === 'all'
+      ? (all.data?.items ?? [])
+      : unreadItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages =
+    filter === 'all'
+      ? Number(all.data?.totalPages ?? 0)
+      : Math.ceil(unreadItems.length / PAGE_SIZE);
 
-  const unreadIdsOnPage = items.filter((n) => !n.readAt).map((n) => n.id);
-
-  const [rawSelected, setSelected] = useState<Set<string>>(() => new Set());
-
-  // Always mask selection by what's currently visible — drops ids removed by
-  // pagination, refetch, or another tab marking the row read. Pure derived
-  // state, no extra effect needed.
-  const visibleUnread = new Set(unreadIdsOnPage);
-  const selected = new Set<string>();
-  rawSelected.forEach((id) => {
-    if (visibleUnread.has(id)) selected.add(id);
-  });
-
-  const allSelected = unreadIdsOnPage.length > 0 && selected.size === unreadIdsOnPage.length;
-  const partiallySelected = selected.size > 0 && !allSelected;
-
-  function toggleOne(id: string, next: boolean) {
-    setSelected((prev) => {
-      const out = new Set(prev);
-      if (next) out.add(id);
-      else out.delete(id);
-      return out;
-    });
+  function changeFilter(next: Filter) {
+    setFilter(next);
+    setPage(1);
   }
 
-  function toggleAll(next: boolean) {
-    setSelected(next ? new Set(unreadIdsOnPage) : new Set());
-  }
+  const groups = [
+    {
+      id: 'today',
+      label: t('inbox.group_today'),
+      rows: items.filter((n) => isSameDay(new Date(n.createdAt), now)),
+    },
+    {
+      id: 'earlier',
+      label: t('inbox.group_earlier'),
+      rows: items.filter((n) => !isSameDay(new Date(n.createdAt), now)),
+    },
+  ].filter((g) => g.rows.length > 0);
 
-  function clearSelection() {
-    setSelected(new Set());
-  }
-
-  async function applyBulkRead() {
-    if (selected.size === 0) return;
-    const ids = Array.from(selected);
-    try {
-      await bulkMarkRead.mutateAsync(ids);
-      clearSelection();
-    } catch {
-      // mutation hook reports error via state; nothing more to do here
-    }
-  }
+  const { isLoading, isError, refetch } = active;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8">
-      <header className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-26px font-bold tracking-tight">{t('inbox.title')}</h1>
-          <p className="text-muted-foreground mt-0.5 text-sm">{t('inbox.subtitle')}</p>
+    <PageContainer width="narrow">
+      <PageHeader
+        title={t('inbox.title')}
+        subtitle={
+          unreadTotal > 0
+            ? t('inbox.subtitle_unread', { count: unreadTotal })
+            : t('inbox.caught_up')
+        }
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={unreadTotal === 0 || markAll.isPending}
+              onClick={() => {
+                markAll.mutate();
+              }}
+            >
+              <CheckCheck className="size-4" aria-hidden />
+              {t('inbox.mark_all_read')}
+            </Button>
+            <Button asChild variant="secondary" size="sm">
+              <Link to="/diet-planner/settings/app" aria-label={t('inbox.settings_aria')}>
+                <Settings className="size-4" aria-hidden />
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
+      <div className="mb-4">
+        <SegmentedControl<Filter>
+          label={t('inbox.filter_label')}
+          value={filter}
+          onChange={changeFilter}
+          options={[
+            { value: 'all', label: t('inbox.filter_all') },
+            { value: 'unread', label: t('inbox.filter_unread', { count: unreadTotal }) },
+          ]}
+        />
+      </div>
+
+      {markAll.isError ? (
+        <div className="mb-4">
+          <Banner variant="error">{t('inbox.mark_all_error')}</Banner>
         </div>
-        <Button asChild variant="secondary" size="sm">
-          <Link to="/diet-planner/settings/app">{t('inbox.preferences_link')}</Link>
-        </Button>
-      </header>
+      ) : null}
 
       {isLoading && (
         <ul aria-busy="true" className="space-y-2">
@@ -103,62 +149,30 @@ export default function Inbox() {
 
       {!isLoading && !isError && items.length === 0 && (
         <div className="bg-card rounded-22px border">
-          <EmptyState
-            icon={InboxIcon}
-            title={t('inbox.empty_title')}
-            description={t('inbox.empty_body')}
-          />
+          {filter === 'unread' ? (
+            <EmptyState icon={InboxIcon} title={t('inbox.caught_up')} />
+          ) : (
+            <EmptyState
+              icon={InboxIcon}
+              title={t('inbox.empty_title')}
+              description={t('inbox.empty_body')}
+            />
+          )}
         </div>
       )}
 
-      {!isLoading && !isError && items.length > 0 && (
-        <>
-          {unreadIdsOnPage.length > 0 ? (
-            <div className="bg-accent rounded-13px mb-3 flex items-center gap-3 px-3 py-2">
-              <Checkbox
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = partiallySelected;
-                }}
-                aria-label={t('inbox.select_all_aria')}
-                onChange={(e) => {
-                  toggleAll(e.target.checked);
-                }}
-              />
-              {selected.size > 0 ? (
-                <>
-                  <span className="text-sm font-medium">
-                    {t('inbox.selected_count', { count: selected.size })}
-                  </span>
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearSelection}
-                      disabled={bulkMarkRead.isPending}
-                    >
-                      {t('inbox.cancel_selection')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => void applyBulkRead()}
-                      disabled={bulkMarkRead.isPending}
-                    >
-                      {t('inbox.mark_selected_read', { count: selected.size })}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <span className="text-muted-foreground text-sm">{t('inbox.select_hint')}</span>
-              )}
-            </div>
-          ) : null}
-
-          <ul className="space-y-2">
-            {items.map((n) =>
-              n.id ? (
+      {!isLoading &&
+        !isError &&
+        groups.map((g) => (
+          <section key={g.id} aria-labelledby={`inbox-${g.id}`} className="mb-6">
+            <h2
+              id={`inbox-${g.id}`}
+              className="text-muted-foreground text-11px mb-2 font-semibold tracking-wider uppercase"
+            >
+              {g.label}
+            </h2>
+            <ul className="space-y-2">
+              {g.rows.map((n) => (
                 <NotificationListItem
                   key={n.id}
                   notification={n}
@@ -166,47 +180,44 @@ export default function Inbox() {
                     markRead.mutate(id);
                   }}
                   now={now}
-                  selected={selected.has(n.id)}
-                  onToggleSelect={toggleOne}
                 />
-              ) : null,
-            )}
-          </ul>
+              ))}
+            </ul>
+          </section>
+        ))}
 
-          {totalPages > 1 && (
-            <nav
-              aria-label="Pagination"
-              className="mt-6 flex items-center justify-between gap-2 text-sm"
-            >
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => {
-                  setPage((p) => Math.max(1, p - 1));
-                }}
-              >
-                {t('inbox.previous_page')}
-              </Button>
-              <span className="text-muted-foreground tnum">
-                {t('inbox.page_indicator', { page, totalPages })}
-              </span>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => {
-                  setPage((p) => p + 1);
-                }}
-              >
-                {t('inbox.next_page')}
-              </Button>
-            </nav>
-          )}
-        </>
+      {!isLoading && !isError && totalPages > 1 && (
+        <nav
+          aria-label="Pagination"
+          className="mt-6 flex items-center justify-between gap-2 text-sm"
+        >
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => {
+              setPage((p) => Math.max(1, p - 1));
+            }}
+          >
+            {t('inbox.previous_page')}
+          </Button>
+          <span className="text-muted-foreground tnum">
+            {t('inbox.page_indicator', { page, totalPages })}
+          </span>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => {
+              setPage((p) => p + 1);
+            }}
+          >
+            {t('inbox.next_page')}
+          </Button>
+        </nav>
       )}
-    </main>
+    </PageContainer>
   );
 }

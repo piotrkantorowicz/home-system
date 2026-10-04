@@ -24,7 +24,7 @@ test.describe('Notifications inbox', () => {
     await expect(page.getByText(/no notifications yet/i)).toBeVisible();
   });
 
-  test('clicking an unread row marks it read', async ({ page }) => {
+  test('opening an unread item marks it read', async ({ page }) => {
     const id = '11111111-1111-1111-1111-111111111111';
     let readCalled = false;
 
@@ -60,16 +60,10 @@ test.describe('Notifications inbox', () => {
 
     await page.goto('/notifications');
 
-    // NotificationListItem's row button only carries an accessible name
-    // ("Mark as read") while unread — once read, aria-label is removed
-    // entirely (it becomes a disabled, unlabeled control). A name-scoped
-    // role locator would stop matching the instant the click succeeds, so
-    // anchor on the notification's own title text instead, which is stable
-    // across the read/unread transition.
-    const row = page.getByText('Time for lunch').locator('xpath=ancestor::button[1]');
-    await expect(row).toHaveAttribute('aria-pressed', 'false');
+    // Each item is one button; opening it marks it read and goes to its destination (Today).
+    const row = page.getByRole('button', { name: /Time for lunch/ });
+    await expect(row.getByRole('img', { name: 'Unread' })).toBeVisible();
     await row.click();
-    await expect(row).toHaveAttribute('aria-pressed', 'true');
-    expect(readCalled).toBe(true);
+    await expect.poll(() => readCalled, { timeout: 3000 }).toBe(true);
   });
 });

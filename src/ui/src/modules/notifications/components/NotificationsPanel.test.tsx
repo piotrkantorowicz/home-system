@@ -110,7 +110,7 @@ describe('NotificationsPanel', () => {
   it('marks an unread notification as read when its row is activated', async () => {
     renderPanel();
     await userEvent.click(screen.getByRole('button', { name: 'panel.open_aria' }));
-    await userEvent.click(screen.getByRole('button', { name: 'inbox.mark_read_aria' }));
+    await userEvent.click(screen.getByRole('button', { name: /Time for lunch/ }));
     expect(mutateMock).toHaveBeenCalledWith(sampleItem.id);
   });
 });

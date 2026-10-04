@@ -105,6 +105,7 @@ export function NotificationsPanel() {
                       markRead.mutate(id);
                     }}
                     now={now}
+                    onNavigate={close}
                   />
                 ) : null,
               )}
