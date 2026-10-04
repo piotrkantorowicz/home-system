@@ -1,8 +1,12 @@
-import { useCreateMeal } from '@modules/diet-planner/api/hooks/useMeals';
+import { goalsOptions } from '@modules/diet-planner/api/hooks/useGoals';
+import { useCreateMeal, useMeals } from '@modules/diet-planner/api/hooks/useMeals';
+import { productOptions } from '@modules/diet-planner/api/hooks/useProducts';
 import { recipeOptions, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
-import { VisibilityBadge } from '@modules/diet-planner/components/VisibilityBadge';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
-import { unitLabel } from '@modules/diet-planner/unitLabel';
+import { mealAccess } from '@modules/diet-planner/utils/householdAccess';
+import { macroEnergyShares } from '@modules/diet-planner/utils/macroEnergyShares';
+import { toVisibility } from '@modules/diet-planner/utils/visibility';
+import { useHousehold } from '@modules/household';
 import {
   Button,
   Card,
@@ -12,12 +16,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  PageContainer,
+  PageHeader,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
-import { cn, formatNumber } from '@shared/lib/utils';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { ChevronRight, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useFormat } from '@shared/hooks/useFormat';
+import { usePreferences } from '@shared/hooks/usePreferences';
+import { cn } from '@shared/lib/utils';
+import { useQueries, useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { Ellipsis, Minus, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -41,15 +53,31 @@ const MACROS = ['protein', 'carbs', 'fat', 'fiber'] as const;
 
 export default function RecipeDetail() {
   const { t } = useTranslation();
+  const fmt = useFormat();
+  const { prefs } = usePreferences();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: recipe } = useSuspenseQuery(recipeOptions(id ?? ''));
   const deleteMutation = useDeleteRecipe();
   const createMeal = useCreateMeal();
   const toast = useToast();
+  const { myRole, myPersonId, members } = useHousehold();
   const [planOpen, setPlanOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [servings, setServings] = useState<number | null>(null);
+
+  // The meals endpoint is bounded by date: read the whole current week, then keep this recipe.
+  const weekOpts = { weekStartsOn: prefs.weekStart === 'sunday' ? 0 : 1 } as const;
+  const today = new Date();
+  const weekFrom = format(startOfWeek(today, weekOpts), 'yyyy-MM-dd');
+  const weekTo = format(endOfWeek(today, weekOpts), 'yyyy-MM-dd');
+  const { data: weekMeals } = useMeals({ from: weekFrom, to: weekTo });
+  const { data: goals } = useQuery(goalsOptions());
+
+  // A product link is offered only when the caller can actually open the product (404 = not visible).
+  const productChecks = useQueries({
+    queries: (recipe?.ingredients ?? []).map((ing) => productOptions(ing.productId)),
+  });
 
   const baseServings = n(recipe?.servings) || 1;
   const shown = servings ?? baseServings;
@@ -59,13 +87,33 @@ export default function RecipeDetail() {
 
   if (!recipe) {
     return (
-      <div className="px-4 py-6 md:px-8">
+      <PageContainer>
         <p className="text-destructive">{t('recipe_detail.not_found')}</p>
-      </div>
+      </PageContainer>
     );
   }
 
   const per = recipe.nutritionPerServing;
+  const shares = macroEnergyShares(per);
+  const kcalTarget = goals?.dailyCalorieTarget ?? null;
+  const planned = (weekMeals ?? [])
+    .filter((m) => m.recipeId === recipe.id)
+    .sort(
+      (a, b) => a.date.localeCompare(b.date) || n(a.mealSlotSortOrder) - n(b.mealSlotSortOrder),
+    );
+  const canPlan = mealAccess(myRole, myPersonId ?? undefined, undefined).canPlan;
+  // The recipe only carries an auth subject, never a name: name the author only when it is the caller.
+  const author = recipe.isOwner
+    ? members.find((m) => m.personId === myPersonId)?.displayName
+    : undefined;
+  const prep = n(recipe.prepTimeMinutes);
+  const meta = [
+    prep > 0 ? t('recipes.prep_minutes', { count: prep }) : null,
+    t(`visibility.${toVisibility(recipe.visibility)}`),
+    author ? t('recipe_detail.by', { name: author }) : null,
+  ]
+    .filter((x): x is string => x !== null)
+    .join(' · ');
 
   const handleAddToPlan = async (data: {
     date: string;
@@ -91,89 +139,127 @@ export default function RecipeDetail() {
   };
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 md:px-8">
-      <nav className="text-muted-foreground text-12-5px flex items-center gap-1">
-        <Link to="/diet-planner/recipes" className="hover:text-foreground">
-          {t('recipes.title')}
-        </Link>
-        <ChevronRight className="size-3.5" />
-        <span className="text-text-2 font-semibold">{recipe.name}</span>
-      </nav>
-
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-26px font-bold">{recipe.name}</h1>
-          <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-sm">
-            <VisibilityBadge visibility={recipe.visibility} />
-            {recipe.prepTimeMinutes
-              ? `${String(n(recipe.prepTimeMinutes))} ${t('recipes.prep_time')} · `
-              : ''}
-            {t('recipes.servings', { count: shown })}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2.5">
-          <Button
-            size="xl"
-            onClick={() => {
-              setPlanOpen(true);
-            }}
-          >
-            {t('recipe_detail.add_to_plan')}
-          </Button>
-          {recipe.canEdit ? (
-            <>
-              <Button size="xl" variant="outline" asChild>
+    <PageContainer>
+      <PageHeader
+        title={recipe.name}
+        subtitle={meta}
+        breadcrumb={[
+          { label: t('recipes.title'), href: '/diet-planner/recipes' },
+          { label: recipe.name },
+        ]}
+        actions={
+          <>
+            {recipe.canEdit ? (
+              <Button variant="outline" asChild>
                 <Link to={`/diet-planner/recipes/${id ?? ''}/edit`}>
                   <Pencil className="size-4" />
                   {t('common.edit')}
                 </Link>
               </Button>
+            ) : null}
+            {recipe.canEdit ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label={t('common.actions')}>
+                    <Ellipsis className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => {
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 />
+                    {t('common.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+            {canPlan ? (
               <Button
-                size="xl"
-                variant="outline"
-                aria-label={t('common.delete')}
                 onClick={() => {
-                  setDeleteOpen(true);
+                  setPlanOpen(true);
                 }}
               >
-                <Trash2 className="text-destructive size-4" />
+                {t('recipe_detail.add_to_plan')}
               </Button>
-            </>
-          ) : null}
-        </div>
-      </div>
+            ) : null}
+          </>
+        }
+      />
 
-      <div className="gap-18px grid items-start lg:grid-cols-3">
+      <div className="grid items-start gap-5 lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
           <div className="flex flex-col gap-6 p-6">
             {recipe.description ? (
               <p className="text-text-2 text-13px leading-relaxed">{recipe.description}</p>
             ) : null}
 
-            <div>
-              <div className="text-15px mb-2 font-bold">{t('recipe_detail.ingredients')}</div>
-              <div className="border-border rounded-16px overflow-hidden border">
-                <div className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-3 py-2 font-semibold uppercase">
-                  <span>{t('recipe_detail.table.product')}</span>
-                  <span className="text-right">{t('recipe_detail.table.amount')}</span>
-                </div>
-                {recipe.ingredients.map((ing) => (
-                  <div
-                    key={ing.id}
-                    className="border-border text-12-5px grid grid-cols-[minmax(0,1fr)_auto] gap-4 border-t px-3 py-2"
+            <section>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h2 className="text-15px font-bold">{t('recipe_detail.ingredients')}</h2>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label={t('recipe_detail.decrease_servings')}
+                    onClick={() => {
+                      setServings(Math.max(1, shown - 1));
+                    }}
+                    className={cn(
+                      'border-border grid size-11 place-items-center rounded-full border',
+                      shown <= 1 && 'opacity-40',
+                    )}
+                    disabled={shown <= 1}
                   >
-                    <span className="font-semibold break-words">{ing.productName}</span>
-                    <span className="tnum text-right">
-                      {(n(ing.amount) * ratio).toFixed(1)} {unitLabel(ing.unit, t)}
-                    </span>
-                  </div>
-                ))}
+                    <Minus className="size-4" />
+                  </button>
+                  <span
+                    className="tnum min-w-20 text-center text-sm font-semibold"
+                    aria-live="polite"
+                  >
+                    {t('recipes.servings', { count: shown })}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t('recipe_detail.increase_servings')}
+                    onClick={() => {
+                      setServings(shown + 1);
+                    }}
+                    className="border-border grid size-11 place-items-center rounded-full border"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
               </div>
-            </div>
+              <ul className="border-border divide-border divide-y overflow-hidden rounded-2xl border">
+                {recipe.ingredients.map((ing, i) => (
+                  <li
+                    key={ing.id}
+                    className="text-13px flex items-center justify-between gap-4 px-3 py-2.5"
+                  >
+                    {productChecks[i]?.data ? (
+                      <Link
+                        to={`/diet-planner/products/${ing.productId}`}
+                        className="text-primary font-semibold break-words underline-offset-2 hover:underline"
+                      >
+                        {ing.productName}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold break-words">{ing.productName}</span>
+                    )}
+                    <span className="tnum text-text-2 shrink-0">
+                      {fmt.quantity(n(ing.amount) * ratio, ing.unit)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
             {steps.length > 0 ? (
-              <div>
-                <div className="text-15px mb-2 font-bold">{t('recipe_detail.method')}</div>
+              <section>
+                <h2 className="text-15px mb-2 font-bold">{t('recipe_detail.method')}</h2>
                 <ol className="flex flex-col gap-3">
                   {steps.map((step, i) => (
                     <li key={i} className="flex gap-3">
@@ -184,75 +270,77 @@ export default function RecipeDetail() {
                     </li>
                   ))}
                 </ol>
-              </div>
+              </section>
             ) : null}
           </div>
         </Card>
 
-        <div className="gap-18px flex flex-col">
+        <div className="flex flex-col gap-5">
           {per ? (
-            <Card className="p-22px flex flex-col gap-3">
+            <Card className="flex flex-col gap-3 p-5">
               <h2 className="text-15px font-bold">{t('recipe_detail.nutrition_per_serving')}</h2>
-              <div className="numeral text-34px leading-none font-bold">
-                {formatNumber(n(per.calories))}
-                <span className="text-muted-foreground text-12px ml-1 font-medium">kcal</span>
+              <div className="tnum text-[40px] leading-none font-bold">
+                {fmt.energy(n(per.calories))}
               </div>
+              {kcalTarget && kcalTarget > 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  {t('recipe_detail.of_your_day', {
+                    percent: Math.round((n(per.calories) / kcalTarget) * 100),
+                  })}
+                </p>
+              ) : null}
+              {shares ? (
+                <div
+                  role="img"
+                  aria-label={t('recipes.macro_bar_aria', {
+                    protein: Math.round(shares.protein),
+                    carbs: Math.round(shares.carbs),
+                    fat: Math.round(shares.fat),
+                  })}
+                  className="bg-muted flex h-2 overflow-hidden rounded-full"
+                >
+                  <span className="bg-protein" style={{ width: `${String(shares.protein)}%` }} />
+                  <span className="bg-carbs" style={{ width: `${String(shares.carbs)}%` }} />
+                  <span className="bg-fat" style={{ width: `${String(shares.fat)}%` }} />
+                </div>
+              ) : null}
               <dl className="divide-border divide-y">
-                {MACROS.map((m) => {
-                  const grams = per[m];
-                  return (
-                    <div key={m} className="flex justify-between gap-4 py-2.5 text-sm">
-                      <dt className="font-medium">{t(`nutrition_summary.${m}`)}</dt>
-                      <dd className="text-text-2 tnum">{n(grams).toFixed(1)} g</dd>
-                    </div>
-                  );
-                })}
+                {MACROS.map((m) => (
+                  <div key={m} className="flex justify-between gap-4 py-2.5 text-sm">
+                    <dt className="font-medium">{t(`nutrition_summary.${m}`)}</dt>
+                    <dd className="text-text-2 tnum">{fmt.grams(n(per[m]))}</dd>
+                  </div>
+                ))}
               </dl>
-              <p className="text-muted-foreground text-11px">
-                {t('recipe_detail.per_serving_note')}
-              </p>
+              {shown > 1 ? (
+                <p className="text-muted-foreground text-sm">
+                  {t('recipe_detail.all_servings', {
+                    count: shown,
+                    energy: fmt.energy(n(per.calories) * shown),
+                  })}
+                </p>
+              ) : null}
             </Card>
           ) : null}
 
-          <Card className="p-22px flex flex-col gap-3">
-            <div className="text-15px font-bold">{t('recipe_detail.servings_label')}</div>
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                aria-label={t('recipe_detail.decrease_servings')}
-                onClick={() => {
-                  setServings(Math.max(1, shown - 1));
-                }}
-                className={cn(
-                  'border-border rounded-12px grid size-11 place-items-center border',
-                  shown <= 1 && 'opacity-40',
-                )}
-                disabled={shown <= 1}
-              >
-                <Minus className="size-4" />
-              </button>
-              <span className="numeral text-22px font-bold">{shown}</span>
-              <button
-                type="button"
-                aria-label={t('recipe_detail.increase_servings')}
-                onClick={() => {
-                  setServings(shown + 1);
-                }}
-                className="border-border rounded-12px grid size-11 place-items-center border"
-              >
-                <Plus className="size-4" />
-              </button>
-            </div>
-            <p className="text-muted-foreground text-11px">{t('recipe_detail.scale_note')}</p>
-            {per && (
-              <p className="text-text-2 text-sm">
-                {t('recipe_detail.total_calories', {
-                  count: shown,
-                  calories: formatNumber(n(per.calories) * shown),
-                })}
-              </p>
-            )}
-          </Card>
+          {planned.length > 0 ? (
+            <Card className="flex flex-col gap-2 p-5" data-testid="recipe-plan-context">
+              <h2 className="text-15px font-bold">{t('recipe_detail.in_your_plan')}</h2>
+              <ul className="divide-border divide-y">
+                {planned.map((m) => (
+                  <li key={m.id}>
+                    <Link
+                      to={`/diet-planner/calendar?view=day&date=${m.date}`}
+                      className="hover:text-primary flex justify-between gap-3 py-2.5 text-sm"
+                    >
+                      <span className="font-medium">{fmt.dayShort(m.date)}</span>
+                      <span className="text-muted-foreground">{m.mealSlotName}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : null}
         </div>
       </div>
 
@@ -309,6 +397,6 @@ export default function RecipeDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

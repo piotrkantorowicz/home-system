@@ -5,6 +5,8 @@ import { http, HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
+import { HouseholdWrapper } from '../../../../test/utils/householdWrapper';
+
 import RecipeDetail from './RecipeDetail';
 
 import { server } from '@/test/mocks/server';
@@ -18,12 +20,10 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, values?: { count?: number; calories?: string }) =>
-      key === 'recipe_detail.total_calories'
-        ? `Total: ${String(values?.calories)} kcal for ${String(values?.count)}`
-        : key === 'common.unit.g'
-          ? 'g'
-          : key,
+    t: (key: string, values?: { count?: number; energy?: string }) =>
+      key === 'recipe_detail.all_servings'
+        ? `All ${String(values?.count)}: ${String(values?.energy)}`
+        : key,
     i18n: { language: 'en' },
   }),
 }));
@@ -36,7 +36,15 @@ function renderPage() {
         name: 'Oat bowl',
         servings: 2,
         isOwner: false,
-        ingredients: [{ id: 'ingredient-1', productName: 'Oats', amount: 100, unit: 'g' }],
+        ingredients: [
+          {
+            id: 'ingredient-1',
+            productId: 'product-1',
+            productName: 'Oats',
+            amount: 100,
+            unit: 'g',
+          },
+        ],
         nutritionPerServing: { calories: 200, protein: 10, carbs: 30, fat: 4, fiber: 0 },
       }),
     ),
@@ -44,14 +52,16 @@ function renderPage() {
   const Wrapper = createWrapper();
   return render(
     <Wrapper>
-      <ToastProvider>
-        <MemoryRouter initialEntries={['/recipes/recipe-1']}>
-          <Routes>
-            <Route path="/recipes/:id" element={<RecipeDetail />} />
-            <Route path="/diet-planner/calendar" element={<p>Meal plan destination</p>} />
-          </Routes>
-        </MemoryRouter>
-      </ToastProvider>
+      <HouseholdWrapper>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/recipes/recipe-1']}>
+            <Routes>
+              <Route path="/recipes/:id" element={<RecipeDetail />} />
+              <Route path="/diet-planner/calendar" element={<p>Meal plan destination</p>} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </HouseholdWrapper>
     </Wrapper>,
   );
 }
@@ -72,14 +82,14 @@ describe('Recipe detail', () => {
   it('scales ingredients and total calories while keeping one serving unchanged', async () => {
     renderPage();
     await screen.findByRole('heading', { name: 'Oat bowl' });
-    expect(screen.getByText('100.0 g')).toBeInTheDocument();
-    expect(screen.getByText('Total: 400 kcal for 2')).toBeInTheDocument();
+    expect(screen.getByText('100 g')).toBeInTheDocument();
+    expect(screen.getByText('All 2: 400 kcal')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'recipe_detail.increase_servings' }));
-    expect(screen.getByText('150.0 g')).toBeInTheDocument();
-    expect(screen.getByText('Total: 600 kcal for 3')).toBeInTheDocument();
-    expect(screen.getByText('200')).toBeInTheDocument();
-    expect(screen.getByText('10.0 g')).toBeInTheDocument();
-    expect(screen.getByText('0.0 g')).toBeInTheDocument();
+    expect(screen.getByText('150 g')).toBeInTheDocument();
+    expect(screen.getByText('All 3: 600 kcal')).toBeInTheDocument();
+    expect(screen.getByText('200 kcal')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   it('prefills a shared recipe and keeps the form on failure, then navigates after retry', async () => {
