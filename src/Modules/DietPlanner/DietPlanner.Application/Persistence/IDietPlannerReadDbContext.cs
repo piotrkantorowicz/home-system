@@ -2,6 +2,7 @@ namespace DietPlanner.Application.Persistence;
 
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Entities;
+using DietPlanner.Domain.Ledgers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -32,6 +33,8 @@ public interface IDietPlannerReadDbContext
     DbSet<HydrationConfig> HydrationConfigs { get; }
     /// <summary>Logged drinks.</summary>
     DbSet<WaterIntake> WaterIntakes { get; }
+    /// <summary>Shopping-list rows ticked as bought.</summary>
+    DbSet<ShoppingCheck> ShoppingChecks { get; }
     /// <summary>Weigh-ins.</summary>
     DbSet<WeightEntry> WeightEntries { get; }
 
