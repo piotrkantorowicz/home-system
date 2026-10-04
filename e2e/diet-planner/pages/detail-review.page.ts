@@ -11,11 +11,11 @@ export class DetailReviewPage {
   }
 
   async scaleRecipe() {
-    await expect(this.page.getByText('100.0 g', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('100 g', { exact: true })).toBeVisible();
     await this.page.getByRole('button', { name: 'Increase servings' }).click();
-    await expect(this.page.getByText('150.0 g', { exact: true })).toBeVisible();
+    await expect(this.page.getByText('150 g', { exact: true })).toBeVisible();
     await expect(this.page.getByText(/^50\s*kcal$/)).toBeVisible();
-    await expect(this.page.getByText('Total for 3 servings: 150 kcal')).toBeVisible();
+    await expect(this.page.getByText('All 3 servings: 150 kcal')).toBeVisible();
   }
 
   async planRecipe(name: string) {

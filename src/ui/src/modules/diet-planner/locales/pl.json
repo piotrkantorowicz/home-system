@@ -460,7 +460,6 @@
     "macro_distribution": "Rozkład Makroskładników (Na Porcję)",
     "ingredients": "Składniki",
     "instructions": "Instrukcje",
-    "total_calories": "Łącznie dla {{count}} porcji: {{calories}} kcal",
     "total_protein": "Całkowite Białko",
     "total_carbs": "Całkowite Węglowodany",
     "total_fat": "Całkowity Tłuszcz",
@@ -474,11 +473,12 @@
     },
     "add_to_plan": "Dodaj do planu",
     "method": "Sposób przygotowania",
-    "servings_label": "Porcje",
-    "scale_note": "Ilości składników skalują się automatycznie.",
-    "per_serving_note": "Wartości dla jednej porcji pozostają bez zmian przy skalowaniu składników.",
     "decrease_servings": "Zmniejsz liczbę porcji",
-    "increase_servings": "Zwiększ liczbę porcji"
+    "increase_servings": "Zwiększ liczbę porcji",
+    "by": "autor: {{name}}",
+    "of_your_day": "{{percent}}% Twojego dnia",
+    "all_servings": "Wszystkie porcje ({{count}}): {{energy}}",
+    "in_your_plan": "W Twoim planie w tym tygodniu"
   },
   "day_view": {
     "summary": {

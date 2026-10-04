@@ -201,9 +201,24 @@ export function formatMoney(
 
 export type ProductUnit = 'Gram' | 'Milliliter' | 'Piece' | (string & {});
 
+/** Ingredient and shopping-list units arrive as "g" / "ml" / "piece"; product units as "Gram" etc. */
+function canonicalUnit(unit: ProductUnit): ProductUnit {
+  switch (String(unit).toLowerCase()) {
+    case 'g':
+      return 'Gram';
+    case 'ml':
+      return 'Milliliter';
+    case 'piece':
+    case 'pcs':
+      return 'Piece';
+    default:
+      return unit;
+  }
+}
+
 /** API unit enums → display units: g · ml · pcs (pl: szt.). */
 export function unitLabel(unit: ProductUnit, count = 2, lang: Lang = 'en'): string {
-  switch (unit) {
+  switch (canonicalUnit(unit)) {
     case 'Gram':
       return 'g';
     case 'Milliliter':
@@ -218,10 +233,11 @@ export function unitLabel(unit: ProductUnit, count = 2, lang: Lang = 'en'): stri
 /** Amount with a sensible unit: 1200 g → "1.2 kg", 1000 ml → "1 L", 8 Piece → "8 pcs". Fractions are kept. */
 export function formatQuantity(
   amount: number | null | undefined,
-  unit: ProductUnit,
+  rawUnit: ProductUnit,
   prefs: FormatPrefs,
 ): string {
   if (!finite(amount)) return NO_VALUE;
+  const unit = canonicalUnit(rawUnit);
   if (unit === 'Gram' && Math.abs(amount) >= 1000)
     return `${grouped(amount / 1000, prefs, 0, 2)} kg`;
   if (unit === 'Milliliter' && Math.abs(amount) >= 1000)

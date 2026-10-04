@@ -10,6 +10,7 @@ import { Clock, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { macroEnergyShares } from '../../utils/macroEnergyShares';
 import { VisibilityBadge } from '../VisibilityBadge';
 
 type NumLike = number | string | null | undefined;
@@ -34,22 +35,6 @@ const num = (v: NumLike): number | null => {
   const x = Number(v);
   return Number.isFinite(x) ? x : null;
 };
-
-/** Share of energy from each macro (protein/carbs 4 kcal/g, fat 9 kcal/g); null when it cannot be computed. */
-function macroEnergyShares(
-  per: RecipeCardData['nutritionPerServing'],
-): { protein: number; carbs: number; fat: number } | null {
-  const protein = num(per?.protein);
-  const carbs = num(per?.carbs);
-  const fat = num(per?.fat);
-  if (protein === null || carbs === null || fat === null) return null;
-  const p = protein * 4;
-  const c = carbs * 4;
-  const f = fat * 9;
-  const total = p + c + f;
-  if (total <= 0) return null;
-  return { protein: (p / total) * 100, carbs: (c / total) * 100, fat: (f / total) * 100 };
-}
 
 export interface RecipeCardProps {
   recipe: RecipeCardData;
