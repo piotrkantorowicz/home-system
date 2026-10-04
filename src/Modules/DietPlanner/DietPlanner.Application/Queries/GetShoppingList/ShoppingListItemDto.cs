@@ -7,8 +7,10 @@ namespace DietPlanner.Application.Queries.GetShoppingList;
 /// <param name="ProductName">Display name of the product.</param>
 /// <param name="TotalAmount">Summed quantity in <paramref name="Unit"/> across all planned meals.</param>
 /// <param name="Unit">Unit the ingredients were specified in.</param>
+/// <param name="IsChecked">Whether a household member marked this row (product and unit, for this exact date range) as bought.</param>
 public sealed record ShoppingListItemDto(
     Guid ProductId,
     string ProductName,
     decimal TotalAmount,
-    string Unit);
+    string Unit,
+    bool IsChecked = false);

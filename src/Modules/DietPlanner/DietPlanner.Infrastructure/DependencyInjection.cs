@@ -61,6 +61,7 @@ public static partial class InfrastructureDependencyInjection
 
         // Meal-reminder ledger + read-side
         services.AddScoped<ISentMealReminderRepository, SentMealReminderRepository>();
+        services.AddScoped<IShoppingCheckRepository, ShoppingCheckRepository>();
         services.AddScoped<IMealReminderCandidateQueries, MealReminderCandidateQueries>();
 
         // Water-reminder ledger + read-side

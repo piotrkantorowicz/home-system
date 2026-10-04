@@ -2,6 +2,7 @@ namespace DietPlanner.Application.Queries.GetShoppingList;
 
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
+using DietPlanner.Domain.Ledgers;
 using DietPlanner.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Cqrs;
@@ -91,13 +92,25 @@ internal sealed class GetShoppingListQueryHandler(
             }
         }
 
+        var scopeId = roster.ScopeId;
+        var rangeFrom = ShoppingCheck.Bound(query.From, DateOnly.MinValue);
+        var rangeTo = ShoppingCheck.Bound(query.To, DateOnly.MaxValue);
+        var checkedRows = (await dbContext.ShoppingChecks
+            .AsNoTracking()
+            .Where(c => c.ScopeId == scopeId && c.RangeFrom == rangeFrom && c.RangeTo == rangeTo)
+            .Select(c => new { c.ProductId, c.Unit })
+            .ToListAsync(ct))
+            .Select(c => (c.ProductId, c.Unit))
+            .ToHashSet();
+
         return totals
             .Where(kvp => products.ContainsKey(kvp.Key.ProductId))
             .Select(kvp => new ShoppingListItemDto(
                 kvp.Key.ProductId.Value,
                 products[kvp.Key.ProductId].Name,
                 Math.Round(kvp.Value, 2),
-                kvp.Key.Unit))
+                kvp.Key.Unit,
+                checkedRows.Contains(kvp.Key)))
             .OrderBy(item => item.ProductName)
             .ThenBy(item => item.Unit)
             .ToList();
