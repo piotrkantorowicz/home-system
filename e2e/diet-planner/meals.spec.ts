@@ -185,7 +185,7 @@ test.describe('Calendar CRUD & Navigation', () => {
       const done = await readMeals();
       expect(done.find((meal) => meal.recipeName === planData.recipeNames[0])?.status).toBe('Done');
 
-      await calendar.dayAction('Record what was actually eaten').first().click();
+      await calendar.dayMealMenuAction('Record what was actually eaten');
       const override = page.getByRole('dialog', {
         name: 'What did you eat instead?',
       });
@@ -202,7 +202,7 @@ test.describe('Calendar CRUD & Navigation', () => {
       expect(actual?.status).toBe('Modified');
       await expect(calendar.dayEaten).toHaveText(String(Math.round(Number(actual?.calories))));
 
-      await calendar.dayAction('Revert to planned').click();
+      await calendar.dayMealMenuAction('Revert to planned');
       await expect(page.getByLabel('Planned', { exact: true })).toHaveCount(2);
       await page.reload();
       await expect(page.getByLabel('Planned', { exact: true })).toHaveCount(2);

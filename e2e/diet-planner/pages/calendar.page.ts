@@ -57,6 +57,15 @@ export class CalendarPage extends BasePage {
     return this.page.getByRole('button', { name, exact: true });
   }
 
+  /** Day view: open the overflow menu of the first meal row and pick an action (swap, reset, edit, delete). */
+  async dayMealMenuAction(action: string) {
+    await this.page
+      .getByRole('button', { name: /^actions for /i })
+      .first()
+      .click();
+    await this.page.getByRole('menuitem', { name: action, exact: true }).click();
+  }
+
   async openMealAction(weekday: string, slot: string, recipeName: string, action: string) {
     await this.cell(weekday, slot).getByRole('button', { name: recipeName }).click();
     await this.page.getByRole('menuitem', { name: action, exact: true }).click();
