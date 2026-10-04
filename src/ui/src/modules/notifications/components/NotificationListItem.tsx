@@ -1,6 +1,7 @@
-import { Checkbox } from '@shared/components/ui';
+import { useNavigationAccess } from '@shared/context/NavigationAccessContext';
 import { cn } from '@shared/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { formatTimeAgo } from '../utils/timeAgo';
 import { getTypeMeta } from '../utils/typeMeta';
@@ -9,83 +10,81 @@ import type { NotificationDto } from '../api/hooks/useNotifications';
 
 export interface NotificationListItemProps {
   notification: NotificationDto;
+  /** Called when an unread item is opened, so the caller can mark it read. */
   onActivate: (id: string) => void;
   now: Date;
-  selected?: boolean;
-  onToggleSelect?: (id: string, next: boolean) => void;
-  showSelect?: boolean;
+  /** Called after navigating to the item's destination (e.g. to close the panel it sits in). */
+  onNavigate?: () => void;
 }
 
+/** One notification: a single button that marks it read and opens its destination. */
 export function NotificationListItem({
   notification,
   onActivate,
   now,
-  selected = false,
-  onToggleSelect,
-  showSelect = true,
+  onNavigate,
 }: NotificationListItemProps) {
   const { t, i18n } = useTranslation('notifications');
+  const navigate = useNavigate();
+  const access = useNavigationAccess();
   const meta = getTypeMeta(notification.type);
   const Icon = meta.icon;
   const isUnread = !notification.readAt;
-  const id = notification.id;
+  // Only offer destinations the user may reach (the API still enforces access).
+  const destination =
+    meta.destination && access.canNavigate(meta.destination.href) ? meta.destination : undefined;
 
   function handleActivate() {
-    if (isUnread) onActivate(id);
+    if (isUnread) onActivate(notification.id);
+    if (destination) {
+      void navigate(destination.href);
+      onNavigate?.();
+    }
   }
 
   return (
-    <li
-      className={cn(
-        'border-border bg-card flex items-start gap-3 rounded-md border p-4 transition-opacity',
-        isUnread ? 'border-l-primary border-l-4' : 'opacity-60',
-      )}
-    >
-      {showSelect && onToggleSelect && (
-        <Checkbox
-          className="mt-1"
-          checked={selected}
-          disabled={!isUnread}
-          aria-label={t('inbox.select_row_aria')}
-          onChange={(e) => {
-            onToggleSelect(id, e.target.checked);
-          }}
-        />
-      )}
+    <li>
       <button
         type="button"
         onClick={handleActivate}
-        disabled={!isUnread}
-        aria-pressed={!isUnread}
-        aria-label={isUnread ? t('inbox.mark_read_aria') : undefined}
         className={cn(
-          'flex flex-1 items-start gap-3 text-left transition-colors',
-          'focus-visible:ring-primary rounded-sm focus-visible:ring-2 focus-visible:outline-none',
-          isUnread && 'hover:opacity-80',
+          'border-border bg-card rounded-16px flex w-full items-start gap-3 border p-3.5 text-left transition-colors',
+          'hover:bg-accent focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
         )}
       >
-        <Icon aria-hidden className="text-muted-foreground mt-0.5 size-5 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <p
+        <span className="bg-accent text-primary rounded-13px flex size-10 shrink-0 items-center justify-center">
+          <Icon aria-hidden className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-2">
+            <span
               className={cn(
-                'truncate text-sm',
-                isUnread
-                  ? 'text-foreground font-semibold'
-                  : 'text-muted-foreground font-medium line-through',
+                'text-foreground truncate text-sm',
+                isUnread ? 'font-bold' : 'font-medium',
               )}
             >
               {notification.title}
-            </p>
+            </span>
             <span className="text-muted-foreground shrink-0 text-xs">
               {notification.createdAt
                 ? formatTimeAgo(notification.createdAt, i18n.language, now)
                 : ''}
             </span>
-          </div>
-          <p className="text-muted-foreground mt-1 line-clamp-1 text-sm">{notification.body}</p>
-          <p className="text-muted-foreground mt-1 text-xs">{t(meta.labelKey)}</p>
-        </div>
+          </span>
+          <span className="text-text-2 mt-1 line-clamp-2 block text-sm">{notification.body}</span>
+          {destination ? (
+            <span className="text-primary mt-1 block text-xs font-semibold">
+              {t(destination.actionKey)}
+            </span>
+          ) : null}
+        </span>
+        {isUnread ? (
+          <span
+            role="img"
+            aria-label={t('inbox.unread_aria')}
+            className="bg-primary mt-1.5 size-2.5 shrink-0 rounded-full"
+          />
+        ) : null}
       </button>
     </li>
   );

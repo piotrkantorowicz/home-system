@@ -3,6 +3,7 @@ export const notificationsQueryKeys = {
     all: () => ['notifications'] as const,
     list: (params: { page: number; pageSize: number }) =>
       ['notifications', 'list', params] as const,
+    unreadList: () => ['notifications', 'list', 'unread'] as const,
     unreadCount: () => ['notifications', 'unread-count'] as const,
   },
   channelPreferences: {

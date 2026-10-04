@@ -2,7 +2,6 @@
   "inbox": {
     "title": "Notifications",
     "subtitle": "Your recent updates",
-    "preferences_link": "Channel preferences",
     "empty_title": "No notifications yet",
     "empty_body": "Once we send you something, it will show up here.",
     "loading": "Loading…",
@@ -11,13 +10,18 @@
     "previous_page": "Previous",
     "next_page": "Next",
     "page_indicator": "Page {{page}} of {{totalPages}}",
-    "mark_read_aria": "Mark as read",
-    "select_row_aria": "Select notification",
-    "select_all_aria": "Select all unread on this page",
-    "select_hint": "Select rows to mark them as read",
-    "selected_count": "{{count}} selected",
-    "cancel_selection": "Cancel",
-    "mark_selected_read": "Mark as read ({{count}})"
+    "subtitle_unread_one": "{{count}} unread",
+    "subtitle_unread_other": "{{count}} unread",
+    "caught_up": "You're all caught up.",
+    "filter_label": "Filter notifications",
+    "filter_all": "All",
+    "filter_unread": "Unread {{count}}",
+    "group_today": "Today",
+    "group_earlier": "Earlier",
+    "mark_all_read": "Mark all as read",
+    "mark_all_error": "Couldn't mark everything as read. Please try again.",
+    "settings_aria": "Notification settings",
+    "unread_aria": "Unread"
   },
   "types": {
     "meal_reminder": "Meal reminder",
@@ -48,5 +52,10 @@
     "subtitle": "Your most recent updates",
     "view_all": "View all",
     "preferences_link": "Channel preferences"
+  },
+  "actions": {
+    "open_today": "Open today",
+    "log_water": "Log water",
+    "see_nutrition": "See nutrition"
   }
 }
