@@ -145,23 +145,17 @@ test('real preferences and meal-missed inbox support single and bulk read', asyn
     };
     await notifications.inbox();
     await expect(notifications.rows(slotName)).toHaveCount(3);
-    await expect(notifications.rows(slotName).getByRole('button', { pressed: false })).toHaveCount(
-      3,
-    );
+    await expect(notifications.unreadRows(slotName)).toHaveCount(3);
     await notifications.expectUnreadCount(total);
     await notifications.readFirst(slotName);
     await notifications.expectUnreadCount(total - 1);
     await page.reload();
-    await expect(notifications.rows(slotName).getByRole('button', { pressed: true })).toHaveCount(
-      1,
-    );
+    await expect(notifications.unreadRows(slotName)).toHaveCount(2);
     await notifications.expectUnreadCount(total - 1);
     await notifications.readRemaining(slotName);
     await notifications.expectUnreadCount(total - 3);
     await page.reload();
-    await expect(notifications.rows(slotName).getByRole('button', { pressed: true })).toHaveCount(
-      3,
-    );
+    await expect(notifications.unreadRows(slotName)).toHaveCount(0);
     await notifications.expectUnreadCount(total - 3);
   } finally {
     if (notificationIds.length)

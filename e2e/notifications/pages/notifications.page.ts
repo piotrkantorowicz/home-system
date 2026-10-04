@@ -37,15 +37,20 @@ export class NotificationsPage {
     else await expect(badge).toHaveAttribute('aria-label', `${total} unread`);
   }
 
+  unreadRows(slotName: string) {
+    return this.rows(slotName).filter({ has: this.page.getByRole('img', { name: 'Unread' }) });
+  }
+
+  // Opening an item marks it read and navigates to its destination, so return to the inbox after.
   async readFirst(slotName: string) {
-    await this.rows(slotName).first().getByRole('button').click();
+    await this.unreadRows(slotName).first().getByRole('button').click();
+    await this.inbox();
   }
 
   async readRemaining(slotName: string) {
-    const checkboxes = this.rows(slotName).getByRole('checkbox');
-    for (let index = 0; index < (await checkboxes.count()); index++) {
-      if (await checkboxes.nth(index).isEnabled()) await checkboxes.nth(index).check();
+    while ((await this.unreadRows(slotName).count()) > 0) {
+      await this.unreadRows(slotName).first().getByRole('button').click();
+      await this.inbox();
     }
-    await this.page.getByRole('button', { name: 'Mark as read (2)', exact: true }).click();
   }
 }

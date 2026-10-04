@@ -11,6 +11,7 @@ export type NotificationsPage = components['schemas']['PagedListOfNotificationDt
 export interface UseNotificationsParams {
   page?: number;
   pageSize?: number;
+  enabled?: boolean;
 }
 
 export function notificationListOptions({ page = 1, pageSize = 20 }: UseNotificationsParams = {}) {
@@ -33,6 +34,10 @@ export function notificationListOptions({ page = 1, pageSize = 20 }: UseNotifica
   });
 }
 
-export function useNotifications(params: UseNotificationsParams = {}) {
-  return useQuery({ ...notificationListOptions(params), placeholderData: keepPreviousData });
+export function useNotifications({ enabled = true, ...params }: UseNotificationsParams = {}) {
+  return useQuery({
+    ...notificationListOptions(params),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
 }

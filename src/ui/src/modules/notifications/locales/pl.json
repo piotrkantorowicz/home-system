@@ -2,7 +2,6 @@
   "inbox": {
     "title": "Powiadomienia",
     "subtitle": "Twoje ostatnie aktualizacje",
-    "preferences_link": "Preferencje kanałów",
     "empty_title": "Brak powiadomień",
     "empty_body": "Gdy coś do Ciebie wyślemy, pojawi się tutaj.",
     "loading": "Ładowanie…",
@@ -11,13 +10,20 @@
     "previous_page": "Poprzednia",
     "next_page": "Następna",
     "page_indicator": "Strona {{page}} z {{totalPages}}",
-    "mark_read_aria": "Oznacz jako przeczytane",
-    "select_row_aria": "Zaznacz powiadomienie",
-    "select_all_aria": "Zaznacz wszystkie nieprzeczytane na tej stronie",
-    "select_hint": "Zaznacz wiersze, aby oznaczyć je jako przeczytane",
-    "selected_count": "Zaznaczono: {{count}}",
-    "cancel_selection": "Anuluj",
-    "mark_selected_read": "Oznacz jako przeczytane ({{count}})"
+    "subtitle_unread_one": "{{count}} nieprzeczytane",
+    "subtitle_unread_few": "{{count}} nieprzeczytane",
+    "subtitle_unread_many": "{{count}} nieprzeczytanych",
+    "subtitle_unread_other": "{{count}} nieprzeczytanych",
+    "caught_up": "Wszystko przeczytane.",
+    "filter_label": "Filtruj powiadomienia",
+    "filter_all": "Wszystkie",
+    "filter_unread": "Nieprzeczytane {{count}}",
+    "group_today": "Dzisiaj",
+    "group_earlier": "Wcześniej",
+    "mark_all_read": "Oznacz wszystkie jako przeczytane",
+    "mark_all_error": "Nie udało się oznaczyć wszystkiego jako przeczytane. Spróbuj ponownie.",
+    "settings_aria": "Ustawienia powiadomień",
+    "unread_aria": "Nieprzeczytane"
   },
   "types": {
     "meal_reminder": "Przypomnienie o posiłku",
@@ -48,5 +54,10 @@
     "subtitle": "Twoje najnowsze aktualizacje",
     "view_all": "Zobacz wszystkie",
     "preferences_link": "Preferencje kanałów"
+  },
+  "actions": {
+    "open_today": "Otwórz dziś",
+    "log_water": "Zapisz wodę",
+    "see_nutrition": "Zobacz odżywianie"
   }
 }
