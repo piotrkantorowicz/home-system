@@ -14,7 +14,7 @@ internal sealed class HouseholdRosterProvider(IHouseholdQueryService households)
         HouseholdContext? context = await households.GetHouseholdContextForUserAsync(authSubject, ct);
         return context is null
             ? new HouseholdRoster(callerPersonId, null, [])
-            : new HouseholdRoster(callerPersonId, context.Role, context.Members);
+            : new HouseholdRoster(callerPersonId, context.Role, context.Members, context.HouseholdId);
     }
 
     public async Task<LibraryAccess> GetLibraryAccessAsync(string authSubject, CancellationToken ct)

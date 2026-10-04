@@ -11,11 +11,16 @@ using Shared.Abstractions.Core.Domain;
 /// <param name="CallerPersonId">Person identifier of the caller.</param>
 /// <param name="CallerRole">The caller's household role, or <see langword="null"/> without a household.</param>
 /// <param name="Members">Every household member, the caller included; empty without a household.</param>
+/// <param name="HouseholdId">The household, or <see langword="null"/> without one.</param>
 internal sealed record HouseholdRoster(
     Guid CallerPersonId,
     string? CallerRole,
-    IReadOnlyList<HouseholdContextMember> Members)
+    IReadOnlyList<HouseholdContextMember> Members,
+    Guid? HouseholdId = null)
 {
+    /// <summary>Owner of shared household data: the household, or the caller alone without one.</summary>
+    public Guid ScopeId => HouseholdId ?? CallerPersonId;
+
     // Role names as HouseholdContext carries them (Household.Domain HouseholdRole.ToString()).
     private const string Owner = "Owner";
     private const string Adult = "Adult";

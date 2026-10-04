@@ -2,12 +2,14 @@ namespace DietPlanner.Api;
 
 using System.Security.Claims;
 using DietPlanner.Application.Commands.BulkCompleteMealEntries;
+using DietPlanner.Application.Commands.ClearShoppingChecks;
 using DietPlanner.Application.Commands.CompleteMealEntry;
 using DietPlanner.Application.Commands.CreateMealEntry;
 using DietPlanner.Application.Commands.DeleteMealEntry;
 using DietPlanner.Application.Commands.ExecuteImport;
 using DietPlanner.Application.Commands.OverrideMealEntry;
 using DietPlanner.Application.Commands.ResetMealEntry;
+using DietPlanner.Application.Commands.SetShoppingCheck;
 using DietPlanner.Application.Commands.UpdateMealEntry;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
@@ -58,6 +60,16 @@ public static class MealEndpoints
             .WithName("UpdateMealEntry")
             .WithSummary("Update a meal entry")
             .WithDescription("Updates the date, meal slot, servings, and notes of an existing meal entry. Allowed for anyone who may plan meals for the entry's person.");
+
+        group.MapPut("/shopping-list/checks", SetShoppingCheck)
+            .WithName("SetShoppingCheck")
+            .WithSummary("Tick or untick one shopping-list row for the whole household")
+            .WithDescription("A row is identified by the list's date range plus product and unit, so the same product in two units, or the same list over another range, is checked separately. Idempotent; allowed for anyone who may plan meals (not Guests).");
+
+        group.MapDelete("/shopping-list/checks", ClearShoppingChecks)
+            .WithName("ClearShoppingChecks")
+            .WithSummary("Untick every row of one shopping-list date range")
+            .WithDescription("Clears the household's checks for exactly this range; other ranges are untouched. Idempotent.");
 
         group.MapDelete("/{id:guid}", DeleteMealEntry)
             .WithName("DeleteMealEntry")
@@ -131,6 +143,30 @@ public static class MealEndpoints
         IReadOnlyList<ShoppingListItemDto> result = await dispatcher.SendAsync<GetShoppingListQuery, IReadOnlyList<ShoppingListItemDto>>(
             new GetShoppingListQuery(personId, @params.From, @params.To, PersonalDataClaims.GetAuthSubject(user)), ct);
         return TypedResults.Ok(result);
+    }
+
+    private static async Task<NoContent> SetShoppingCheck(
+        SetShoppingCheckRequest request,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        await dispatcher.SendAsync(
+            new SetShoppingCheckCommand(
+                GetPersonId(user), PersonalDataClaims.GetAuthSubject(user),
+                request.From, request.To, request.ProductId, request.Unit, request.IsChecked), ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> ClearShoppingChecks(
+        [AsParameters] MealDateRangeParams @params,
+        ClaimsPrincipal user,
+        ICommandDispatcher dispatcher,
+        CancellationToken ct)
+    {
+        await dispatcher.SendAsync(
+            new ClearShoppingChecksCommand(GetPersonId(user), PersonalDataClaims.GetAuthSubject(user), @params.From, @params.To), ct);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Created<Guid>> CreateMealEntry(
@@ -262,6 +298,16 @@ public static class MealEndpoints
 public sealed record MealDateRangeParams(
     [property: FromQuery] DateOnly? From,
     [property: FromQuery] DateOnly? To);
+
+/// <summary>
+/// Body of a shopping-list tick.
+/// </summary>
+/// <param name="From">First day of the list's range, or omitted for no lower bound; must match the list request.</param>
+/// <param name="To">Last day of the list's range, or omitted for no upper bound; must match the list request.</param>
+/// <param name="ProductId">The product of the row.</param>
+/// <param name="Unit">The unit of the row.</param>
+/// <param name="IsChecked"><see langword="true"/> to mark bought, <see langword="false"/> to clear it.</param>
+public sealed record SetShoppingCheckRequest(DateOnly? From, DateOnly? To, Guid ProductId, string Unit, bool IsChecked);
 
 /// <summary>
 /// Body of meal entry creation.
