@@ -32,3 +32,15 @@ export function shiftMonth(month: string, delta: number): string {
 export function isMonth(value: string): boolean {
   return /^\d{4}-\d{2}$/.test(value) && shiftMonth(value, 0) === value;
 }
+
+/** "October 2026" / "październik 2026" for a `YYYY-MM` month. */
+export function formatMonth(month: string, lang: string): string {
+  return new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(`${month}-01T00:00:00Z`),
+  );
+}
+
+/** Last calendar day of a `YYYY-MM` month as `YYYY-MM-DD`. */
+export function monthEnd(month: string): string {
+  return shiftDays(`${shiftMonth(month, 1)}-01`, -1);
+}

@@ -1,28 +1,43 @@
+import { useHousehold } from '@modules/household';
 import {
-  Badge,
   Banner,
   Button,
+  Checkbox,
   EmptyState,
-  Field,
+  Input,
+  MoneyText,
+  MonthStepper,
+  PageContainer,
+  PageHeader,
   Pagination,
   Select,
-  Input,
-  Checkbox,
+  Skeleton,
 } from '@shared/components/ui';
+import { useFormat } from '@shared/hooks/useFormat';
 import { Plus, Receipt } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { useAccountsQuery, useBudgetQuery, useExpensesQuery } from '../api/queries';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
-import { isIsoDate } from '../lib/dates';
+import { ExpenseRow } from '../components/ExpenseRow';
+import {
+  currentMonth,
+  formatMonth,
+  monthEnd,
+  shiftDays,
+  shiftMonth,
+  todayLocal,
+} from '../lib/dates';
 import { EXPENSE_CATEGORIES } from '../types';
 
-import type { ExpenseCategory, ExpenseFilters } from '../types';
+import type { Expense, ExpenseCategory, ExpenseFilters } from '../types';
 
 export default function ExpensesPage() {
-  const { t } = useTranslation('budget');
+  const { t, i18n } = useTranslation('budget');
+  const { dayShort } = useFormat();
+  const { myPersonId } = useHousehold();
   const budget = useBudgetQuery();
   const accounts = useAccountsQuery();
   // `?add=1` opens the form: the phone tab bar's raised "Add expense" button links here.
@@ -31,117 +46,160 @@ export default function ExpensesPage() {
   const setAdding = (open: boolean) => {
     setSearchParams(open ? { add: '1' } : {}, { replace: true });
   };
+  const [month, setMonth] = useState(currentMonth());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [category, setCategory] = useState('');
   const [accountId, setAccountId] = useState('');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
   const [includeVoided, setIncludeVoided] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [search, setSearch] = useState('');
+
+  // Typing is applied to the query after a short pause so each keystroke is not a request.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const next = searchText.trim();
+      if (next !== search) {
+        setSearch(next);
+        setPage(1);
+      }
+    }, 300);
+    return () => {
+      clearTimeout(id);
+    };
+  }, [searchText, search]);
 
   const filters: ExpenseFilters = {
     page,
     pageSize,
+    from: `${month}-01`,
+    to: monthEnd(month),
     ...(category ? { category: category as ExpenseCategory } : {}),
     ...(accountId ? { accountId } : {}),
-    ...(isIsoDate(from) ? { from } : {}),
-    ...(isIsoDate(to) ? { to } : {}),
+    ...(search ? { search } : {}),
     ...(includeVoided ? { includeVoided: true } : {}),
   };
   const query = useExpensesQuery(filters);
   const currency = budget.data?.currency ?? '';
   const accountName = (id: string) => accounts.data?.find((a) => a.id === id)?.name ?? '';
-  const filtered = category !== '' || accountId !== '' || from !== '' || to !== '' || includeVoided;
+  const filtered = category !== '' || accountId !== '' || search !== '' || includeVoided;
   const reset = (apply: () => void) => {
     apply();
     setPage(1);
   };
 
+  const today = todayLocal();
+  const dayLabel = (date: string) => {
+    if (date === today) return t('day_today', { day: dayShort(date) });
+    if (date === shiftDays(today, -1)) return t('day_yesterday', { day: dayShort(date) });
+    return dayShort(date);
+  };
+  // Server totals cover the whole day across every page, so a day split by paging stays correct.
+  const dayTotals = new Map(query.data?.dailyTotals.map((d) => [d.date, d.total]));
+  const groups: { date: string; items: Expense[] }[] = [];
+  for (const e of query.data?.items ?? []) {
+    const last = groups.at(-1);
+    if (last?.date === e.occurredOn) last.items.push(e);
+    else groups.push({ date: e.occurredOn, items: [e] });
+  }
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-xl">
-          <h2 className="text-xl font-semibold">{t('expenses')}</h2>
-          <p className="text-text-2 mt-1 text-sm">{t('expenses_intro')}</p>
-        </div>
-        <Button
-          className="gap-2"
-          onClick={() => {
-            setAdding(true);
-          }}
-        >
-          <Plus className="size-4" />
-          {t('add_expense')}
-        </Button>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title={t('expenses')}
+        subtitle={currency ? t('overview_subtitle_plain', { currency }) : undefined}
+        actions={
+          <Button
+            className="gap-2"
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            <Plus className="size-4" />
+            {t('add_expense')}
+          </Button>
+        }
+      />
 
       <form
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="mb-4 flex flex-wrap items-center gap-3"
         aria-label={t('filters')}
         onSubmit={(event) => {
           event.preventDefault();
         }}
       >
-        <Field id="filter-category" label={t('category')}>
-          <Select
-            id="filter-category"
-            value={category}
-            onChange={(event) => {
-              reset(() => {
-                setCategory(event.target.value);
-              });
-            }}
-          >
-            <option value="">{t('all')}</option>
-            {EXPENSE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {t(`categories.${c}`)}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field id="filter-envelope" label={t('envelope')}>
-          <Select
-            id="filter-envelope"
-            value={accountId}
-            onChange={(event) => {
-              reset(() => {
-                setAccountId(event.target.value);
-              });
-            }}
-          >
-            <option value="">{t('all')}</option>
-            {accounts.data?.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field id="filter-from" label={t('from')}>
-          <Input
-            id="filter-from"
-            type="date"
-            value={from}
-            onChange={(event) => {
-              reset(() => {
-                setFrom(event.target.value);
-              });
-            }}
-          />
-        </Field>
-        <Field id="filter-to" label={t('to')}>
-          <Input
-            id="filter-to"
-            type="date"
-            value={to}
-            onChange={(event) => {
-              reset(() => {
-                setTo(event.target.value);
-              });
-            }}
-          />
-        </Field>
+        <MonthStepper
+          label={formatMonth(month, i18n.language)}
+          groupLabel={t('month')}
+          previousLabel={t('previous_month')}
+          nextLabel={t('next_month')}
+          onPrevious={() => {
+            reset(() => {
+              setMonth(shiftMonth(month, -1));
+            });
+          }}
+          onNext={() => {
+            reset(() => {
+              setMonth(shiftMonth(month, 1));
+            });
+          }}
+        />
+        <Input
+          type="search"
+          aria-label={t('search_expenses')}
+          placeholder={t('search_expenses')}
+          className="w-full sm:w-56"
+          value={searchText}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+          }}
+        />
+        <Select
+          aria-label={t('envelope')}
+          className="w-auto"
+          value={accountId}
+          onChange={(event) => {
+            reset(() => {
+              setAccountId(event.target.value);
+            });
+          }}
+        >
+          <option value="">{t('all_envelopes')}</option>
+          {accounts.data?.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label={t('category')}
+          className="w-auto"
+          value={category}
+          onChange={(event) => {
+            reset(() => {
+              setCategory(event.target.value);
+            });
+          }}
+        >
+          <option value="">{t('all_categories')}</option>
+          {EXPENSE_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {t(`categories.${c}`)}
+            </option>
+          ))}
+        </Select>
+      </form>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-text-2 text-meta">
+          {query.isSuccess && (
+            <>
+              {t('expense_count', { count: Number(query.data.activeCount) })} ·{' '}
+              <MoneyText amount={query.data.totalAmount} /> {t('totals_total')} ·{' '}
+              {t('totals_share')} <MoneyText amount={query.data.yourShareAmount} />
+            </>
+          )}
+        </p>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
             checked={includeVoided}
@@ -153,9 +211,15 @@ export default function ExpensesPage() {
           />
           {t('show_voided')}
         </label>
-      </form>
+      </div>
 
-      {query.isPending && <p role="status">{t('loading')}</p>}
+      {query.isPending && (
+        <div role="status" className="space-y-2">
+          <span className="sr-only">{t('loading')}</span>
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      )}
       {query.isError && (
         <Banner
           variant="error"
@@ -176,34 +240,27 @@ export default function ExpensesPage() {
       )}
       {query.isSuccess && query.data.items.length > 0 && (
         <>
-          <ul className="space-y-3">
-            {query.data.items.map((e) => (
-              <li key={e.id}>
-                <Link
-                  to={`/budget/expenses/${e.id}`}
-                  className="border-border hover:bg-accent focus-visible:ring-ring flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold break-words">
-                      {t(`categories.${e.category}`)} · {accountName(e.accountId)}
-                    </p>
-                    <p className="text-text-2 text-sm">
-                      {e.occurredOn} · {t('recorded_by', { name: e.addedByDisplayName })} ·{' '}
-                      {e.paidByDisplayName
-                        ? t('paid_by_name', { name: e.paidByDisplayName })
-                        : t('paid_from_household')}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {e.isVoided && <Badge variant="destructive">{t('voided')}</Badge>}
-                    <span className="font-semibold">
-                      {e.amount} {currency}
-                    </span>
-                  </div>
-                </Link>
-              </li>
+          <div className="space-y-4">
+            {groups.map((g) => (
+              <section key={g.date} aria-label={dayLabel(g.date)}>
+                <div className="text-text-2 text-meta flex items-center justify-between gap-3 px-2 font-semibold">
+                  <h2 className="text-meta font-semibold">{dayLabel(g.date)}</h2>
+                  {dayTotals.has(g.date) && <MoneyText amount={dayTotals.get(g.date)} />}
+                </div>
+                <ul>
+                  {g.items.map((e) => (
+                    <li key={e.id}>
+                      <ExpenseRow
+                        expense={e}
+                        envelopeName={accountName(e.accountId)}
+                        myPersonId={myPersonId}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
           <Pagination
             page={Number(query.data.page)}
             pageSize={Number(query.data.pageSize)}
@@ -224,6 +281,6 @@ export default function ExpensesPage() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

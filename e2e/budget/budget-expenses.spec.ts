@@ -25,7 +25,7 @@ test.describe('Budget expenses', () => {
     await expect(dialog.getByRole('button', { name: 'Save' })).toBeEnabled();
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(dialog).toBeHidden();
-    const row = page.getByRole('link', { name: new RegExp(`${amount.replace('.', '\\.')} PLN`) });
+    const row = page.getByRole('link', { name: new RegExp(`${amount.replace('.', '\\.')}`) });
     await expect(row.first()).toBeVisible();
 
     // The same amount and category within two days is flagged; Keep both is a deliberate choice.
