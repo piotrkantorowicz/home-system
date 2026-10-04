@@ -176,7 +176,7 @@ test.describe('Household roles', () => {
 
         // The member sees the same household read-only.
         await invitee.household.goto();
-        await expect(invitee.household.heading).toHaveText(household.name);
+        await expect(invitee.household.summary(household.name)).toBeVisible();
         await expect(invitee.household.memberRow(memberName)).toContainText(role);
         await expect(invitee.household.roleSelects).toHaveCount(0);
         await expect(invitee.household.addMemberButton).toBeHidden();

@@ -1,4 +1,4 @@
-import { Banner, Button } from '@shared/components/ui';
+import { Banner, Button, Card } from '@shared/components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +11,8 @@ export function PendingInvitations({ id, owner }: { id: string; owner: boolean }
   const query = useInvitations(id, true);
   const [revoke, setRevoke] = useState<string | null>(null);
   return (
-    <section className="border-border border-t pt-6">
+    <Card className="p-5 md:p-6">
       <h2 className="text-lg font-semibold">{t('invitations')}</h2>
-      <p className="text-text-2 mt-1 text-sm">{t('invite_hint')}</p>
       {query.isPending && <p role="status">{t('loading')}</p>}
       {query.isError && (
         <Banner
@@ -27,7 +26,12 @@ export function PendingInvitations({ id, owner }: { id: string; owner: boolean }
         </Banner>
       )}
       {query.isSuccess && query.data.length === 0 && (
-        <p className="text-muted-foreground mt-4 text-sm">{t('no_invitations')}</p>
+        <p className="text-text-2 mt-1 text-sm">
+          {t('no_invitations')} {t('invitations_hint')}
+        </p>
+      )}
+      {query.isSuccess && query.data.length > 0 && (
+        <p className="text-text-2 mt-1 text-sm">{t('invitations_hint')}</p>
       )}
       <ul className="divide-border mt-2 divide-y">
         {query.data?.map((invitation) => {
@@ -72,6 +76,6 @@ export function PendingInvitations({ id, owner }: { id: string; owner: boolean }
           }}
         />
       )}
-    </section>
+    </Card>
   );
 }
