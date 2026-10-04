@@ -5,8 +5,11 @@ import {
   Card,
   Field,
   Input,
+  LimitMeter,
   MacroBar,
   MetricTile,
+  MoneyText,
+  MonthStepper,
   Num,
   PageHeader,
   Ring,
@@ -129,7 +132,10 @@ export default function ControlKit() {
           </div>
         </Group>
 
-        <Group title={t('control_kit.data')} sub="MetricTile · MacroBar · numerals">
+        <Group
+          title={t('control_kit.data')}
+          sub="MetricTile · MacroBar · MoneyText · LimitMeter · MonthStepper"
+        >
           <div className="grid grid-cols-2 gap-2">
             <MetricTile label="Calories" value={formatNumber(2150)} hint="kcal" />
             <MetricTile label="Delta" value={formatSigned(-130)} hint="vs target" accent="fat" />
@@ -143,6 +149,17 @@ export default function ControlKit() {
             macro="fiber"
             unit="g"
             showOverflow={false}
+          />
+          <MoneyText amount="4114.65" currency="PLN" className="text-section font-bold" />
+          <LimitMeter percent={62} />
+          <LimitMeter percent={100} over limitAt={50} />
+          <MonthStepper
+            label="October 2026"
+            groupLabel="Month"
+            previousLabel="Previous month"
+            nextLabel="Next month"
+            onPrevious={() => undefined}
+            onNext={() => undefined}
           />
         </Group>
 
