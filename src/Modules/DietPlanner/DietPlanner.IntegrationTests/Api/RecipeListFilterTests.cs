@@ -8,7 +8,7 @@ using Shared.Abstractions.Core.Pagination;
 
 /// <summary>#486 — recipe list: high-protein and under-15-minute filters apply before paging.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
-public sealed class RecipeListFilterTests
+public sealed class RecipeListFilterTests : IDisposable
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -18,7 +18,21 @@ public sealed class RecipeListFilterTests
     /// <param name="db">The shared database container fixture.</param>
     public RecipeListFilterTests(DatabaseFixture db) => _db = db;
 
-    private HttpClient ClientFor(string user) => new DietPlannerWebApplicationFactory(_db.ConnectionString, user).CreateClient();
+    private readonly List<DietPlannerWebApplicationFactory> _factories = [];
+
+    private HttpClient ClientFor(string user)
+    {
+        var factory = new DietPlannerWebApplicationFactory(_db.ConnectionString, user);
+        _factories.Add(factory);
+        return factory.CreateClient();
+    }
+
+    /// <summary>Disposes every host the test booted so they do not pile up across the suite.</summary>
+    public void Dispose()
+    {
+        foreach (var factory in _factories)
+            factory.Dispose();
+    }
 
     private static async Task<Guid> ProductAsync(HttpClient client, string name, decimal? calories, decimal? protein, string? visibility = null)
     {
