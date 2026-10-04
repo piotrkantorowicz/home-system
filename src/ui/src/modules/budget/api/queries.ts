@@ -295,6 +295,7 @@ async function mutateExpense(action: ExpenseAction) {
       fundingSource: input.fundingSource,
       paidByPersonId: input.paidByPersonId,
       participantIds: input.participantIds,
+      description: input.description ?? null,
     };
     return action.kind === 'create'
       ? api.POST('/api/budget/expenses', {

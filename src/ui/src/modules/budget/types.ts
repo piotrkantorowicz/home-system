@@ -40,6 +40,8 @@ export interface ExpenseInput {
   fundingSource: FundingSource | null;
   paidByPersonId: string | null;
   participantIds: string[];
+  /** Optional short note (what the money was for); `null` or blank means none. */
+  description?: string | null;
 }
 
 export type Settlement = components['schemas']['SettlementDto'];

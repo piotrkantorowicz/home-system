@@ -44,6 +44,8 @@ vi.mock('@shared/api/tokenInterceptor', () => ({
 }));
 
 const BASE = 'http://localhost:5050';
+// "Save" or "Save 12.50"; not "Save without checking".
+const SAVE = /^Save( [\d.]+)?$/;
 const account = (id: string, name: string, visibility: string, owner: string | null = null) => ({
   id,
   name,
@@ -184,13 +186,14 @@ describe('Add expense', () => {
     const dialog = await openAddForm();
     expect(within(dialog).getByText('Recorded by Alex (you)')).toBeVisible();
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '12,50');
-    await userEvent.selectOptions(within(dialog).getByLabelText('Category'), 'Transport');
-    await userEvent.selectOptions(within(dialog).getByLabelText('Paid by'), 'bea');
+    await userEvent.type(within(dialog).getByLabelText('What for'), 'Bus tickets');
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Transport' }));
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Bea' }));
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Alex' }));
     await waitFor(() => {
-      expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
     });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
 
     await waitFor(() => {
       expect(create).toHaveBeenCalledTimes(1);
@@ -203,10 +206,73 @@ describe('Add expense', () => {
       fundingSource: 'Individual',
       paidByPersonId: 'bea',
       participantIds: ['bea'],
+      description: 'Bus tickets',
     });
     expect((create.mock.calls[0]?.[0] as { clientRequestId: string }).clientRequestId).toMatch(
       /^[0-9a-f-]{36}$/,
     );
+  });
+
+  it('previews each share live in integer cents, remainder to the lowest person id, whatever the tick order', async () => {
+    const original = household.members;
+    // Ids sort as cy < me < zed; ticking order below is deliberately different.
+    household.members = [
+      { personId: 'zed', displayName: 'Zed', role: 'Adult', isManaged: false },
+      { personId: 'me', displayName: 'Alex', role: 'Owner', isManaged: false },
+      { personId: 'cy', displayName: 'Cy', role: 'Adult', isManaged: false },
+    ];
+    try {
+      const dialog = await openAddForm();
+      await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '100,00');
+
+      const share = (name: string) =>
+        within(
+          within(dialog).getByRole('checkbox', { name }).closest('label') as HTMLElement,
+        ).getByText(/^\d+\.\d{2}$/).textContent;
+      expect(share('Cy')).toBe('33.34');
+      expect(share('Alex')).toBe('33.33');
+      expect(share('Zed')).toBe('33.33');
+      expect(within(dialog).getByRole('button', { name: 'Save 100.00' })).toBeVisible();
+
+      await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Cy' }));
+      expect(share('Alex')).toBe('50.00');
+      expect(share('Zed')).toBe('50.00');
+    } finally {
+      household.members = original;
+    }
+  });
+
+  it('sends household funds with nobody credited and no split', async () => {
+    const create = vi.fn();
+    server.use(
+      http.post(`${BASE}/api/budget/expenses`, async ({ request }) => {
+        create(await request.json());
+        return HttpResponse.json({ expenseId: 'new', revision: 1, created: true }, { status: 201 });
+      }),
+    );
+    const dialog = await openAddForm();
+    await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '20');
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Household account' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
+
+    await waitFor(() => {
+      expect(create).toHaveBeenCalledTimes(1);
+    });
+    expect(create.mock.calls[0]?.[0]).toMatchObject({
+      fundingSource: 'HouseholdFunds',
+      paidByPersonId: null,
+      participantIds: [],
+      description: null,
+    });
+  });
+
+  it('keeps Save outside the scrolling body so it stays reachable on a phone', async () => {
+    const dialog = await openAddForm();
+    const save = within(dialog).getByRole('button', { name: SAVE });
+
+    expect(save.closest('.overflow-y-auto')).toBeNull();
+    expect(within(dialog).getByLabelText('Amount (PLN)')).toHaveFocus();
+    expect(within(dialog).getByLabelText('Amount (PLN)')).toHaveAttribute('inputmode', 'decimal');
   });
 
   it('validates amount and participants before sending', async () => {
@@ -219,7 +285,7 @@ describe('Add expense', () => {
     );
     const dialog = await openAddForm();
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '1.005');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText('Enter a positive amount with at most two decimals.');
     expect(create).not.toHaveBeenCalled();
 
@@ -227,7 +293,7 @@ describe('Add expense', () => {
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '5');
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Alex' }));
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Bea' }));
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText('Choose at least one person.');
   });
 
@@ -241,9 +307,9 @@ describe('Add expense', () => {
 
   it('explains household funds: nobody credited, nothing split', async () => {
     const dialog = await openAddForm();
-    await userEvent.selectOptions(within(dialog).getByLabelText('Funded by'), 'HouseholdFunds');
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Household account' }));
     expect(within(dialog).getByText(/nobody is credited and nothing is split/)).toBeVisible();
-    expect(within(dialog).queryByLabelText('Paid by')).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('checkbox', { name: 'Alex' })).not.toBeInTheDocument();
   });
 
   it('flags a future date without blocking it', async () => {
@@ -306,11 +372,11 @@ describe('Duplicate hint', () => {
     const dialog = await openAddForm();
     await fillAmount(dialog);
     await within(dialog).findByText('1 similar expense already exists');
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: SAVE })).toBeDisabled();
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Keep both' }));
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await waitFor(() => {
       expect(create).toHaveBeenCalledTimes(1);
     });
@@ -342,11 +408,11 @@ describe('Duplicate hint', () => {
     await fillAmount(dialog);
     await within(dialog).findByText('1 similar expense already exists');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Keep both' }));
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
 
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '5');
     await waitFor(() => {
-      expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled();
+      expect(within(dialog).getByRole('button', { name: SAVE })).toBeDisabled();
     });
   });
 
@@ -356,10 +422,10 @@ describe('Duplicate hint', () => {
     await fillAmount(dialog);
     await within(dialog).findByText('Could not check for similar expenses.');
     expect(within(dialog).queryByText(/similar expense/)).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: SAVE })).toBeDisabled();
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save without checking' }));
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
   });
 });
 
@@ -379,13 +445,13 @@ describe('Submission failures and retries', () => {
     const dialog = await openAddForm();
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '20');
     await waitFor(() => {
-      expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
     });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText('Could not save. Your input is kept — try again.');
     expect(within(dialog).getByLabelText('Amount (PLN)')).toHaveValue('20');
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await waitFor(() => {
       expect(ids).toHaveLength(2);
     });
@@ -403,15 +469,15 @@ describe('Submission failures and retries', () => {
     const dialog = await openAddForm();
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '20');
     await waitFor(() => {
-      expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
     });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText(/Your input is kept/);
     await userEvent.type(within(dialog).getByLabelText('Amount (PLN)'), '5');
     await waitFor(() => {
-      expect(within(dialog).getByRole('button', { name: 'Save' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: SAVE })).toBeEnabled();
     });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await waitFor(() => {
       expect(ids).toHaveLength(2);
     });
@@ -488,10 +554,10 @@ describe('Expense detail', () => {
     await waitFor(() => {
       expect(listParams.some((p) => p.get('excludeId') === 'e1')).toBe(true);
     });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText('Enter a reason.');
     await userEvent.type(within(dialog).getByLabelText('Reason'), 'typo');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await waitFor(() => {
       expect(update).toHaveBeenCalledTimes(1);
     });
@@ -512,7 +578,7 @@ describe('Expense detail', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Correct' }));
     const dialog = await screen.findByRole('dialog');
     await userEvent.type(within(dialog).getByLabelText('Reason'), 'typo');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: SAVE }));
     await within(dialog).findByText(/Someone else changed this expense/);
     expect(within(dialog).getByLabelText('Reason')).toHaveValue('typo');
 

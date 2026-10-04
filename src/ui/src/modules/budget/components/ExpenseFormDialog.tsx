@@ -13,6 +13,8 @@ import {
   Select,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
+import { initials } from '@shared/lib/initials';
+import { cn } from '@shared/lib/utils';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +29,7 @@ import {
 } from '../api/queries';
 import { useRequestId } from '../hooks/useRequestId';
 import { isIsoDate, shiftDays, todayLocal } from '../lib/dates';
-import { normalizeAmount } from '../lib/money';
+import { minorToDecimal, normalizeAmount, splitEqual, toMinor } from '../lib/money';
 import { EXPENSE_CATEGORIES } from '../types';
 
 import type { Expense, ExpenseCategory, ExpenseInput, FundingSource } from '../types';
@@ -47,6 +49,8 @@ interface Person {
 }
 
 const MAX_REASON = 200;
+const MAX_DESCRIPTION = 80;
+const HOUSEHOLD_PAYER = 'household';
 
 function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDialogProps) {
   const { t } = useTranslation('budget');
@@ -85,6 +89,7 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
   const schema = z
     .object({
       amount: z.string().refine((v) => normalizeAmount(v) !== null, t('amount_invalid')),
+      description: z.string().trim().max(MAX_DESCRIPTION, t('what_for_limit')),
       occurredOn: z.string().refine(isIsoDate, t('date_invalid')),
       category: z.enum(EXPENSE_CATEGORIES),
       accountId: z.string().min(1, t('envelope_required')),
@@ -120,6 +125,7 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
     resolver: zodResolver(schema),
     defaultValues: {
       amount: expense?.amount ?? '',
+      description: expense?.description ?? '',
       occurredOn: expense?.occurredOn ?? todayLocal(),
       category: (expense?.category as ExpenseCategory | undefined) ?? 'Groceries',
       accountId: initialAccount,
@@ -178,6 +184,30 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
     );
   };
 
+  const amountMinor = amount === null ? null : toMinor(amount);
+  const shares =
+    amountMinor !== null && split
+      ? splitEqual(amountMinor, participantIds)
+      : new Map<string, number>();
+  const payer = values.fundingSource === 'HouseholdFunds' ? HOUSEHOLD_PAYER : values.paidByPersonId;
+  const choosePayer = (choice: string) => {
+    if (choice === HOUSEHOLD_PAYER) {
+      setValue('fundingSource', 'HouseholdFunds', { shouldValidate: true });
+      return;
+    }
+    setValue('fundingSource', 'Individual', { shouldValidate: true });
+    setValue('paidByPersonId', choice, { shouldValidate: true });
+  };
+  const personLabel = (p: Person) =>
+    p.former ? t('former', { name: p.name }) : p.id === myPersonId ? t('you') : p.name;
+  const saveLabel = mutation.isPending
+    ? t('saving')
+    : amount !== null
+      ? t('save_amount', { amount: minorToDecimal(toMinor(amount)) })
+      : t('save');
+  const chip =
+    'border-border bg-card text-text-2 hover:border-border-strong has-checked:border-primary has-checked:bg-accent has-checked:text-primary has-focus-visible:ring-ring flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold has-focus-visible:ring-2';
+
   return (
     <Dialog
       open
@@ -186,19 +216,22 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
       }}
     >
       <DialogContent
-        className="max-h-[90dvh] overflow-y-auto"
+        className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 max-md:inset-0 max-md:top-0 max-md:left-0 max-md:h-dvh max-md:max-h-none max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:border-0 md:max-w-[560px]"
         aria-describedby="expense-description"
       >
-        <DialogTitle>{editing ? t('correct_expense') : t('add_expense')}</DialogTitle>
-        <DialogDescription id="expense-description">
-          {editing ? t('correct_description') : t('add_description')}
-        </DialogDescription>
+        <div className="shrink-0 px-5 pt-5 pb-3 md:px-6 md:pt-6">
+          <DialogTitle>{editing ? t('correct_expense') : t('add_expense')}</DialogTitle>
+          <DialogDescription id="expense-description" className="sr-only">
+            {editing ? t('correct_description') : t('add_description')}
+          </DialogDescription>
+        </div>
         <form
-          className="space-y-4"
+          className="flex min-h-0 flex-1 flex-col"
           noValidate
           onSubmit={(event) => {
             void handleSubmit((data) => {
               if (blocked) return;
+              const note = data.description.trim();
               const input: ExpenseInput = {
                 accountId: data.accountId,
                 amount: normalizeAmount(data.amount) ?? data.amount,
@@ -207,6 +240,7 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
                 fundingSource: personal ? 'Individual' : data.fundingSource,
                 paidByPersonId: split ? data.paidByPersonId : null,
                 participantIds: split ? data.participantIds : [],
+                description: note.length > 0 ? note : null,
               };
               const reason = data.reason.trim();
               const key = requestId.idFor(
@@ -234,222 +268,317 @@ function ExpenseFormDialogContent({ expense, onClose, onReload }: ExpenseFormDia
             })(event);
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-2 md:px-6">
             <Field
               id="expense-amount"
-              label={t('amount', { currency })}
+              label={t('amount_label')}
               error={errors.amount?.message}
+              className="text-center md:text-left"
             >
-              <Input
-                id="expense-amount"
-                inputMode="decimal"
-                autoComplete="off"
-                {...register('amount')}
-                aria-invalid={!!errors.amount}
-              />
+              <div className="relative">
+                <Input
+                  id="expense-amount"
+                  aria-label={t('amount', { currency })}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  // REASON: the amount is the one thing this form is for (SPEC §5.3 asks for autofocus).
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                  placeholder="0.00"
+                  className="h-16 pr-16 text-[36px] font-semibold md:pl-5"
+                  {...register('amount')}
+                  aria-invalid={!!errors.amount}
+                />
+                <span
+                  aria-hidden="true"
+                  className="text-text-2 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg"
+                >
+                  {currency}
+                </span>
+              </div>
             </Field>
+
             <Field
-              id="expense-date"
-              label={t('date')}
-              error={errors.occurredOn?.message}
-              hint={isIsoDate(date) && date > todayLocal() ? t('date_future') : undefined}
+              id="expense-note"
+              label={t('what_for')}
+              hint={t('what_for_optional')}
+              error={errors.description?.message}
             >
               <Input
-                id="expense-date"
-                type="date"
-                {...register('occurredOn')}
-                aria-invalid={!!errors.occurredOn}
+                id="expense-note"
+                maxLength={MAX_DESCRIPTION}
+                autoComplete="off"
+                {...register('description')}
+                aria-invalid={!!errors.description}
               />
             </Field>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="expense-category" label={t('category')}>
-              <Select id="expense-category" {...register('category')}>
+
+            <fieldset>
+              <legend className="text-label text-text-2 mb-1.5 font-semibold">
+                {t('category')}
+              </legend>
+              <div className="flex flex-wrap gap-2">
                 {EXPENSE_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
+                  <label key={c} className={chip}>
+                    <input type="radio" value={c} className="sr-only" {...register('category')} />
                     {t(`categories.${c}`)}
-                  </option>
+                  </label>
                 ))}
-              </Select>
-            </Field>
-            <Field id="expense-envelope" label={t('envelope')} error={errors.accountId?.message}>
-              <Select id="expense-envelope" disabled={editing} {...register('accountId')}>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
+              </div>
+            </fieldset>
 
-          <p className="text-text-2 text-sm">
-            {t('recorded_by_you', {
-              name: members.find((m) => m.personId === myPersonId)?.displayName ?? '',
-            })}
-          </p>
-
-          {personal && (
-            <p className="text-text-2 text-sm">{t('paid_by_owner', { name: ownerName })}</p>
-          )}
-
-          {shared && (
-            <Field id="expense-funding" label={t('funding')}>
-              <Select id="expense-funding" {...register('fundingSource')}>
-                <option value="Individual">{t('funding_individual')}</option>
-                <option value="HouseholdFunds">{t('funding_household')}</option>
-              </Select>
-            </Field>
-          )}
-          {shared && values.fundingSource === 'HouseholdFunds' && (
-            <p className="text-text-2 text-sm">{t('household_funds_note')}</p>
-          )}
-
-          {split && (
-            <>
-              <Field id="expense-payer" label={t('paid_by')} error={errors.paidByPersonId?.message}>
-                <Select id="expense-payer" {...register('paidByPersonId')}>
-                  {people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.former ? t('former', { name: p.name }) : p.name}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="expense-envelope" label={t('envelope')} error={errors.accountId?.message}>
+                <Select id="expense-envelope" disabled={editing} {...register('accountId')}>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {t(a.visibility === 'Personal' ? 'envelope_personal' : 'envelope_shared', {
+                        name: a.name,
+                      })}
                     </option>
                   ))}
                 </Select>
               </Field>
-              <fieldset className="space-y-2">
-                <legend className="text-text-2 mb-1 text-xs font-semibold">
-                  {t('split_between')}
+              <Field
+                id="expense-date"
+                label={t('date')}
+                error={errors.occurredOn?.message}
+                hint={isIsoDate(date) && date > todayLocal() ? t('date_future') : undefined}
+              >
+                <Input
+                  id="expense-date"
+                  type="date"
+                  {...register('occurredOn')}
+                  aria-invalid={!!errors.occurredOn}
+                />
+              </Field>
+            </div>
+
+            {personal && (
+              <p className="text-text-2 text-sm">{t('paid_by_owner', { name: ownerName })}</p>
+            )}
+
+            {shared && (
+              <fieldset>
+                <legend className="text-label text-text-2 mb-1.5 font-semibold">
+                  {t('who_paid')}
                 </legend>
-                {people.map((p) => (
-                  <label key={p.id} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={participantIds.includes(p.id)}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {people.map((p) => (
+                    <label key={p.id} className={chip}>
+                      <input
+                        type="radio"
+                        name="expense-payer"
+                        className="sr-only"
+                        checked={payer === p.id}
+                        onChange={() => {
+                          choosePayer(p.id);
+                        }}
+                      />
+                      <Avatar label={p.name} />
+                      <span className="min-w-0 break-words">{personLabel(p)}</span>
+                    </label>
+                  ))}
+                  <label className={chip}>
+                    <input
+                      type="radio"
+                      name="expense-payer"
+                      className="sr-only"
+                      checked={payer === HOUSEHOLD_PAYER}
                       onChange={() => {
-                        toggleParticipant(p.id);
+                        choosePayer(HOUSEHOLD_PAYER);
                       }}
                     />
-                    {p.former ? t('former', { name: p.name }) : p.name}
+                    <Avatar label={t('household_account_initial')} />
+                    <span className="min-w-0 break-words">{t('household_account')}</span>
                   </label>
-                ))}
-                <p className="text-muted-foreground text-xs">{t('split_equal_note')}</p>
+                </div>
+                {errors.paidByPersonId?.message && (
+                  <p className="text-destructive mt-1 text-xs">{errors.paidByPersonId.message}</p>
+                )}
+              </fieldset>
+            )}
+            {shared && values.fundingSource === 'HouseholdFunds' && (
+              <p className="text-text-2 text-sm">{t('household_funds_note')}</p>
+            )}
+
+            {split && (
+              <fieldset>
+                <legend className="text-label text-text-2 mb-1.5 font-semibold">
+                  {t('split_between')}
+                </legend>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {people.map((p) => {
+                    const on = participantIds.includes(p.id);
+                    const share = shares.get(p.id);
+                    return (
+                      <label key={p.id} className={cn(chip, 'justify-between')}>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Checkbox
+                            checked={on}
+                            aria-label={p.former ? t('former', { name: p.name }) : p.name}
+                            onChange={() => {
+                              toggleParticipant(p.id);
+                            }}
+                          />
+                          <span className="min-w-0 break-words">{personLabel(p)}</span>
+                        </span>
+                        <span className="tnum" aria-hidden="true">
+                          {on && share !== undefined ? minorToDecimal(share) : '–'}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-muted-foreground mt-1.5 text-xs">{t('split_equal_note')}</p>
                 {errors.participantIds?.message && (
                   <p className="text-destructive text-xs">{errors.participantIds.message}</p>
                 )}
               </fieldset>
-            </>
-          )}
+            )}
 
-          {editing && (
-            <Field
-              id="expense-reason"
-              label={t('reason')}
-              error={errors.reason?.message}
-              hint={t('reason_hint')}
-            >
-              <Input
+            {editing && (
+              <Field
                 id="expense-reason"
-                maxLength={MAX_REASON}
-                {...register('reason')}
-                aria-invalid={!!errors.reason}
-              />
-            </Field>
-          )}
+                label={t('reason')}
+                error={errors.reason?.message}
+                hint={t('reason_hint')}
+              >
+                <Input
+                  id="expense-reason"
+                  maxLength={MAX_REASON}
+                  {...register('reason')}
+                  aria-invalid={!!errors.reason}
+                />
+              </Field>
+            )}
 
-          <div role="status" aria-live="polite" className="space-y-2">
-            {checking && <p className="text-text-2 text-sm">{t('duplicates_checking')}</p>}
-            {matches.length > 0 && (
-              <div className="border-border space-y-2 rounded-xl border p-3">
-                <p className="text-sm font-semibold">
-                  {t('duplicates_title', { count: matches.length })}
-                </p>
-                <ul className="space-y-1 text-sm">
-                  {matches.map((m) => (
-                    <li key={m.id}>
-                      {m.occurredOn} · {t(`categories.${m.category}`)} · {m.amount} {currency} ·{' '}
-                      {accountName(m.accountId)} · {m.addedByDisplayName}
-                    </li>
-                  ))}
-                </ul>
-                {decided === 'keep' ? (
-                  <p className="text-text-2 text-sm">{t('duplicates_kept')}</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        setDecision({ key: hintKey, kind: 'keep' });
-                      }}
-                    >
-                      {t('keep_both')}
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={onClose}>
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-            {lookupFailed && (
-              <Banner variant="warning">
-                <p>{t('duplicates_failed')}</p>
-                {decided === 'skip' ? (
-                  <p className="mt-1">{t('duplicates_skipped')}</p>
-                ) : (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        void hint.refetch();
-                      }}
-                    >
-                      {t('retry')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setDecision({ key: hintKey, kind: 'skip' });
-                      }}
-                    >
-                      {t('save_without_checking')}
-                    </Button>
-                  </div>
-                )}
-              </Banner>
-            )}
+            <div role="status" aria-live="polite" className="space-y-2">
+              {checking && <p className="text-text-2 text-sm">{t('duplicates_checking')}</p>}
+              {matches.length > 0 && (
+                <div className="border-border space-y-2 rounded-xl border p-3">
+                  <p className="text-sm font-semibold">
+                    {t('duplicates_title', { count: matches.length })}
+                  </p>
+                  <ul className="space-y-1 text-sm">
+                    {matches.map((m) => (
+                      <li key={m.id}>
+                        {m.occurredOn} · {t(`categories.${m.category}`)} · {m.amount} {currency} ·{' '}
+                        {accountName(m.accountId)} · {m.addedByDisplayName}
+                      </li>
+                    ))}
+                  </ul>
+                  {decided === 'keep' ? (
+                    <p className="text-text-2 text-sm">{t('duplicates_kept')}</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          setDecision({ key: hintKey, kind: 'keep' });
+                        }}
+                      >
+                        {t('keep_both')}
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" onClick={onClose}>
+                        {t('cancel')}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {lookupFailed && (
+                <Banner variant="warning">
+                  <p>{t('duplicates_failed')}</p>
+                  {decided === 'skip' ? (
+                    <p className="mt-1">{t('duplicates_skipped')}</p>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          void hint.refetch();
+                        }}
+                      >
+                        {t('retry')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setDecision({ key: hintKey, kind: 'skip' });
+                        }}
+                      >
+                        {t('save_without_checking')}
+                      </Button>
+                    </div>
+                  )}
+                </Banner>
+              )}
+            </div>
+
+            {mutation.isError &&
+              (errorStatus(mutation.error) === 409 && editing ? (
+                <Banner
+                  variant="error"
+                  {...(onReload ? { onRetry: onReload, retryLabel: t('reload') } : {})}
+                >
+                  {t('expense_conflict')}
+                </Banner>
+              ) : (
+                <Banner variant="error">
+                  {errorStatus(mutation.error) === 422
+                    ? t('expense_rejected')
+                    : t('expense_save_error')}
+                </Banner>
+              ))}
           </div>
 
-          {mutation.isError &&
-            (errorStatus(mutation.error) === 409 && editing ? (
-              <Banner
-                variant="error"
-                {...(onReload ? { onRetry: onReload, retryLabel: t('reload') } : {})}
+          {/* Outside the scrolling body, so Save stays reachable on a phone with the keyboard open. */}
+          <div className="border-border bg-card flex shrink-0 flex-wrap items-center justify-between gap-3 border-t px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6">
+            <p className="text-text-2 text-sm max-md:hidden">
+              {t('recorded_by_you', {
+                name: members.find((m) => m.personId === myPersonId)?.displayName ?? '',
+              })}
+            </p>
+            <div className="flex flex-1 gap-2 max-md:w-full md:flex-none">
+              <Button
+                type="button"
+                variant="outline"
+                size="xl"
+                onClick={onClose}
+                className="max-md:hidden"
               >
-                {t('expense_conflict')}
-              </Banner>
-            ) : (
-              <Banner variant="error">
-                {errorStatus(mutation.error) === 422
-                  ? t('expense_rejected')
-                  : t('expense_save_error')}
-              </Banner>
-            ))}
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              {t('cancel')}
-            </Button>
-            <Button type="submit" disabled={mutation.isPending || blocked}>
-              {mutation.isPending ? t('saving') : t('save')}
-            </Button>
+                {t('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                size="xl"
+                className="max-md:flex-1"
+                disabled={mutation.isPending || blocked}
+              >
+                {saveLabel}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Avatar({ label }: { label: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="bg-accent text-accent-foreground grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold"
+    >
+      {initials(label)}
+    </span>
   );
 }
 

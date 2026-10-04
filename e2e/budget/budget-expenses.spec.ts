@@ -1,5 +1,7 @@
 import { test, expect } from '../diet-planner/fixtures';
 
+import { ensureBudget } from './utils/seed';
+
 // Each worker owns its own household, so budget state never crosses workers.
 test.describe('Budget expenses', () => {
   test('owner adds, corrects and voids an expense; a similar one is flagged first', async ({
@@ -17,9 +19,9 @@ test.describe('Budget expenses', () => {
     const dialog = page.getByRole('dialog');
 
     // Household funds keep the journey independent of other members; amount uses a decimal comma.
-    await dialog.getByLabel('Funded by').selectOption('HouseholdFunds');
+    await dialog.getByText('Household account', { exact: true }).click();
     await dialog.getByLabel(/^Amount/).fill(amount.replace('.', ','));
-    await dialog.getByLabel('Category').selectOption('Groceries');
+    await dialog.getByText('Groceries', { exact: true }).click();
     await expect(dialog.getByRole('button', { name: 'Save' })).toBeEnabled();
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(dialog).toBeHidden();
@@ -29,7 +31,7 @@ test.describe('Budget expenses', () => {
     // The same amount and category within two days is flagged; Keep both is a deliberate choice.
     await page.getByRole('button', { name: 'Add expense' }).click();
     const second = page.getByRole('dialog');
-    await second.getByLabel('Funded by').selectOption('HouseholdFunds');
+    await second.getByText('Household account', { exact: true }).click();
     await second.getByLabel(/^Amount/).fill(amount);
     await expect(second.getByText(/similar expense.* already exist/)).toBeVisible();
     await expect(second.getByRole('button', { name: 'Save' })).toBeDisabled();
@@ -65,5 +67,22 @@ test.describe('Budget expenses', () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test('on a short phone viewport the amount takes focus and Save stays reachable', async ({
+    page,
+  }) => {
+    await page.goto('/budget');
+    await ensureBudget(page);
+    await page.setViewportSize({ width: 390, height: 420 });
+    await page.goto('/budget/expenses?add=1');
+
+    const dialog = page.getByRole('dialog');
+    const amount = dialog.getByLabel(/^Amount/);
+    await expect(amount).toBeFocused();
+    await amount.fill('12,50');
+
+    // The footer sits outside the scrolling body, so Save is in view without scrolling.
+    await expect(dialog.getByRole('button', { name: /^Save 12\.50$/ })).toBeInViewport({ ratio: 1 });
   });
 });
