@@ -1,6 +1,15 @@
-import { Badge, Card, CardContent } from '@shared/components/ui';
+import {
+  Badge,
+  Card,
+  CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
-import { Check, Pencil, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
+import { Check, Ellipsis, Pencil, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -86,11 +95,11 @@ export function DayMealList({
                   onClick={() => {
                     onAddMeal(slot.id);
                   }}
-                  className="text-muted-foreground hover:text-primary focus-visible:ring-primary rounded-md p-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="text-muted-foreground hover:text-primary focus-visible:ring-primary -my-2 grid size-11 place-items-center rounded-md text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
                   aria-label={t('meal_form.add_title')}
                   title={t('meal_form.add_title')}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="size-5" />
                 </button>
               )}
             </div>
@@ -152,6 +161,8 @@ function MealRow({
   const { t } = useTranslation();
   const status = (meal.status as MealStatus | undefined) ?? 'Planned';
   const isModified = status === 'Modified' && meal.actualRecipe;
+  const consumed = status === 'Done' || status === 'Modified';
+  const name = meal.actualRecipe?.name ?? meal.recipeName;
 
   return (
     <Card className="hover:border-primary/40 transition-colors">
@@ -170,7 +181,7 @@ function MealRow({
               </Link>
               <span
                 title={meal.recipeName}
-                className="text-muted-foreground/70 block truncate text-xs line-through"
+                className="text-muted-foreground/70 block truncate text-xs"
               >
                 {meal.recipeName}
               </span>
@@ -203,58 +214,72 @@ function MealRow({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className={cn('text-base font-semibold tabular-nums')}>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <span className="numeral mr-1 text-base font-semibold">
             {Math.round(num(meal.calories))}
             <span className="text-muted-foreground ml-1 text-xs font-normal">kcal</span>
           </span>
-          <div className="flex items-center gap-1">
-            {canLog && status !== 'Done' && status !== 'Modified' && (
-              <ActionButton
-                onClick={onComplete}
-                title={t('calendar.meal_actions.mark_done')}
-                hoverColor="hover:text-emerald-600"
+          {canLog && (
+            <button
+              type="button"
+              aria-pressed={consumed}
+              aria-label={t(consumed ? 'dashboard.meal_unmark' : 'dashboard.meal_mark', { name })}
+              onClick={consumed ? onReset : onComplete}
+              className="focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <span
+                className={cn(
+                  'grid size-7 place-items-center rounded-full border-2',
+                  consumed ? 'bg-primary border-primary text-primary-foreground' : 'border-input',
+                )}
               >
-                <Check className="h-3.5 w-3.5" />
-              </ActionButton>
-            )}
-            {canLog && (
-              <ActionButton
-                onClick={onOverride}
-                title={t('calendar.meal_actions.override')}
-                hoverColor="hover:text-amber-600"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-              </ActionButton>
-            )}
-            {canLog && status !== 'Planned' && (
-              <ActionButton
-                onClick={onReset}
-                title={t('calendar.meal_actions.reset')}
-                hoverColor="hover:text-foreground"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-              </ActionButton>
-            )}
-            {canPlan && (
-              <>
-                <ActionButton
-                  onClick={onEdit}
-                  title={t('common.edit')}
-                  hoverColor="hover:text-foreground"
+                {consumed && <Check className="size-4" strokeWidth={3} />}
+              </span>
+            </button>
+          )}
+          {(canLog || canPlan) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t('calendar.meal_actions.menu_for', { name })}
+                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring grid size-11 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
-                </ActionButton>
-                <ActionButton
-                  onClick={onDelete}
-                  title={t('common.delete')}
-                  hoverColor="hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </ActionButton>
-              </>
-            )}
-          </div>
+                  <Ellipsis className="size-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[180px]">
+                {canLog && (
+                  <DropdownMenuItem onSelect={onOverride}>
+                    <Sparkles />
+                    {t('calendar.meal_actions.override')}
+                  </DropdownMenuItem>
+                )}
+                {canLog && status !== 'Planned' && (
+                  <DropdownMenuItem onSelect={onReset}>
+                    <RotateCcw />
+                    {t('calendar.meal_actions.reset')}
+                  </DropdownMenuItem>
+                )}
+                {canPlan && (
+                  <>
+                    {canLog && <DropdownMenuSeparator />}
+                    <DropdownMenuItem onSelect={onEdit}>
+                      <Pencil />
+                      {t('common.edit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={onDelete}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 />
+                      {t('common.delete')}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -272,29 +297,5 @@ function Macro({ label, value }: MacroProps) {
       <span className="text-muted-foreground/70">{label}</span>{' '}
       <span className="text-foreground font-medium tabular-nums">{value.toFixed(1)}g</span>
     </span>
-  );
-}
-
-interface ActionButtonProps {
-  onClick: () => void;
-  title: string;
-  hoverColor: string;
-  children: React.ReactNode;
-}
-
-function ActionButton({ onClick, title, hoverColor, children }: ActionButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      aria-label={title}
-      className={cn(
-        'text-muted-foreground focus-visible:ring-primary rounded p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none',
-        hoverColor,
-      )}
-    >
-      {children}
-    </button>
   );
 }
