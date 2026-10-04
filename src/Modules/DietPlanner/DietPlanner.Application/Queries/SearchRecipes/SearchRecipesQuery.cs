@@ -11,9 +11,13 @@ using Shared.Abstractions.Cqrs;
 /// <param name="UserId">Auth subject of the caller.</param>
 /// <param name="Page">1-based page number.</param>
 /// <param name="PageSize">Items per page; clamped by the endpoint.</param>
+/// <param name="OnlyHighProtein">Only high-protein recipes per <c>HighProteinRule</c>; recipes with an unknown-protein ingredient never match.</param>
+/// <param name="OnlyQuick">Only recipes with a known preparation time under 15 minutes; unknown times never match.</param>
 public sealed record SearchRecipesQuery(
     string? Search,
     bool OnlyMine,
     string UserId,
     int Page,
-    int PageSize) : IQuery<PagedList<RecipeDto>>;
+    int PageSize,
+    bool OnlyHighProtein = false,
+    bool OnlyQuick = false) : IQuery<PagedList<RecipeDto>>;
