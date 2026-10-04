@@ -1,111 +1,121 @@
 import { useGoals } from '@modules/diet-planner/api/hooks/useGoals';
 import { useNutritionSummary } from '@modules/diet-planner/api/hooks/useMeals';
+import { MacroKcalCard } from '@modules/diet-planner/components/MacroKcalCard';
+import {
+  buildNutritionRange,
+  kcalSplit,
+  rangeDates,
+} from '@modules/diet-planner/utils/nutritionRange';
+import { iso } from '@modules/diet-planner/utils/weekHistory';
 import {
   Banner,
   Card,
+  DailyBars,
   EmptyState,
   MetricTile,
+  PageContainer,
+  PageHeader,
   Pagination,
   SegmentedControl,
   Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  type DailyBar,
 } from '@shared/components/ui';
-import { cn, formatNumber, formatSigned } from '@shared/lib/utils';
+import { useFormat } from '@shared/hooks/useFormat';
+import { goalStatus } from '@shared/lib/format';
 import { CalendarX } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Range = '7' | '30' | '90';
 
-function toDateStr(date: Date): string {
-  return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate(),
-  ).padStart(2, '0')}`;
-}
-
-const DAY_MS = 86400000;
-
-function rangeBounds(range: Range): { from: string; to: string } {
-  const now = new Date();
-  const start = new Date(now.getTime() - (Number(range) - 1) * DAY_MS);
-  return { from: toDateStr(start), to: toDateStr(now) };
-}
-
-function lastDates(range: Range): string[] {
-  const out: string[] = [];
-  const now = new Date();
-  for (let i = Number(range) - 1; i >= 0; i--) {
-    out.push(toDateStr(new Date(now.getTime() - i * DAY_MS)));
-  }
-  return out;
-}
+/** Daily totals show unpaginated up to a month; 90 days page through in month-sized chunks. */
+const PAGE_SIZE = 31;
 
 export default function NutritionSummary() {
   const { t } = useTranslation();
+  const fmt = useFormat();
   const [range, setRange] = useState<Range>('7');
-  const [tablePage, setTablePage] = useState(1);
-  const [tablePageSize, setTablePageSize] = useState(25);
+  const [page, setPage] = useState(1);
 
-  const { from, to } = rangeBounds(range);
+  const today = iso(new Date());
+  const dates = rangeDates(today, Number(range));
+  const from = dates[0] ?? today;
 
-  const { data, isLoading, isError, refetch } = useNutritionSummary({ from, to });
+  const { data, isLoading, isError, refetch } = useNutritionSummary({ from, to: today });
   const { data: goals } = useGoals();
 
-  const days = data ?? [];
   const target = goals?.dailyCalorieTarget ?? null;
+  const proteinGoal = goals?.proteinGrams ?? null;
+  const summary = buildNutritionRange(data ?? [], dates, target);
+  const compact = dates.length > 14;
 
-  const logged = days.filter((d) => d.calories > 0);
-  const avg = (pick: (d: (typeof days)[number]) => number): number =>
-    logged.length > 0 ? logged.reduce((s, d) => s + pick(d), 0) / logged.length : 0;
+  const proteinShort =
+    proteinGoal !== null && summary.avgProtein !== null
+      ? goalStatus(summary.avgProtein, proteinGoal, 'min')
+      : null;
+  const intake =
+    target !== null && summary.avgCalories !== null
+      ? goalStatus(summary.avgCalories, target, 'limit')
+      : null;
 
-  const avgKcal = avg((d) => d.calories);
-  const avgProtein = avg((d) => d.protein);
-  const overDays = target !== null ? days.filter((d) => d.calories > target).length : 0;
-
-  const dateList = lastDates(range);
-  const byDate = new Map(days.map((d) => [d.date.slice(0, 10), d]));
-  const todayStr = toDateStr(new Date());
-
-  const scaleMax = Math.max(target ?? 0, ...days.map((d) => d.calories), 1);
-  const targetLinePct = target !== null ? (target / scaleMax) * 100 : null;
-
-  const macroSplit = (p: number, c: number, f: number) => {
-    const total = p * 4 + c * 4 + f * 9 || 1;
+  const bars: DailyBar[] = summary.days.map(({ date, row }, i) => {
+    const d = new Date(`${date}T00:00:00`);
+    const kcal = row ? Math.round(row.calories) : null;
     return {
-      protein: Math.round(((p * 4) / total) * 100),
-      carbs: Math.round(((c * 4) / total) * 100),
-      fat: Math.round(((f * 9) / total) * 100),
+      key: date,
+      // Long ranges label only the first day of each week so 90 bars stay readable.
+      label: !compact || i % 7 === 0 ? fmt.dayShort(d) : '',
+      sublabel: '',
+      value: kcal,
+      text: kcal === null ? '' : fmt.energy(kcal),
+      over: kcal !== null && goalStatus(kcal, target, 'limit').state === 'over',
+      isToday: date === today,
+      srText: `${fmt.dayShort(d)}: ${kcal === null ? t('dashboard.nothing_logged') : fmt.energy(kcal)}`,
     };
-  };
-  const actualSplit = macroSplit(
-    avgProtein,
-    avg((d) => d.carbs),
-    avg((d) => d.fat),
-  );
-  const targetSplit = goals
-    ? macroSplit(goals.proteinGrams ?? 0, goals.carbsGrams ?? 0, goals.fatGrams ?? 0)
+  });
+
+  const split =
+    summary.avgProtein !== null && summary.avgCarbs !== null && summary.avgFat !== null
+      ? kcalSplit(summary.avgProtein, summary.avgCarbs, summary.avgFat)
+      : null;
+  const goalSplit = goals
+    ? kcalSplit(goals.proteinGrams ?? 0, goals.carbsGrams ?? 0, goals.fatGrams ?? 0)
     : null;
 
-  const pageStart = (tablePage - 1) * tablePageSize;
-  const pagedDays = days.slice(pageStart, pageStart + tablePageSize);
+  // Newest first; only days with a logged row.
+  const rows = summary.days.filter((d) => d.row).reverse();
+  const paged =
+    rows.length > PAGE_SIZE ? rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : rows;
+  const g = (n: number | null) => `${fmt.grams(n)} g`;
+  const int = (n: number) => fmt.grams(Math.round(n));
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-26px font-bold">{t('nutrition_page.title')}</h1>
-          <p className="text-muted-foreground mt-1 text-sm">{t('nutrition_page.subtitle')}</p>
-        </div>
-        <SegmentedControl
-          label={t('nutrition_page.range_label')}
-          value={range}
-          onChange={setRange}
-          options={[
-            { value: '7', label: t('nutrition_page.range_7') },
-            { value: '30', label: t('nutrition_page.range_30') },
-            { value: '90', label: t('nutrition_page.range_90') },
-          ]}
-        />
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('nutrition_page.title')}
+        subtitle={t('nutrition_page.subtitle')}
+        actions={
+          <SegmentedControl
+            label={t('nutrition_page.range_label')}
+            value={range}
+            onChange={(r) => {
+              setRange(r);
+              setPage(1);
+            }}
+            options={[
+              { value: '7', label: t('nutrition_page.range_7') },
+              { value: '30', label: t('nutrition_page.range_30') },
+              { value: '90', label: t('nutrition_page.range_90') },
+            ]}
+          />
+        }
+      />
 
       {isError ? (
         <Banner
@@ -119,173 +129,146 @@ export default function NutritionSummary() {
         </Banner>
       ) : isLoading ? (
         <Skeleton className="h-420px rounded-22px w-full" />
-      ) : days.length === 0 ? (
+      ) : summary.loggedCount === 0 ? (
         <EmptyState
           icon={CalendarX}
           title={t('nutrition_page.no_data')}
           description={t('nutrition_page.no_data_desc')}
         />
       ) : (
-        <>
-          <div className="gap-18px grid grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricTile
               label={t('nutrition_page.avg_intake')}
-              value={formatNumber(avgKcal)}
-              hint={target !== null ? formatSigned(avgKcal - target) : 'kcal'}
-              {...(target !== null && avgKcal > target ? { accent: 'fat' as const } : {})}
+              value={fmt.energy(summary.avgCalories)}
+              hint={
+                intake === null
+                  ? t('nutrition_page.no_goal')
+                  : intake.state === 'onTarget'
+                    ? t('nutrition_page.on_target', { target: fmt.energy(target) })
+                    : t(`nutrition_page.intake_${intake.state === 'over' ? 'over' : 'under'}`, {
+                        amount: fmt.energy(Math.abs(intake.diff)),
+                        target: fmt.energy(target),
+                      })
+              }
             />
             <MetricTile
               label={t('nutrition_page.avg_protein')}
-              value={`${avgProtein.toFixed(0)} g`}
+              value={g(summary.avgProtein)}
+              hint={
+                proteinShort === null
+                  ? t('nutrition_page.no_goal')
+                  : proteinShort.state === 'short'
+                    ? t('nutrition_page.protein_short', {
+                        amount: g(Math.abs(proteinShort.diff)),
+                        goal: g(proteinGoal),
+                      })
+                    : t('nutrition_page.protein_met', { goal: g(proteinGoal) })
+              }
             />
             <MetricTile
               label={t('nutrition_page.days_logged')}
-              value={`${String(logged.length)} / ${String(days.length)}`}
+              value={t('nutrition_page.logged_of', {
+                logged: summary.loggedCount,
+                total: dates.length,
+              })}
+              hint={t('nutrition_page.averages_note', { count: summary.loggedCount })}
             />
             <MetricTile
               label={t('nutrition_page.over_days')}
-              value={String(overDays)}
-              {...(overDays > 0 ? { accent: 'fat' as const } : {})}
+              value={target === null ? '—' : String(summary.overDays)}
+              hint={
+                target === null
+                  ? t('nutrition_page.no_goal')
+                  : summary.avgOver === null
+                    ? t('nutrition_page.none_over')
+                    : t('nutrition_page.over_each', { amount: fmt.energy(summary.avgOver) })
+              }
             />
           </div>
 
-          <Card className="p-22px flex flex-col gap-4">
+          <Card className="flex flex-col gap-4 p-6">
             <div className="text-15px font-bold">{t('nutrition_page.intake_vs_target')}</div>
-            <div className="relative flex h-[190px] items-end gap-1">
-              {targetLinePct !== null ? (
-                <div
-                  className="border-fat pointer-events-none absolute inset-x-0 border-t-2 border-dashed"
-                  style={{ bottom: `${String(targetLinePct)}%` }}
-                />
-              ) : null}
-              {dateList.map((date) => {
-                const day = byDate.get(date);
-                const kcal = day?.calories ?? 0;
-                const isToday = date === todayStr;
-                const over = target !== null && kcal > target;
-                const h = kcal > 0 ? Math.max(4, (kcal / scaleMax) * 100) : 22;
-                return (
-                  <div
-                    key={date}
-                    role="img"
-                    aria-label={t('nutrition_page.chart_bar_label', {
-                      date,
-                      kcal: Math.round(kcal),
-                    })}
-                    className={cn(
-                      'flex-1 rounded-t-[5px]',
-                      kcal === 0 && 'border-border-strong border border-dashed',
-                    )}
-                    style={{
-                      height: `${String(h)}%`,
-                      background:
-                        kcal === 0
-                          ? 'transparent'
-                          : isToday
-                            ? 'var(--color-primary)'
-                            : over
-                              ? 'color-mix(in oklab, var(--color-fat) 45%, transparent)'
-                              : 'color-mix(in oklab, var(--color-primary) 30%, transparent)',
-                    }}
-                  />
-                );
-              })}
-            </div>
+            <DailyBars
+              days={bars}
+              target={target}
+              {...(target === null
+                ? {}
+                : {
+                    targetLabel: t('dashboard.hero_target_amount', { amount: fmt.energy(target) }),
+                  })}
+              ariaLabel={t('nutrition_page.intake_vs_target')}
+              overLabel={t('dashboard.week_over_marker')}
+              missingText="—"
+              compact={compact}
+            />
           </Card>
 
-          <Card className="p-22px flex flex-col gap-4">
-            <div className="text-15px font-bold">{t('nutrition_page.macro_split')}</div>
-            <SplitRow label={t('nutrition_page.actual')} split={actualSplit} />
-            {targetSplit ? (
-              <SplitRow label={t('nutrition_page.target')} split={targetSplit} dim />
-            ) : null}
-            <div className="text-muted-foreground text-11px flex gap-4">
-              {(['protein', 'carbs', 'fat'] as const).map((m) => (
-                <span key={m} className="inline-flex items-center gap-1.5 capitalize">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: `var(--color-${m})` }}
-                  />
-                  {t(`products.table.${m}`)}
-                </span>
-              ))}
-            </div>
-          </Card>
+          <MacroKcalCard actual={split} goal={goalSplit} />
 
-          <Card className="overflow-x-auto p-0" role="table">
-            <div className="min-w-[560px]">
-              <div
-                role="row"
-                className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 px-4 py-2.5 font-semibold uppercase"
-              >
-                <span role="columnheader">{t('nutrition_page.date')}</span>
-                <span role="columnheader" className="text-right">
-                  kcal
-                </span>
-                <span role="columnheader" className="text-right">
-                  {t('nutrition_summary.protein')}
-                </span>
-                <span role="columnheader" className="text-right">
-                  {t('nutrition_summary.carbs')}
-                </span>
-                <span role="columnheader" className="text-right">
-                  {t('nutrition_summary.fat')}
-                </span>
-                <span role="columnheader" className="text-right">
-                  {t('nutrition_summary.fiber')}
-                </span>
-              </div>
-              {pagedDays.map((day) => (
-                <div
-                  key={day.date}
-                  role="row"
-                  className="border-border text-12-5px grid grid-cols-[1.4fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-2 border-t px-4 py-2.5"
-                >
-                  <span className="font-semibold">{day.date.slice(0, 10)}</span>
-                  <span className="tnum text-right font-semibold">
-                    {formatNumber(day.calories)}
-                  </span>
-                  <span className="text-text-2 tnum text-right">{day.protein.toFixed(1)}</span>
-                  <span className="text-text-2 tnum text-right">{day.carbs.toFixed(1)}</span>
-                  <span className="text-text-2 tnum text-right">{day.fat.toFixed(1)}</span>
-                  <span className="text-text-2 tnum text-right">{day.fiber.toFixed(1)}</span>
-                </div>
-              ))}
-            </div>
+          <Card className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('nutrition_page.date')}</TableHead>
+                  <TableHead className="text-right">kcal</TableHead>
+                  <TableHead>{t('nutrition_page.vs_target')}</TableHead>
+                  <TableHead className="text-right">{t('nutrition_summary.protein')}</TableHead>
+                  <TableHead className="text-right">{t('nutrition_summary.carbs')}</TableHead>
+                  <TableHead className="text-right">{t('nutrition_summary.fat')}</TableHead>
+                  <TableHead className="text-right">{t('nutrition_summary.fiber')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paged.map(({ date, row }) => {
+                  if (!row) return null;
+                  const status = goalStatus(row.calories, target, 'limit');
+                  const amount = fmt.energy(Math.abs(status.diff));
+                  return (
+                    <TableRow key={date} data-date={date} className="h-11">
+                      <TableCell className="py-0 font-semibold">
+                        {fmt.dayShort(new Date(`${date}T00:00:00`))}
+                      </TableCell>
+                      <TableCell className="tnum py-0 text-right font-semibold">
+                        {fmt.energy(row.calories)}
+                      </TableCell>
+                      <TableCell className="text-text-2 py-0">
+                        {status.state === 'none'
+                          ? '—'
+                          : status.state === 'onTarget'
+                            ? t('nutrition_page.status_on_target')
+                            : t(`nutrition_page.status_${status.state}`, { amount })}
+                      </TableCell>
+                      <TableCell className="tnum text-text-2 py-0 text-right">
+                        {int(row.protein)}
+                      </TableCell>
+                      <TableCell className="tnum text-text-2 py-0 text-right">
+                        {int(row.carbs)}
+                      </TableCell>
+                      <TableCell className="tnum text-text-2 py-0 text-right">
+                        {int(row.fat)}
+                      </TableCell>
+                      <TableCell className="tnum text-text-2 py-0 text-right">
+                        {int(row.fiber)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </Card>
-          <Pagination
-            page={tablePage}
-            pageSize={tablePageSize}
-            totalCount={days.length}
-            onPageChange={setTablePage}
-            onPageSizeChange={(size) => {
-              setTablePageSize(size);
-              setTablePage(1);
-            }}
-          />
-        </>
+          {rows.length > PAGE_SIZE ? (
+            <Pagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              totalCount={rows.length}
+              onPageChange={setPage}
+              onPageSizeChange={() => undefined}
+              pageSizeOptions={[PAGE_SIZE]}
+            />
+          ) : null}
+        </div>
       )}
-    </div>
-  );
-}
-
-function SplitRow({
-  label,
-  split,
-  dim = false,
-}: {
-  label: string;
-  split: { protein: number; carbs: number; fat: number };
-  dim?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="text-muted-foreground text-10-5px font-semibold uppercase">{label}</div>
-      <div className={cn('flex h-3.5 overflow-hidden rounded-full', dim && 'opacity-40')}>
-        {(['protein', 'carbs', 'fat'] as const).map((m) => (
-          <div key={m} style={{ width: `${String(split[m])}%`, background: `var(--color-${m})` }} />
-        ))}
-      </div>
-    </div>
+    </PageContainer>
   );
 }

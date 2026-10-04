@@ -7,14 +7,12 @@ import type { Page, Locator } from '@playwright/test';
 export type NutritionRange = '7' | '30' | '90';
 
 /**
- * Nutrition Summary dropped the custom from/to DatePicker range in the #208
- * redesign — it now offers three fixed presets (7/30/90 days ending today)
- * via a SegmentedControl, plus a bar chart, a macro split, and a paginated
- * daily-breakdown table. See docs/e2e/nutrition.md.
+ * Nutrition Summary (redesign v3): 7/30/90-day segmented range, neutral summary tiles,
+ * labelled daily bars, kcal-based macro bars and a native daily-totals table (newest
+ * first, unpaginated up to 31 rows). See docs/e2e/nutrition.md.
  */
 export class NutritionPage extends BasePage {
   readonly rangeGroup: Locator;
-  readonly pageSizeSelect: Locator;
   readonly previousButton: Locator;
   readonly nextButton: Locator;
   readonly tableRows: Locator;
@@ -22,11 +20,8 @@ export class NutritionPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.rangeGroup = page.getByRole('radiogroup', { name: /range/i });
-    this.pageSizeSelect = page.getByRole('combobox').or(page.locator('select')).first();
     this.previousButton = page.getByRole('button', { name: /previous/i });
     this.nextButton = page.getByRole('button', { name: /next/i });
-    // The daily-breakdown table is a CSS-grid list, not a native <table> —
-    // each row div carries role="row" (see NutritionSummary.tsx).
     this.tableRows = page.getByRole('table').getByRole('row');
   }
 
@@ -73,14 +68,6 @@ export class NutritionPage extends BasePage {
     return (await this.tableRows.count()) - 1;
   }
 
-  async getPageSize(): Promise<number> {
-    return parseInt(await this.pageSizeSelect.inputValue(), 10);
-  }
-
-  async setPageSize(size: number) {
-    await this.pageSizeSelect.selectOption(String(size));
-  }
-
   async expectEmptyState() {
     await expect(this.page.getByText(/no meal data for the selected range/i)).toBeVisible({
       timeout: 8000,
@@ -94,20 +81,24 @@ export class NutritionPage extends BasePage {
   }
 
   async expectMacroSplitVisible() {
-    await expect(this.page.getByText(/macro split/i)).toBeVisible({
+    await expect(this.page.getByText(/where calories come from/i)).toBeVisible({
       timeout: 8000,
     });
   }
 
-  /** One numeric cell of a day's row — column order matches `NutritionSummary.tsx`. */
+  /** One cell of a day's row (`tr[data-date]`) — column order matches `NutritionSummary.tsx`. */
   dayCell(date: string, column: 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber'): Locator {
-    const index = { calories: 1, protein: 2, carbs: 3, fat: 4, fiber: 5 }[column];
-    return this.tableRows.filter({ hasText: date }).locator('span').nth(index);
+    const index = { calories: 1, protein: 3, carbs: 4, fat: 5, fiber: 6 }[column];
+    return this.page.locator(`tr[data-date="${date}"]`).getByRole('cell').nth(index);
   }
 
-  /** The intake chart gives each day a `role="img"` bar labelled `"<date>: <kcal> kcal"`. */
-  chartBar(date: string, kcal: number): Locator {
-    return this.page.getByRole('img', { name: `${date}: ${kcal} kcal` });
+  /** The chart's screen-reader list gives every day an item ending in `"<kcal> kcal"`. */
+  chartBar(kcal: number): Locator {
+    return this.page
+      .getByRole('figure')
+      .getByRole('listitem')
+      .filter({ hasText: `: ${kcal} kcal` })
+      .first();
   }
 
   tileValue(label: string): Locator {
