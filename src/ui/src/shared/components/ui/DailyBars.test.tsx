@@ -38,4 +38,9 @@ describe('DailyBars', () => {
     expect(screen.getByText('b: none')).toBeInTheDocument();
     expect(screen.queryByTestId('target-line')).toBeNull();
   });
+
+  it('compact mode hides the figure above each bar', () => {
+    render(<DailyBars {...props} compact days={[bar('a', 1800)]} />);
+    expect(screen.getByText('1800').className).toContain('hidden');
+  });
 });

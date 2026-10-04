@@ -20,7 +20,7 @@ export interface WeekHistory {
   overDays: number;
 }
 
-function iso(d: Date): string {
+export function iso(d: Date): string {
   return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
     d.getDate(),
   ).padStart(2, '0')}`;
