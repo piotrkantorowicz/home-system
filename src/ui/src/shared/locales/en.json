@@ -58,6 +58,8 @@
     "dead_letters": "Dead letters",
     "shell": {
       "settings": "Settings",
+      "more": "More",
+      "more_hint": "Other pages, modules and account",
       "destinations": "Household and account"
     },
     "route_error": {

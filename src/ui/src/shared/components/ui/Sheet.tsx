@@ -43,7 +43,7 @@ function SheetDescription({
 
 export interface SheetContentProps extends React.ComponentProps<typeof DialogPrimitive.Content> {
   onClose?: () => void;
-  side?: 'left' | 'right';
+  side?: 'left' | 'right' | 'bottom';
 }
 
 function SheetContent({
@@ -67,9 +67,12 @@ function SheetContent({
         ref={ref}
         className={cn(
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          side === 'right'
-            ? 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 h-full w-full max-w-lg duration-300'
-            : 'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 h-full w-64 duration-300',
+          side === 'right' &&
+            'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 h-full w-full max-w-lg duration-300',
+          side === 'left' &&
+            'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 h-full w-64 duration-300',
+          side === 'bottom' &&
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl duration-300',
           className,
         )}
         {...props}
