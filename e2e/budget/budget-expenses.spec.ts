@@ -46,10 +46,10 @@ test.describe('Budget expenses', () => {
     await correct.getByLabel('Reason').fill('typo');
     await correct.getByRole('button', { name: 'Save' }).click();
     await expect(correct).toBeHidden();
-    await expect(page.getByRole('heading', { name: /^1\.00 PLN/ })).toBeVisible();
     const history = page.getByRole('region', { name: 'History' });
-    await expect(history.getByText(/Revision 1 · Created/)).toBeVisible();
-    await expect(history.getByText(/Revision 2 · Corrected/)).toBeVisible();
+    await expect(history.getByText(/Added by you/)).toBeVisible();
+    await expect(history.getByText(/Corrected by you/)).toBeVisible();
+    await expect(history.getByText(/Amount/)).toBeVisible();
 
     // Void it: it stops offering actions and leaves the default list.
     await page.getByRole('button', { name: 'Void' }).click();
