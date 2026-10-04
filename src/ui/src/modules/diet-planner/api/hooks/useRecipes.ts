@@ -16,19 +16,42 @@ export type RecipeDto = components['schemas']['RecipeDto'];
 interface RecipesQueryParams {
   search?: string;
   onlyMine?: boolean;
+  onlyHighProtein?: boolean;
+  onlyQuick?: boolean;
   page?: number;
   pageSize?: number;
 }
 
 export function recipeListOptions(params: RecipesQueryParams = {}) {
-  const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
+  const {
+    search = '',
+    onlyMine = false,
+    onlyHighProtein = false,
+    onlyQuick = false,
+    page = 1,
+    pageSize = 50,
+  } = params;
 
   return queryOptions({
-    queryKey: queryKeys.recipes.list({ search, onlyMine, page, pageSize }),
+    queryKey: queryKeys.recipes.list({
+      search,
+      onlyMine,
+      onlyHighProtein,
+      onlyQuick,
+      page,
+      pageSize,
+    }),
     queryFn: async () => {
       const response = await api.GET('/api/v1/recipes', {
         params: {
-          query: { Search: search, OnlyMine: onlyMine, Page: page, PageSize: pageSize },
+          query: {
+            Search: search,
+            OnlyMine: onlyMine,
+            OnlyHighProtein: onlyHighProtein,
+            OnlyQuick: onlyQuick,
+            Page: page,
+            PageSize: pageSize,
+          },
         },
       });
 
