@@ -1,156 +1,91 @@
 import {
   BodyStatsForm,
-  GoalsForm,
-  MealScheduleForm,
-  HydrationConfigForm,
   DietReminderSettingsForm,
+  EnergyModel,
+  GoalsForm,
+  HydrationConfigForm,
+  MealScheduleForm,
   WeightHistorySection,
-  ProfileOverview,
 } from '@modules/diet-planner/components/settings';
-import { cn } from '@shared/lib/utils';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
-type SectionId =
-  | 'overview'
-  | 'body-stats'
-  | 'weight-history'
-  | 'goals'
-  | 'meal-schedule'
-  | 'hydration'
-  | 'notifications';
-
-function isValidSection(s: string | null): s is SectionId {
-  return [
-    'overview',
-    'body-stats',
-    'weight-history',
-    'goals',
-    'meal-schedule',
-    'hydration',
-    'notifications',
-  ].includes(s ?? '');
-}
+// Legacy `?section=` deep links map onto the one scrolling page's anchors.
+const LEGACY_SECTION_ANCHOR: Record<string, string> = {
+  overview: 'profile',
+  'body-stats': 'profile',
+  'weight-history': 'profile',
+  goals: 'goals',
+  'meal-schedule': 'meal-times',
+  hydration: 'water',
+  notifications: 'reminders',
+};
 
 export default function Profile() {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const rawSection = searchParams.get('section');
-  const activeSection: SectionId = isValidSection(rawSection) ? rawSection : 'overview';
+  const { search, hash } = useLocation();
+  const legacy = new URLSearchParams(search).get('section');
 
-  function navigate(section: SectionId) {
-    setSearchParams(section === 'overview' ? {} : { section });
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
+
+  if (legacy !== null) {
+    const anchor = LEGACY_SECTION_ANCHOR[legacy] ?? 'profile';
+    return <Navigate replace to={{ search: '', hash: `#${anchor}` }} />;
   }
 
-  const FORM_COMPONENTS: Record<
-    Exclude<SectionId, 'overview'>,
-    React.ComponentType<{ onSuccess?: () => void }>
-  > = {
-    'body-stats': BodyStatsForm,
-    'weight-history': WeightHistorySection,
-    goals: GoalsForm,
-    'meal-schedule': MealScheduleForm,
-    hydration: HydrationConfigForm,
-    notifications: DietReminderSettingsForm,
-  };
-
-  const sidebarGroups = [
+  const sections = [
     {
-      label: t('profile.sidebar.personal'),
-      items: [
-        { id: 'overview' as SectionId, label: t('profile.sidebar.overview') },
-        { id: 'body-stats' as SectionId, label: t('profile.sidebar.body_stats') },
-        { id: 'weight-history' as SectionId, label: t('profile.sidebar.weight_history') },
-      ],
+      id: 'profile',
+      label: t('profile.tab_profile'),
+      body: (
+        <>
+          <div id="profile-details" className="scroll-mt-24">
+            <BodyStatsForm />
+          </div>
+          <EnergyModel />
+          <WeightHistorySection />
+        </>
+      ),
     },
-    {
-      label: t('profile.sidebar.diet_planner'),
-      items: [
-        { id: 'goals' as SectionId, label: t('profile.sidebar.goals') },
-        { id: 'meal-schedule' as SectionId, label: t('profile.sidebar.meal_schedule') },
-        { id: 'hydration' as SectionId, label: t('profile.sidebar.hydration') },
-      ],
-    },
-    {
-      label: t('profile.sidebar.notifications'),
-      items: [{ id: 'notifications' as SectionId, label: t('profile.sidebar.alerts') }],
-    },
+    { id: 'goals', label: t('profile.tab_goals'), body: <GoalsForm /> },
+    { id: 'meal-times', label: t('profile.tab_meal_times'), body: <MealScheduleForm /> },
+    { id: 'water', label: t('profile.tab_water'), body: <HydrationConfigForm /> },
+    { id: 'reminders', label: t('profile.tab_reminders'), body: <DietReminderSettingsForm /> },
   ];
 
-  const allItems = sidebarGroups.flatMap((g) => g.items);
-
   return (
-    <div className="animate-fade-in-up p-8 lg:p-10">
-      {/* Hero */}
-      <div className="mb-8">
-        <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('profile.page_title')}</h1>
-        <p className="text-muted-foreground text-lg">{t('profile.page_subtitle')}</p>
+    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
+      <div>
+        <h1 className="text-26px font-bold">{t('profile.settings_title')}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t('profile.settings_subtitle')}</p>
       </div>
 
-      <div className="flex gap-8">
-        {/* Desktop sidebar */}
-        <nav className="hidden w-56 shrink-0 md:block">
-          {sidebarGroups.map((group) => (
-            <div key={group.label} className="mb-6">
-              <p className="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
-                {group.label}
-              </p>
-              <ul>
-                {group.items.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      onClick={() => {
-                        navigate(item.id);
-                      }}
-                      className={cn(
-                        'w-full rounded-lg px-3 py-2 text-left text-sm transition-colors',
-                        activeSection === item.id
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
+      <nav
+        aria-label={t('profile.tabs')}
+        className="bg-background sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b px-4 md:mx-0 md:px-0"
+      >
+        {sections.map((s) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring shrink-0 rounded-md px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {s.label}
+          </a>
+        ))}
+      </nav>
 
-        {/* Content */}
-        <div className="min-w-0 flex-1">
-          {/* Mobile tabs */}
-          <div className="mb-6 flex gap-1 overflow-x-auto border-b md:hidden">
-            {allItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  navigate(item.id);
-                }}
-                className={cn(
-                  'shrink-0 border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-                  activeSection === item.id
-                    ? 'border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground border-transparent',
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Active section */}
-          {activeSection === 'overview' ? (
-            <ProfileOverview onEdit={navigate} />
-          ) : (
-            (() => {
-              const ActiveForm = FORM_COMPONENTS[activeSection];
-              return <ActiveForm />;
-            })()
-          )}
-        </div>
-      </div>
+      {sections.map((s) => (
+        <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-24">
+          <h2 id={`${s.id}-h`} className="text-18px mb-4 font-bold">
+            {s.label}
+          </h2>
+          <div className="flex flex-col gap-4">{s.body}</div>
+        </section>
+      ))}
     </div>
   );
 }

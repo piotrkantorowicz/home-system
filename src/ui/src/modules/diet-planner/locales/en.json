@@ -104,7 +104,10 @@
     "save_success": "Goals saved successfully!",
     "save_error": "Failed to save goals. Please try again.",
     "nutrition_header": "Nutrition Goals",
-    "nutrition_desc": "Set your daily calorie and macro targets"
+    "nutrition_desc": "Set your daily calorie and macro targets",
+    "direction_limit": "Limit: turns red when you go over.",
+    "direction_min": "At least: turns green when you reach it.",
+    "direction_explainer": "Limits turn red when you go over; minimums turn green when you reach them."
   },
   "products": {
     "title": "Products",
@@ -520,20 +523,6 @@
     "nav": "Profile",
     "title": "My Profile",
     "subtitle": "Manage your biometric data and activity level",
-    "page_title": "Profile & Settings",
-    "page_subtitle": "Manage your personal information and preferences",
-    "sidebar": {
-      "personal": "Personal",
-      "body_stats": "Body Stats",
-      "diet_planner": "Diet Planner",
-      "goals": "Goals",
-      "meal_schedule": "Meal Schedule",
-      "hydration": "Hydration",
-      "notifications": "Notifications",
-      "alerts": "Alerts",
-      "weight_history": "Weight History",
-      "overview": "Overview"
-    },
     "personal_header": "Personal Information",
     "personal_desc": "Your basic personal details",
     "measurements_header": "Body Measurements",
@@ -557,23 +546,23 @@
     "save_btn": "Save Profile",
     "save_success": "Profile saved successfully!",
     "save_error": "Failed to save profile. Please try again.",
+    "settings_title": "Settings",
+    "settings_subtitle": "Your profile, goals, meal times, water and reminders",
+    "tabs": "Settings sections",
+    "tab_profile": "Profile",
+    "tab_goals": "Goals",
+    "tab_meal_times": "Meal times",
+    "tab_water": "Water",
+    "tab_reminders": "Reminders",
+    "energy_empty": "Add your birth date, sex and a daily calorie target to see your resting and daily calorie burn.",
+    "add_details": "Add details",
     "overview": {
-      "edit_profile": "Edit profile",
       "energy_model": "Energy model",
       "energy_model_sub": "Recalculated daily",
-      "energy_model_empty": "Set a daily calorie target to see your energy model.",
       "daily_deficit": "Daily deficit",
       "weekly_change": "Weekly change",
       "current_bmi": "Current BMI",
-      "target_bmi": "Target BMI",
-      "macro_targets": "Macro targets",
-      "macro_targets_empty": "No macro targets set yet.",
-      "edit_targets": "Edit targets",
-      "all_reminder_settings": "All reminder settings",
-      "reminder_saved": "Reminder updated",
-      "reminder_error": "Could not update the reminder",
-      "weight_to_go": "{{kg}} kg to go",
-      "est_goal_date": "Estimated goal date:"
+      "target_bmi": "Target BMI"
     }
   },
   "sheets": {

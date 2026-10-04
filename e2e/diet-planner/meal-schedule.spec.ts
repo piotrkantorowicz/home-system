@@ -8,7 +8,7 @@ test.describe('Meal Schedule', () => {
     const schedulePage = new MealSchedulePage(page);
     await schedulePage.goto();
 
-    await expect(page).toHaveURL(/\/diet-planner\/profile\?section=meal-schedule/);
+    await expect(page).toHaveURL(/\/diet-planner\/profile#meal-times/);
   });
 
   test('shows default meal slots on first visit', async ({ page }) => {
