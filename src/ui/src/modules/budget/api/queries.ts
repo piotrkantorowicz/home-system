@@ -1,5 +1,11 @@
 import { useHousehold } from '@modules/household';
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useAuth } from 'react-oidc-context';
 
 import { api, checkResponse } from './client';
@@ -82,6 +88,44 @@ export function useExpensesQuery(filters: ExpenseFilters, enabled = true) {
   return useQuery({
     ...expensesOptions(auth.user?.profile.sub, household?.id, filters),
     enabled: enabled && auth.isAuthenticated && !!household,
+  });
+}
+
+/** Newest `limit` expenses across the given envelopes: the endpoint filters by one envelope only. */
+export function useLatestExpensesQuery(
+  accountIds: string[],
+  range: { from: string; to: string },
+  limit: number,
+  enabled = true,
+) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQueries({
+    queries: accountIds.map((accountId) => ({
+      ...expensesOptions(auth.user?.profile.sub, household?.id, {
+        ...range,
+        accountId,
+        page: 1,
+        pageSize: limit,
+      }),
+      enabled: enabled && auth.isAuthenticated && !!household,
+    })),
+    combine: (results) => ({
+      isPending: results.some((r) => r.isPending),
+      isError: results.some((r) => r.isError),
+      refetch: () => {
+        results.forEach((r) => {
+          void r.refetch();
+        });
+      },
+      items: results
+        .flatMap((r) => r.data?.items ?? [])
+        .sort(
+          (a, b) =>
+            b.occurredOn.localeCompare(a.occurredOn) || b.createdAt.localeCompare(a.createdAt),
+        )
+        .slice(0, limit),
+    }),
   });
 }
 

@@ -13,7 +13,7 @@ test.describe('Budget monthly summary', () => {
     await expect(setup.or(overview)).toBeVisible();
     if (await setup.isVisible()) await setup.click();
     await expect(overview).toBeVisible();
-    await expect(page.getByText(/^Shared spending ·/)).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Shared' })).toBeChecked();
 
     // A limit of zero is a real limit (unlike "No limit").
     await page
@@ -23,7 +23,7 @@ test.describe('Budget monthly summary', () => {
     await limit.getByLabel(/^Limit/).fill('0');
     await limit.getByRole('button', { name: 'Save' }).click();
     await expect(limit).toBeHidden();
-    await expect(page.getByText(/Limit 0\.00 PLN/)).toBeVisible();
+    await expect(page.getByText(/of 0\.00$/).first()).toBeVisible();
 
     // Overspending never blocks recording.
     await page.getByRole('button', { name: 'Add expense' }).click();
@@ -34,21 +34,22 @@ test.describe('Budget monthly summary', () => {
     await expect(dialog.getByRole('button', { name: 'Save' })).toBeEnabled();
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByText(/Over the limit by/)).toBeVisible();
+    await expect(page.getByText(/over the limit/).first()).toBeVisible();
 
     // Another month is its own page of numbers; going back restores this one.
-    const label = (await page.getByText(/^Shared spending ·/).textContent()) ?? '';
+    const month = page.getByRole('group', { name: 'Month' }).locator('p');
+    const label = (await month.textContent()) ?? '';
     await page.getByRole('button', { name: 'Previous month' }).click();
-    await expect(page.getByText(/^Shared spending ·/)).not.toHaveText(label);
+    await expect(month).not.toHaveText(label);
     await page.getByRole('button', { name: 'Next month' }).click();
-    await expect(page.getByText(/^Shared spending ·/)).toHaveText(label);
+    await expect(month).toHaveText(label);
 
     // Clean up: clear the limit and void the expense.
     await page.getByRole('button', { name: 'Change limit for Everyday' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Clear limit' }).click();
     await expect(page.getByText(/No limit/).first()).toBeVisible();
     await page
-      .getByRole('link', { name: new RegExp(`${amount.replace('.', '\\.')} PLN`) })
+      .getByRole('link', { name: new RegExp(amount.replace('.', '\\.')) })
       .first()
       .click();
     await page.getByRole('button', { name: 'Void' }).click();
