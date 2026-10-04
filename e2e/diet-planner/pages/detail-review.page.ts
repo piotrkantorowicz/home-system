@@ -26,12 +26,17 @@ export class DetailReviewPage {
     await dialog.getByLabel('Meal Type', { exact: true }).selectOption({ label: 'Breakfast' });
     await dialog.getByRole('button', { name: 'Add Meal', exact: true }).click();
     await expect(this.page).toHaveURL(/calendar\?view=day&date=/);
-    await expect(this.page.getByRole('heading', { name: 'Calendar', exact: true })).toBeVisible();
+    await expect(this.page.getByRole('heading', { name: 'Meal plan', exact: true })).toBeVisible();
     await expect(this.page.getByText(name, { exact: true })).toBeVisible();
   }
 
   async jumpToToday() {
+    // The week view's button is "This week": it returns to the current week and stays in the week view.
     await this.page.goto('/diet-planner/calendar?view=week&date=2020-01-01');
+    await this.page.getByRole('button', { name: 'This week', exact: true }).click();
+    await expect(this.page).toHaveURL(/calendar\?view=week$/);
+    // The day view's button is "Today": it jumps to the current day and focuses its heading.
+    await this.page.goto('/diet-planner/calendar?view=day&date=2020-01-01');
     await this.page.getByRole('button', { name: 'Today', exact: true }).click();
     await expect(this.page).toHaveURL(/calendar\?view=day$/);
     const today = new Date().toLocaleDateString('en', {
@@ -50,7 +55,7 @@ export class DetailReviewPage {
       'true',
     );
     await this.page.goBack();
-    await expect(this.page).toHaveURL(/view=week&date=2020-01-01/);
+    await expect(this.page).toHaveURL(/view=day&date=2020-01-01/);
   }
 
   async captureResponsive(outputPath: (name: string) => string, name: string) {

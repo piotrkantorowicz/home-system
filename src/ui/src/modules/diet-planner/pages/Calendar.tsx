@@ -4,10 +4,8 @@ import {
   Select,
   Skeleton,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  PageContainer,
+  PageHeader,
   SegmentedControl,
 } from '@shared/components/ui';
 import {
@@ -19,10 +17,10 @@ import {
   DialogFooter,
 } from '@shared/components/ui/Dialog';
 import { useToast } from '@shared/context/ToastContext';
+import { useFormat } from '@shared/hooks/useFormat';
 import { usePreferences } from '@shared/hooks/usePreferences';
-import { cn } from '@shared/lib/utils';
-import { ArrowRight, ChevronLeft, ChevronRight, Target } from 'lucide-react';
-import { lazy, Suspense, useState, useRef, useSyncExternalStore } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Upload } from 'lucide-react';
+import { useState, useRef, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -33,25 +31,16 @@ import {
   useCreateMeal,
   useUpdateMeal,
   useDeleteMeal,
-  useNutritionSummary,
   useCompleteMeal,
   useResetMeal,
   useBulkCompleteMeals,
-  type DailyNutrition,
 } from '../api/hooks/useMeals';
-import { CalendarTabBar, type CalendarTab } from '../components/CalendarTabBar';
-import { HydrationQuickAdd } from '../components/HydrationQuickAdd';
-import { MacroProgressBar } from '../components/MacroProgressBar';
 import { WeekGrid } from '../components/calendar/WeekGrid';
+import { WeekMeters, type WeekTotals } from '../components/calendar/WeekMeters';
 import { DayView } from '../components/calendar-day/DayView';
 import { MealForm } from '../components/diet-plans/MealForm';
 import { MealOverrideDialog } from '../components/diet-plans/MealOverrideDialog';
-import { consumedNutrition } from '../utils/consumedNutrition';
 import { mealAccess, plannableMembers } from '../utils/householdAccess';
-
-const NutritionSummaryPage = lazy(() => import('./NutritionSummary'));
-const ShoppingListPage = lazy(() => import('./ShoppingList'));
-const ImportWizardPage = lazy(() => import('./diet-plans/ImportWizard'));
 
 function getWeekStart(date: Date, weekStart: 'monday' | 'sunday') {
   const d = new Date(date);
@@ -88,21 +77,7 @@ function resolveSelectedDay(dateParam: string | null): Date {
   return today;
 }
 
-const EMPTY_TOTALS = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
-
-function sumWeeklyTotals(days: DailyNutrition[] | undefined) {
-  if (!days) return EMPTY_TOTALS;
-  return days.reduce(
-    (acc, day) => ({
-      calories: acc.calories + day.calories,
-      protein: acc.protein + day.protein,
-      carbs: acc.carbs + day.carbs,
-      fat: acc.fat + day.fat,
-      fiber: acc.fiber + day.fiber,
-    }),
-    EMPTY_TOTALS,
-  );
-}
+const EMPTY_TOTALS: WeekTotals = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
 
 const narrowQuery = '(max-width: 767px)';
 function subscribeViewport(callback: () => void) {
@@ -135,8 +110,8 @@ interface Meal {
 
 export default function Calendar() {
   const { t, i18n } = useTranslation();
+  const fmt = useFormat();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<CalendarTab>('calendar');
   const [searchParams, setSearchParams] = useSearchParams();
   const dateHeadingRef = useRef<HTMLHeadingElement>(null);
 
@@ -212,13 +187,7 @@ export default function Calendar() {
     to: formatLocalDate(weekEndDate),
   };
 
-  const { data: nutritionSummary } = useNutritionSummary({
-    from: weekRange.from,
-    to: weekRange.to,
-  });
   const { data: goals } = useGoals();
-
-  const weeklyTotals = sumWeeklyTotals(nutritionSummary);
 
   const { data: meals, isLoading: mealsLoading } = useMeals({
     from: weekRange.from,
@@ -226,10 +195,17 @@ export default function Calendar() {
     ...(personId !== undefined ? { personId } : {}),
   });
 
-  // The nutrition summary endpoint is caller-only; another member's day totals come from their meals.
-  const nutritionByDate = new Map<string, DailyNutrition>();
-  for (const day of viewed ? consumedNutrition(meals ?? []) : (nutritionSummary ?? []))
-    nutritionByDate.set(day.date.slice(0, 10), day);
+  // Everything planned for the week, eaten or not (meal quantities already include overrides).
+  const weeklyTotals = (meals ?? []).reduce<WeekTotals>(
+    (acc, meal) => ({
+      calories: acc.calories + Number(meal.calories),
+      protein: acc.protein + Number(meal.protein),
+      carbs: acc.carbs + Number(meal.carbs),
+      fat: acc.fat + Number(meal.fat),
+      fiber: acc.fiber + Number(meal.fiber),
+    }),
+    EMPTY_TOTALS,
+  );
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStartDate);
@@ -336,7 +312,7 @@ export default function Calendar() {
     shiftDate(1);
   };
   const goToToday = () => {
-    updateParams({ date: null, view: 'day' }, { replace: false });
+    updateParams({ date: null }, { replace: false });
     dateHeadingRef.current?.focus();
     dateHeadingRef.current?.scrollIntoView({ block: 'nearest' });
   };
@@ -350,45 +326,65 @@ export default function Calendar() {
   });
   const dayMeals = dayQuery.data;
 
+  const rangeLabel = fmt.dayRange(weekDays[0], weekDays[6]);
+  const calorieTarget = viewed ? null : (goals?.dailyCalorieTarget ?? null);
+  const firstSlot = slots[0];
+
   return (
-    <div
-      className={cn(
-        'animate-fade-in-up py-8 lg:py-10',
-        // Calendar tab needs maximum horizontal real estate for the 7-day grid
-        activeTab === 'calendar' ? 'px-4 lg:px-6' : 'px-8 lg:px-10',
-      )}
-    >
-      <div className="mb-8">
-        <h1 className="mb-3 text-4xl font-bold tracking-tight">{t('calendar.title')}</h1>
-        <p className="text-muted-foreground text-lg">{t('calendar.subtitle')}</p>
-      </div>
-
-      {/* Tab Bar */}
-      <CalendarTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {activeTab === 'calendar' && (
-        <>
-          {/* Navigator */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 ref={dateHeadingRef} tabIndex={-1} className="text-xl font-semibold">
-                {view === 'week'
-                  ? t('diet_plan_detail.week_of', {
-                      date:
-                        weekDays[0]?.toLocaleDateString(i18n.language, {
-                          month: 'long',
-                          day: 'numeric',
-                        }) ?? '',
-                    })
-                  : selectedDay.toLocaleDateString(i18n.language, {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-              </h2>
-            </div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              {members.length > 1 && (
+    <PageContainer className="animate-fade-in-up">
+      <PageHeader
+        title={t('calendar.title')}
+        subtitle={
+          calorieTarget === null
+            ? rangeLabel
+            : t('calendar.subtitle_target', { range: rangeLabel, kcal: fmt.energy(calorieTarget) })
+        }
+        actions={
+          <>
+            <Button variant="outline" size="xl" asChild>
+              <Link to="/diet-planner/import">
+                <Upload className="size-4" />
+                {t('calendar.import')}
+              </Link>
+            </Button>
+            {canPlan && firstSlot ? (
+              <Button
+                size="xl"
+                onClick={() => {
+                  openCreateForm(formatLocalDate(new Date()), firstSlot.id);
+                }}
+              >
+                <Plus className="size-4" />
+                {t('calendar.add_meal')}
+              </Button>
+            ) : null}
+          </>
+        }
+      />
+      <>
+        {/* Controls */}
+        <h2 ref={dateHeadingRef} tabIndex={-1} className="sr-only">
+          {view === 'week'
+            ? t('diet_plan_detail.week_of', {
+                date:
+                  weekDays[0]?.toLocaleDateString(i18n.language, {
+                    month: 'long',
+                    day: 'numeric',
+                  }) ?? '',
+              })
+            : selectedDay.toLocaleDateString(i18n.language, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+        </h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {members.length > 1 && (
+              <div className="flex items-center gap-2">
+                <span aria-hidden="true" className="text-muted-foreground text-sm">
+                  {t('calendar.person_for')}
+                </span>
                 <div className="w-44">
                   <Select
                     aria-label={t('calendar.person_filter')}
@@ -409,331 +405,224 @@ export default function Calendar() {
                     ))}
                   </Select>
                 </div>
-              )}
-              <SegmentedControl
-                label={t('calendar.view_label')}
-                value={view}
-                onChange={setView}
-                options={[
-                  { value: 'day', label: t('calendar.day_view') },
-                  { value: 'week', label: t('calendar.week_view') },
-                ]}
-              />
-              <Button variant="outline" className="min-h-11" onClick={goToToday}>
-                {t('calendar.today')}
-              </Button>
-              <button
-                type="button"
-                onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
-                aria-label={t('common.previous')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={view === 'week' ? goToNextWeek : goToNextDay}
-                aria-label={t('common.next')}
-                className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </div>
+              </div>
+            )}
+            <SegmentedControl
+              label={t('calendar.view_label')}
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'day', label: t('calendar.day_view') },
+                { value: 'week', label: t('calendar.week_view') },
+              ]}
+            />
           </div>
-
-          {view === 'day' && (
-            <div
-              className="mb-5 grid grid-cols-7 gap-1"
-              role="group"
-              aria-label={t('calendar.choose_day')}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={view === 'week' ? goToPrevWeek : goToPrevDay}
+              aria-label={t('common.previous')}
+              className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
             >
-              {weekDays.map((day) => (
-                <Button
-                  key={formatLocalDate(day)}
-                  variant={formatLocalDate(day) === dayDateStr ? 'default' : 'outline'}
-                  className="h-auto min-h-14 min-w-0 flex-col px-1"
-                  aria-pressed={formatLocalDate(day) === dayDateStr}
-                  aria-label={day.toLocaleDateString(i18n.language, {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                  onClick={() => {
-                    updateParams({ date: formatLocalDate(day) }, { replace: false });
-                  }}
-                >
-                  <span className="text-xs">
-                    {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
-                  </span>
-                  <span>{day.getDate()}</span>
-                </Button>
-              ))}
-            </div>
-          )}
-          {view === 'day' &&
-            (dayQuery.isError ? (
-              <Banner
-                variant="error"
-                onRetry={() => {
-                  void dayQuery.refetch();
-                }}
-                retryLabel={t('dashboard.retry')}
-              >
-                {t('dashboard.data_error')}
-              </Banner>
-            ) : dayQuery.isPending || dayQuery.isPlaceholderData ? (
-              <Skeleton className="h-72 w-full" />
-            ) : (
-              <DayView
-                date={dayDateStr}
-                slots={slots.map((s) => ({
-                  id: s.id,
-                  name: s.name,
-                  defaultTime: s.defaultTime,
-                  sortOrder: s.sortOrder,
-                }))}
-                meals={dayMeals ?? []}
-                onAddMeal={(slotId) => {
-                  openCreateForm(dayDateStr, slotId);
-                }}
-                onEditMeal={(meal) => {
-                  openEditForm(meal as unknown as Meal);
-                }}
-                onDeleteMeal={(meal) => {
-                  setDeletingMeal(meal as unknown as Meal);
-                }}
-                onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
-                onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
-                onOverrideMeal={(mealId) => {
-                  setOverrideMealId(mealId);
-                }}
-                canPlan={canPlan}
-                canLog={canLog}
-                otherPerson={viewed !== undefined}
-              />
-            ))}
+              <ChevronLeft className="size-4" />
+            </button>
+            <Button variant="outline" className="min-h-11" onClick={goToToday}>
+              {t(view === 'week' ? 'calendar.this_week' : 'calendar.today')}
+            </Button>
+            <button
+              type="button"
+              onClick={view === 'week' ? goToNextWeek : goToNextDay}
+              aria-label={t('common.next')}
+              className="border-border bg-card text-text-2 hover:border-border-strong hover:text-foreground rounded-12px grid size-11 place-items-center border transition-colors"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+        </div>
 
-          {view === 'week' ? (
-            <WeekGrid
-              weekDays={weekDays}
-              slots={slots.map((s) => ({ id: s.id, name: s.name, sortOrder: s.sortOrder }))}
-              meals={meals ?? []}
-              nutritionByDate={nutritionByDate}
-              calorieTarget={viewed ? null : (goals?.dailyCalorieTarget ?? null)}
-              loading={mealsLoading}
-              bulkPending={bulkCompleteMeals.isPending}
-              onAddMeal={openCreateForm}
+        {view === 'day' && (
+          <div
+            className="mb-5 grid grid-cols-7 gap-1"
+            role="group"
+            aria-label={t('calendar.choose_day')}
+          >
+            {weekDays.map((day) => (
+              <Button
+                key={formatLocalDate(day)}
+                variant={formatLocalDate(day) === dayDateStr ? 'default' : 'outline'}
+                className="h-auto min-h-14 min-w-0 flex-col px-1"
+                aria-pressed={formatLocalDate(day) === dayDateStr}
+                aria-label={day.toLocaleDateString(i18n.language, {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+                onClick={() => {
+                  updateParams({ date: formatLocalDate(day) }, { replace: false });
+                }}
+              >
+                <span className="text-xs">
+                  {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
+                </span>
+                <span>{day.getDate()}</span>
+              </Button>
+            ))}
+          </div>
+        )}
+        {view === 'day' &&
+          (dayQuery.isError ? (
+            <Banner
+              variant="error"
+              onRetry={() => {
+                void dayQuery.refetch();
+              }}
+              retryLabel={t('dashboard.retry')}
+            >
+              {t('dashboard.data_error')}
+            </Banner>
+          ) : dayQuery.isPending || dayQuery.isPlaceholderData ? (
+            <Skeleton className="h-72 w-full" />
+          ) : (
+            <DayView
+              date={dayDateStr}
+              slots={slots.map((s) => ({
+                id: s.id,
+                name: s.name,
+                defaultTime: s.defaultTime,
+                sortOrder: s.sortOrder,
+              }))}
+              meals={dayMeals ?? []}
+              onAddMeal={(slotId) => {
+                openCreateForm(dayDateStr, slotId);
+              }}
               onEditMeal={(meal) => {
                 openEditForm(meal as unknown as Meal);
+              }}
+              onDeleteMeal={(meal) => {
+                setDeletingMeal(meal as unknown as Meal);
               }}
               onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
               onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
               onOverrideMeal={(mealId) => {
                 setOverrideMealId(mealId);
               }}
-              onDeleteMeal={(meal) => {
-                setDeletingMeal(meal as unknown as Meal);
-              }}
-              onBulkComplete={(date) => void handleBulkComplete(date)}
               canPlan={canPlan}
               canLog={canLog}
-              showPerson={viewed !== undefined}
+              otherPerson={viewed !== undefined}
             />
-          ) : null}
+          ))}
 
-          {/* Weekly Nutrition Summary — hidden in day view (DayView has its own summary) */}
-          {view === 'week' && !viewed && (
-            <Card className="animate-fade-in-up mt-6">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{t('nutrition_summary.title')}</CardTitle>
-                  {goals !== undefined && goals !== null && (
-                    <Link
-                      to="/diet-planner/profile?section=goals"
-                      className="text-muted-foreground hover:text-primary text-sm transition-colors"
-                    >
-                      {t('nutrition_summary.goals_edit')}
-                    </Link>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {goals === undefined || goals === null ? (
-                  <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-8 text-center">
-                    <div className="rounded-xl bg-orange-500/10 p-2.5">
-                      <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {t('nutrition_summary.goals_cta_title')}
-                    </p>
-                    <Link
-                      to="/diet-planner/profile?section=goals"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                    >
-                      {t('nutrition_summary.goals_cta_button')}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                ) : weeklyTotals.calories === 0 &&
-                  weeklyTotals.protein === 0 &&
-                  weeklyTotals.carbs === 0 ? (
-                  <p className="text-muted-foreground text-sm">{t('nutrition_summary.no_meals')}</p>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <MacroProgressBar
-                      label={t('nutrition_summary.calories')}
-                      actual={weeklyTotals.calories}
-                      goal={goals.dailyCalorieTarget !== null ? goals.dailyCalorieTarget * 7 : null}
-                      unit="kcal"
-                      gradient="from-rose-500 to-orange-500"
-                    />
-                    <MacroProgressBar
-                      label={t('nutrition_summary.protein')}
-                      actual={weeklyTotals.protein}
-                      goal={goals.proteinGrams !== null ? goals.proteinGrams * 7 : null}
-                      gradient="from-blue-500 to-indigo-500"
-                    />
-                    <MacroProgressBar
-                      label={t('nutrition_summary.carbs')}
-                      actual={weeklyTotals.carbs}
-                      goal={goals.carbsGrams !== null ? goals.carbsGrams * 7 : null}
-                      gradient="from-emerald-500 to-teal-500"
-                    />
-                    <MacroProgressBar
-                      label={t('nutrition_summary.fat')}
-                      actual={weeklyTotals.fat}
-                      goal={goals.fatGrams !== null ? goals.fatGrams * 7 : null}
-                      gradient="from-amber-500 to-orange-500"
-                    />
-                    <MacroProgressBar
-                      label={t('nutrition_summary.fiber')}
-                      actual={weeklyTotals.fiber}
-                      goal={goals.fiberGrams !== null ? goals.fiberGrams * 7 : null}
-                      gradient="from-violet-500 to-purple-500"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Hydration Quick Add — week view only (DaySummaryCard already includes it) */}
-          {view === 'week' && !viewed && <HydrationQuickAdd />}
-
-          <MealForm
-            key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}
-            open={mealFormOpen}
-            onClose={() => {
-              setMealFormOpen(false);
-              setEditingMeal(null);
+        {view === 'week' ? (
+          <WeekGrid
+            weekDays={weekDays}
+            slots={slots.map((s) => ({
+              id: s.id,
+              name: s.name,
+              sortOrder: s.sortOrder,
+              defaultTime: s.defaultTime,
+            }))}
+            meals={meals ?? []}
+            calorieTarget={calorieTarget}
+            loading={mealsLoading}
+            bulkPending={bulkCompleteMeals.isPending}
+            onAddMeal={openCreateForm}
+            onEditMeal={(meal) => {
+              openEditForm(meal as unknown as Meal);
             }}
-            onSubmit={(data) => {
-              void handleFormSubmit(data);
+            onCompleteMeal={(meal) => void handleComplete(meal as unknown as Meal)}
+            onResetMeal={(meal) => void handleReset(meal as unknown as Meal)}
+            onOverrideMeal={(mealId) => {
+              setOverrideMealId(mealId);
             }}
-            initialDate={editingMeal ? undefined : mealFormDate}
-            initialMealSlotId={editingMeal ? undefined : mealFormSlotId}
-            initialValues={
-              editingMeal
-                ? {
-                    date: editingMeal.date,
-                    mealSlotId: editingMeal.mealSlotId,
-                    recipeId: editingMeal.recipeId,
-                    recipeName: editingMeal.recipeName,
-                    servings: Number(editingMeal.servings),
-                    notes: editingMeal.notes ?? '',
-                  }
-                : undefined
-            }
-            assignees={assignees}
-            initialPersonId={personId ?? ''}
-            isSubmitting={isSubmitting}
-            mode={editingMeal ? 'edit' : 'create'}
+            onDeleteMeal={(meal) => {
+              setDeletingMeal(meal as unknown as Meal);
+            }}
+            onBulkComplete={(date) => void handleBulkComplete(date)}
+            canPlan={canPlan}
+            canLog={canLog}
+            showPerson={viewed !== undefined}
           />
+        ) : null}
 
-          {overrideMealId !== null && (
-            <MealOverrideDialog
-              open
-              onClose={() => {
-                setOverrideMealId(null);
-              }}
-              mealEntryId={overrideMealId}
-            />
-          )}
+        {view === 'week' && !viewed && <WeekMeters totals={weeklyTotals} goals={goals ?? null} />}
 
-          {/* Delete confirmation dialog */}
-          <Dialog
-            open={!!deletingMeal}
-            onOpenChange={(v) => {
-              if (!v) setDeletingMeal(null);
+        <MealForm
+          key={`${editingMeal?.id ?? 'new'}-${String(mealFormOpen)}`}
+          open={mealFormOpen}
+          onClose={() => {
+            setMealFormOpen(false);
+            setEditingMeal(null);
+          }}
+          onSubmit={(data) => {
+            void handleFormSubmit(data);
+          }}
+          initialDate={editingMeal ? undefined : mealFormDate}
+          initialMealSlotId={editingMeal ? undefined : mealFormSlotId}
+          initialValues={
+            editingMeal
+              ? {
+                  date: editingMeal.date,
+                  mealSlotId: editingMeal.mealSlotId,
+                  recipeId: editingMeal.recipeId,
+                  recipeName: editingMeal.recipeName,
+                  servings: Number(editingMeal.servings),
+                  notes: editingMeal.notes ?? '',
+                }
+              : undefined
+          }
+          assignees={assignees}
+          initialPersonId={personId ?? ''}
+          isSubmitting={isSubmitting}
+          mode={editingMeal ? 'edit' : 'create'}
+        />
+
+        {overrideMealId !== null && (
+          <MealOverrideDialog
+            open
+            onClose={() => {
+              setOverrideMealId(null);
             }}
-          >
-            <DialogContent className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
-              </DialogHeader>
-              <DialogDescription>
-                {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
-              </DialogDescription>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDeletingMeal(null);
-                  }}
-                  disabled={deleteMeal.isPending}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    void handleDelete();
-                  }}
-                  disabled={deleteMeal.isPending}
-                >
-                  {deleteMeal.isPending ? t('common.deleting') : t('common.delete')}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
+            mealEntryId={overrideMealId}
+          />
+        )}
 
-      {activeTab === 'nutrition' && (
-        <Suspense
-          fallback={
-            <div className="text-muted-foreground flex items-center justify-center py-16">
-              {t('common.loading')}
-            </div>
-          }
+        {/* Delete confirmation dialog */}
+        <Dialog
+          open={!!deletingMeal}
+          onOpenChange={(v) => {
+            if (!v) setDeletingMeal(null);
+          }}
         >
-          <NutritionSummaryPage />
-        </Suspense>
-      )}
-
-      {activeTab === 'shopping' && (
-        <Suspense
-          fallback={
-            <div className="text-muted-foreground flex items-center justify-center py-16">
-              {t('common.loading')}
-            </div>
-          }
-        >
-          <ShoppingListPage />
-        </Suspense>
-      )}
-
-      {activeTab === 'import' && (
-        <Suspense
-          fallback={
-            <div className="text-muted-foreground flex items-center justify-center py-16">
-              {t('common.loading')}
-            </div>
-          }
-        >
-          <ImportWizardPage />
-        </Suspense>
-      )}
-    </div>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t('meal_form.delete_title')}</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              {t('meal_form.delete_description', { name: deletingMeal?.recipeName ?? '' })}
+            </DialogDescription>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeletingMeal(null);
+                }}
+                disabled={deleteMeal.isPending}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleDelete();
+                }}
+                disabled={deleteMeal.isPending}
+              >
+                {deleteMeal.isPending ? t('common.deleting') : t('common.delete')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    </PageContainer>
   );
 }
