@@ -1,7 +1,7 @@
 import { Banner, EmptyState } from '@shared/components/ui';
 import { Lock, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useMatch } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
 import { useBudgetQuery } from '../api/queries';
@@ -58,12 +58,18 @@ function BudgetGate() {
 
 export function BudgetLayout() {
   const { t } = useTranslation('budget');
+  // The overview draws its own v3 PageHeader/PageContainer; the other screens still use this frame.
+  const overview = useMatch({ path: '/budget', end: true });
   return (
     <BudgetCacheBoundary>
-      <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8">
-        <h1 className="mb-6 text-3xl font-bold break-words">{t('budget_nav')}</h1>
+      {overview ? (
         <BudgetGate />
-      </main>
+      ) : (
+        <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8">
+          <h1 className="mb-6 text-3xl font-bold break-words">{t('budget_nav')}</h1>
+          <BudgetGate />
+        </main>
+      )}
     </BudgetCacheBoundary>
   );
 }

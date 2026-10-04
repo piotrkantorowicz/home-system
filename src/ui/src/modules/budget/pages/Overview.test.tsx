@@ -60,6 +60,35 @@ let client: QueryClient;
 let envelopes: Record<string, unknown>[];
 let summaryStatus: number;
 let summaryParams: URLSearchParams[];
+let settlement: { isSettled: boolean; suggestions: Record<string, unknown>[] };
+let settlementCalls: number;
+let expenseItems: Record<string, unknown>[];
+
+const transfer = (from: string, to: string, toName = 'Ania', amount = '10.00') => ({
+  fromPersonId: from,
+  fromDisplayName: 'Alex',
+  toPersonId: to,
+  toDisplayName: toName,
+  amount,
+});
+const expense = (over: Record<string, unknown>) => ({
+  id: 'e',
+  accountId: 'a1',
+  amount: '1.00',
+  category: 'Groceries',
+  occurredOn: '2026-10-01',
+  description: null,
+  fundingSource: 'Individual',
+  paidByPersonId: 'ania',
+  paidByDisplayName: 'Ania',
+  addedByPersonId: 'me',
+  addedByDisplayName: 'Alex',
+  revision: 1,
+  createdAt: '2026-10-01T10:00:00Z',
+  isVoided: false,
+  shares: [{ personId: 'me', personDisplayName: 'Alex', amount: '0.50' }],
+  ...over,
+});
 
 function ui() {
   return (
@@ -93,6 +122,9 @@ beforeEach(() => {
   envelopes = [envelope({})];
   summaryStatus = 200;
   summaryParams = [];
+  settlement = { isSettled: true, suggestions: [] };
+  settlementCalls = 0;
+  expenseItems = [];
   server.use(
     http.get(`${BASE}/api/budget`, () => HttpResponse.json({ id: 'b1', currency: 'PLN' })),
     http.get(`${BASE}/api/budget/summary`, ({ request }) => {
@@ -108,9 +140,15 @@ beforeEach(() => {
           })
         : new HttpResponse(null, { status: summaryStatus });
     }),
-    http.get(`${BASE}/api/budget/expenses`, () =>
-      HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 5 }),
-    ),
+    http.get(`${BASE}/api/budget/expenses`, ({ request }) => {
+      const accountId = new URL(request.url).searchParams.get('accountId');
+      const items = expenseItems.filter((x) => !accountId || x.accountId === accountId);
+      return HttpResponse.json({ items, totalCount: items.length, page: 1, pageSize: 5 });
+    }),
+    http.get(`${BASE}/api/budget/settlement`, () => {
+      settlementCalls += 1;
+      return HttpResponse.json({ currency: 'PLN', balances: [], ...settlement });
+    }),
     http.get(`${BASE}/api/budget/accounts`, () =>
       HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 100 }),
     ),
@@ -118,10 +156,10 @@ beforeEach(() => {
 });
 
 describe('Overview', () => {
-  it('shows the server total, categories and a clearly separate shared scope', async () => {
+  it('shows the server total, categories and the shared scope', async () => {
     renderPage();
-    await screen.findByText('12.34 PLN');
-    expect(screen.getByText(/^Shared spending ·/)).toBeInTheDocument();
+    await screen.findByText('12.34');
+    expect(screen.getByRole('radio', { name: 'Shared', checked: true })).toBeInTheDocument();
     expect(screen.getByText('Groceries')).toBeInTheDocument();
     expect(summaryParams[0]?.get('scope')).toBe('shared');
     expect(summaryParams[0]?.get('month')).toBe(currentMonth());
@@ -142,22 +180,22 @@ describe('Overview', () => {
     renderPage();
     await screen.findByText('Fun');
     expect(screen.getByText(/No limit/)).toBeInTheDocument();
-    expect(screen.getByText('0.00 PLN left')).toBeInTheDocument();
-    expect(screen.getByText(/Limit 0\.00 PLN/)).toBeInTheDocument();
+    expect(screen.getAllByText('0.00 left').length).toBeGreaterThan(0);
+    expect(screen.getByText('0.00 of 0.00')).toBeInTheDocument();
   });
 
-  it('says "Over the limit by" in words, not just color, and never hides the add button', async () => {
+  it('says "over the limit" in words, exactly, even against a zero limit', async () => {
     envelopes = [
       envelope({
-        spent: '5.00',
+        spent: '0.01',
         limit: '0.00',
         limitRevision: 1,
-        remaining: '-5.00',
+        remaining: '-0.01',
         isOverspent: true,
       }),
     ];
     renderPage();
-    await screen.findByText('Over the limit by 5.00 PLN');
+    expect((await screen.findAllByText('↑ 0.01 over the limit')).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Add expense' })).toBeEnabled();
   });
 
@@ -170,7 +208,7 @@ describe('Overview', () => {
 
   it('moves between months, across the year end, and asks the server for that month', async () => {
     renderPage();
-    await screen.findByText('12.34 PLN');
+    await screen.findByText('12.34');
     await userEvent.click(screen.getByRole('button', { name: 'Previous month' }));
     await waitFor(() => {
       expect(summaryParams.at(-1)?.get('month')).toBe(shiftMonth(currentMonth(), -1));
@@ -182,10 +220,10 @@ describe('Overview', () => {
     });
   });
 
-  it('switches to my spending and can look at a managed member', async () => {
+  it('switches to just mine and can look at a managed member', async () => {
     renderPage();
-    await screen.findByText('12.34 PLN');
-    await userEvent.click(screen.getByRole('button', { name: 'My spending' }));
+    await screen.findByText('12.34');
+    await userEvent.click(screen.getByRole('radio', { name: 'Just mine' }));
     await waitFor(() => {
       expect(summaryParams.at(-1)?.get('scope')).toBe('personal');
     });
@@ -196,23 +234,63 @@ describe('Overview', () => {
     });
   });
 
-  it('gives a child only their own spending, with no shared scope', async () => {
+  it('gives a child only their own spending, with no shared scope and no settle card', async () => {
     household.myRole = 'Child';
+    settlement = { isSettled: false, suggestions: [transfer('me', 'x')] };
     renderPage();
-    await screen.findByText('12.34 PLN');
-    expect(screen.queryByRole('button', { name: 'Shared spending' })).not.toBeInTheDocument();
+    await screen.findByText('12.34');
+    expect(screen.queryByRole('radio', { name: 'Shared' })).not.toBeInTheDocument();
     expect(summaryParams[0]?.get('scope')).toBe('personal');
-    expect(screen.getByText(/^My spending ·/)).toBeInTheDocument();
+    expect(screen.queryByText(/You owe/)).not.toBeInTheDocument();
+    expect(settlementCalls).toBe(0);
   });
 
   it('offers retry when the summary fails, not a zero total', async () => {
     summaryStatus = 500;
     renderPage();
     await screen.findByText(/Could not load Budget/);
-    expect(screen.queryByText('0.00 PLN')).not.toBeInTheDocument();
+    expect(screen.queryByText('0.00')).not.toBeInTheDocument();
     summaryStatus = 200;
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    await screen.findByText('12.34 PLN');
+    await screen.findByText('12.34');
+  });
+
+  it('prompts to settle up when I owe someone, and hides it when just mine', async () => {
+    settlement = { isSettled: false, suggestions: [transfer('me', 'ania', 'Ania', '505.73')] };
+    renderPage();
+    const card = await screen.findByRole('link', { name: /You owe Ania 505\.73/ });
+    expect(card).toHaveAttribute('href', '/budget/settlement');
+    await userEvent.click(screen.getByRole('radio', { name: 'Just mine' }));
+    await waitFor(() => {
+      expect(screen.queryByText(/You owe/)).not.toBeInTheDocument();
+    });
+  });
+
+  it('hides the settle card when everyone is settled', async () => {
+    settlement = { isSettled: true, suggestions: [] };
+    renderPage();
+    await screen.findByText('12.34');
+    await waitFor(() => {
+      expect(settlementCalls).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText(/You owe|owes you/)).not.toBeInTheDocument();
+  });
+
+  it('lists the latest expenses of the month, description first, only from this scope', async () => {
+    expenseItems = [
+      expense({ id: 'e1', description: 'Weekly shop', amount: '20.00' }),
+      expense({ id: 'e2', description: null, category: 'Transport', amount: '5.00' }),
+      expense({ id: 'e3', accountId: 'foreign', description: 'Not in scope', amount: '9.00' }),
+    ];
+    renderPage();
+    await screen.findByText('Weekly shop');
+    expect(screen.getByRole('link', { name: /Weekly shop/ })).toHaveAttribute(
+      'href',
+      '/budget/expenses/e1',
+    );
+    expect(screen.getAllByText('Transport').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Not in scope')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Ania paid · split with you/)).toHaveLength(2);
   });
 });
 
