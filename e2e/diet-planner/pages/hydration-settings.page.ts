@@ -10,7 +10,7 @@ export class HydrationSettingsPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.dailyTargetInput = page.getByLabel(/daily.*target/i);
+    this.dailyTargetInput = page.getByLabel(/daily water target/i);
     this.glassSizeInput = page.getByLabel(/glass size/i);
     this.saveSettingsButton = page.getByRole('button', { name: /save settings/i });
   }
