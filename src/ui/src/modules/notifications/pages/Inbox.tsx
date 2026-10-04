@@ -83,7 +83,7 @@ export default function Inbox() {
           <p className="text-muted-foreground mt-0.5 text-sm">{t('inbox.subtitle')}</p>
         </div>
         <Button asChild variant="secondary" size="sm">
-          <Link to="/notifications/preferences">{t('inbox.preferences_link')}</Link>
+          <Link to="/diet-planner/settings/app">{t('inbox.preferences_link')}</Link>
         </Button>
       </header>
 

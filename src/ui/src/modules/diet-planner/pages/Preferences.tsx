@@ -1,10 +1,13 @@
-import { Banner, Button, Card, SegmentedControl, Switch } from '@shared/components/ui';
+import { ChannelPreferencesSection } from '@modules/notifications';
+import { Banner, Card, SegmentedControl, Switch } from '@shared/components/ui';
 import { useTheme } from '@shared/context/ThemeContext';
+import { useFormat } from '@shared/hooks/useFormat';
 import { usePreferences, type Preferences as Prefs } from '@shared/hooks/usePreferences';
 import { cn, getInitials } from '@shared/lib/utils';
 import { LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
+import { Link } from 'react-router-dom';
 
 type ThemeChoice = 'light' | 'dark' | 'system';
 
@@ -12,6 +15,7 @@ export default function Preferences() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { prefs, set } = usePreferences();
+  const fmt = useFormat();
   const auth = useAuth();
 
   const profile = auth.user?.profile;
@@ -23,9 +27,21 @@ export default function Preferences() {
       <div>
         <h1 className="text-26px font-bold">{t('preferences.title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('preferences.subtitle')}</p>
+        <Link
+          to="/diet-planner/profile"
+          className="text-primary focus-visible:ring-ring mt-2 inline-block rounded text-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
+        >
+          {t('preferences.diet_settings')} →
+        </Link>
       </div>
 
       <div className="gap-18px grid [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+        {/* Notification channels */}
+        <Card className="p-22px flex flex-col gap-4">
+          <div className="text-15px font-bold">{t('preferences.notifications')}</div>
+          <ChannelPreferencesSection />
+        </Card>
+
         {/* Appearance */}
         <Card className="p-22px flex flex-col gap-4">
           <div className="text-15px font-bold">{t('preferences.appearance')}</div>
@@ -139,6 +155,9 @@ export default function Preferences() {
               set('thinSpaceThousands', v);
             }}
           />
+          <p className="text-muted-foreground text-12-5px tnum">
+            {t('preferences.example')}: {fmt.energy(2150)} · {fmt.weight(72.5)} · {fmt.volume(250)}
+          </p>
           <Banner variant="info">{t('preferences.units_note')}</Banner>
         </Card>
 
@@ -174,18 +193,7 @@ export default function Preferences() {
             <LogOut className="size-4" />
           </button>
 
-          <div
-            className="rounded-13px text-13px flex items-center justify-between border px-3.5 py-3 font-semibold"
-            style={{
-              borderColor: 'color-mix(in oklab, var(--color-fat) 40%, transparent)',
-              background: 'color-mix(in oklab, var(--color-fat) 8%, transparent)',
-            }}
-          >
-            <span className="text-destructive">{t('preferences.delete_account')}</span>
-            <Button size="xs" variant="destructive" disabled>
-              {t('preferences.delete_account_btn')}
-            </Button>
-          </div>
+          <p className="text-muted-foreground text-12-5px">{t('preferences.delete_unavailable')}</p>
         </Card>
       </div>
     </div>

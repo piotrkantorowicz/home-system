@@ -1,6 +1,6 @@
-import { NAV_GROUP_SETTINGS } from '@shared/lib/module-registry';
-import { Bell, Inbox as InboxIcon, SlidersHorizontal } from 'lucide-react';
+import { Bell, Inbox as InboxIcon } from 'lucide-react';
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 
 import { UnreadBadge } from './components/UnreadBadge';
 import en from './locales/en.json';
@@ -9,7 +9,11 @@ import pl from './locales/pl.json';
 import type { AppModule } from '@shared/lib/module-registry';
 
 const Inbox = lazy(() => import('./pages/Inbox'));
-const ChannelPreferences = lazy(() => import('./pages/ChannelPreferences'));
+
+export { ChannelPreferencesSection } from './components/ChannelPreferencesSection';
+
+// Channel preferences now live in App & account (#502).
+const APP_SETTINGS_PATH = '/diet-planner/settings/app';
 
 export const notificationsModule: AppModule = {
   name: 'notifications',
@@ -31,16 +35,9 @@ export const notificationsModule: AppModule = {
       translationKey: 'common.inbox',
       Badge: UnreadBadge,
     },
-    {
-      name: 'Preferences',
-      href: '/notifications/preferences',
-      icon: SlidersHorizontal,
-      translationKey: 'common.preferences',
-      group: NAV_GROUP_SETTINGS,
-    },
   ],
   routes: [
     { index: true, Component: Inbox },
-    { path: 'preferences', Component: ChannelPreferences },
+    { path: 'preferences', element: <Navigate to={APP_SETTINGS_PATH} replace /> },
   ],
 };
