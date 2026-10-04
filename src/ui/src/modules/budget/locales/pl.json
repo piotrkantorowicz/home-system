@@ -28,7 +28,6 @@
   "overview_count_other": "{{count}} aktywnej koperty, które widzisz",
   "manage_envelopes": "Zarządzaj kopertami",
   "envelopes": "Koperty",
-  "envelopes_intro": "Koperta to nazwany zasobnik na wydatki, np. Everyday lub Wakacje. Grupuje cel lub właściciela; nie jest kontem bankowym.",
   "new_envelope": "Nowa koperta",
   "new_description": "Wybierz nazwę i kto może ją widzieć.",
   "rename_envelope": "Zmień nazwę koperty",
@@ -305,5 +304,15 @@
   "show_all": "Pokaż wszystkie ({{count}})",
   "show_recent": "Pokaż tylko ostatnie",
   "payment_actions": "Działania płatności",
-  "undo_hint": "Właśnie zapisano płatność. Nadal możesz ją cofnąć."
+  "undo_hint": "Właśnie zapisano płatność. Nadal możesz ją cofnąć.",
+  "envelopes_subtitle": "Zasobniki na wydatki, np. Everyday lub Wakacje — nie konta bankowe",
+  "shared_note": "Widzą je właściciele i dorośli",
+  "personal_note": "Widzisz je tylko ty",
+  "personal_note_mixed": "Prywatne dla właściciela. Widzisz też koperty członków, którymi zarządzasz.",
+  "expenses_in_month_one": "{{count}} wydatek · {{month}}",
+  "expenses_in_month_few": "{{count}} wydatki · {{month}}",
+  "expenses_in_month_many": "{{count}} wydatków · {{month}}",
+  "expenses_in_month_other": "{{count}} wydatku · {{month}}",
+  "limit_per_month": "{{limit}} / miesiąc",
+  "envelope_actions": "Działania dla: {{name}}"
 }

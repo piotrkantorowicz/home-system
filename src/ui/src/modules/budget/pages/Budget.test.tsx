@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BudgetLayout } from '../components/BudgetLayout';
 import { budgetModule } from '../index';
+import { currentMonth } from '../lib/dates';
 
 import BudgetPage from './BudgetPage';
 import EnvelopesPage from './EnvelopesPage';
@@ -53,7 +54,30 @@ const shared = {
   createdAt: '2026-10-02T10:00:00Z',
 };
 const personal = { ...shared, id: 'a2', name: 'Mine', visibility: 'Personal', ownerPersonId: 'me' };
+const holidays = { ...shared, id: 'a4', name: 'Holidays' };
 const archived = { ...shared, id: 'a3', name: 'Old trip', isArchived: true, revision: 3 };
+
+const envelopeSummary = (
+  account: Pick<typeof shared, 'id' | 'name' | 'visibility' | 'isArchived'> & {
+    ownerPersonId: string | null;
+  },
+  count: number,
+  limit: string | null,
+) => ({
+  accountId: account.id,
+  name: account.name,
+  visibility: account.visibility,
+  ownerPersonId: account.ownerPersonId,
+  isArchived: account.isArchived,
+  spent: '10.00',
+  expenseCount: count,
+  limit,
+  limitRevision: limit === null ? null : 2,
+  remaining: null,
+  isOverspent: false,
+});
+let summaries: Record<string, unknown[]>;
+let summaryParams: URLSearchParams[];
 
 let client: QueryClient;
 let budget: { id: string; currency: string } | null;
@@ -93,21 +117,29 @@ beforeEach(() => {
   household.household = { id: 'h1' };
   household.myRole = 'Owner';
   budget = { id: 'b1', currency: 'PLN' };
-  accounts = [shared, personal, archived];
+  accounts = [shared, holidays, personal, archived];
+  summaries = {
+    shared: [envelopeSummary(shared, 3, '3000.00'), envelopeSummary(holidays, 0, null)],
+    personal: [envelopeSummary(personal, 1, '0.00')],
+  };
+  summaryParams = [];
   server.use(
     http.get(`${BASE}/api/budget`, () =>
       budget ? HttpResponse.json(budget) : new HttpResponse(null, { status: 404 }),
     ),
-    http.get(`${BASE}/api/budget/summary`, () =>
-      HttpResponse.json({
-        month: '2026-10',
-        scope: 'Shared',
+    http.get(`${BASE}/api/budget/summary`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      summaryParams.push(params);
+      return HttpResponse.json({
+        month: params.get('month'),
+        scope: params.get('scope'),
         currency: 'PLN',
         totalSpent: '0.00',
-        envelopes: [],
+        expenseCount: 0,
+        envelopes: summaries[params.get('scope') ?? 'shared'] ?? [],
         categories: [],
-      }),
-    ),
+      });
+    }),
     http.get(`${BASE}/api/budget/expenses`, () =>
       HttpResponse.json({ items: [], totalCount: 0, page: 1, pageSize: 5 }),
     ),
@@ -195,13 +227,60 @@ describe('Budget gate', () => {
 });
 
 describe('Envelopes', () => {
-  it('lists active and archived envelopes with their audience', async () => {
+  const openMenu = async (name: string, item: string) => {
+    await userEvent.click(await screen.findByRole('button', { name: `Actions for ${name}` }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: item }));
+  };
+
+  it('groups envelopes into Shared and Personal sections with a count each', async () => {
+    renderAt('/budget/envelopes');
+    await screen.findByRole('heading', { level: 1, name: 'Envelopes' });
+    await screen.findByRole('heading', { name: 'Shared · 2' });
+    expect(screen.getByRole('heading', { name: 'Personal · 1' })).toBeInTheDocument();
+    expect(screen.getByText('Owners and adults can see these')).toBeInTheDocument();
+    expect(screen.getByText('Only you can see these')).toBeInTheDocument();
+  });
+
+  it("shows this month's expense count and limit from the server summary", async () => {
     renderAt('/budget/envelopes');
     await screen.findByText('Everyday');
-    expect(screen.getAllByText('Shared')).toHaveLength(2);
-    expect(screen.getByText('Personal · You')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Archived' })).toBeInTheDocument();
+    expect(await screen.findByText(/3 expenses in /)).toBeInTheDocument();
+    expect(screen.getByText(/3.?000\.00 \/ month/)).toBeInTheDocument();
+    // The request is for the current month and each scope, never a client-side recount.
+    const scopes = summaryParams
+      .map((p) => `${p.get('scope') ?? ''} ${p.get('month') ?? ''}`)
+      .sort();
+    expect(scopes).toEqual([`personal ${currentMonth()}`, `shared ${currentMonth()}`]);
+  });
+
+  it('tells a zero limit from no limit', async () => {
+    renderAt('/budget/envelopes');
+    await screen.findByText(/· 0\.00 \/ month/);
+    expect(screen.getByText(/1 expense in /)).toBeInTheDocument();
+    expect(screen.getAllByText(/No limit/)).toHaveLength(1);
+  });
+
+  it('keeps archived envelopes in a collapsed section where they can be restored', async () => {
+    renderAt('/budget/envelopes');
+    const summary = await screen.findByText('Archived · 1');
+    expect(summary.closest('details')).not.toHaveAttribute('open');
     expect(screen.getByText('Old trip')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Restore Old trip' })).toBeInTheDocument();
+  });
+
+  it('sets a limit from the menu', async () => {
+    renderAt('/budget/envelopes');
+    await openMenu('Holidays', 'Set limit');
+    await screen.findByRole('heading', { name: /Limit for Holidays/ });
+  });
+
+  it('shows personal envelopes of managed members with their owner, and a softer privacy note', async () => {
+    accounts = [shared, { ...personal, id: 'a5', name: 'Sam allowance', ownerPersonId: 'kid' }];
+    summaries = { shared: [], personal: [] };
+    renderAt('/budget/envelopes');
+    await screen.findByText('Sam allowance');
+    expect(screen.getByText(/Personal · Sam/)).toBeInTheDocument();
+    expect(screen.queryByText('Only you can see these')).not.toBeInTheDocument();
   });
 
   it('creates a shared envelope and explains who can see it', async () => {
@@ -280,7 +359,7 @@ describe('Envelopes', () => {
       }),
     );
     renderAt('/budget/envelopes');
-    await userEvent.click(await screen.findByRole('button', { name: 'Rename Everyday' }));
+    await openMenu('Everyday', 'Rename');
     const name = screen.getByLabelText('Name');
     await userEvent.clear(name);
     await userEvent.type(name, 'Daily');
@@ -303,7 +382,7 @@ describe('Envelopes', () => {
       }),
     );
     renderAt('/budget/envelopes');
-    await userEvent.click(await screen.findByRole('button', { name: 'Archive Everyday' }));
+    await openMenu('Everyday', 'Archive');
     await userEvent.click(await screen.findByRole('button', { name: 'Restore Old trip' }));
     await waitFor(() => {
       expect(calls).toEqual(['archive {"expectedRevision":1}', 'restore {"expectedRevision":3}']);
@@ -323,7 +402,7 @@ describe('Envelopes', () => {
       ),
     );
     renderAt('/budget/envelopes');
-    await userEvent.click(await screen.findByRole('button', { name: 'Archive Everyday' }));
+    await openMenu('Everyday', 'Archive');
     await screen.findByText(/Someone else changed this envelope/);
     await waitFor(() => {
       expect(loads.mock.calls.length).toBeGreaterThan(1);

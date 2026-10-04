@@ -32,16 +32,35 @@ test.describe('Budget envelopes', () => {
     await page.keyboard.press('Enter');
     await expect(page.getByText(name, { exact: true })).toBeVisible();
 
-    // Rename, archive, restore.
-    await page.getByRole('button', { name: `Rename ${name}` }).click();
+    // This month's count and limit come from the server; a new envelope has none yet.
+    const row = (n: string) => page.getByRole('listitem').filter({ hasText: n });
+    await expect(row(name)).toContainText('0 expenses in');
+    await expect(row(name)).toContainText('No limit');
+
+    // Set a limit: zero is a real limit, different from "No limit".
+    await page.getByRole('button', { name: `Actions for ${name}` }).click();
+    await page.getByRole('menuitem', { name: 'Set limit' }).click();
+    const limit = page.getByRole('dialog');
+    await limit.getByLabel(/^Limit/).fill('0');
+    await limit.getByRole('button', { name: 'Save' }).click();
+    await expect(limit).toBeHidden();
+    await expect(row(name)).toContainText('0.00 / month');
+
+    // Rename, archive, restore, all from the row menu.
+    await page.getByRole('button', { name: `Actions for ${name}` }).click();
+    await page.getByRole('menuitem', { name: 'Rename' }).click();
     await page.getByLabel('Name', { exact: true }).fill(renamed);
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText(renamed, { exact: true })).toBeVisible();
 
-    await page.getByRole('button', { name: `Archive ${renamed}` }).click();
-    await expect(page.getByRole('heading', { name: 'Archived' })).toBeVisible();
+    await page.getByRole('button', { name: `Actions for ${renamed}` }).click();
+    await page.getByRole('menuitem', { name: 'Archive' }).click();
+    const archived = page.locator('details', { hasText: /^Archived/ });
+    await expect(archived).toBeVisible();
+    await expect(archived).not.toHaveAttribute('open', '');
+    await archived.getByText(/^Archived/).click();
     await page.getByRole('button', { name: `Restore ${renamed}` }).click();
-    await expect(page.getByRole('button', { name: `Archive ${renamed}` })).toBeVisible();
+    await expect(page.getByRole('button', { name: `Actions for ${renamed}` })).toBeVisible();
 
     // A phone-width screen keeps every control reachable without sideways scrolling.
     await page.setViewportSize({ width: 390, height: 844 });
