@@ -30,6 +30,7 @@ export interface ExpenseFilters {
   to?: string;
   excludeId?: string;
   includeVoided?: boolean;
+  search?: string;
 }
 
 export interface ExpenseInput {

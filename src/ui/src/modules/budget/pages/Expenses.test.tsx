@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BudgetLayout } from '../components/BudgetLayout';
 import { budgetModule } from '../index';
-import { todayLocal } from '../lib/dates';
+import { currentMonth, shiftMonth, todayLocal } from '../lib/dates';
 
 import ExpenseDetailPage from './ExpenseDetailPage';
 import ExpensesPage from './ExpensesPage';
@@ -135,6 +135,10 @@ const page = (items: Record<string, unknown>[]) => ({
   totalCount: items.length,
   page: 1,
   pageSize: 25,
+  activeCount: items.length,
+  totalAmount: '150.00',
+  yourShareAmount: '50.00',
+  dailyTotals: [{ date: '2026-10-02', total: '120.00', count: 3 }],
 });
 
 beforeEach(() => {
@@ -486,24 +490,57 @@ describe('Submission failures and retries', () => {
 });
 
 describe('Expense list', () => {
-  it('shows who recorded and who paid as separate facts, and voided rows', async () => {
+  it('groups rows by day with the server day total, description first, and voided rows', async () => {
     listItems = [
-      expense,
-      { ...expense, id: 'e2', isVoided: true, paidByPersonId: null, paidByDisplayName: null },
+      { ...expense, id: 'e1', occurredOn: '2026-10-02', description: 'Weekly shop' },
+      {
+        ...expense,
+        id: 'e2',
+        occurredOn: '2026-10-02',
+        isVoided: true,
+        description: null,
+        paidByPersonId: null,
+        paidByDisplayName: null,
+        shares: [],
+      },
     ];
     renderAt('/budget/expenses');
-    await screen.findAllByText(/recorded by Alex/);
-    expect(screen.getByText(/paid by Bea/)).toBeInTheDocument();
-    expect(screen.getByText(/Paid from household funds/)).toBeInTheDocument();
+    await screen.findByText('Weekly shop');
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+    // The day total is the server's, not a sum of the loaded rows.
+    expect(screen.getByText('120.00')).toBeInTheDocument();
+    expect(screen.getByText(/household account/)).toBeInTheDocument();
     expect(screen.getByText('Voided')).toBeInTheDocument();
+    expect(screen.queryByText(/recorded by/i)).not.toBeInTheDocument();
   });
 
-  it('sends filters to the server and shows a distinct filtered-empty state', async () => {
+  it('shows full-filter totals from the server, not the loaded page', async () => {
+    listItems = [expense];
+    renderAt('/budget/expenses');
+    const totals = (await screen.findByText(/1 expense ·/)).closest('p');
+    expect(totals).toHaveTextContent('1 expense · 150.00 total · your share of split costs 50.00');
+  });
+
+  it('scopes to the month and moves between months', async () => {
+    renderAt('/budget/expenses');
+    await screen.findByText('No expenses yet');
+    expect(listParams.at(-1)?.get('from')).toBe(`${currentMonth()}-01`);
+    await userEvent.click(screen.getByRole('button', { name: 'Previous month' }));
+    await waitFor(() => {
+      expect(listParams.at(-1)?.get('from')).toBe(`${shiftMonth(currentMonth(), -1)}-01`);
+    });
+  });
+
+  it('sends search and filters to the server and shows a distinct filtered-empty state', async () => {
     renderAt('/budget/expenses');
     await screen.findByText('No expenses yet');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'Health');
     await screen.findByText('No matching expenses');
     expect(listParams.at(-1)?.get('category')).toBe('Health');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search expenses' }), 'milk');
+    await waitFor(() => {
+      expect(listParams.at(-1)?.get('search')).toBe('milk');
+    });
     await userEvent.click(screen.getByRole('checkbox', { name: 'Show voided expenses' }));
     await waitFor(() => {
       expect(listParams.at(-1)?.get('includeVoided')).toBe('true');
