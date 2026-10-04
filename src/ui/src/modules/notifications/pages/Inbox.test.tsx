@@ -149,6 +149,24 @@ describe('Inbox', () => {
     });
   });
 
+  it('mark all read has no row cap: 2,100 unread rows across 21 server pages', async () => {
+    const all = Array.from({ length: 2100 }, (_, i) => item(i + 1, null, 0.01 + i / 1000));
+    const bulk = vi.fn();
+    serve(all);
+    server.use(
+      http.post(`${BASE}/api/notifications/read`, async ({ request }) => {
+        bulk(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderInbox();
+    await userEvent.click(await screen.findByRole('button', { name: 'inbox.mark_all_read' }));
+    await waitFor(() => {
+      expect(bulk).toHaveBeenCalledTimes(1);
+    });
+    expect((bulk.mock.calls[0]?.[0] as { ids: string[] }).ids).toHaveLength(2100);
+  });
+
   it('mark all read covers the whole list, not just the visible page', async () => {
     const all = Array.from({ length: 45 }, (_, i) => item(i + 1, null, 0.01 + i / 100));
     const bulk = vi.fn();

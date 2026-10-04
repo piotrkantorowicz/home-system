@@ -6,7 +6,6 @@ import { notificationsQueryKeys } from '../queryKeys';
 import type { NotificationDto, NotificationsPage } from './useNotifications';
 
 const PAGE_SIZE = 100; // backend maximum
-const MAX_PAGES = 20; // ponytail: safety stop at 2 000 rows; raise it or add a server-side unread filter
 
 /**
  * Every unread notification, newest first. The API has no unread filter, so this walks the list
@@ -20,7 +19,7 @@ export async function fetchAllUnread(): Promise<NotificationDto[]> {
   const total = Number(count.data.total);
 
   const unread: NotificationDto[] = [];
-  for (let page = 1; unread.length < total && page <= MAX_PAGES; page++) {
+  for (let page = 1; unread.length < total; page++) {
     const res = await api.GET('/api/notifications', {
       params: { query: { page, pageSize: PAGE_SIZE } },
     });
