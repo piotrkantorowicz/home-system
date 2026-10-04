@@ -1,16 +1,5 @@
-import {
-  Banner,
-  EmptyState,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@shared/components/ui';
+import { Banner, Pagination, Skeleton } from '@shared/components/ui';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,10 +11,10 @@ import {
 } from '../api/hooks/useDeliveryDeadLetters';
 import { formatDateTime } from '../utils/format';
 
-import { RetriedBadge } from './RetriedBadge';
+import { DeadLetterRow } from './DeadLetterRow';
+import { DeadLetterSection } from './DeadLetterSection';
+import { NothingWaiting } from './NothingWaiting';
 import { RetryAllButton } from './RetryAllButton';
-import { RetryButton } from './RetryButton';
-import { ViewPayloadButton } from './ViewPayloadButton';
 
 export function DeliveryDeadLetters() {
   const { t, i18n } = useTranslation('admin');
@@ -41,83 +30,73 @@ export function DeliveryDeadLetters() {
   const lastPage = data ? Math.max(1, Math.ceil(data.totalCount / pageSize)) : page;
   if (page > lastPage) setPage(lastPage);
 
-  if (isError) {
-    return (
-      <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
-        {t('load_error')}
-      </Banner>
-    );
-  }
-
-  if (data?.totalCount === 0) {
-    return <EmptyState icon={CheckCircle2} title={t('deliveries.empty')} />;
-  }
+  const total = data?.totalCount ?? 0;
 
   return (
-    <>
-      <div className="mb-3 flex justify-end">
-        <RetryAllButton
-          count={data?.totalCount ?? 0}
-          pending={retryAll.isPending}
-          onConfirm={() => {
-            retryAll.mutate();
-          }}
-        />
-      </div>
-      <Table aria-label={t('deliveries.title')} aria-busy={isLoading}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('deliveries.notification')}</TableHead>
-            <TableHead>{t('deliveries.channel')}</TableHead>
-            <TableHead>{t('attempts')}</TableHead>
-            <TableHead>{t('last_attempt')}</TableHead>
-            <TableHead>{t('last_error')}</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.items.map((d) => (
-            <TableRow key={d.deliveryId}>
-              <TableCell>
-                <div className="font-medium">{d.title}</div>
-                <div className="text-muted-foreground text-xs">
-                  {d.type} · {d.userId}
-                </div>
-              </TableCell>
-              <TableCell>{d.channel}</TableCell>
-              <TableCell className="tnum whitespace-nowrap">
-                {d.attemptCount}
-                <RetriedBadge retryOf={d.retryOf} />
-              </TableCell>
-              <TableCell className="whitespace-nowrap">
-                {formatDateTime(d.lastAttemptAt, i18n.language)}
-              </TableCell>
-              <TableCell className="max-w-xs text-xs break-words">{d.failureReason}</TableCell>
-              <TableCell className="text-right whitespace-nowrap">
-                <ViewPayloadButton options={deliveryContentOptions(d.deliveryId)} />
-                <RetryButton
-                  pending={retry.isPending && retry.variables === d.deliveryId}
-                  onRetry={() => {
-                    retry.mutate(d.deliveryId);
-                  }}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {data && data.totalCount > pageSize && (
-        <Pagination
-          page={page}
-          pageSize={pageSize}
-          totalCount={data.totalCount}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
+    <DeadLetterSection
+      title={t('deliveries.title')}
+      count={total}
+      action={
+        total > 0 ? (
+          <RetryAllButton
+            count={total}
+            pending={retryAll.isPending}
+            onConfirm={() => {
+              retryAll.mutate();
+            }}
+          />
+        ) : null
+      }
+    >
+      {isError ? (
+        <div className="px-4 pb-4 md:px-6">
+          <Banner variant="error" onRetry={() => void refetch()} retryLabel={t('reload')}>
+            {t('load_error')}
+          </Banner>
+        </div>
+      ) : data && total === 0 ? (
+        <NothingWaiting />
+      ) : (
+        <>
+          <ul aria-label={t('deliveries.title')} aria-busy={isLoading}>
+            {data === undefined ? (
+              <li className="px-4 pb-4 md:px-6">
+                <Skeleton className="h-14 w-full" />
+              </li>
+            ) : null}
+            {data?.items.map((d) => (
+              <DeadLetterRow
+                key={d.deliveryId}
+                name={d.title}
+                detail={`${d.type} · ${d.channel} · ${d.userId}`}
+                time={formatDateTime(d.lastAttemptAt, i18n.language)}
+                attempts={d.attemptCount}
+                retryOf={d.retryOf}
+                error={d.failureReason}
+                payloadOptions={deliveryContentOptions(d.deliveryId)}
+                pending={retry.isPending && retry.variables === d.deliveryId}
+                onRetry={() => {
+                  retry.mutate(d.deliveryId);
+                }}
+              />
+            ))}
+          </ul>
+          {total > pageSize && (
+            <div className="border-border border-t px-4 py-3 md:px-6">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                totalCount={total}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
-    </>
+    </DeadLetterSection>
   );
 }

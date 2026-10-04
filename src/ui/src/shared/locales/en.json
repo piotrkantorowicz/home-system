@@ -55,7 +55,7 @@
     "no_modules_body": "Ask an administrator to enable a module for your account.",
     "no_matches": "No matches",
     "admin": "Admin",
-    "dead_letters": "Dead letters",
+    "dead_letters": "Failed messages",
     "shell": {
       "settings": "Settings",
       "more": "More",
