@@ -136,6 +136,14 @@ export default function ControlKit() {
           </div>
           <MacroBar label="Protein" value={95} target={140} macro="protein" unit="g" />
           <MacroBar label="Carbs" value={210} target={190} macro="carbs" unit="g" />
+          <MacroBar
+            label="Fibre (minimum goal — no overflow mark)"
+            value={34}
+            target={30}
+            macro="fiber"
+            unit="g"
+            showOverflow={false}
+          />
         </Group>
 
         <Group title={t('control_kit.ring')} sub="conic progress">

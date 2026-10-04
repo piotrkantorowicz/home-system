@@ -23,7 +23,7 @@ test('consumed nutrition, undo, and responsive agenda work with real meals', asy
   const plannedCount = await mealActions.count();
   expect(plannedCount).toBeGreaterThan(0);
   await mealActions.first().click();
-  await expect(page.locator('summary').filter({ hasText: 'Logged meals (1)' })).toBeVisible();
+  await expect(page.getByText(/^1 of \d+ eaten$/)).toBeVisible();
   await expect(page.getByText('Nothing logged', { exact: true })).not.toBeVisible();
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(mealActions).toHaveCount(plannedCount);
