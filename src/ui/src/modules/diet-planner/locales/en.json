@@ -414,7 +414,6 @@
     "macro_distribution": "Macro Distribution (Per Serving)",
     "ingredients": "Ingredients",
     "instructions": "Instructions",
-    "total_calories": "Total for {{count}} servings: {{calories}} kcal",
     "total_protein": "Total Protein",
     "total_carbs": "Total Carbs",
     "total_fat": "Total Fat",
@@ -428,11 +427,12 @@
     },
     "add_to_plan": "Add to plan",
     "method": "Method",
-    "servings_label": "Servings",
-    "scale_note": "Ingredient amounts scale automatically.",
-    "per_serving_note": "Nutrition for one serving stays the same when scaling ingredients.",
     "decrease_servings": "Decrease servings",
-    "increase_servings": "Increase servings"
+    "increase_servings": "Increase servings",
+    "by": "by {{name}}",
+    "of_your_day": "{{percent}}% of your day",
+    "all_servings": "All {{count}} servings: {{energy}}",
+    "in_your_plan": "In your plan this week"
   },
   "day_view": {
     "summary": {

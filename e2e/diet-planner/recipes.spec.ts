@@ -109,11 +109,11 @@ test.describe('Recipes CRUD', () => {
     await page.reload();
     await expect(page.getByText(ingredientName, { exact: true })).toBeVisible();
     await expect(page.getByText(liquidName, { exact: true })).toBeVisible();
-    await expect(page.getByText('100.0 g', { exact: true })).toBeVisible();
-    await expect(page.getByText('200.0 ml', { exact: true })).toBeVisible();
+    await expect(page.getByText('100 g', { exact: true })).toBeVisible();
+    await expect(page.getByText('200 ml', { exact: true })).toBeVisible();
     await expect(page.getByText('Mix grains.')).toBeVisible();
     await expect(page.getByText('Add liquid.')).toBeVisible();
-    await expect(page.getByText('100kcal', { exact: true })).toBeVisible();
+    await expect(page.getByText(/^100\s*kcal$/)).toBeVisible();
 
     await page.getByRole('link', { name: /^edit$/i }).click();
     await page.waitForURL(/\/edit$/);
@@ -124,8 +124,8 @@ test.describe('Recipes CRUD', () => {
     await page.reload();
     // The visibility badge shares the line ("Household 4 servings").
     await expect(page.getByText(/4 servings$/i)).toBeVisible();
-    await expect(page.getByText('200.0 g', { exact: true })).toBeVisible();
-    await expect(page.getByText('200.0 ml', { exact: true })).toBeVisible();
+    await expect(page.getByText('200 g', { exact: true })).toBeVisible();
+    await expect(page.getByText('200 ml', { exact: true })).toBeVisible();
     await expect(page.getByText('Mix grains.')).toBeVisible();
     await expect(page.getByText('Add liquid.')).toBeVisible();
     await expect(page.getByText('75kcal', { exact: true })).toBeVisible();

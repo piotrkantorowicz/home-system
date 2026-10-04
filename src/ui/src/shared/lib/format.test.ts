@@ -134,6 +134,11 @@ describe('units', () => {
     expect(formatQuantity(12.5, 'Gram', en)).toBe('12.5 g');
     expect(formatQuantity(Number.NaN, 'Gram', en)).toBe(NO_VALUE);
   });
+  it('accepts the lowercase units ingredients and the shopping list use', () => {
+    expect(formatQuantity(1200, 'g', en)).toBe('1.2 kg');
+    expect(formatQuantity(250, 'ml', en)).toBe('250 ml');
+    expect(formatQuantity(1.5, 'piece', en)).toBe('1.5 pcs');
+  });
 });
 
 describe('dates', () => {
