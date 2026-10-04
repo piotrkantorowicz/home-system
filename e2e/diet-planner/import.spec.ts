@@ -7,15 +7,14 @@ import { createApiContext } from './utils/seed';
 test.describe.configure({ mode: 'serial', timeout: 120000 });
 
 test.describe('Diet Plan Import', () => {
-  test('user can load sample JSON and it populates the input', async ({ page }) => {
+  test('the sample plan goes straight to a reviewable import', async ({ page }) => {
     const importPage = new ImportPage(page);
     await importPage.goto();
 
     await importPage.loadSample();
 
-    const jsonContent = await importPage.jsonInput.inputValue();
-    expect(jsonContent).toContain('products');
-    expect(jsonContent).toContain('recipes');
+    await expect(page.getByText('Sample plan', { exact: true })).toBeVisible();
+    await expect(importPage.importButton).toBeEnabled();
   });
 
   test('entering invalid JSON blocks progression to step 2', async ({ page }) => {
@@ -52,8 +51,7 @@ test.describe('Diet Plan Import', () => {
 
     await importPage.goto();
     await importPage.uploadJson(data);
-    await importPage.continueButton.click();
-    await expect(importPage.reviewDetected).toBeVisible();
+    await expect(page.getByText('diet-plan.json')).toBeVisible();
     await expect(importPage.importButton).toBeEnabled();
     await importPage.previousButton.click();
     await expect(importPage.jsonInput).toHaveValue(JSON.stringify(data));
@@ -68,9 +66,11 @@ test.describe('Diet Plan Import', () => {
       await api.dispose();
     }
 
+    await importPage.openPaste();
     await importPage.continueButton.click();
     await expect(importPage.reviewDetected).toBeVisible();
     await importPage.importButton.click();
+    await importPage.openPlanLink.click();
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);
     await expect(new CalendarPage(page).mealChips(recipe).first()).toBeVisible();
   });
@@ -106,7 +106,7 @@ test.describe('Diet Plan Import', () => {
     });
     await importPage.continueButton.click();
     await expect(importPage.reviewDetected).toBeVisible();
-    await expect(page.getByText(/1 warning\(s\)/)).toBeVisible();
+    await expect(page.getByText(/1 thing to check/)).toBeVisible();
     await expect(page.getByText(/appears more than once/)).toBeVisible();
     await expect(importPage.importButton).toBeEnabled();
   });
@@ -156,7 +156,7 @@ test.describe('Diet Plan Import', () => {
     await validatePromise;
 
     await expect(importPage.reviewDetected).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/ready to import/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Import 1 meal', exact: true })).toBeVisible();
     await expect(importPage.importButton).toBeEnabled();
   });
 
