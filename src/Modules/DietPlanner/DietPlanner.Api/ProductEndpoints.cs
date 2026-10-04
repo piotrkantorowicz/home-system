@@ -30,8 +30,8 @@ public static class ProductEndpoints
 
         group.MapGet("/", ListProducts)
             .WithName("ListProducts")
-            .WithSummary("List products with optional search and pagination")
-            .WithDescription("Returns a paginated list of products visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to products created by the current user.");
+            .WithSummary("List products with search, completeness filter, sorting and pagination")
+            .WithDescription("Returns a paginated list of products visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to products created by the current user and `onlyIncomplete=true` for products missing calories, protein, carbs or fat. `sortBy` (name, calories, protein, carbs, fat, fiber) with `sortDescending` sorts before paging; unknown nutrition values always come last, ties fall back to name then id.");
 
         group.MapGet("/{id:guid}", GetProduct)
             .WithName("GetProduct")
@@ -64,7 +64,7 @@ public static class ProductEndpoints
     {
         var userId = GetUserId(user);
         var result = await dispatcher.SendAsync<SearchProductsQuery, PagedList<ProductDto>>(
-            new SearchProductsQuery(@params.Search, @params.OnlyMine, userId, @params.Page, @params.PageSize), ct);
+            new SearchProductsQuery(@params.Search, @params.OnlyMine, userId, @params.Page, @params.PageSize, @params.OnlyIncomplete, @params.SortBy, @params.SortDescending), ct);
         return TypedResults.Ok(result);
     }
 
@@ -135,11 +135,17 @@ public static class ProductEndpoints
 /// <param name="OnlyMine">When true, only items the caller created.</param>
 /// <param name="Page">1-based page number.</param>
 /// <param name="PageSize">Items per page.</param>
+/// <param name="OnlyIncomplete">When true, only products missing calories, protein, carbs or fat. Combines with search and onlyMine.</param>
+/// <param name="SortBy"><c>name</c> (default), <c>calories</c>, <c>protein</c>, <c>carbs</c>, <c>fat</c> or <c>fiber</c>; unknown values sort last in either direction.</param>
+/// <param name="SortDescending">Reverse the sort direction.</param>
 public sealed record ListProductsParams(
     [property: FromQuery] string? Search,
     [property: FromQuery] bool OnlyMine = false,
     [property: FromQuery] int Page = 1,
-    [property: FromQuery] int PageSize = 50);
+    [property: FromQuery] int PageSize = 50,
+    [property: FromQuery] bool OnlyIncomplete = false,
+    [property: FromQuery] string? SortBy = null,
+    [property: FromQuery] bool SortDescending = false);
 
 /// <summary>
 /// Body of product creation; nutrition is per 100 g.
