@@ -34,7 +34,6 @@ const ImportWizard = lazy(() => import('./pages/diet-plans/ImportWizard'));
 const NutritionSummary = lazy(() => import('./pages/NutritionSummary'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Hydration = lazy(() => import('./pages/Hydration'));
-const Preferences = lazy(() => import('./pages/Preferences'));
 const ControlKit = lazy(() => import('./pages/ControlKit'));
 
 export const dietPlannerModule: AppModule = {
@@ -123,7 +122,7 @@ export const dietPlannerModule: AppModule = {
     // Pinned at the bottom, below a divider
     {
       name: 'Preferences',
-      href: '/diet-planner/settings/app',
+      href: '/settings/app',
       icon: SlidersHorizontal,
       translationKey: 'common.preferences',
       group: NAV_GROUP_SETTINGS,
@@ -145,8 +144,8 @@ export const dietPlannerModule: AppModule = {
     { path: 'nutrition', Component: NutritionSummary },
     { path: 'profile', Component: Profile },
     { path: 'hydration', Component: Hydration },
-    { path: 'settings/app', Component: Preferences },
-    { path: 'preferences', element: <Navigate to="/diet-planner/settings/app" replace /> },
+    { path: 'settings/app', element: <Navigate to="/settings/app" replace /> },
+    { path: 'preferences', element: <Navigate to="/settings/app" replace /> },
     { path: 'control-kit', Component: ControlKit },
   ],
 };

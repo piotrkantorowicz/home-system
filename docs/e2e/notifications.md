@@ -6,7 +6,7 @@ the real backend and scheduler. The original two specs retain route mocks.
 
 ## channel-preferences.spec.ts — Channel preferences
 
-Route: `/diet-planner/settings/app` (App & account). The legacy `/notifications/preferences` redirects here (#502).
+Route: `/settings/app` (App & account; legacy `/diet-planner/settings/app` and `/diet-planner/preferences` redirect here, #550). The legacy `/notifications/preferences` redirects here (#502).
 
 > **#208 redesign — the "console" channel row was dropped.** The page now
 > renders only two `ChannelToggleRow`s: **Email** (disabled, "coming soon")

@@ -13,7 +13,7 @@ const Inbox = lazy(() => import('./pages/Inbox'));
 export { ChannelPreferencesSection } from './components/ChannelPreferencesSection';
 
 // Channel preferences now live in App & account (#502).
-const APP_SETTINGS_PATH = '/diet-planner/settings/app';
+const APP_SETTINGS_PATH = '/settings/app';
 
 export const notificationsModule: AppModule = {
   name: 'notifications',

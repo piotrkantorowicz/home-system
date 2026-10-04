@@ -100,5 +100,5 @@ test('Polish language switches labels and stays usable after reload', async ({ p
 
   await nav.userMenuButton.click();
   await nav.preferencesLink.click();
-  await expect(page).toHaveURL('/diet-planner/settings/app');
+  await expect(page).toHaveURL('/settings/app');
 });

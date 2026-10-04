@@ -11,7 +11,7 @@ describe('legacy channel preferences route', () => {
       <MemoryRouter initialEntries={['/notifications/preferences']}>
         <Routes>
           <Route path="/notifications/preferences" element={legacy?.element} />
-          <Route path="/diet-planner/settings/app" element={<div>app-account</div>} />
+          <Route path="/settings/app" element={<div>app-account</div>} />
         </Routes>
       </MemoryRouter>,
     );

@@ -204,7 +204,7 @@ describe('Inbox', () => {
     renderInbox();
     expect(await screen.findByRole('link', { name: 'inbox.settings_aria' })).toHaveAttribute(
       'href',
-      '/diet-planner/settings/app',
+      '/settings/app',
     );
   });
 

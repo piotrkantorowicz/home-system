@@ -70,5 +70,33 @@
       "not_found_title": "Nie znaleziono strony",
       "not_found_message": "Ta strona nie istnieje lub została przeniesiona."
     }
+  },
+  "preferences": {
+    "title": "Aplikacja i konto",
+    "subtitle": "Powiadomienia, wygląd, jednostki i Twoje konto.",
+    "appearance": "Wygląd",
+    "theme": "Motyw",
+    "theme_light": "Jasny",
+    "theme_dark": "Ciemny",
+    "theme_system": "Systemowy",
+    "language": "Język",
+    "compact_density": "Kompaktowy układ",
+    "compact_density_hint": "Ciaśniejsze odstępy i mniejsze kontrolki.",
+    "units": "Jednostki i formaty",
+    "energy": "Energia",
+    "weight": "Waga",
+    "volume": "Objętość",
+    "week_start": "Początek tygodnia",
+    "week_monday": "Poniedziałek",
+    "week_sunday": "Niedziela",
+    "thin_space": "Wąska spacja w tysiącach",
+    "thin_space_hint": "Pokaż 2 150 zamiast 2,150.",
+    "units_note": "Jednostki i format liczb dotyczą widoków Dziś, Plan tygodnia, Produkty, Przepisy i Budżet. Strony Woda i Odżywianie nadal pokazują kcal, g i ml.",
+    "account": "Konto",
+    "sign_out": "Wyloguj",
+    "notifications": "Gdzie trafiają powiadomienia",
+    "diet_settings": "Ustawienia diety",
+    "example": "Przykład",
+    "delete_unavailable": "Usuwanie konta nie jest jeszcze dostępne."
   }
 }

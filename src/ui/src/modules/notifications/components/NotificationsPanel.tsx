@@ -122,7 +122,7 @@ export function NotificationsPanel() {
             {t('panel.view_all')}
           </Link>
           <Link
-            to="/diet-planner/settings/app"
+            to="/settings/app"
             onClick={close}
             className="text-primary focus-visible:ring-primary hover:underline focus-visible:ring-2 focus-visible:outline-none"
           >
