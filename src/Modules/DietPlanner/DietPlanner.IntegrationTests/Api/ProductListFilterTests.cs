@@ -9,7 +9,7 @@ using Shared.Abstractions.Core.Pagination;
 
 /// <summary>#485 — product list: incomplete-nutrition filter and whitelisted stable sorting, both applied before paging.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
-public sealed class ProductListFilterTests
+public sealed class ProductListFilterTests : IDisposable
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -19,7 +19,21 @@ public sealed class ProductListFilterTests
     /// <param name="db">The shared database container fixture.</param>
     public ProductListFilterTests(DatabaseFixture db) => _db = db;
 
-    private HttpClient ClientFor(string user) => new DietPlannerWebApplicationFactory(_db.ConnectionString, user).CreateClient();
+    private readonly List<DietPlannerWebApplicationFactory> _factories = [];
+
+    private HttpClient ClientFor(string user)
+    {
+        var factory = new DietPlannerWebApplicationFactory(_db.ConnectionString, user);
+        _factories.Add(factory);
+        return factory.CreateClient();
+    }
+
+    /// <summary>Disposes every host the test booted so they do not pile up across the suite.</summary>
+    public void Dispose()
+    {
+        foreach (var factory in _factories)
+            factory.Dispose();
+    }
 
     private static async Task AddAsync(
         HttpClient client, string name, decimal? calories, decimal? protein, decimal? carbs, decimal? fat, decimal? fiber, string? visibility = null)
