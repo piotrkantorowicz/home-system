@@ -103,7 +103,7 @@ describe('NotificationsPanel', () => {
     );
     expect(screen.getByRole('link', { name: /panel.preferences_link/ })).toHaveAttribute(
       'href',
-      '/diet-planner/settings/app',
+      '/settings/app',
     );
   });
 

@@ -107,7 +107,7 @@ export default function Inbox() {
               {t('inbox.mark_all_read')}
             </Button>
             <Button asChild variant="secondary" size="sm">
-              <Link to="/diet-planner/settings/app" aria-label={t('inbox.settings_aria')}>
+              <Link to="/settings/app" aria-label={t('inbox.settings_aria')}>
                 <Settings className="size-4" aria-hidden />
               </Link>
             </Button>
