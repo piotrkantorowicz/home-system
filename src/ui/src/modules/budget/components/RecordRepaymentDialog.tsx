@@ -30,6 +30,10 @@ export interface RepaymentPrefill {
 interface RecordRepaymentDialogProps {
   settlement: Settlement;
   prefill?: RepaymentPrefill;
+  /** Open on the small confirm step: the suggestion is already filled in. */
+  startAtReview?: boolean;
+  /** Called with the new payment so the page can offer "Undo" right after. */
+  onRecorded?: (repayment: { id: string; revision: number }) => void;
   onClose: () => void;
 }
 
@@ -42,6 +46,8 @@ interface Person {
 export function RecordRepaymentDialog({
   settlement,
   prefill,
+  startAtReview = false,
+  onRecorded,
   onClose,
 }: RecordRepaymentDialogProps) {
   const { t } = useTranslation('budget');
@@ -65,7 +71,7 @@ export function RecordRepaymentDialog({
   const [amount, setAmount] = useState(prefill?.amount ?? '');
   const [paidOn, setPaidOn] = useState(todayLocal());
   const [note, setNote] = useState('');
-  const [reviewing, setReviewing] = useState(false);
+  const [reviewing, setReviewing] = useState(startAtReview && !!prefill);
   const [touched, setTouched] = useState(false);
 
   const normalized = normalizeAmount(amount);
@@ -82,6 +88,16 @@ export function RecordRepaymentDialog({
   const limit = Math.min(Math.max(0, -netOf(from)), Math.max(0, netOf(to)));
   const overpays = normalized !== null && toMinor(normalized) > limit;
 
+  // The suggestion this was opened from has moved on (someone else paid, an expense changed).
+  const stale =
+    !!prefill &&
+    !settlement.suggestions.some(
+      (s) =>
+        s.fromPersonId === prefill.fromPersonId &&
+        s.toPersonId === prefill.toPersonId &&
+        s.amount === prefill.amount,
+    );
+
   const submit = () => {
     if (!normalized) return;
     const input = {
@@ -94,8 +110,9 @@ export function RecordRepaymentDialog({
     mutation.mutate(
       { kind: 'record', requestId: requestId.idFor(JSON.stringify(input)), input },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           requestId.reset();
+          if (result) onRecorded?.({ id: result.repaymentId, revision: Number(result.revision) });
           toast.success(t('repayment_recorded'));
           onClose();
         },
@@ -132,6 +149,7 @@ export function RecordRepaymentDialog({
               })}
             </p>
             <p className="text-text-2 text-sm">{t('repayment_no_money')}</p>
+            {stale && <Banner variant="warning">{t('repayment_stale')}</Banner>}
             {overpays && <Banner variant="warning">{t('repayment_overpay')}</Banner>}
             {mutation.isError && <Banner variant="error">{t('repayment_save_error')}</Banner>}
             <div className="flex justify-end gap-2">

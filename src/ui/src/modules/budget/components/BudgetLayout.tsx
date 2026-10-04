@@ -62,9 +62,10 @@ export function BudgetLayout() {
   const overview = useMatch({ path: '/budget', end: true });
   const expenses = useMatch({ path: '/budget/expenses', end: true });
   const detail = useMatch({ path: '/budget/expenses/:id', end: true });
+  const settlement = useMatch({ path: '/budget/settlement', end: true });
   return (
     <BudgetCacheBoundary>
-      {overview || expenses || detail ? (
+      {overview || expenses || detail || settlement ? (
         <BudgetGate />
       ) : (
         <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8">

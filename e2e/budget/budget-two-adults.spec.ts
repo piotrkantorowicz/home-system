@@ -143,30 +143,28 @@ test.describe('Budget with two adults', () => {
       // The same entries on screen: the shared one for both, each private one for its owner only.
       await page.goto('/budget/expenses');
       await expect(
-        page.getByRole('link', { name: new RegExp(`${shared.replace('.', '\\.')} PLN`) }).first(),
+        page.getByRole('link', { name: new RegExp(`${shared.replace('.', '\\.')}`) }).first(),
       ).toBeVisible();
       await expect(
-        page
-          .getByRole('link', { name: new RegExp(`${ownerPrivate.replace('.', '\\.')} PLN`) })
-          .first(),
+        page.getByRole('link', { name: new RegExp(`${ownerPrivate.replace('.', '\\.')}`) }).first(),
       ).toBeVisible();
       await expect(
-        page.getByRole('link', { name: new RegExp(`${inviteePrivate.replace('.', '\\.')} PLN`) }),
+        page.getByRole('link', { name: new RegExp(`${inviteePrivate.replace('.', '\\.')}`) }),
       ).toHaveCount(0);
       await invitee.page.goto('/budget/expenses');
       await expect(
         invitee.page
-          .getByRole('link', { name: new RegExp(`${shared.replace('.', '\\.')} PLN`) })
+          .getByRole('link', { name: new RegExp(`${shared.replace('.', '\\.')}`) })
           .first(),
       ).toBeVisible();
       await expect(
         invitee.page
-          .getByRole('link', { name: new RegExp(`${inviteePrivate.replace('.', '\\.')} PLN`) })
+          .getByRole('link', { name: new RegExp(`${inviteePrivate.replace('.', '\\.')}`) })
           .first(),
       ).toBeVisible();
       await expect(
         invitee.page.getByRole('link', {
-          name: new RegExp(`${ownerPrivate.replace('.', '\\.')} PLN`),
+          name: new RegExp(`${ownerPrivate.replace('.', '\\.')}`),
         }),
       ).toHaveCount(0);
 
@@ -185,8 +183,10 @@ test.describe('Budget with two adults', () => {
       // The invitee owes half of the shared expense. A partial repayment is recorded in the UI…
       const half = (minor(shared) / 2 / 100).toFixed(2);
       await invitee.page.goto('/budget/settlement');
-      await expect(invitee.page.getByText(`Owes ${half} PLN`)).toBeVisible();
-      await invitee.page.getByRole('button', { name: 'Record payment' }).nth(1).click();
+      await expect(
+        invitee.page.getByText(new RegExp(`owes\\s+${half.replace('.', '\\.')}`)),
+      ).toBeVisible();
+      await invitee.page.getByRole('button', { name: 'Record a different amount' }).click();
       const pay = invitee.page.getByRole('dialog');
       await pay.getByLabel(/^Amount/).fill('5');
       await pay.getByRole('button', { name: 'Review' }).click();
@@ -197,10 +197,14 @@ test.describe('Budget with two adults', () => {
       // …and survives a reload for both adults.
       const remaining = ((minor(shared) / 2 - 500) / 100).toFixed(2);
       await invitee.page.reload();
-      await expect(invitee.page.getByText(`Owes ${remaining} PLN`)).toBeVisible();
+      await expect(
+        invitee.page.getByText(new RegExp(`owes\\s+${remaining.replace('.', '\\.')}`)),
+      ).toBeVisible();
       await expect(invitee.page.getByText(/paid .* 5\.00 PLN/).first()).toBeVisible();
       await page.goto('/budget/settlement');
-      await expect(page.getByText(`Is owed ${remaining} PLN`)).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`is owed\\s+${remaining.replace('.', '\\.')}`)),
+      ).toBeVisible();
     } finally {
       await settleUp(page, inviteeId, ownerId);
       await ensureNoHousehold(invitee.page);

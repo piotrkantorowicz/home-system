@@ -1,26 +1,45 @@
-import { Badge, Banner, Button, EmptyState, Pagination } from '@shared/components/ui';
-import { Lock, Scale } from 'lucide-react';
+import { useHousehold } from '@modules/household';
+import {
+  Banner,
+  Button,
+  EmptyState,
+  PageContainer,
+  PageHeader,
+  Skeleton,
+} from '@shared/components/ui';
+import { useToast } from '@shared/context/ToastContext';
+import { Check, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { errorStatus } from '../api/client';
-import { useRepaymentsQuery, useSettlementQuery } from '../api/queries';
+import { useRepaymentMutation, useSettlementQuery } from '../api/queries';
+import { BalanceBars } from '../components/BalanceBars';
 import { RecordRepaymentDialog } from '../components/RecordRepaymentDialog';
+import { RepaymentList } from '../components/RepaymentList';
+import { SettlementAnswerCard } from '../components/SettlementAnswerCard';
 import { VoidRepaymentDialog } from '../components/VoidRepaymentDialog';
 import { useBudgetAccess } from '../hooks/useBudgetAccess';
 
 import type { RepaymentPrefill } from '../components/RecordRepaymentDialog';
 import type { Repayment } from '../types';
 
+interface Recording {
+  prefill?: RepaymentPrefill;
+  review?: boolean;
+}
+
 export default function SettlementPage() {
   const { t } = useTranslation('budget');
+  const toast = useToast();
   const { level } = useBudgetAccess();
+  const { myPersonId } = useHousehold();
   const query = useSettlementQuery(level === 'adult');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const repayments = useRepaymentsQuery(page, pageSize, level === 'adult');
-  const [recording, setRecording] = useState<{ prefill?: RepaymentPrefill } | null>(null);
+  const undoMutation = useRepaymentMutation();
+  const [recording, setRecording] = useState<Recording | null>(null);
   const [voiding, setVoiding] = useState<Repayment | null>(null);
+  // The payment this session just recorded: only that one can be undone from here.
+  const [justRecorded, setJustRecorded] = useState<{ id: string; revision: number } | null>(null);
 
   if (level !== 'adult' || errorStatus(query.error) === 403)
     return (
@@ -31,216 +50,163 @@ export default function SettlementPage() {
       />
     );
 
+  const undo = () => {
+    if (!justRecorded) return;
+    undoMutation.mutate(
+      {
+        kind: 'void',
+        id: justRecorded.id,
+        expectedRevision: justRecorded.revision,
+        reason: t('undo_reason'),
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('payment_undone'));
+          setJustRecorded(null);
+        },
+        // onSettled already refreshed everything; a stale undo must not be retried blindly.
+        onError: () => {
+          setJustRecorded(null);
+        },
+      },
+    );
+  };
+  const undoButton = justRecorded && (
+    <Button variant="outline" disabled={undoMutation.isPending} onClick={undo}>
+      {t('undo')}
+    </Button>
+  );
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="max-w-2xl">
-          <h2 className="text-xl font-semibold">{t('settlement_title')}</h2>
-          <p className="text-text-2 mt-1 text-sm">{t('settlement_intro')}</p>
-        </div>
-        {query.isSuccess && (
-          <Button
-            onClick={() => {
-              setRecording({});
+    <PageContainer width="narrow">
+      <PageHeader
+        title={t('settlement_title')}
+        subtitle={
+          query.isSuccess ? t('settlement_subtitle', { currency: query.data.currency }) : undefined
+        }
+        actions={
+          query.isSuccess ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRecording({});
+              }}
+            >
+              {t('record_payment')}
+            </Button>
+          ) : undefined
+        }
+      />
+      <div className="space-y-8">
+        {query.isPending && <Skeleton className="h-40 w-full" />}
+        {query.isError && (
+          <Banner
+            variant="error"
+            onRetry={() => {
+              void query.refetch();
             }}
+            retryLabel={t('retry')}
           >
-            {t('record_payment')}
-          </Button>
+            {t('load_error')}
+          </Banner>
         )}
-      </header>
+        {undoMutation.isError && <Banner variant="error">{t('undo_error')}</Banner>}
 
-      {query.isPending && <p role="status">{t('loading')}</p>}
-      {query.isError && (
-        <Banner
-          variant="error"
-          onRetry={() => {
-            void query.refetch();
-          }}
-          retryLabel={t('retry')}
-        >
-          {t('load_error')}
-        </Banner>
-      )}
-
-      {query.isSuccess && (
-        <>
-          {query.data.isSettled ? (
-            <EmptyState icon={Scale} title={t('settled_title')} description={t('settled_body')} />
-          ) : (
-            <>
-              <section aria-labelledby="balances-title" className="space-y-3">
-                <h3 id="balances-title" className="font-semibold">
-                  {t('balances')}
-                </h3>
-                <ul className="space-y-2">
-                  {query.data.balances.map((b) => {
-                    const owes = b.net.startsWith('-');
-                    const zero = /^-?0\.00$/.test(b.net);
-                    return (
-                      <li
-                        key={b.personId}
-                        className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
-                      >
-                        <p className="font-semibold break-words">
-                          {b.displayName}
-                          {b.isFormerAdult && (
-                            <Badge variant="outline" className="ml-2">
-                              {t('former_adult')}
-                            </Badge>
-                          )}
-                        </p>
-                        <p className="text-sm">
-                          {zero
-                            ? t('balance_zero')
-                            : t(owes ? 'balance_owes' : 'balance_gets', {
-                                amount: owes ? b.net.slice(1) : b.net,
-                                currency: query.data.currency,
-                              })}
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-
-              <section aria-labelledby="suggestions-title" className="space-y-3">
-                <h3 id="suggestions-title" className="font-semibold">
-                  {t('suggestions')}
-                </h3>
-                <ol className="space-y-2">
-                  {query.data.suggestions.map((s) => (
-                    <li
-                      key={`${s.fromPersonId}-${s.toPersonId}`}
-                      className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
-                    >
-                      {t('suggestion', {
-                        from: s.fromDisplayName,
-                        to: s.toDisplayName,
-                        amount: s.amount,
-                        currency: query.data.currency,
-                      })}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setRecording({
-                            prefill: {
-                              fromPersonId: s.fromPersonId,
-                              toPersonId: s.toPersonId,
-                              amount: s.amount,
-                            },
-                          });
-                        }}
-                      >
-                        {t('record_payment')}
-                      </Button>
-                    </li>
-                  ))}
-                </ol>
-                {query.data.balances.length >= 3 && (
-                  <p className="text-text-2 text-sm">{t('simplification_note')}</p>
-                )}
-                <p className="text-text-2 text-sm">{t('suggestions_note')}</p>
-              </section>
-            </>
-          )}
-
-          <section aria-labelledby="repayments-title" className="space-y-3">
-            <h3 id="repayments-title" className="font-semibold">
-              {t('repayments_title')}
-            </h3>
-            {repayments.isPending && <p role="status">{t('loading')}</p>}
-            {repayments.isError && (
-              <Banner
-                variant="error"
-                onRetry={() => {
-                  void repayments.refetch();
-                }}
-                retryLabel={t('retry')}
+        {query.isSuccess && (
+          <>
+            {query.data.isSettled ? (
+              <section
+                aria-labelledby="settled-title"
+                className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
               >
-                {t('repayments_error')}
-              </Banner>
-            )}
-            {repayments.isSuccess &&
-              (repayments.data.items.length === 0 ? (
-                <p className="text-text-2 text-sm">{t('repayments_empty')}</p>
-              ) : (
-                <>
-                  <ul className="space-y-2">
-                    {repayments.data.items.map((r) => (
-                      <li
-                        key={r.id}
-                        className="border-border flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
-                      >
-                        <div className="space-y-1">
-                          <p className={r.isVoided ? 'line-through' : undefined}>
-                            {t('repayment_line', {
-                              from: r.fromDisplayName,
-                              to: r.toDisplayName,
-                              amount: r.amount,
-                              currency: query.data.currency,
-                              date: r.paidOn,
-                            })}
-                            {r.isVoided && (
-                              <Badge variant="outline" className="ml-2 no-underline">
-                                {t('voided')}
-                              </Badge>
-                            )}
-                          </p>
-                          {r.note && <p className="text-text-2">{r.note}</p>}
-                          <p className="text-text-2">
-                            {t('repayment_added_by', { name: r.addedByDisplayName })}
-                            {r.isVoided && r.voidReason
-                              ? ` · ${t('reason_is', { reason: r.voidReason })}`
-                              : ''}
-                          </p>
-                        </div>
-                        {!r.isVoided && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setVoiding(r);
-                            }}
-                          >
-                            {t('void_repayment')}
-                          </Button>
-                        )}
-                      </li>
+                <div className="flex items-start gap-3">
+                  <Check aria-hidden="true" className="text-text-2 mt-0.5 size-5" />
+                  <div>
+                    <h2 id="settled-title" className="font-semibold">
+                      {t('settled_title')}
+                    </h2>
+                    <p className="text-text-2 text-sm">{t('settled_body')}</p>
+                  </div>
+                </div>
+                {undoButton}
+              </section>
+            ) : (
+              <>
+                {justRecorded && (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-text-2 text-sm">{t('undo_hint')}</p>
+                    {undoButton}
+                  </div>
+                )}
+                <section aria-labelledby="suggestions-title" className="space-y-3">
+                  <h2 id="suggestions-title" className="sr-only">
+                    {t('suggestions')}
+                  </h2>
+                  <ol className="space-y-3">
+                    {query.data.suggestions.map((s) => (
+                      <SettlementAnswerCard
+                        key={`${s.fromPersonId}-${s.toPersonId}`}
+                        suggestion={s}
+                        currency={query.data.currency}
+                        myPersonId={myPersonId}
+                        onPay={() => {
+                          setRecording({ prefill: s, review: true });
+                        }}
+                        onDifferentAmount={() => {
+                          setRecording({ prefill: s });
+                        }}
+                      />
                     ))}
-                  </ul>
-                  <Pagination
-                    page={Number(repayments.data.page)}
-                    pageSize={Number(repayments.data.pageSize)}
-                    totalCount={Number(repayments.data.totalCount)}
-                    onPageChange={setPage}
-                    onPageSizeChange={(size) => {
-                      setPageSize(size);
-                      setPage(1);
-                    }}
-                  />
-                </>
-              ))}
-          </section>
+                  </ol>
+                  {query.data.balances.length >= 3 && (
+                    <p className="text-text-2 text-sm">{t('simplification_note')}</p>
+                  )}
+                  <p className="text-text-2 text-sm">{t('no_money_note')}</p>
+                </section>
 
-          <section aria-labelledby="how-title" className="space-y-2">
-            <h3 id="how-title" className="font-semibold">
-              {t('how_title')}
-            </h3>
-            <ul className="text-text-2 list-disc space-y-1 pl-5 text-sm">
-              <li>{t('how_counts')}</li>
-              <li>{t('how_future')}</li>
-              <li>{t('how_excluded')}</li>
-              <li>{t('how_former')}</li>
-            </ul>
-          </section>
-        </>
-      )}
+                <section aria-labelledby="balances-title" className="space-y-3">
+                  <h2 id="balances-title" className="font-semibold">
+                    {t('balances')}
+                  </h2>
+                  <BalanceBars balances={query.data.balances} currency={query.data.currency} />
+                </section>
+              </>
+            )}
+
+            <section aria-labelledby="repayments-title" className="space-y-3">
+              <h2 id="repayments-title" className="font-semibold">
+                {t('repayments_title')}
+              </h2>
+              <RepaymentList currency={query.data.currency} onVoid={setVoiding} />
+            </section>
+
+            <details className="border-border rounded-xl border p-4">
+              <summary className="cursor-pointer font-semibold">{t('how_title')}</summary>
+              <ul className="text-text-2 mt-3 list-disc space-y-1 pl-5 text-sm">
+                <li>{t('how_counts')}</li>
+                <li>{t('how_future')}</li>
+                <li>{t('how_excluded')}</li>
+                <li>{t('how_former')}</li>
+              </ul>
+            </details>
+          </>
+        )}
+      </div>
 
       {recording && query.isSuccess && (
         <RecordRepaymentDialog
           settlement={query.data}
-          {...(recording.prefill ? { prefill: recording.prefill } : {})}
+          {...(recording.prefill
+            ? {
+                prefill: {
+                  fromPersonId: recording.prefill.fromPersonId,
+                  toPersonId: recording.prefill.toPersonId,
+                  amount: recording.prefill.amount,
+                },
+              }
+            : {})}
+          startAtReview={recording.review ?? false}
+          onRecorded={setJustRecorded}
           onClose={() => {
             setRecording(null);
           }}
@@ -254,6 +220,6 @@ export default function SettlementPage() {
           }}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
