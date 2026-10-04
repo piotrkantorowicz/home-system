@@ -29,7 +29,8 @@ test('consumed nutrition, undo, and responsive agenda work with real meals', asy
   await expect(mealActions).toHaveCount(plannedCount);
   await expect(page.getByText('Nothing logged', { exact: true })).toBeVisible();
   for (const dismiss of await page.getByRole('button', { name: 'Dismiss notification' }).all()) {
-    await dismiss.click();
+    // A toast can auto-dismiss between listing and clicking; the count check below is the assertion.
+    await dismiss.click({ timeout: 2000 }).catch(() => undefined);
   }
   await expect(page.getByRole('button', { name: 'Dismiss notification' })).toHaveCount(0);
 

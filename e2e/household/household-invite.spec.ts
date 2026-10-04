@@ -76,7 +76,9 @@ test.describe('Household invitations', () => {
       const inviteeRow = inviteePage
         .getByTestId('shopping-list-row')
         .filter({ hasText: productName });
-      await inviteeRow.getByRole('checkbox').check();
+      // click, not check(): ticking moves the row from "to buy" to "bought" (a new
+      // element), and check() verifies the state on the element it clicked.
+      await inviteeRow.getByRole('checkbox').click();
       await expect(inviteeRow.getByRole('checkbox')).toBeChecked();
       await page.reload();
       const ownerRow = page.getByTestId('shopping-list-row').filter({ hasText: productName });
@@ -282,7 +284,8 @@ test.describe('Library visibility', () => {
       await expect(guestRecipes.createButton).toBeHidden();
 
       await guestRecipes.expectRecipeVisible(householdRecipe);
-      await expect(guestRecipes.visibilityBadgeFor(householdRecipe, 'Household')).toBeVisible();
+      // Household is the default, so its card carries no badge; only Private/Public are flagged.
+      await expect(guestRecipes.visibilityBadgeFor(householdRecipe, 'Private')).toBeHidden();
 
       await guestRecipes.searchFor(privateRecipe);
       await guestRecipes.expectRecipeNotVisible(privateRecipe);

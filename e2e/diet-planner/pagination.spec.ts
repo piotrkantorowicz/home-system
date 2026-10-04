@@ -65,7 +65,8 @@ test.describe('Pagination — Products list', () => {
       { length: 12 },
       (_, i) => `${prefix} ${String(i + 1).padStart(2, '0')}`,
     );
-    await seedProducts(page, names);
+    // One product outside the search so clearing it provably widens the list.
+    await seedProducts(page, [...names, `E2EOther${Date.now()}`]);
 
     await productsPage.goto();
     await productsPage.searchFor(prefix);
@@ -100,7 +101,8 @@ test.describe('Pagination — Products list', () => {
 
     const prefix = `E2ESearch${Date.now()}`;
     const names = [`${prefix} A`, `${prefix} B`, `${prefix} C`];
-    await seedProducts(page, names);
+    // One product outside the search so clearing it provably widens the list.
+    await seedProducts(page, [...names, `E2EOther${Date.now()}`]);
 
     await productsPage.goto();
     await productsPage.searchFor(prefix);
@@ -108,13 +110,13 @@ test.describe('Pagination — Products list', () => {
 
     await expect(page).toHaveURL(new RegExp(`search=${encodeURIComponent(prefix)}`));
     await expect(page).toHaveURL(/pageSize=10/);
-    await expect(page.getByText('3 items', { exact: true })).toBeVisible();
+    await expect(page.getByText('3 products · nutrition per 100 g', { exact: true })).toBeVisible();
 
     await page.reload();
 
     await expect(productsPage.searchInput).toHaveValue(prefix);
     await expect(productsPage.pageSizeSelect).toHaveValue('10');
-    await expect(page.getByText('3 items', { exact: true })).toBeVisible();
+    await expect(page.getByText('3 products · nutrition per 100 g', { exact: true })).toBeVisible();
     for (const name of names) {
       await expect(productsPage.rowFor(name)).toBeVisible();
     }
@@ -122,9 +124,10 @@ test.describe('Pagination — Products list', () => {
     await productsPage.clearSearch();
 
     await expect(page).not.toHaveURL(/search=/);
-    const countText = await page.getByText(/^\d+ items$/).textContent();
-    const count = Number(countText?.match(/\d+/)?.[0] ?? 0);
-    expect(count).toBeGreaterThan(names.length);
+    const count = page.getByText(/^\d+ products · nutrition per 100 g$/);
+    await expect
+      .poll(async () => Number((await count.textContent())?.match(/\d+/)?.[0] ?? 0))
+      .toBeGreaterThan(names.length);
   });
 });
 

@@ -128,6 +128,6 @@ test.describe('Recipes CRUD', () => {
     await expect(page.getByText('200 ml', { exact: true })).toBeVisible();
     await expect(page.getByText('Mix grains.')).toBeVisible();
     await expect(page.getByText('Add liquid.')).toBeVisible();
-    await expect(page.getByText('75kcal', { exact: true })).toBeVisible();
+    await expect(page.getByText('75 kcal', { exact: true })).toBeVisible();
   });
 });

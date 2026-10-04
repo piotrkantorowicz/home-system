@@ -158,7 +158,10 @@ test.describe('Meal Schedule', () => {
     // value. Without a seeded config the UI falls back to hard-coded defaults
     // that don't always hydrate before the inputValue() read below.
     await seedMealSchedule(page);
-    await schedulePage.goto();
+    // goto() would be a same-document hash navigation (the settings hub is one
+    // route), so reload to pick up the seeded schedule.
+    await page.reload();
+    await schedulePage.saveButton.waitFor();
 
     // Toggle between two names so the form is always dirty regardless of prior run state
     const currentName = await schedulePage.slotNameInput(0).inputValue();
