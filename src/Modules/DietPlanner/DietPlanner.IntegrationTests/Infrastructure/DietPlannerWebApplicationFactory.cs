@@ -32,6 +32,7 @@ public sealed class DietPlannerWebApplicationFactory(
     /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        TestHostTracker.Track(this);
         builder.UseEnvironment("Testing");
 
         if (settings is not null)

@@ -80,8 +80,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List recipes with optional search and pagination
-         * @description Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user.
+         * List recipes with search, high-protein and quick filters, and pagination
+         * @description Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user, `onlyHighProtein=true` for recipes with at least 25 g protein per serving or at least 30% of calories from protein (recipes with an ingredient of unknown protein never match), and `onlyQuick=true` for a known preparation time under 15 minutes. Filters apply before paging, so `totalCount` matches the filtered set.
          */
         get: operations["ListRecipes"];
         put?: never;
@@ -3032,6 +3032,8 @@ export interface operations {
                 OnlyMine?: boolean;
                 Page?: number | string;
                 PageSize?: number | string;
+                OnlyHighProtein?: boolean;
+                OnlyQuick?: boolean;
             };
             header?: never;
             path?: never;
