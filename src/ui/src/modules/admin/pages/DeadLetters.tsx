@@ -1,16 +1,17 @@
 import { useUserRoles } from '@shared/auth/useUserRoles';
-import { EmptyState, MetricTile } from '@shared/components/ui';
+import { Card, EmptyState, PageContainer, PageHeader, Skeleton } from '@shared/components/ui';
+import { cn } from '@shared/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { deliveryBacklogOptions } from '../api/hooks/useDeliveryDeadLetters';
 import { outboxBacklogOptions } from '../api/hooks/useOutboxDeadLetters';
+import { DeadLetterSection } from '../components/DeadLetterSection';
 import { DeliveryDeadLetters } from '../components/DeliveryDeadLetters';
+import { NothingWaiting } from '../components/NothingWaiting';
 import { OutboxDeadLetters } from '../components/OutboxDeadLetters';
 import { ADMIN_ROLE } from '../constants';
-
-import type { ReactNode } from 'react';
 
 export default function DeadLetters() {
   const { t } = useTranslation('admin');
@@ -18,13 +19,13 @@ export default function DeadLetters() {
 
   if (!isAdmin) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
+      <PageContainer>
         <EmptyState
           icon={ShieldAlert}
           title={t('forbidden_title')}
           description={t('forbidden_body')}
         />
-      </main>
+      </PageContainer>
     );
   }
 
@@ -42,73 +43,74 @@ function AdminDeadLetters() {
   const modulesWithDead = modules.filter((m) => m.deadLettered > 0);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
-      <header className="mb-6">
-        <h1 className="text-26px font-bold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground mt-0.5 text-sm">{t('subtitle')}</p>
-      </header>
+    <PageContainer>
+      <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
-      <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricTile
+      <Card className="mb-4 grid grid-cols-2 gap-x-6 gap-y-4 p-4 md:grid-cols-4 md:p-6">
+        <Stat
           label={t('tiles.dead_deliveries')}
-          value={deliveries.data?.deadLettered ?? '—'}
-          accent={deliveries.data?.deadLettered ? 'fat' : 'default'}
+          value={deliveries.data?.deadLettered}
           loading={deliveries.isLoading}
+          alert
         />
-        <MetricTile
+        <Stat
           label={t('tiles.retrying_deliveries')}
-          value={deliveries.data?.retrying ?? '—'}
+          value={deliveries.data?.retrying}
           loading={deliveries.isLoading}
         />
-        <MetricTile
+        <Stat
           label={t('tiles.dead_events')}
-          value={outbox.data ? deadEvents : '—'}
-          accent={deadEvents ? 'fat' : 'default'}
+          value={outbox.data ? deadEvents : undefined}
           loading={outbox.isLoading}
+          alert
         />
-        <MetricTile
+        <Stat
           label={t('tiles.retrying_events')}
-          value={outbox.data ? retryingEvents : '—'}
+          value={outbox.data ? retryingEvents : undefined}
           loading={outbox.isLoading}
         />
-      </div>
+      </Card>
 
-      <Section title={t('deliveries.title')} description={t('deliveries.description')}>
-        <DeliveryDeadLetters />
-      </Section>
+      <DeliveryDeadLetters />
 
-      <Section title={t('events.title')} description={t('events.description')}>
-        {outbox.data && modulesWithDead.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{t('events.empty')}</p>
-        ) : (
-          modulesWithDead.map((m) => (
-            <div key={m.module} className="mb-6">
-              <h3 className="mb-2 text-sm font-semibold">
-                {t('events.module_heading', { module: m.module, count: m.deadLettered })}
-              </h3>
-              <OutboxDeadLetters module={m.module} />
-            </div>
-          ))
-        )}
-      </Section>
-    </main>
+      {outbox.data && modulesWithDead.length === 0 ? (
+        <DeadLetterSection title={t('events.title')} count={0}>
+          <NothingWaiting />
+        </DeadLetterSection>
+      ) : (
+        modulesWithDead.map((m) => <OutboxDeadLetters key={m.module} module={m.module} />)
+      )}
+    </PageContainer>
   );
 }
 
-function Section({
-  title,
-  description,
-  children,
+/** A neutral label/value pair; the value turns red only when it is above zero and `alert` is set. */
+function Stat({
+  label,
+  value,
+  loading,
+  alert = false,
 }: {
-  title: string;
-  description: string;
-  children: ReactNode;
+  label: string;
+  value: number | undefined;
+  loading: boolean;
+  alert?: boolean;
 }) {
   return (
-    <section className="bg-card rounded-22px mb-6 border p-4 md:p-6">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="text-muted-foreground mb-4 text-sm">{description}</p>
-      {children}
-    </section>
+    <div>
+      <div className="text-muted-foreground text-label">{label}</div>
+      {loading ? (
+        <Skeleton className="mt-1 h-7 w-10" />
+      ) : (
+        <div
+          className={cn(
+            'numeral mt-0.5 text-2xl font-semibold',
+            alert && value !== undefined && value > 0 && 'text-over',
+          )}
+        >
+          {value ?? '—'}
+        </div>
+      )}
+    </div>
   );
 }

@@ -14,9 +14,9 @@ test.describe('Admin dead letters', () => {
     try {
       await page.goto('/admin');
 
-      await expect(page.getByRole('heading', { level: 1, name: 'Dead letters' })).toBeVisible();
-      await expect(page.getByText('Dead deliveries')).toBeVisible();
-      await expect(page.getByText('Dead events')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Failed messages' })).toBeVisible();
+      await expect(page.getByText('Failed deliveries')).toBeVisible();
+      await expect(page.getByText('Failed events')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Notification deliveries' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Integration events' })).toBeVisible();
     } finally {
@@ -28,6 +28,6 @@ test.describe('Admin dead letters', () => {
     await page.goto('/admin');
 
     await expect(page.getByText('Admins only')).toBeVisible();
-    await expect(page.getByRole('heading', { level: 1, name: 'Dead letters' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1, name: 'Failed messages' })).toHaveCount(0);
   });
 });
