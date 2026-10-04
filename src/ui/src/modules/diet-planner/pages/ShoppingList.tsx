@@ -1,4 +1,8 @@
 import {
+  rowKey,
+  useLocalShoppingChecks,
+} from '@modules/diet-planner/api/hooks/useLocalShoppingChecks';
+import {
   useClearShoppingChecks,
   useSetShoppingCheck,
   useShoppingList,
@@ -25,7 +29,7 @@ import {
 import { useToast } from '@shared/context/ToastContext';
 import { useFormat } from '@shared/hooks/useFormat';
 import { CalendarDays, Clipboard, Download, Ellipsis, FileJson, ShoppingCart } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ShoppingListItemDto } from '@modules/diet-planner/api/hooks/useShoppingList';
@@ -88,7 +92,30 @@ export default function ShoppingList() {
   const setCheck = useSetShoppingCheck(appliedRange);
   const clearChecks = useClearShoppingChecks(appliedRange);
 
-  const items = data ?? [];
+  const local = useLocalShoppingChecks(household?.id ?? 'none', appliedRange.from, appliedRange.to);
+  // A check the API refused stays visible, marked as saved on this device only.
+  const items = (data ?? []).map((i) => {
+    const kept = local.checks[rowKey(i.productId, i.unit)];
+    return kept === undefined ? { ...i, isLocal: false } : { ...i, isChecked: kept, isLocal: true };
+  });
+
+  // Re-sync once per household and range: push kept checks, and drop each one the API accepts.
+  const synced = useRef('');
+  useEffect(() => {
+    const scope = `${household?.id ?? 'none'}|${appliedRange.from}|${appliedRange.to}`;
+    if (!data || synced.current === scope) return;
+    synced.current = scope;
+    for (const [k, isChecked] of Object.entries(local.checks)) {
+      const [productId = '', unit = ''] = k.split('|');
+      setCheck.mutateAsync({ productId, unit, isChecked }).then(
+        () => {
+          local.clear(productId, unit);
+        },
+        () => undefined,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- REASON: run once per scope when its data first arrives
+  }, [data]);
   const todo = items.filter((i) => !i.isChecked);
   const bought = items.filter((i) => i.isChecked);
   const rangeInvalid = !draftFrom || !draftTo || draftFrom > draftTo;
@@ -100,18 +127,22 @@ export default function ShoppingList() {
   };
 
   const toggle = (item: ShoppingListItemDto, isChecked: boolean) => {
-    setCheck.mutate(
-      { productId: item.productId, unit: item.unit, isChecked },
-      {
-        onError: () => {
-          toast.error(t('shopping_list.check_failed'));
-        },
+    setCheck.mutateAsync({ productId: item.productId, unit: item.unit, isChecked }).then(
+      () => {
+        local.clear(item.productId, item.unit);
+      },
+      () => {
+        local.set(item.productId, item.unit, isChecked);
+        toast.error(t('shopping_list.saved_locally_toast'));
       },
     );
   };
 
   const uncheckAll = () => {
     clearChecks.mutate(undefined, {
+      onSuccess: () => {
+        local.clearAll();
+      },
       onError: () => {
         toast.error(t('shopping_list.check_failed'));
       },
@@ -161,7 +192,7 @@ export default function ShoppingList() {
     );
   };
 
-  const renderRow = (item: ShoppingListItemDto) => (
+  const renderRow = (item: ShoppingListItemDto & { isLocal: boolean }) => (
     <li key={`${item.productId}-${item.unit}`}>
       <label
         className="hover:bg-accent/40 flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg px-3"
@@ -175,9 +206,14 @@ export default function ShoppingList() {
           }}
         />
         <span
-          className={`min-w-0 flex-1 truncate font-medium ${item.isChecked ? 'text-muted-foreground line-through' : ''}`}
+          className={`min-w-0 flex-1 font-medium ${item.isChecked ? 'text-muted-foreground line-through' : ''}`}
         >
           {item.productName}
+          {item.isLocal ? (
+            <span className="text-muted-foreground block text-xs font-normal no-underline">
+              {t('shopping_list.saved_locally')}
+            </span>
+          ) : null}
         </span>
         <span className="text-muted-foreground tabular-nums">
           {quantity(Number(item.totalAmount), item.unit)}

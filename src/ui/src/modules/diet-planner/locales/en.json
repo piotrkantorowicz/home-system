@@ -354,7 +354,9 @@
     "uncheck_all": "Uncheck all",
     "check_failed": "Could not save that change. It was not saved.",
     "load_failed": "Could not load the shopping list.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "saved_locally": "Saved on this device",
+    "saved_locally_toast": "Could not reach the shared list. Saved on this device only."
   },
   "import_wizard": {
     "title": "Import a plan",

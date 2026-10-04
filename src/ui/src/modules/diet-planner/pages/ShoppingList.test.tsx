@@ -52,10 +52,24 @@ function renderPage() {
   );
 }
 
+/** The page's default range: this week, Monday to Sunday, as `from:to`. */
+function range() {
+  const iso = (d: Date) =>
+    `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return `${iso(monday)}:${iso(sunday)}`;
+}
+
 describe('ShoppingList', () => {
   // A tiny stateful backend: GET reflects what PUT/DELETE did, like the real household store.
   let items = seed;
   beforeEach(() => {
+    window.localStorage.clear();
     items = seed.map((i) => ({ ...i }));
     server.use(
       http.get(LIST, () => HttpResponse.json(items)),
@@ -101,15 +115,39 @@ describe('ShoppingList', () => {
     expect(body).toMatchObject({ productId: 'p-1', unit: 'g', isChecked: true });
   });
 
-  it('rolls the row back and says so when the API refuses', async () => {
+  it('keeps the check on this device, labelled, when the API refuses', async () => {
     server.use(http.put(`${LIST}/checks`, () => new HttpResponse(null, { status: 500 })));
     renderPage();
     const row = (await screen.findByText('Flour')).closest('label') as HTMLElement;
     await userEvent.click(within(row).getByRole('checkbox'));
-    expect(await screen.findByText('shopping_list.check_failed')).toBeInTheDocument();
+    expect(await screen.findByText('shopping_list.saved_locally')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByTestId('shopping-list-progress')).toHaveTextContent('1/3');
+      expect(screen.getByTestId('shopping-list-progress')).toHaveTextContent('2/3');
     });
+    const stored = window.localStorage.getItem('home-system-shopping-local:home-1:' + range());
+    expect(JSON.parse(stored ?? '{}')).toEqual({ 'p-1|g': true });
+  });
+
+  it('clears the local entry once the API accepts the check', async () => {
+    const key = 'home-system-shopping-local:home-1:' + range();
+    window.localStorage.setItem(key, JSON.stringify({ 'p-1|g': true }));
+    renderPage();
+    // The kept check is shown, then re-synced to the API and dropped locally.
+    await waitFor(() => {
+      expect(window.localStorage.getItem(key)).toBeNull();
+    });
+    expect(items.find((i) => i.productId === 'p-1')?.isChecked).toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByText('shopping_list.saved_locally')).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps entries separate per household and range', async () => {
+    window.localStorage.setItem('home-system-shopping-local:other:' + range(), '{"p-1|g":true}');
+    renderPage();
+    await screen.findByText('Flour');
+    expect(screen.queryByText('shopping_list.saved_locally')).not.toBeInTheDocument();
+    expect(screen.getByTestId('shopping-list-progress')).toHaveTextContent('1/3');
   });
 
   it('unchecks everything', async () => {

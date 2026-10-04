@@ -364,7 +364,9 @@
     "uncheck_all": "Odznacz wszystko",
     "check_failed": "Nie udało się zapisać zmiany. Nie została zapisana.",
     "load_failed": "Nie udało się wczytać listy zakupów.",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "saved_locally": "Zapisano na tym urządzeniu",
+    "saved_locally_toast": "Nie udało się połączyć ze wspólną listą. Zapisano tylko na tym urządzeniu."
   },
   "import_wizard": {
     "title": "Importuj plan",
