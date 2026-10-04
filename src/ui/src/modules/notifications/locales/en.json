@@ -28,10 +28,6 @@
     "unknown": "Notification"
   },
   "preferences": {
-    "title": "Channel preferences",
-    "subtitle": "Choose where you receive notifications",
-    "back_to_inbox": "Back to inbox",
-    "diet_settings_link": "Looking for the reminder schedule? →",
     "loading": "Loading…",
     "error": "Failed to load preferences.",
     "retry": "Retry",

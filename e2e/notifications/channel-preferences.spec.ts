@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 
-// The #208 redesign dropped the "console" channel row entirely — the page
-// now shows only Email (disabled, "coming soon") and Websocket (the one
+// The #208 redesign dropped the "console" channel row entirely — App &
+// account now shows only Email (disabled, "coming soon") and Websocket (the one
 // interactive toggle). If a console channel comes back, these tests will
 // need a third row again. See docs/e2e/notification-preferences.md.
 test.describe('Notifications channel preferences', () => {
@@ -20,11 +20,11 @@ test.describe('Notifications channel preferences', () => {
 
     await page.goto('/notifications/preferences');
 
-    await expect(page.getByRole('heading', { name: /channel preferences/i })).toBeVisible();
-    const switches = page.getByRole('switch');
-    await expect(switches).toHaveCount(2);
-    await expect(switches.nth(0)).toBeDisabled(); // Email — "coming soon"
-    await expect(switches.nth(1)).toBeEnabled(); // Websocket
+    // The legacy route redirects to App & account, which now hosts the channels.
+    await expect(page).toHaveURL(/\/diet-planner\/settings\/app/);
+    await expect(page.getByRole('heading', { name: /app & account/i, level: 1 })).toBeVisible();
+    await expect(page.getByRole('switch', { name: /^email$/i })).toBeDisabled(); // coming soon
+    await expect(page.getByRole('switch', { name: /real-time/i })).toBeEnabled();
   });
 
   test('toggling websocket fires a PUT', async ({ page }) => {
@@ -46,10 +46,9 @@ test.describe('Notifications channel preferences', () => {
       });
     });
 
-    await page.goto('/notifications/preferences');
+    await page.goto('/diet-planner/settings/app');
 
-    const websocketSwitch = page.getByRole('switch').nth(1);
-    await websocketSwitch.click();
+    await page.getByRole('switch', { name: /real-time/i }).click();
 
     await expect.poll(() => putCalled, { timeout: 3000 }).toBe(true);
   });

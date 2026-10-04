@@ -30,7 +30,7 @@ const dietPlannerLinks = [
 
 const settingsLinks = [
   {
-    to: '/diet-planner/preferences',
+    to: '/diet-planner/settings/app',
     icon: SlidersHorizontal,
     translationKey: 'common.preferences',
   },

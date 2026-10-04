@@ -28,10 +28,6 @@
     "unknown": "Powiadomienie"
   },
   "preferences": {
-    "title": "Preferencje kanałów",
-    "subtitle": "Wybierz, gdzie otrzymywać powiadomienia",
-    "back_to_inbox": "Powrót do skrzynki",
-    "diet_settings_link": "Szukasz harmonogramu przypomnień? →",
     "loading": "Ładowanie…",
     "error": "Nie udało się pobrać preferencji.",
     "retry": "Spróbuj ponownie",

@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 
 import en from './locales/en.json';
 import pl from './locales/pl.json';
@@ -122,7 +123,7 @@ export const dietPlannerModule: AppModule = {
     // Pinned at the bottom, below a divider
     {
       name: 'Preferences',
-      href: '/diet-planner/preferences',
+      href: '/diet-planner/settings/app',
       icon: SlidersHorizontal,
       translationKey: 'common.preferences',
       group: NAV_GROUP_SETTINGS,
@@ -144,7 +145,8 @@ export const dietPlannerModule: AppModule = {
     { path: 'nutrition', Component: NutritionSummary },
     { path: 'profile', Component: Profile },
     { path: 'hydration', Component: Hydration },
-    { path: 'preferences', Component: Preferences },
+    { path: 'settings/app', Component: Preferences },
+    { path: 'preferences', element: <Navigate to="/diet-planner/settings/app" replace /> },
     { path: 'control-kit', Component: ControlKit },
   ],
 };
