@@ -556,13 +556,50 @@ describe('Expense list', () => {
 });
 
 describe('Expense detail', () => {
-  it('shows attribution, stored shares and the history with reasons', async () => {
+  it('shows who pays what, details and the revision timeline', async () => {
     renderAt('/budget/expenses/e1');
-    await screen.findByRole('heading', { name: /100\.00 PLN · Groceries/ });
+    await screen.findByRole('heading', { level: 1, name: 'Groceries' });
     expect(screen.getByText('Recorded by')).toBeInTheDocument();
+    expect(screen.getByText(/Bea paid\. You owe Bea/)).toBeInTheDocument();
     const history = screen.getByRole('region', { name: 'History' });
-    expect(within(history).getByText(/Revision 1 · Created/)).toBeInTheDocument();
-    expect(within(history).getByText(/by Alex/)).toBeInTheDocument();
+    expect(within(history).getByText(/Added by you/)).toBeInTheDocument();
+  });
+
+  it('shows only the changed fields of a correction, newest first', async () => {
+    const [first] = expense.history;
+    const corrected = {
+      ...expense,
+      amount: '120.00',
+      history: [
+        first,
+        {
+          ...first,
+          revisionNumber: 2,
+          operation: 'Update',
+          reason: 'typo',
+          snapshot: {
+            ...first?.snapshot,
+            amount: '120.00',
+            shares: [
+              { personId: 'me', personDisplayName: 'Alex', amount: '60.00' },
+              { personId: 'bea', personDisplayName: 'Bea', amount: '60.00' },
+            ],
+          },
+        },
+      ],
+    };
+    server.use(http.get(`${BASE}/api/budget/expenses/e1`, () => HttpResponse.json(corrected)));
+    renderAt('/budget/expenses/e1');
+    const history = await screen.findByRole('region', { name: 'History' });
+    expect(within(history).getByText(/Corrected by you/)).toBeInTheDocument();
+    expect(within(history).getByText('“typo”')).toBeInTheDocument();
+    expect(within(history).getByText(/Each share/)).toBeInTheDocument();
+  });
+
+  it('keeps Void in its own row, away from Correct', async () => {
+    renderAt('/budget/expenses/e1');
+    const row = await screen.findByRole('region', { name: 'Void this expense' });
+    expect(within(row).getByRole('button', { name: 'Void' })).toBeInTheDocument();
   });
 
   it('is a 404 state for an invisible expense', async () => {
