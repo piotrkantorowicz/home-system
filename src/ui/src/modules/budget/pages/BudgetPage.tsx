@@ -34,7 +34,7 @@ import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
 import { ExpenseRow } from '../components/ExpenseRow';
 import { LimitDialog } from '../components/LimitDialog';
 import { useBudgetAccess } from '../hooks/useBudgetAccess';
-import { currentMonth, shiftDays, shiftMonth } from '../lib/dates';
+import { currentMonth, formatMonth, monthEnd, shiftMonth } from '../lib/dates';
 import { limitStatus, sumMinor } from '../lib/limits';
 import { minorToDecimal } from '../lib/money';
 
@@ -58,21 +58,16 @@ export default function BudgetPage() {
   // Settle up is household-wide: never in "Just mine", never for children.
   const showSettle = level === 'adult' && !personal;
   const settlement = useSettlementQuery(showSettle);
-  const lastDay = shiftDays(`${shiftMonth(month, 1)}-01`, -1);
   const latest = useLatestExpensesQuery(
     summary.data?.envelopes.map((e) => e.accountId) ?? [],
-    { from: `${month}-01`, to: lastDay },
+    { from: `${month}-01`, to: monthEnd(month) },
     5,
     summary.isSuccess,
   );
   const latestRows = latest.items;
   const currency = summary.data?.currency ?? budget.data?.currency ?? '';
   const managed = members.filter((m) => m.isManaged);
-  const monthLabel = new Intl.DateTimeFormat(i18n.language, {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${month}-01T00:00:00Z`));
+  const monthLabel = formatMonth(month, i18n.language);
   const reload = () => {
     setLimitFor(null);
     void client.invalidateQueries({ queryKey: budgetQueryKeys.all() });

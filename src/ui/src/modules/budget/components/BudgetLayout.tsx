@@ -58,11 +58,12 @@ function BudgetGate() {
 
 export function BudgetLayout() {
   const { t } = useTranslation('budget');
-  // The overview draws its own v3 PageHeader/PageContainer; the other screens still use this frame.
+  // The overview and expense history draw their own v3 PageHeader/PageContainer; the other screens still use this frame.
   const overview = useMatch({ path: '/budget', end: true });
+  const expenses = useMatch({ path: '/budget/expenses', end: true });
   return (
     <BudgetCacheBoundary>
-      {overview ? (
+      {overview || expenses ? (
         <BudgetGate />
       ) : (
         <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8">
