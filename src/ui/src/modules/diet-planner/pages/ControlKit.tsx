@@ -3,6 +3,7 @@ import {
   Banner,
   Button,
   Card,
+  DailyBars,
   Field,
   Input,
   LimitMeter,
@@ -160,6 +161,60 @@ export default function ControlKit() {
             nextLabel="Next month"
             onPrevious={() => undefined}
             onNext={() => undefined}
+          />
+        </Group>
+
+        <Group title="DailyBars" sub="value labels · target line · today · missing vs zero">
+          <DailyBars
+            ariaLabel="Last 7 days"
+            overLabel="over target"
+            missingText="—"
+            target={2100}
+            targetLabel="2 100 target"
+            days={[
+              {
+                key: 'a',
+                label: 'Mon',
+                sublabel: '28.9',
+                value: 1900,
+                text: '1 900',
+                srText: 'Mon: 1 900 kcal',
+              },
+              {
+                key: 'b',
+                label: 'Tue',
+                sublabel: '29.9',
+                value: 2400,
+                text: '2 400',
+                over: true,
+                srText: 'Tue: 2 400 kcal',
+              },
+              {
+                key: 'c',
+                label: 'Wed',
+                sublabel: '30.9',
+                value: null,
+                text: '',
+                srText: 'Wed: nothing logged',
+              },
+              {
+                key: 'd',
+                label: 'Thu',
+                sublabel: '1.10',
+                value: 0,
+                text: '0',
+                srText: 'Thu: 0 kcal',
+              },
+              {
+                key: 'e',
+                label: 'Fri',
+                sublabel: '2.10',
+                value: 1500,
+                text: '1 500',
+                isToday: true,
+                srText: 'Fri: 1 500 kcal',
+              },
+            ]}
           />
         </Group>
 
