@@ -14,7 +14,7 @@ test.describe('Diet Reminder Settings', () => {
     const prefsPage = new DietReminderSettingsPage(page);
     await prefsPage.goto();
 
-    await expect(page).toHaveURL(/\/diet-planner\/profile\?section=notifications/);
+    await expect(page).toHaveURL(/\/diet-planner\/profile#reminders/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 

@@ -103,7 +103,10 @@
     "save_btn": "Zapisz Cele",
     "save_success": "Cele zapisane pomyślnie!",
     "nutrition_header": "Cele żywieniowe",
-    "nutrition_desc": "Ustaw dzienny cel kalorii i makroskładników"
+    "nutrition_desc": "Ustaw dzienny cel kalorii i makroskładników",
+    "direction_limit": "Limit: robi się czerwony po przekroczeniu.",
+    "direction_min": "Minimum: robi się zielony po osiągnięciu.",
+    "direction_explainer": "Limity robią się czerwone po przekroczeniu; minima zielone po osiągnięciu."
   },
   "products": {
     "title": "Produkty",
@@ -534,20 +537,6 @@
     "nav": "Profil",
     "title": "Mój Profil",
     "subtitle": "Zarządzaj swoimi danymi biometrycznymi i poziomem aktywności",
-    "page_title": "Profil i Ustawienia",
-    "page_subtitle": "Zarządzaj swoimi danymi osobowymi i preferencjami",
-    "sidebar": {
-      "personal": "Osobiste",
-      "body_stats": "Dane ciała",
-      "diet_planner": "Planowanie diety",
-      "goals": "Cele",
-      "meal_schedule": "Plan posiłków",
-      "hydration": "Nawodnienie",
-      "notifications": "Powiadomienia",
-      "alerts": "Alerty",
-      "weight_history": "Historia wagi",
-      "overview": "Przegląd"
-    },
     "personal_header": "Dane Osobowe",
     "personal_desc": "Twoje podstawowe dane osobowe",
     "measurements_header": "Pomiary Ciała",
@@ -570,23 +559,23 @@
     "activity_extra": "Ekstremalnie Aktywny",
     "save_btn": "Zapisz Profil",
     "save_success": "Profil zapisany pomyślnie!",
+    "settings_title": "Ustawienia",
+    "settings_subtitle": "Profil, cele, pory posiłków, woda i przypomnienia",
+    "tabs": "Sekcje ustawień",
+    "tab_profile": "Profil",
+    "tab_goals": "Cele",
+    "tab_meal_times": "Pory posiłków",
+    "tab_water": "Woda",
+    "tab_reminders": "Przypomnienia",
+    "energy_empty": "Dodaj datę urodzenia, płeć i dzienny cel kalorii, aby zobaczyć spoczynkowe i dzienne zapotrzebowanie.",
+    "add_details": "Dodaj dane",
     "overview": {
-      "edit_profile": "Edytuj profil",
       "energy_model": "Model energetyczny",
       "energy_model_sub": "Przeliczany codziennie",
-      "energy_model_empty": "Ustaw dzienny cel kaloryczny, aby zobaczyć model energetyczny.",
       "daily_deficit": "Dzienny deficyt",
       "weekly_change": "Zmiana tygodniowa",
       "current_bmi": "Aktualne BMI",
-      "target_bmi": "Docelowe BMI",
-      "macro_targets": "Cele makro",
-      "macro_targets_empty": "Brak ustawionych celów makro.",
-      "edit_targets": "Edytuj cele",
-      "all_reminder_settings": "Wszystkie ustawienia przypomnień",
-      "reminder_saved": "Zaktualizowano przypomnienie",
-      "reminder_error": "Nie udało się zaktualizować przypomnienia",
-      "weight_to_go": "Pozostało {{kg}} kg",
-      "est_goal_date": "Szacowana data celu:"
+      "target_bmi": "Docelowe BMI"
     }
   },
   "sheets": {

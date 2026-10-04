@@ -115,7 +115,7 @@ export const dietPlannerModule: AppModule = {
     },
     {
       name: 'Goals',
-      href: '/diet-planner/profile?section=goals',
+      href: '/diet-planner/profile#goals',
       icon: Target,
       translationKey: 'common.goals',
       group: 'nav_groups.track',
