@@ -1057,10 +1057,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Page visible expenses; filter by envelope, category, exact amount and date range */
+        /** Page visible expenses with exact totals over the whole filter; filter by envelope, category, exact amount, date range and description text (search) */
         get: operations["ListBudgetExpenses"];
         put?: never;
-        /** Record an expense; a retry with the same clientRequestId returns the original result */
+        /** Record an expense; a retry with the same clientRequestId returns the original result; description is optional, up to 80 characters */
         post: operations["CreateBudgetExpense"];
         delete?: never;
         options?: never;
@@ -1633,6 +1633,13 @@ export interface components {
             weeklySummaryTimeOfDay: string;
             goalAlertsEnabled: boolean;
         };
+        ExpenseDayTotalDto: {
+            /** Format: date */
+            date: string;
+            total: string;
+            /** Format: int32 */
+            count: number | string;
+        };
         ExpenseDto: {
             /** Format: uuid */
             id: string;
@@ -1657,6 +1664,24 @@ export interface components {
             isVoided: boolean;
             shares: components["schemas"]["ExpenseShareDto"][];
             history?: null | components["schemas"]["ExpenseRevisionDto"][];
+        };
+        ExpenseListDto: {
+            items: components["schemas"]["ExpenseDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+            /** Format: int32 */
+            page: number | string;
+            /** Format: int32 */
+            pageSize: number | string;
+            /** Format: int32 */
+            activeCount: number | string;
+            totalAmount: string;
+            yourShareAmount: string;
+            dailyTotals: components["schemas"]["ExpenseDayTotalDto"][];
+            /** Format: int32 */
+            totalPages?: number | string;
+            hasNextPage?: boolean;
+            hasPreviousPage?: boolean;
         };
         ExpenseMutationResult: {
             /** Format: uuid */
@@ -2069,19 +2094,6 @@ export interface components {
             hasNextPage?: boolean;
             hasPreviousPage?: boolean;
         };
-        PagedListOfExpenseDto: {
-            items: components["schemas"]["ExpenseDto"][];
-            /** Format: int32 */
-            totalCount: number | string;
-            /** Format: int32 */
-            page: number | string;
-            /** Format: int32 */
-            pageSize: number | string;
-            /** Format: int32 */
-            totalPages?: number | string;
-            hasNextPage?: boolean;
-            hasPreviousPage?: boolean;
-        };
         PagedListOfNotificationDto: {
             items: components["schemas"]["NotificationDto"][];
             /** Format: int32 */
@@ -2341,6 +2353,8 @@ export interface components {
             scope: string;
             currency: string;
             totalSpent: string;
+            /** Format: int32 */
+            expenseCount: number | string;
             envelopes: components["schemas"]["SummaryEnvelopeDto"][];
             categories: components["schemas"]["SummaryCategoryDto"][];
         };
@@ -2353,6 +2367,8 @@ export interface components {
             ownerPersonId: null | string;
             isArchived: boolean;
             spent: string;
+            /** Format: int32 */
+            expenseCount: number | string;
             limit: null | string;
             /** Format: int32 */
             limitRevision: null | number | string;
@@ -7840,7 +7856,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedListOfExpenseDto"];
+                    "application/json": components["schemas"]["ExpenseListDto"];
                 };
             };
             /** @description Validation failed */
