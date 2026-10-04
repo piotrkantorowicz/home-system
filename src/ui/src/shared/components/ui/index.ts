@@ -73,6 +73,7 @@ export {
   type SegmentedControlProps,
   type SegmentedControlOption,
 } from './SegmentedControl';
+export { DailyBars, type DailyBar, type DailyBarsProps } from './DailyBars';
 export { Ring, type RingProps } from './Ring';
 export { Switch, type SwitchProps } from './Switch';
 export { Banner, type BannerProps, type BannerVariant } from './Banner';
