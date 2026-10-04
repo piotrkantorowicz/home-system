@@ -62,19 +62,48 @@ interface ProductsResponse {
 interface ProductsQueryParams {
   search?: string;
   onlyMine?: boolean;
+  onlyIncomplete?: boolean;
+  sortBy?: ProductSortKey;
+  sortDescending?: boolean;
   page?: number;
   pageSize?: number;
 }
 
+export type ProductSortKey = 'name' | 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber';
+
 export function productListOptions(params: ProductsQueryParams = {}) {
-  const { search = '', onlyMine = false, page = 1, pageSize = 50 } = params;
+  const {
+    search = '',
+    onlyMine = false,
+    onlyIncomplete = false,
+    sortBy = 'name',
+    sortDescending = false,
+    page = 1,
+    pageSize = 50,
+  } = params;
 
   return queryOptions({
-    queryKey: queryKeys.products.list({ search, onlyMine, page, pageSize }),
+    queryKey: queryKeys.products.list({
+      search,
+      onlyMine,
+      onlyIncomplete,
+      sortBy,
+      sortDescending,
+      page,
+      pageSize,
+    }),
     queryFn: async (): Promise<ProductsResponse> => {
       const response = await api.GET('/api/v1/products', {
         params: {
-          query: { Search: search, OnlyMine: onlyMine, Page: page, PageSize: pageSize },
+          query: {
+            Search: search,
+            OnlyMine: onlyMine,
+            OnlyIncomplete: onlyIncomplete,
+            SortBy: sortBy,
+            SortDescending: sortDescending,
+            Page: page,
+            PageSize: pageSize,
+          },
         },
       });
 

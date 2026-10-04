@@ -137,7 +137,16 @@
     "clear_filters": "Wyczyść filtry",
     "view_label": "Widok",
     "view_table": "Tabela",
-    "view_cards": "Karty"
+    "view_cards": "Karty",
+    "subtitle_per100_one": "{{count}} produkt · wartości odżywcze na 100 g",
+    "subtitle_per100_few": "{{count}} produkty · wartości odżywcze na 100 g",
+    "subtitle_per100_many": "{{count}} produktów · wartości odżywcze na 100 g",
+    "subtitle_per100_other": "{{count}} produktu · wartości odżywcze na 100 g",
+    "no_density": "Brak gęstości: nie można podać wartości na 100 ml",
+    "filter_label": "Filtr",
+    "filter_all": "Wszystkie",
+    "filter_incomplete": "Niekompletne",
+    "sort_by": "Sortuj wg {{column}}"
   },
   "recipes": {
     "title": "Przepisy",
