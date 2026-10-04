@@ -16,15 +16,21 @@ export class HouseholdPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = page.getByRole('heading', { level: 1 });
-    this.addMemberButton = page.getByRole('button', { name: /add member/i });
+    this.addMemberButton = page.getByRole('button', { name: /add person/i });
     this.myInvitationsHeading = page.getByRole('heading', {
       name: /invitations for you/i,
     });
     this.leaveButton = page.getByRole('button', { name: /leave household/i });
     this.confirmButton = page.getByRole('button', { name: /^confirm$/i });
     this.deleteButton = page.getByRole('button', { name: /delete household/i });
-    this.settingsHeading = page.getByRole('heading', { name: /household settings/i });
+    this.settingsHeading = page.getByRole('heading', { name: 'Household name', exact: true });
     this.roleSelects = page.getByRole('combobox', { name: /^role for /i });
+  }
+
+  /** The subtitle under the title: "<household name> · N people share …". */
+  summary(householdName: string): Locator {
+    const escaped = householdName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.page.getByText(new RegExp(`^${escaped} · \\d+ (person|people) share`));
   }
 
   memberRow(name: string): Locator {
@@ -72,7 +78,7 @@ export class HouseholdPage extends BasePage {
     // Wait for the real effect (membership now shows in place of the invitations
     // panel) rather than the transient join toast, which is prone to disappearing
     // before a slower poll notices it.
-    await this.page.getByRole('heading', { level: 1, name: householdName }).waitFor();
+    await this.summary(householdName).waitFor();
   }
 
   async declineInvitationFrom(householdName: string) {

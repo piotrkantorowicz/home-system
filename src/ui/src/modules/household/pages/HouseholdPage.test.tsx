@@ -109,7 +109,7 @@ describe('Household UI', () => {
     await userEvent.clear(screen.getByLabelText('Household name'));
     await userEvent.type(screen.getByLabelText('Household name'), 'Our home');
     await userEvent.click(screen.getByRole('button', { name: 'Get started' }));
-    await screen.findByRole('heading', { name: 'Our home' });
+    await screen.findByRole('heading', { name: 'Household', level: 1 });
     expect(create).toHaveBeenCalledWith({ name: 'Our home' });
   });
 
@@ -201,7 +201,9 @@ describe('Household UI', () => {
     );
     renderPage();
     expect(await screen.findByLabelText('Role for Alex')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Remove Alex' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Actions for Alex' })).toBeDisabled();
+    // The reason is stated once, beside the disabled Leave action.
+    expect(screen.getAllByText(/You're the only owner/)).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Leave household' })).toBeDisabled();
     await userEvent.selectOptions(screen.getByLabelText('Role for Sam'), 'Adult');
     await waitFor(() => {
@@ -209,11 +211,48 @@ describe('Household UI', () => {
     });
   });
 
+  it('shows initials, marks the caller and explains managed people and roles', async () => {
+    renderPage();
+    const people = (await screen.findByRole('heading', { name: 'People' })).closest('div');
+    expect(await within(people ?? document.body).findByText('(you)')).toBeInTheDocument();
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('S')).toBeInTheDocument();
+    expect(screen.getByText(/Managed profile · doesn't sign in/)).toBeInTheDocument();
+    expect(screen.getByText(/Owners manage the household/)).toBeInTheDocument();
+  });
+
+  it('keeps Save disabled until the household name actually changes', async () => {
+    renderPage();
+    const name = await screen.findByLabelText('Household name');
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(save).toBeDisabled();
+
+    await userEvent.type(name, ' 2');
+    expect(save).toBeEnabled();
+
+    await userEvent.type(name, '{Backspace}{Backspace}');
+    expect(save).toBeDisabled();
+    await userEvent.type(name, '   ');
+    expect(save).toBeDisabled();
+  });
+
+  it('offers Leave to everyone and Delete only to owners, each with its own explanation', async () => {
+    household = {
+      ...fixture,
+      members: [...fixture.members, { ...fixture.members[0], personId: 'o2' } as never],
+    };
+    renderPage();
+    expect(await screen.findByRole('button', { name: 'Leave household' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Delete household' })).toBeInTheDocument();
+    expect(screen.getByText(/Removes shared resources and every membership/)).toBeInTheDocument();
+    expect(screen.queryByText(/You're the only owner/)).not.toBeInTheDocument();
+  });
+
   it.each(['Adult', 'Child', 'Guest'])('hides owner controls from %s members', async (role) => {
     household = { ...fixture, myRole: role };
     renderPage();
-    await screen.findByRole('heading', { name: 'Our home' });
-    expect(screen.queryByRole('button', { name: 'Add member' })).not.toBeInTheDocument();
+    await screen.findByRole('button', { name: 'Leave household' });
+    expect(screen.queryByRole('button', { name: 'Add person' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Role for Sam')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete household' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Leave household' })).toBeEnabled();
@@ -234,7 +273,7 @@ describe('Household UI', () => {
         }),
       );
       renderPage();
-      await userEvent.click(await screen.findByRole('button', { name: 'Add member' }));
+      await userEvent.click(await screen.findByRole('button', { name: 'Add person' }));
       const dialog = within(screen.getByRole('dialog'));
       if (mode === 'existing') {
         await dialog.findByRole('option', { name: 'Jo (jo@example.com)' });
@@ -276,7 +315,7 @@ describe('Household UI', () => {
       ),
     );
     renderPage();
-    await userEvent.click(await screen.findByRole('button', { name: 'Add member' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Add person' }));
     const dialog = within(screen.getByRole('dialog'));
     await userEvent.click(dialog.getByRole('tab', { name: 'By email' }));
     await userEvent.type(dialog.getByLabelText('Email address'), 'jo@example.com');
@@ -294,13 +333,15 @@ describe('Household UI', () => {
       }),
     );
     renderPage();
-    await userEvent.click(await screen.findByRole('button', { name: 'Remove Sam' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Actions for Sam' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Remove Sam' }));
     expect(remove).not.toHaveBeenCalled();
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }),
     );
     expect(remove).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Remove Sam' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for Sam' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Remove Sam' }));
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }),
     );
@@ -336,7 +377,7 @@ describe('Household UI', () => {
     await screen.findByText('Our home invited you as Adult');
     await userEvent.click(screen.getByRole('button', { name: 'Accept' }));
     expect(await screen.findByText("You've joined the Our home household.")).toBeInTheDocument();
-    await screen.findByRole('heading', { name: 'Our home' });
+    await screen.findByRole('heading', { name: 'Household', level: 1 });
   });
 
   it('declines a pending invitation without joining', async () => {
@@ -424,8 +465,8 @@ describe('Household UI', () => {
     const name = await screen.findByLabelText('Household name');
     await userEvent.clear(name);
     await userEvent.type(name, 'New home');
-    await userEvent.click(screen.getByRole('button', { name: 'Save name' }));
-    await screen.findByRole('heading', { name: 'New home' });
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText(/^New home · 2 people/)).toBeInTheDocument();
     expect(await screen.findByText('Household name saved.')).toBeInTheDocument();
   });
 
@@ -486,6 +527,6 @@ describe('Household UI', () => {
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }),
     );
-    expect(await screen.findByText('No pending invitations.')).toBeInTheDocument();
+    expect(await screen.findByText(/No pending invitations\./)).toBeInTheDocument();
   });
 });
