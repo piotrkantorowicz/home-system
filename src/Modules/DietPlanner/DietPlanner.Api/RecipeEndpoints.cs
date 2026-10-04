@@ -30,8 +30,8 @@ public static class RecipeEndpoints
 
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")
-            .WithSummary("List recipes with optional search and pagination")
-            .WithDescription("Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user.");
+            .WithSummary("List recipes with search, high-protein and quick filters, and pagination")
+            .WithDescription("Returns a paginated list of recipes visible to the caller. Visibility: private (creator only), household (creator's household, default) or public (everyone). Use `onlyMine=true` to restrict results to recipes created by the current user, `onlyHighProtein=true` for recipes with at least 25 g protein per serving or at least 30% of calories from protein (recipes with an ingredient of unknown protein never match), and `onlyQuick=true` for a known preparation time under 15 minutes. Filters apply before paging, so `totalCount` matches the filtered set.");
 
         group.MapGet("/{id:guid}", GetRecipe)
             .WithName("GetRecipe")
@@ -64,7 +64,7 @@ public static class RecipeEndpoints
     {
         var userId = GetUserId(user);
         var result = await dispatcher.SendAsync<SearchRecipesQuery, PagedList<RecipeDto>>(
-            new SearchRecipesQuery(@params.Search, @params.OnlyMine, userId, @params.Page, @params.PageSize), ct);
+            new SearchRecipesQuery(@params.Search, @params.OnlyMine, userId, @params.Page, @params.PageSize, @params.OnlyHighProtein, @params.OnlyQuick), ct);
         return TypedResults.Ok(result);
     }
 
@@ -139,11 +139,15 @@ public static class RecipeEndpoints
 /// <param name="OnlyMine">When true, only items the caller created.</param>
 /// <param name="Page">1-based page number.</param>
 /// <param name="PageSize">Items per page.</param>
+/// <param name="OnlyHighProtein">Per serving: protein of at least 25 g, or at least 30% of calories from protein. Recipes with an unknown-protein ingredient never match.</param>
+/// <param name="OnlyQuick">Only recipes with a known preparation time under 15 minutes.</param>
 public sealed record ListRecipesParams(
     [property: FromQuery] string? Search,
     [property: FromQuery] bool OnlyMine = false,
     [property: FromQuery] int Page = 1,
-    [property: FromQuery] int PageSize = 50);
+    [property: FromQuery] int PageSize = 50,
+    [property: FromQuery] bool OnlyHighProtein = false,
+    [property: FromQuery] bool OnlyQuick = false);
 
 /// <summary>
 /// One ingredient line in a recipe create or update.

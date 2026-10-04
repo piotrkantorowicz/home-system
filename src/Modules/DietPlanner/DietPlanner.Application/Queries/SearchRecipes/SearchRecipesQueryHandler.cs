@@ -41,10 +41,26 @@ internal sealed class SearchRecipesQueryHandler
         if (query.OnlyMine)
             q = q.Where(r => r.CreatedByUserId == query.UserId);
 
-        var totalCount = await q.CountAsync(ct);
+        if (query.OnlyQuick)
+            q = q.Where(r => r.PrepTimeMinutes != null && r.PrepTimeMinutes < QuickPrepMinutes);
+
+        int totalCount;
+        if (query.OnlyHighProtein)
+        {
+            // Nutrition depends on unit conversion that SQL cannot do, so the candidates (already narrowed by
+            // visibility, search, owner and prep time) are scored in memory and paging runs over the matching ids.
+            // ponytail: scores every visible candidate; precompute per-serving protein if libraries grow past a few thousand.
+            var matching = await HighProteinIdsAsync(q, ct);
+            totalCount = matching.Count;
+            q = q.Where(r => matching.Contains(r.Id));
+        }
+        else
+        {
+            totalCount = await q.CountAsync(ct);
+        }
 
         var recipes = await q
-            .OrderBy(r => r.Name)
+            .OrderBy(r => r.Name).ThenBy(r => r.Id)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Include(r => r.Ingredients)
@@ -64,6 +80,53 @@ internal sealed class SearchRecipesQueryHandler
         var items = recipes.Select(recipe => ToDto(recipe, products, access)).ToList();
 
         return new PagedList<RecipeDto>(items, totalCount, query.Page, query.PageSize);
+    }
+
+    private const int QuickPrepMinutes = 15;
+
+    private async Task<List<RecipeId>> HighProteinIdsAsync(IQueryable<Recipe> q, CancellationToken ct)
+    {
+        var candidates = await q
+            .Select(r => new
+            {
+                r.Id,
+                r.Servings,
+                Ingredients = r.Ingredients.Select(i => new { i.ProductId, i.Amount, i.Unit }).ToList()
+            })
+            .ToListAsync(ct);
+
+        var productIds = candidates.SelectMany(c => c.Ingredients.Select(i => i.ProductId)).Distinct().ToList();
+        var products = await _dbContext.Products
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, ct);
+
+        var matching = new List<RecipeId>();
+        foreach (var c in candidates)
+        {
+            decimal protein = 0, calories = 0;
+            var proteinKnown = c.Ingredients.Count > 0;
+            var caloriesKnown = proteinKnown;
+            foreach (var i in c.Ingredients)
+            {
+                if (!products.TryGetValue(i.ProductId, out var product))
+                {
+                    proteinKnown = caloriesKnown = false;
+                    break;
+                }
+
+                var factor = UnitConverter.ConvertToGrams(i.Amount, i.Unit, product.DensityGramsPerMl, product.GramPerPiece) / 100m;
+                if (product.Nutrition.Protein is { } p) protein += p * factor; else proteinKnown = false;
+                if (product.Nutrition.Calories is { } k) calories += k * factor; else caloriesKnown = false;
+            }
+
+            if (!proteinKnown) continue;
+            var servings = Math.Max(c.Servings, 1);
+            if (HighProteinRule.IsHighProtein(protein / servings, caloriesKnown ? calories / servings : null))
+                matching.Add(c.Id);
+        }
+
+        return matching;
     }
 
     private static RecipeDto ToDto(Recipe recipe, Dictionary<ProductId, Product> products, LibraryAccess access)
