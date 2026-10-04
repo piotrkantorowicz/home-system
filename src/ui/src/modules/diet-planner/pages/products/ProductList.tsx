@@ -1,4 +1,5 @@
 import {
+  type ProductSortKey,
   productOptions,
   useDeleteProduct,
   useProducts,
@@ -28,14 +29,22 @@ import {
   Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
+import { useFormat } from '@shared/hooks/useFormat';
 import { cn } from '@shared/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { MoreVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  MoreVertical,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-
-type ViewMode = 'table' | 'cards';
 
 interface Row {
   id: string;
@@ -45,16 +54,10 @@ interface Row {
   carbsPer100g: number | null;
   fatPer100g: number | null;
   fiberPer100g?: number | null;
+  densityGramsPerMl?: number | null;
   defaultUnit: string;
   visibility: string;
   canEdit: boolean;
-}
-
-const macroClass = { protein: 'text-protein', carbs: 'text-carbs', fat: 'text-fat' } as const;
-
-function dominant(p: Row): 'protein' | 'carbs' | 'fat' {
-  const v = { protein: p.proteinPer100g ?? 0, carbs: p.carbsPer100g ?? 0, fat: p.fatPer100g ?? 0 };
-  return (['protein', 'carbs', 'fat'] as const).reduce((a, b) => (v[b] > v[a] ? b : a));
 }
 
 function isIncomplete(p: Row): boolean {
@@ -66,8 +69,18 @@ function isIncomplete(p: Row): boolean {
   );
 }
 
-const fmt = (v: number | null | undefined): string =>
-  v === null || v === undefined ? '—' : v.toFixed(1);
+type Filter = 'all' | 'mine' | 'incomplete';
+
+const COLUMN_LABEL: Record<ProductSortKey, string> = {
+  name: 'name',
+  calories: 'calories',
+  protein: 'protein',
+  carbs: 'carbs',
+  fat: 'fat',
+  fiber: 'fiber',
+};
+
+const SORT_KEYS: ProductSortKey[] = ['name', 'calories', 'protein', 'carbs', 'fat', 'fiber'];
 
 export default function ProductList() {
   const { t } = useTranslation();
@@ -84,21 +97,22 @@ export default function ProductList() {
     setSearch,
     update,
   } = useListLocation();
-  const onlyMine = params.get('mine') === 'true';
-  const onlyIncomplete = params.get('incomplete') === 'true';
-  const [defaultView] = useState<ViewMode>(() =>
-    typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches
-      ? 'cards'
-      : 'table',
-  );
-  const view =
-    params.get('view') === 'cards'
-      ? 'cards'
-      : params.get('view') === 'table'
-        ? 'table'
-        : defaultView;
-  const setView = (view: ViewMode) => {
-    update({ view });
+  const fmt = useFormat();
+  const filter: Filter =
+    params.get('filter') === 'mine' || params.get('filter') === 'incomplete'
+      ? (params.get('filter') as Filter)
+      : 'all';
+  const sortParam = params.get('sort') as ProductSortKey | null;
+  const sortBy: ProductSortKey = sortParam && SORT_KEYS.includes(sortParam) ? sortParam : 'name';
+  const sortDescending = params.get('dir') === 'desc';
+  // Changing sort or filter always returns to page 1.
+  const setSort = (key: ProductSortKey) => {
+    const descending = key === sortBy && !sortDescending;
+    update({
+      sort: key === 'name' ? null : key,
+      dir: descending ? 'desc' : null,
+      page: null,
+    });
   };
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -110,16 +124,17 @@ export default function ProductList() {
 
   const { data, isLoading, error } = useProducts({
     search: debouncedSearch,
-    onlyMine,
+    onlyMine: filter === 'mine',
+    onlyIncomplete: filter === 'incomplete',
+    sortBy,
+    sortDescending,
     page,
     pageSize,
   });
   const deleteMutation = useDeleteProduct();
 
-  const items = (data?.items ?? []) as Row[];
-  const incompleteCount = items.filter(isIncomplete).length;
-  const rows = onlyIncomplete ? items.filter(isIncomplete) : items;
-  const hasFilters = !!search || onlyMine || onlyIncomplete;
+  const rows = (data?.items ?? []) as Row[];
+  const hasFilters = !!search || filter !== 'all';
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -137,7 +152,7 @@ export default function ProductList() {
         <div>
           <h1 className="text-26px font-bold">{t('products.title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            {t('products.count', { count: data?.totalCount ?? 0 })}
+            {t('products.subtitle_per100', { count: data?.totalCount ?? 0 })}
           </p>
         </div>
         {canCreate ? (
@@ -165,33 +180,17 @@ export default function ProductList() {
           />
         </div>
 
-        <FilterChip
-          active={onlyMine}
-          onClick={() => {
-            update({ mine: onlyMine ? null : 'true', page: null });
-          }}
-        >
-          {t('products.only_mine')}
-        </FilterChip>
-        {incompleteCount > 0 ? (
-          <FilterChip
-            active={onlyIncomplete}
-            onClick={() => {
-              update({ incomplete: onlyIncomplete ? null : 'true', page: null });
-            }}
-          >
-            {t('products.incomplete_chip', { count: incompleteCount })}
-          </FilterChip>
-        ) : null}
-
         <SegmentedControl
           className="ml-auto"
-          label={t('products.view_label')}
-          value={view}
-          onChange={setView}
+          label={t('products.filter_label')}
+          value={filter}
+          onChange={(value) => {
+            update({ filter: value === 'all' ? null : value, page: null });
+          }}
           options={[
-            { value: 'table', label: t('products.view_table') },
-            { value: 'cards', label: t('products.view_cards') },
+            { value: 'all', label: t('products.filter_all') },
+            { value: 'mine', label: t('products.only_mine') },
+            { value: 'incomplete', label: t('products.filter_incomplete') },
           ]}
         />
       </div>
@@ -210,7 +209,7 @@ export default function ProductList() {
               ? {
                   label: t('products.clear_filters'),
                   onClick: () => {
-                    update({ search: null, mine: null, incomplete: null, page: null });
+                    update({ search: null, filter: null, page: null });
                   },
                 }
               : canCreate
@@ -218,99 +217,120 @@ export default function ProductList() {
                 : undefined
           }
         />
-      ) : view === 'table' ? (
-        <div className="border-border bg-card rounded-22px overflow-x-auto border" role="table">
-          <div className="min-w-[720px]">
-            <div
-              role="row"
-              className="bg-secondary text-muted-foreground text-10-5px grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] gap-3 px-5 py-2.5 font-semibold uppercase"
-            >
-              <span role="columnheader">{t('products.table.name')}</span>
-              <span role="columnheader" className="text-right">
-                {t('products.table.calories')}
-              </span>
-              <span role="columnheader" className="text-right">
-                {t('products.table.protein')}
-              </span>
-              <span role="columnheader" className="text-right">
-                {t('products.table.carbs')}
-              </span>
-              <span role="columnheader" className="text-right">
-                {t('products.table.fat')}
-              </span>
-              <span role="columnheader" className="text-right">
-                {t('products.table.fiber')}
-              </span>
-              <span />
-            </div>
-            {rows.map((p) => {
-              const dom = dominant(p);
-              const incomplete = isIncomplete(p);
-              return (
-                <div
-                  key={p.id}
-                  role="row"
-                  aria-label={p.name}
-                  className={cn(
-                    'border-border hover:bg-secondary focus-within:ring-primary text-13px relative grid grid-cols-[2.2fr_1fr_0.8fr_0.8fr_0.8fr_0.8fr_44px] items-center gap-3 border-t px-5 py-3.5 focus-within:ring-2 focus-within:ring-inset',
-                  )}
-                  style={
-                    incomplete
-                      ? {
-                          background: 'color-mix(in oklab, var(--color-carbs) 7%, transparent)',
-                        }
-                      : undefined
-                  }
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Link
-                      to={`/diet-planner/products/${p.id}`}
-                      className="truncate font-semibold after:absolute after:inset-0 focus:outline-none"
-                      onMouseEnter={() => {
-                        prefetchProduct(p.id);
-                      }}
-                      onFocus={() => {
-                        prefetchProduct(p.id);
-                      }}
-                    >
-                      {p.name}
-                    </Link>
-                    {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
-                    <VisibilityBadge visibility={p.visibility} />
-                    <span className="text-muted-foreground text-11-5px">
-                      {unitLabel(p.defaultUnit, t)}
-                    </span>
-                  </span>
-                  <span className="tnum text-right font-semibold">{fmt(p.caloriesPer100g)}</span>
-                  <MacroCell value={p.proteinPer100g} on={dom === 'protein'} macro="protein" />
-                  <MacroCell value={p.carbsPer100g} on={dom === 'carbs'} macro="carbs" />
-                  <MacroCell value={p.fatPer100g} on={dom === 'fat'} macro="fat" />
-                  <span className="text-text-2 tnum text-right">{fmt(p.fiberPer100g)}</span>
-                  <RowMenu
-                    product={p}
-                    onDelete={() => {
-                      setDeleteId(p.id);
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
       ) : (
-        <div className="gap-18px grid sm:grid-cols-2 lg:grid-cols-3" role="list">
-          {rows.map((p) => (
-            <ProductCardItem
-              key={p.id}
-              product={p}
-              onPrefetch={() => {
-                prefetchProduct(p.id);
-              }}
-              onDelete={() => {
-                setDeleteId(p.id);
-              }}
-            />
-          ))}
+        <div className="border-border bg-card rounded-22px max-h-[70vh] overflow-auto border">
+          <table className="text-13px w-full min-w-[720px] border-collapse">
+            <thead className="bg-secondary text-muted-foreground sticky top-0 z-10">
+              <tr>
+                {SORT_KEYS.flatMap((key) => [
+                  <th
+                    key={key}
+                    scope="col"
+                    aria-sort={
+                      key === sortBy ? (sortDescending ? 'descending' : 'ascending') : 'none'
+                    }
+                    className={cn(
+                      'h-11 px-4 text-xs font-semibold uppercase',
+                      key === 'name' ? 'text-left' : 'text-right',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSort(key);
+                      }}
+                      aria-label={t('products.sort_by', {
+                        column: t(`products.table.${COLUMN_LABEL[key]}`),
+                      })}
+                      className="hover:text-foreground focus-visible:ring-primary inline-flex h-11 items-center gap-1 uppercase focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      {t(`products.table.${COLUMN_LABEL[key]}`)}
+                      {key === sortBy ? (
+                        sortDescending ? (
+                          <ArrowDown className="size-3.5" aria-hidden />
+                        ) : (
+                          <ArrowUp className="size-3.5" aria-hidden />
+                        )
+                      ) : null}
+                    </button>
+                  </th>,
+                  ...(key === 'name'
+                    ? [
+                        <th
+                          key="unit"
+                          scope="col"
+                          className="h-11 px-4 text-left text-xs font-semibold uppercase"
+                        >
+                          {t('products.table.unit')}
+                        </th>,
+                      ]
+                    : []),
+                ])}
+                <th className="w-12" aria-label={t('common.actions')} />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-border hover:bg-secondary focus-within:ring-primary relative h-11 border-t focus-within:ring-2 focus-within:ring-inset"
+                >
+                  <td className="px-4 py-2">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Link
+                        to={`/diet-planner/products/${p.id}`}
+                        className="truncate font-semibold after:absolute after:inset-0 focus:outline-none"
+                        onMouseEnter={() => {
+                          prefetchProduct(p.id);
+                        }}
+                        onFocus={() => {
+                          prefetchProduct(p.id);
+                        }}
+                      >
+                        {p.name}
+                      </Link>
+                      {isIncomplete(p) ? (
+                        <IncompleteBadge label={t('products.incomplete_badge')} />
+                      ) : null}
+                      {p.visibility !== 'Household' ? (
+                        <VisibilityBadge visibility={p.visibility} />
+                      ) : null}
+                    </span>
+                  </td>
+                  <td className="text-text-2 px-4">
+                    <span
+                      title={
+                        p.defaultUnit === 'ml' && (p.densityGramsPerMl ?? null) === null
+                          ? t('products.no_density')
+                          : undefined
+                      }
+                    >
+                      {unitLabel(p.defaultUnit, t)}
+                      {p.defaultUnit === 'ml' && (p.densityGramsPerMl ?? null) === null ? (
+                        <>
+                          <span aria-hidden> *</span>
+                          <span className="sr-only">{t('products.no_density')}</span>
+                        </>
+                      ) : null}
+                    </span>
+                  </td>
+                  <td className="tnum px-4 text-right">{fmt.energy(p.caloriesPer100g)}</td>
+                  <td className="tnum px-4 text-right">{fmt.grams(p.proteinPer100g)}</td>
+                  <td className="tnum px-4 text-right">{fmt.grams(p.carbsPer100g)}</td>
+                  <td className="tnum px-4 text-right">{fmt.grams(p.fatPer100g)}</td>
+                  <td className="tnum px-4 text-right">{fmt.grams(p.fiberPer100g)}</td>
+                  <td className="px-2">
+                    <RowMenu
+                      product={p}
+                      onDelete={() => {
+                        setDeleteId(p.id);
+                      }}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -362,51 +382,6 @@ export default function ProductList() {
   );
 }
 
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'text-12px inline-flex h-11 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors',
-        active
-          ? 'bg-accent text-accent-foreground'
-          : 'bg-secondary border-border text-text-2 hover:text-foreground border',
-      )}
-    >
-      {children}
-      {active ? <span aria-hidden>×</span> : null}
-    </button>
-  );
-}
-
-function MacroCell({
-  value,
-  on,
-  macro,
-}: {
-  value: number | null | undefined;
-  on: boolean;
-  macro: 'protein' | 'carbs' | 'fat';
-}) {
-  return (
-    <span
-      className={cn('tnum text-right', on ? cn('font-semibold', macroClass[macro]) : 'text-text-2')}
-    >
-      {fmt(value)}
-    </span>
-  );
-}
-
 function IncompleteBadge({ label }: { label: string }) {
   return (
     <span
@@ -455,70 +430,5 @@ function RowMenu({ product, onDelete }: { product: Row; onDelete: () => void }) 
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function ProductCardItem({
-  product,
-  onPrefetch,
-  onDelete,
-}: {
-  product: Row;
-  onPrefetch: () => void;
-  onDelete: () => void;
-}) {
-  const { t } = useTranslation();
-  const incomplete = isIncomplete(product);
-  const chips: { key: 'protein' | 'carbs' | 'fat'; label: string }[] = [
-    { key: 'protein', label: 'P' },
-    { key: 'carbs', label: 'C' },
-    { key: 'fat', label: 'F' },
-  ];
-  const val = {
-    protein: product.proteinPer100g,
-    carbs: product.carbsPer100g,
-    fat: product.fatPer100g,
-  };
-
-  return (
-    <div
-      role="listitem"
-      aria-label={product.name}
-      className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px p-18px relative flex flex-col gap-3 border shadow-sm focus-within:ring-2"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <Link
-          to={`/diet-planner/products/${product.id}`}
-          className="text-14px after:rounded-22px font-bold after:absolute after:inset-0 focus:outline-none"
-          onMouseEnter={onPrefetch}
-          onFocus={onPrefetch}
-        >
-          {product.name}
-        </Link>
-        <RowMenu product={product} onDelete={onDelete} />
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        <VisibilityBadge visibility={product.visibility} />
-        {incomplete ? <IncompleteBadge label={t('products.incomplete_badge')} /> : null}
-      </div>
-      <div className="numeral text-20px font-bold">
-        {fmt(product.caloriesPer100g)}
-        <span className="text-muted-foreground text-11px ml-1 font-medium">kcal / 100 g</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {chips.map((c) => (
-          <div
-            key={c.key}
-            className="rounded-9px p-2 text-center"
-            style={{
-              background: `color-mix(in oklab, var(--color-${c.key}) 12%, transparent)`,
-            }}
-          >
-            <div className="tnum text-13px font-bold">{fmt(val[c.key])}</div>
-            <div className="text-muted-foreground text-9-5px">{c.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

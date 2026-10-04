@@ -52,8 +52,46 @@ describe('useProducts', () => {
 describe('productListOptions', () => {
   it('builds its key from the queryKeys factory with the defaults applied', () => {
     expect(productListOptions({ search: 'oat' }).queryKey).toEqual(
-      queryKeys.products.list({ search: 'oat', onlyMine: false, page: 1, pageSize: 50 }),
+      queryKeys.products.list({
+        search: 'oat',
+        onlyMine: false,
+        onlyIncomplete: false,
+        sortBy: 'name',
+        sortDescending: false,
+        page: 1,
+        pageSize: 50,
+      }),
     );
+  });
+});
+
+describe('productListOptions server params', () => {
+  it('sends filter and sort to the API', async () => {
+    let url = '';
+    server.use(
+      http.get('http://localhost:5050/api/v1/products', ({ request }) => {
+        url = request.url;
+        return HttpResponse.json({
+          items: [],
+          page: 2,
+          pageSize: 25,
+          totalCount: 0,
+          totalPages: 0,
+        });
+      }),
+    );
+    const { result } = renderHook(
+      () => useProducts({ onlyIncomplete: true, sortBy: 'protein', sortDescending: true, page: 2 }),
+      { wrapper: createWrapper() },
+    );
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    const q = new URL(url).searchParams;
+    expect(q.get('OnlyIncomplete')).toBe('true');
+    expect(q.get('SortBy')).toBe('protein');
+    expect(q.get('SortDescending')).toBe('true');
+    expect(q.get('Page')).toBe('2');
   });
 });
 

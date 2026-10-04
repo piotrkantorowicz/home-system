@@ -26,8 +26,15 @@ export const queryKeys = {
   },
   products: {
     all: () => ['products'] as const,
-    list: (params: { search?: string; onlyMine?: boolean; page?: number; pageSize?: number }) =>
-      ['products', params] as const,
+    list: (params: {
+      search?: string;
+      onlyMine?: boolean;
+      onlyIncomplete?: boolean;
+      sortBy?: string;
+      sortDescending?: boolean;
+      page?: number;
+      pageSize?: number;
+    }) => ['products', params] as const,
     detail: (id: string) => ['products', id] as const,
   },
   recipes: {
