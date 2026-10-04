@@ -1,112 +1,83 @@
-import { Card, MetricTile } from '@shared/components/ui';
-import { cn, formatNumber } from '@shared/lib/utils';
+import { buildWeekHistory } from '@modules/diet-planner/utils/weekHistory';
+import { Card, DailyBars, MetricTile, type DailyBar } from '@shared/components/ui';
+import { useFormat } from '@shared/hooks/useFormat';
+import { usePreferences } from '@shared/hooks/usePreferences';
 import { useTranslation } from 'react-i18next';
 
 import type { DailyNutrition } from '@modules/diet-planner/api/hooks/useMeals';
 
 interface WeekReviewCardProps {
-  /** Last 7 days of nutrition summaries (any order, may have gaps). */
+  /** Consumed nutrition per day (any order, gaps = nothing logged). */
   week: DailyNutrition[];
   target: number | null;
+  /** Local calendar day, `YYYY-MM-DD`; the last of the seven bars. */
+  today: string;
 }
 
-function last7Dates(): string[] {
-  const out: string[] = [];
-  const base = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(base);
-    d.setDate(base.getDate() - i);
-    out.push(
-      `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-        d.getDate(),
-      ).padStart(2, '0')}`,
-    );
-  }
-  return out;
-}
-
-export function WeekReviewCard({ week, target }: WeekReviewCardProps) {
+/** Last 7 days of calories against the daily target, with full-day averages. */
+export function WeekReviewCard({ week, target, today }: WeekReviewCardProps) {
   const { t, i18n } = useTranslation();
-  const dates = last7Dates();
-  const byDate = new Map(week.map((d) => [d.date.slice(0, 10), d]));
+  const fmt = useFormat();
+  const { prefs } = usePreferences();
+  const unit = prefs.energyUnit;
+  const figure = (kcal: number) => fmt.energy(kcal).slice(0, -unit.length).trim();
 
-  const days = dates.map((date, index) => ({
-    date,
-    calories: Math.round(byDate.get(date)?.calories ?? 0),
-    isToday: index === dates.length - 1,
-    weekday: new Date(`${date}T00:00:00`).toLocaleDateString(i18n.language, { weekday: 'short' }),
-  }));
+  const history = buildWeekHistory(week, today, target);
+  const nothingLogged = history.days.every((day) => day.calories === null);
 
-  const logged = days.filter((d) => byDate.has(d.date));
-  const avg =
-    logged.length > 0 ? Math.round(logged.reduce((s, d) => s + d.calories, 0) / logged.length) : 0;
-  const scaleMax = Math.max(target ?? 0, ...days.map((d) => d.calories), 1);
+  const bars: DailyBar[] = history.days.map((day) => {
+    const date = new Date(`${day.date}T00:00:00`);
+    return {
+      key: day.date,
+      label: date.toLocaleDateString(i18n.language, { weekday: 'short' }),
+      sublabel: date.toLocaleDateString(i18n.language, { day: 'numeric', month: 'numeric' }),
+      value: day.calories,
+      text: day.calories === null ? '' : figure(day.calories),
+      over: day.over,
+      isToday: day.isToday,
+      srText: `${date.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' })}: ${
+        day.calories === null ? t('dashboard.nothing_logged') : fmt.energy(day.calories)
+      }`,
+    };
+  });
 
   return (
     <Card className="flex min-w-0 flex-col gap-5 p-6">
       <div className="text-15px font-bold">{t('dashboard.week_review_title')}</div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-        <MetricTile label={t('dashboard.week_avg_intake')} value={formatNumber(avg)} hint="kcal" />
-        <MetricTile
-          label={t('dashboard.week_days_logged')}
-          value={`${String(logged.length)} / 7`}
-        />
-        <MetricTile
-          label={t('dashboard.hero_target')}
-          value={target === null ? '—' : formatNumber(target)}
-          {...(target === null ? {} : { hint: 'kcal' })}
-        />
-      </div>
-
-      <p className="text-text-2 text-sm">{t('dashboard.week_partial')}</p>
-      <div aria-hidden="true" className="h-132px flex items-end gap-2.5 border-b pb-0">
-        {days.map((day) => {
-          const heightPct = day.calories > 0 ? Math.max(6, (day.calories / scaleMax) * 100) : 0;
-          return (
-            <div
-              key={day.date}
-              className="flex h-full min-w-0 flex-1 flex-col items-center gap-1.5"
-            >
-              <div className="flex min-h-0 w-full flex-1 items-end justify-center">
-                <div
-                  className={cn(
-                    'rounded-t-10px w-full max-w-[46px] rounded-b-[3px]',
-                    day.calories === 0 && 'border-border-strong border border-dashed',
-                  )}
-                  style={{
-                    height: day.calories === 0 ? '2px' : `${String(heightPct)}%`,
-                    background:
-                      day.calories === 0
-                        ? 'var(--color-border)'
-                        : day.isToday
-                          ? 'var(--color-primary)'
-                          : 'color-mix(in oklab, var(--color-primary) 32%, transparent)',
-                  }}
-                />
-              </div>
-              <span
-                className={cn(
-                  'text-xs',
-                  day.isToday ? 'text-foreground font-bold' : 'text-muted-foreground',
-                )}
-              >
-                {day.weekday}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <ul className="sr-only">
-        {days.map((day) => (
-          <li key={day.date}>
-            {day.date}:{' '}
-            {byDate.has(day.date)
-              ? `${formatNumber(day.calories)} kcal`
-              : t('dashboard.nothing_logged')}
-          </li>
-        ))}
-      </ul>
+      {nothingLogged ? (
+        <p className="text-text-2 text-sm">{t('dashboard.week_empty')}</p>
+      ) : (
+        <>
+          <DailyBars
+            days={bars}
+            target={target}
+            {...(target === null
+              ? {}
+              : { targetLabel: t('dashboard.hero_target_amount', { amount: fmt.energy(target) }) })}
+            ariaLabel={t('dashboard.week_review_title')}
+            overLabel={t('dashboard.week_over_marker')}
+            missingText="—"
+          />
+          <p className="text-text-2 text-sm">{t('dashboard.week_partial')}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <MetricTile
+              label={t('dashboard.week_avg_full_days')}
+              value={history.avgCalories === null ? '—' : figure(history.avgCalories)}
+              {...(history.avgCalories === null ? {} : { hint: unit })}
+            />
+            <MetricTile
+              label={t('dashboard.week_over_days')}
+              value={target === null || history.fullDays === 0 ? '—' : String(history.overDays)}
+              accent={history.overDays > 0 ? 'fat' : 'default'}
+            />
+            <MetricTile
+              label={t('dashboard.week_avg_protein')}
+              value={history.avgProtein === null ? '—' : fmt.grams(history.avgProtein)}
+              {...(history.avgProtein === null ? {} : { hint: 'g' })}
+            />
+          </div>
+        </>
+      )}
     </Card>
   );
 }

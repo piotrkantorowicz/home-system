@@ -136,7 +136,11 @@ export default function Dashboard() {
           />
         )}
         {!mealsQuery.isError && !mealsLoading && (
-          <WeekReviewCard week={week} target={goalsData?.dailyCalorieTarget ?? null} />
+          <WeekReviewCard
+            week={week}
+            target={goalsData?.dailyCalorieTarget ?? null}
+            today={today}
+          />
         )}
       </div>
 
