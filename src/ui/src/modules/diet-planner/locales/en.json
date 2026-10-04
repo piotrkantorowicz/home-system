@@ -841,8 +841,8 @@
     }
   },
   "preferences": {
-    "title": "Preferences",
-    "subtitle": "Appearance, units and account.",
+    "title": "App & account",
+    "subtitle": "Notifications, appearance, units and your account.",
     "appearance": "Appearance",
     "theme": "Theme",
     "theme_light": "Light",
@@ -860,11 +860,13 @@
     "week_sunday": "Sunday",
     "thin_space": "Thin-space thousands",
     "thin_space_hint": "Show 2 150 instead of 2,150.",
-    "units_note": "Unit preferences are saved now; screens will adopt them in a later pass.",
+    "units_note": "Units and number format apply to Today, Week plan, Products, Recipes and Budget. The Water and Nutrition pages still show kcal, g and ml.",
     "account": "Account",
     "sign_out": "Sign out",
-    "delete_account": "Delete account",
-    "delete_account_btn": "Delete"
+    "notifications": "Where notifications go",
+    "diet_settings": "Diet settings",
+    "example": "Example",
+    "delete_unavailable": "Account deletion is not available yet."
   },
   "control_kit": {
     "title": "Control kit",

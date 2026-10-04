@@ -840,8 +840,8 @@
     }
   },
   "preferences": {
-    "title": "Preferencje",
-    "subtitle": "Wygląd, jednostki i konto.",
+    "title": "Aplikacja i konto",
+    "subtitle": "Powiadomienia, wygląd, jednostki i Twoje konto.",
     "appearance": "Wygląd",
     "theme": "Motyw",
     "theme_light": "Jasny",
@@ -859,11 +859,13 @@
     "week_sunday": "Niedziela",
     "thin_space": "Wąska spacja w tysiącach",
     "thin_space_hint": "Pokaż 2 150 zamiast 2,150.",
-    "units_note": "Preferencje jednostek są zapisywane; ekrany zaczną z nich korzystać później.",
+    "units_note": "Jednostki i format liczb dotyczą widoków Dziś, Plan tygodnia, Produkty, Przepisy i Budżet. Strony Woda i Odżywianie nadal pokazują kcal, g i ml.",
     "account": "Konto",
     "sign_out": "Wyloguj",
-    "delete_account": "Usuń konto",
-    "delete_account_btn": "Usuń"
+    "notifications": "Gdzie trafiają powiadomienia",
+    "diet_settings": "Ustawienia diety",
+    "example": "Przykład",
+    "delete_unavailable": "Usuwanie konta nie jest jeszcze dostępne."
   },
   "control_kit": {
     "title": "Zestaw kontrolek",

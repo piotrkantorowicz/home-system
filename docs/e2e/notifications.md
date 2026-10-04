@@ -6,7 +6,7 @@ the real backend and scheduler. The original two specs retain route mocks.
 
 ## channel-preferences.spec.ts — Channel preferences
 
-Route: `/notifications/preferences`.
+Route: `/diet-planner/settings/app` (App & account). The legacy `/notifications/preferences` redirects here (#502).
 
 > **#208 redesign — the "console" channel row was dropped.** The page now
 > renders only two `ChannelToggleRow`s: **Email** (disabled, "coming soon")
@@ -15,8 +15,8 @@ Route: `/notifications/preferences`.
 > returns, these tests need a third row again.
 
 - **`renders the email (disabled) and websocket (enabled) channel rows`** —
-  mocks `GET /api/notification-preferences`, asserts exactly 2
-  `role="switch"`es: `nth(0)` (Email) disabled, `nth(1)` (Websocket) enabled.
+  mocks `GET /api/notification-preferences`, asserts the legacy
+  route redirects and the Email switch is disabled while Real-time is enabled.
 - **`toggling websocket fires a PUT`** — clicks the websocket switch, polls
   until the mocked `PUT /api/notification-preferences` was hit.
 

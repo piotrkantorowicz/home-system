@@ -1,10 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
-import ChannelPreferences from './ChannelPreferences';
+import { ChannelPreferencesSection } from './ChannelPreferencesSection';
 
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
@@ -31,14 +30,12 @@ function renderPage() {
   const Wrapper = createWrapper();
   return render(
     <Wrapper>
-      <MemoryRouter>
-        <ChannelPreferences />
-      </MemoryRouter>
+      <ChannelPreferencesSection />
     </Wrapper>,
   );
 }
 
-describe('ChannelPreferences', () => {
+describe('ChannelPreferencesSection', () => {
   it('renders the email and websocket toggle rows after loading (console toggle hidden)', async () => {
     server.use(
       http.get(`${BASE}/api/notification-preferences`, () => HttpResponse.json(defaultPreferences)),
