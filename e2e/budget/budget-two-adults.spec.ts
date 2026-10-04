@@ -174,10 +174,10 @@ test.describe('Budget with two adults', () => {
       // similar private one belonging to the other adult is not.
       await page.getByRole('button', { name: 'Add expense' }).click();
       const dialog = page.getByRole('dialog');
-      await dialog.getByLabel('Category').selectOption('Groceries');
+      await dialog.getByText('Groceries', { exact: true }).click();
       await dialog.getByLabel(/^Amount/).fill(shared);
       await expect(dialog.getByText(/similar expense.* already exist/)).toBeVisible();
-      await dialog.getByLabel('Category').selectOption('Leisure');
+      await dialog.getByText('Leisure', { exact: true }).click();
       await dialog.getByLabel(/^Amount/).fill(inviteePrivate);
       await expect(dialog.getByText(/similar expense.* already exist/)).toBeHidden();
       await dialog.getByRole('button', { name: 'Cancel' }).first().click();

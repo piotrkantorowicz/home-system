@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { currentMonth, isIsoDate, isMonth, shiftDays, shiftMonth, todayLocal } from './dates';
-import { normalizeAmount, normalizeLimit } from './money';
+import { minorToDecimal, normalizeAmount, normalizeLimit, splitEqual } from './money';
 
 describe('normalizeAmount', () => {
   it.each([
@@ -70,5 +70,58 @@ describe('normalizeLimit', () => {
 
   it.each(['', '-1', '1.005', '1e2', 'abc'])('rejects %s', (input) => {
     expect(normalizeLimit(input)).toBeNull();
+  });
+});
+
+describe('splitEqual', () => {
+  const [a, b, c] = [
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000002',
+    '7fffffff-0000-0000-0000-000000000003',
+  ] as const;
+
+  it('gives the remainder cents to the first ids in ascending order, whatever the tick order', () => {
+    for (const order of [
+      [a, b, c],
+      [c, b, a],
+      [b, c, a],
+    ]) {
+      const shares = splitEqual(10000, order);
+      expect(shares.get(a)).toBe(3334);
+      expect(shares.get(b)).toBe(3333);
+      expect(shares.get(c)).toBe(3333);
+      expect([...shares.values()].reduce((x, y) => x + y, 0)).toBe(10000);
+    }
+  });
+
+  it('spreads several remainder cents one each', () => {
+    const one = splitEqual(1000, [a, b, c]);
+    expect([one.get(a), one.get(b), one.get(c)]).toEqual([334, 333, 333]);
+    const two = splitEqual(1001, [a, b, c]);
+    expect([two.get(a), two.get(b), two.get(c)]).toEqual([334, 334, 333]);
+  });
+
+  it('is exact for one person and empty for none', () => {
+    expect(splitEqual(18436, [a]).get(a)).toBe(18436);
+    expect(splitEqual(100, []).size).toBe(0);
+  });
+
+  it('compares ids case-insensitively like the canonical text form', () => {
+    const upper = 'FFFFFFFF-0000-0000-0000-000000000001';
+    const shares = splitEqual(101, [upper, a]);
+    expect(shares.get(a)).toBe(51);
+    expect(shares.get(upper)).toBe(50);
+  });
+});
+
+describe('minorToDecimal', () => {
+  it.each([
+    [18436, '184.36'],
+    [5, '0.05'],
+    [100, '1.00'],
+    [0, '0.00'],
+    [-4050, '-40.50'],
+  ])('writes %i as %s', (minor, expected) => {
+    expect(minorToDecimal(minor)).toBe(expected);
   });
 });

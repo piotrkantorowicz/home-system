@@ -28,8 +28,8 @@ test.describe('Budget monthly summary', () => {
     // Overspending never blocks recording.
     await page.getByRole('button', { name: 'Add expense' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Envelope').selectOption({ label: 'Everyday' });
-    await dialog.getByLabel('Funded by').selectOption('HouseholdFunds');
+    await dialog.getByLabel('Envelope').selectOption({ label: 'Everyday · shared' });
+    await dialog.getByText('Household account', { exact: true }).click();
     await dialog.getByLabel(/^Amount/).fill(amount);
     await expect(dialog.getByRole('button', { name: 'Save' })).toBeEnabled();
     await dialog.getByRole('button', { name: 'Save' }).click();
