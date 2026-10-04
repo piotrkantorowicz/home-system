@@ -330,7 +330,7 @@
   },
   "shopping_list": {
     "title": "Shopping List",
-    "subtitle": "Aggregated ingredients from your planned meals — overrides are ignored.",
+    "subtitle": "From meals planned {{range}}",
     "shared_with": "Shared with {{household}}",
     "from": "From",
     "to": "To",
@@ -346,7 +346,17 @@
     "copied": "Shopping list copied",
     "copy_failed": "Could not copy to clipboard",
     "export_csv": "Export CSV",
-    "export_json": "Export JSON"
+    "export_json": "Export JSON",
+    "subtitle_shared": "Shared with {{household}} · from meals planned {{range}}",
+    "more": "More actions",
+    "progress": "{{done}} of {{total}} bought",
+    "bought": "Bought · {{count}}",
+    "uncheck_all": "Uncheck all",
+    "check_failed": "Could not save that change. It was not saved.",
+    "load_failed": "Could not load the shopping list.",
+    "retry": "Try again",
+    "saved_locally": "Saved on this device",
+    "saved_locally_toast": "Could not reach the shared list. Saved on this device only."
   },
   "import_wizard": {
     "title": "Import a plan",
