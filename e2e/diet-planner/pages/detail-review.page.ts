@@ -62,7 +62,8 @@ export class DetailReviewPage {
     for (const dismiss of await this.page
       .getByRole('button', { name: 'Dismiss notification' })
       .all()) {
-      await dismiss.click();
+      // A toast can auto-dismiss between listing and clicking; the count check below is the assertion.
+      await dismiss.click({ timeout: 2000 }).catch(() => undefined);
     }
     await expect(this.page.getByRole('button', { name: 'Dismiss notification' })).toHaveCount(0);
     await this.page.emulateMedia({ reducedMotion: 'reduce' });

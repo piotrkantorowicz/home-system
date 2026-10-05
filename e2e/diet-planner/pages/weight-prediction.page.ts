@@ -26,7 +26,9 @@ export class WeightPredictionPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.energyModelCard = page.getByText('Energy model', { exact: true });
-    this.energyModelEmptyMessage = page.getByText(/set a daily calorie target/i);
+    this.energyModelEmptyMessage = page.getByText(
+      /add your birth date, sex and a daily calorie target/i,
+    );
     this.bmrValue = this.tileValue(page, 'BMR');
     this.tdeeValue = this.tileValue(page, 'TDEE');
     this.weeklyChangeValue = this.tileValue(page, 'Weekly change');

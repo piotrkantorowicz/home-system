@@ -2,6 +2,19 @@ import { test, expect } from './fixtures';
 import { DashboardPage, HydrationPage, HydrationSettingsPage } from './pages';
 import { createApiContext } from './utils/seed';
 
+import type { Page } from '@playwright/test';
+
+/** The progress bar only renders once a daily goal is saved (the form merely pre-fills 2500). */
+async function ensureDailyGoal(page: Page) {
+  await page.goto('/diet-planner/hydration');
+  const api = await createApiContext(page);
+  const res = await api.put('/api/v1/hydration/config', {
+    data: { dailyWaterTargetMl: 2500, glassSizeMl: 250, trackWaterIntake: true },
+  });
+  expect(res.ok()).toBe(true);
+  await api.dispose();
+}
+
 test.describe('Hydration', () => {
   test('hydration page loads and shows the heading', async ({ page }) => {
     const hydrationPage = new HydrationPage(page);
@@ -11,6 +24,7 @@ test.describe('Hydration', () => {
   });
 
   test('the water progress bar is visible on the page', async ({ page }) => {
+    await ensureDailyGoal(page);
     const hydrationPage = new HydrationPage(page);
     await hydrationPage.goto();
 
@@ -55,15 +69,7 @@ test.describe('Hydration', () => {
   });
 
   test('water entries persist, can be removed, and update the dashboard', async ({ page }) => {
-    const settings = new HydrationSettingsPage(page);
-    await settings.goto();
-    if (
-      (await settings.dailyTargetInput.inputValue()) !== '2500' ||
-      (await settings.glassSizeInput.inputValue()) !== '250'
-    ) {
-      await settings.updateSettings({ dailyTargetMl: 2500, glassSizeMl: 250 });
-      await expect(settings.saveSettingsButton).toBeDisabled();
-    }
+    await ensureDailyGoal(page);
 
     const hydration = new HydrationPage(page);
     await hydration.goto();
@@ -112,7 +118,7 @@ test.describe('Hydration', () => {
     expect(persisted.entries).toHaveLength(baseline.entries.length + 1);
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
-    await expect(dashboard.waterTotal(baseline.totalMl + 250)).toBeVisible();
+    await expect(dashboard.waterTotal(baseline.totalMl + 250, 2500)).toBeVisible();
     await expect(dashboard.waterProgress).toHaveAttribute(
       'aria-valuenow',
       String(Math.min(baseline.totalMl + 250, 2500)),

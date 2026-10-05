@@ -7,7 +7,7 @@ import type { Page, Locator } from '@playwright/test';
  * product/recipe/calendar quick-stat cards (that entry point moved into the
  * two-tier nav's grouped section panel). It now shows one "Today"
  * summary surface (calories, macros and water), a "Meals" list with check
- * toggles, and a "This week" review card.
+ * toggles, and a "Last 7 days" review card.
  */
 export class DashboardPage extends BasePage {
   readonly heading: Locator;
@@ -33,7 +33,12 @@ export class DashboardPage extends BasePage {
     await this.heading.waitFor();
   }
 
-  waterTotal(amountMl: number) {
-    return this.page.getByText(String(amountMl), { exact: true });
+  /** The Water summary writes progress as "0.8 of 2.5 L" (litres, one decimal). */
+  waterTotal(amountMl: number, goalMl: number) {
+    const litres = (ml: number) => (Math.round(ml / 100) / 10).toFixed(1);
+    return this.page
+      .locator('p')
+      .filter({ has: this.page.locator('strong', { hasText: litres(amountMl) }) })
+      .filter({ hasText: `of ${litres(goalMl)} L` });
   }
 }
