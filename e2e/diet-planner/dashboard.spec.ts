@@ -16,7 +16,7 @@ test.describe('Dashboard', () => {
     await dashboard.goto();
 
     await expect(dashboard.waterProgress).toBeVisible();
-    await expect(page.getByText('This week', { exact: true })).toBeVisible();
+    await expect(page.getByText('Last 7 days', { exact: true })).toBeVisible();
   });
 
   test('the "Open meal plan" link on the Meals card opens the calendar', async ({ page }) => {

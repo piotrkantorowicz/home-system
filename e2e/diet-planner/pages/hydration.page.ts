@@ -5,7 +5,7 @@ import { BasePage } from './BasePage';
 import type { Page, Locator } from '@playwright/test';
 
 export class HydrationPage extends BasePage {
-  /** Today's progress bar — role="progressbar" + aria-valuenow (see Hydration.tsx). */
+  /** Today's progress bar — only rendered once a daily goal is set (see Hydration.tsx). */
   readonly levelMeter: Locator;
   readonly addGlassButton: Locator;
   readonly customButton: Locator;
@@ -27,7 +27,7 @@ export class HydrationPage extends BasePage {
 
   async goto() {
     await this.page.goto('/diet-planner/hydration');
-    await this.levelMeter.waitFor();
+    await this.page.getByRole('heading', { level: 1 }).waitFor();
   }
 
   async expectLevelMeterVisible() {

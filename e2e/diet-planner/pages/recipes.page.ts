@@ -66,7 +66,9 @@ export class RecipesPage extends BasePage {
         el.scrollIntoView({ block: 'center' });
       });
       await productInput.fill(ingredient.name);
-      const option = this.page.getByRole('option', { name: ingredient.name }).first();
+      // Anchored: "Ingredient 1" must not match the option "Liquid Ingredient 1".
+      const nameStart = new RegExp(`^${ingredient.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+      const option = this.page.getByRole('option', { name: nameStart }).first();
       await option.waitFor({ state: 'visible', timeout: 10000 });
       await option.click({ force: true });
 

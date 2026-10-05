@@ -21,7 +21,7 @@ test.describe('Notifications channel preferences', () => {
     await page.goto('/notifications/preferences');
 
     // The legacy route redirects to App & account, which now hosts the channels.
-    await expect(page).toHaveURL(/\/diet-planner\/settings\/app/);
+    await expect(page).toHaveURL(/\/settings\/app$/);
     await expect(page.getByRole('heading', { name: /app & account/i, level: 1 })).toBeVisible();
     await expect(page.getByRole('switch', { name: /^email$/i })).toBeDisabled(); // coming soon
     await expect(page.getByRole('switch', { name: /real-time/i })).toBeEnabled();
