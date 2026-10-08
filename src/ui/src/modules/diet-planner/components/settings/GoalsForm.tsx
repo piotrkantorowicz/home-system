@@ -12,7 +12,6 @@ import {
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Loader2, Save } from 'lucide-react';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -78,19 +77,18 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       fatGrams: null,
       fiberGrams: null,
     },
-  });
-
-  useEffect(() => {
-    if (goals && goalsExist) {
-      reset({
+    // A background refetch must not wipe what the user is typing.
+    resetOptions: { keepDirtyValues: true },
+    ...(goals && {
+      values: {
         dailyCalorieTarget: goals.dailyCalorieTarget,
         proteinGrams: goals.proteinGrams,
         carbsGrams: goals.carbsGrams,
         fatGrams: goals.fatGrams,
         fiberGrams: goals.fiberGrams,
-      });
-    }
-  }, [goals, goalsExist, reset]);
+      },
+    }),
+  });
 
   const onSubmit = async (data: GoalFormData) => {
     const request = {
@@ -106,6 +104,9 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       toast.error(t('goals.save_error'));
       return;
     }
+    // Inputs hold strings, so keepDirtyValues would keep the saved field dirty
+    // against the refetched number. RHF merges resetOptions into reset(); override.
+    reset(data, { keepDirtyValues: false });
     toast.success(t('goals.save_success'));
     onSuccess?.();
   };

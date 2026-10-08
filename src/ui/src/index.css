@@ -262,8 +262,11 @@
   --glass-shadow: var(--shadow);
 }
 
-* {
-  border-color: var(--color-border);
+/* Layered so `border-<color>` utilities can override it. */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
 }
 
 /* Native form controls follow the active theme — fixes white option list / spinner

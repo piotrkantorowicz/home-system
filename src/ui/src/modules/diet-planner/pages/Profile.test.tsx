@@ -34,24 +34,30 @@ function renderAt(url: string) {
 }
 
 describe('Profile settings page', () => {
-  it('renders every form on one page with an anchor per section', () => {
+  it('shows only the profile tab by default', () => {
     renderAt('/diet-planner/profile');
-    for (const text of [
-      'body-stats-form',
-      'weight-history',
-      'goals-form',
-      'meal-form',
-      'water-form',
-      'reminders-form',
-    ]) {
-      expect(screen.getByText(text)).toBeInTheDocument();
-    }
+    expect(screen.getByText('body-stats-form')).toBeInTheDocument();
+    expect(screen.getByText('weight-history')).toBeInTheDocument();
+    expect(screen.queryByText('goals-form')).not.toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'profile.tabs' });
     expect(nav.querySelectorAll('a')).toHaveLength(5);
-    expect(screen.getByRole('link', { name: 'profile.tab_water' })).toHaveAttribute(
-      'href',
-      '#water',
+    expect(screen.getByRole('link', { name: 'profile.tab_profile' })).toHaveAttribute(
+      'aria-current',
+      'page',
     );
+  });
+
+  it.each([
+    ['#goals', 'goals-form', 'profile.tab_goals'],
+    ['#meal-times', 'meal-form', 'profile.tab_meal_times'],
+    ['#water', 'water-form', 'profile.tab_water'],
+    ['#reminders', 'reminders-form', 'profile.tab_reminders'],
+    ['#profile-details', 'body-stats-form', 'profile.tab_profile'],
+  ])('hash %s selects its tab', (hash, form, tab) => {
+    renderAt(`/diet-planner/profile${hash}`);
+    expect(screen.getByText(form)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: tab })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getAllByText(/-form$/)).toHaveLength(1);
   });
 
   it.each([
