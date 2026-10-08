@@ -13,12 +13,13 @@ export interface PageContainerProps {
 const widthClass = { default: '', form: 'max-w-[880px]', narrow: 'max-w-[760px]' } as const;
 
 /**
- * The stable page body: 1120px max, left-aligned, 16px padding on phones and 40/48px on desktop.
+ * The stable page body: 1120px max (1440px from 2xl), centred in the main area, 16px padding on phones
+ * and 40/48px on desktop. Every page shares this frame, so titles keep one origin per viewport.
  * Narrow content passes `width` rather than re-wrapping.
  */
 export function PageContainer({ children, width = 'default', className }: PageContainerProps) {
   return (
-    <div className="w-full max-w-[1120px] px-4 py-4 md:px-12 md:py-10">
+    <div className="mx-auto w-full max-w-[1120px] px-4 py-4 md:px-12 md:py-10 2xl:max-w-[1440px]">
       <div className={cn(widthClass[width], className)}>{children}</div>
     </div>
   );

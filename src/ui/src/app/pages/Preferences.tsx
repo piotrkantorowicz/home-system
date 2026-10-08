@@ -1,5 +1,5 @@
 import { ChannelPreferencesSection } from '@modules/notifications';
-import { Banner, Card, SegmentedControl, Switch } from '@shared/components/ui';
+import { Banner, Card, PageContainer, SegmentedControl, Switch } from '@shared/components/ui';
 import { useTheme } from '@shared/context/ThemeContext';
 import { useFormat } from '@shared/hooks/useFormat';
 import { usePreferences, type Preferences as Prefs } from '@shared/hooks/usePreferences';
@@ -23,7 +23,7 @@ export default function Preferences() {
   const provider = profile?.iss ?? '';
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-6">
       <div>
         <h1 className="text-26px font-bold">{t('preferences.title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('preferences.subtitle')}</p>
@@ -196,7 +196,7 @@ export default function Preferences() {
           <p className="text-muted-foreground text-12-5px">{t('preferences.delete_unavailable')}</p>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

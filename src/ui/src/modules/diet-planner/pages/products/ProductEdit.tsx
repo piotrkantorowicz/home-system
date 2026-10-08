@@ -1,4 +1,5 @@
 import { productOptions, useUpdateProduct } from '@modules/diet-planner/api/hooks/useProducts';
+import { PageContainer } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -41,14 +42,14 @@ export default function ProductEdit() {
 
   if (!product) {
     return (
-      <div className="p-8 lg:p-10">
+      <PageContainer>
         <div className="text-destructive text-lg">{t('product_detail.not_found')}</div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="animate-fade-in-up mx-auto max-w-6xl px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in-up">
       <div className="mb-8">
         <h1 className="text-26px font-bold">{t('product_form.edit_title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -74,6 +75,6 @@ export default function ProductEdit() {
         isSubmitting={updateMutation.isPending}
         submitLabel={t('product_form.update_btn')}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -1,7 +1,7 @@
-import { Banner, EmptyState } from '@shared/components/ui';
+import { Banner, EmptyState, PageContainer } from '@shared/components/ui';
 import { Lock, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Outlet, useMatch } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
 import { useBudgetQuery } from '../api/queries';
@@ -15,6 +15,12 @@ import { BudgetSetup } from './BudgetSetup';
  * states; nothing else renders — and no cached rows — until the server has said yes.
  */
 function BudgetGate() {
+  const state = useBudgetGateState();
+  return state === null ? <Outlet /> : <PageContainer>{state}</PageContainer>;
+}
+
+/** The screen to show instead of the page, or null once the server has said yes. */
+function useBudgetGateState() {
   const { t } = useTranslation('budget');
   const { level } = useBudgetAccess();
   const query = useBudgetQuery(level !== 'none');
@@ -23,12 +29,7 @@ function BudgetGate() {
     return (
       <EmptyState icon={Lock} title={t('unavailable_title')} description={t('unavailable_body')} />
     );
-  if (query.isPending)
-    return (
-      <p role="status" className="p-6">
-        {t('loading')}
-      </p>
-    );
+  if (query.isPending) return <p role="status">{t('loading')}</p>;
   if (query.isError)
     return (
       <Banner
@@ -53,27 +54,13 @@ function BudgetGate() {
       <EmptyState icon={Wallet} title={t('ask_adult_title')} description={t('ask_adult_body')} />
     );
 
-  return <Outlet />;
+  return null;
 }
 
 export function BudgetLayout() {
-  const { t } = useTranslation('budget');
-  // The overview and expense history draw their own v3 PageHeader/PageContainer; the other screens still use this frame.
-  const overview = useMatch({ path: '/budget', end: true });
-  const expenses = useMatch({ path: '/budget/expenses', end: true });
-  const detail = useMatch({ path: '/budget/expenses/:id', end: true });
-  const settlement = useMatch({ path: '/budget/settlement', end: true });
-  const envelopes = useMatch({ path: '/budget/envelopes', end: true });
   return (
     <BudgetCacheBoundary>
-      {overview || expenses || detail || settlement || envelopes ? (
-        <BudgetGate />
-      ) : (
-        <main className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8">
-          <h1 className="mb-6 text-3xl font-bold break-words">{t('budget_nav')}</h1>
-          <BudgetGate />
-        </main>
-      )}
+      <BudgetGate />
     </BudgetCacheBoundary>
   );
 }
