@@ -66,6 +66,7 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = useForm<GoalFormInput, unknown, GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -103,6 +104,9 @@ export function GoalsForm({ onSuccess }: GoalsFormProps) {
       toast.error(t('goals.save_error'));
       return;
     }
+    // Inputs hold strings, so keepDirtyValues would keep the saved field dirty
+    // against the refetched number. RHF merges resetOptions into reset(); override.
+    reset(data, { keepDirtyValues: false });
     toast.success(t('goals.save_success'));
     onSuccess?.();
   };
