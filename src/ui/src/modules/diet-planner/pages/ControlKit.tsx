@@ -296,7 +296,7 @@ export default function ControlKit() {
         </Group>
         <Group
           title="Page header"
-          sub="PageHeader · PageContainer — title = nav label, one primary action, 1120px body (1440px from 2xl), centred"
+          sub="PageHeader · PageContainer — title = nav label, one primary action, 1120px body, centred"
         >
           <PageHeader
             title="Expenses"
