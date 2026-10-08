@@ -80,7 +80,10 @@ async function titleOrigin(page: Page, { path, ready }: AlignedRoute): Promise<s
   const heading = main.getByRole('heading').first();
   await expect(heading).toBeVisible();
   const geometry = await heading.evaluate((el) => {
-    for (const a of document.getAnimations()) a.finish();
+    // Settle entrance animations; looping ones (skeleton pulse) cannot finish and move nothing.
+    for (const a of document.getAnimations()) {
+      if (a.effect?.getComputedTiming().endTime !== Infinity) a.finish();
+    }
     let frame = el.parentElement;
     while (frame && getComputedStyle(frame).maxWidth !== '1120px') frame = frame.parentElement;
     if (!frame) return { origin: 'outside PageContainer', overflow: false };
