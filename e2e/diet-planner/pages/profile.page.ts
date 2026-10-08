@@ -145,8 +145,13 @@ export class ProfilePage extends BasePage {
   }
 
   async save() {
+    const saved = this.page.waitForResponse(
+      (r) => r.url().endsWith('/api/v1/profile') && r.request().method() !== 'GET' && r.ok(),
+    );
     await this.saveButton.click();
-    await expect(this.successMessage).toBeVisible({ timeout: 10000 });
+    await saved;
+    // Back-to-back saves stack identical toasts, so any one of them confirms this save.
+    await expect(this.successMessage.first()).toBeVisible({ timeout: 10000 });
   }
 
   async expectFieldValue(field: 'heightCm' | 'currentWeightKg' | 'targetWeightKg', value: number) {
