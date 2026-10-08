@@ -12,6 +12,7 @@ import {
   MoneyText,
   MonthStepper,
   Num,
+  PageContainer,
   PageHeader,
   Ring,
   SegmentedControl,
@@ -47,7 +48,7 @@ export default function ControlKit() {
   const [on, setOn] = useState(true);
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-5">
       <PageHeader
         title={t('control_kit.title')}
         subtitle={t('control_kit.subtitle')}
@@ -295,7 +296,7 @@ export default function ControlKit() {
         </Group>
         <Group
           title="Page header"
-          sub="PageHeader · PageContainer — title = nav label, one primary action, 1120px body"
+          sub="PageHeader · PageContainer — title = nav label, one primary action, 1120px body, centred"
         >
           <PageHeader
             title="Expenses"
@@ -332,6 +333,6 @@ export default function ControlKit() {
           </div>
         </Group>
       </div>
-    </div>
+    </PageContainer>
   );
 }

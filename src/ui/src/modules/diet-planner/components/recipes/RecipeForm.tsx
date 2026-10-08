@@ -230,7 +230,7 @@ export function RecipeForm({
       onSubmit={(e) => {
         void handleSubmit(onSubmit)(e);
       }}
-      className="gap-18px mx-auto flex max-w-3xl flex-col"
+      className="gap-18px flex flex-col"
     >
       <Card>
         <CardHeader>

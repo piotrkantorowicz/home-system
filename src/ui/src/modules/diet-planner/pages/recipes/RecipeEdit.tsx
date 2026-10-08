@@ -1,4 +1,5 @@
 import { recipeOptions, useUpdateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { PageContainer } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -42,14 +43,14 @@ export default function RecipeEdit() {
 
   if (!recipe) {
     return (
-      <div className="p-8 lg:p-10">
+      <PageContainer width="form">
         <div className="text-destructive text-lg">{t('recipe_detail.not_found')}</div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
+    <PageContainer width="form" className="animate-fade-in-up">
       <div className="mb-8">
         <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipe_form.edit_title')}</h1>
         <p className="text-muted-foreground text-0-95rem">
@@ -77,6 +78,6 @@ export default function RecipeEdit() {
         submitLabel={t('recipe_form.update_btn')}
         canChangeVisibility={recipe.isOwner}
       />
-    </div>
+    </PageContainer>
   );
 }

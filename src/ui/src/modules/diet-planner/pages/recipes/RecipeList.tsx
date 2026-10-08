@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   EmptyState,
+  PageContainer,
   Pagination,
   SegmentedControl,
   Skeleton,
@@ -91,7 +92,7 @@ export default function RecipeList() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-26px font-bold">{t('recipes.title')}</h1>
@@ -248,6 +249,6 @@ export default function RecipeList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

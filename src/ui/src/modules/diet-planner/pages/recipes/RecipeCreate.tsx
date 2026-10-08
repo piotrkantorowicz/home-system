@@ -1,5 +1,6 @@
 import { api } from '@modules/diet-planner/api/client';
 import { useCreateRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
+import { PageContainer } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -48,7 +49,7 @@ export default function RecipeCreate() {
   };
 
   return (
-    <div className="animate-fade-in-up mx-auto max-w-4xl p-8 lg:p-10">
+    <PageContainer width="form" className="animate-fade-in-up">
       <div className="mb-8">
         <h1 className="mb-2 text-4xl font-bold tracking-tight">{t('recipe_form.create_title')}</h1>
         <p className="text-muted-foreground text-0-95rem">{t('recipe_form.create_subtitle')}</p>
@@ -59,6 +60,6 @@ export default function RecipeCreate() {
         isSubmitting={createMutation.isPending}
         submitLabel={t('recipe_form.create_btn')}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -7,6 +7,7 @@ import {
   MealScheduleForm,
   WeightHistorySection,
 } from '@modules/diet-planner/components/settings';
+import { PageContainer } from '@shared/components/ui';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -57,7 +58,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-6">
       <div>
         <h1 className="text-26px font-bold">{t('profile.settings_title')}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t('profile.settings_subtitle')}</p>
@@ -86,6 +87,6 @@ export default function Profile() {
           <div className="flex flex-col gap-4">{s.body}</div>
         </section>
       ))}
-    </div>
+    </PageContainer>
   );
 }

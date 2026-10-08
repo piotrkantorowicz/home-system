@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageContainer,
   StatusPill,
 } from '@shared/components/ui';
 import { cn, formatNumber } from '@shared/lib/utils';
@@ -36,9 +37,9 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="px-4 py-6 md:px-8">
+      <PageContainer>
         <p className="text-destructive">{t('product_detail.not_found')}</p>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -83,7 +84,7 @@ export default function ProductDetail() {
   ] as const;
 
   return (
-    <div className="animate-fade-in mx-auto flex max-w-5xl flex-col gap-5 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-5">
       <nav className="text-muted-foreground text-12-5px flex items-center gap-1">
         <Link to="/diet-planner/products" className="hover:text-foreground">
           {t('products.title')}
@@ -275,6 +276,6 @@ export default function ProductDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

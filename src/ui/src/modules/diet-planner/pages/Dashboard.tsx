@@ -7,13 +7,14 @@ import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
 import { GoalsForm } from '@modules/diet-planner/components/settings';
 import {
   Banner,
-  Skeleton,
   Button,
+  PageContainer,
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  Skeleton,
 } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Droplet, Plus } from 'lucide-react';
@@ -75,7 +76,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 px-4 py-6 md:px-8">
+    <PageContainer className="animate-fade-in flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[30px] font-bold">{t('dashboard.today_title')}</h1>
@@ -172,6 +173,6 @@ export default function Dashboard() {
         }}
         isSubmitting={createMeal.isPending}
       />
-    </div>
+    </PageContainer>
   );
 }
