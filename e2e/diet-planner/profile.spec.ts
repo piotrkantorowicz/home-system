@@ -1,7 +1,33 @@
 import { test, expect } from './fixtures';
 import { ProfilePage } from './pages';
+import { profileSectionReady } from './pages/profile-hub.helper';
 
 test.describe('Profile', () => {
+  test('tabs switch sections and follow browser history', async ({ page }) => {
+    const profilePage = new ProfilePage(page);
+    await profilePage.goto();
+    const tabs = page.getByRole('navigation', { name: /settings sections/i });
+
+    await tabs.getByRole('link', { name: 'Goals' }).click();
+    await expect(page).toHaveURL(/\/diet-planner\/profile#goals$/);
+    await expect(profileSectionReady(page, 'goals')).toBeVisible();
+    await expect(tabs.getByRole('link', { name: 'Goals' })).toHaveAttribute('aria-current', 'page');
+    await expect(profilePage.saveButton).toBeHidden();
+
+    await tabs.getByRole('link', { name: 'Water' }).click();
+    await expect(page).toHaveURL(/#water$/);
+    await expect(profileSectionReady(page, 'hydration')).toBeVisible();
+    await expect(profileSectionReady(page, 'goals')).toBeHidden();
+
+    await page.goBack();
+    await expect(page).toHaveURL(/#goals$/);
+    await expect(profileSectionReady(page, 'goals')).toBeVisible();
+
+    await page.goForward();
+    await expect(page).toHaveURL(/#water$/);
+    await expect(profileSectionReady(page, 'hydration')).toBeVisible();
+  });
+
   test('profile page loads and shows the form', async ({ page }) => {
     const profilePage = new ProfilePage(page);
     await profilePage.goto();
