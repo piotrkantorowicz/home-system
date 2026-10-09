@@ -209,8 +209,10 @@ test.describe('Budget with two adults', () => {
         page.getByText(new RegExp(`is owed\\s+${remaining.replace('.', '\\.')}`)),
       ).toBeVisible();
     } finally {
-      await settleUp(page, inviteeId, ownerId);
+      // Voiding the shared expense moves the balance, so clean up before settling to zero.
+      await archiveTrackedEnvelopes(page);
       await archiveTrackedEnvelopes(invitee.page);
+      await settleUp(page, inviteeId, ownerId);
       await ensureNoHousehold(invitee.page);
       await invitee.context.close();
     }
