@@ -35,6 +35,14 @@ export async function ensureBudget(page: Page): Promise<void> {
   }
 }
 
+// Envelopes can only be archived, never deleted — remember what each page created so the test can
+// archive it afterwards instead of piling up active envelopes on the shared worker accounts.
+const created = new Map<Page, string[]>();
+
+export function trackEnvelope(page: Page, id: string): void {
+  created.set(page, [...(created.get(page) ?? []), id]);
+}
+
 export async function createEnvelope(
   page: Page,
   name: string,
@@ -47,7 +55,60 @@ export async function createEnvelope(
       await api.post('/api/budget/accounts', { data: { name, visibility, ownerPersonId } }),
       `create envelope ${name}`,
     );
+    trackEnvelope(page, body.id);
     return body.id;
+  } finally {
+    await api.dispose();
+  }
+}
+
+/**
+ * Voids the expenses in, clears this month's limits on, and archives every envelope this page
+ * created — the overview keeps showing an archived envelope that still has spending or a limit.
+ * Best effort: access may already be revoked.
+ */
+export async function archiveTrackedEnvelopes(page: Page): Promise<void> {
+  const ids = created.get(page) ?? [];
+  created.delete(page);
+  if (ids.length === 0) return;
+  const api = await createApiContext(page);
+  try {
+    const month = today().slice(0, 7);
+    const limits = await api.get(`/api/budget/limits?month=${month}`);
+    const limitList = limits.ok()
+      ? ((await limits.json()) as { accountId: string; revision: number }[])
+      : [];
+    for (const id of ids) {
+      const expenses = await api.get(`/api/budget/expenses?accountId=${id}&pageSize=100`);
+      if (expenses.ok()) {
+        const { items } = (await expenses.json()) as { items: { id: string; revision: number }[] };
+        for (const expense of items) {
+          await api.post(`/api/budget/expenses/${expense.id}/void`, {
+            data: {
+              clientRequestId: crypto.randomUUID(),
+              expectedRevision: expense.revision,
+              reason: 'test cleanup',
+            },
+          });
+        }
+      }
+      for (const limit of limitList.filter((l) => l.accountId === id)) {
+        await api.delete(
+          `/api/budget/accounts/${id}/limits/${month}?expectedRevision=${limit.revision}`,
+        );
+      }
+
+      const account = await api.get(`/api/budget/accounts/${id}`);
+      if (!account.ok()) continue;
+      const { revision, isArchived } = (await account.json()) as {
+        revision: number;
+        isArchived: boolean;
+      };
+      if (isArchived) continue;
+      await api.post(`/api/budget/accounts/${id}/archive`, {
+        data: { expectedRevision: revision },
+      });
+    }
   } finally {
     await api.dispose();
   }

@@ -5,6 +5,7 @@ import { ensureNoHousehold, joinAsMember } from '../household/utils/seed';
 import { inviteeAuthStatePath, inviteeInvitationEmail } from '../shared/auth-paths';
 
 import {
+  archiveTrackedEnvelopes,
   createEnvelope,
   createExpense,
   ensureBudget,
@@ -66,6 +67,8 @@ async function settleUp(owner: Page, inviteeId: string, ownerId: string) {
 }
 
 test.describe('Budget with two adults', () => {
+  test.afterEach(async ({ page }) => archiveTrackedEnvelopes(page));
+
   test('adults share entries, never see each other’s private ones, and a partial repayment survives reload', async ({
     page,
     browser,
@@ -206,6 +209,9 @@ test.describe('Budget with two adults', () => {
         page.getByText(new RegExp(`is owed\\s+${remaining.replace('.', '\\.')}`)),
       ).toBeVisible();
     } finally {
+      // Voiding the shared expense moves the balance, so clean up before settling to zero.
+      await archiveTrackedEnvelopes(page);
+      await archiveTrackedEnvelopes(invitee.page);
       await settleUp(page, inviteeId, ownerId);
       await ensureNoHousehold(invitee.page);
       await invitee.context.close();
@@ -252,6 +258,7 @@ test.describe('Budget with two adults', () => {
         (await get(invitee.page, `/api/budget/accounts/${own}`)).status,
       ).toBeGreaterThanOrEqual(403);
     } finally {
+      await archiveTrackedEnvelopes(invitee.page);
       await ensureNoHousehold(invitee.page);
       await invitee.context.close();
     }
