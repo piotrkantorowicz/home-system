@@ -2,12 +2,13 @@ namespace Notifications.Infrastructure.Queries;
 
 using Dapper;
 using Notifications.Application.Queries.ListNotifications;
+using Notifications.Application.Templates;
 using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Sql;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
 
-internal sealed class ListNotificationsQueryHandler(DapperUnitOfWork uow)
+internal sealed class ListNotificationsQueryHandler(DapperUnitOfWork uow, INotificationTemplateRegistry templates)
     : IQueryHandler<ListNotificationsQuery, PagedList<NotificationDto>>
 {
     public async Task<PagedList<NotificationDto>> HandleAsync(
@@ -15,7 +16,7 @@ internal sealed class ListNotificationsQueryHandler(DapperUnitOfWork uow)
     {
         var connection = await uow.GetConnectionAsync(ct);
 
-        var items = await connection.QueryAsync<NotificationDto>(new CommandDefinition(
+        var items = await connection.QueryAsync<NotificationListRow>(new CommandDefinition(
             NotificationSql.ListByUserPaged,
             new
             {
@@ -30,6 +31,8 @@ internal sealed class ListNotificationsQueryHandler(DapperUnitOfWork uow)
             new { query.UserId },
             cancellationToken: ct));
 
-        return new PagedList<NotificationDto>(items.ToList(), total, query.Page, query.PageSize);
+        var localizer = new NotificationTextLocalizer(templates);
+        return new PagedList<NotificationDto>(items.Select(row => localizer.Localize(row, query.Locale)).ToList(),
+            total, query.Page, query.PageSize);
     }
 }

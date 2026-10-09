@@ -9,5 +9,6 @@ using Shared.Abstractions.Cqrs;
 /// <param name="UserId">Auth subject of the caller.</param>
 /// <param name="Page">1-based page number.</param>
 /// <param name="PageSize">Items per page.</param>
-public sealed record ListNotificationsQuery(string UserId, int Page = 1, int PageSize = 20)
+/// <param name="Locale">Language used to render inbox text.</param>
+public sealed record ListNotificationsQuery(string UserId, int Page = 1, int PageSize = 20, string Locale = "en")
     : IQuery<PagedList<NotificationDto>>;

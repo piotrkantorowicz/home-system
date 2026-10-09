@@ -1,4 +1,5 @@
 import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { api } from '../client';
 import { notificationsQueryKeys } from '../queryKeys';
@@ -14,12 +15,16 @@ export interface UseNotificationsParams {
   enabled?: boolean;
 }
 
-export function notificationListOptions({ page = 1, pageSize = 20 }: UseNotificationsParams = {}) {
+export function notificationListOptions(
+  { page = 1, pageSize = 20 }: UseNotificationsParams = {},
+  locale = 'en',
+) {
   return queryOptions({
-    queryKey: notificationsQueryKeys.notifications.list({ page, pageSize }),
+    queryKey: notificationsQueryKeys.notifications.list({ page, pageSize, locale }),
     queryFn: async (): Promise<NotificationsPage> => {
       const response = await api.GET('/api/notifications', {
         params: { query: { page, pageSize } },
+        headers: { 'Accept-Language': locale },
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime errors are not reflected in the typed shape; data is undefined when the request fails
@@ -35,8 +40,9 @@ export function notificationListOptions({ page = 1, pageSize = 20 }: UseNotifica
 }
 
 export function useNotifications({ enabled = true, ...params }: UseNotificationsParams = {}) {
+  const { i18n } = useTranslation();
   return useQuery({
-    ...notificationListOptions(params),
+    ...notificationListOptions(params, i18n.language),
     enabled,
     placeholderData: keepPreviousData,
   });

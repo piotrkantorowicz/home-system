@@ -44,6 +44,7 @@ public static class NotificationsEndpoints
 
     private static async Task<Ok<PagedList<NotificationDto>>> ListNotifications(
         ClaimsPrincipal user,
+        HttpContext context,
         IQueryDispatcher dispatcher,
         CancellationToken ct,
         [FromQuery] int page = 1,
@@ -53,7 +54,8 @@ public static class NotificationsEndpoints
             ?? throw new UnauthorizedAccessException("Missing user identifier claim.");
 
         var result = await dispatcher.SendAsync<ListNotificationsQuery, PagedList<NotificationDto>>(
-            new ListNotificationsQuery(userId, page, pageSize), ct);
+            new ListNotificationsQuery(userId, page, pageSize,
+                context.Request.Headers.AcceptLanguage.ToString().StartsWith("pl", StringComparison.OrdinalIgnoreCase) ? "pl" : "en"), ct);
 
         return TypedResults.Ok(result);
     }

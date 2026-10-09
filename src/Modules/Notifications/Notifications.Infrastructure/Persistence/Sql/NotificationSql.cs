@@ -34,6 +34,7 @@ internal static class NotificationSql
                type        AS Type,
                title       AS Title,
                body        AS Body,
+               payload     AS Payload,
                created_at  AS CreatedAt,
                read_at     AS ReadAt
         FROM notifications
