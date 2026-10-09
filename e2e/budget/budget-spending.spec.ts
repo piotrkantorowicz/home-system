@@ -1,6 +1,7 @@
 import { test, expect } from '../diet-planner/fixtures';
 
 import {
+  archiveTrackedEnvelopes,
   createEnvelope,
   createExpense,
   ensureBudget,
@@ -13,6 +14,8 @@ import {
 
 // Each worker owns its own household, so budget state never crosses workers.
 test.describe('Budget spending totals', () => {
+  test.afterEach(async ({ page }) => archiveTrackedEnvelopes(page));
+
   test('correcting and voiding an expense moves the shared total, and a reload keeps it', async ({
     page,
   }) => {

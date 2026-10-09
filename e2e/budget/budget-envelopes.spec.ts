@@ -1,7 +1,11 @@
 import { test, expect } from '../diet-planner/fixtures';
 
+import { archiveTrackedEnvelopes, trackEnvelope } from './utils/seed';
+
 // Each worker owns its own household, so setup/envelope state never crosses workers.
 test.describe('Budget envelopes', () => {
+  test.afterEach(async ({ page }) => archiveTrackedEnvelopes(page));
+
   test('owner sets up Budget, manages envelopes with the keyboard, and the page fits a phone', async ({
     page,
   }) => {
@@ -29,7 +33,11 @@ test.describe('Budget envelopes', () => {
     await expect(newEnvelope).toBeFocused();
     await page.keyboard.press('Enter');
     await page.getByLabel('Name', { exact: true }).fill(name);
+    const createdResponse = page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/api/budget/accounts'),
+    );
     await page.keyboard.press('Enter');
+    trackEnvelope(page, ((await (await createdResponse).json()) as { id: string }).id);
     await expect(page.getByText(name, { exact: true })).toBeVisible();
 
     // This month's count and limit come from the server; a new envelope has none yet.
