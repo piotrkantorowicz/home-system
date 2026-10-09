@@ -50,6 +50,10 @@ internal sealed class NotificationTemplateRegistry : INotificationTemplateRegist
                 new(NotificationType.GoalMilestone, "en",
                     "Goal reached",
                     "{{MilestoneLabel}}"),
+            [(NotificationType.GoalMilestone, "pl")] =
+                new(NotificationType.GoalMilestone, "pl",
+                    "Cel osiągnięty",
+                    "Osiągnięto docelową masę ciała {{TargetWeightKg}} kg."),
         };
 
     public NotificationTemplate Resolve(NotificationType type, string locale)
