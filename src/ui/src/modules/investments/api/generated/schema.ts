@@ -1842,6 +1842,12 @@ export interface components {
             isVoided: boolean;
             shares: components["schemas"]["ExpenseShareDto"][];
         };
+        FxRateDto: {
+            mid: string;
+            /** Format: date */
+            effectiveDate: string;
+            tableNo: string;
+        };
         GoalDto: {
             /** Format: uuid */
             id: string;
@@ -2522,6 +2528,9 @@ export interface components {
             recordedAt: string;
             /** Format: date-time */
             updatedAt: string;
+            amountPln: null | string;
+            rate: null | components["schemas"]["FxRateDto"];
+            rateMissing: boolean;
         };
         SummaryCategoryDto: {
             category: string;
@@ -2719,6 +2728,9 @@ export interface components {
             latestBalance: null | string;
             /** Format: date */
             latestAsOf: null | string;
+            latestBalancePln: null | string;
+            rate: null | components["schemas"]["FxRateDto"];
+            rateMissing: boolean;
         };
         WaterIntakeEntryDto: {
             /** Format: uuid */

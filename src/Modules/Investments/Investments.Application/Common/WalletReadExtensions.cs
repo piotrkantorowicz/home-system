@@ -4,6 +4,7 @@ using System.Globalization;
 using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Aggregates;
+using Investments.Domain.Fx;
 using Investments.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Abstractions.Core.Domain;
@@ -46,12 +47,22 @@ internal static class WalletReadExtensions
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException("Wallet", id);
 
-        return row.ToDto(caller);
+        return row.ToDto(caller, await db.LoadLatestRatesAsync([row.Currency], ct));
     }
 
-    public static WalletDto ToDto(this WalletRow r, InvestmentsCaller caller) => new(
-        r.Id, r.Name, r.Institution.ToString(), r.Kind.ToString(), r.Currency.ToString(), r.Visibility.ToString(),
-        r.OwnerPersonId, caller.NameOf(r.OwnerPersonId) ?? r.OwnerName, r.IsArchived, r.Version, r.CreatedAt,
-        caller.CanChangeVisibility(r.OwnerPersonId),
-        r.LatestBalance?.ToString("F2", CultureInfo.InvariantCulture), r.LatestAsOf);
+    /// <summary>Maps a row; its PLN value uses today's rate from <paramref name="rates"/> (see <see cref="FxRateBookLoader.LoadLatestRatesAsync"/>).</summary>
+    public static WalletDto ToDto(this WalletRow r, InvestmentsCaller caller, FxRateBook rates)
+    {
+        var pln = r.LatestBalance is { } balance ? rates.ToPlnAtLatest(balance, r.Currency) : null;
+
+        return new(
+            r.Id, r.Name, r.Institution.ToString(), r.Kind.ToString(), r.Currency.ToString(), r.Visibility.ToString(),
+            r.OwnerPersonId, caller.NameOf(r.OwnerPersonId) ?? r.OwnerName, r.IsArchived, r.Version, r.CreatedAt,
+            caller.CanChangeVisibility(r.OwnerPersonId),
+            Format(r.LatestBalance), r.LatestAsOf, Format(pln?.Amount), FxRateDto.From(pln?.Rate), pln?.RateMissing ?? false);
+    }
+
+    public static string Format(decimal amount) => amount.ToString("F2", CultureInfo.InvariantCulture);
+
+    public static string? Format(decimal? amount) => amount is null ? null : Format(amount.Value);
 }

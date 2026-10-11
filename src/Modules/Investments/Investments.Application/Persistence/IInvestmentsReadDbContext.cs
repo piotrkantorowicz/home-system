@@ -1,6 +1,7 @@
 namespace Investments.Application.Persistence;
 
 using Investments.Domain.Aggregates;
+using Investments.Domain.Fx;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
@@ -14,4 +15,7 @@ public interface IInvestmentsReadDbContext
 
     /// <summary>Every balance snapshot, in every household.</summary>
     DbSet<BalanceSnapshot> BalanceSnapshots { get; }
+
+    /// <summary>Every stored NBP rate.</summary>
+    DbSet<FxRate> FxRates { get; }
 }
