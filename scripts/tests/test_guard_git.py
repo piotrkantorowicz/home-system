@@ -1,6 +1,7 @@
 """Exercise hook decisions without executing the submitted git commands."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -112,6 +113,53 @@ class GuardGitOnMainTests(unittest.TestCase):
 
     def test_merge_is_not_blocked_by_the_epic_rule(self):
         self.assertEqual(0, self.decision("git merge --ff-only origin/main"))
+
+
+class GuardGitMergeTests(unittest.TestCase):
+    """The merge gate, with `gh pr view` stubbed to print `reviewDecision|headRefName|labels`."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        subprocess.run(["git", "init", "-b", "feat/1-example", str(self.root / "repo")],
+                       check=True, capture_output=True)
+        bin_dir = self.root / "bin"
+        bin_dir.mkdir()
+        gh = bin_dir / "gh"
+        gh.write_text('#!/bin/sh\nprintf \'%s\\n\' "$FAKE_GH_PR"\n')
+        gh.chmod(0o755)
+        self.path = f"{bin_dir}:{os.environ['PATH']}"
+
+    def decision(self, command, pr_view):
+        return subprocess.run(
+            ["bash", str(HOOK)], cwd=self.root / "repo", text=True, capture_output=True,
+            env={**os.environ, "PATH": self.path, "FAKE_GH_PR": pr_view},
+            input=json.dumps({"tool_input": {"command": command}}),
+        )
+
+    def test_unapproved_pr_is_blocked_and_reports_the_real_decision(self):
+        result = self.decision("gh pr merge 7 --squash", "|feat/7-thing|")
+        self.assertEqual(2, result.returncode)
+        self.assertIn("reviewDecision=NONE", result.stderr)
+
+    def test_approved_review_allows_merge(self):
+        self.assertEqual(0, self.decision("gh pr merge 7 --squash", "APPROVED|feat/7-thing|").returncode)
+
+    def test_owner_approved_label_allows_merge(self):
+        for labels in ("owner-approved", "bug,owner-approved,chore"):
+            with self.subTest(labels=labels):
+                result = self.decision("gh pr merge 7 --squash", f"|feat/7-thing|{labels}")
+                self.assertEqual(0, result.returncode)
+
+    def test_similar_label_does_not_allow_merge(self):
+        result = self.decision("gh pr merge 7 --squash", "|feat/7-thing|not-owner-approved")
+        self.assertEqual(2, result.returncode)
+
+    def test_strategy_still_enforced_with_the_label(self):
+        self.assertEqual(2, self.decision("gh pr merge 7 --rebase", "|feat/7-thing|owner-approved").returncode)
+        self.assertEqual(2, self.decision("gh pr merge 8 --squash", "|epic/8-lane|owner-approved").returncode)
+        self.assertEqual(0, self.decision("gh pr merge 8 --rebase", "|epic/8-lane|owner-approved").returncode)
 
 
 if __name__ == "__main__":

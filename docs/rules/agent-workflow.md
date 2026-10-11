@@ -44,7 +44,7 @@ The script reads a classic PAT (`repo` + `project`) from `BOARD_TOKEN` or
 | Bot review | `review-pr <n>` | Inline comments + one summary comment on the PR. Never approves. | **Run in the other tool** (see below) |
 | Fix-up | `address-review <n>` | Fix commits, per-thread replies, resolved threads it changed | — |
 | Babysit | `/loop 10m babysit-pr <n>` | Re-runs CI-fix / address-review until green + approved | — |
-| Merge | owner | Squash merge, branch deleted | **Human approval required** — `guard-git.sh` blocks `gh pr merge` otherwise |
+| Merge | owner | Squash merge, branch deleted | **Owner's OK required** — an approving review, or the `owner-approved` label on PRs the owner can't approve (agents push as the owner). Only the owner adds that label; agents never do. `guard-git.sh` blocks `gh pr merge` otherwise |
 | Release | `release.yml` | Tag `vX.Y.Z` + GitHub Release from the commits since the last tag | automatic on every push to `main` |
 
 ## Epic lane (optional)
@@ -114,7 +114,7 @@ Claude and Codex can work different issues at the same time without sharing an i
 
 | Hook | Blocks |
 |---|---|
-| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED`, or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`) |
+| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` or the `owner-approved` label, or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`) |
 
 `guard-git.sh` checks the branch of the checkout the command targets: `git -C <dir>` wins, then a
 leading `cd <dir>` (literal path — shell variables defined inside the same command are not

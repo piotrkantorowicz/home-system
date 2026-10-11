@@ -62,14 +62,19 @@ if grep -Eq 'git[[:space:]]+(reset[[:space:]]+--hard|clean[[:space:]]+-[a-zA-Z]*
   block "destructive git command. Ask the user to run it themselves (prefix with '!' in the prompt)."
 fi
 
-# 4. Merge only after a human approval on the PR, and with the strategy the history
+# 4. Merge only after the owner's OK on the PR, and with the strategy the history
 #    needs: epic → main is rebase-merged (child commits stay visible to semantic-release),
 #    everything else is squash-merged (one Conventional Commit per PR).
+#    The OK is an approving review or, for PRs the owner can't approve (agents push as the
+#    owner, so that's all of them), the `owner-approved` label — added by the owner, never an agent.
 if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
   pr=$(grep -Eo 'merge[[:space:]]+[0-9]+' <<< "$cmd" | grep -Eo '[0-9]+' || true)
-  read -r decision head < <(cd "$target" && gh pr view ${pr:-} --json reviewDecision,headRefName \
-    -q '[.reviewDecision, .headRefName] | join(" ")' 2>/dev/null); decision=${decision:-NONE}; head=${head:-}
-  [[ "$decision" == "APPROVED" ]] || block "PR ${pr:-for this branch} is not approved (reviewDecision=$decision). Merge happens after the owner's review."
+  # '|' separator: whitespace would collapse an empty reviewDecision and shift the fields.
+  IFS='|' read -r decision head labels < <(cd "$target" && gh pr view ${pr:-} --json reviewDecision,headRefName,labels \
+    -q '[.reviewDecision, .headRefName, ([.labels[].name] | join(","))] | join("|")' 2>/dev/null)
+  decision=${decision:-NONE}; head=${head:-}
+  [[ "$decision" == "APPROVED" || ",${labels:-}," == *",owner-approved,"* ]] \
+    || block "PR ${pr:-for this branch} is not approved (reviewDecision=$decision, no owner-approved label). Merge happens after the owner's OK."
   if [[ "$head" == epic/* ]]; then
     grep -Eq -- '--rebase' <<< "$cmd" || block "PR ${pr} is an epic branch — merge it with --rebase so the child commits stay on main."
   else
