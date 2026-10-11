@@ -64,7 +64,8 @@ Preconditions — stop at the first that fails:
 ## After the owner merges
 
 `gh pr merge <pr> --rebase --delete-branch` — owner-run, or agent-run only after
-`reviewDecision == APPROVED` (the guard hook enforces `--rebase` for `epic/*` heads).
+`reviewDecision == APPROVED` or the owner adds the `owner-approved` label — never add it
+yourself (the guard hook enforces `--rebase` for `epic/*` heads).
 `release.yml` runs on the resulting push to `main` and tags the release. Remove the
 worktree: `git worktree remove .worktrees/epic-<n>`.
 

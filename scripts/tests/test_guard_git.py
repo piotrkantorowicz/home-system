@@ -1,6 +1,7 @@
 """Exercise hook decisions without executing the submitted git commands."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -112,6 +113,76 @@ class GuardGitOnMainTests(unittest.TestCase):
 
     def test_merge_is_not_blocked_by_the_epic_rule(self):
         self.assertEqual(0, self.decision("git merge --ff-only origin/main"))
+
+
+class GuardGitMergeTests(unittest.TestCase):
+    """The merge gate. A stub `gh` runs the hook's real `-q` query (with jq) over a fake PR."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        subprocess.run(["git", "init", "-b", "feat/1-example", str(self.root / "repo")],
+                       check=True, capture_output=True)
+        bin_dir = self.root / "bin"
+        bin_dir.mkdir()
+        gh = bin_dir / "gh"
+        gh.write_text(
+            '#!/bin/sh\n'
+            'while [ $# -gt 0 ]; do [ "$1" = "-q" ] && { shift; q="$1"; }; shift; done\n'
+            'printf \'%s\' "$FAKE_GH_PR" | jq -r "$q"\n')
+        gh.chmod(0o755)
+        self.path = f"{bin_dir}:{os.environ['PATH']}"
+
+    def decision(self, command, decision="", head="feat/7-thing", labels=()):
+        pr = {"reviewDecision": decision, "headRefName": head, "labels": [{"name": n} for n in labels]}
+        return subprocess.run(
+            ["bash", str(HOOK)], cwd=self.root / "repo", text=True, capture_output=True,
+            env={**os.environ, "PATH": self.path, "FAKE_GH_PR": json.dumps(pr)},
+            input=json.dumps({"tool_input": {"command": command}}),
+        )
+
+    def test_unapproved_pr_is_blocked_and_reports_the_real_decision(self):
+        result = self.decision("gh pr merge 7 --squash")
+        self.assertEqual(2, result.returncode)
+        self.assertIn("reviewDecision=NONE", result.stderr)
+
+    def test_approved_review_allows_merge(self):
+        self.assertEqual(0, self.decision("gh pr merge 7 --squash", decision="APPROVED").returncode)
+
+    def test_owner_approved_label_allows_merge(self):
+        for labels in (["owner-approved"], ["bug", "owner-approved", "chore"]):
+            with self.subTest(labels=labels):
+                self.assertEqual(0, self.decision("gh pr merge 7 --squash", labels=labels).returncode)
+
+    def test_look_alike_labels_and_branch_names_do_not_allow_merge(self):
+        for labels, head in ((["not-owner-approved"], "feat/7-thing"),
+                             (["x,owner-approved"], "feat/7-thing"),
+                             ([], "feat/7|yes|APPROVED"),
+                             ([], "yes|APPROVED")):
+            with self.subTest(labels=labels, head=head):
+                result = self.decision("gh pr merge 7 --squash", head=head, labels=labels)
+                self.assertEqual(2, result.returncode)
+
+    def test_strategy_still_enforced_with_the_label(self):
+        ok = ["owner-approved"]
+        self.assertEqual(2, self.decision("gh pr merge 7 --rebase", labels=ok).returncode)
+        self.assertEqual(2, self.decision("gh pr merge 8 --squash", head="epic/8-lane", labels=ok).returncode)
+        self.assertEqual(0, self.decision("gh pr merge 8 --rebase", head="epic/8-lane", labels=ok).returncode)
+
+    def test_agents_cannot_add_the_owner_approved_label(self):
+        for command in ("gh pr edit 7 --add-label owner-approved",
+                        "gh pr edit 7 --add-label bug,owner-approved",
+                        "gh pr create --label 'owner-approved' --title x",
+                        "gh pr create -l owner-approved --title x",
+                        "gh pr edit 7 --add-label 'bug, owner-approved'",
+                        "gh issue edit 7 --add-label=owner-approved",
+                        "gh api repos/o/r/issues/7/labels -f 'labels[]=owner-approved'"):
+            with self.subTest(command=command):
+                self.assertEqual(2, self.decision(command).returncode)
+
+    def test_mentioning_the_label_elsewhere_is_allowed(self):
+        self.assertEqual(0, self.decision("gh pr create --label bug --body 'owner-approved explained'").returncode)
 
 
 if __name__ == "__main__":

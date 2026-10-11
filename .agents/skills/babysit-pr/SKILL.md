@@ -33,7 +33,8 @@ cheapest thing that moves the PR forward, then stop.
    Fix, `/verify`, commit (`fix(...)`/`test(...)`), push. If the failure is flaky /
    infrastructure (Docker pull, npm registry), re-run once: `gh run rerun <run-id> --failed`.
 4. **New unresolved review threads** since the last tick → run `/address-review <n>`.
-5. **Green + approved** (`reviewDecision == APPROVED`, all checks pass, no unresolved
+5. **Green + approved** (`reviewDecision == APPROVED` or the owner-added `owner-approved`
+   label — never add it yourself — all checks pass, no unresolved
    threads): report *"ready to merge"* and end the loop. Do **not** merge — the owner does,
    or explicitly asks for `gh pr merge --squash --delete-branch` (`--rebase` when
    `headRefName` is `epic/*` — the guard hook enforces the strategy).
