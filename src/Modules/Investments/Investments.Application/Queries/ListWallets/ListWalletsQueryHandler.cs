@@ -27,7 +27,7 @@ internal sealed class ListWalletsQueryHandler(InvestmentsAccessService access, I
         var rows = await visible
             .OrderBy(w => w.Kind).ThenBy(w => w.Name).ThenBy(w => w.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(WalletReadExtensions.ToRow)
+            .ToRows(db.BalanceSnapshots)
             .ToListAsync(ct);
 
         return new PagedList<WalletDto>([.. rows.Select(r => r.ToDto(caller))], total, page, pageSize);

@@ -14,4 +14,6 @@ internal sealed record WalletRow(
     string OwnerName,
     bool IsArchived,
     uint Version,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    decimal? LatestBalance,
+    DateOnly? LatestAsOf);

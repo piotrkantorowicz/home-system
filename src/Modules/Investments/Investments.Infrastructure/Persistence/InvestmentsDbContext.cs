@@ -10,6 +10,7 @@ internal sealed class InvestmentsDbContext : DbContext, IInvestmentsUnitOfWork, 
     public InvestmentsDbContext(DbContextOptions<InvestmentsDbContext> options) : base(options) { }
 
     public DbSet<Wallet> Wallets => Set<Wallet>();
+    public DbSet<BalanceSnapshot> BalanceSnapshots => Set<BalanceSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

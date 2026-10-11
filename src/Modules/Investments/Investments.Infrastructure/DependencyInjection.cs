@@ -43,6 +43,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IInvestmentsReadDbContext>(sp => sp.GetRequiredService<InvestmentsDbContext>());
 
         services.AddScoped<IWalletRepository, WalletRepository>();
+        services.AddScoped<IBalanceSnapshotRepository, BalanceSnapshotRepository>();
         services.AddScoped<InvestmentsAccessService>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);

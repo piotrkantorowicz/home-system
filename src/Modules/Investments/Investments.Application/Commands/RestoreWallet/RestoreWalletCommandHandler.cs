@@ -1,6 +1,7 @@
 namespace Investments.Application.Commands.RestoreWallet;
 
 using Investments.Application.Common;
+using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
@@ -8,7 +9,8 @@ using Shared.Abstractions.Cqrs;
 internal sealed class RestoreWalletCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
-    IInvestmentsUnitOfWork unitOfWork) : ICommandHandler<RestoreWalletCommand, WalletDto>
+    IInvestmentsUnitOfWork unitOfWork,
+    IInvestmentsReadDbContext db) : ICommandHandler<RestoreWalletCommand, WalletDto>
 {
     public async Task<WalletDto> HandleAsync(RestoreWalletCommand command, CancellationToken ct = default)
     {
@@ -18,6 +20,6 @@ internal sealed class RestoreWalletCommandHandler(
         wallet.Restore();
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 
-        return wallet.ToDto(caller);
+        return await db.ReadWalletAsync(caller, wallet.Id.Value, ct);
     }
 }
