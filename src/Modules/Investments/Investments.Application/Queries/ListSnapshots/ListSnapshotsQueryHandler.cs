@@ -1,6 +1,5 @@
 namespace Investments.Application.Queries.ListSnapshots;
 
-using System.Globalization;
 using Investments.Application.Common;
 using Investments.Application.Persistence;
 using Investments.Domain.ValueObjects;
@@ -42,8 +41,8 @@ internal sealed class ListSnapshotsQueryHandler(InvestmentsAccessService access,
             var pln = rates.ToPlnAtLatest(r.Amount, currency);
             return new SnapshotDto(
                 r.AsOf,
-                Format(r.Amount),
-                i + 1 < rows.Count ? Format(rows[i + 1].Amount) : null,
+                WalletReadExtensions.Format(r.Amount),
+                i + 1 < rows.Count ? WalletReadExtensions.Format(rows[i + 1].Amount) : null,
                 r.Note,
                 caller.NameOf(r.RecordedByPersonId) ?? r.RecordedByName,
                 r.RecordedAt,
@@ -55,6 +54,4 @@ internal sealed class ListSnapshotsQueryHandler(InvestmentsAccessService access,
 
         return new PagedList<SnapshotDto>(items, total, page, pageSize);
     }
-
-    private static string Format(decimal amount) => amount.ToString("F2", CultureInfo.InvariantCulture);
 }

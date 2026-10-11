@@ -62,5 +62,7 @@ internal static class WalletReadExtensions
             Format(r.LatestBalance), r.LatestAsOf, Format(pln?.Amount), FxRateDto.From(pln?.Rate), pln?.RateMissing ?? false);
     }
 
-    public static string? Format(decimal? amount) => amount?.ToString("F2", CultureInfo.InvariantCulture);
+    public static string Format(decimal amount) => amount.ToString("F2", CultureInfo.InvariantCulture);
+
+    public static string? Format(decimal? amount) => amount is null ? null : Format(amount.Value);
 }
