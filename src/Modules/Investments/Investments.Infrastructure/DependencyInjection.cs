@@ -1,7 +1,11 @@
 namespace Investments.Infrastructure;
 
 using Investments.Application;
+using Investments.Application.Common;
+using Investments.Application.Persistence;
+using Investments.Domain.Abstractions;
 using Investments.Infrastructure.Persistence;
+using Investments.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +20,7 @@ using Shared.Infrastructure.Persistence.Extensions;
 /// </summary>
 public static partial class InfrastructureDependencyInjection
 {
-    /// <summary>Registers the module's <c>DbContext</c> and CQRS handlers.</summary>
+    /// <summary>Registers the module's <c>DbContext</c>, repositories, module-scoped unit of work and CQRS handlers.</summary>
     /// <param name="services">The host service collection.</param>
     /// <param name="configuration">Provides the <c>Investments</c> connection string.</param>
     /// <returns><paramref name="services"/> for chaining.</returns>
@@ -32,6 +36,15 @@ public static partial class InfrastructureDependencyInjection
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
 
         // No outbox: Investments publishes no integration events (design §6).
+
+        // Module-scoped unit of work + read context — never the global IUnitOfWork
+        // (owned by the first Style-1 module). See docs/rules/backend-module-structure.md.
+        services.AddScoped<IInvestmentsUnitOfWork>(sp => sp.GetRequiredService<InvestmentsDbContext>());
+        services.AddScoped<IInvestmentsReadDbContext>(sp => sp.GetRequiredService<InvestmentsDbContext>());
+
+        services.AddScoped<IWalletRepository, WalletRepository>();
+        services.AddScoped<InvestmentsAccessService>();
+
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
         return services;
