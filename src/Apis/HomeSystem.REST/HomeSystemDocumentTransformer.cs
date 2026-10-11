@@ -6,7 +6,7 @@ using Microsoft.OpenApi;
 
 /// <summary>
 /// The single document-level OpenAPI transformer for the host: document info and tags, the Authentik bearer
-/// security scheme, and the shared <c>ProblemDetails</c> responses (400/401/403/404/422) produced by
+/// security scheme, and the shared <c>ProblemDetails</c> responses (400/401/403/404/422/503) produced by
 /// <see cref="Shared.Infrastructure.Web.ApplicationExceptionHandler"/> and the auth middleware. Those responses
 /// are added to every operation that does not already declare the status code, so an endpoint's own typed
 /// result or explicit response metadata always wins.
@@ -25,6 +25,7 @@ public sealed class HomeSystemDocumentTransformer : IOpenApiDocumentTransformer
             ["403"] = "Forbidden",
             ["404"] = "Not found",
             ["422"] = "Business rule violation",
+            ["503"] = "Service unavailable",
         };
 
     /// <inheritdoc />
