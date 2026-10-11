@@ -7,6 +7,7 @@ import pl from './locales/pl.json';
 import type { AppModule } from '@shared/lib/module-registry';
 
 const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
+const WalletDetailPage = lazy(() => import('./pages/WalletDetailPage'));
 
 export const investmentsModule: AppModule = {
   name: 'investments',
@@ -28,5 +29,8 @@ export const investmentsModule: AppModule = {
       mobileTab: true,
     },
   ],
-  routes: [{ index: true, Component: InvestmentsPage }],
+  routes: [
+    { index: true, Component: InvestmentsPage },
+    { path: 'wallets/:id', Component: WalletDetailPage },
+  ],
 };

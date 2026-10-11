@@ -2,7 +2,7 @@ import { useHousehold } from '@modules/household';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from 'react-oidc-context';
 
-import { api, checkResponse } from './client';
+import { api, checkResponse, errorStatus } from './client';
 import { investmentsQueryKeys } from './queryKeys';
 
 import type { NewWallet, WalletVisibility } from '../types';
@@ -28,6 +28,93 @@ export function useWalletsQuery() {
   return useQuery({
     ...walletsOptions(auth.user?.profile.sub, household?.id),
     enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+export function walletOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  id: string,
+) {
+  return queryOptions({
+    queryKey: investmentsQueryKeys.wallet(subject, householdId, id),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/investments/wallets/{id}', {
+        params: { path: { id } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing wallet response');
+      return result.data;
+    },
+    // A missing or invisible wallet is a 404 that will not go away on retry.
+    retry: (count, error) => errorStatus(error) !== 404 && count < 2,
+  });
+}
+
+export function useWalletQuery(id: string) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...walletOptions(auth.user?.profile.sub, household?.id, id),
+    enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+export function snapshotsOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  id: string,
+  page: number,
+  pageSize: number,
+) {
+  return queryOptions({
+    queryKey: investmentsQueryKeys.snapshots(subject, householdId, id, page, pageSize),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/investments/wallets/{id}/snapshots', {
+        params: { path: { id }, query: { page, pageSize } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing snapshots response');
+      return result.data;
+    },
+  });
+}
+
+export function useSnapshotsQuery(id: string, page: number, pageSize: number) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...snapshotsOptions(auth.user?.profile.sub, household?.id, id, page, pageSize),
+    enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+export type SnapshotAction =
+  | { kind: 'record'; walletId: string; asOf: string; amount: string; note: string | null }
+  | { kind: 'delete'; walletId: string; asOf: string };
+
+async function mutateSnapshot(action: SnapshotAction) {
+  const params = { path: { id: action.walletId, asOf: action.asOf } };
+  const result =
+    action.kind === 'record'
+      ? await api.PUT('/api/investments/wallets/{id}/snapshots/{asOf}', {
+          params,
+          body: { amount: action.amount, note: action.note },
+        })
+      : await api.DELETE('/api/investments/wallets/{id}/snapshots/{asOf}', { params });
+  checkResponse(result);
+}
+
+export function useSnapshotMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: mutateSnapshot,
+    // The wallet's latest balance and the history both change.
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: investmentsQueryKeys.all() });
+    },
   });
 }
 
