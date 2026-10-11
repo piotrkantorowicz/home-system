@@ -1,5 +1,6 @@
 namespace Investments.IntegrationTests.Infrastructure;
 
+using global::Investments.Application.Fx;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -18,16 +19,22 @@ public sealed class InvestmentsApiFactory(InvestmentsDatabaseFixture databases) 
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Investments", databases.ConnectionString);
         builder.UseSetting("ConnectionStrings:Household", databases.HouseholdConnectionString);
+        builder.UseSetting("Investments:NbpFx:Enabled", "false"); // tests run the worker on demand
 
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(TestClock.Create());
+            services.RemoveAll<INbpClient>();
+            services.AddSingleton<INbpClient>(Nbp);
 
             services.AddAuthentication(TestAuthHandler.SchemeName)
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
         });
     }
+
+    /// <summary>The NBP stand-in every request in this host uses.</summary>
+    public FakeNbpClient Nbp { get; } = new();
 
     /// <summary>Creates a client whose every request authenticates as the given subject via the test headers.</summary>
     /// <param name="sub">The Authentik subject to impersonate; unique per test to keep data isolated.</param>
