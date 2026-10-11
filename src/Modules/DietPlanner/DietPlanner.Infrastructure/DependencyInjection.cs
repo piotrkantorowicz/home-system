@@ -1,18 +1,22 @@
 namespace DietPlanner.Infrastructure;
 
+using System.Net;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
+using DietPlanner.Application.Storage;
 using DietPlanner.Application.Workers;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.Services;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.Infrastructure.Persistence.Repositories;
+using DietPlanner.Infrastructure.Storage;
 using DietPlanner.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Cqrs.Extensions;
@@ -84,8 +88,36 @@ public static partial class InfrastructureDependencyInjection
             .ValidateOnStart();
         services.AddHostedService<DietReminderTickService>();
 
+        services.AddOptions<ImageStorageOptions>()
+            .BindConfiguration(ImageStorageOptions.SectionName)
+            .Validate(o => !o.Enabled || !string.IsNullOrWhiteSpace(o.Region), "Region must be nonempty when image storage is enabled.")
+            .Validate(o => !o.Enabled || IsValidImageStorageBucket(o.Bucket), "Bucket must be a DNS-style name of 3-63 lowercase letters, digits, dots or hyphens, without empty labels or an IP address.")
+            .Validate<IHostEnvironment>((o, environment) => !o.Enabled || IsValidImageStorageEndpoint(o.Endpoint, environment),
+                "Endpoint must be an absolute HTTP(S) origin without credentials, query, fragment or a non-root path; HTTPS is required outside Development/Testing.")
+            .ValidateOnStart();
+
+        if (!configuration.GetValue<bool>($"{ImageStorageOptions.SectionName}:Enabled"))
+        {
+            services.AddSingleton<IImageObjectStorage, UnavailableImageObjectStorage>();
+        }
+
         return services;
     }
+
+    private static bool IsValidImageStorageBucket(string bucket)
+        => bucket.Length is >= 3 and <= 63
+            && !(bucket.Contains('.') && IPAddress.TryParse(bucket, out _))
+            && bucket.Split('.').All(label => label.Length > 0
+                && char.IsAsciiLetterOrDigit(label[0]) && char.IsAsciiLetterOrDigit(label[^1])
+                && label.All(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' or '-'));
+
+    private static bool IsValidImageStorageEndpoint(string? endpoint, IHostEnvironment environment)
+        => string.IsNullOrEmpty(endpoint)
+            || (Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri)
+                && uri.Scheme is "http" or "https"
+                && uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0
+                && uri.AbsolutePath == "/"
+                && (uri.Scheme == "https" || environment.IsDevelopment() || environment.IsEnvironment("Testing")));
 
     /// <summary>
     /// Applies pending EF Core migrations to the Diet Planner database. Called by the host at startup in
