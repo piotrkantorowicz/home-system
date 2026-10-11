@@ -2,6 +2,7 @@ import { adminModule } from '@modules/admin';
 import { budgetModule } from '@modules/budget';
 import { dietPlannerModule } from '@modules/diet-planner';
 import { householdModule } from '@modules/household';
+import { investmentsModule } from '@modules/investments';
 import { notificationsModule } from '@modules/notifications';
 import { queryClient } from '@shared/api/queryClient';
 import { AuthProvider } from '@shared/auth/AuthProvider';
@@ -22,6 +23,7 @@ import '../index.css';
 registerModule(householdModule);
 registerModule(dietPlannerModule);
 registerModule(budgetModule);
+registerModule(investmentsModule);
 registerModule(notificationsModule);
 registerModule(adminModule);
 

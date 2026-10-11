@@ -16,6 +16,7 @@
     "generate:api:notifications": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/notifications/api/generated/schema.ts",
     "generate:api:household": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/household/api/generated/schema.ts",
     "generate:api:budget": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/budget/api/generated/schema.ts",
+    "generate:api:investments": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/investments/api/generated/schema.ts",
     "generate:api:admin": "openapi-typescript http://localhost:5050/openapi/v1.json -o src/modules/admin/api/generated/schema.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
