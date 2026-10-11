@@ -5,6 +5,8 @@ using DietPlanner.Infrastructure;
 using HomeSystem.REST;
 using Household.Api;
 using Household.Infrastructure;
+using Investments.Api;
+using Investments.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +29,7 @@ builder.Services.AddDietPlannerModule(builder.Configuration);
 builder.Services.AddNotificationsModule(builder.Configuration, builder.Environment);
 builder.Services.AddHouseholdModule(builder.Configuration);
 builder.Services.AddBudgetModule(builder.Configuration);
+builder.Services.AddInvestmentsModule(builder.Configuration);
 builder.Services.AddOperationsModule();
 
 // CQRS dispatcher chain — registered once, shared by every module's handlers.
@@ -169,6 +172,7 @@ app.MapNotificationsEndpoints();
 app.MapNotificationChannelPreferencesEndpoints();
 app.MapHouseholdEndpoints();
 app.MapBudgetEndpoints();
+app.MapInvestmentsEndpoints();
 app.MapNotificationDeliveriesAdminEndpoints();
 app.MapOperationsEndpoints();
 
@@ -181,6 +185,7 @@ if (app.Environment.IsDevelopment())
     app.Services.MigrateNotificationsDatabase();
     await app.Services.MigrateHouseholdDatabaseAsync(app.Logger);
     await app.Services.MigrateBudgetDatabaseAsync(app.Logger);
+    await app.Services.MigrateInvestmentsDatabaseAsync(app.Logger);
 }
 
 await app.RunAsync();

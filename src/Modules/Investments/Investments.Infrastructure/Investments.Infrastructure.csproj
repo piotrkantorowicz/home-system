@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Pinned to patched 10.x to override transitive 9.0.0 flagged by NU1903
+         (GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf) -->
+    <PackageReference Include="System.Security.Cryptography.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Investments.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Investments.Domain\Investments.Domain.csproj" />
+    <ProjectReference Include="..\Investments.Application\Investments.Application.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Persistence\Shared.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

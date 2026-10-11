@@ -42,6 +42,12 @@
     <Project Path="src/Modules/Budget/Budget.Infrastructure/Budget.Infrastructure.csproj" />
     <Project Path="src/Modules/Budget/Budget.Api/Budget.Api.csproj" />
   </Folder>
+  <Folder Name="/Modules/Investments/">
+    <Project Path="src/Modules/Investments/Investments.Domain/Investments.Domain.csproj" />
+    <Project Path="src/Modules/Investments/Investments.Application/Investments.Application.csproj" />
+    <Project Path="src/Modules/Investments/Investments.Infrastructure/Investments.Infrastructure.csproj" />
+    <Project Path="src/Modules/Investments/Investments.Api/Investments.Api.csproj" />
+  </Folder>
   <Folder Name="/Host/">
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
   </Folder>
@@ -54,6 +60,7 @@
     <Project Path="src/Modules/Household/Household.UnitTests/Household.UnitTests.csproj" />
     <Project Path="src/Modules/Budget/Budget.IntegrationTests/Budget.IntegrationTests.csproj" />
     <Project Path="src/Modules/Budget/Budget.UnitTests/Budget.UnitTests.csproj" />
+    <Project Path="src/Modules/Investments/Investments.IntegrationTests/Investments.IntegrationTests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
     <Project Path="src/Shared/Shared.Web.IntegrationTests/Shared.Web.IntegrationTests.csproj" />
