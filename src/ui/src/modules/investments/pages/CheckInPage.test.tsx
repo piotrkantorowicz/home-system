@@ -158,6 +158,7 @@ describe('CheckInPage', () => {
           {
             title: 'Business rule violation',
             detail: 'Nothing was saved. Fix these balances: w1: archived',
+            errors: { w1: ['archived'] },
           },
           { status: 422 },
         ),
@@ -169,7 +170,9 @@ describe('CheckInPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save 1 balance' }));
 
     expect(
-      await screen.findByText(/Nothing was saved. Fix these balances: w1/),
+      await screen.findByText('Nothing was saved. Fix the balances marked below.'),
     ).toBeInTheDocument();
+    expect(screen.getByText('archived')).toBeInTheDocument();
+    expect(screen.getByLabelText('XTB IKE')).toHaveAttribute('aria-invalid', 'true');
   });
 });

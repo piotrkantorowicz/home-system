@@ -111,6 +111,7 @@
   "check_in_title": "Miesięczne podsumowanie",
   "check_in_subtitle": "Zapisz salda z tego miesiąca za jednym razem. Jedna data dla wszystkich portfeli.",
   "check_in_no_wallets": "Najpierw dodaj portfel.",
+  "check_in_rejected": "Nic nie zapisano. Popraw salda oznaczone poniżej.",
   "check_in_skip_hint": "Zostaw portfel pusty, aby go pominąć.",
   "last_balance": "Ostatnio: {{amount}} z {{date}}",
   "amount_invalid_short": "Nieprawidłowa kwota",

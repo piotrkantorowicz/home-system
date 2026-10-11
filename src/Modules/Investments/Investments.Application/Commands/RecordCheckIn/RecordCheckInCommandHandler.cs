@@ -33,19 +33,19 @@ internal sealed partial class RecordCheckInCommandHandler(
             .ToDictionary(s => s.WalletId);
 
         // Validate every entry before writing any; staged changes are discarded on failure.
-        List<string> failures = [];
+        Dictionary<string, string[]> failures = [];
         var created = 0;
         foreach (var entry in command.Entries)
         {
             var id = WalletId.From(entry.WalletId);
             if (!visible.TryGetValue(id, out var wallet))
             {
-                failures.Add($"{entry.WalletId}: wallet not found");
+                failures[entry.WalletId.ToString()] = ["wallet not found"];
                 continue;
             }
             if (!Money.TryParse(entry.Amount, out var amount))
             {
-                failures.Add($"{entry.WalletId}: amount must be a decimal such as 12450.10, not negative, at most two decimals");
+                failures[entry.WalletId.ToString()] = ["amount must be a decimal such as 12450.10, not negative, at most two decimals"];
                 continue;
             }
 
@@ -65,12 +65,13 @@ internal sealed partial class RecordCheckInCommandHandler(
             }
             catch (InvestmentsDomainException ex)
             {
-                failures.Add($"{entry.WalletId}: {ex.Message}");
+                failures[entry.WalletId.ToString()] = [ex.Message];
             }
         }
 
         if (failures.Count > 0)
-            throw new InvestmentsDomainException($"Nothing was saved. Fix these balances: {string.Join("; ", failures)}");
+            throw new InvestmentsDomainException(
+                $"Nothing was saved. Fix these balances: {string.Join("; ", failures.Select(f => $"{f.Key}: {f.Value[0]}"))}", failures);
 
         await unitOfWork.CommitOrThrowConflictAsync(ct);
         await BackfillRatesAsync(visible.Values.Select(w => w.Currency), today, ct);

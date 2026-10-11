@@ -109,6 +109,7 @@
   "check_in_title": "Monthly check-in",
   "check_in_subtitle": "Record this month's balances in one go. One date for every wallet.",
   "check_in_no_wallets": "Add a wallet first.",
+  "check_in_rejected": "Nothing was saved. Fix the balances marked below.",
   "check_in_skip_hint": "Leave a wallet empty to skip it.",
   "last_balance": "Last: {{amount}} on {{date}}",
   "amount_invalid_short": "Not a valid amount",

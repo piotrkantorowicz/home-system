@@ -220,13 +220,14 @@ export interface CheckInInput {
   entries: { walletId: string; amount: string }[];
 }
 
-/** The server's explanation of a rejected check-in (it names the failing wallets), if any. */
-export function checkInErrorDetail(error: unknown): string | null {
+/** Why the server rejected a check-in, per wallet id (from the 422 `errors`), if it said. */
+export function checkInErrors(error: unknown): Record<string, string[]> | null {
   return typeof error === 'object' &&
     error !== null &&
-    'detail' in error &&
-    typeof error.detail === 'string'
-    ? error.detail
+    'errors' in error &&
+    typeof error.errors === 'object' &&
+    error.errors !== null
+    ? (error.errors as Record<string, string[]>)
     : null;
 }
 
@@ -238,10 +239,10 @@ export function useCheckInMutation() {
         body: { asOf: input.asOf, entries: input.entries.map((e) => ({ ...e, note: null })) },
       });
       if (!result.response.ok) {
-        const problem = result.error as { detail?: string | null } | undefined;
+        const problem = result.error as { errors?: Record<string, string[]> } | undefined;
         throw Object.assign(new Error(`Check-in failed (${String(result.response.status)})`), {
           status: result.response.status,
-          detail: problem?.detail ?? null,
+          errors: problem?.errors ?? null,
         });
       }
       return result.data;

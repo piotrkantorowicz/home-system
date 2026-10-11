@@ -25,7 +25,7 @@ public sealed class CheckInTests : IClassFixture<InvestmentsDatabaseFixture>, ID
 
     private sealed record Result(DateOnly AsOf, int Saved, int Created);
 
-    private sealed record Problem(string? Detail);
+    private sealed record Problem(string? Detail, Dictionary<string, string[]>? Errors);
 
     private sealed record HistoryPage(int TotalCount, List<HistoryRow> Items);
 
@@ -67,9 +67,10 @@ public sealed class CheckInTests : IClassFixture<InvestmentsDatabaseFixture>, ID
             new { walletId = good.Id, amount = "100" }, new { walletId = bad.Id, amount = "1.234" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
-        var detail = (await response.Content.ReadFromJsonAsync<Problem>(Ct))!.Detail!;
-        detail.ShouldContain(bad.Id.ToString());
-        detail.ShouldNotContain(good.Id.ToString());
+        var problem = (await response.Content.ReadFromJsonAsync<Problem>(Ct))!;
+        problem.Detail!.ShouldContain(bad.Id.ToString());
+        problem.Detail!.ShouldNotContain(good.Id.ToString());
+        problem.Errors!.Keys.ShouldBe([bad.Id.ToString()]);
         (await HistoryAsync(h.Owner, good.Id)).TotalCount.ShouldBe(0);
     }
 
@@ -86,7 +87,9 @@ public sealed class CheckInTests : IClassFixture<InvestmentsDatabaseFixture>, ID
             new { walletId = mine.Id, amount = "10" }, new { walletId = hidden.Id, amount = "10" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
-        var detail = (await response.Content.ReadFromJsonAsync<Problem>(Ct))!.Detail!;
+        var problem = (await response.Content.ReadFromJsonAsync<Problem>(Ct))!;
+        problem.Errors![hidden.Id.ToString()].ShouldBe(["wallet not found"]);
+        var detail = problem.Detail!;
         detail.ShouldContain($"{hidden.Id}: wallet not found");
         detail.ShouldNotContain("Adult secret");
         detail.ShouldNotContain("IKZE");

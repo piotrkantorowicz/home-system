@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
-import { checkInErrorDetail, useCheckInMutation, useWalletsQuery } from '../api/queries';
+import { checkInErrors, useCheckInMutation, useWalletsQuery } from '../api/queries';
 import { formatDate, todayInWarsaw } from '../lib/dates';
 import { change, normalizeAmount } from '../lib/money';
 
@@ -52,7 +52,7 @@ export default function CheckInPage() {
     );
   };
 
-  const rejection = errorStatus(mutation.error) === 422 ? checkInErrorDetail(mutation.error) : null;
+  const rejected = errorStatus(mutation.error) === 422 ? checkInErrors(mutation.error) : null;
 
   return (
     <PageContainer width="narrow">
@@ -94,6 +94,7 @@ export default function CheckInPage() {
               wallet={wallet}
               value={text}
               invalid={invalid}
+              serverError={rejected?.[wallet.id]?.[0]}
               delta={
                 normalized !== null && wallet.latestBalance !== null
                   ? change(normalized, wallet.latestBalance)
@@ -118,7 +119,9 @@ export default function CheckInPage() {
         </ul>
         <p className="text-muted-foreground text-meta">{t('check_in_skip_hint')}</p>
         {mutation.isError && (
-          <Banner variant="error">{rejection ?? t('balance_save_error')}</Banner>
+          <Banner variant="error">
+            {rejected ? t('check_in_rejected') : t('balance_save_error')}
+          </Banner>
         )}
         <div className="flex justify-end">
           <Button
@@ -137,6 +140,8 @@ interface CheckInRowProps {
   wallet: Wallet;
   value: string;
   invalid: boolean;
+  /** The server's reason this wallet's balance was rejected (English, as sent). */
+  serverError?: string | undefined;
   delta: string | null;
   lastLabel: string;
   formatDelta: (delta: string) => string;
@@ -147,6 +152,7 @@ function CheckInRow({
   wallet,
   value,
   invalid,
+  serverError,
   delta,
   lastLabel,
   formatDelta,
@@ -170,7 +176,7 @@ function CheckInRow({
           autoComplete="off"
           placeholder={wallet.currency}
           value={value}
-          aria-invalid={invalid}
+          aria-invalid={invalid || serverError !== undefined}
           aria-describedby={`${id}-hint`}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             onChange(e.target.value);
@@ -180,7 +186,7 @@ function CheckInRow({
           id={`${id}-hint`}
           className={cn(
             'text-meta tnum',
-            invalid
+            invalid || serverError !== undefined
               ? 'text-destructive'
               : delta?.startsWith('-')
                 ? 'text-destructive'
@@ -188,7 +194,9 @@ function CheckInRow({
           )}
           aria-live="polite"
         >
-          {invalid ? t('amount_invalid_short') : delta === null ? '' : formatDelta(delta)}
+          {invalid
+            ? t('amount_invalid_short')
+            : (serverError ?? (delta === null ? '' : formatDelta(delta)))}
         </p>
       </div>
     </li>
