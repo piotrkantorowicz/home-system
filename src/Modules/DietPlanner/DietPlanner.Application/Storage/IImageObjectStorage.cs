@@ -7,9 +7,9 @@ namespace DietPlanner.Application.Storage;
 /// </remarks>
 public interface IImageObjectStorage
 {
-    /// <summary>Writes an object without closing the caller's input stream.</summary>
+    /// <summary>Writes an object from the beginning without closing the caller's input stream.</summary>
     /// <param name="key">The opaque, previously persisted revision key.</param>
-    /// <param name="content">The caller-owned readable content stream.</param>
+    /// <param name="content">The caller-owned nonempty, readable and seekable content stream.</param>
     /// <param name="contentType">The stored media type.</param>
     /// <param name="ct">Cancels the storage operation.</param>
     /// <returns>A task that completes when the write succeeds.</returns>

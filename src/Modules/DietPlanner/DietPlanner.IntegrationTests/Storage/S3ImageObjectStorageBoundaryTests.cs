@@ -1,6 +1,7 @@
 namespace DietPlanner.IntegrationTests.Storage;
 
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -19,6 +20,7 @@ public sealed class S3ImageObjectStorageBoundaryTests
     public async Task Put_WithValidContent_ForwardsRequestAndPreservesStream()
     {
         await using var content = new MemoryStream([1, 2, 3]);
+        content.Position = content.Length;
         CancellationToken ct = TestContext.Current.CancellationToken;
         S3ImageObjectStorage storage = CreateStorage((request, token) =>
         {
@@ -27,6 +29,7 @@ public sealed class S3ImageObjectStorageBoundaryTests
             put.Key.ShouldBe(Key);
             put.ContentType.ShouldBe("image/jpeg");
             put.InputStream.ShouldBeSameAs(content);
+            put.InputStream.Position.ShouldBe(0);
             put.AutoCloseStream.ShouldBeFalse();
             put.CannedACL.ShouldBeNull();
             token.ShouldBe(ct);
@@ -125,12 +128,18 @@ public sealed class S3ImageObjectStorageBoundaryTests
     [InlineData("InvalidAccessKeyId")]
     [InlineData("client")]
     [InlineData("network")]
+    [InlineData("timeout")]
+    [InlineData("io")]
+    [InlineData("socket")]
     public async Task Operation_WhenProviderFails_ReportsSanitizedUnavailable(string error)
     {
         S3ImageObjectStorage storage = CreateStorage((_, _) => throw error switch
         {
             "client" => new AmazonClientException("secret https://provider.example/key"),
             "network" => new HttpRequestException("secret https://provider.example/key"),
+            "timeout" => new TaskCanceledException("secret https://provider.example/key"),
+            "io" => new IOException("secret https://provider.example/key"),
+            "socket" => new SocketException((int)SocketError.ConnectionReset),
             _ => S3Failure(error),
         });
         await using var content = new MemoryStream([1]);
@@ -183,6 +192,22 @@ public sealed class S3ImageObjectStorageBoundaryTests
         await Should.ThrowAsync<ArgumentNullException>(() => storage.PutAsync(Key, null!, "image/jpeg", ct)); // Tests the runtime null boundary.
         await content.DisposeAsync();
         await Should.ThrowAsync<ArgumentException>(() => storage.PutAsync(Key, content, "image/jpeg", ct));
+    }
+
+    /// <summary>Empty and non-seekable uploads fail before the SDK can store unusable content.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Put_WhenEmptyOrNonSeekable_RejectsBeforeSdk(bool seekable)
+    {
+        S3ImageObjectStorage storage = CreateStorage((_, _) => throw new InvalidOperationException("SDK must not be invoked."));
+        using var buffer = new MemoryStream();
+        using Stream content = seekable
+            ? buffer
+            : new System.IO.Compression.GZipStream(buffer, System.IO.Compression.CompressionMode.Decompress);
+
+        await Should.ThrowAsync<ArgumentException>(
+            () => storage.PutAsync(Key, content, "image/jpeg", TestContext.Current.CancellationToken));
     }
 
     /// <summary>Cancellation takes precedence and SDK cancellation failures preserve cancellation.</summary>
@@ -243,5 +268,9 @@ public sealed class S3ImageObjectStorageBoundaryTests
     }
 
     private static AmazonS3Exception S3Failure(string error)
-        => new("secret https://provider.example/key") { ErrorCode = error, StatusCode = HttpStatusCode.NotFound };
+        => new("secret https://provider.example/key")
+        {
+            ErrorCode = error,
+            StatusCode = error == "AccessDenied" ? HttpStatusCode.Forbidden : HttpStatusCode.NotFound,
+        };
 }

@@ -18,6 +18,7 @@ public sealed class S3ImageObjectStorageTests(ImageStorageFixture fixture)
         string key = $"recipe-images/{Guid.CreateVersion7():N}/detail";
         byte[] expected = [1, 2, 3, 4];
         await using var input = new MemoryStream(expected);
+        input.Position = input.Length;
         try
         {
             await storage.PutAsync(key, input, "image/jpeg", ct);

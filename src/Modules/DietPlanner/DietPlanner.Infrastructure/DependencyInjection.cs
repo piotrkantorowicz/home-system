@@ -2,7 +2,6 @@ namespace DietPlanner.Infrastructure;
 
 using System.Net;
 using Amazon;
-using Amazon.Runtime;
 using Amazon.S3;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
@@ -100,42 +99,34 @@ public static partial class InfrastructureDependencyInjection
                 "Endpoint must be an absolute HTTP(S) origin without credentials, query, fragment or a non-root path; HTTPS is required outside Development/Testing.")
             .ValidateOnStart();
 
-        if (!configuration.GetValue<bool>($"{ImageStorageOptions.SectionName}:Enabled"))
+        services.AddSingleton<IImageObjectStorage>(sp =>
         {
-            services.AddSingleton<IImageObjectStorage, UnavailableImageObjectStorage>();
-        }
-        else
+            IOptions<ImageStorageOptions> options = sp.GetRequiredService<IOptions<ImageStorageOptions>>();
+            return options.Value.Enabled
+                ? new S3ImageObjectStorage(sp.GetRequiredKeyedService<IAmazonS3>(typeof(S3ImageObjectStorage)), options)
+                : new UnavailableImageObjectStorage();
+        });
+        services.AddKeyedSingleton<IAmazonS3>(typeof(S3ImageObjectStorage), (sp, _) =>
         {
-            services.AddSingleton<IAmazonS3>(sp =>
+            ImageStorageOptions options = sp.GetRequiredService<IOptions<ImageStorageOptions>>().Value;
+            var clientConfig = new AmazonS3Config
             {
-                ImageStorageOptions options = sp.GetRequiredService<IOptions<ImageStorageOptions>>().Value;
-                var clientConfig = new AmazonS3Config
-                {
-                    ForcePathStyle = options.ForcePathStyle,
-                    MaxErrorRetry = 2,
-                    DisableLogging = true,
-                };
-                if (string.IsNullOrWhiteSpace(options.Endpoint))
-                {
-                    clientConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
-                }
-                else
-                {
-                    clientConfig.ServiceURL = options.Endpoint;
-                    clientConfig.AuthenticationRegion = options.Region;
-                }
+                ForcePathStyle = options.ForcePathStyle,
+                MaxErrorRetry = 2,
+                DisableLogging = true,
+            };
+            if (string.IsNullOrWhiteSpace(options.Endpoint))
+            {
+                clientConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+            }
+            else
+            {
+                clientConfig.ServiceURL = options.Endpoint;
+                clientConfig.AuthenticationRegion = options.Region;
+            }
 
-                try
-                {
-                    return new AmazonS3Client(clientConfig);
-                }
-                catch (Exception ex) when (ex is AmazonClientException or HttpRequestException)
-                {
-                    throw new ImageStorageUnavailableException();
-                }
-            });
-            services.AddSingleton<IImageObjectStorage, S3ImageObjectStorage>();
-        }
+            return new AmazonS3Client(clientConfig);
+        });
 
         return services;
     }
@@ -148,7 +139,7 @@ public static partial class InfrastructureDependencyInjection
                 && label.All(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' or '-'));
 
     private static bool IsValidImageStorageEndpoint(string? endpoint, IHostEnvironment environment)
-        => string.IsNullOrEmpty(endpoint)
+        => string.IsNullOrWhiteSpace(endpoint)
             || (Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri)
                 && uri.Scheme is "http" or "https"
                 && uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0

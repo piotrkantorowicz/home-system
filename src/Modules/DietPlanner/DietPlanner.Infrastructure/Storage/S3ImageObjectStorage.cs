@@ -1,5 +1,6 @@
 namespace DietPlanner.Infrastructure.Storage;
 
+using System.Net.Sockets;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -15,16 +16,12 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
     public async Task PutAsync(string key, Stream content, string contentType, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        ValidateKey(key);
-        ArgumentNullException.ThrowIfNull(content);
-        ArgumentException.ThrowIfNullOrWhiteSpace(contentType);
-        if (!content.CanRead)
-        {
-            throw new ArgumentException("Image content must be readable.", nameof(content));
-        }
+        ImageObjectStorageValidation.ValidateKey(key);
+        ImageObjectStorageValidation.ValidateContent(content, contentType);
 
         try
         {
+            content.Position = 0;
             await client.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = options.Value.Bucket,
@@ -34,7 +31,8 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
                 AutoCloseStream = false,
             }, ct);
         }
-        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException)
+        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException or IOException or SocketException
+            || ex is OperationCanceledException && !ct.IsCancellationRequested)
         {
             ct.ThrowIfCancellationRequested();
             throw new ImageStorageUnavailableException();
@@ -45,7 +43,7 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
     public async Task<ImageObjectRead?> OpenReadAsync(string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        ValidateKey(key);
+        ImageObjectStorageValidation.ValidateKey(key);
         GetObjectResponse? response = null;
         try
         {
@@ -64,7 +62,8 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
             ct.ThrowIfCancellationRequested();
             return null;
         }
-        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException)
+        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException or IOException or SocketException
+            || ex is OperationCanceledException && !ct.IsCancellationRequested)
         {
             ct.ThrowIfCancellationRequested();
             throw new ImageStorageUnavailableException();
@@ -79,7 +78,7 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
     public async Task DeleteAsync(string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        ValidateKey(key);
+        ImageObjectStorageValidation.ValidateKey(key);
         try
         {
             await client.DeleteObjectAsync(new DeleteObjectRequest
@@ -92,20 +91,11 @@ public sealed class S3ImageObjectStorage(IAmazonS3 client, IOptions<ImageStorage
         {
             ct.ThrowIfCancellationRequested();
         }
-        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException)
+        catch (Exception ex) when (ex is AmazonS3Exception or AmazonClientException or HttpRequestException or IOException or SocketException
+            || ex is OperationCanceledException && !ct.IsCancellationRequested)
         {
             ct.ThrowIfCancellationRequested();
             throw new ImageStorageUnavailableException();
-        }
-    }
-
-    private static void ValidateKey(string key)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        if (key.StartsWith('/') || Uri.TryCreate(key, UriKind.Absolute, out _)
-            || key.Split('/').Any(segment => segment is "." or ".."))
-        {
-            throw new ArgumentException("Image keys must be relative internal object names without dot segments.", nameof(key));
         }
     }
 }

@@ -92,6 +92,75 @@ public sealed class ImageStorageConfigurationTests
         provider.GetService<IAmazonS3>().ShouldBeNull();
     }
 
+    /// <summary>Late options overrides select the same implementation as the validated configuration.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Resolve_WhenEnabledOverridden_UsesValidatedOptions(bool enabled)
+    {
+        using ServiceProvider provider = BuildProvider(new Dictionary<string, string?>
+        {
+            ["Enabled"] = (!enabled).ToString(),
+            ["Bucket"] = "recipe-images",
+        }, configure: services => services.Configure<ImageStorageOptions>(options => options.Enabled = enabled));
+
+        provider.GetRequiredService<IStartupValidator>().Validate();
+        IImageObjectStorage storage = provider.GetRequiredService<IImageObjectStorage>();
+        if (enabled)
+        {
+            storage.ShouldBeOfType<S3ImageObjectStorage>();
+        }
+        else
+        {
+            storage.ShouldBeOfType<UnavailableImageObjectStorage>();
+        }
+    }
+
+    /// <summary>Another module's S3 registration cannot replace the DietPlanner client.</summary>
+    [Fact]
+    public void Resolve_WhenAnotherModuleRegistersS3_KeepsModuleClient()
+    {
+        using var otherClient = new AmazonS3Client(new Amazon.Runtime.BasicAWSCredentials("test", "test"),
+            new AmazonS3Config { ServiceURL = "https://other-module.example.com" });
+        using ServiceProvider provider = BuildProvider(new Dictionary<string, string?>
+        {
+            ["Enabled"] = "true",
+            ["Bucket"] = "recipe-images",
+            ["Endpoint"] = "https://diet-planner.example.com",
+        }, configure: services => services.AddSingleton<IAmazonS3>(otherClient));
+
+        provider.GetRequiredService<IImageObjectStorage>().ShouldBeOfType<S3ImageObjectStorage>();
+        provider.GetRequiredService<IAmazonS3>().ShouldBeSameAs(otherClient);
+        IAmazonS3 client = provider.GetRequiredKeyedService<IAmazonS3>(typeof(S3ImageObjectStorage));
+        client.ShouldNotBeSameAs(otherClient);
+        client.Config.ServiceURL.TrimEnd('/').ShouldBe("https://diet-planner.example.com");
+    }
+
+    /// <summary>Disabled storage exposes invalid keys through faulted tasks, like enabled storage.</summary>
+    [Theory]
+    [InlineData("../x")]
+    [InlineData("/absolute")]
+    [InlineData("https://provider.example/key")]
+    public async Task Operation_WhenDisabledWithInvalidKey_ReturnsFaultedTask(string key)
+    {
+        using ServiceProvider provider = BuildProvider();
+        IImageObjectStorage storage = provider.GetRequiredService<IImageObjectStorage>();
+        using var content = new MemoryStream([1]);
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        Task[] operations =
+        [
+            storage.PutAsync(key, content, "image/jpeg", ct),
+            storage.OpenReadAsync(key, ct),
+            storage.DeleteAsync(key, ct),
+        ];
+
+        foreach (Task operation in operations)
+        {
+            operation.IsFaulted.ShouldBeTrue();
+            await Should.ThrowAsync<ArgumentException>(() => operation);
+        }
+    }
+
     /// <summary>Unused disabled storage settings do not prevent startup.</summary>
     [Fact]
     public void Validate_WhenDisabledWithInvalidOptions_Succeeds()
@@ -169,6 +238,7 @@ public sealed class ImageStorageConfigurationTests
     [Theory]
     [InlineData(null, "Production")]
     [InlineData("", "Production")]
+    [InlineData(" ", "Production")]
     [InlineData("https://storage.example.com", "Production")]
     [InlineData("https://storage.example.com/", "Production")]
     [InlineData("http://localhost:9000", "Development")]
@@ -202,7 +272,7 @@ public sealed class ImageStorageConfigurationTests
             ["ForcePathStyle"] = forcePathStyle.ToString(),
         });
 
-        IAmazonS3 client = provider.GetRequiredService<IAmazonS3>();
+        IAmazonS3 client = provider.GetRequiredKeyedService<IAmazonS3>(typeof(S3ImageObjectStorage));
         var config = client.Config.ShouldBeOfType<AmazonS3Config>();
 
         config.ForcePathStyle.ShouldBe(forcePathStyle);
@@ -219,12 +289,14 @@ public sealed class ImageStorageConfigurationTests
         }
 
         provider.GetRequiredService<IImageObjectStorage>().ShouldBeOfType<S3ImageObjectStorage>();
-        provider.GetRequiredService<IAmazonS3>().ShouldBeSameAs(client);
+        provider.GetRequiredKeyedService<IAmazonS3>(typeof(S3ImageObjectStorage)).ShouldBeSameAs(client);
+        provider.GetService<IAmazonS3>().ShouldBeNull();
     }
 
     private static ServiceProvider BuildProvider(
         Dictionary<string, string?>? options = null,
-        string environment = "Development")
+        string environment = "Development",
+        Action<IServiceCollection>? configure = null)
     {
         var values = new Dictionary<string, string?>
         {
@@ -241,6 +313,7 @@ public sealed class ImageStorageConfigurationTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IHostEnvironment>(new HostingEnvironment { EnvironmentName = environment });
         services.AddDietPlannerInfrastructure(configuration);
+        configure?.Invoke(services);
         return services.BuildServiceProvider();
     }
 }

@@ -6,23 +6,27 @@ using DietPlanner.Application.Storage;
 public sealed class UnavailableImageObjectStorage : IImageObjectStorage
 {
     /// <inheritdoc/>
-    public Task PutAsync(string key, Stream content, string contentType, CancellationToken ct)
+    public async Task PutAsync(string key, Stream content, string contentType, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        throw new ImageStorageUnavailableException();
+        ImageObjectStorageValidation.ValidateKey(key);
+        ImageObjectStorageValidation.ValidateContent(content, contentType);
+        await Task.FromException(new ImageStorageUnavailableException());
     }
 
     /// <inheritdoc/>
-    public Task<ImageObjectRead?> OpenReadAsync(string key, CancellationToken ct)
+    public async Task<ImageObjectRead?> OpenReadAsync(string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        throw new ImageStorageUnavailableException();
+        ImageObjectStorageValidation.ValidateKey(key);
+        return await Task.FromException<ImageObjectRead?>(new ImageStorageUnavailableException());
     }
 
     /// <inheritdoc/>
-    public Task DeleteAsync(string key, CancellationToken ct)
+    public async Task DeleteAsync(string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        throw new ImageStorageUnavailableException();
+        ImageObjectStorageValidation.ValidateKey(key);
+        await Task.FromException(new ImageStorageUnavailableException());
     }
 }
