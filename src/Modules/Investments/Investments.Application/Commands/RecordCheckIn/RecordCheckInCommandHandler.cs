@@ -21,13 +21,14 @@ internal sealed class RecordCheckInCommandHandler(
         var caller = await access.RequireAccessAsync(command.AuthSubject, ct);
         var now = clock.GetUtcNow();
         var today = HouseholdCalendar.Today(clock);
+        var asOf = command.AsOf ?? throw new InvalidOperationException("AsOf is checked by RecordCheckInCommandValidator.");
         WalletId[] ids = [.. command.Entries.Select(e => WalletId.From(e.WalletId))];
 
         // Invisible and unknown wallets look the same: "not found" for the id the caller sent.
         var visible = (await wallets.GetManyAsync(ids, caller.HouseholdId, ct))
             .Where(caller.CanAccess)
             .ToDictionary(w => w.Id);
-        var existing = (await snapshots.GetForDateAsync([.. visible.Keys], command.AsOf, ct))
+        var existing = (await snapshots.GetForDateAsync([.. visible.Keys], asOf, ct))
             .ToDictionary(s => s.WalletId);
 
         // Validate every entry before writing any; staged changes are discarded on failure.
@@ -56,7 +57,7 @@ internal sealed class RecordCheckInCommandHandler(
                 else
                 {
                     await snapshots.AddAsync(BalanceSnapshot.Record(
-                        BalanceSnapshotId.New(), wallet, command.AsOf, amount, entry.Note,
+                        BalanceSnapshotId.New(), wallet, asOf, amount, entry.Note,
                         caller.PersonId, caller.NameOf(caller.PersonId) ?? "Unknown", today, now), ct);
                     created++;
                 }
@@ -74,7 +75,7 @@ internal sealed class RecordCheckInCommandHandler(
         await unitOfWork.CommitOrThrowConflictAsync(ct);
         await BackfillRatesAsync(visible.Values.Select(w => w.Currency), today, ct);
 
-        return new RecordCheckInResult(command.AsOf, command.Entries.Count, created);
+        return new RecordCheckInResult(asOf, command.Entries.Count, created);
     }
 
     private async Task BackfillRatesAsync(IEnumerable<WalletCurrency> currencies, DateOnly today, CancellationToken ct)

@@ -97,13 +97,14 @@ public sealed class CheckInTests : IClassFixture<InvestmentsDatabaseFixture>, ID
         (await HistoryAsync(adult.Client, hidden.Id)).TotalCount.ShouldBe(0);
     }
 
-    /// <summary>A new date on an archived wallet, or a future date, fails the batch.</summary>
+    /// <summary>A new date on an archived wallet, a future date or one before NBP's first table fails the batch.</summary>
     /// <param name="asOf">Check-in date.</param>
     /// <param name="archive">Whether the wallet is archived first.</param>
     [Theory]
     [InlineData("2026-09-01", true)]
     [InlineData("2026-09-13", false)]
-    public async Task CheckIn_ArchivedOrFuture_Returns422(string asOf, bool archive)
+    [InlineData("2002-01-01", false)]
+    public async Task CheckIn_ArchivedOrOutOfRange_Returns422(string asOf, bool archive)
     {
         var h = await _scenario.NewHouseholdAsync();
         var wallet = await InvestmentsScenario.CreateWalletAsync(h.Owner, "Wallet");
@@ -129,5 +130,19 @@ public sealed class CheckInTests : IClassFixture<InvestmentsDatabaseFixture>, ID
 
         empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         duplicate.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    /// <summary>A body without a date is rejected instead of defaulting to 0001-01-01.</summary>
+    [Fact]
+    public async Task CheckIn_MissingDate_Returns400()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var wallet = await InvestmentsScenario.CreateWalletAsync(h.Owner, "Wallet");
+
+        var response = await h.Owner.PutAsJsonAsync(
+            "/api/investments/snapshots", new { entries = new[] { new { walletId = wallet.Id, amount = "1" } } }, Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await HistoryAsync(h.Owner, wallet.Id)).TotalCount.ShouldBe(0);
     }
 }

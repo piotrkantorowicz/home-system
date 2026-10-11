@@ -9,6 +9,9 @@ internal sealed class RecordCheckInCommandValidator : ICommandValidator<RecordCh
 
     public IEnumerable<ValidationError> Validate(RecordCheckInCommand command)
     {
+        if (command.AsOf is null)
+            yield return new ValidationError(nameof(command.AsOf), "Choose the date of the balances.");
+
         if (command.Entries is null || command.Entries.Count == 0)
             yield return new ValidationError(nameof(command.Entries), "Add at least one balance.");
         else if (command.Entries.Count > MaxEntries)

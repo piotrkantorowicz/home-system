@@ -186,7 +186,7 @@ internal sealed record RecordSnapshotRequest(string Amount, string? Note);
 /// <param name="AsOf">The date for every entry, <c>YYYY-MM-DD</c>.</param>
 /// <param name="Entries">One per wallet being updated; at most 100.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-internal sealed record RecordCheckInRequest(DateOnly AsOf, IReadOnlyList<CheckInEntryRequest>? Entries);
+internal sealed record RecordCheckInRequest(DateOnly? AsOf, IReadOnlyList<CheckInEntryRequest>? Entries);
 
 /// <summary>One entry of a check-in.</summary>
 /// <param name="WalletId">The wallet.</param>

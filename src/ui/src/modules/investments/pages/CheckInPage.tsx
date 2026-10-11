@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
 import { checkInErrors, useCheckInMutation, useWalletsQuery } from '../api/queries';
-import { formatDate, todayInWarsaw } from '../lib/dates';
+import { EARLIEST_AS_OF, formatDate, todayInWarsaw } from '../lib/dates';
 import { change, normalizeAmount } from '../lib/money';
 
 import type { Wallet } from '../types';
@@ -33,7 +33,7 @@ export default function CheckInPage() {
   });
   const filled = rows.filter((r) => r.normalized !== null);
   const anyInvalid = rows.some((r) => r.invalid);
-  const dateInvalid = asOf === '' || asOf > today;
+  const dateInvalid = asOf < EARLIEST_AS_OF || asOf > today;
 
   const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,6 +73,7 @@ export default function CheckInPage() {
           <Input
             id="check-in-date"
             type="date"
+            min={EARLIEST_AS_OF}
             max={today}
             value={asOf}
             aria-invalid={dateInvalid}
