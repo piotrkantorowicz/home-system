@@ -1,5 +1,4 @@
-import { useHousehold } from '@modules/household';
-import { useAuth } from 'react-oidc-context';
+import { useRecipeImageScope } from '../../hooks/useRecipeImageScope';
 
 import { RecipePhotoContent } from './RecipePhotoContent';
 
@@ -10,11 +9,8 @@ interface RecipePhotoProps {
 }
 
 export function RecipePhoto({ recipe }: RecipePhotoProps) {
-  const auth = useAuth();
-  const { household, myPersonId, myRole, isLoading, isError } = useHousehold();
-  const subject = auth.user?.profile.sub;
-  if (!auth.isAuthenticated || !subject || isLoading || isError) return null;
-  const scope = JSON.stringify([subject, household?.id, myPersonId, myRole]);
+  const scope = useRecipeImageScope();
+  if (!scope) return null;
   return (
     <RecipePhotoContent
       key={`${scope}:${recipe.id}:${String(recipe.canEdit)}`}

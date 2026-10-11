@@ -10,8 +10,13 @@ import { Clock, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { useNearViewport } from '../../hooks/useNearViewport';
 import { macroEnergyShares } from '../../utils/macroEnergyShares';
 import { VisibilityBadge } from '../VisibilityBadge';
+
+import { RecipeThumbnail } from './RecipeThumbnail';
+
+import type { RecipeDto } from '../../api/hooks/useRecipes';
 
 type NumLike = number | string | null | undefined;
 
@@ -22,6 +27,7 @@ export interface RecipeCardData {
   prepTimeMinutes?: NumLike;
   visibility: string;
   canEdit: boolean;
+  image?: RecipeDto['image'];
   nutritionPerServing?: {
     calories: NumLike;
     protein: NumLike;
@@ -46,6 +52,7 @@ export interface RecipeCardProps {
 export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
   const { t } = useTranslation();
   const fmt = useFormat();
+  const [viewportRef, nearViewport] = useNearViewport();
   const per = recipe.nutritionPerServing;
   const shares = macroEnergyShares(per);
   const prep = num(recipe.prepTimeMinutes);
@@ -58,14 +65,18 @@ export function RecipeCard({ recipe, onPrefetch, onDelete }: RecipeCardProps) {
 
   return (
     <div
+      ref={viewportRef}
       role="listitem"
       aria-label={recipe.name}
       className="border-border bg-card hover:border-primary focus-within:ring-primary rounded-22px relative flex flex-col gap-2.5 border p-4 shadow-sm focus-within:ring-2"
     >
       <div className="flex items-start justify-between gap-2">
+        {nearViewport && recipe.image ? (
+          <RecipeThumbnail id={recipe.id} image={recipe.image} />
+        ) : null}
         <Link
           to={`/diet-planner/recipes/${recipe.id}`}
-          className="after:rounded-22px line-clamp-2 text-[14.5px] font-bold after:absolute after:inset-0 focus:outline-none"
+          className="after:rounded-22px line-clamp-2 min-w-0 flex-1 text-[14.5px] font-bold after:absolute after:inset-0 focus:outline-none"
           onMouseEnter={onPrefetch}
           onFocus={onPrefetch}
         >
