@@ -30,6 +30,18 @@ public sealed class RecipeImageRevisionTests
         revision.NextCleanupAt.ShouldBe(DateTimeOffset.UnixEpoch.AddHours(25));
     }
 
+    /// <summary>Failed deletion keeps retirement permanent and yields to later revisions until retry.</summary>
+    [Fact]
+    public void RetryCleanup_FailedDelete_BacksOffWithoutReopeningRevision()
+    {
+        var revision = RecipeImageRevision.Create(Guid.CreateVersion7(), RecipeId.New(), DateTimeOffset.UnixEpoch);
+        revision.Retire();
+        revision.RetryCleanup(DateTimeOffset.UnixEpoch);
+        revision.NextCleanupAt.ShouldBe(DateTimeOffset.UnixEpoch.AddMinutes(5));
+        revision.Retired.ShouldBeTrue();
+        Should.Throw<InvalidOperationException>(revision.Publish);
+    }
+
     /// <summary>Recipe deletion revokes its image and prevents resurrection.</summary>
     [Fact]
     public void SoftDelete_WithPhoto_ClearsMetadataAndRejectsNewPhoto()

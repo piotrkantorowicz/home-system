@@ -13,17 +13,20 @@ internal sealed partial class RecipeImageCleanupWorker(IServiceScopeFactory scop
             return;
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1), clock);
         while (await timer.WaitForNextTickAsync(ct))
+            await RunOnceAsync(ct);
+    }
+
+    internal async Task RunOnceAsync(CancellationToken ct)
+    {
+        try
         {
-            try
-            {
-                await using AsyncServiceScope scope = scopes.CreateAsyncScope();
-                await scope.ServiceProvider.GetRequiredService<RecipeImageCleanup>().RunOnceAsync(ct);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                // Provider keys and failure details must not enter application logs.
-                LogCleanupFailure(logger);
-            }
+            await using AsyncServiceScope scope = scopes.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<RecipeImageCleanup>().RunOnceAsync(ct);
+        }
+        catch (Exception) when (!ct.IsCancellationRequested)
+        {
+            // Provider keys and failure details must not enter application logs.
+            LogCleanupFailure(logger);
         }
     }
 

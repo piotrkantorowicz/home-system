@@ -54,6 +54,8 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             image.Property(x => x.ThumbnailWidth).HasColumnName("image_thumbnail_width");
             image.Property(x => x.ThumbnailHeight).HasColumnName("image_thumbnail_height");
             image.Property(x => x.ThumbnailSize).HasColumnName("image_thumbnail_size");
+            image.HasIndex(x => x.Version).HasDatabaseName("idx_recipes_image_version")
+                .HasFilter("image_version IS NOT NULL");
         });
 
         builder.HasQueryFilter(r => r.DeletedAt == null);

@@ -266,8 +266,10 @@ public sealed class RecipeImageApiTests(DatabaseFixture database, ImageStorageFi
         (await client.DeleteAsync($"/api/v1/recipes/{id}", Ct)).EnsureSuccessStatusCode();
         (await client.GetAsync($"/api/v1/recipes/{id}/image", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         storage.FailDelete = true;
-        await Should.ThrowAsync<ImageStorageUnavailableException>(() => CleanupAsync(host));
+        await CleanupAsync(host);
         storage.FailDelete = false;
+        host.Services.GetRequiredService<TimeProvider>().ShouldBeOfType<Microsoft.Extensions.Time.Testing.FakeTimeProvider>()
+            .Advance(TimeSpan.FromMinutes(5));
         await CleanupAsync(host);
         using ImageObjectRead? removed = await objects.CreateStorage().OpenReadAsync(RecipeImageKeys.Detail(image.Version), Ct);
         removed.ShouldBeNull();
@@ -311,6 +313,44 @@ public sealed class RecipeImageApiTests(DatabaseFixture database, ImageStorageFi
         (await client.GetAsync($"/api/v1/recipes/{id}/image/thumbnail", Ct)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await UploadAsync(client, id)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await client.DeleteAsync($"/api/v1/recipes/{id}/image", Ct)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    /// <summary>Permanent storage errors and SDK timeouts cannot starve other orphaned revisions.</summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Cleanup_OneDeleteFails_OtherRevisionsContinueAndFailedRevisionBacksOff(bool timeout)
+    {
+        var storage = new PhotoTestStorage(objects.CreateStorage());
+        WebApplicationFactory<Program> host = Host($"photo-{Guid.CreateVersion7():N}", storage);
+        using HttpClient client = host.CreateClient();
+        Guid first = await CreateAsync(client);
+        RecipeImageDto poisoned = await UploadOkAsync(client, first);
+        Guid second = await CreateAsync(client);
+        RecipeImageDto healthy = await UploadOkAsync(client, second);
+        (await client.DeleteAsync($"/api/v1/recipes/{first}/image", Ct)).EnsureSuccessStatusCode();
+        (await client.DeleteAsync($"/api/v1/recipes/{second}/image", Ct)).EnsureSuccessStatusCode();
+        int attempts = 0;
+        storage.BeforeDelete = (key, _) =>
+        {
+            if (key != RecipeImageKeys.Detail(poisoned.Version)) return Task.CompletedTask;
+            attempts++;
+            throw timeout ? new TaskCanceledException("Provider timeout") : new ImageStorageUnavailableException();
+        };
+        await CleanupAsync(host);
+        attempts.ShouldBe(1);
+        using ImageObjectRead? cleaned = await objects.CreateStorage().OpenReadAsync(RecipeImageKeys.Detail(healthy.Version), Ct);
+        cleaned.ShouldBeNull();
+        using ImageObjectRead? remaining = await objects.CreateStorage().OpenReadAsync(RecipeImageKeys.Detail(poisoned.Version), Ct);
+        remaining.ShouldNotBeNull();
+        await CleanupAsync(host);
+        attempts.ShouldBe(1);
+        storage.BeforeDelete = null;
+        host.Services.GetRequiredService<TimeProvider>().ShouldBeOfType<Microsoft.Extensions.Time.Testing.FakeTimeProvider>()
+            .Advance(TimeSpan.FromMinutes(5));
+        await CleanupAsync(host);
+        using ImageObjectRead? retried = await objects.CreateStorage().OpenReadAsync(RecipeImageKeys.Detail(poisoned.Version), Ct);
+        retried.ShouldBeNull();
     }
 
     /// <summary>Crash after intent/detail write is reclaimed; a delayed object write is swept again.</summary>

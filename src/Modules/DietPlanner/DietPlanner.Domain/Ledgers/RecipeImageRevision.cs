@@ -41,4 +41,8 @@ public sealed class RecipeImageRevision
     /// <summary>Schedules another idempotent deletion sweep.</summary>
     /// <param name="now">Current time.</param>
     public void Cleaned(DateTimeOffset now) => NextCleanupAt = now.AddDays(1);
+
+    /// <summary>Backs off a failed deletion without blocking newer orphans.</summary>
+    /// <param name="now">Current time.</param>
+    public void RetryCleanup(DateTimeOffset now) => NextCleanupAt = now.AddMinutes(5);
 }

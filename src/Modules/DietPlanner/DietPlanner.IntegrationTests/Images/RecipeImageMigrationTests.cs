@@ -25,7 +25,8 @@ public sealed class RecipeImageMigrationTests
         {
             string[] migrations = [.. db.Database.GetMigrations()];
             var migrator = db.GetService<IMigrator>();
-            await migrator.MigrateAsync(migrations[^2], ct);
+            int photoMigration = Array.FindIndex(migrations, m => m.EndsWith("_AddRecipeImages", StringComparison.Ordinal));
+            await migrator.MigrateAsync(migrations[photoMigration - 1], ct);
             DateTime now = DateTime.UnixEpoch;
             await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO recipes (id, name, created_by_user_id, visibility, created_at) VALUES ({recipeId}, 'Pre-photo recipe', 'migration-user', 'Private', {now})", ct);
             await migrator.MigrateAsync(null, ct);

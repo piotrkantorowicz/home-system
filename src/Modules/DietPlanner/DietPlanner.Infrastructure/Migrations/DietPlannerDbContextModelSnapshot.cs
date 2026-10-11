@@ -937,6 +937,10 @@ namespace DietPlanner.Infrastructure.Migrations
 
                             b1.HasKey("RecipeId");
 
+                            b1.HasIndex("Version")
+                                .HasDatabaseName("idx_recipes_image_version")
+                                .HasFilter("image_version IS NOT NULL");
+
                             b1.ToTable("recipes");
 
                             b1.WithOwner()
