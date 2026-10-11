@@ -37,9 +37,9 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
 
     private static async Task<Guid> WalletWithBalanceAsync(
         HttpClient client, string name, string amount, string visibility = "Shared", string kind = "Brokerage",
-        string currency = "PLN", string asOf = "2026-09-01")
+        string currency = "PLN", string asOf = "2026-09-01", Guid? ownerPersonId = null)
     {
-        var wallet = await InvestmentsScenario.CreateWalletAsync(client, name, visibility, kind: kind, currency: currency);
+        var wallet = await InvestmentsScenario.CreateWalletAsync(client, name, visibility, ownerPersonId, kind, currency);
         (await client.PutAsJsonAsync($"/api/investments/wallets/{wallet.Id}/snapshots/{asOf}", new { amount }, Ct))
             .EnsureSuccessStatusCode();
         return wallet.Id;
@@ -49,7 +49,7 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
         => (await client.GetFromJsonAsync<NetWorth>($"/api/investments/net-worth{query}", Ct))!;
 
     /// <summary>
-    /// Household = shared + own private (+ managed); Mine = own. Another adult's private wallet never
+    /// Household = shared + own private (+ managed); Mine = own (+ managed). Another adult's private wallet never
     /// shows in totals, breakdowns or the wallet list — and each adult sees a different household total.
     /// </summary>
     [Fact]
@@ -72,6 +72,24 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
         ownerHousehold.ByKind.Select(k => (k.Kind, k.Total)).ShouldBe([("Savings", "1000.00"), ("IKE", "500.00"), ("Brokerage", "300.00")]);
         ownerMine.Total.ShouldBe("1500.00");
         adultHousehold.Total.ShouldBe("2000.00");
+    }
+
+    /// <summary>Mine covers the caller's managed members (kids) too, not another adult's shared wallet.</summary>
+    [Fact]
+    public async Task Mine_IncludesManagedMembers()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var adult = await _scenario.MemberAsync(h, "Adult");
+        var kid = await InvestmentsScenario.ManagedChildAsync(h);
+        await WalletWithBalanceAsync(h.Owner, "Owner IKE", "500", "Private", "IKE");
+        await WalletWithBalanceAsync(h.Owner, "Kid PPK", "200", "Private", "PPK", ownerPersonId: kid);
+        await WalletWithBalanceAsync(adult.Client, "Adult shared", "300");
+
+        var ownerMine = await NetWorthAsync(h.Owner, "?scope=mine");
+        var adultMine = await NetWorthAsync(adult.Client, "?scope=mine");
+
+        ownerMine.Total.ShouldBe("700.00");
+        adultMine.Total.ShouldBe("500.00");
     }
 
     /// <summary>Archived wallets do not count.</summary>
