@@ -22,11 +22,12 @@ test.describe('Investments check-in', () => {
     const stamp = Date.now().toString(36);
     const ike = `E2E IKE ${stamp}`;
     const savings = `E2E savings ${stamp}`;
-    const before = minor((await netWorth(page)).total);
+    // Open the app first — the seed helpers read the access token from its localStorage.
     const investments = new InvestmentsPage(page);
+    await investments.goto();
+    const before = minor((await netWorth(page)).total);
 
     // A wallet created in the UI, with a first balance recorded on its page.
-    await investments.goto();
     trackWallet(page, await investments.addWallet(ike, 'IKE'));
     await investments.walletLink(ike).click();
     const detail = new WalletDetailPage(page);
