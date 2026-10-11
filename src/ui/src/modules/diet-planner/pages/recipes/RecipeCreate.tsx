@@ -39,13 +39,13 @@ export default function RecipeCreate() {
     };
     try {
       const ingredients = await Promise.all(data.ingredients.map(resolveIngredient));
-      await createMutation.mutateAsync({ ...request, ingredients });
+      const id = await createMutation.mutateAsync({ ...request, ingredients });
+      toast.success(t('recipe_form.create_success'));
+      void navigate(`/diet-planner/recipes/${id}`);
     } catch {
       toast.error(t('recipe_form.create_error'));
       return;
     }
-    toast.success(t('recipe_form.create_success'));
-    void navigate('/diet-planner/recipes');
   };
 
   return (
