@@ -3,6 +3,7 @@ import { useCreateMeal, useMeals } from '@modules/diet-planner/api/hooks/useMeal
 import { productOptions } from '@modules/diet-planner/api/hooks/useProducts';
 import { recipeOptions, useDeleteRecipe } from '@modules/diet-planner/api/hooks/useRecipes';
 import { MealForm } from '@modules/diet-planner/components/diet-plans/MealForm';
+import { RecipePhoto } from '@modules/diet-planner/components/recipes/RecipePhoto';
 import { mealAccess } from '@modules/diet-planner/utils/householdAccess';
 import { macroEnergyShares } from '@modules/diet-planner/utils/macroEnergyShares';
 import { toVisibility } from '@modules/diet-planner/utils/visibility';
@@ -193,6 +194,7 @@ export default function RecipeDetail() {
       <div className="grid items-start gap-5 lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
           <div className="flex flex-col gap-6 p-6">
+            <RecipePhoto recipe={recipe} />
             {recipe.description ? (
               <p className="text-text-2 text-13px leading-relaxed">{recipe.description}</p>
             ) : null}

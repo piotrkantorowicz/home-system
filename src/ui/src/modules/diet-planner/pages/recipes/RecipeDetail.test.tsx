@@ -10,6 +10,8 @@ import RecipeDetail from './RecipeDetail';
 
 import { createWrapper } from '@/test/utils/queryWrapper';
 
+vi.mock('react-oidc-context', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown>) =>

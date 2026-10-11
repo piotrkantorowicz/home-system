@@ -105,7 +105,7 @@ export function useCreateRecipe() {
         body: recipeData,
       });
 
-      if (!response.response.ok) {
+      if (!response.response.ok || !response.data) {
         const detail = (response.error as { detail?: string } | undefined)?.detail ?? '';
         throw new Error(`Failed to create recipe${detail ? `: ${detail}` : ''}`);
       }
