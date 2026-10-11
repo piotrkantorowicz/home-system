@@ -28,15 +28,16 @@ internal sealed class GetNetWorthQueryHandler(InvestmentsAccessService access, I
         return new NetWorthDto(
             asOf,
             scope,
-            Format(point.Total),
+            WalletReadExtensions.Format(point.Total),
             point.Incomplete,
             [.. point.Wallets.GroupBy(v => v.Wallet.Kind)
-                .Select(g => new NetWorthKindDto(g.Key.ToString(), Format(g.Sum(v => v.Pln?.Amount ?? 0m))))
-                .OrderByDescending(k => decimal.Parse(k.Total, CultureInfo.InvariantCulture))],
+                .Select(g => new { g.Key, Total = g.Sum(v => v.Pln?.Amount ?? 0m) })
+                .OrderByDescending(k => k.Total)
+                .Select(k => new NetWorthKindDto(k.Key.ToString(), WalletReadExtensions.Format(k.Total)))],
             [.. point.Wallets.GroupBy(v => v.Wallet.OwnerPersonId)
                 .Select(g => new { g.Key, Total = g.Sum(v => v.Pln?.Amount ?? 0m) })
                 .OrderByDescending(o => o.Total)
-                .Select(o => new NetWorthOwnerDto(o.Key, OwnerName(o.Key), Format(o.Total)))],
+                .Select(o => new NetWorthOwnerDto(o.Key, OwnerName(o.Key), WalletReadExtensions.Format(o.Total)))],
             [.. point.Wallets.Select(v => new NetWorthWalletDto(
                 v.Wallet.Id.Value,
                 byId[v.Wallet.Id].Name,
@@ -50,6 +51,4 @@ internal sealed class GetNetWorthQueryHandler(InvestmentsAccessService access, I
                 .OrderBy(r => r.Currency)
                 .Select(r => new NetWorthRateDto(r.Currency.ToString(), r.Mid.ToString("F6", CultureInfo.InvariantCulture), r.EffectiveDate, r.TableNo))]);
     }
-
-    private static string Format(decimal amount) => amount.ToString("F2", CultureInfo.InvariantCulture);
 }
