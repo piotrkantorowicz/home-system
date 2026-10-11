@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { investmentsModule } from '../index';
+import { todayInWarsaw } from '../lib/dates';
 
 import InvestmentsPage from './InvestmentsPage';
 
@@ -93,6 +94,15 @@ const oldDeposit: Wallet = { ...xtb, id: 'w5', name: 'Old deposit', isArchived: 
 
 let client: QueryClient;
 let wallets: Wallet[];
+let netWorth: Record<string, unknown>;
+let netWorthScopes: string[];
+
+const year = Number(todayInWarsaw().slice(0, 4));
+const history = [
+  { date: `${String(year - 1)}-11-30`, total: '90000.00', incomplete: false },
+  { date: `${String(year - 1)}-12-31`, total: '100000.00', incomplete: false },
+  { date: todayInWarsaw(), total: '112500.00', incomplete: false },
+];
 
 function renderPage() {
   const Wrapper = createWrapper(client);
@@ -120,7 +130,29 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   household.myRole = 'Owner';
   wallets = [xtb, ike, kidSavings, beaShared, oldDeposit];
+  netWorthScopes = [];
+  netWorth = {
+    asOf: todayInWarsaw(),
+    scope: 'household',
+    total: '112500.00',
+    incomplete: false,
+    byKind: [
+      { kind: 'Brokerage', total: '90000.00' },
+      { kind: 'IKE', total: '22500.00' },
+    ],
+    byOwner: [],
+    wallets: [],
+    ratesUsed: [],
+  };
   server.use(
+    http.get(`${BASE}/api/investments/net-worth`, ({ request }) => {
+      const scope = new URL(request.url).searchParams.get('scope') ?? '';
+      netWorthScopes.push(scope);
+      return HttpResponse.json({ ...netWorth, scope });
+    }),
+    http.get(`${BASE}/api/investments/net-worth/history`, () =>
+      HttpResponse.json({ scope: 'household', points: history }),
+    ),
     http.get(`${BASE}/api/investments/wallets`, () =>
       HttpResponse.json({ items: wallets, totalCount: wallets.length, page: 1, pageSize: 100 }),
     ),
@@ -132,6 +164,73 @@ describe('investmentsModule', () => {
     expect(investmentsModule.basePath).toBe('/investments');
     expect(investmentsModule.navItems.map((item) => item.href)).toEqual(['/investments']);
     expect(investmentsModule.routes[0]?.index).toBe(true);
+  });
+});
+
+describe('InvestmentsPage net worth', () => {
+  it('shows the household total and its change since 1 January', async () => {
+    renderPage();
+
+    expect(await screen.findByText(/112.500.00 PLN/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/\+12.500.00 PLN \(\+12\.5%\) since 1 January/),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Household net worth')).toBeInTheDocument();
+  });
+
+  it('switches to my net worth', async () => {
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Mine' }));
+
+    expect(await screen.findByText('My net worth')).toBeInTheDocument();
+    expect(netWorthScopes).toContain('mine');
+    expect(screen.getByRole('button', { name: 'Mine' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('names the wallets left out for lack of a rate', async () => {
+    netWorth = {
+      ...netWorth,
+      incomplete: true,
+      wallets: [
+        {
+          id: 'w2',
+          name: 'Retirement',
+          kind: 'IKE',
+          currency: 'EUR',
+          balance: '10.00',
+          balanceAsOf: '2026-09-01',
+          balancePln: null,
+          rateMissing: true,
+        },
+      ],
+    };
+    renderPage();
+
+    expect(
+      await screen.findByText(/Not included for lack of an NBP exchange rate: Retirement/),
+    ).toBeInTheDocument();
+  });
+
+  it('breaks the total down by kind with shares', async () => {
+    renderPage();
+
+    const breakdown = await screen.findByRole('region', { name: 'By kind' });
+    expect(within(breakdown).getByText('80%')).toBeInTheDocument();
+    expect(within(breakdown).getByText('20%')).toBeInTheDocument();
+  });
+
+  it('flags a wallet whose latest balance is older than 45 days', async () => {
+    const old = new Date();
+    old.setDate(old.getDate() - 46);
+    wallets = [
+      { ...xtb, latestAsOf: todayInWarsaw(old) },
+      { ...ike, latestAsOf: todayInWarsaw() },
+    ];
+    renderPage();
+
+    expect(await screen.findByText('Updated 46 days ago')).toBeInTheDocument();
+    expect(screen.getAllByText(/Updated \d+ days? ago/)).toHaveLength(1);
   });
 });
 

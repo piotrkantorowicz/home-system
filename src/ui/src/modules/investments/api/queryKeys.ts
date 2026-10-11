@@ -13,4 +13,8 @@ export const investmentsQueryKeys = {
     page: number,
     pageSize: number,
   ) => ['investments', 'snapshots', subject, householdId, id, page, pageSize] as const,
+  netWorth: (subject: string | undefined, householdId: string | undefined, scope: string) =>
+    ['investments', 'net-worth', subject, householdId, scope] as const,
+  netWorthHistory: (subject: string | undefined, householdId: string | undefined, scope: string) =>
+    ['investments', 'net-worth-history', subject, householdId, scope] as const,
 } as const;

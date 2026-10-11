@@ -1,17 +1,26 @@
 import { useHousehold } from '@modules/household';
-import { Banner, Button, EmptyState, PageContainer, PageHeader } from '@shared/components/ui';
+import { Banner, Button, Card, EmptyState, PageContainer, PageHeader } from '@shared/components/ui';
 import { useToast } from '@shared/context/ToastContext';
 import { Plus, Wallet as WalletIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
-import { useWalletMutation, useWalletsQuery } from '../api/queries';
+import {
+  useNetWorthHistoryQuery,
+  useNetWorthQuery,
+  useWalletMutation,
+  useWalletsQuery,
+} from '../api/queries';
+import { KindBreakdown } from '../components/KindBreakdown';
+import { NetWorthChart } from '../components/NetWorthChart';
+import { NetWorthSummary } from '../components/NetWorthSummary';
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { WalletRow } from '../components/WalletRow';
-import { WALLET_KINDS } from '../types';
+import { NET_WORTH_SCOPES, WALLET_KINDS } from '../types';
 
-import type { Wallet } from '../types';
+import type { NetWorthScope, Wallet } from '../types';
 
 export default function InvestmentsPage() {
   const { t } = useTranslation('investments');
@@ -20,6 +29,10 @@ export default function InvestmentsPage() {
   const query = useWalletsQuery();
   const mutation = useWalletMutation();
   const [editing, setEditing] = useState<Wallet | 'new' | null>(null);
+  const [params, setParams] = useSearchParams();
+  const scope: NetWorthScope = params.get('scope') === 'mine' ? 'mine' : 'household';
+  const netWorth = useNetWorthQuery(scope);
+  const history = useNetWorthHistoryQuery(scope);
 
   const wallets = query.data ?? [];
   const active = wallets.filter((w) => !w.isArchived);
@@ -78,8 +91,44 @@ export default function InvestmentsPage() {
 
   return (
     <PageContainer width="narrow">
-      <PageHeader title={t('wallets_title')} subtitle={t('wallets_subtitle')} actions={addButton} />
+      <PageHeader title={t('net_worth')} actions={addButton} />
       <div className="space-y-8">
+        <div role="group" aria-label={t('scope')} className="flex gap-2">
+          {NET_WORTH_SCOPES.map((value) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={scope === value ? 'default' : 'outline'}
+              aria-pressed={scope === value}
+              onClick={() => {
+                setParams(value === 'household' ? {} : { scope: value }, { replace: true });
+              }}
+            >
+              {t(`scope_${value}`)}
+            </Button>
+          ))}
+        </div>
+        {netWorth.isError && (
+          <Banner
+            variant="error"
+            onRetry={() => {
+              void netWorth.refetch();
+            }}
+            retryLabel={t('retry')}
+          >
+            {t('net_worth_load_error')}
+          </Banner>
+        )}
+        {netWorth.data && (
+          <Card className="space-y-6 p-5">
+            <NetWorthSummary netWorth={netWorth.data} history={history.data} />
+            {history.data && history.data.length > 1 && <NetWorthChart points={history.data} />}
+          </Card>
+        )}
+        {netWorth.data && (
+          <KindBreakdown byKind={netWorth.data.byKind} total={netWorth.data.total} />
+        )}
+        <h2 className="text-section font-semibold">{t('wallets_title')}</h2>
         {mutation.isError && (
           <Banner variant="error">
             {errorStatus(mutation.error) === 409 ? t('conflict_error') : t('save_error')}
@@ -106,9 +155,9 @@ export default function InvestmentsPage() {
         )}
         {groups.map(({ kind, rows }) => (
           <section key={kind} aria-labelledby={`kind-${kind}`} className="space-y-3">
-            <h2 id={`kind-${kind}`} className="text-section font-semibold">
+            <h3 id={`kind-${kind}`} className="font-semibold">
               {t(`kind_${kind}`)} · {rows.length}
-            </h2>
+            </h3>
             <ul className="space-y-2">{rows.map(renderRow)}</ul>
           </section>
         ))}
