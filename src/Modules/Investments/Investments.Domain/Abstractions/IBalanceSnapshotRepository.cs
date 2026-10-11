@@ -17,6 +17,12 @@ public interface IBalanceSnapshotRepository
     /// <param name="ct">Cancellation token.</param>
     Task<BalanceSnapshot?> GetAsync(WalletId walletId, DateOnly asOf, CancellationToken ct);
 
+    /// <summary>Loads the snapshots recorded for <paramref name="asOf"/> on any of the wallets.</summary>
+    /// <param name="walletIds">The wallets.</param>
+    /// <param name="asOf">The date.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyList<BalanceSnapshot>> GetForDateAsync(IReadOnlyCollection<WalletId> walletIds, DateOnly asOf, CancellationToken ct);
+
     /// <summary>Stages a snapshot for deletion on the next commit.</summary>
     /// <param name="snapshot">The snapshot to remove.</param>
     void Remove(BalanceSnapshot snapshot);

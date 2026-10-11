@@ -104,5 +104,18 @@
   "by_kind": "By kind",
   "net_worth_load_error": "Couldn't load net worth.",
   "updated_days_ago_one": "Updated {{count}} day ago",
-  "updated_days_ago_other": "Updated {{count}} days ago"
+  "updated_days_ago_other": "Updated {{count}} days ago",
+  "update_balances": "Update balances",
+  "check_in_title": "Monthly check-in",
+  "check_in_subtitle": "Record this month's balances in one go. One date for every wallet.",
+  "check_in_no_wallets": "Add a wallet first.",
+  "check_in_rejected": "Nothing was saved. Fix the balances marked below.",
+  "check_in_skip_hint": "Leave a wallet empty to skip it.",
+  "last_balance": "Last: {{amount}} on {{date}}",
+  "amount_invalid_short": "Not a valid amount",
+  "save_balances_zero": "Save balances",
+  "save_balances_one": "Save {{count}} balance",
+  "save_balances_other": "Save {{count}} balances",
+  "check_in_saved_one": "Saved {{count}} balance.",
+  "check_in_saved_other": "Saved {{count}} balances."
 }

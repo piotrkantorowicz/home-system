@@ -12,4 +12,7 @@ internal sealed class WalletRepository(InvestmentsDbContext dbContext) : IWallet
 
     public async Task<Wallet?> GetAsync(WalletId id, Guid householdId, CancellationToken ct)
         => await dbContext.Wallets.FirstOrDefaultAsync(w => w.Id == id && w.HouseholdId == householdId, ct);
+
+    public async Task<IReadOnlyList<Wallet>> GetManyAsync(IReadOnlyCollection<WalletId> ids, Guid householdId, CancellationToken ct)
+        => await dbContext.Wallets.Where(w => ids.Contains(w.Id) && w.HouseholdId == householdId).ToListAsync(ct);
 }

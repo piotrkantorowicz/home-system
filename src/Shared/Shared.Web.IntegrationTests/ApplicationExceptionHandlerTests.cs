@@ -78,6 +78,24 @@ public sealed class ApplicationExceptionHandlerTests
             .ShouldBe(["OwnerId must not be empty."]);
     }
 
+    /// <summary>A batch rule violation keeps its detail and adds the per-item reasons under <c>errors</c>.</summary>
+    [Fact]
+    public async Task TryHandle_WhenDomainExceptionWithErrors_Writes422WithErrors()
+    {
+        var exception = new DomainException(
+            "Nothing was saved.", new Dictionary<string, string[]> { ["w1"] = ["wallet not found"] });
+        await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
+        using var client = host.CreateClient();
+
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        body.RootElement.GetProperty("detail").GetString().ShouldBe("Nothing was saved.");
+        body.RootElement.GetProperty("errors").GetProperty("w1").EnumerateArray().Select(e => e.GetString())
+            .ShouldBe(["wallet not found"]);
+    }
+
     /// <summary>A cancelled request answers 499 with no body — the client is not there to read one.</summary>
     [Fact]
     public async Task TryHandle_WhenOperationCanceled_Returns499WithEmptyBody()

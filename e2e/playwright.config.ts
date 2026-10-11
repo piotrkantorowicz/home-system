@@ -5,7 +5,7 @@ import { config as loadDotenv } from 'dotenv';
 // TEST_USER_PASSWORD is required — see e2e/.env.example.
 loadDotenv();
 
-const INVITEE_SPECS = /(household-invite|budget-two-adults)\.spec\.ts/;
+const INVITEE_SPECS = /(household-invite|budget-two-adults|investments-two-adults)\.spec\.ts/;
 
 export default defineConfig({
   testDir: '.',
@@ -51,6 +51,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /budget-two-adults\.spec\.ts/,
       dependencies: ['chromium-invitee-household'],
+    },
+    {
+      name: 'chromium-invitee-investments',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /investments-two-adults\.spec\.ts/,
+      dependencies: ['chromium-invitee-budget'],
     },
   ],
 
