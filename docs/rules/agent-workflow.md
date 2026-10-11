@@ -114,7 +114,7 @@ Claude and Codex can work different issues at the same time without sharing an i
 
 | Hook | Blocks |
 |---|---|
-| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` or the `owner-approved` label, or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`) |
+| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` or the `owner-approved` label, or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`); adding the `owner-approved` label via `gh` (best effort — a trust signal, not a security boundary) |
 
 `guard-git.sh` checks the branch of the checkout the command targets: `git -C <dir>` wins, then a
 leading `cd <dir>` (literal path — shell variables defined inside the same command are not

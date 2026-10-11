@@ -116,7 +116,7 @@ class GuardGitOnMainTests(unittest.TestCase):
 
 
 class GuardGitMergeTests(unittest.TestCase):
-    """The merge gate, with `gh pr view` stubbed to print `reviewDecision|headRefName|labels`."""
+    """The merge gate. A stub `gh` runs the hook's real `-q` query (with jq) over a fake PR."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -127,39 +127,60 @@ class GuardGitMergeTests(unittest.TestCase):
         bin_dir = self.root / "bin"
         bin_dir.mkdir()
         gh = bin_dir / "gh"
-        gh.write_text('#!/bin/sh\nprintf \'%s\\n\' "$FAKE_GH_PR"\n')
+        gh.write_text(
+            '#!/bin/sh\n'
+            'while [ $# -gt 0 ]; do [ "$1" = "-q" ] && { shift; q="$1"; }; shift; done\n'
+            'printf \'%s\' "$FAKE_GH_PR" | jq -r "$q"\n')
         gh.chmod(0o755)
         self.path = f"{bin_dir}:{os.environ['PATH']}"
 
-    def decision(self, command, pr_view):
+    def decision(self, command, decision="", head="feat/7-thing", labels=()):
+        pr = {"reviewDecision": decision, "headRefName": head, "labels": [{"name": n} for n in labels]}
         return subprocess.run(
             ["bash", str(HOOK)], cwd=self.root / "repo", text=True, capture_output=True,
-            env={**os.environ, "PATH": self.path, "FAKE_GH_PR": pr_view},
+            env={**os.environ, "PATH": self.path, "FAKE_GH_PR": json.dumps(pr)},
             input=json.dumps({"tool_input": {"command": command}}),
         )
 
     def test_unapproved_pr_is_blocked_and_reports_the_real_decision(self):
-        result = self.decision("gh pr merge 7 --squash", "|feat/7-thing|")
+        result = self.decision("gh pr merge 7 --squash")
         self.assertEqual(2, result.returncode)
         self.assertIn("reviewDecision=NONE", result.stderr)
 
     def test_approved_review_allows_merge(self):
-        self.assertEqual(0, self.decision("gh pr merge 7 --squash", "APPROVED|feat/7-thing|").returncode)
+        self.assertEqual(0, self.decision("gh pr merge 7 --squash", decision="APPROVED").returncode)
 
     def test_owner_approved_label_allows_merge(self):
-        for labels in ("owner-approved", "bug,owner-approved,chore"):
+        for labels in (["owner-approved"], ["bug", "owner-approved", "chore"]):
             with self.subTest(labels=labels):
-                result = self.decision("gh pr merge 7 --squash", f"|feat/7-thing|{labels}")
-                self.assertEqual(0, result.returncode)
+                self.assertEqual(0, self.decision("gh pr merge 7 --squash", labels=labels).returncode)
 
-    def test_similar_label_does_not_allow_merge(self):
-        result = self.decision("gh pr merge 7 --squash", "|feat/7-thing|not-owner-approved")
-        self.assertEqual(2, result.returncode)
+    def test_look_alike_labels_and_branch_names_do_not_allow_merge(self):
+        for labels, head in ((["not-owner-approved"], "feat/7-thing"),
+                             (["x,owner-approved"], "feat/7-thing"),
+                             ([], "feat/7|yes|APPROVED"),
+                             ([], "yes|APPROVED")):
+            with self.subTest(labels=labels, head=head):
+                result = self.decision("gh pr merge 7 --squash", head=head, labels=labels)
+                self.assertEqual(2, result.returncode)
 
     def test_strategy_still_enforced_with_the_label(self):
-        self.assertEqual(2, self.decision("gh pr merge 7 --rebase", "|feat/7-thing|owner-approved").returncode)
-        self.assertEqual(2, self.decision("gh pr merge 8 --squash", "|epic/8-lane|owner-approved").returncode)
-        self.assertEqual(0, self.decision("gh pr merge 8 --rebase", "|epic/8-lane|owner-approved").returncode)
+        ok = ["owner-approved"]
+        self.assertEqual(2, self.decision("gh pr merge 7 --rebase", labels=ok).returncode)
+        self.assertEqual(2, self.decision("gh pr merge 8 --squash", head="epic/8-lane", labels=ok).returncode)
+        self.assertEqual(0, self.decision("gh pr merge 8 --rebase", head="epic/8-lane", labels=ok).returncode)
+
+    def test_agents_cannot_add_the_owner_approved_label(self):
+        for command in ("gh pr edit 7 --add-label owner-approved",
+                        "gh pr edit 7 --add-label bug,owner-approved",
+                        "gh pr create --label 'owner-approved' --title x",
+                        "gh issue edit 7 --add-label=owner-approved",
+                        "gh api repos/o/r/issues/7/labels -f 'labels[]=owner-approved'"):
+            with self.subTest(command=command):
+                self.assertEqual(2, self.decision(command).returncode)
+
+    def test_mentioning_the_label_elsewhere_is_allowed(self):
+        self.assertEqual(0, self.decision("gh pr create --label bug --body 'owner-approved explained'").returncode)
 
 
 if __name__ == "__main__":
