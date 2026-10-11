@@ -118,3 +118,4 @@ Thumbs.db
 .claude/handoffs/
 .worktrees/
 .codex/
+__pycache__/
