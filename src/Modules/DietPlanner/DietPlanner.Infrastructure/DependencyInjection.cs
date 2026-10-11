@@ -104,8 +104,8 @@ public static partial class InfrastructureDependencyInjection
         return services;
     }
 
-    private static bool IsValidImageStorageBucket(string bucket)
-        => bucket.Length is >= 3 and <= 63
+    private static bool IsValidImageStorageBucket(string? bucket)
+        => bucket is { Length: >= 3 and <= 63 }
             && !(bucket.Contains('.') && IPAddress.TryParse(bucket, out _))
             && bucket.Split('.').All(label => label.Length > 0
                 && char.IsAsciiLetterOrDigit(label[0]) && char.IsAsciiLetterOrDigit(label[^1])

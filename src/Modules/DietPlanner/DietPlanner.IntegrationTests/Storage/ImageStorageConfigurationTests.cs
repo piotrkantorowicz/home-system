@@ -108,6 +108,7 @@ public sealed class ImageStorageConfigurationTests
 
     /// <summary>Enabled invalid settings fail without disclosing supplied values.</summary>
     [Theory]
+    [InlineData("Bucket", null)]
     [InlineData("Bucket", "")]
     [InlineData("Bucket", "ab")]
     [InlineData("Bucket", "UPPERCASE")]
@@ -123,7 +124,7 @@ public sealed class ImageStorageConfigurationTests
     [InlineData("Endpoint", "https://localhost?secret=value")]
     [InlineData("Endpoint", "https://localhost#secret")]
     [InlineData("Endpoint", "https://localhost/bucket")]
-    public void Validate_WhenEnabledWithInvalidField_ReportsSafeFailure(string field, string value)
+    public void Validate_WhenEnabledWithInvalidField_ReportsSafeFailure(string field, string? value)
     {
         using ServiceProvider provider = BuildProvider(new Dictionary<string, string?>
         {
