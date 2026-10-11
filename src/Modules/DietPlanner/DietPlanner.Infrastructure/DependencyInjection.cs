@@ -5,11 +5,13 @@ using Amazon;
 using Amazon.S3;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
+using DietPlanner.Application.Images;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Storage;
 using DietPlanner.Application.Workers;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.Services;
+using DietPlanner.Infrastructure.Images;
 using DietPlanner.Infrastructure.Persistence;
 using DietPlanner.Infrastructure.Persistence.Repositories;
 using DietPlanner.Infrastructure.Storage;
@@ -63,6 +65,10 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
         services.AddScoped<HouseholdRosterProvider>();
+        services.AddScoped<IRecipeImageProcessor, RecipeImageProcessor>();
+        services.AddScoped<IRecipeImagePersistence, RecipeImagePersistence>();
+        services.AddScoped<RecipeImageCleanup>();
+        services.AddHostedService<RecipeImageCleanupWorker>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 
