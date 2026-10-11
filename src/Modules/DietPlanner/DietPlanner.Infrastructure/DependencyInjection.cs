@@ -1,6 +1,9 @@
 namespace DietPlanner.Infrastructure;
 
 using System.Net;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Persistence;
@@ -18,6 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Shared.Abstractions.Core.Domain;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
@@ -99,6 +103,38 @@ public static partial class InfrastructureDependencyInjection
         if (!configuration.GetValue<bool>($"{ImageStorageOptions.SectionName}:Enabled"))
         {
             services.AddSingleton<IImageObjectStorage, UnavailableImageObjectStorage>();
+        }
+        else
+        {
+            services.AddSingleton<IAmazonS3>(sp =>
+            {
+                ImageStorageOptions options = sp.GetRequiredService<IOptions<ImageStorageOptions>>().Value;
+                var clientConfig = new AmazonS3Config
+                {
+                    ForcePathStyle = options.ForcePathStyle,
+                    MaxErrorRetry = 2,
+                    DisableLogging = true,
+                };
+                if (string.IsNullOrWhiteSpace(options.Endpoint))
+                {
+                    clientConfig.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+                }
+                else
+                {
+                    clientConfig.ServiceURL = options.Endpoint;
+                    clientConfig.AuthenticationRegion = options.Region;
+                }
+
+                try
+                {
+                    return new AmazonS3Client(clientConfig);
+                }
+                catch (Exception ex) when (ex is AmazonClientException or HttpRequestException)
+                {
+                    throw new ImageStorageUnavailableException();
+                }
+            });
+            services.AddSingleton<IImageObjectStorage, S3ImageObjectStorage>();
         }
 
         return services;

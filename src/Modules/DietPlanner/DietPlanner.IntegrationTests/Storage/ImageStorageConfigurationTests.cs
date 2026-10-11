@@ -1,5 +1,6 @@
 namespace DietPlanner.IntegrationTests.Storage;
 
+using Amazon.S3;
 using DietPlanner.Application.Storage;
 using DietPlanner.Infrastructure;
 using DietPlanner.Infrastructure.Storage;
@@ -88,6 +89,7 @@ public sealed class ImageStorageConfigurationTests
 
         provider.GetRequiredService<IOptions<ImageStorageOptions>>().Value.Enabled.ShouldBeFalse();
         provider.GetRequiredService<IImageObjectStorage>().ShouldBeOfType<UnavailableImageObjectStorage>();
+        provider.GetService<IAmazonS3>().ShouldBeNull();
     }
 
     /// <summary>Unused disabled storage settings do not prevent startup.</summary>
@@ -182,6 +184,42 @@ public sealed class ImageStorageConfigurationTests
         }, environment);
 
         provider.GetRequiredService<IStartupValidator>().Validate();
+    }
+
+    /// <summary>Enabled clients use the configured origin, signing region and addressing style without requests.</summary>
+    [Theory]
+    [InlineData("http://localhost:9000", true)]
+    [InlineData("https://storage.example.com", false)]
+    [InlineData(null, false)]
+    public void Resolve_WhenEnabled_UsesConfiguredS3Client(string? endpoint, bool forcePathStyle)
+    {
+        using ServiceProvider provider = BuildProvider(new Dictionary<string, string?>
+        {
+            ["Enabled"] = "true",
+            ["Region"] = "eu-central-1",
+            ["Bucket"] = "recipe-images",
+            ["Endpoint"] = endpoint,
+            ["ForcePathStyle"] = forcePathStyle.ToString(),
+        });
+
+        IAmazonS3 client = provider.GetRequiredService<IAmazonS3>();
+        var config = client.Config.ShouldBeOfType<AmazonS3Config>();
+
+        config.ForcePathStyle.ShouldBe(forcePathStyle);
+        config.MaxErrorRetry.ShouldBe(2);
+        config.DisableLogging.ShouldBeTrue();
+        if (endpoint is null)
+        {
+            config.RegionEndpoint.SystemName.ShouldBe("eu-central-1");
+        }
+        else
+        {
+            config.ServiceURL.TrimEnd('/').ShouldBe(endpoint);
+            config.AuthenticationRegion.ShouldBe("eu-central-1");
+        }
+
+        provider.GetRequiredService<IImageObjectStorage>().ShouldBeOfType<S3ImageObjectStorage>();
+        provider.GetRequiredService<IAmazonS3>().ShouldBeSameAs(client);
     }
 
     private static ServiceProvider BuildProvider(
