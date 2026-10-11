@@ -82,7 +82,9 @@ export class RecipesPage extends BasePage {
     }
 
     await this.page.getByRole('button', { name: /save|create/i }).click();
-    await this.page.waitForURL(/\/diet-planner\/recipes\/[a-z0-9-]+$/);
+    await this.page.waitForURL(
+      /\/diet-planner\/recipes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
     await expect(this.page.getByRole('heading', { name: data.name, level: 1 })).toBeVisible();
     await expect(this.page.getByLabel(/choose a photo/i)).toBeVisible();
     await this.goto();

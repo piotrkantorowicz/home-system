@@ -2,7 +2,6 @@
 
 import { File as NativeFile } from 'node:buffer';
 
-import { HouseholdContext } from '@modules/household/hooks/useHousehold';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -21,6 +20,7 @@ import { RecipePhoto } from './RecipePhoto';
 import type { RecipeDto } from '../../api/hooks/useRecipes';
 
 import { server } from '@/test/mocks/server';
+import { HouseholdWrapper } from '@/test/utils/householdWrapper';
 
 const auth = { isAuthenticated: true, user: { profile: { sub: 'user-1' } } };
 const AuthTestContext = createContext(auth);
@@ -142,19 +142,9 @@ function renderPhoto(role = 'Owner', loading = false) {
     >
       <I18nextProvider i18n={language}>
         <QueryClientProvider client={client}>
-          <HouseholdContext
-            value={{
-              household: isLoading ? null : { id: 'home-1', name: 'Home', myRole, members: [] },
-              myRole: isLoading ? null : myRole,
-              myPersonId: isLoading ? null : 'person-1',
-              members: [],
-              isLoading,
-              isError: false,
-              refetch: () => undefined,
-            }}
-          >
+          <HouseholdWrapper myRole={myRole} isLoading={isLoading}>
             <PhotoPage />
-          </HouseholdContext>
+          </HouseholdWrapper>
         </QueryClientProvider>
       </I18nextProvider>
     </AuthTestContext>
