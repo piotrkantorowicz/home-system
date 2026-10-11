@@ -1,5 +1,7 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
+using DietPlanner.Application.Images;
+
 /// <summary>
 /// One ingredient line of a recipe with its product resolved.
 /// </summary>
@@ -48,6 +50,7 @@ public sealed record NutritionDto(
 /// <param name="Ingredients">The ingredient lines.</param>
 /// <param name="NutritionPerServing">Macros for one serving, when calculated.</param>
 /// <param name="TotalNutrition">Macros for the whole recipe, when calculated.</param>
+/// <param name="Image">Optional normalized photo metadata.</param>
 public sealed record RecipeDto(
     Guid Id,
     string Name,
@@ -63,4 +66,5 @@ public sealed record RecipeDto(
     bool CanEdit,
     IReadOnlyList<RecipeIngredientDto> Ingredients,
     NutritionDto? NutritionPerServing = null,
-    NutritionDto? TotalNutrition = null);
+    NutritionDto? TotalNutrition = null,
+    RecipeImageDto? Image = null);

@@ -75,6 +75,17 @@ public sealed class Recipe : AggregateRoot<RecipeId>
     public DateTime? UpdatedAt { get; private set; }
     /// <summary>When the recipe was soft-deleted, UTC; <see langword="null"/> while active.</summary>
     public DateTime? DeletedAt { get; private set; }
+    /// <summary>Optional normalized photo metadata.</summary>
+    public RecipeImage? Image { get; private set; }
+
+    /// <summary>Replaces or removes the current photo.</summary>
+    /// <param name="image">New metadata, or null to remove.</param>
+    public void ChangeImage(RecipeImage? image)
+    {
+        if (IsDeleted)
+            throw new DietPlannerDomainException("Deleted recipes cannot have photos.");
+        Image = image;
+    }
     /// <summary>The ingredient lines, in insertion order.</summary>
     public IReadOnlyCollection<RecipeIngredient> Ingredients => _ingredients.AsReadOnly();
 
@@ -137,5 +148,6 @@ public sealed class Recipe : AggregateRoot<RecipeId>
             throw new DietPlannerDomainException("Recipe is already deleted.");
 
         DeletedAt = now;
+        Image = null;
     }
 }

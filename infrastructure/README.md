@@ -222,10 +222,55 @@ addressing style, results, and cleanup. Local fixture success is insufficient.
 
 ### Coordinated backup and recovery
 
-Database rows alone do not preserve photos. This slice has no image rows yet;
-the following is the mandatory procedure for #565, not a claim of an executed
-full-stack restore test. Use separate backup/admin credentials and protect both
-backup stores and manifests from public access.
+Database rows alone do not preserve photos. Recipe metadata references immutable
+`recipe-images/<revision>/detail.jpg` and `thumbnail.jpg` objects. Use separate
+backup/admin credentials and protect both backup stores and manifests from public access.
+
+The API accepts one multipart `file` at `PUT /api/v1/recipes/{id}/image`, streams
+the current detail at `GET /image` and thumbnail at `GET /image/thumbnail`, and
+removes the reference at `DELETE /image` (paths relative to that recipe). Every
+operation requires authentication and current library access. Outputs are JPEG,
+private/no-store; responses and recipe JSON expose metadata but never storage keys.
+
+The decoder uses MIT-licensed SkiaSharp 3.119.4, including matching Linux native
+assets without a Fontconfig dependency. JPEG, PNG and static WebP are accepted
+only when filename and media type match decoded content. Inputs are bounded to
+10 MiB and 25 megapixels before pixel allocation; orientation is applied and
+source metadata discarded. The decoder uses supported subsampling, avoids extra
+encoded-input and default-orientation copies, and serializes native processing.
+PNG may still require a full-resolution decode, bounded to 25 megapixels.
+Detail/thumbnail outputs are bounded to 1600/320 px
+and 1 MiB/100 KiB. Native assets are verified by decoder tests on Linux; deployment
+on another OS/architecture must include its matching SkiaSharp native assets.
+
+`recipe_image_revisions` persists intent before S3 writes. Upload holds a revision
+row lock across two writes (60-second cancellation deadline), then locks the recipe,
+rechecks access/version and atomically switches its metadata. Cleanup runs each
+minute in batches of 50, skips locked uploads, and retires unreferenced published
+or expired pending revisions (15-minute grace). Retirement commits before object
+deletion. Failed deletes back off for five minutes without aborting other revisions,
+including provider timeouts. A partial image-version index supports reference checks.
+Tombstones are retained and swept daily
+to catch delayed storage writes after crashes; do not purge them while an old
+process/request or retained recovery point could recreate those objects. Cleanup
+never deletes a revision currently referenced by an active recipe. Deleting a
+recipe or removing its image immediately revokes reads; S3 outages do not block removal.
+
+Upload's initial read runs outside the command's ambient transaction so its connection
+returns to the pool before object writes. One database connection and revision lock
+remain held across writes to fence cleanup; moving writes before that lock would let
+cleanup delete an in-flight upload. Concurrent replacements can each write both objects;
+the loser receives 409 after the short recipe-lock phase, leaving at most 1.1 MiB eligible
+for cleanup after its pending intent expires (15 minutes). This avoids holding a recipe
+lock during S3 I/O.
+Retained tombstones grow with retired revisions and incur two deletes per daily sweep;
+purging them requires a storage fence and recovery-retention policy that this slice does not provide.
+
+For recovery, stop the API processes (including their hosted cleanup workers)
+before restoring. Integration tests exercise API/PostgreSQL/object-service restarts,
+coordinated restoration of photo metadata and both variants, pending-upload
+reconciliation, deletion retry and upload/cleanup races against PostgreSQL and RustFS.
+They do not replace production backup/export tooling or provider compatibility checks.
 
 To capture a consistent restore point:
 

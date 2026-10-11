@@ -26,7 +26,12 @@ internal sealed class RecipeRepository : IRecipeRepository
         => await _dbContext.Recipes.AddAsync(recipe, ct);
 
     public void Update(Recipe recipe)
-        => _dbContext.Recipes.Update(recipe);
+    {
+        // Recipe reads are tracked; marking the whole graph modified overwrites concurrent photo changes.
+        if (_dbContext.Entry(recipe).State == EntityState.Detached)
+            throw new InvalidOperationException("Recipe updates require a tracked recipe.");
+        _dbContext.ChangeTracker.DetectChanges();
+    }
 
     public void Delete(Recipe recipe)
         => _dbContext.Recipes.Remove(recipe);
