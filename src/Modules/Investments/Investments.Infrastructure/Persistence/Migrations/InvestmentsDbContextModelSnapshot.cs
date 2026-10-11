@@ -22,6 +22,66 @@ namespace Investments.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Investments.Domain.Aggregates.BalanceSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly>("AsOf")
+                        .HasColumnType("date")
+                        .HasColumnName("as_of");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("household_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<string>("RecordedByName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("recorded_by_name");
+
+                    b.Property<Guid>("RecordedByPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by_person_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wallet_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId", "AsOf")
+                        .IsUnique()
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ux_balance_snapshots_wallet_as_of");
+
+                    b.HasIndex("WalletId", "HouseholdId");
+
+                    b.ToTable("balance_snapshots", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_balance_snapshots_amount_range", "amount >= 0 AND amount <= 9999999999.99");
+                        });
+                });
+
             modelBuilder.Entity("Investments.Domain.Aggregates.Wallet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -102,6 +162,16 @@ namespace Investments.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_wallets_visibility", "visibility IN ('Shared', 'Private')");
                         });
+                });
+
+            modelBuilder.Entity("Investments.Domain.Aggregates.BalanceSnapshot", b =>
+                {
+                    b.HasOne("Investments.Domain.Aggregates.Wallet", null)
+                        .WithMany()
+                        .HasForeignKey("WalletId", "HouseholdId")
+                        .HasPrincipalKey("Id", "HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

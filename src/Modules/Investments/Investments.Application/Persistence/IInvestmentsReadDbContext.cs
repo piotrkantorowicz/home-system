@@ -11,4 +11,7 @@ public interface IInvestmentsReadDbContext
 {
     /// <summary>Every wallet, in every household.</summary>
     DbSet<Wallet> Wallets { get; }
+
+    /// <summary>Every balance snapshot, in every household.</summary>
+    DbSet<BalanceSnapshot> BalanceSnapshots { get; }
 }

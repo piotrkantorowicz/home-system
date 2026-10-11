@@ -1,6 +1,7 @@
 namespace Investments.Application.Commands.ArchiveWallet;
 
 using Investments.Application.Common;
+using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Abstractions;
 using Shared.Abstractions.Cqrs;
@@ -8,7 +9,8 @@ using Shared.Abstractions.Cqrs;
 internal sealed class ArchiveWalletCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
-    IInvestmentsUnitOfWork unitOfWork) : ICommandHandler<ArchiveWalletCommand, WalletDto>
+    IInvestmentsUnitOfWork unitOfWork,
+    IInvestmentsReadDbContext db) : ICommandHandler<ArchiveWalletCommand, WalletDto>
 {
     public async Task<WalletDto> HandleAsync(ArchiveWalletCommand command, CancellationToken ct = default)
     {
@@ -18,6 +20,6 @@ internal sealed class ArchiveWalletCommandHandler(
         wallet.Archive();
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 
-        return wallet.ToDto(caller);
+        return await db.ReadWalletAsync(caller, wallet.Id.Value, ct);
     }
 }
