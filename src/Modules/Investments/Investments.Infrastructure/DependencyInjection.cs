@@ -43,18 +43,20 @@ public static partial class InfrastructureDependencyInjection
     /// </summary>
     /// <param name="serviceProvider">The built host provider; a scope is created from it.</param>
     /// <param name="logger">Receives the outcome.</param>
+    /// <param name="ct">Cancels the migration; cancellation propagates instead of being logged as a failure.</param>
     public static async Task MigrateInvestmentsDatabaseAsync(
         this IServiceProvider serviceProvider,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken ct)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<InvestmentsDbContext>();
         try
         {
-            await dbContext.Database.MigrateAsync();
+            await dbContext.Database.MigrateAsync(ct);
             LogMigrationsApplied(logger);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogMigrationsFailed(logger, ex);
         }

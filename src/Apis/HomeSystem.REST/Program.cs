@@ -185,7 +185,7 @@ if (app.Environment.IsDevelopment())
     app.Services.MigrateNotificationsDatabase();
     await app.Services.MigrateHouseholdDatabaseAsync(app.Logger);
     await app.Services.MigrateBudgetDatabaseAsync(app.Logger);
-    await app.Services.MigrateInvestmentsDatabaseAsync(app.Logger);
+    await app.Services.MigrateInvestmentsDatabaseAsync(app.Logger, app.Lifetime.ApplicationStopping);
 }
 
 await app.RunAsync();
