@@ -27,6 +27,7 @@ public static class RecipeEndpoints
         var group = app.MapGroup("/api/v1/recipes")
             .WithTags("Recipes")
             .RequireAuthorization();
+        group.MapRecipeImageEndpoints();
 
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")
@@ -126,7 +127,7 @@ public static class RecipeEndpoints
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
+    internal static string GetUserId(ClaimsPrincipal user)
         => user.FindFirstValue(ClaimTypes.NameIdentifier)
            ?? user.FindFirstValue("sub")
            ?? throw new UnauthorizedAccessException("User ID not found in token");
