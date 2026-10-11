@@ -4,7 +4,7 @@ import { useToast } from '@shared/context/ToastContext';
 import { Plus, Wallet as WalletIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
 import {
@@ -91,7 +91,19 @@ export default function InvestmentsPage() {
 
   return (
     <PageContainer width="narrow">
-      <PageHeader title={t('net_worth')} actions={addButton} />
+      <PageHeader
+        title={t('net_worth')}
+        actions={
+          <>
+            {active.length > 0 && (
+              <Button asChild>
+                <Link to="/investments/check-in">{t('update_balances')}</Link>
+              </Button>
+            )}
+            {addButton}
+          </>
+        }
+      />
       <div className="space-y-8">
         <div role="group" aria-label={t('scope')} className="flex gap-2">
           {NET_WORTH_SCOPES.map((value) => (

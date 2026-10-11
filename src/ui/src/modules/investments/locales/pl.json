@@ -106,5 +106,22 @@
   "updated_days_ago_one": "Zaktualizowano {{count}} dzień temu",
   "updated_days_ago_few": "Zaktualizowano {{count}} dni temu",
   "updated_days_ago_many": "Zaktualizowano {{count}} dni temu",
-  "updated_days_ago_other": "Zaktualizowano {{count}} dnia temu"
+  "updated_days_ago_other": "Zaktualizowano {{count}} dnia temu",
+  "update_balances": "Aktualizuj salda",
+  "check_in_title": "Miesięczne podsumowanie",
+  "check_in_subtitle": "Zapisz salda z tego miesiąca za jednym razem. Jedna data dla wszystkich portfeli.",
+  "check_in_no_wallets": "Najpierw dodaj portfel.",
+  "check_in_rejected": "Nic nie zapisano. Popraw salda oznaczone poniżej.",
+  "check_in_skip_hint": "Zostaw portfel pusty, aby go pominąć.",
+  "last_balance": "Ostatnio: {{amount}} z {{date}}",
+  "amount_invalid_short": "Nieprawidłowa kwota",
+  "save_balances_zero": "Zapisz salda",
+  "save_balances_one": "Zapisz {{count}} saldo",
+  "save_balances_few": "Zapisz {{count}} salda",
+  "save_balances_many": "Zapisz {{count}} sald",
+  "save_balances_other": "Zapisz {{count}} salda",
+  "check_in_saved_one": "Zapisano {{count}} saldo.",
+  "check_in_saved_few": "Zapisano {{count}} salda.",
+  "check_in_saved_many": "Zapisano {{count}} sald.",
+  "check_in_saved_other": "Zapisano {{count}} salda."
 }

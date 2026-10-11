@@ -30,7 +30,9 @@ export function NetWorthSummary({ netWorth, history }: NetWorthSummaryProps) {
       <p className="text-muted-foreground text-meta">
         {netWorth.scope === 'mine' ? t('my_net_worth') : t('household_net_worth')}
       </p>
-      <p className="text-display tnum font-bold">{money(netWorth.total, { currency: 'PLN' })}</p>
+      <p data-testid="net-worth-total" className="text-display tnum font-bold">
+        {money(netWorth.total, { currency: 'PLN' })}
+      </p>
       <p className={cn('text-meta tnum', negative ? 'text-destructive' : 'text-good')}>
         {change
           ? t('change_since_january', {

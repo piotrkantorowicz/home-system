@@ -171,7 +171,7 @@ describe('InvestmentsPage net worth', () => {
   it('shows the household total and its change since 1 January', async () => {
     renderPage();
 
-    expect(await screen.findByText(/112.500.00 PLN/)).toBeInTheDocument();
+    expect(await screen.findByTestId('net-worth-total')).toHaveTextContent(/112.500.00 PLN/);
     expect(
       await screen.findByText(/\+12.500.00 PLN \(\+12\.5%\) since 1 January/),
     ).toBeInTheDocument();
