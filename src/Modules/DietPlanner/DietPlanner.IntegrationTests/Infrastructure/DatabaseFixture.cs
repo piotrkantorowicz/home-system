@@ -19,6 +19,14 @@ public sealed class DatabaseFixture : IAsyncLifetime
     /// <summary>Connection string of the running container, handed to the application factory.</summary>
     public string ConnectionString => _container.GetConnectionString();
 
+    /// <summary>Restarts PostgreSQL while retaining its data for persistence checks.</summary>
+    /// <param name="ct">Cancellation.</param>
+    public async Task RestartAsync(CancellationToken ct)
+    {
+        await _container.StopAsync(ct);
+        await _container.StartAsync(ct);
+    }
+
     /// <summary>Starts the PostgreSQL container and prepares the schema; runs once per test collection.</summary>
     public async ValueTask InitializeAsync()
     {

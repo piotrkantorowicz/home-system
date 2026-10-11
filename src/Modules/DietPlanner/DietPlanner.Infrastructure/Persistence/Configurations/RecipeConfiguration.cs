@@ -45,6 +45,16 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         builder.Property(x => x.DeletedAt).HasColumnName("deleted_at");
+        builder.OwnsOne(x => x.Image, image =>
+        {
+            image.Property(x => x.Version).HasColumnName("image_version");
+            image.Property(x => x.Width).HasColumnName("image_width");
+            image.Property(x => x.Height).HasColumnName("image_height");
+            image.Property(x => x.Size).HasColumnName("image_size");
+            image.Property(x => x.ThumbnailWidth).HasColumnName("image_thumbnail_width");
+            image.Property(x => x.ThumbnailHeight).HasColumnName("image_thumbnail_height");
+            image.Property(x => x.ThumbnailSize).HasColumnName("image_thumbnail_size");
+        });
 
         builder.HasQueryFilter(r => r.DeletedAt == null);
 

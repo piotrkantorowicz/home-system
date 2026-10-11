@@ -658,6 +658,40 @@ namespace DietPlanner.Infrastructure.Migrations
                     b.ToTable("recipe_ingredients", (string)null);
                 });
 
+            modelBuilder.Entity("DietPlanner.Domain.Ledgers.RecipeImageRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset>("NextCleanupAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_cleanup_at");
+
+                    b.Property<bool>("Published")
+                        .HasColumnType("boolean")
+                        .HasColumnName("published");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recipe_id");
+
+                    b.Property<bool>("Retired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("retired");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NextCleanupAt");
+
+                    b.ToTable("recipe_image_revisions", (string)null);
+                });
+
             modelBuilder.Entity("DietPlanner.Domain.Ledgers.SentMealReminder", b =>
                 {
                     b.Property<Guid>("MealEntryId")
@@ -864,6 +898,52 @@ namespace DietPlanner.Infrastructure.Migrations
 
                     b.Navigation("Nutrition")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("DietPlanner.Domain.Aggregates.Recipe", b =>
+                {
+                    b.OwnsOne("DietPlanner.Domain.ValueObjects.RecipeImage", "Image", b1 =>
+                        {
+                            b1.Property<Guid>("RecipeId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Height")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_height");
+
+                            b1.Property<int>("Size")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_size");
+
+                            b1.Property<int>("ThumbnailHeight")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_thumbnail_height");
+
+                            b1.Property<int>("ThumbnailSize")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_thumbnail_size");
+
+                            b1.Property<int>("ThumbnailWidth")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_thumbnail_width");
+
+                            b1.Property<Guid>("Version")
+                                .HasColumnType("uuid")
+                                .HasColumnName("image_version");
+
+                            b1.Property<int>("Width")
+                                .HasColumnType("integer")
+                                .HasColumnName("image_width");
+
+                            b1.HasKey("RecipeId");
+
+                            b1.ToTable("recipes");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecipeId");
+                        });
+
+                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("DietPlanner.Domain.Entities.MealEntryActualProduct", b =>

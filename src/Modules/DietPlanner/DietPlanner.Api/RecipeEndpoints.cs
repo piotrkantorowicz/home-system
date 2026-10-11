@@ -27,6 +27,7 @@ public static class RecipeEndpoints
         var group = app.MapGroup("/api/v1/recipes")
             .WithTags("Recipes")
             .RequireAuthorization();
+        group.MapRecipeImageEndpoints();
 
         group.MapGet("/", ListRecipes)
             .WithName("ListRecipes")

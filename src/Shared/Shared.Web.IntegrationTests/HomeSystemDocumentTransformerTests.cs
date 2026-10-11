@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class HomeSystemDocumentTransformerTests
 {
-    private static readonly string[] SharedStatuses = ["400", "401", "403", "404", "422", "503"];
+    private static readonly string[] SharedStatuses = ["400", "401", "403", "404", "409", "422", "503"];
 
     /// <summary>The real host's document: every operation documents the shared problem responses.</summary>
     [Fact]
@@ -83,6 +83,7 @@ public sealed class HomeSystemDocumentTransformerTests
         SchemaRef(responses, "401").ShouldEndWith("/ProblemDetails");
         SchemaRef(responses, "403").ShouldEndWith("/ProblemDetails");
         SchemaRef(responses, "404").ShouldEndWith("/ProblemDetails");
+        SchemaRef(responses, "409").ShouldEndWith("/ProblemDetails");
         SchemaRef(responses, "422").ShouldEndWith("/ProblemDetails");
         SchemaRef(responses, "503").ShouldEndWith("/ProblemDetails");
         responses.TryGetProperty("200", out _).ShouldBeTrue();

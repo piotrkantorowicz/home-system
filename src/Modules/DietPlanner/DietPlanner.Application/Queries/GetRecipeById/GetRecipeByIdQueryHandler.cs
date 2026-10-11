@@ -1,6 +1,7 @@
 namespace DietPlanner.Application.Queries.GetRecipeById;
 
 using DietPlanner.Application.Households;
+using DietPlanner.Application.Images;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.Domain.ValueObjects;
@@ -86,6 +87,9 @@ internal sealed class GetRecipeByIdQueryHandler
             access.CanEdit(recipe.CreatedByUserId, recipe.Visibility),
             ingredientDtos,
             perServing,
-            totalNutrition);
+            totalNutrition,
+            recipe.Image is null ? null : new RecipeImageDto(recipe.Image.Version,
+                recipe.Image.Width, recipe.Image.Height, recipe.Image.Size,
+                recipe.Image.ThumbnailWidth, recipe.Image.ThumbnailHeight, recipe.Image.ThumbnailSize));
     }
 }

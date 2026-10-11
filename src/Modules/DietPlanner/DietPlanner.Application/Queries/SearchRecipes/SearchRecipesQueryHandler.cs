@@ -1,6 +1,7 @@
 namespace DietPlanner.Application.Queries.SearchRecipes;
 
 using DietPlanner.Application.Households;
+using DietPlanner.Application.Images;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Services;
@@ -154,6 +155,9 @@ internal sealed class SearchRecipesQueryHandler
                 i.Id.Value, i.ProductId.Value,
                 products.GetValueOrDefault(i.ProductId)?.Name ?? "Unknown", i.Amount, i.Unit)).ToList(),
             new NutritionDto(calories / servings, protein / servings, carbs / servings, fat / servings, fiber / servings),
-            new NutritionDto(calories, protein, carbs, fat, fiber));
+            new NutritionDto(calories, protein, carbs, fat, fiber),
+            recipe.Image is null ? null : new RecipeImageDto(recipe.Image.Version,
+                recipe.Image.Width, recipe.Image.Height, recipe.Image.Size,
+                recipe.Image.ThumbnailWidth, recipe.Image.ThumbnailHeight, recipe.Image.ThumbnailSize));
     }
 }
