@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.UploadRecipeImage;
 
+using System.Transactions;
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Images;
 using DietPlanner.Application.Persistence;
@@ -17,6 +18,8 @@ internal sealed class UploadRecipeImageCommandHandler(
 {
     public async Task<RecipeImageDto> HandleAsync(UploadRecipeImageCommand command, CancellationToken ct)
     {
+        // Persistence owns independent transactions; do not retain an enlisted read connection during S3 writes.
+        using var suppression = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled);
         LibraryAccess access = await households.GetLibraryAccessAsync(command.UserId, ct);
         var header = await db.Recipes.AsNoTracking().Where(r => r.Id == RecipeId.From(command.Id))
             .Select(r => new { r.CreatedByUserId, r.Visibility, Version = r.Image == null ? (Guid?)null : r.Image.Version })
