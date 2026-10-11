@@ -88,8 +88,6 @@ internal sealed class GetRecipeByIdQueryHandler
             ingredientDtos,
             perServing,
             totalNutrition,
-            recipe.Image is null ? null : new RecipeImageDto(recipe.Image.Version,
-                recipe.Image.Width, recipe.Image.Height, recipe.Image.Size,
-                recipe.Image.ThumbnailWidth, recipe.Image.ThumbnailHeight, recipe.Image.ThumbnailSize));
+            RecipeImageDto.From(recipe.Image));
     }
 }

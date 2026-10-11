@@ -156,8 +156,6 @@ internal sealed class SearchRecipesQueryHandler
                 products.GetValueOrDefault(i.ProductId)?.Name ?? "Unknown", i.Amount, i.Unit)).ToList(),
             new NutritionDto(calories / servings, protein / servings, carbs / servings, fat / servings, fiber / servings),
             new NutritionDto(calories, protein, carbs, fat, fiber),
-            recipe.Image is null ? null : new RecipeImageDto(recipe.Image.Version,
-                recipe.Image.Width, recipe.Image.Height, recipe.Image.Size,
-                recipe.Image.ThumbnailWidth, recipe.Image.ThumbnailHeight, recipe.Image.ThumbnailSize));
+            RecipeImageDto.From(recipe.Image));
     }
 }

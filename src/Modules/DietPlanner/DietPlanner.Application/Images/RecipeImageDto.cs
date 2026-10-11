@@ -1,5 +1,7 @@
 namespace DietPlanner.Application.Images;
 
+using DietPlanner.Domain.ValueObjects;
+
 /// <summary>Normalized JPEG metadata; version changes on replacement.</summary>
 /// <param name="Version">Revision.</param>
 /// <param name="Width">Detail width.</param>
@@ -10,4 +12,9 @@ namespace DietPlanner.Application.Images;
 /// <param name="ThumbnailSize">Thumbnail bytes.</param>
 /// <param name="ContentType">Normalized media type.</param>
 public sealed record RecipeImageDto(Guid Version, int Width, int Height, int Size,
-    int ThumbnailWidth, int ThumbnailHeight, int ThumbnailSize, string ContentType = "image/jpeg");
+    int ThumbnailWidth, int ThumbnailHeight, int ThumbnailSize, string ContentType = "image/jpeg")
+{
+    internal static RecipeImageDto? From(RecipeImage? image)
+        => image is null ? null : new(image.Version, image.Width, image.Height, image.Size,
+            image.ThumbnailWidth, image.ThumbnailHeight, image.ThumbnailSize);
+}
