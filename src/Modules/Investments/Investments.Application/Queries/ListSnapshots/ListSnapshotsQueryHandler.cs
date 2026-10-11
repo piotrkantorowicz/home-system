@@ -36,10 +36,10 @@ internal sealed class ListSnapshotsQueryHandler(InvestmentsAccessService access,
             .Select(s => new { s.AsOf, s.Amount, s.Note, s.RecordedByPersonId, s.RecordedByName, s.RecordedAt, s.UpdatedAt })
             .ToListAsync(ct);
 
-        var rates = await db.LoadRatesAsync(rows.Select(r => (currency, r.AsOf)), ct);
+        var rates = await db.LoadLatestRatesAsync([currency], ct);
         var items = rows.Take(pageSize).Select((r, i) =>
         {
-            var pln = rates.ToPln(r.Amount, currency, r.AsOf);
+            var pln = rates.ToPlnAtLatest(r.Amount, currency);
             return new SnapshotDto(
                 r.AsOf,
                 Format(r.Amount),

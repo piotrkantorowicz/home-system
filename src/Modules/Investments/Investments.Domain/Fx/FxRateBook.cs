@@ -27,6 +27,11 @@ public sealed class FxRateBook
     public FxRate? Find(WalletCurrency currency, DateOnly date)
         => _byCurrency.TryGetValue(currency, out var rates) ? rates.LastOrDefault(r => r.EffectiveDate <= date) : null;
 
+    /// <summary>Converts an amount to PLN at the newest rate in the book — today's rate, as rates are never future-dated.</summary>
+    /// <param name="amount">The amount in its own currency.</param>
+    /// <param name="currency">Its currency.</param>
+    public PlnValue ToPlnAtLatest(decimal amount, WalletCurrency currency) => ToPln(amount, currency, DateOnly.MaxValue);
+
     /// <summary>Converts an amount held in <paramref name="currency"/> on <paramref name="date"/> to PLN.</summary>
     /// <param name="amount">The amount in its own currency.</param>
     /// <param name="currency">Its currency.</param>

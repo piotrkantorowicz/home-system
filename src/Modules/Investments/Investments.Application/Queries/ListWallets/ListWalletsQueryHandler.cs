@@ -30,7 +30,7 @@ internal sealed class ListWalletsQueryHandler(InvestmentsAccessService access, I
             .ToRows(db.BalanceSnapshots)
             .ToListAsync(ct);
 
-        var rates = await db.LoadRatesAsync(rows.SelectMany(r => r.LatestValue()), ct);
+        var rates = await db.LoadLatestRatesAsync(rows.Select(r => r.Currency), ct);
         return new PagedList<WalletDto>([.. rows.Select(r => r.ToDto(caller, rates))], total, page, pageSize);
     }
 }

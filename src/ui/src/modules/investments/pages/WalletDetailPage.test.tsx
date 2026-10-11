@@ -149,7 +149,7 @@ describe('WalletDetailPage', () => {
     renderPage();
 
     expect(
-      await screen.findByText(/No NBP exchange rate for this date yet/, { selector: 'p' }),
+      await screen.findByText(/No NBP exchange rate yet/, { selector: 'p' }),
     ).toBeInTheDocument();
     const rows = within(await screen.findByRole('table')).getAllByRole('row');
     expect(rowAt(rows, 1)).toHaveTextContent(/—No NBP exchange rate/);

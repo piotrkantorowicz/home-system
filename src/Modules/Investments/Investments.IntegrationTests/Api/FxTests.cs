@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// #576 — NBP rates: backfill on write, prior-business-day fallback, NBP outages never failing a
+/// #576 — NBP rates: backfill on write, values at today's (newest) rate, NBP outages never failing a
 /// write, and an idempotent worker. Rates are global, so each test starts with none stored
 /// (tests in a class run one at a time).
 /// </summary>
@@ -60,7 +60,7 @@ public sealed class FxTests : IClassFixture<InvestmentsDatabaseFixture>, IAsyncL
 
     private Task RunWorkerAsync() => _factory.Services.GetRequiredService<NbpFxWorker>().RunOnceAsync(Ct);
 
-    /// <summary>A Sunday balance is valued at Friday's rate, fetched when the balance is recorded; the rate and table are exposed.</summary>
+    /// <summary>When the newest rate is a Friday's, it applies over the weekend; it is fetched when the balance is recorded and the rate and table are exposed.</summary>
     [Fact]
     public async Task ForeignBalance_OnWeekend_UsesPriorBusinessDayRate()
     {
@@ -118,19 +118,24 @@ public sealed class FxTests : IClassFixture<InvestmentsDatabaseFixture>, IAsyncL
         after.LatestBalancePln.ShouldBe("395.12");
     }
 
-    /// <summary>A balance dated before any published rate stays missing — a later rate is never used.</summary>
+    /// <summary>Wallet and history values use today's rate, not the rate of the balance's own date.</summary>
     [Fact]
-    public async Task BalanceBeforeFirstRate_IsMissing()
+    public async Task ForeignBalance_UsesTodaysRate()
     {
-        _factory.Nbp.Publish(WalletCurrency.EUR, new DateOnly(2022, 3, 10), 4.6m);
+        _factory.Nbp.Publish(WalletCurrency.EUR, new DateOnly(2025, 1, 3), 4.2716m);
+        _factory.Nbp.Publish(WalletCurrency.EUR, new DateOnly(2026, 9, 11), 4.3m);
         var h = await _scenario.NewHouseholdAsync();
         var wallet = await InvestmentsScenario.CreateWalletAsync(h.Owner, "Old EUR", currency: "EUR");
 
-        (await PutAsync(h.Owner, wallet.Id, "2022-03-01", "10")).EnsureSuccessStatusCode();
+        (await PutAsync(h.Owner, wallet.Id, "2025-01-05", "1000")).EnsureSuccessStatusCode();
         var detail = await WalletAsync(h.Owner, wallet.Id);
+        var history = await h.Owner.GetFromJsonAsync<SnapshotPage>($"/api/investments/wallets/{wallet.Id}/snapshots", Ct);
 
-        detail.RateMissing.ShouldBeTrue();
-        detail.LatestBalancePln.ShouldBeNull();
+        detail.LatestBalancePln.ShouldBe("4300.00");
+        detail.Rate!.EffectiveDate.ShouldBe(new DateOnly(2026, 9, 11));
+        var row = history!.Items.ShouldHaveSingleItem();
+        row.AmountPln.ShouldBe("4300.00");
+        row.Rate!.EffectiveDate.ShouldBe(new DateOnly(2026, 9, 11));
     }
 
     /// <summary>Running the worker again stores nothing twice.</summary>

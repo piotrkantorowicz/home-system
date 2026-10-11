@@ -89,6 +89,6 @@
   "delete_balance_confirm_body": "Zniknie z historii i z majątku netto. Tej operacji nie można cofnąć.",
   "delete": "Usuń",
   "rate_used": "1 {{currency}} = {{mid}} PLN · tabela NBP {{table}} z {{date}}",
-  "rate_missing": "Brak jeszcze kursu NBP z tego dnia — wartość w PLN pojawi się po jego pobraniu.",
+  "rate_missing": "Brak jeszcze kursu NBP — wartość w PLN pojawi się po jego pobraniu.",
   "rate_missing_short": "Brak kursu PLN"
 }

@@ -56,6 +56,11 @@ public sealed class FxRateBookTests
         value.RateMissing.ShouldBeTrue();
     }
 
+    /// <summary>Today's value uses the newest rate of that currency.</summary>
+    [Fact]
+    public void ToPlnAtLatest_UsesNewestRate()
+        => Book.ToPlnAtLatest(10m, WalletCurrency.EUR).Rate.ShouldBe(Friday);
+
     /// <summary>PLN needs no rate.</summary>
     [Fact]
     public void ToPln_Pln_IsUnchanged()

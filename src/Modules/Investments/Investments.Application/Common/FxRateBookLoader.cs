@@ -29,4 +29,21 @@ internal static class FxRateBookLoader
 
         return new FxRateBook(rates);
     }
+
+    /// <summary>Loads the newest stored rate of each foreign currency (today's rate, or the last business day's).</summary>
+    public static async Task<FxRateBook> LoadLatestRatesAsync(
+        this IInvestmentsReadDbContext db, IEnumerable<WalletCurrency> currencies, CancellationToken ct)
+    {
+        var foreign = currencies.Where(c => c != WalletCurrency.PLN).Distinct().ToList();
+        if (foreign.Count == 0)
+            return new FxRateBook([]);
+
+        var rates = await db.FxRates.AsNoTracking()
+            .Where(r => foreign.Contains(r.Currency))
+            .GroupBy(r => r.Currency)
+            .Select(g => g.OrderByDescending(r => r.EffectiveDate).First())
+            .ToListAsync(ct);
+
+        return new FxRateBook(rates);
+    }
 }

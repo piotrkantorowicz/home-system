@@ -89,6 +89,6 @@
   "delete_balance_confirm_body": "It's removed from the history and the net worth. This can't be undone.",
   "delete": "Delete",
   "rate_used": "1 {{currency}} = {{mid}} PLN · NBP table {{table}} of {{date}}",
-  "rate_missing": "No NBP exchange rate for this date yet — the PLN value will appear once it is fetched.",
+  "rate_missing": "No NBP exchange rate yet — the PLN value will appear once it is fetched.",
   "rate_missing_short": "No PLN rate yet"
 }

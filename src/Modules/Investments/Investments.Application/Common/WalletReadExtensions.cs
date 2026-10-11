@@ -47,16 +47,13 @@ internal static class WalletReadExtensions
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException("Wallet", id);
 
-        return row.ToDto(caller, await db.LoadRatesAsync(row.LatestValue(), ct));
+        return row.ToDto(caller, await db.LoadLatestRatesAsync([row.Currency], ct));
     }
 
-    /// <summary>The (currency, date) pairs a set of rows needs rates for.</summary>
-    public static IEnumerable<(WalletCurrency, DateOnly)> LatestValue(this WalletRow r)
-        => r.LatestAsOf is { } asOf ? [(r.Currency, asOf)] : [];
-
+    /// <summary>Maps a row; its PLN value uses today's rate from <paramref name="rates"/> (see <see cref="FxRateBookLoader.LoadLatestRatesAsync"/>).</summary>
     public static WalletDto ToDto(this WalletRow r, InvestmentsCaller caller, FxRateBook rates)
     {
-        var pln = r.LatestBalance is { } balance && r.LatestAsOf is { } asOf ? rates.ToPln(balance, r.Currency, asOf) : null;
+        var pln = r.LatestBalance is { } balance ? rates.ToPlnAtLatest(balance, r.Currency) : null;
 
         return new(
             r.Id, r.Name, r.Institution.ToString(), r.Kind.ToString(), r.Currency.ToString(), r.Visibility.ToString(),
