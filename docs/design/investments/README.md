@@ -91,7 +91,7 @@ Authorize from current membership on every request; no cached roster. A departed
 
 Represent amounts with a module-local value object backed by `decimal`. Store balances as `numeric(18,2)`, FX rates as `numeric(18,6)`. API money fields are decimal strings (`"12450.10"`), documented as strings in OpenAPI. At most two fractional digits, no exponent, maximum `9999999999.99`. Reject excess precision; never round silently. Balances may be zero, never negative (no liabilities in scope).
 
-Wallet currencies: `PLN`, `EUR`, `USD`. Reporting currency: PLN, fixed. Adding a currency is a code change to the allowed list plus the FX fetch list.
+Wallet currencies: `PLN`, `EUR`, `USD`. Reporting currency: PLN, fixed in phase 1 (configurable later: [#588](https://github.com/piotrkantorowicz/home-system/issues/588)). Adding a currency is a code change to the allowed list plus the FX fetch list.
 
 The browser keeps input as text, accepts the active locale's decimal separator, and normalizes to the API format. The server computes all totals and conversions.
 
@@ -103,9 +103,10 @@ The browser keeps input as text, accepts the active locale's decimal separator, 
 
 - Source: NBP table A mid rates (`https://api.nbp.pl/api/exchangerates/rates/a/{code}/{from}/{to}/`).
 - Rate for a date D: the most recent published rate with `EffectiveDate <= D`. Weekends and holidays fall back to the prior business day.
+- **Which D:** current figures use today's rate, i.e. the newest stored rate. That covers the wallet list, wallet detail, every row of the snapshot history, and `GET /net-worth` even with a past `asOf`. Only the month-end history chart values each point at that month end's rate, so it shows FX moves over time.
 - PLN wallets need no rate.
 - Responses that convert foreign amounts include the rate, its effective date, and the NBP table number used.
-- If no rate exists on or before D for a needed currency, that wallet is returned with `rateMissing: true`, contributes nothing to the PLN total, and the response sets a top-level `incomplete: true`. Never guess or reuse a later rate.
+- If no applicable rate exists for a needed currency, that wallet is returned with `rateMissing: true`, contributes nothing to the PLN total, and the response sets a top-level `incomplete: true`. Never guess or reuse a later rate.
 
 Phase 3 needs D-1 rates for tax; storing every published rate makes that a query, not new infrastructure.
 
@@ -175,7 +176,7 @@ Module `src/ui/src/modules/investments/`, registered in the module registry with
 - **Dashboard** (mockup “Dashboard A”, approved). Household/Mine scope toggle; net worth total; change since 1 January (amount and percent); 12-month line chart; breakdown by kind (stacked bar + legend); wallets table grouped by kind, showing owner, private chip, native and PLN values, last balance date. Primary action “Update balances” → check-in.
 - **Stale flag:** wallet whose latest snapshot is older than 45 days shows “Updated N days ago” in warning style. Constant in code; not configurable.
 - **Incomplete flag:** when `incomplete` is true, the total shows a warning naming the wallets without a rate.
-- **Wallet detail:** native-currency balance first, PLN second with the NBP rate and table number; inline “Record balance” form (date, amount, note; same date replaces); history table with change vs previous and PLN at that date's rate; Edit / Archive.
+- **Wallet detail:** native-currency balance first, PLN second with the NBP rate and table number; inline “Record balance” form (date, amount, note; same date replaces); history table with change vs previous and PLN at today's rate; Edit / Archive.
 - **Monthly check-in** (approved for phase 1): one date for the batch; one row per active visible wallet with last balance and date; empty input means “skip”; live change per row; Save button labelled with the count; single batch request.
 - **Add/edit wallet:** form with name, institution, kind, currency, owner (self or managed members), visibility. Owner, kind, and currency read-only after creation.
 - Empty state: no wallets → explains what a wallet is and offers “Add wallet”.
@@ -232,3 +233,4 @@ Delivered through the epic lane `epic/571-investments-phase-1-net-worth`. This d
 | 2026-10-10 | Architecture: new `Investments` module, DDD + EF, market data inside the module. |
 | 2026-10-10 | Every wallet has a legal owner; visibility Shared/Private is separate and owner-changeable. No workspace/initialize step; reporting currency PLN fixed. |
 | 2026-10-10 | UI: Dashboard A (timeline first); monthly check-in included in phase 1. |
+| 2026-10-11 | PLN values use today's NBP rate everywhere except the month-end history chart (month-end rates). Configurable reporting currency deferred to #588. |
