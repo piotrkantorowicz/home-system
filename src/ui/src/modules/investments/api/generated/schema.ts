@@ -1316,6 +1316,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/investments/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Record balances for several wallets on one date, all or nothing; any invalid entry is a 422 naming the wallet ids */
+        put: operations["RecordInvestmentsCheckIn"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/investments/net-worth": {
         parameters: {
             query?: never;
@@ -1596,6 +1613,12 @@ export interface components {
             consoleEnabled: boolean;
             emailEnabled: boolean;
             webSocketEnabled: boolean;
+        };
+        CheckInEntryRequest: {
+            /** Format: uuid */
+            walletId: string;
+            amount: string;
+            note: null | string;
         };
         ConvertToAccountRequest: {
             email: string;
@@ -2486,6 +2509,19 @@ export interface components {
             /** Format: double */
             amount: number | string;
             unit: string;
+        };
+        RecordCheckInRequest: {
+            /** Format: date */
+            asOf: string;
+            entries: null | components["schemas"]["CheckInEntryRequest"][];
+        };
+        RecordCheckInResult: {
+            /** Format: date */
+            asOf: string;
+            /** Format: int32 */
+            saved: number | string;
+            /** Format: int32 */
+            created: number | string;
         };
         RecordRepaymentRequest: {
             /** Format: uuid */
@@ -9707,6 +9743,75 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RecordInvestmentsCheckIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordCheckInRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordCheckInResult"];
+                };
             };
             /** @description Validation failed */
             400: {

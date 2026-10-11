@@ -214,3 +214,40 @@ export function useNetWorthHistoryQuery(scope: NetWorthScope) {
     enabled: auth.isAuthenticated && !!household,
   });
 }
+
+export interface CheckInInput {
+  asOf: string;
+  entries: { walletId: string; amount: string }[];
+}
+
+/** The server's explanation of a rejected check-in (it names the failing wallets), if any. */
+export function checkInErrorDetail(error: unknown): string | null {
+  return typeof error === 'object' &&
+    error !== null &&
+    'detail' in error &&
+    typeof error.detail === 'string'
+    ? error.detail
+    : null;
+}
+
+export function useCheckInMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CheckInInput) => {
+      const result = await api.PUT('/api/investments/snapshots', {
+        body: { asOf: input.asOf, entries: input.entries.map((e) => ({ ...e, note: null })) },
+      });
+      if (!result.response.ok) {
+        const problem = result.error as { detail?: string | null } | undefined;
+        throw Object.assign(new Error(`Check-in failed (${String(result.response.status)})`), {
+          status: result.response.status,
+          detail: problem?.detail ?? null,
+        });
+      }
+      return result.data;
+    },
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: investmentsQueryKeys.all() });
+    },
+  });
+}

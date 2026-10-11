@@ -8,6 +8,7 @@ import type { AppModule } from '@shared/lib/module-registry';
 
 const InvestmentsPage = lazy(() => import('./pages/InvestmentsPage'));
 const WalletDetailPage = lazy(() => import('./pages/WalletDetailPage'));
+const CheckInPage = lazy(() => import('./pages/CheckInPage'));
 
 export const investmentsModule: AppModule = {
   name: 'investments',
@@ -32,5 +33,6 @@ export const investmentsModule: AppModule = {
   routes: [
     { index: true, Component: InvestmentsPage },
     { path: 'wallets/:id', Component: WalletDetailPage },
+    { path: 'check-in', Component: CheckInPage },
   ],
 };
