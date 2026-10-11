@@ -17,7 +17,7 @@ export class RecipeImageError extends Error {
 
 export function recipeImageOptions(id: string, version: string, scope: string) {
   return queryOptions({
-    queryKey: ['recipe-images', scope, id, version],
+    queryKey: queryKeys.recipeImages.detail(scope, id, version),
     queryFn: async ({ signal }) => {
       const response = await api.GET('/api/v1/recipes/{id}/image', {
         params: { path: { id } },
@@ -70,21 +70,22 @@ export function useChangeRecipeImage(id: string, scope: string) {
       return response.data;
     },
     onSuccess: async (image) => {
-      if (!isCurrentScope()) return;
-      await client.cancelQueries({ queryKey: ['recipe-images', scope, id] });
-      if (!isCurrentScope()) return;
-      client.removeQueries({ queryKey: ['recipe-images', scope, id] });
-      client.setQueryData<RecipeDto | null>(queryKeys.recipes.detail(id), (recipe) =>
-        recipe ? { ...recipe, image } : recipe,
-      );
-      await client.invalidateQueries({ queryKey: queryKeys.recipes.all() });
+      await client.cancelQueries({ queryKey: queryKeys.recipeImages.all(scope, id) });
+      client.removeQueries({ queryKey: queryKeys.recipeImages.all(scope, id) });
+      // Only the mounted scope may write response data into the unscoped recipe cache.
+      if (isCurrentScope()) {
+        client.setQueryData<RecipeDto | null>(queryKeys.recipes.detail(id), (recipe) =>
+          recipe ? { ...recipe, image } : recipe,
+        );
+      }
+      // Navigation must not suppress invalidation; refetches use the current credentials.
+      void client.invalidateQueries({ queryKey: queryKeys.recipes.all() });
     },
     onError: async (error) => {
-      if (!isCurrentScope()) return;
-      if (error instanceof RecipeImageError && [401, 403, 404].includes(error.status)) {
-        await client.cancelQueries({ queryKey: ['recipe-images', scope, id] });
-        client.removeQueries({ queryKey: ['recipe-images', scope, id] });
-        await client.invalidateQueries({ queryKey: queryKeys.recipes.detail(id) });
+      if (error instanceof RecipeImageError && [401, 403, 404, 409].includes(error.status)) {
+        await client.cancelQueries({ queryKey: queryKeys.recipeImages.all(scope, id) });
+        client.removeQueries({ queryKey: queryKeys.recipeImages.all(scope, id) });
+        void client.invalidateQueries({ queryKey: queryKeys.recipes.detail(id) });
       }
     },
   });

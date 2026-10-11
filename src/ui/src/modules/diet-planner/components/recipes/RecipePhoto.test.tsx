@@ -2,6 +2,7 @@
 
 import { File as NativeFile } from 'node:buffer';
 
+import { HouseholdContext } from '@modules/household/hooks/useHousehold';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -20,7 +21,6 @@ import { RecipePhoto } from './RecipePhoto';
 import type { RecipeDto } from '../../api/hooks/useRecipes';
 
 import { server } from '@/test/mocks/server';
-import { HouseholdWrapper } from '@/test/utils/householdWrapper';
 
 const auth = { isAuthenticated: true, user: { profile: { sub: 'user-1' } } };
 const AuthTestContext = createContext(auth);
@@ -132,8 +132,8 @@ function PhotoPage() {
   return data ? <RecipePhoto recipe={data} /> : <p>Recipe unavailable</p>;
 }
 
-function renderPhoto(role = 'Owner') {
-  const content = (myRole: string) => (
+function renderPhoto(role = 'Owner', loading = false) {
+  const content = (myRole: string, isLoading: boolean) => (
     <AuthTestContext
       value={{
         isAuthenticated: auth.isAuthenticated,
@@ -142,18 +142,28 @@ function renderPhoto(role = 'Owner') {
     >
       <I18nextProvider i18n={language}>
         <QueryClientProvider client={client}>
-          <HouseholdWrapper myRole={myRole}>
+          <HouseholdContext
+            value={{
+              household: isLoading ? null : { id: 'home-1', name: 'Home', myRole, members: [] },
+              myRole: isLoading ? null : myRole,
+              myPersonId: isLoading ? null : 'person-1',
+              members: [],
+              isLoading,
+              isError: false,
+              refetch: () => undefined,
+            }}
+          >
             <PhotoPage />
-          </HouseholdWrapper>
+          </HouseholdContext>
         </QueryClientProvider>
       </I18nextProvider>
     </AuthTestContext>
   );
-  const view = render(content(role));
+  const view = render(content(role, loading));
   return {
     ...view,
-    refresh: (myRole = role) => {
-      view.rerender(content(myRole));
+    refresh: (myRole = role, isLoading = false) => {
+      view.rerender(content(myRole, isLoading));
     },
   };
 }
@@ -422,4 +432,118 @@ it('ignores a late upload response after identity changes', async () => {
   expect(finished).toHaveBeenCalledOnce();
   expect(client.getQueryData<RecipeDto>(queryKeys.recipes.detail('r1'))?.image?.version).toBe('v1');
   expect(toast.success).not.toHaveBeenCalled();
+});
+
+it('invalidates recipe caches when an upload completes after navigation', async () => {
+  let release: () => void = () => {
+    throw new Error('Upload gate is not initialized');
+  };
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started = vi.fn();
+  server.use(
+    http.put('http://localhost:5050/api/v1/recipes/r1/image', async () => {
+      started();
+      await gate;
+      return HttpResponse.json({ ...image, version: 'v2' });
+    }),
+  );
+  const listKey = queryKeys.recipes.list({});
+  client.setQueryData(listKey, [recipe]);
+  const view = renderPhoto();
+  await screen.findByRole('img', { name: 'Photo of Oats' });
+  await selectPhoto();
+  await userEvent.click(screen.getByRole('button', { name: 'Upload photo' }));
+  await waitFor(() => {
+    expect(started).toHaveBeenCalledOnce();
+  });
+  view.unmount();
+  release();
+  await waitFor(() => {
+    expect(client.isMutating()).toBe(0);
+  });
+  expect(client.getQueryState(listKey)?.isInvalidated).toBe(true);
+  expect(client.getQueryState(queryKeys.recipes.detail('r1'))?.isInvalidated).toBe(true);
+  expect(toast.success).not.toHaveBeenCalled();
+});
+
+it('finishes upload feedback before a slow recipe refetch completes', async () => {
+  let release: () => void = () => {
+    throw new Error('Refetch gate is not initialized');
+  };
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let uploaded = false;
+  server.use(
+    http.put('http://localhost:5050/api/v1/recipes/r1/image', () => {
+      uploaded = true;
+      recipe = { ...recipe, image: { ...image, version: 'v2' } };
+      return HttpResponse.json(recipe.image);
+    }),
+    http.get('http://localhost:5050/api/v1/recipes/r1', async () => {
+      if (uploaded) await gate;
+      return HttpResponse.json(recipe);
+    }),
+  );
+  renderPhoto();
+  await screen.findByRole('img', { name: 'Photo of Oats' });
+  await selectPhoto();
+  await userEvent.click(screen.getByRole('button', { name: 'Upload photo' }));
+  try {
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Photo saved.');
+    });
+    expect(screen.getByLabelText('Choose a replacement photo')).toBeEnabled();
+    expect(screen.queryByRole('img', { name: 'Selected photo preview' })).not.toBeInTheDocument();
+  } finally {
+    release();
+  }
+});
+
+it('allows another upload after a missing-photo removal refetches editable detail', async () => {
+  server.use(
+    http.delete('http://localhost:5050/api/v1/recipes/r1/image', () => {
+      recipe = { ...recipe, image: null };
+      return new HttpResponse(null, { status: 404 });
+    }),
+  );
+  renderPhoto();
+  await screen.findByRole('img', { name: 'Photo of Oats' });
+  await userEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
+  const control = await screen.findByLabelText('Choose a photo');
+  expect(control).toBeEnabled();
+  await userEvent.upload(control, new File(['image'], 'photo.png', { type: 'image/png' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Upload photo' }));
+  await waitFor(() => {
+    expect(toast.success).toHaveBeenCalledWith('Photo saved.');
+  });
+});
+
+it('waits for household scope before offering file selection', async () => {
+  const view = renderPhoto('Owner', true);
+  expect(screen.queryByRole('region')).not.toBeInTheDocument();
+  expect(read).not.toHaveBeenCalled();
+  view.refresh();
+  await screen.findByLabelText('Choose a replacement photo');
+  await selectPhoto();
+  expect(screen.getByRole('img', { name: 'Selected photo preview' })).toBeInTheDocument();
+});
+
+it('keeps the selected file after a conflict and offers a matching retry instruction', async () => {
+  server.use(
+    http.put('http://localhost:5050/api/v1/recipes/r1/image', () =>
+      HttpResponse.json({}, { status: 409 }),
+    ),
+  );
+  renderPhoto();
+  await screen.findByRole('img', { name: 'Photo of Oats' });
+  await selectPhoto();
+  await userEvent.click(screen.getByRole('button', { name: 'Upload photo' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Retry the upload or choose another file.',
+  );
+  expect(screen.getByRole('img', { name: 'Selected photo preview' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Upload photo' })).toBeEnabled();
 });

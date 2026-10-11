@@ -475,7 +475,7 @@
     "unavailable": "Zdjęcie niedostępne. Treść przepisu jest nadal dostępna.",
     "invalid_file": "Nie można przyjąć zdjęcia. Wybierz poprawny JPEG, PNG lub statyczny WebP do 10 MiB i 25 megapikseli.",
     "access_error": "Dostęp do zdjęcia zmienił się. Odśwież przepis, aby sprawdzić uprawnienia.",
-    "conflict": "Zdjęcie zmieniło się podczas przesyłania. Aktualnie zapisane zdjęcie zostało zachowane. Wybierz plik ponownie, aby spróbować jeszcze raz.",
+    "conflict": "Zdjęcie zmieniło się podczas przesyłania. Aktualnie zapisane zdjęcie zostało zachowane. Ponów przesyłanie lub wybierz inny plik.",
     "upload_error": "Przesyłanie zdjęcia nie powiodło się. Przepis i poprzednie zdjęcie zostały zachowane. Spróbuj ponownie lub anuluj.",
     "remove_error": "Nie udało się usunąć zdjęcia. Spróbuj ponownie.",
     "upload_success": "Zdjęcie zapisane.",

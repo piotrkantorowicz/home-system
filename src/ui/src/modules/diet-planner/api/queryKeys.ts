@@ -1,6 +1,11 @@
 // src/ui/src/modules/diet-planner/api/queryKeys.ts
 
 export const queryKeys = {
+  recipeImages: {
+    all: (scope: string, id: string) => ['recipe-images', scope, id] as const,
+    detail: (scope: string, id: string, version: string) =>
+      ['recipe-images', scope, id, version] as const,
+  },
   meals: {
     all: () => ['meals'] as const,
     list: (range: { from?: string; to?: string; personId?: string }) => ['meals', range] as const,

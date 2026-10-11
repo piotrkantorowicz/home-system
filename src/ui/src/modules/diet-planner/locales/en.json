@@ -453,7 +453,7 @@
     "unavailable": "Photo unavailable. Recipe content remains available.",
     "invalid_file": "Photo could not be accepted. Use a valid JPEG, PNG or static WebP up to 10 MiB and 25 megapixels.",
     "access_error": "Photo access changed. Reload the recipe to check your permissions.",
-    "conflict": "Photo changed during upload. The current saved photo was kept. Choose the file again to retry.",
+    "conflict": "Photo changed during upload. The current saved photo was kept. Retry the upload or choose another file.",
     "upload_error": "Photo upload failed. Your recipe and previous photo were kept. Retry or cancel.",
     "remove_error": "Photo removal failed. Please retry.",
     "upload_success": "Photo saved.",

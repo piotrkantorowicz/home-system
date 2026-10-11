@@ -11,9 +11,9 @@ interface RecipePhotoProps {
 
 export function RecipePhoto({ recipe }: RecipePhotoProps) {
   const auth = useAuth();
-  const { household, myPersonId, myRole } = useHousehold();
+  const { household, myPersonId, myRole, isLoading, isError } = useHousehold();
   const subject = auth.user?.profile.sub;
-  if (!auth.isAuthenticated || !subject) return null;
+  if (!auth.isAuthenticated || !subject || isLoading || isError) return null;
   const scope = JSON.stringify([subject, household?.id, myPersonId, myRole]);
   return (
     <RecipePhotoContent

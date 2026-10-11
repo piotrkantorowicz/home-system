@@ -33,7 +33,7 @@ export function RecipePhotoContent({ recipe, scope }: RecipePhotoContentProps) {
   });
   const change = useChangeRecipeImage(recipe.id, scope);
   const denied =
-    change.error instanceof RecipeImageError && [401, 403, 404].includes(change.error.status);
+    change.error instanceof RecipeImageError && [401, 403].includes(change.error.status);
   const imageUrl = useObjectUrl(image.isError || denied ? null : image.data);
   const previewUrl = useObjectUrl(denied ? null : file);
   const visibleUrl = imageUrl && imageUrl !== brokenUrl ? imageUrl : undefined;
