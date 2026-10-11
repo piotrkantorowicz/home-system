@@ -9,11 +9,11 @@ using Investments.Domain.ValueObjects;
 /// </summary>
 public sealed class FxRateBook
 {
-    private readonly Dictionary<WalletCurrency, FxRate[]> _byCurrency;
+    private readonly Dictionary<WalletCurrency, FxQuote[]> _byCurrency;
 
     /// <summary>Creates a book over the given rates.</summary>
     /// <param name="rates">Rates for any currencies and dates, in any order.</param>
-    public FxRateBook(IEnumerable<FxRate> rates)
+    public FxRateBook(IEnumerable<FxQuote> rates)
     {
         ArgumentNullException.ThrowIfNull(rates);
         _byCurrency = rates
@@ -24,7 +24,7 @@ public sealed class FxRateBook
     /// <summary>The rate that applies to <paramref name="date"/>, or <see langword="null"/> when none was published on or before it.</summary>
     /// <param name="currency">A foreign currency.</param>
     /// <param name="date">The date being valued.</param>
-    public FxRate? Find(WalletCurrency currency, DateOnly date)
+    public FxQuote? Find(WalletCurrency currency, DateOnly date)
         => _byCurrency.TryGetValue(currency, out var rates) ? rates.LastOrDefault(r => r.EffectiveDate <= date) : null;
 
     /// <summary>Converts an amount to PLN at the newest rate in the book — today's rate, as rates are never future-dated.</summary>

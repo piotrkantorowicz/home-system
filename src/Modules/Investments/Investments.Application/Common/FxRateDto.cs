@@ -9,6 +9,6 @@ using Investments.Domain.Fx;
 /// <param name="TableNo">The NBP table number, e.g. <c>172/A/NBP/2026</c>.</param>
 public sealed record FxRateDto(string Mid, DateOnly EffectiveDate, string TableNo)
 {
-    internal static FxRateDto? From(FxRate? rate)
+    internal static FxRateDto? From(FxQuote? rate)
         => rate is null ? null : new(rate.Mid.ToString("F6", CultureInfo.InvariantCulture), rate.EffectiveDate, rate.TableNo);
 }

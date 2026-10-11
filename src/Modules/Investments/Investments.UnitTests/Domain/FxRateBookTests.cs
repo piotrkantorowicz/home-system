@@ -7,9 +7,9 @@ using Investments.Domain.ValueObjects;
 /// <summary>Rate selection: latest published on or before the date, never a later one.</summary>
 public sealed class FxRateBookTests
 {
-    private static readonly FxRate Thursday = FxRate.Create(WalletCurrency.EUR, new DateOnly(2026, 9, 3), 4.25m, "171/A/NBP/2026");
-    private static readonly FxRate Friday = FxRate.Create(WalletCurrency.EUR, new DateOnly(2026, 9, 4), 4.2651m, "172/A/NBP/2026");
-    private static readonly FxRate UsdFriday = FxRate.Create(WalletCurrency.USD, new DateOnly(2026, 9, 4), 3.6m, "172/A/NBP/2026");
+    private static readonly FxQuote Thursday = new(WalletCurrency.EUR, new DateOnly(2026, 9, 3), 4.25m, "171/A/NBP/2026");
+    private static readonly FxQuote Friday = new(WalletCurrency.EUR, new DateOnly(2026, 9, 4), 4.2651m, "172/A/NBP/2026");
+    private static readonly FxQuote UsdFriday = new(WalletCurrency.USD, new DateOnly(2026, 9, 4), 3.6m, "172/A/NBP/2026");
 
     private static readonly FxRateBook Book = new([Friday, UsdFriday, Thursday]);
 

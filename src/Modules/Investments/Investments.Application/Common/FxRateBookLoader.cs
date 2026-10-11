@@ -25,6 +25,7 @@ internal static class FxRateBookLoader
 
         var rates = await db.FxRates.AsNoTracking()
             .Where(r => currencies.Contains(r.Currency) && r.EffectiveDate >= from && r.EffectiveDate <= to)
+            .Select(r => new FxQuote(r.Currency, r.EffectiveDate, r.Mid, r.TableNo))
             .ToListAsync(ct);
 
         return new FxRateBook(rates);
@@ -41,7 +42,9 @@ internal static class FxRateBookLoader
         var rates = await db.FxRates.AsNoTracking()
             .Where(r => foreign.Contains(r.Currency))
             .GroupBy(r => r.Currency)
-            .Select(g => g.OrderByDescending(r => r.EffectiveDate).First())
+            .Select(g => g.OrderByDescending(r => r.EffectiveDate)
+                .Select(r => new FxQuote(r.Currency, r.EffectiveDate, r.Mid, r.TableNo))
+                .First())
             .ToListAsync(ct);
 
         return new FxRateBook(rates);
