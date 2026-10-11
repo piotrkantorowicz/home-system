@@ -14,8 +14,10 @@ tests, an explicit persistent local Compose override, and the operational runboo
 The [spec](../specs/2026-10-10-private-s3-image-storage.md) is unchanged;
 the [plan](../plans/2026-10-10-private-s3-image-storage.md) records execution.
 
-Task 5 verification and delivery preparation are complete. Final whole-branch
-architecture/quality review, push, PR creation, and board transition remain pending.
+Task 5 verification, delivery preparation, and final whole-branch architecture/
+quality review are complete. Final review of `4f84795` found no Critical, Important,
+or Minor issues and no architecture violations. Push, PR creation, and board
+transition are the remaining delivery steps at the time this report is committed.
 The PR must follow the repository template, reference `Refs #563`, and end with
 `Closes #564`. No merge, production provisioning, or cloud purchase occurred.
 
@@ -85,7 +87,7 @@ their stated rework costs:
 | Checklist item                  | Assessment                                                                                                                                                                                                                                                                                   |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Issue scope and named deferrals | #564 storage/setup scope met. #565 owns HTTP 503 mapping before exposure, authorization, decoding/normalization, immutable revision/pending records, concurrency, and durable cleanup. UI #566, thumbnails #567, lifecycle/access E2E #568, account deletion #513 remain outside this slice. |
-| Area rules and architecture     | Root AGENTS and backend coding/module/DDD/CQRS/integration/testing rules read; source inspection found no cross-module or SDK boundary violation. Task reviews 1–4 are clean. Final whole-branch architecture/quality review remains pending.                                                |
+| Area rules and architecture     | Root AGENTS and backend coding/module/DDD/CQRS/integration/testing rules read; source inspection found no cross-module or SDK boundary violation. Task reviews 1–4 and final whole-branch architecture/quality review are clean.                                                             |
 | No unfinished code/suppression  | Changed implementation files contain no TODO/FIXME, commented-out code, or unexplained warning suppression. The test proxy is intentionally inheritable for DispatchProxy; xUnit lifetime signatures are framework-defined.                                                                  |
 | OpenAPI, migrations, i18n       | Not applicable: no HTTP API models/routes, database schema, or user-facing UI text changed.                                                                                                                                                                                                  |
 | Domain/handler/UI coverage      | No domain rule, endpoint, handler, or UI flow changed. Storage logic has configuration/boundary/ownership tests and real S3 tests; existing recipe routes passed through the real host.                                                                                                      |
