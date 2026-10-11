@@ -8,6 +8,7 @@ using DietPlanner.Application.Images;
 using DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.Application.Storage;
 using DietPlanner.Domain.Ledgers;
+using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using DietPlanner.Infrastructure.Images;
 using DietPlanner.Infrastructure.Persistence;
@@ -93,6 +94,46 @@ public sealed class RecipeImageApiTests(DatabaseFixture database, ImageStorageFi
     {
         await using AsyncServiceScope scope = host.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<RecipeImageCleanup>().RunOnceAsync(Ct);
+    }
+
+    /// <summary>Stale tracked recipe edits cannot overwrite a concurrent photo; stale deletion still revokes it.</summary>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Recipe_StaleEditOrDelete_DoesNotRestorePreviousPhoto(bool delete, bool hadPhoto)
+    {
+        WebApplicationFactory<Program> host = Host($"photo-{Guid.CreateVersion7():N}");
+        using HttpClient client = host.CreateClient();
+        Guid id = await CreateAsync(client);
+        if (hadPhoto) await UploadOkAsync(client, id);
+        await using AsyncServiceScope scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
+        var repository = scope.ServiceProvider.GetRequiredService<IRecipeRepository>();
+        var stale = (await repository.GetByIdAsync(RecipeId.From(id), Ct))!;
+        RecipeImageDto winner = await UploadOkAsync(client, id);
+        await CleanupAsync(host);
+        if (delete)
+            stale.SoftDelete(host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+        else
+            stale.Update(stale.Name, "Edited during upload", stale.Instructions, stale.Servings,
+                stale.PrepTimeMinutes, host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+        repository.Update(stale);
+        await db.SaveChangesAsync(Ct);
+        if (delete)
+        {
+            (await client.GetAsync($"/api/v1/recipes/{id}/image", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            await CleanupAsync(host);
+            using ImageObjectRead? removed = await objects.CreateStorage().OpenReadAsync(RecipeImageKeys.Detail(winner.Version), Ct);
+            removed.ShouldBeNull();
+        }
+        else
+        {
+            (await DetailAsync(client, id)).Image.ShouldBe(winner);
+            (await DetailAsync(client, id)).Description.ShouldBe("Edited during upload");
+            (await client.GetAsync($"/api/v1/recipes/{id}/image", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
     }
 
     /// <summary>Create remains compatible; replace/remove preserve recipe content and retire bytes.</summary>
