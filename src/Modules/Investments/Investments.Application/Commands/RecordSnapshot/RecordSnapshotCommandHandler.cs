@@ -5,17 +5,15 @@ using Investments.Application.Fx;
 using Investments.Domain.Abstractions;
 using Investments.Domain.Aggregates;
 using Investments.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed partial class RecordSnapshotCommandHandler(
+internal sealed class RecordSnapshotCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
     IBalanceSnapshotRepository snapshots,
     IInvestmentsUnitOfWork unitOfWork,
     FxRateSync fx,
-    TimeProvider clock,
-    ILogger<RecordSnapshotCommandHandler> logger) : ICommandHandler<RecordSnapshotCommand, RecordSnapshotResult>
+    TimeProvider clock) : ICommandHandler<RecordSnapshotCommand, RecordSnapshotResult>
 {
     public async Task<RecordSnapshotResult> HandleAsync(RecordSnapshotCommand command, CancellationToken ct = default)
     {
@@ -42,23 +40,10 @@ internal sealed partial class RecordSnapshotCommandHandler(
 
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 
+        // Backfill rates for a date older than any stored one; a failure never fails the committed write.
         if (wallet.Currency != WalletCurrency.PLN)
-        {
-            // Backfill rates for a date older than any stored one. NBP being down never fails the
-            // write: the read side shows rateMissing until the worker fills the gap.
-            try
-            {
-                await fx.SyncAsync(wallet.Currency, today, ct);
-            }
-            catch (NbpUnavailableException ex)
-            {
-                LogBackfillFailed(ex, wallet.Currency);
-            }
-        }
+            await fx.TrySyncAsync(wallet.Currency, today, ct);
 
         return new RecordSnapshotResult(snapshot.AsOf, amount.ToString(), snapshot.Note, created);
     }
-
-    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "NBP rate backfill for {Currency} failed; the worker will retry")]
-    private partial void LogBackfillFailed(Exception exception, WalletCurrency currency);
 }

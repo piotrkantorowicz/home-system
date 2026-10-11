@@ -156,4 +156,40 @@ public sealed class FxTests : IClassFixture<InvestmentsDatabaseFixture>, IAsyncL
             r => r.Currency == WalletCurrency.EUR && r.EffectiveDate.Year == 2023, Ct);
         stored.ShouldBe(2);
     }
+
+    /// <summary>
+    /// NBP failing part-way through a multi-request backfill never leaves a hole in the stored
+    /// rates (which would value dates in it at a stale rate); the worker then fills the rest.
+    /// </summary>
+    [Fact]
+    public async Task PartialBackfillFailure_LeavesNoGap()
+    {
+        for (var day = new DateOnly(2023, 1, 1); day <= new DateOnly(2024, 12, 31); day = day.AddDays(1))
+            _factory.Nbp.Publish(WalletCurrency.EUR, day, 4.5m);
+        var h = await _scenario.NewHouseholdAsync();
+        var wallet = await InvestmentsScenario.CreateWalletAsync(h.Owner, "EUR savings", currency: "EUR");
+        (await PutAsync(h.Owner, wallet.Id, "2024-12-20", "10")).EnsureSuccessStatusCode();
+
+        // The backfill to 2023-01-10 takes two requests; the one covering March 2024 times out.
+        var outage = new DateOnly(2024, 3, 1);
+        _factory.Nbp.FailWhen = (first, last) => first <= outage && outage <= last;
+        (await PutAsync(h.Owner, wallet.Id, "2023-01-10", "10")).EnsureSuccessStatusCode();
+        var afterFailure = await StoredEurRatesAsync();
+
+        _factory.Nbp.FailWhen = null;
+        await RunWorkerAsync();
+        var afterWorker = await StoredEurRatesAsync();
+
+        (afterFailure[^1].DayNumber - afterFailure[0].DayNumber + 1).ShouldBe(afterFailure.Count);
+        afterWorker[0].ShouldBe(new DateOnly(2023, 1, 1));
+        afterWorker.Count.ShouldBe(731);
+    }
+
+    private async Task<List<DateOnly>> StoredEurRatesAsync()
+    {
+        await using var db = NewDbContext();
+        return await db.FxRates
+            .Where(r => r.Currency == WalletCurrency.EUR && r.EffectiveDate.Year >= 2023 && r.EffectiveDate.Year <= 2024)
+            .OrderBy(r => r.EffectiveDate).Select(r => r.EffectiveDate).ToListAsync(Ct);
+    }
 }

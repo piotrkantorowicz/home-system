@@ -12,6 +12,9 @@ public sealed class FakeNbpClient : INbpClient
     /// <summary>When set, every call fails as if NBP were down.</summary>
     public bool Unavailable { get; set; }
 
+    /// <summary>When set, a request for a range it matches (first, last) fails as if NBP timed out.</summary>
+    public Func<DateOnly, DateOnly, bool>? FailWhen { get; set; }
+
     /// <summary>Makes a rate available.</summary>
     /// <param name="currency">The currency.</param>
     /// <param name="date">Effective date.</param>
@@ -22,7 +25,7 @@ public sealed class FakeNbpClient : INbpClient
     /// <inheritdoc />
     public Task<IReadOnlyList<NbpRate>> GetRatesAsync(WalletCurrency currency, DateOnly first, DateOnly last, CancellationToken ct)
     {
-        if (Unavailable)
+        if (Unavailable || FailWhen?.Invoke(first, last) == true)
             throw new NbpUnavailableException("NBP is down (fake).");
         if (last.DayNumber - first.DayNumber >= 367)
             throw new InvalidOperationException("NBP serves at most 367 days per request.");
