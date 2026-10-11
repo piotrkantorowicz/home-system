@@ -6,17 +6,15 @@ using Investments.Domain.Abstractions;
 using Investments.Domain.Aggregates;
 using Investments.Domain.Exceptions;
 using Investments.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 
-internal sealed partial class RecordCheckInCommandHandler(
+internal sealed class RecordCheckInCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
     IBalanceSnapshotRepository snapshots,
     IInvestmentsUnitOfWork unitOfWork,
     FxRateSync fx,
-    TimeProvider clock,
-    ILogger<RecordCheckInCommandHandler> logger) : ICommandHandler<RecordCheckInCommand, RecordCheckInResult>
+    TimeProvider clock) : ICommandHandler<RecordCheckInCommand, RecordCheckInResult>
 {
     public async Task<RecordCheckInResult> HandleAsync(RecordCheckInCommand command, CancellationToken ct = default)
     {
@@ -81,20 +79,8 @@ internal sealed partial class RecordCheckInCommandHandler(
 
     private async Task BackfillRatesAsync(IEnumerable<WalletCurrency> currencies, DateOnly today, CancellationToken ct)
     {
+        // Same rule as a single balance: a sync failure never fails the committed write.
         foreach (var currency in currencies.Where(c => c != WalletCurrency.PLN).Distinct())
-        {
-            // Same rule as a single balance: NBP being down never fails the write.
-            try
-            {
-                await fx.SyncAsync(currency, today, ct);
-            }
-            catch (NbpUnavailableException ex)
-            {
-                LogBackfillFailed(ex, currency);
-            }
-        }
+            await fx.TrySyncAsync(currency, today, ct);
     }
-
-    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "NBP rate backfill for {Currency} failed; the worker will retry")]
-    private partial void LogBackfillFailed(Exception exception, WalletCurrency currency);
 }
