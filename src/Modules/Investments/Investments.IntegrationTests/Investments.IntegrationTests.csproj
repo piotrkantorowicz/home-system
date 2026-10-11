@@ -11,6 +11,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Testcontainers.PostgreSql" />
@@ -25,6 +26,7 @@
     <ProjectReference Include="..\..\..\Apis\HomeSystem.REST\HomeSystem.REST.csproj" />
     <ProjectReference Include="..\Investments.Api\Investments.Api.csproj" />
     <ProjectReference Include="..\Investments.Infrastructure\Investments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Household\Household.Infrastructure\Household.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
