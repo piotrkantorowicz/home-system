@@ -1,4 +1,14 @@
-import { Banner, Button, Pagination } from '@shared/components/ui';
+import {
+  Banner,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Pagination,
+} from '@shared/components/ui';
 import { useFormat } from '@shared/hooks/useFormat';
 import { cn } from '@shared/lib/utils';
 import { Trash2 } from 'lucide-react';
@@ -23,6 +33,7 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
   const [pageSize, setPageSize] = useState(20);
   const query = useSnapshotsQuery(wallet.id, page, pageSize);
   const mutation = useSnapshotMutation();
+  const [pendingDelete, setPendingDelete] = useState<{ asOf: string; date: string } | null>(null);
   const currency = { currency: wallet.currency };
   const items = query.data?.items ?? [];
 
@@ -101,7 +112,7 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
                         disabled={mutation.isPending}
                         aria-label={t('delete_balance', { date })}
                         onClick={() => {
-                          mutation.mutate({ kind: 'delete', walletId: wallet.id, asOf: s.asOf });
+                          setPendingDelete({ asOf: s.asOf, date });
                         }}
                       >
                         <Trash2 className="size-4" />
@@ -126,6 +137,48 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
           }}
         />
       )}
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('delete_balance_confirm_title', { date: pendingDelete?.date })}
+            </DialogTitle>
+            <DialogDescription>{t('delete_balance_confirm_body')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setPendingDelete(null);
+              }}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={mutation.isPending}
+              onClick={() => {
+                if (!pendingDelete) return;
+                mutation.mutate(
+                  { kind: 'delete', walletId: wallet.id, asOf: pendingDelete.asOf },
+                  {
+                    onSettled: () => {
+                      setPendingDelete(null);
+                    },
+                  },
+                );
+              }}
+            >
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

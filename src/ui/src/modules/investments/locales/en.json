@@ -85,5 +85,8 @@
   "change": "Change",
   "note": "Note",
   "actions": "Actions",
-  "delete_balance": "Delete balance for {{date}}"
+  "delete_balance": "Delete balance for {{date}}",
+  "delete_balance_confirm_title": "Delete the balance for {{date}}?",
+  "delete_balance_confirm_body": "It's removed from the history and the net worth. This can't be undone.",
+  "delete": "Delete"
 }

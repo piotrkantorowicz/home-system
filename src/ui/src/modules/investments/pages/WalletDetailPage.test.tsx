@@ -183,6 +183,10 @@ describe('WalletDetailPage', () => {
 
     const rows = within(await screen.findByRole('table')).getAllByRole('row');
     await userEvent.click(within(rowAt(rows, 2)).getByRole('button', { name: /Delete balance/ }));
+    expect(remove).not.toHaveBeenCalled();
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }),
+    );
 
     await waitFor(() => {
       expect(remove).toHaveBeenCalledWith('2026-08-31');

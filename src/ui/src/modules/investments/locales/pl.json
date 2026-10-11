@@ -85,5 +85,8 @@
   "change": "Zmiana",
   "note": "Notatka",
   "actions": "Akcje",
-  "delete_balance": "Usuń saldo z {{date}}"
+  "delete_balance": "Usuń saldo z {{date}}",
+  "delete_balance_confirm_title": "Usunąć saldo z {{date}}?",
+  "delete_balance_confirm_body": "Zniknie z historii i z majątku netto. Tej operacji nie można cofnąć.",
+  "delete": "Usuń"
 }
