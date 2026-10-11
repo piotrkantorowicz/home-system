@@ -38,6 +38,14 @@ public sealed class BalanceSnapshotTests
     public void Record_FutureDate_Throws()
         => Should.Throw<InvestmentsDomainException>(() => Record(NewWallet(), Today.AddDays(1)));
 
+    /// <summary>A date before NBP's first table is rejected; the first table date itself is fine.</summary>
+    [Fact]
+    public void Record_BeforeEarliestDate_Throws()
+    {
+        Should.Throw<InvestmentsDomainException>(() => Record(NewWallet(), BalanceSnapshot.EarliestAsOf.AddDays(-1)));
+        Record(NewWallet(), BalanceSnapshot.EarliestAsOf).AsOf.ShouldBe(BalanceSnapshot.EarliestAsOf);
+    }
+
     /// <summary>An archived wallet takes no new dates.</summary>
     [Fact]
     public void Record_ArchivedWallet_Throws()

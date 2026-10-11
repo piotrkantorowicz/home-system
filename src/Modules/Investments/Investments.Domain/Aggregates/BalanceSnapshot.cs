@@ -13,19 +13,22 @@ public sealed class BalanceSnapshot : AggregateRoot<BalanceSnapshotId>
     /// <summary>Maximum length of a note.</summary>
     public const int MaxNoteLength = 200;
 
+    /// <summary>Earliest date a balance can have: NBP's first exchange-rate table (2002-01-02).</summary>
+    public static readonly DateOnly EarliestAsOf = new(2002, 1, 2);
+
     private BalanceSnapshot() { }
 
     /// <summary>Records a balance for a date that has none yet.</summary>
     /// <param name="id">Identifier for the new snapshot.</param>
     /// <param name="wallet">The wallet; must not be archived.</param>
-    /// <param name="asOf">The date the balance applies to; not after <paramref name="today"/>.</param>
+    /// <param name="asOf">The date the balance applies to; from <see cref="EarliestAsOf"/> up to <paramref name="today"/>.</param>
     /// <param name="amount">The balance in the wallet's currency.</param>
     /// <param name="note">Optional note, trimmed, at most 200 characters.</param>
     /// <param name="recordedByPersonId">Who recorded it.</param>
     /// <param name="recordedByName">Their display name at the time (kept as a snapshot).</param>
     /// <param name="today">The household's current date.</param>
     /// <param name="now">Current time, UTC.</param>
-    /// <exception cref="InvestmentsDomainException">The wallet is archived, the date is in the future, or the note is too long.</exception>
+    /// <exception cref="InvestmentsDomainException">The wallet is archived, the date is in the future or before <see cref="EarliestAsOf"/>, or the note is too long.</exception>
     public static BalanceSnapshot Record(
         BalanceSnapshotId id,
         Wallet wallet,
@@ -43,7 +46,7 @@ public sealed class BalanceSnapshot : AggregateRoot<BalanceSnapshotId>
 
         if (wallet.IsArchived)
             throw new InvestmentsDomainException("An archived wallet takes no new balances. Restore it first.");
-        EnsureNotFuture(asOf, today);
+        EnsureInRange(asOf, today);
 
         return new BalanceSnapshot
         {
@@ -76,10 +79,12 @@ public sealed class BalanceSnapshot : AggregateRoot<BalanceSnapshotId>
         UpdatedAt = now;
     }
 
-    private static void EnsureNotFuture(DateOnly asOf, DateOnly today)
+    private static void EnsureInRange(DateOnly asOf, DateOnly today)
     {
         if (asOf > today)
             throw new InvestmentsDomainException("A balance can't be recorded for a future date.");
+        if (asOf < EarliestAsOf)
+            throw new InvestmentsDomainException($"A balance can't be recorded before {EarliestAsOf:yyyy-MM-dd}.");
     }
 
     private static string? NormalizeNote(string? note)
