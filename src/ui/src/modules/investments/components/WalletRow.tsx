@@ -49,6 +49,12 @@ export function WalletRow({ wallet, ownerLabel, busy, onEdit, onToggleArchive }:
             ? '—'
             : money(wallet.latestBalance, { currency: wallet.currency })}
         </p>
+        {wallet.currency !== 'PLN' && wallet.latestBalancePln !== null && (
+          <p className="text-text-2 text-meta tnum">
+            ≈ {money(wallet.latestBalancePln, { currency: 'PLN' })}
+          </p>
+        )}
+        {wallet.rateMissing && <p className="text-warning text-meta">{t('rate_missing_short')}</p>}
         <p className="text-muted-foreground text-meta">
           {wallet.latestAsOf ? formatDate(wallet.latestAsOf, i18n.language) : t('no_balance_yet')}
         </p>

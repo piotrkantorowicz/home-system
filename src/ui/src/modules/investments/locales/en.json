@@ -65,7 +65,6 @@
   "latest_balance": "Latest balance",
   "as_of": "As of {{date}}",
   "no_balance_yet": "No balance yet",
-  "pln_pending": "The PLN value appears once exchange rates are available.",
   "record_balance": "Record balance",
   "date": "Date",
   "balance_in": "Balance ({{currency}})",
@@ -88,5 +87,8 @@
   "delete_balance": "Delete balance for {{date}}",
   "delete_balance_confirm_title": "Delete the balance for {{date}}?",
   "delete_balance_confirm_body": "It's removed from the history and the net worth. This can't be undone.",
-  "delete": "Delete"
+  "delete": "Delete",
+  "rate_used": "1 {{currency}} = {{mid}} PLN · NBP table {{table}} of {{date}}",
+  "rate_missing": "No NBP exchange rate for this date yet — the PLN value will appear once it is fetched.",
+  "rate_missing_short": "No PLN rate yet"
 }

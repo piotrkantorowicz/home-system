@@ -54,6 +54,9 @@ const xtb: Wallet = {
   canChangeVisibility: true,
   latestBalance: '300.00',
   latestAsOf: '2026-09-01',
+  latestBalancePln: '300.00',
+  rate: null,
+  rateMissing: false,
 };
 const history = [
   { asOf: '2026-09-01', amount: '300.00', previousAmount: '350.50', note: 'dip' },
@@ -63,6 +66,9 @@ const history = [
   recordedByName: 'Alex',
   recordedAt: '2026-09-01T10:00:00Z',
   updatedAt: '2026-09-01T10:00:00Z',
+  amountPln: s.amount,
+  rate: null,
+  rateMissing: false,
 }));
 
 function rowAt(rows: HTMLElement[], index: number): HTMLElement {
@@ -113,13 +119,40 @@ describe('WalletDetailPage', () => {
     expect(screen.getByText('Latest balance').parentElement).toHaveTextContent('300.00 PLN');
   });
 
-  it('says the PLN value is pending for a foreign-currency wallet', async () => {
-    wallet = { ...xtb, currency: 'EUR' };
+  it('shows the PLN value of a foreign wallet with the NBP rate used', async () => {
+    wallet = {
+      ...xtb,
+      currency: 'EUR',
+      latestBalancePln: '1279.80',
+      rate: { mid: '4.266000', effectiveDate: '2026-08-29', tableNo: '167/A/NBP/2026' },
+    };
     renderPage();
 
-    expect(await screen.findByText(/PLN value appears once exchange rates/)).toBeInTheDocument();
+    expect(await screen.findByText(/≈ 1.279.80 PLN/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/1 EUR = 4.266000 PLN · NBP table 167\/A\/NBP\/2026/),
+    ).toBeInTheDocument();
+  });
+
+  it('says when a foreign balance has no NBP rate yet', async () => {
+    wallet = { ...xtb, currency: 'USD', latestBalancePln: null, rateMissing: true };
+    server.use(
+      http.get(`${BASE}/api/investments/wallets/w1/snapshots`, () =>
+        HttpResponse.json({
+          items: history.map((h) => ({ ...h, amountPln: null, rateMissing: true })),
+          totalCount: history.length,
+          page: 1,
+          pageSize: 20,
+        }),
+      ),
+    );
+    renderPage();
+
+    expect(
+      await screen.findByText(/No NBP exchange rate for this date yet/, { selector: 'p' }),
+    ).toBeInTheDocument();
     const rows = within(await screen.findByRole('table')).getAllByRole('row');
-    expect(within(rowAt(rows, 1)).getAllByText('—')).toHaveLength(1);
+    expect(rowAt(rows, 1)).toHaveTextContent(/—No NBP exchange rate/);
   });
 
   it('shows each balance with its change from the previous one', async () => {

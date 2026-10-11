@@ -101,8 +101,13 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
                         : `${delta.startsWith('-') ? '' : '+'}${money(delta, currency)}`}
                     </td>
                     <td className="tnum text-text-2 px-4 text-right">
-                      {/* PLN conversion for foreign wallets arrives with NBP rates. */}
-                      {wallet.currency === 'PLN' ? money(s.amount, currency) : '—'}
+                      {s.amountPln === null ? (
+                        <span title={t('rate_missing')}>
+                          —<span className="sr-only">{t('rate_missing')}</span>
+                        </span>
+                      ) : (
+                        money(s.amountPln, { currency: 'PLN' })
+                      )}
                     </td>
                     <td className="text-text-2 px-4">{s.note}</td>
                     <td className="px-2">
