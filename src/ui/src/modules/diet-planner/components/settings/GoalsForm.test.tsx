@@ -70,7 +70,10 @@ describe('GoalsForm', () => {
     // The untouched field picking up the refetch proves the form re-synced.
     await screen.findByDisplayValue('120');
     expect(input).toHaveValue(1500);
-    expect(save).toBeEnabled();
+    // RHF publishes isDirty a render after the reset paints the new values.
+    await waitFor(() => {
+      expect(save).toBeEnabled();
+    });
   });
 
   it('is clean again once a save lands and the goals query refetches', async () => {

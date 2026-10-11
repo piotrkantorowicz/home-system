@@ -23,6 +23,8 @@
     <ProjectReference Include="..\..\Modules\Household\Household.Infrastructure\Household.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Budget\Budget.Api\Budget.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Budget\Budget.Infrastructure\Budget.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Investments\Investments.Api\Investments.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\Investments\Investments.Infrastructure\Investments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Operations\Operations.Api\Operations.Api.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.Infrastructure.Cqrs\Shared.Infrastructure.Cqrs.csproj" />
     <ProjectReference Include="..\..\Shared\Shared.Infrastructure.Messaging\Shared.Infrastructure.Messaging.csproj" />

@@ -219,6 +219,33 @@ services:
     networks:
       - home-system-shared
 
+  # ============================================
+  # PostgreSQL for Investments API
+  # Use: docker compose --profile investments up
+  # ============================================
+  investments-db:
+    image: postgres:16-alpine
+    container_name: investments-db
+    restart: unless-stopped
+    profiles: ["investments"]
+    ports:
+      - "5436:5432"
+    volumes:
+      - investments_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: investments
+      POSTGRES_USER: investments
+      POSTGRES_PASSWORD: ${INVESTMENTS_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U investments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+    networks:
+      - home-system-shared
+
 networks:
   home-system-shared:
     driver: bridge
@@ -232,3 +259,4 @@ volumes:
   notifications_db_data:
   household_db_data:
   budget_db_data:
+  investments_db_data:
