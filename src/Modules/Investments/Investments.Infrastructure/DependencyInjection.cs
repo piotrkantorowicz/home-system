@@ -2,8 +2,10 @@ namespace Investments.Infrastructure;
 
 using Investments.Application;
 using Investments.Application.Common;
+using Investments.Application.Fx;
 using Investments.Application.Persistence;
 using Investments.Domain.Abstractions;
+using Investments.Infrastructure.Fx;
 using Investments.Infrastructure.Persistence;
 using Investments.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +47,18 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<IBalanceSnapshotRepository, BalanceSnapshotRepository>();
         services.AddScoped<InvestmentsAccessService>();
+
+        // NBP rates: typed client, idempotent store, sync service, hourly worker.
+        services.AddHttpClient<INbpClient, NbpClient>(http =>
+        {
+            http.BaseAddress = new Uri("https://api.nbp.pl/api/");
+            http.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddScoped<IFxRateStore, FxRateStore>();
+        services.AddScoped<FxRateSync>();
+        services.AddOptions<NbpFxOptions>().BindConfiguration(NbpFxOptions.SectionName);
+        services.AddSingleton<NbpFxWorker>();
+        services.AddHostedService(sp => sp.GetRequiredService<NbpFxWorker>());
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
 

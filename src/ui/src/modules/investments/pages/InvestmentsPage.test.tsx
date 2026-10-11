@@ -57,6 +57,9 @@ const xtb: Wallet = {
   canChangeVisibility: true,
   latestBalance: '12450.10',
   latestAsOf: '2026-09-30',
+  latestBalancePln: '12450.10',
+  rate: null,
+  rateMissing: false,
 };
 const ike: Wallet = {
   ...xtb,
@@ -66,6 +69,7 @@ const ike: Wallet = {
   currency: 'EUR',
   latestBalance: null,
   latestAsOf: null,
+  latestBalancePln: null,
 };
 const kidSavings: Wallet = {
   ...xtb,

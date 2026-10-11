@@ -1,5 +1,7 @@
 namespace Investments.Application.Queries.GetWallet;
 
+using Investments.Application.Common;
+
 /// <summary>A wallet as seen by an authorised caller.</summary>
 /// <param name="Id">Wallet identifier.</param>
 /// <param name="Name">Display name.</param>
@@ -15,6 +17,9 @@ namespace Investments.Application.Queries.GetWallet;
 /// <param name="CanChangeVisibility">Whether the caller may change visibility (owner or managing adult).</param>
 /// <param name="LatestBalance">Latest recorded balance in the wallet's currency, e.g. <c>"12450.10"</c>; <see langword="null"/> before the first.</param>
 /// <param name="LatestAsOf">Date of <paramref name="LatestBalance"/>.</param>
+/// <param name="LatestBalancePln">The latest balance in PLN at the NBP rate for its date; <see langword="null"/> before the first balance or when the rate is missing.</param>
+/// <param name="Rate">The NBP rate used; <see langword="null"/> for PLN wallets.</param>
+/// <param name="RateMissing">A foreign wallet whose latest balance has no NBP rate on or before its date yet.</param>
 public sealed record WalletDto(
     Guid Id,
     string Name,
@@ -29,4 +34,7 @@ public sealed record WalletDto(
     DateTimeOffset CreatedAt,
     bool CanChangeVisibility,
     string? LatestBalance,
-    DateOnly? LatestAsOf);
+    DateOnly? LatestAsOf,
+    string? LatestBalancePln,
+    FxRateDto? Rate,
+    bool RateMissing);

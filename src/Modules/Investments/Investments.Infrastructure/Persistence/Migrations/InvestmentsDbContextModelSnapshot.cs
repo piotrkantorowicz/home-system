@@ -164,6 +164,37 @@ namespace Investments.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Investments.Domain.Fx.FxRate", b =>
+                {
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<DateOnly>("EffectiveDate")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_date");
+
+                    b.Property<decimal>("Mid")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("mid");
+
+                    b.Property<string>("TableNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("table_no");
+
+                    b.HasKey("Currency", "EffectiveDate");
+
+                    b.ToTable("fx_rates", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fx_rates_currency", "currency IN ('EUR', 'USD')");
+
+                            t.HasCheckConstraint("ck_fx_rates_mid_positive", "mid > 0");
+                        });
+                });
+
             modelBuilder.Entity("Investments.Domain.Aggregates.BalanceSnapshot", b =>
                 {
                     b.HasOne("Investments.Domain.Aggregates.Wallet", null)

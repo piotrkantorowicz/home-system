@@ -117,8 +117,25 @@ export default function WalletDetailPage() {
               ? t('as_of', { date: formatDate(wallet.latestAsOf, i18n.language) })
               : t('no_balance_yet')}
           </p>
-          {wallet.currency !== 'PLN' && (
-            <p className="text-muted-foreground text-meta">{t('pln_pending')}</p>
+          {wallet.currency !== 'PLN' && wallet.latestBalancePln !== null && (
+            <p className="text-body tnum">
+              ≈ {money(wallet.latestBalancePln, { currency: 'PLN' })}
+            </p>
+          )}
+          {wallet.rate && (
+            <p className="text-muted-foreground text-meta">
+              {t('rate_used', {
+                currency: wallet.currency,
+                mid: wallet.rate.mid,
+                table: wallet.rate.tableNo,
+                date: formatDate(wallet.rate.effectiveDate, i18n.language),
+              })}
+            </p>
+          )}
+          {wallet.rateMissing && (
+            <p className="text-warning text-meta" role="status">
+              {t('rate_missing')}
+            </p>
           )}
         </Card>
         <RecordBalanceForm wallet={wallet} />

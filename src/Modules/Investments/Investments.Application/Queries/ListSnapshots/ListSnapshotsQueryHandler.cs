@@ -1,6 +1,5 @@
 namespace Investments.Application.Queries.ListSnapshots;
 
-using System.Globalization;
 using Investments.Application.Common;
 using Investments.Application.Persistence;
 using Investments.Domain.ValueObjects;
@@ -18,8 +17,11 @@ internal sealed class ListSnapshotsQueryHandler(InvestmentsAccessService access,
     {
         var caller = await access.RequireAccessAsync(query.AuthSubject, ct);
         var walletId = WalletId.From(query.WalletId);
-        if (!await db.Wallets.AsNoTracking().VisibleTo(caller).AnyAsync(w => w.Id == walletId, ct))
-            throw new NotFoundException("Wallet", query.WalletId);
+        var currency = await db.Wallets.AsNoTracking().VisibleTo(caller)
+            .Where(w => w.Id == walletId)
+            .Select(w => (WalletCurrency?)w.Currency)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException("Wallet", query.WalletId);
 
         var page = Math.Max(query.Page, 1);
         var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
@@ -33,17 +35,23 @@ internal sealed class ListSnapshotsQueryHandler(InvestmentsAccessService access,
             .Select(s => new { s.AsOf, s.Amount, s.Note, s.RecordedByPersonId, s.RecordedByName, s.RecordedAt, s.UpdatedAt })
             .ToListAsync(ct);
 
-        var items = rows.Take(pageSize).Select((r, i) => new SnapshotDto(
-            r.AsOf,
-            Format(r.Amount),
-            i + 1 < rows.Count ? Format(rows[i + 1].Amount) : null,
-            r.Note,
-            caller.NameOf(r.RecordedByPersonId) ?? r.RecordedByName,
-            r.RecordedAt,
-            r.UpdatedAt)).ToList();
+        var rates = await db.LoadLatestRatesAsync([currency], ct);
+        var items = rows.Take(pageSize).Select((r, i) =>
+        {
+            var pln = rates.ToPlnAtLatest(r.Amount, currency);
+            return new SnapshotDto(
+                r.AsOf,
+                WalletReadExtensions.Format(r.Amount),
+                i + 1 < rows.Count ? WalletReadExtensions.Format(rows[i + 1].Amount) : null,
+                r.Note,
+                caller.NameOf(r.RecordedByPersonId) ?? r.RecordedByName,
+                r.RecordedAt,
+                r.UpdatedAt,
+                WalletReadExtensions.Format(pln.Amount),
+                FxRateDto.From(pln.Rate),
+                pln.RateMissing);
+        }).ToList();
 
         return new PagedList<SnapshotDto>(items, total, page, pageSize);
     }
-
-    private static string Format(decimal amount) => amount.ToString("F2", CultureInfo.InvariantCulture);
 }
