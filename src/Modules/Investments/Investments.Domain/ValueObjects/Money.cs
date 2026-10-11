@@ -42,6 +42,7 @@ public readonly partial record struct Money
     /// <summary>The normalised wire form, e.g. <c>"123.40"</c>.</summary>
     public override string ToString() => Amount.ToString("F2", CultureInfo.InvariantCulture);
 
-    [GeneratedRegex(@"^\d{1,10}(\.\d{1,2})?$")]
+    // [0-9], not \d: \d matches any Unicode digit, which decimal.Parse then rejects.
+    [GeneratedRegex(@"^[0-9]{1,10}(\.[0-9]{1,2})?$")]
     private static partial Regex AmountPattern();
 }

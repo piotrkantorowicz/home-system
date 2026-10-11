@@ -33,6 +33,8 @@ public sealed class MoneyTests
     [InlineData(".5")]
     [InlineData("")]
     [InlineData("10000000000")]
+    [InlineData("١٢٣")]
+    [InlineData("１２３")]
     [InlineData(null)]
     public void TryParse_Invalid(string? text) => Money.TryParse(text, out _).ShouldBeFalse();
 }
