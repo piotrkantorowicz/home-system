@@ -11,7 +11,8 @@ using Shared.Abstractions.Cqrs;
 /// place: <see cref="CommandValidationException"/> → 400 (with an <c>errors</c> extension grouped by property),
 /// <see cref="ForbiddenException"/> → 403, <see cref="NotFoundException"/> → 404, <see cref="ConflictException"/> → 409, <see cref="DomainException"/> → 422
 /// (with an <c>errors</c> extension when it carries per-item reasons),
-/// <see cref="OperationCanceledException"/> → 499 (empty body), anything else → 500 with no exception detail.
+/// <see cref="OperationCanceledException"/> → 499 (empty body), <see cref="ServiceUnavailableException"/> → 503,
+/// anything else → 500 with no exception detail.
 /// Endpoints and handlers never build problem details themselves.
 /// </summary>
 /// <remarks>
@@ -110,6 +111,12 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
                     Detail = exception.Message,
                 },
                 domain.Errors),
+            ServiceUnavailableException => new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Service unavailable",
+                Detail = exception.Message,
+            },
             _ => new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,

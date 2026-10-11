@@ -25,9 +25,10 @@ public sealed class ApplicationExceptionHandlerTests
         { new NotFoundException("Household was not found."), HttpStatusCode.NotFound, "Not found" },
         { new ConflictException("The budget already uses another currency."), HttpStatusCode.Conflict, "Conflict" },
         { new DomainException("A household must keep at least one owner."), HttpStatusCode.UnprocessableEntity, "Business rule violation" },
+        { new ServiceUnavailableException("Recipe image storage is unavailable."), HttpStatusCode.ServiceUnavailable, "Service unavailable" },
     };
 
-    /// <summary>403 / 404 / 409 / 422 carry the exception message as <c>detail</c>, plus the problem+json envelope.</summary>
+    /// <summary>Mapped failures carry a safe message as <c>detail</c>, plus the problem+json envelope.</summary>
     [Theory]
     [MemberData(nameof(DetailedExceptions))]
     public async Task TryHandle_WhenMappedException_WritesProblemDetailsWithDetail(

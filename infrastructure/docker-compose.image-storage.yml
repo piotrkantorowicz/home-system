@@ -1,0 +1,37 @@
+services:
+  recipe-image-storage:
+    image: rustfs/rustfs:1.0.1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9100:9000"
+    environment:
+      RUSTFS_ACCESS_KEY: ${RECIPE_IMAGE_STORAGE_ACCESS_KEY:?Set local image-storage access key}
+      RUSTFS_SECRET_KEY: ${RECIPE_IMAGE_STORAGE_SECRET_KEY:?Set local image-storage secret key}
+      RUSTFS_CONSOLE_ENABLE: "false"
+    command: ["/data"]
+    volumes:
+      - recipe_image_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-fsS",
+          "-o",
+          "/dev/null",
+          "http://127.0.0.1:9000/health/ready",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - home-system-shared
+
+volumes:
+  recipe_image_data:
