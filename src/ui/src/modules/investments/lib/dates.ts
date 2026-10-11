@@ -1,10 +1,14 @@
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
+/** Earliest balance date the server accepts: NBP's first exchange-rate table. */
+export const EARLIEST_AS_OF = '2002-01-02';
 
-/** The user's local calendar day as `YYYY-MM-DD` — never via UTC, so late evenings stay on the same day. */
-export function todayLocal(now: Date = new Date()): string {
-  return `${String(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+const warsawDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw' });
+
+/**
+ * Today in Europe/Warsaw as `YYYY-MM-DD` — the household calendar the server checks "not in the
+ * future" against, so a user in another time zone can't pick a day the server rejects.
+ */
+export function todayInWarsaw(now: Date = new Date()): string {
+  return warsawDay.format(now);
 }
 
 /** A `YYYY-MM-DD` date in the active language, e.g. "31 Aug 2026". */

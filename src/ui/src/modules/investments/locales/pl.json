@@ -76,7 +76,7 @@
   "balance_saved": "Zapisano saldo.",
   "balance_save_error": "Nie udało się zapisać salda. Spróbuj ponownie.",
   "amount_invalid": "Podaj kwotę, np. 12450,10 — nieujemną, z najwyżej dwoma miejscami po przecinku.",
-  "date_invalid": "Wybierz datę, która nie jest w przyszłości.",
+  "date_invalid": "Wybierz datę od 2 stycznia 2002 do dziś.",
   "history": "Historia",
   "history_load_error": "Nie udało się wczytać historii.",
   "balance_delete_error": "Nie udało się usunąć salda. Spróbuj ponownie.",

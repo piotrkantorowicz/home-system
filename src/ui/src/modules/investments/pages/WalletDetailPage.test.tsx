@@ -8,7 +8,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { investmentsModule } from '../index';
-import { todayLocal } from '../lib/dates';
+import { todayInWarsaw } from '../lib/dates';
 
 import WalletDetailPage from './WalletDetailPage';
 
@@ -150,7 +150,7 @@ describe('WalletDetailPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save balance' }));
 
     await waitFor(() => {
-      expect(put).toHaveBeenCalledWith(todayLocal(), { amount: '12450.1', note: null });
+      expect(put).toHaveBeenCalledWith(todayInWarsaw(), { amount: '12450.1', note: null });
     });
   });
 

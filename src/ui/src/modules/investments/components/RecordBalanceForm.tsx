@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useSnapshotMutation } from '../api/queries';
-import { todayLocal } from '../lib/dates';
+import { EARLIEST_AS_OF, todayInWarsaw } from '../lib/dates';
 import { normalizeAmount } from '../lib/money';
 
 import type { Wallet } from '../types';
@@ -20,7 +20,7 @@ export function RecordBalanceForm({ wallet }: RecordBalanceFormProps) {
   const { t } = useTranslation('investments');
   const toast = useToast();
   const mutation = useSnapshotMutation();
-  const today = todayLocal();
+  const today = todayInWarsaw();
   const [asOf, setAsOf] = useState(today);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -30,7 +30,7 @@ export function RecordBalanceForm({ wallet }: RecordBalanceFormProps) {
   const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalized = normalizeAmount(amount);
-    const dateOk = asOf !== '' && asOf <= today;
+    const dateOk = asOf >= EARLIEST_AS_OF && asOf <= today;
     setAmountError(normalized === null ? t('amount_invalid') : null);
     setDateError(dateOk ? null : t('date_invalid'));
     if (normalized === null || !dateOk) return;
@@ -56,6 +56,7 @@ export function RecordBalanceForm({ wallet }: RecordBalanceFormProps) {
           <Input
             id="balance-date"
             type="date"
+            min={EARLIEST_AS_OF}
             max={today}
             value={asOf}
             aria-invalid={dateError !== null}

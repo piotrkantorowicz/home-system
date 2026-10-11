@@ -76,7 +76,7 @@
   "balance_saved": "Balance saved.",
   "balance_save_error": "Couldn't save the balance. Try again.",
   "amount_invalid": "Enter an amount such as 12450,10 — not negative, at most two decimals.",
-  "date_invalid": "Choose a date that is not in the future.",
+  "date_invalid": "Choose a date from 2 January 2002 up to today.",
   "history": "History",
   "history_load_error": "Couldn't load the history.",
   "balance_delete_error": "Couldn't delete the balance. Try again.",
