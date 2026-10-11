@@ -461,6 +461,26 @@
     "density_info": "1 ml = {{value}}g",
     "piece_info": "1 sztuka = {{value}}g"
   },
+  "recipe_photo": {
+    "title": "Zdjęcie przepisu",
+    "alt": "Zdjęcie: {{name}}",
+    "choose": "Wybierz zdjęcie",
+    "replace": "Wybierz nowe zdjęcie",
+    "preview": "Podgląd wybranego zdjęcia",
+    "limits": "JPEG, PNG lub statyczny WebP. Maksymalnie 10 MiB i 25 megapikseli. Zapisz przepis przed dodaniem zdjęcia.",
+    "upload": "Prześlij zdjęcie",
+    "remove": "Usuń zdjęcie",
+    "saving": "Zapisywanie zdjęcia…",
+    "loading": "Ładowanie zdjęcia…",
+    "unavailable": "Zdjęcie niedostępne. Treść przepisu jest nadal dostępna.",
+    "invalid_file": "Nie można przyjąć zdjęcia. Wybierz poprawny JPEG, PNG lub statyczny WebP do 10 MiB i 25 megapikseli.",
+    "access_error": "Dostęp do zdjęcia zmienił się. Odśwież przepis, aby sprawdzić uprawnienia.",
+    "conflict": "Zdjęcie zmieniło się podczas przesyłania. Aktualnie zapisane zdjęcie zostało zachowane. Ponów przesyłanie lub wybierz inny plik.",
+    "upload_error": "Przesyłanie zdjęcia nie powiodło się. Przepis i poprzednie zdjęcie zostały zachowane. Spróbuj ponownie lub anuluj.",
+    "remove_error": "Nie udało się usunąć zdjęcia. Spróbuj ponownie.",
+    "upload_success": "Zdjęcie zapisane.",
+    "remove_success": "Zdjęcie usunięte."
+  },
   "recipe_detail": {
     "back": "Powrót do Przepisów",
     "loading": "Ładowanie przepisu...",
