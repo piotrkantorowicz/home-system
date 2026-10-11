@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investments Phase 1 Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: HomeSystem app shell (slim sidebar + content), mockup switcher on top. Tokens copied from src/ui/src/index.css */
+:root {
+  --bg: hsl(260 20% 97%);
+  --card: hsl(0 0% 100%);
+  --fg: hsl(264 12% 15%);
+  --text-2: hsl(264 6% 41%);
+  --muted: hsl(264 14% 93%);
+  --border: hsl(258 14% 89%);
+  --primary: hsl(261 75% 54%);
+  --primary-fg: hsl(0 0% 100%);
+  --primary-soft: hsl(258 88% 96%);
+  --primary-ink: hsl(262 70% 42%);
+  --good: #22704a; --good-soft: #e6f3ec;
+  --warn: #8a5300; --warn-soft: #fdf6ea;
+  --over: #b42b31; --over-soft: #fbe9ea;
+  --track: #ebe8f0;
+  --k-brokerage: hsl(261 60% 56%);
+  --k-ike: hsl(215 60% 52%);
+  --k-ikze: hsl(195 60% 42%);
+  --k-ppk: hsl(162 50% 36%);
+  --k-bonds: hsl(35 70% 46%);
+  --k-savings: #b8458c;
+  --font: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r-lg: 16px; --r-md: 10px; --r-sm: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: hsl(249 10% 14%); --card: hsl(247 10% 18%); --fg: hsl(260 21% 95%); --text-2: hsl(265 8% 71%);
+  --muted: hsl(248 9% 17%); --border: hsl(251 9% 25%); --primary: hsl(257 78% 74%); --primary-fg: hsl(256 44% 14%);
+  --primary-soft: hsl(256 44% 25%); --primary-ink: hsl(258 90% 85%);
+  --good: #6fd3a3; --good-soft: #1f3a2d; --warn: #e9b86a; --warn-soft: #3a2f1c; --over: #f09094; --over-soft: #4a2328; --track: #3a3843;
+  --k-brokerage: hsl(257 78% 74%); --k-ike: hsl(211 67% 65%); --k-ikze: hsl(197 61% 62%); --k-ppk: hsl(157 48% 58%); --k-bonds: hsl(36 73% 62%); --k-savings: #e08abf;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: hsl(249 10% 14%); --card: hsl(247 10% 18%); --fg: hsl(260 21% 95%); --text-2: hsl(265 8% 71%);
+  --muted: hsl(248 9% 17%); --border: hsl(251 9% 25%); --primary: hsl(257 78% 74%); --primary-fg: hsl(256 44% 14%);
+  --primary-soft: hsl(256 44% 25%); --primary-ink: hsl(258 90% 85%);
+  --good: #6fd3a3; --good-soft: #1f3a2d; --warn: #e9b86a; --warn-soft: #3a2f1c; --over: #f09094; --over-soft: #4a2328; --track: #3a3843;
+  --k-brokerage: hsl(257 78% 74%); --k-ike: hsl(211 67% 65%); --k-ikze: hsl(197 61% 62%); --k-ppk: hsl(157 48% 58%); --k-bonds: hsl(36 73% 62%); --k-savings: #e08abf;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+.num { font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 20px; }
+
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.switcher .label { color: var(--text-2); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+.switcher button { font: inherit; border: 1px solid var(--border); background: var(--card); color: var(--fg); padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+.switcher button[aria-pressed="true"] { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+.switcher button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.note { color: var(--text-2); font-size: 13px; max-width: 70ch; }
+.note strong { color: var(--fg); font-weight: 600; }
+
+.shell { display: grid; grid-template-columns: 200px 1fr; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.side { border-right: 1px solid var(--border); padding: 18px 12px; display: grid; align-content: start; gap: 2px; }
+.side .brand { font-weight: 700; padding: 0 10px 14px; }
+.side a { color: var(--text-2); text-decoration: none; padding: 8px 10px; border-radius: var(--r-md); }
+.side a.on { background: var(--primary-soft); color: var(--primary-ink); font-weight: 600; }
+.main { padding: 24px; display: grid; gap: 20px; min-width: 0; background: var(--bg); }
+@media (max-width: 760px) { .shell { grid-template-columns: 1fr; } .side { display: none; } .main { padding: 16px; } }
+
+.head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+h1 { font-size: 24px; margin: 0; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 15px; margin: 0; font-weight: 600; }
+.sub { color: var(--text-2); font-size: 13px; }
+.btn { font: inherit; font-weight: 500; border: 1px solid var(--border); background: var(--card); color: var(--fg); padding: 8px 14px; border-radius: var(--r-md); cursor: pointer; }
+.btn.primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--card); }
+.seg button { font: inherit; border: 0; background: none; color: var(--text-2); padding: 7px 12px; cursor: pointer; }
+.seg button.on { background: var(--primary-soft); color: var(--primary-ink); font-weight: 600; }
+
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+.total { font-size: 38px; font-weight: 600; letter-spacing: -.01em; line-height: 1.1; }
+.delta { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 500; padding: 3px 8px; border-radius: 999px; background: var(--good-soft); color: var(--good); }
+.kv { display: flex; flex-wrap: wrap; gap: 18px; }
+.kv div { display: grid; }
+.kv span:first-child { color: var(--text-2); font-size: 12px; }
+
+svg text { fill: var(--text-2); font-family: var(--font); font-size: 11px; }
+.chart-wrap { overflow-x: auto; }
+
+.stack { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--track); }
+.legend { display: grid; gap: 8px; }
+.legend .row { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center; }
+.sw { width: 10px; height: 10px; border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 500; color: var(--text-2); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+tr.group td { background: var(--muted); font-weight: 600; font-size: 12px; color: var(--text-2); padding-block: 6px; }
+.tbl { overflow-x: auto; }
+.wname { display: grid; }
+.wname small { color: var(--text-2); font-size: 12px; }
+.chip { display: inline-flex; gap: 4px; align-items: center; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--muted); color: var(--text-2); white-space: nowrap; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.over { background: var(--over-soft); color: var(--over); }
+.chip.priv { background: var(--primary-soft); color: var(--primary-ink); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.wcard { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px; display: grid; gap: 8px; }
+.wcard .top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.wcard .v { font-size: 20px; font-weight: 600; }
+.kindtag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+
+.form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: 12px; color: var(--text-2); }
+input, select { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; min-width: 0; }
+input.amt { width: 140px; text-align: right; }
+.hint { font-size: 12px; color: var(--text-2); }
+.chg-up { color: var(--good); } .chg-down { color: var(--over); }
+.badge-ex { font-size: 11px; color: var(--warn); background: var(--warn-soft); padding: 2px 8px; border-radius: 999px; }
+</style>
+
+<div class="wrap">
+  <div class="switcher" role="group" aria-label="Mockup">
+    <span class="label">Mockup</span>
+    <button type="button" data-v="a" aria-pressed="true">Dashboard A · timeline first</button>
+    <button type="button" data-v="b" aria-pressed="false">Dashboard B · allocation first</button>
+    <button type="button" data-v="detail" aria-pressed="false">Wallet detail</button>
+    <button type="button" data-v="checkin" aria-pressed="false">Monthly check-in</button>
+    <span class="badge-ex">Example data</span>
+  </div>
+  <p class="note" id="note"></p>
+
+  <div class="shell">
+    <nav class="side" aria-label="App">
+      <div class="brand">HomeSystem</div>
+      <a href="#a">Diet planner</a><a href="#a">Budget</a><a class="on" href="#a">Investments</a><a href="#a">Household</a>
+    </nav>
+    <main class="main" id="view"></main>
+  </div>
+</div>
+
+<script>
+const KINDS = {
+  Brokerage: { label: "Brokerage", c: "--k-brokerage" },
+  IKE: { label: "IKE", c: "--k-ike" },
+  IKZE: { label: "IKZE", c: "--k-ikze" },
+  PPK: { label: "PPK", c: "--k-ppk" },
+  TreasuryBonds: { label: "Treasury bonds", c: "--k-bonds" },
+  Savings: { label: "Savings", c: "--k-savings" },
+};
+const FX = { PLN: 1, EUR: 4.2671, USD: 3.9412 };
+const FX_NOTE = "NBP table A no. 197/A/NBP/2026, 9 Oct 2026";
+const ME = "Alex", OTHER = "Bea";
+const W = [
+  { id: 1, name: "XTB IKE", inst: "XTB", kind: "IKE", cur: "PLN", owner: ME, vis: "Shared", bal: 84320.55, asOf: "2026-10-01" },
+  { id: 2, name: "XTB Invest", inst: "XTB", kind: "Brokerage", cur: "USD", owner: ME, vis: "Shared", bal: 12450.10, asOf: "2026-10-01" },
+  { id: 3, name: "Saxo Global", inst: "Saxo", kind: "Brokerage", cur: "EUR", owner: ME, vis: "Private", bal: 18900.00, asOf: "2026-09-30" },
+  { id: 4, name: "Bossa IKZE", inst: "Bossa", kind: "IKZE", cur: "PLN", owner: ME, vis: "Shared", bal: 31200.00, asOf: "2026-10-01" },
+  { id: 5, name: "mBank eMakler", inst: "mBank", kind: "Brokerage", cur: "PLN", owner: OTHER, vis: "Shared", bal: 22610.40, asOf: "2026-08-02" },
+  { id: 6, name: "EDO bonds", inst: "PKO BP", kind: "TreasuryBonds", cur: "PLN", owner: OTHER, vis: "Shared", bal: 60412.00, asOf: "2026-10-01" },
+  { id: 7, name: "Allianz PPK", inst: "Allianz", kind: "PPK", cur: "PLN", owner: ME, vis: "Shared", bal: 27840.12, asOf: "2026-09-30" },
+  { id: 8, name: "mBank savings", inst: "mBank", kind: "Savings", cur: "PLN", owner: OTHER, vis: "Shared", bal: 45000.00, asOf: "2026-10-02" },
+];
+const pln = w => w.bal * FX[w.cur];
+const TOTAL = W.reduce((s, w) => s + pln(w), 0);
+// month-end net worth, last 12 months (illustrative)
+const MONTHS = ["Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"];
+const HIST = [318200, 322900, 331400, 329800, 336100, 340700, 338900, 347300, 352800, 355100, 361900, Math.round(TOTAL)];
+const JAN1 = HIST[1];
+
+const fmt = (n, cur = "PLN", d = 2) => new Intl.NumberFormat("pl-PL", { minimumFractionDigits: d, maximumFractionDigits: d }).format(n) + " " + cur;
+const today = new Date("2026-10-10");
+const ageDays = s => Math.round((today - new Date(s)) / 864e5);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function lineChart(vals, labels, w = 640, h = 200) {
+  const pad = { l: 56, r: 12, t: 12, b: 26 };
+  const min = Math.floor(Math.min(...vals) / 20000) * 20000, max = Math.ceil(Math.max(...vals) / 20000) * 20000;
+  const x = i => pad.l + i * (w - pad.l - pad.r) / (vals.length - 1);
+  const y = v => pad.t + (max - v) * (h - pad.t - pad.b) / (max - min);
+  let g = "";
+  for (let v = min; v <= max; v += 20000) g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end">${v / 1000}k</text>`;
+  labels.forEach((l, i) => g += `<text x="${x(i)}" y="${h - 6}" text-anchor="middle">${l}</text>`);
+  const pts = vals.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const area = `${x(0)},${y(min)} ${pts} ${x(vals.length - 1)},${y(min)}`;
+  const li = vals.length - 1;
+  return `<div class="chart-wrap"><svg viewBox="0 0 ${w} ${h}" width="100%" style="min-width:420px" role="img" aria-label="Net worth by month">
+    ${g}<polygon points="${area}" fill="var(--primary)" fill-opacity=".12"/>
+    <polyline points="${pts}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="${x(li)}" cy="${y(vals[li])}" r="5" fill="var(--primary)" stroke="var(--card)" stroke-width="2"/></svg></div>`;
+}
+
+function byKind() {
+  const m = {};
+  W.forEach(w => m[w.kind] = (m[w.kind] || 0) + pln(w));
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+function kindLegend() {
+  const k = byKind();
+  return `<div class="stack">${k.map(([kind, v]) => `<div style="width:${v / TOTAL * 100}%;background:var(${KINDS[kind].c})" title="${KINDS[kind].label}"></div>`).join("")}</div>
+  <div class="legend">${k.map(([kind, v]) => `<div class="row"><span class="sw" style="background:var(${KINDS[kind].c})"></span><span>${KINDS[kind].label}</span><span class="num sub">${(v / TOTAL * 100).toFixed(1)}%</span><span class="num">${fmt(v, "PLN", 0)}</span></div>`).join("")}</div>`;
+}
+const staleChip = w => ageDays(w.asOf) > 45 ? `<span class="chip warn">Updated ${ageDays(w.asOf)} days ago</span>` : "";
+const visChip = w => w.vis === "Private" ? `<span class="chip priv">Private</span>` : "";
+
+function scopeSeg() { return `<div class="seg" role="group" aria-label="Scope"><button class="on" type="button">Household</button><button type="button">Mine</button></div>`; }
+
+function viewA() {
+  const rows = byKind().map(([kind]) => {
+    const ws = W.filter(w => w.kind === kind);
+    return `<tr class="group"><td colspan="4">${KINDS[kind].label}</td></tr>` + ws.map(w => `<tr>
+      <td><div class="wname"><span>${esc(w.name)} ${visChip(w)}</span><small>${w.inst} · ${w.owner}</small></div></td>
+      <td class="r num">${w.cur === "PLN" ? "" : `<div class="sub">${fmt(w.bal, w.cur)}</div>`}${fmt(pln(w))}</td>
+      <td class="num sub">${w.asOf}</td><td>${staleChip(w)}</td></tr>`).join("");
+  }).join("");
+  return `<div class="head"><div><h1>Investments</h1><div class="sub">Household net worth · 10 Oct 2026</div></div>
+    <div class="form">${scopeSeg()}<button class="btn primary" type="button" data-go="checkin">Update balances</button></div></div>
+  <div class="grid2">
+    <section class="panel"><div class="kv"><div><span>Net worth</span><span class="total num">${fmt(TOTAL, "PLN", 0)}</span></div></div>
+      <div><span class="delta num">▲ ${fmt(TOTAL - JAN1, "PLN", 0)} · +${((TOTAL / JAN1 - 1) * 100).toFixed(1)}% since 1 Jan</span></div>
+      ${lineChart(HIST, MONTHS)}</section>
+    <section class="panel"><h2>By kind</h2>${kindLegend()}<p class="hint">Foreign wallets converted at ${FX_NOTE}.</p></section>
+  </div>
+  <section class="panel"><div class="head"><h2>Wallets</h2><button class="btn" type="button">Add wallet</button></div>
+    <div class="tbl"><table><thead><tr><th>Wallet</th><th class="r">Value</th><th>Last balance</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
+function donut() {
+  const k = byKind(); let a = 0; const R = 70, C = 2 * Math.PI * R;
+  const segs = k.map(([kind, v]) => { const len = v / TOTAL * C; const s = `<circle r="${R}" cx="90" cy="90" fill="none" stroke="var(${KINDS[kind].c})" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-a}" transform="rotate(-90 90 90)"/>`; a += len; return s; }).join("");
+  return `<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Allocation by kind">${segs}
+    <text x="90" y="86" text-anchor="middle" style="font-size:11px">Net worth</text>
+    <text x="90" y="104" text-anchor="middle" style="font-size:15px;font-weight:600;fill:var(--fg)">${Math.round(TOTAL / 1000)}k PLN</text></svg>`;
+}
+function viewB() {
+  const owners = [ME, OTHER].map(o => [o, W.filter(w => w.owner === o).reduce((s, w) => s + pln(w), 0)]);
+  const cards = W.map(w => `<article class="wcard">
+    <div class="top"><span class="kindtag" style="color:var(${KINDS[w.kind].c})">${KINDS[w.kind].label}</span>${visChip(w)}</div>
+    <div class="wname"><span>${esc(w.name)}</span><small>${w.inst} · ${w.owner}</small></div>
+    <div class="v num">${fmt(pln(w), "PLN", 0)}</div>
+    <div class="sub num">${w.cur === "PLN" ? "" : fmt(w.bal, w.cur) + " · "}as of ${w.asOf}</div>${staleChip(w)}</article>`).join("");
+  return `<div class="head"><div><h1>Investments</h1><div class="sub">Household net worth · 10 Oct 2026</div></div>
+    <div class="form">${scopeSeg()}<button class="btn primary" type="button" data-go="checkin">Update balances</button></div></div>
+  <div class="grid2">
+    <section class="panel"><h2>Allocation</h2><div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center">${donut()}<div class="legend" style="flex:1;min-width:220px">${byKind().map(([kind, v]) => `<div class="row"><span class="sw" style="background:var(${KINDS[kind].c})"></span><span>${KINDS[kind].label}</span><span class="num sub">${(v / TOTAL * 100).toFixed(1)}%</span><span class="num">${fmt(v, "PLN", 0)}</span></div>`).join("")}</div></div></section>
+    <section class="panel"><h2>By owner</h2>${owners.map(([o, v]) => `<div style="display:grid;gap:6px"><div style="display:flex;justify-content:space-between"><span>${o}</span><span class="num">${fmt(v, "PLN", 0)}</span></div><div class="stack" style="height:8px"><div style="width:${v / TOTAL * 100}%;background:var(--primary)"></div></div></div>`).join("")}
+      <span class="delta num" style="justify-self:start">▲ +${((TOTAL / JAN1 - 1) * 100).toFixed(1)}% since 1 Jan</span></section>
+  </div>
+  <section style="display:grid;gap:12px"><div class="head"><h2>Wallets</h2><button class="btn" type="button">Add wallet</button></div><div class="cards">${cards}</div></section>`;
+}
+
+function viewDetail() {
+  const w = W[2];
+  const snaps = [["2026-09-30", 18900.00, "After Q3 rebalance"], ["2026-08-31", 18420.55, ""], ["2026-07-31", 18610.00, ""], ["2026-06-30", 17950.20, ""], ["2026-05-31", 17200.00, "Deposit 1 000 EUR"], ["2026-04-30", 16020.80, ""]];
+  const rates = { "2026-09-30": 4.2702, "2026-08-31": 4.2655, "2026-07-31": 4.2810, "2026-06-30": 4.2898, "2026-05-31": 4.2560, "2026-04-30": 4.2711 };
+  const rows = snaps.map(([d, v, n], i) => { const prev = snaps[i + 1]; const ch = prev ? v - prev[1] : null;
+    return `<tr><td class="num">${d}</td><td class="r num">${fmt(v, "EUR")}</td><td class="r num ${ch == null ? "" : ch >= 0 ? "chg-up" : "chg-down"}">${ch == null ? "" : (ch >= 0 ? "+" : "") + fmt(ch, "EUR")}</td><td class="r num sub">${fmt(v * rates[d])}</td><td class="sub">${esc(n)}</td></tr>`; }).join("");
+  return `<div class="head"><div><div class="sub"><a href="#a" data-go="a" style="color:var(--primary-ink)">Investments</a> / Saxo Global</div><h1>Saxo Global <span class="chip priv">Private</span></h1>
+    <div class="sub">Saxo · Brokerage · EUR · owner ${w.owner}</div></div>
+    <div class="form"><button class="btn" type="button">Edit</button><button class="btn" type="button">Archive</button></div></div>
+  <div class="grid2">
+    <section class="panel"><div class="kv"><div><span>Latest balance · 30 Sep 2026</span><span class="total num">${fmt(w.bal, "EUR")}</span></div><div><span>In PLN</span><span class="num" style="font-size:20px;font-weight:600">${fmt(pln(w))}</span></div></div>
+      <p class="hint">Converted at ${FX_NOTE}. Only you can see this wallet; it counts in your “Mine” total and in household net worth for you only.</p></section>
+    <section class="panel"><h2>Record balance</h2>
+      <form class="form" onsubmit="event.preventDefault()"><div class="field"><label for="d1">Date</label><input id="d1" type="date" value="2026-10-10"></div>
+      <div class="field"><label for="a1">Balance (EUR)</label><input id="a1" class="amt num" inputmode="decimal" placeholder="0,00"></div>
+      <div class="field"><label for="n1">Note</label><input id="n1" placeholder="optional"></div>
+      <button class="btn primary" type="submit">Save</button></form>
+      <p class="hint">Saving a date that already has a balance replaces it.</p></section>
+  </div>
+  <section class="panel"><h2>Balance history</h2><div class="tbl"><table><thead><tr><th>Date</th><th class="r">Balance</th><th class="r">Change</th><th class="r">PLN at NBP rate</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
+function viewCheckin() {
+  const rows = W.map(w => `<tr><td><div class="wname"><span>${esc(w.name)} ${visChip(w)}</span><small>${w.inst} · ${w.owner}</small></div></td>
+    <td class="r num"><div>${fmt(w.bal, w.cur)}</div><div class="sub">${w.asOf}</div></td>
+    <td class="r"><input class="amt num" id="ci${w.id}" data-id="${w.id}" inputmode="decimal" placeholder="${new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2 }).format(w.bal)}" aria-label="New balance for ${esc(w.name)} in ${w.cur}"> <span class="sub">${w.cur}</span></td>
+    <td class="r num" id="chg${w.id}"></td></tr>`).join("");
+  return `<div class="head"><div><h1>Monthly check-in</h1><div class="sub">Type today's balance for each wallet you checked. Leave the rest empty.</div></div>
+    <div class="form"><div class="field"><label for="cd">Balance date</label><input id="cd" type="date" value="2026-10-10"></div></div></div>
+  <section class="panel"><div class="tbl"><table><thead><tr><th>Wallet</th><th class="r">Last balance</th><th class="r">New balance</th><th class="r">Change</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="head"><span class="sub" id="cisum">No balances entered yet.</span><button class="btn primary" type="button" id="cisave" disabled>Save balances</button></div></section>`;
+}
+
+const NOTES = {
+  a: "<strong>Timeline first.</strong> Answers “are we growing?” at a glance. Wallets as one table grouped by kind; stale wallets flagged so the total is never silently out of date.",
+  b: "<strong>Allocation first.</strong> Answers “where is the money?” Donut by kind, split by owner, wallets as cards. Growth chart would move to a second tab.",
+  detail: "<strong>Wallet detail.</strong> Native currency first, PLN second with the exact NBP rate used. One inline form records a balance; same date replaces.",
+  checkin: "<strong>Monthly check-in.</strong> One screen to update every wallet at once, the likely real workflow once a month. Try typing in a balance.",
+};
+const views = { a: viewA, b: viewB, detail: viewDetail, checkin: viewCheckin };
+const view = document.getElementById("view");
+function show(v) {
+  view.innerHTML = views[v]();
+  document.getElementById("note").innerHTML = NOTES[v];
+  document.querySelectorAll(".switcher button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+  try { localStorage.setItem("inv-mock-view", v); } catch (e) {}
+}
+document.querySelector(".switcher").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) show(b.dataset.v); });
+view.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (g) { e.preventDefault(); show(g.dataset.go); }
+  const seg = e.target.closest(".seg button"); if (seg) { seg.parentElement.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === seg)); }
+});
+view.addEventListener("input", e => {
+  const inp = e.target.closest("input[data-id]"); if (!inp) return;
+  const w = W.find(x => x.id === +inp.dataset.id);
+  const v = parseFloat(inp.value.replace(/\s/g, "").replace(",", "."));
+  const cell = document.getElementById("chg" + w.id);
+  if (isNaN(v)) cell.innerHTML = ""; else { const d = v - w.bal; cell.innerHTML = `<span class="${d >= 0 ? "chg-up" : "chg-down"}">${d >= 0 ? "+" : ""}${fmt(d, w.cur)}</span>`; }
+  const n = [...view.querySelectorAll("input[data-id]")].filter(i => i.value.trim()).length;
+  document.getElementById("cisum").textContent = n ? `${n} of ${W.length} wallets will get a new balance.` : "No balances entered yet.";
+  const s = document.getElementById("cisave"); s.disabled = !n; s.textContent = n ? `Save ${n} balance${n > 1 ? "s" : ""}` : "Save balances";
+});
+let start = "a"; try { start = localStorage.getItem("inv-mock-view") || "a"; } catch (e) {}
+show(views[start] ? start : "a");
+</script>
