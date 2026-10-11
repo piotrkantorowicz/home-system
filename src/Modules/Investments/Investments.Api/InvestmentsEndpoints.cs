@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Investments.Application.Commands.ArchiveWallet;
 using Investments.Application.Commands.CreateWallet;
 using Investments.Application.Commands.DeleteSnapshot;
+using Investments.Application.Commands.RecordCheckIn;
 using Investments.Application.Commands.RecordSnapshot;
 using Investments.Application.Commands.RestoreWallet;
 using Investments.Application.Commands.UpdateWallet;
@@ -58,6 +59,9 @@ internal static class InvestmentsEndpoints
             .WithName("DeleteInvestmentSnapshot")
             .WithSummary("Remove a wallet's balance for a date");
 
+        group.MapPut("/snapshots", RecordCheckIn)
+            .WithName("RecordInvestmentsCheckIn")
+            .WithSummary("Record balances for several wallets on one date, all or nothing; any invalid entry is a 422 naming the wallet ids");
         group.MapGet("/net-worth", GetNetWorth)
             .WithName("GetInvestmentsNetWorth")
             .WithSummary("Net worth in PLN on a date (default today) for scope household or mine, with breakdowns and rates used");
@@ -129,6 +133,12 @@ internal static class InvestmentsEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<Ok<RecordCheckInResult>> RecordCheckIn(
+        RecordCheckInRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+        => TypedResults.Ok(await dispatcher.SendAsync<RecordCheckInCommand, RecordCheckInResult>(
+            new RecordCheckInCommand(
+                Sub(user), request.AsOf, [.. (request.Entries ?? []).Select(e => new CheckInEntry(e.WalletId, e.Amount, e.Note))]), ct));
+
     private static async Task<Ok<NetWorthDto>> GetNetWorth(
         ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
         [FromQuery] DateOnly? asOf = null, [FromQuery] string? scope = null)
@@ -171,3 +181,16 @@ internal sealed record UpdateWalletRequest(string Name, string Visibility, uint 
 /// <param name="Note">Optional note, at most 200 characters.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record RecordSnapshotRequest(string Amount, string? Note);
+
+/// <summary>Body of <c>PUT /api/investments/snapshots</c> (monthly check-in).</summary>
+/// <param name="AsOf">The date for every entry, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Entries">One per wallet being updated; at most 100.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record RecordCheckInRequest(DateOnly AsOf, IReadOnlyList<CheckInEntryRequest>? Entries);
+
+/// <summary>One entry of a check-in.</summary>
+/// <param name="WalletId">The wallet.</param>
+/// <param name="Amount">Decimal string, not negative, at most two decimals.</param>
+/// <param name="Note">Optional note, at most 200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record CheckInEntryRequest(Guid WalletId, string Amount, string? Note);

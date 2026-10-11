@@ -16,4 +16,10 @@ public interface IWalletRepository
     /// <param name="householdId">The household it must belong to.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<Wallet?> GetAsync(WalletId id, Guid householdId, CancellationToken ct);
+
+    /// <summary>Loads the household's wallets among <paramref name="ids"/> for modification; unknown ids are skipped.</summary>
+    /// <param name="ids">The wallets.</param>
+    /// <param name="householdId">The household they must belong to.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyList<Wallet>> GetManyAsync(IReadOnlyCollection<WalletId> ids, Guid householdId, CancellationToken ct);
 }

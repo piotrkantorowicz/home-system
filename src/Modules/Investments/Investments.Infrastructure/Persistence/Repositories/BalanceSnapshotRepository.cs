@@ -13,5 +13,9 @@ internal sealed class BalanceSnapshotRepository(InvestmentsDbContext dbContext) 
     public async Task<BalanceSnapshot?> GetAsync(WalletId walletId, DateOnly asOf, CancellationToken ct)
         => await dbContext.BalanceSnapshots.FirstOrDefaultAsync(s => s.WalletId == walletId && s.AsOf == asOf, ct);
 
+    public async Task<IReadOnlyList<BalanceSnapshot>> GetForDateAsync(
+        IReadOnlyCollection<WalletId> walletIds, DateOnly asOf, CancellationToken ct)
+        => await dbContext.BalanceSnapshots.Where(s => walletIds.Contains(s.WalletId) && s.AsOf == asOf).ToListAsync(ct);
+
     public void Remove(BalanceSnapshot snapshot) => dbContext.BalanceSnapshots.Remove(snapshot);
 }
