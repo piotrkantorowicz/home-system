@@ -1,7 +1,6 @@
 namespace DietPlanner.IntegrationTests.Images;
 
 using DietPlanner.Domain.Aggregates;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 internal sealed class PhotoCommitFailureInterceptor : SaveChangesInterceptor
