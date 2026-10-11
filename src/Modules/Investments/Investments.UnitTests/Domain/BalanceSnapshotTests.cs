@@ -51,7 +51,7 @@ public sealed class BalanceSnapshotTests
     public void Record_ArchivedWallet_Throws()
     {
         var wallet = NewWallet();
-        wallet.Archive();
+        wallet.Archive(Today);
 
         Should.Throw<InvestmentsDomainException>(() => Record(wallet, Today));
     }

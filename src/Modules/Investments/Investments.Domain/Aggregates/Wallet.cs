@@ -69,11 +69,26 @@ public sealed class Wallet : AggregateRoot<WalletId>
     /// <param name="visibility">The new visibility.</param>
     public void ChangeVisibility(WalletVisibility visibility) => Visibility = visibility;
 
-    /// <summary>Hides the wallet from active lists and totals; history stays. No-op when already archived.</summary>
-    public void Archive() => IsArchived = true;
+    /// <summary>
+    /// Hides the wallet from active lists and from totals from <paramref name="today"/> on; earlier
+    /// net-worth history keeps it. No-op when already archived.
+    /// </summary>
+    /// <param name="today">The household's current date.</param>
+    public void Archive(DateOnly today)
+    {
+        if (IsArchived)
+            return;
 
-    /// <summary>Makes an archived wallet active again. No-op when not archived.</summary>
-    public void Restore() => IsArchived = false;
+        IsArchived = true;
+        ArchivedOn = today;
+    }
+
+    /// <summary>Makes an archived wallet active again, in history too. No-op when not archived.</summary>
+    public void Restore()
+    {
+        IsArchived = false;
+        ArchivedOn = null;
+    }
 
     private static string NormalizeName(string? name)
     {
@@ -110,6 +125,9 @@ public sealed class Wallet : AggregateRoot<WalletId>
 
     /// <summary>Whether the wallet is hidden from active lists and totals.</summary>
     public bool IsArchived { get; private set; }
+
+    /// <summary>The household date it was archived on; <see langword="null"/> when active.</summary>
+    public DateOnly? ArchivedOn { get; private set; }
 
     /// <summary>Creation time, UTC.</summary>
     public DateTimeOffset CreatedAt { get; private set; }

@@ -1,0 +1,32 @@
+namespace Investments.Application.Common;
+
+using Investments.Domain.Aggregates;
+using Shared.Abstractions.Cqrs;
+
+/// <summary>Which wallets a net-worth figure covers (design §4).</summary>
+internal static class NetWorthScope
+{
+    public const string Household = "household";
+    public const string Mine = "mine";
+
+    /// <summary>Normalises the query value; blank means household.</summary>
+    public static string Parse(string? scope, string queryName)
+    {
+        var value = string.IsNullOrWhiteSpace(scope) ? Household : scope.Trim().ToLowerInvariant();
+        return value is Household or Mine
+            ? value
+            : throw new CommandValidationException(queryName, [new ValidationError("Scope", "Scope must be household or mine.")]);
+    }
+
+    /// <summary>
+    /// Household: every wallet the caller may see (shared, own, managed members'). Mine: the caller's
+    /// own plus their managed members' (an adult's kids), whatever the visibility. Archived wallets
+    /// are included: they count in history up to their archive date (see <c>NetWorthCalculator</c>).
+    /// </summary>
+    public static IQueryable<Wallet> InScope(this IQueryable<Wallet> wallets, InvestmentsCaller caller, string scope)
+    {
+        var owners = caller.ManagedOwnerIds;
+        var visible = wallets.VisibleTo(caller);
+        return scope == Mine ? visible.Where(w => owners.Contains(w.OwnerPersonId)) : visible;
+    }
+}

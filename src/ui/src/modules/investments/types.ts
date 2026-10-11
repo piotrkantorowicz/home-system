@@ -38,3 +38,8 @@ export interface NewWallet {
   visibility: WalletVisibility;
   ownerPersonId: string;
 }
+
+export type NetWorth = components['schemas']['NetWorthDto'];
+
+export const NET_WORTH_SCOPES = ['household', 'mine'] as const;
+export type NetWorthScope = (typeof NET_WORTH_SCOPES)[number];

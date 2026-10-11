@@ -8,6 +8,8 @@ using Investments.Application.Commands.DeleteSnapshot;
 using Investments.Application.Commands.RecordSnapshot;
 using Investments.Application.Commands.RestoreWallet;
 using Investments.Application.Commands.UpdateWallet;
+using Investments.Application.Queries.GetNetWorth;
+using Investments.Application.Queries.GetNetWorthHistory;
 using Investments.Application.Queries.GetWallet;
 using Investments.Application.Queries.ListSnapshots;
 using Investments.Application.Queries.ListWallets;
@@ -55,6 +57,13 @@ internal static class InvestmentsEndpoints
         group.MapDelete("/wallets/{id:guid}/snapshots/{asOf}", DeleteSnapshot)
             .WithName("DeleteInvestmentSnapshot")
             .WithSummary("Remove a wallet's balance for a date");
+
+        group.MapGet("/net-worth", GetNetWorth)
+            .WithName("GetInvestmentsNetWorth")
+            .WithSummary("Net worth in PLN on a date (default today) for scope household or mine, with breakdowns and rates used");
+        group.MapGet("/net-worth/history", GetNetWorthHistory)
+            .WithName("GetInvestmentsNetWorthHistory")
+            .WithSummary("Month-end net worth in PLN over [from, to] (default the last 12 months, at most 10 years), plus to itself");
 
         // Catch-all so the whole prefix answers 401 to anonymous callers and 404 to signed-in ones
         // for routes that do not exist; real endpoints always win over a fallback.
@@ -119,6 +128,17 @@ internal static class InvestmentsEndpoints
         await dispatcher.SendAsync(new DeleteSnapshotCommand(Sub(user), id, asOf), ct);
         return TypedResults.NoContent();
     }
+
+    private static async Task<Ok<NetWorthDto>> GetNetWorth(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] DateOnly? asOf = null, [FromQuery] string? scope = null)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetNetWorthQuery, NetWorthDto>(new GetNetWorthQuery(Sub(user), asOf, scope), ct));
+
+    private static async Task<Ok<NetWorthHistoryDto>> GetNetWorthHistory(
+        ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] DateOnly? from = null, [FromQuery] DateOnly? to = null, [FromQuery] string? scope = null)
+        => TypedResults.Ok(await dispatcher.SendAsync<GetNetWorthHistoryQuery, NetWorthHistoryDto>(
+            new GetNetWorthHistoryQuery(Sub(user), from, to, scope), ct));
 
     private static string Sub(ClaimsPrincipal user)
         => user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub")

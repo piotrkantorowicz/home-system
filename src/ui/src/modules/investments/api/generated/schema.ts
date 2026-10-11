@@ -1316,6 +1316,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/investments/net-worth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Net worth in PLN on a date (default today) for scope household or mine, with breakdowns and rates used */
+        get: operations["GetInvestmentsNetWorth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/investments/net-worth/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Month-end net worth in PLN over [from, to] (default the last 12 months, at most 10 years), plus to itself */
+        get: operations["GetInvestmentsNetWorthHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications/deliveries/summary": {
         parameters: {
             query?: never;
@@ -2132,6 +2166,56 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        NetWorthDto: {
+            /** Format: date */
+            asOf: string;
+            scope: string;
+            total: string;
+            incomplete: boolean;
+            byKind: components["schemas"]["NetWorthKindDto"][];
+            byOwner: components["schemas"]["NetWorthOwnerDto"][];
+            wallets: components["schemas"]["NetWorthWalletDto"][];
+            ratesUsed: components["schemas"]["NetWorthRateDto"][];
+        };
+        NetWorthHistoryDto: {
+            scope: string;
+            points: components["schemas"]["NetWorthHistoryPointDto"][];
+        };
+        NetWorthHistoryPointDto: {
+            /** Format: date */
+            date: string;
+            total: string;
+            incomplete: boolean;
+        };
+        NetWorthKindDto: {
+            kind: string;
+            total: string;
+        };
+        NetWorthOwnerDto: {
+            /** Format: uuid */
+            personId: string;
+            name: string;
+            total: string;
+        };
+        NetWorthRateDto: {
+            currency: string;
+            mid: string;
+            /** Format: date */
+            effectiveDate: string;
+            tableNo: string;
+        };
+        NetWorthWalletDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: string;
+            currency: string;
+            balance: null | string;
+            /** Format: date */
+            balanceAsOf: null | string;
+            balancePln: null | string;
+            rateMissing: boolean;
         };
         NotificationDto: {
             /** Format: uuid */
@@ -9623,6 +9707,143 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetInvestmentsNetWorth: {
+        parameters: {
+            query?: {
+                asOf?: string;
+                scope?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthDto"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Business rule violation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetInvestmentsNetWorthHistory: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                scope?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthHistoryDto"];
+                };
             };
             /** @description Validation failed */
             400: {

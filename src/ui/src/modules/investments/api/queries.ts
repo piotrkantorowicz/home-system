@@ -5,7 +5,7 @@ import { useAuth } from 'react-oidc-context';
 import { api, checkResponse, errorStatus } from './client';
 import { investmentsQueryKeys } from './queryKeys';
 
-import type { NewWallet, WalletVisibility } from '../types';
+import type { NetWorthScope, NewWallet, WalletVisibility } from '../types';
 
 export function walletsOptions(subject: string | undefined, householdId: string | undefined) {
   return queryOptions({
@@ -155,5 +155,62 @@ export function useWalletMutation() {
     onSettled: async () => {
       await client.invalidateQueries({ queryKey: investmentsQueryKeys.all() });
     },
+  });
+}
+
+export function netWorthOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  scope: NetWorthScope,
+) {
+  return queryOptions({
+    queryKey: investmentsQueryKeys.netWorth(subject, householdId, scope),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/investments/net-worth', {
+        params: { query: { scope } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing net worth response');
+      return result.data;
+    },
+  });
+}
+
+export function useNetWorthQuery(scope: NetWorthScope) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...netWorthOptions(auth.user?.profile.sub, household?.id, scope),
+    enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+/** The last 12 months by month end — always includes last 31 December for "since 1 January". */
+export function netWorthHistoryOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  scope: NetWorthScope,
+) {
+  return queryOptions({
+    queryKey: investmentsQueryKeys.netWorthHistory(subject, householdId, scope),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/investments/net-worth/history', {
+        params: { query: { scope } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing net worth history response');
+      return result.data.points;
+    },
+  });
+}
+
+export function useNetWorthHistoryQuery(scope: NetWorthScope) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...netWorthHistoryOptions(auth.user?.profile.sub, household?.id, scope),
+    enabled: auth.isAuthenticated && !!household,
   });
 }
