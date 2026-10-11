@@ -13,6 +13,8 @@ namespace Investments.Application.Queries.GetWallet;
 /// <param name="Version">Concurrency token; send it back on edit.</param>
 /// <param name="CreatedAt">Creation time, UTC.</param>
 /// <param name="CanChangeVisibility">Whether the caller may change visibility (owner or managing adult).</param>
+/// <param name="LatestBalance">Latest recorded balance in the wallet's currency, e.g. <c>"12450.10"</c>; <see langword="null"/> before the first.</param>
+/// <param name="LatestAsOf">Date of <paramref name="LatestBalance"/>.</param>
 public sealed record WalletDto(
     Guid Id,
     string Name,
@@ -25,4 +27,6 @@ public sealed record WalletDto(
     bool IsArchived,
     uint Version,
     DateTimeOffset CreatedAt,
-    bool CanChangeVisibility);
+    bool CanChangeVisibility,
+    string? LatestBalance,
+    DateOnly? LatestAsOf);

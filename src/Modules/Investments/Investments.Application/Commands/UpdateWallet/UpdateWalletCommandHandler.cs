@@ -1,6 +1,7 @@
 namespace Investments.Application.Commands.UpdateWallet;
 
 using Investments.Application.Common;
+using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Abstractions;
 using Investments.Domain.ValueObjects;
@@ -10,7 +11,8 @@ using Shared.Abstractions.Cqrs;
 internal sealed class UpdateWalletCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
-    IInvestmentsUnitOfWork unitOfWork) : ICommandHandler<UpdateWalletCommand, WalletDto>
+    IInvestmentsUnitOfWork unitOfWork,
+    IInvestmentsReadDbContext db) : ICommandHandler<UpdateWalletCommand, WalletDto>
 {
     public async Task<WalletDto> HandleAsync(UpdateWalletCommand command, CancellationToken ct = default)
     {
@@ -28,6 +30,6 @@ internal sealed class UpdateWalletCommandHandler(
         wallet.ChangeVisibility(visibility);
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 
-        return wallet.ToDto(caller);
+        return await db.ReadWalletAsync(caller, wallet.Id.Value, ct);
     }
 }

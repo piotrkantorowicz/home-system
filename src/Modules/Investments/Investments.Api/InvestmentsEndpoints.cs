@@ -4,9 +4,12 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Investments.Application.Commands.ArchiveWallet;
 using Investments.Application.Commands.CreateWallet;
+using Investments.Application.Commands.DeleteSnapshot;
+using Investments.Application.Commands.RecordSnapshot;
 using Investments.Application.Commands.RestoreWallet;
 using Investments.Application.Commands.UpdateWallet;
 using Investments.Application.Queries.GetWallet;
+using Investments.Application.Queries.ListSnapshots;
 using Investments.Application.Queries.ListWallets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -42,6 +45,16 @@ internal static class InvestmentsEndpoints
         group.MapPost("/wallets/{id:guid}/restore", RestoreWallet)
             .WithName("RestoreInvestmentWallet")
             .WithSummary("Make an archived wallet active again");
+
+        group.MapGet("/wallets/{id:guid}/snapshots", ListSnapshots)
+            .WithName("ListInvestmentSnapshots")
+            .WithSummary("Page a visible wallet's balances, newest first, each with the previous balance");
+        group.MapPut("/wallets/{id:guid}/snapshots/{asOf}", RecordSnapshot)
+            .WithName("RecordInvestmentSnapshot")
+            .WithSummary("Record a wallet's balance for a date (YYYY-MM-DD); the same date replaces amount and note");
+        group.MapDelete("/wallets/{id:guid}/snapshots/{asOf}", DeleteSnapshot)
+            .WithName("DeleteInvestmentSnapshot")
+            .WithSummary("Remove a wallet's balance for a date");
 
         // Catch-all so the whole prefix answers 401 to anonymous callers and 404 to signed-in ones
         // for routes that do not exist; real endpoints always win over a fallback.
@@ -83,6 +96,30 @@ internal static class InvestmentsEndpoints
         Guid id, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
         => TypedResults.Ok(await dispatcher.SendAsync<RestoreWalletCommand, WalletDto>(new RestoreWalletCommand(Sub(user), id), ct));
 
+    private static async Task<Ok<PagedList<SnapshotDto>>> ListSnapshots(
+        Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListSnapshotsQuery, PagedList<SnapshotDto>>(
+            new ListSnapshotsQuery(Sub(user), id, page, pageSize), ct));
+
+    private static async Task<Results<Created<RecordSnapshotResult>, Ok<RecordSnapshotResult>>> RecordSnapshot(
+        Guid id, DateOnly asOf, RecordSnapshotRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<RecordSnapshotCommand, RecordSnapshotResult>(
+            new RecordSnapshotCommand(Sub(user), id, asOf, request.Amount, request.Note), ct);
+
+        return result.Created
+            ? TypedResults.Created($"/api/investments/wallets/{id}/snapshots/{asOf:yyyy-MM-dd}", result)
+            : TypedResults.Ok(result);
+    }
+
+    private static async Task<NoContent> DeleteSnapshot(
+        Guid id, DateOnly asOf, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new DeleteSnapshotCommand(Sub(user), id, asOf), ct);
+        return TypedResults.NoContent();
+    }
+
     private static string Sub(ClaimsPrincipal user)
         => user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub")
            ?? throw new UnauthorizedAccessException("Missing subject claim.");
@@ -108,3 +145,9 @@ internal sealed record CreateWalletRequest(
 /// <param name="Version">The version the client last saw.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record UpdateWalletRequest(string Name, string Visibility, uint Version);
+
+/// <summary>Body of <c>PUT /api/investments/wallets/{id}/snapshots/{asOf}</c>.</summary>
+/// <param name="Amount">Decimal string, not negative, at most two decimals, e.g. <c>"12450.10"</c>.</param>
+/// <param name="Note">Optional note, at most 200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record RecordSnapshotRequest(string Amount, string? Note);

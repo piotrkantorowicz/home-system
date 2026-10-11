@@ -4,6 +4,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { investmentsModule } from '../index';
@@ -54,8 +55,18 @@ const xtb: Wallet = {
   version: 7,
   createdAt: '2026-10-02T10:00:00Z',
   canChangeVisibility: true,
+  latestBalance: '12450.10',
+  latestAsOf: '2026-09-30',
 };
-const ike: Wallet = { ...xtb, id: 'w2', name: 'Retirement', kind: 'IKE', currency: 'EUR' };
+const ike: Wallet = {
+  ...xtb,
+  id: 'w2',
+  name: 'Retirement',
+  kind: 'IKE',
+  currency: 'EUR',
+  latestBalance: null,
+  latestAsOf: null,
+};
 const kidSavings: Wallet = {
   ...xtb,
   id: 'w3',
@@ -85,7 +96,9 @@ function renderPage() {
     <Wrapper>
       <HouseholdStateContext value={{ ...household }}>
         <ToastProvider>
-          <InvestmentsPage />
+          <MemoryRouter>
+            <InvestmentsPage />
+          </MemoryRouter>
         </ToastProvider>
       </HouseholdStateContext>
     </Wrapper>,
@@ -138,6 +151,19 @@ describe('InvestmentsPage', () => {
     expect(screen.getByRole('region', { name: 'Brokerage · 1' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'IKE · 1' })).toBeInTheDocument();
     expect(screen.getByText('Archived · 1')).toBeInTheDocument();
+  });
+
+  it('links each wallet to its detail page and shows its latest balance', async () => {
+    renderPage();
+
+    const link = await screen.findByRole('link', { name: 'XTB main' });
+    expect(link).toHaveAttribute('href', '/investments/wallets/w1');
+    const row = link.closest('li');
+    if (!row) throw new Error('wallet row not found');
+    expect(within(row).getByText(/12.450.10 PLN/)).toBeInTheDocument();
+    const ikeRow = screen.getByRole('link', { name: 'Retirement' }).closest('li');
+    if (!ikeRow) throw new Error('wallet row not found');
+    expect(within(ikeRow).getByText('No balance yet')).toBeInTheDocument();
   });
 
   it('creates a wallet for a managed member, never for another adult', async () => {

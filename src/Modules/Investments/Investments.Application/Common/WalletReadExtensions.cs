@@ -1,9 +1,12 @@
 namespace Investments.Application.Common;
 
-using System.Linq.Expressions;
+using System.Globalization;
+using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Aggregates;
 using Investments.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
+using Shared.Abstractions.Core.Domain;
 
 /// <summary>
 /// The one place wallet visibility is applied to queries — before filtering, counting and lookup —
@@ -24,15 +27,31 @@ internal static class WalletReadExtensions
                 || (seesShared && w.Visibility == WalletVisibility.Shared && members.Contains(w.OwnerPersonId))));
     }
 
-    public static readonly Expression<Func<Wallet, WalletRow>> ToRow = w => new WalletRow(
-        w.Id.Value, w.Name, w.Institution, w.Kind, w.Currency, w.Visibility, w.OwnerPersonId, w.OwnerName, w.IsArchived, w.Version, w.CreatedAt);
+    /// <summary>Projects wallets with their latest recorded balance.</summary>
+    public static IQueryable<WalletRow> ToRows(this IQueryable<Wallet> wallets, IQueryable<BalanceSnapshot> snapshots)
+        => wallets.Select(w => new WalletRow(
+            w.Id.Value, w.Name, w.Institution, w.Kind, w.Currency, w.Visibility, w.OwnerPersonId, w.OwnerName, w.IsArchived, w.Version, w.CreatedAt,
+            snapshots.Where(s => s.WalletId == w.Id).OrderByDescending(s => s.AsOf).Select(s => (decimal?)s.Amount).FirstOrDefault(),
+            snapshots.Where(s => s.WalletId == w.Id).OrderByDescending(s => s.AsOf).Select(s => (DateOnly?)s.AsOf).FirstOrDefault()));
+
+    /// <summary>Reads one visible wallet as a DTO; not-found when it is missing or invisible.</summary>
+    public static async Task<WalletDto> ReadWalletAsync(
+        this IInvestmentsReadDbContext db, InvestmentsCaller caller, Guid id, CancellationToken ct)
+    {
+        var walletId = WalletId.From(id);
+        var row = await db.Wallets.AsNoTracking()
+            .Where(w => w.Id == walletId)
+            .VisibleTo(caller)
+            .ToRows(db.BalanceSnapshots)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException("Wallet", id);
+
+        return row.ToDto(caller);
+    }
 
     public static WalletDto ToDto(this WalletRow r, InvestmentsCaller caller) => new(
         r.Id, r.Name, r.Institution.ToString(), r.Kind.ToString(), r.Currency.ToString(), r.Visibility.ToString(),
         r.OwnerPersonId, caller.NameOf(r.OwnerPersonId) ?? r.OwnerName, r.IsArchived, r.Version, r.CreatedAt,
-        caller.CanChangeVisibility(r.OwnerPersonId));
-
-    public static WalletDto ToDto(this Wallet w, InvestmentsCaller caller) => new WalletRow(
-        w.Id.Value, w.Name, w.Institution, w.Kind, w.Currency, w.Visibility, w.OwnerPersonId, w.OwnerName, w.IsArchived, w.Version, w.CreatedAt)
-        .ToDto(caller);
+        caller.CanChangeVisibility(r.OwnerPersonId),
+        r.LatestBalance?.ToString("F2", CultureInfo.InvariantCulture), r.LatestAsOf);
 }

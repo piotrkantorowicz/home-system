@@ -1,6 +1,7 @@
 namespace Investments.Application.Commands.CreateWallet;
 
 using Investments.Application.Common;
+using Investments.Application.Persistence;
 using Investments.Application.Queries.GetWallet;
 using Investments.Domain.Abstractions;
 using Investments.Domain.Aggregates;
@@ -12,6 +13,7 @@ internal sealed class CreateWalletCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
     IInvestmentsUnitOfWork unitOfWork,
+    IInvestmentsReadDbContext db,
     TimeProvider clock) : ICommandHandler<CreateWalletCommand, WalletDto>
 {
     public async Task<WalletDto> HandleAsync(CreateWalletCommand command, CancellationToken ct = default)
@@ -38,6 +40,6 @@ internal sealed class CreateWalletCommandHandler(
         await wallets.AddAsync(wallet, ct);
         await unitOfWork.CommitAsync(ct);
 
-        return wallet.ToDto(caller);
+        return await db.ReadWalletAsync(caller, wallet.Id.Value, ct);
     }
 }
