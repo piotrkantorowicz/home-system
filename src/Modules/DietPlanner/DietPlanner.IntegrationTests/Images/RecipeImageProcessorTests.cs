@@ -64,6 +64,22 @@ public sealed class RecipeImageProcessorTests
         await Should.ThrowAsync<DietPlannerDomainException>(() => new RecipeImageProcessor().ProcessAsync(input, "image/png", "photo.png", Ct));
     }
 
+    /// <summary>Maximum-sized inputs retain the detail target after native subsampling or full PNG decoding.</summary>
+    [Theory]
+    [InlineData(SKEncodedImageFormat.Jpeg, "image/jpeg", "photo.jpg")]
+    [InlineData(SKEncodedImageFormat.Png, "image/png", "photo.png")]
+    [InlineData(SKEncodedImageFormat.Webp, "image/webp", "photo.webp")]
+    public async Task Process_MaximumPixelCount_ProducesBoundedDetail(SKEncodedImageFormat format, string type, string name)
+    {
+        using var input = new MemoryStream(Photo(format, 5000, 5000));
+        ProcessedRecipeImage result = await new RecipeImageProcessor().ProcessAsync(input, type, name, Ct);
+        result.Metadata.Width.ShouldBe(1600);
+        result.Metadata.Height.ShouldBe(1600);
+        using SKBitmap detail = SKBitmap.Decode(result.Detail);
+        detail.Width.ShouldBe(1600);
+        detail.GetPixel(800, 800).Red.ShouldBeGreaterThan((byte)200);
+    }
+
     /// <summary>All eight EXIF orientations apply before source metadata is discarded.</summary>
     [Theory]
     [InlineData(1, false)]

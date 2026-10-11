@@ -10,8 +10,23 @@ internal sealed class RecipeImageProcessor : IRecipeImageProcessor
 {
     private const int MaxInputBytes = 10 * 1024 * 1024;
     private const long MaxPixels = 25_000_000;
+    // PNG may require a full-resolution decode; serialize native work to bound concurrent pixel allocations.
+    private static readonly SemaphoreSlim DecodeGate = new(1, 1);
 
     public async Task<ProcessedRecipeImage> ProcessAsync(Stream input, string contentType, string fileName, CancellationToken ct)
+    {
+        await DecodeGate.WaitAsync(ct);
+        try
+        {
+            return await ProcessCoreAsync(input, contentType, fileName, ct);
+        }
+        finally
+        {
+            DecodeGate.Release();
+        }
+    }
+
+    private static async Task<ProcessedRecipeImage> ProcessCoreAsync(Stream input, string contentType, string fileName, CancellationToken ct)
     {
         using var bytes = new MemoryStream();
         byte[] buffer = new byte[81920];
@@ -23,8 +38,9 @@ internal sealed class RecipeImageProcessor : IRecipeImageProcessor
             await bytes.WriteAsync(buffer.AsMemory(0, count), ct);
         }
         ct.ThrowIfCancellationRequested();
-        using var data = SKData.CreateCopy(bytes.ToArray());
-        using SKCodec codec = SKCodec.Create(data) ?? throw Invalid("Photo data is malformed or unsupported.");
+        bytes.Position = 0;
+        using var stream = new SKManagedStream(bytes, false);
+        using SKCodec codec = SKCodec.Create(stream) ?? throw Invalid("Photo data is malformed or unsupported.");
         string actual = codec.EncodedFormat switch
         {
             SKEncodedImageFormat.Jpeg => "image/jpeg",
@@ -48,13 +64,22 @@ internal sealed class RecipeImageProcessor : IRecipeImageProcessor
         SKImageInfo info = codec.Info;
         if (info.Width <= 0 || info.Height <= 0 || (long)info.Width * info.Height > MaxPixels)
             throw Invalid("Photos must be at most 25 megapixels.");
-        using var decoded = new SKBitmap(new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+        float scale = Math.Min(1f, (float)RecipeImage.MaxDetailDimension / Math.Max(info.Width, info.Height));
+        SKSizeI dimensions = codec.GetScaledDimensions(scale);
+        // JPEG rounds to supported fractions; retain enough pixels for the detail output without upscaling.
+        while (Math.Max(dimensions.Width, dimensions.Height) < Math.Min(RecipeImage.MaxDetailDimension, Math.Max(info.Width, info.Height)) && scale < 1f)
+        {
+            scale = Math.Min(1f, scale + 0.125f);
+            dimensions = codec.GetScaledDimensions(scale);
+        }
+        using var decoded = new SKBitmap(new SKImageInfo(dimensions.Width, dimensions.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
         if (codec.GetPixels(decoded.Info, decoded.GetPixels()) != SKCodecResult.Success)
             throw Invalid("Photo data is incomplete or malformed.");
         ct.ThrowIfCancellationRequested();
-        using SKBitmap oriented = Orient(decoded, codec.EncodedOrigin);
-        (byte[] detail, int width, int height) = Encode(oriented, RecipeImage.MaxDetailDimension, RecipeImage.MaxDetailSize, ct);
-        (byte[] thumbnail, int thumbnailWidth, int thumbnailHeight) = Encode(oriented, RecipeImage.MaxThumbnailDimension, RecipeImage.MaxThumbnailSize, ct);
+        using SKBitmap? oriented = codec.EncodedOrigin == SKEncodedOrigin.TopLeft ? null : Orient(decoded, codec.EncodedOrigin);
+        using SKImage pixels = SKImage.FromBitmap(oriented ?? decoded);
+        (byte[] detail, int width, int height) = Encode(pixels, RecipeImage.MaxDetailDimension, RecipeImage.MaxDetailSize, ct);
+        (byte[] thumbnail, int thumbnailWidth, int thumbnailHeight) = Encode(pixels, RecipeImage.MaxThumbnailDimension, RecipeImage.MaxThumbnailSize, ct);
         return new ProcessedRecipeImage(detail, thumbnail, new RecipeImageDto(Guid.CreateVersion7(), width, height,
             detail.Length, thumbnailWidth, thumbnailHeight, thumbnail.Length));
     }
@@ -111,7 +136,7 @@ internal sealed class RecipeImageProcessor : IRecipeImageProcessor
         return output;
     }
 
-    private static (byte[] Bytes, int Width, int Height) Encode(SKBitmap source, int longestSide, int limit, CancellationToken ct)
+    private static (byte[] Bytes, int Width, int Height) Encode(SKImage source, int longestSide, int limit, CancellationToken ct)
     {
         double scale = Math.Min(1d, (double)longestSide / Math.Max(source.Width, source.Height));
         int width = Math.Max(1, (int)Math.Round(source.Width * scale));
@@ -120,8 +145,7 @@ internal sealed class RecipeImageProcessor : IRecipeImageProcessor
         using (var canvas = new SKCanvas(resized))
         {
             canvas.Clear(SKColors.White);
-            using SKImage image = SKImage.FromBitmap(source);
-            canvas.DrawImage(image, new SKRect(0, 0, width, height), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+            canvas.DrawImage(source, new SKRect(0, 0, width, height), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
         }
         using SKImage normalized = SKImage.FromBitmap(resized);
         for (int quality = 85; quality >= 35; quality -= 10)
