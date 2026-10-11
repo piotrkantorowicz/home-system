@@ -185,11 +185,14 @@ development service, not a production deployment recipe.
 Give the API workload identity or a rotated secret restricted to
 `s3:PutObject`, `s3:GetObject`, and `s3:DeleteObject` on
 `arn:aws:s3:::<bucket>/recipe-images/*` (or the provider's equivalent resource).
-Bucket creation, policy updates, listing, backups, and version administration use
-separate administrative credentials. If a provider requires `s3:ListBucket` to
-distinguish `NoSuchKey` from access denial, grant it only on the bucket with a
-`s3:prefix` condition restricted to `recipe-images/*`, after the restricted-key
-smoke check proves it necessary. Do not silently broaden application permissions.
+For AWS S3, also grant `s3:ListBucket` on `arn:aws:s3:::<bucket>` so a missing key
+returns 404 rather than 403. Use a dedicated image bucket: this permission lets
+the workload list its keys, while object access remains limited to `recipe-images/*`.
+Do not add an `s3:prefix` condition to this grant: GetObject does not supply the
+listing prefix parameter. See the [AWS GetObject permission contract](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
+Other providers must prove equivalent missing-key behavior with restricted credentials.
+Bucket creation, policy updates, backups, and version administration use separate
+administrative credentials. Access denial remains a storage failure, never a missing image.
 
 For AWS S3, set `Region` to the bucket's exact region, omit `Endpoint` to use the
 SDK regional endpoint, and set `ForcePathStyle=false`. For compatible providers,
@@ -207,15 +210,15 @@ Before deployment, run these checks against a scratch bucket/prefix with the
 chosen provider and the actual adapter/SDK. Record provider, SDK version, region,
 addressing style, results, and cleanup. Local fixture success is insufficient.
 
-| Check                              | Required proof                                                                                                                                                             |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Region, signing, addressing        | Exact deployment region and endpoint accept signed operations with the selected path/virtual-host style and SDK checksum defaults.                                         |
-| Privacy                            | Anonymous reads of an existing object fail; policy/ACL grant no public access.                                                                                             |
-| Object operations                  | Put/read/delete succeed, bytes/checksums match, and `ContentType` survives reads.                                                                                          |
-| Missing resources                  | Missing key is distinguished from missing bucket, access denial, and service outage; repeated deletion is safe.                                                            |
-| Restricted application credentials | Only the intended object prefix works; bucket creation, policy changes, unrestricted listing, and other prefixes are denied. Prove any prefix-scoped ListBucket exception. |
-| Cancellation and network failure   | Cancellation propagates; failed/unavailable operations return safe storage failures without leaking provider details.                                                      |
-| Backup/restore                     | Export and restore checksums and required versions/delete markers; validate the selected provider's versioning and retention behavior.                                     |
+| Check                              | Required proof                                                                                                                                                                          |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Region, signing, addressing        | Exact deployment region and endpoint accept signed operations with the selected path/virtual-host style and SDK checksum defaults.                                                      |
+| Privacy                            | Anonymous reads of an existing object fail; policy/ACL grant no public access.                                                                                                          |
+| Object operations                  | Put/read/delete succeed, bytes/checksums match, and `ContentType` survives reads.                                                                                                       |
+| Missing resources                  | Missing key is distinguished from missing bucket, access denial, and service outage; repeated deletion is safe.                                                                         |
+| Restricted application credentials | Object access works only under `recipe-images/*`; bucket creation, policy changes, and access to other buckets are denied. AWS credentials may list keys in the dedicated image bucket. |
+| Cancellation and network failure   | Cancellation propagates; failed/unavailable operations return safe storage failures without leaking provider details.                                                                   |
+| Backup/restore                     | Export and restore checksums and required versions/delete markers; validate the selected provider's versioning and retention behavior.                                                  |
 
 ### Coordinated backup and recovery
 
