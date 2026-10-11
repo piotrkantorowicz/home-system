@@ -37,7 +37,7 @@ internal static class RecipeImageEndpoints
     {
         await using Stream input = file.OpenReadStream();
         RecipeImageDto image = await dispatcher.SendAsync<UploadRecipeImageCommand, RecipeImageDto>(
-            new UploadRecipeImageCommand(id, Subject(user), input, file.ContentType, file.FileName), ct);
+            new UploadRecipeImageCommand(id, RecipeEndpoints.GetUserId(user), input, file.ContentType, file.FileName), ct);
         return TypedResults.Ok(image);
     }
 
@@ -56,7 +56,7 @@ internal static class RecipeImageEndpoints
         http.Response.Headers.Pragma = "no-cache";
         http.Response.Headers.XContentTypeOptions = "nosniff";
         ImageObjectRead? image = await dispatcher.SendAsync<GetRecipeImageQuery, ImageObjectRead?>(
-            new GetRecipeImageQuery(id, Subject(user), thumbnail), ct);
+            new GetRecipeImageQuery(id, RecipeEndpoints.GetUserId(user), thumbnail), ct);
         if (image is null)
             return TypedResults.NotFound();
         http.Response.RegisterForDispose(image);
@@ -66,13 +66,9 @@ internal static class RecipeImageEndpoints
     private static async Task<NoContent> Remove(Guid id, ClaimsPrincipal user,
         ICommandDispatcher dispatcher, CancellationToken ct)
     {
-        await dispatcher.SendAsync(new RemoveRecipeImageCommand(id, Subject(user)), ct);
+        await dispatcher.SendAsync(new RemoveRecipeImageCommand(id, RecipeEndpoints.GetUserId(user)), ct);
         return TypedResults.NoContent();
     }
-
-    private static string Subject(ClaimsPrincipal user)
-        => user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub")
-            ?? throw new UnauthorizedAccessException("User ID not found in token");
 
     private static Task DocumentJpegAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken ct)
     {

@@ -127,7 +127,7 @@ public static class RecipeEndpoints
         return TypedResults.NoContent();
     }
 
-    private static string GetUserId(ClaimsPrincipal user)
+    internal static string GetUserId(ClaimsPrincipal user)
         => user.FindFirstValue(ClaimTypes.NameIdentifier)
            ?? user.FindFirstValue("sub")
            ?? throw new UnauthorizedAccessException("User ID not found in token");
