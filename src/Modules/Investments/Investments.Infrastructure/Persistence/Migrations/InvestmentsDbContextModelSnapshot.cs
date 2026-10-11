@@ -88,6 +88,10 @@ namespace Investments.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateOnly?>("ArchivedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("archived_on");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");

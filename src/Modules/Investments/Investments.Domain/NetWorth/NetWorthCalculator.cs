@@ -29,7 +29,7 @@ public sealed class NetWorthCalculator
             .ToDictionary(g => g.Key, g => g.OrderBy(b => b.AsOf).ToArray());
     }
 
-    /// <summary>Net worth on <paramref name="date"/>, at that date's rates.</summary>
+    /// <summary>Net worth on <paramref name="date"/>, at that date's rates. A wallet archived on or before the date doesn't count.</summary>
     /// <param name="date">The reference date.</param>
     public NetWorthPoint ValueAt(DateOnly date) => ValueAt(date, date);
 
@@ -40,7 +40,7 @@ public sealed class NetWorthCalculator
     private NetWorthPoint ValueAt(DateOnly date, DateOnly rateDate)
     {
         List<WalletValue> values = [];
-        foreach (var wallet in _wallets)
+        foreach (var wallet in _wallets.Where(w => !(w.ArchivedOn <= date)))
         {
             var balance = _balances.TryGetValue(wallet.Id, out var history) ? history.LastOrDefault(b => b.AsOf <= date) : null;
             values.Add(new WalletValue(wallet, balance, balance is null ? null : _rates.ToPln(balance.Amount, wallet.Currency, rateDate)));

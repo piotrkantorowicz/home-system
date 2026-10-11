@@ -21,12 +21,12 @@ internal static class NetWorthScope
     /// <summary>
     /// Household: every wallet the caller may see (shared, own, managed members'). Mine: the caller's
     /// own plus their managed members' (an adult's kids), whatever the visibility. Archived wallets
-    /// never count.
+    /// are included: they count in history up to their archive date (see <c>NetWorthCalculator</c>).
     /// </summary>
     public static IQueryable<Wallet> InScope(this IQueryable<Wallet> wallets, InvestmentsCaller caller, string scope)
     {
         var owners = caller.ManagedOwnerIds;
-        var visible = wallets.VisibleTo(caller).Where(w => !w.IsArchived);
+        var visible = wallets.VisibleTo(caller);
         return scope == Mine ? visible.Where(w => owners.Contains(w.OwnerPersonId)) : visible;
     }
 }

@@ -10,14 +10,15 @@ internal sealed class ArchiveWalletCommandHandler(
     InvestmentsAccessService access,
     IWalletRepository wallets,
     IInvestmentsUnitOfWork unitOfWork,
-    IInvestmentsReadDbContext db) : ICommandHandler<ArchiveWalletCommand, WalletDto>
+    IInvestmentsReadDbContext db,
+    TimeProvider clock) : ICommandHandler<ArchiveWalletCommand, WalletDto>
 {
     public async Task<WalletDto> HandleAsync(ArchiveWalletCommand command, CancellationToken ct = default)
     {
         var caller = await access.RequireAccessAsync(command.AuthSubject, ct);
         var wallet = await wallets.LoadAccessibleAsync(caller, command.Id, ct);
 
-        wallet.Archive();
+        wallet.Archive(HouseholdCalendar.Today(clock));
         await unitOfWork.CommitOrThrowConflictAsync(ct);
 
         return await db.ReadWalletAsync(caller, wallet.Id.Value, ct);

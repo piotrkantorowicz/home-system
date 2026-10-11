@@ -93,19 +93,22 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
         adultMine.Total.ShouldBe("500.00");
     }
 
-    /// <summary>Archived wallets do not count.</summary>
+    /// <summary>An archived wallet no longer counts from its archive date, but history before it keeps it.</summary>
     [Fact]
-    public async Task ArchivedWallet_Excluded()
+    public async Task ArchivedWallet_ExcludedFromArchiveDate()
     {
         var h = await _scenario.NewHouseholdAsync();
         await WalletWithBalanceAsync(h.Owner, "Active", "100");
-        var old = await WalletWithBalanceAsync(h.Owner, "Closed", "900");
+        var old = await WalletWithBalanceAsync(h.Owner, "Closed", "900", asOf: "2026-08-01");
         (await h.Owner.PostAsync($"/api/investments/wallets/{old}/archive", null, Ct)).EnsureSuccessStatusCode();
 
         var netWorth = await NetWorthAsync(h.Owner);
+        var history = await h.Owner.GetFromJsonAsync<History>("/api/investments/net-worth/history?from=2026-08-01&to=2026-09-12", Ct);
 
         netWorth.Total.ShouldBe("100.00");
         netWorth.Wallets.ShouldHaveSingleItem().Name.ShouldBe("Active");
+        history!.Points.Select(p => (p.Date, p.Total)).ShouldBe(
+            [(new DateOnly(2026, 8, 31), "900.00"), (new DateOnly(2026, 9, 12), "100.00")]);
     }
 
     /// <summary>

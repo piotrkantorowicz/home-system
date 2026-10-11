@@ -61,11 +61,13 @@ public sealed class WalletTests
     {
         var wallet = NewWallet();
 
-        wallet.Archive();
-        wallet.Archive();
+        wallet.Archive(new DateOnly(2026, 9, 1));
+        wallet.Archive(new DateOnly(2026, 9, 2));
         wallet.IsArchived.ShouldBeTrue();
+        wallet.ArchivedOn.ShouldBe(new DateOnly(2026, 9, 1));
 
         wallet.Restore();
         wallet.IsArchived.ShouldBeFalse();
+        wallet.ArchivedOn.ShouldBeNull();
     }
 }
