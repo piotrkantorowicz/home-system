@@ -2,6 +2,7 @@ namespace Investments.IntegrationTests.Api;
 
 using System.Net;
 using System.Net.Http.Json;
+using global::Investments.Domain.ValueObjects;
 using Investments.IntegrationTests.Infrastructure;
 
 /// <summary>#577 — net worth and its month-end history: scopes, private-wallet exclusion, archive, incomplete, validation.</summary>
@@ -105,6 +106,25 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
 
         netWorth.Total.ShouldBe("100.00");
         netWorth.Wallets.ShouldHaveSingleItem().Name.ShouldBe("Active");
+    }
+
+    /// <summary>
+    /// The net-worth figure converts at today's rate even for a past date; the history chart keeps
+    /// each month end's rate. USD only — rates are shared across this class and the missing-rate test uses EUR.
+    /// </summary>
+    [Fact]
+    public async Task NetWorth_UsesTodaysRate_HistoryKeepsMonthEndRate()
+    {
+        _factory.Nbp.Publish(WalletCurrency.USD, new DateOnly(2026, 6, 30), 4.0m);
+        _factory.Nbp.Publish(WalletCurrency.USD, new DateOnly(2026, 9, 11), 4.5m);
+        var h = await _scenario.NewHouseholdAsync();
+        await WalletWithBalanceAsync(h.Owner, "IBKR", "100", currency: "USD", asOf: "2026-06-15");
+
+        var netWorth = await NetWorthAsync(h.Owner, "?asOf=2026-06-30");
+        var history = await h.Owner.GetFromJsonAsync<History>("/api/investments/net-worth/history?from=2026-06-01&to=2026-06-30", Ct);
+
+        netWorth.Total.ShouldBe("450.00");
+        history!.Points.ShouldHaveSingleItem().Total.ShouldBe("400.00");
     }
 
     /// <summary>A foreign balance without a rate is left out of the total and flagged.</summary>

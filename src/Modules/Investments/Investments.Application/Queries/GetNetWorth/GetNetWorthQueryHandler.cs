@@ -19,8 +19,9 @@ internal sealed class GetNetWorthQueryHandler(InvestmentsAccessService access, I
             throw new CommandValidationException(
                 nameof(GetNetWorthQuery), [new ValidationError("AsOf", "Net worth can't be computed for a future date.")]);
 
-        var (calculator, wallets) = await db.LoadNetWorthAsync(caller, scope, asOf, asOf, ct);
-        var point = calculator.ValueAt(asOf);
+        // The current figure uses today's rates (owner decision); the history chart keeps month-end rates.
+        var (calculator, wallets) = await db.LoadNetWorthAsync(caller, scope, asOf, asOf, ct, latestRates: true);
+        var point = calculator.ValueAtLatestRates(asOf);
         var byId = wallets.ToDictionary(w => w.Id);
         string OwnerName(Guid personId) => caller.NameOf(personId) ?? wallets.First(w => w.OwnerPersonId == personId).OwnerName;
 

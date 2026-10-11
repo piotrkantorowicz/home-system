@@ -5,7 +5,7 @@ using Investments.Domain.ValueObjects;
 
 /// <summary>
 /// Net worth on a date: for each wallet, its latest balance on or before the date, converted to PLN
-/// at the rate for that date. A foreign balance without a rate is left out and marks the result
+/// at the rate for that date (history) or at today's rate (the current figure). A foreign balance without a rate is left out and marks the result
 /// incomplete — never guessed.
 /// </summary>
 public sealed class NetWorthCalculator
@@ -29,15 +29,21 @@ public sealed class NetWorthCalculator
             .ToDictionary(g => g.Key, g => g.OrderBy(b => b.AsOf).ToArray());
     }
 
-    /// <summary>Net worth on <paramref name="date"/>.</summary>
+    /// <summary>Net worth on <paramref name="date"/>, at that date's rates.</summary>
     /// <param name="date">The reference date.</param>
-    public NetWorthPoint ValueAt(DateOnly date)
+    public NetWorthPoint ValueAt(DateOnly date) => ValueAt(date, date);
+
+    /// <summary>Net worth on <paramref name="date"/>, at the newest rates in the book (today's).</summary>
+    /// <param name="date">The reference date for balances.</param>
+    public NetWorthPoint ValueAtLatestRates(DateOnly date) => ValueAt(date, DateOnly.MaxValue);
+
+    private NetWorthPoint ValueAt(DateOnly date, DateOnly rateDate)
     {
         List<WalletValue> values = [];
         foreach (var wallet in _wallets)
         {
             var balance = _balances.TryGetValue(wallet.Id, out var history) ? history.LastOrDefault(b => b.AsOf <= date) : null;
-            values.Add(new WalletValue(wallet, balance, balance is null ? null : _rates.ToPln(balance.Amount, wallet.Currency, date)));
+            values.Add(new WalletValue(wallet, balance, balance is null ? null : _rates.ToPln(balance.Amount, wallet.Currency, rateDate)));
         }
 
         return new NetWorthPoint(

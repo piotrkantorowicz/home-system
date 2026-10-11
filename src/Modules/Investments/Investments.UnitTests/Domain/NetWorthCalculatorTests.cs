@@ -42,6 +42,17 @@ public sealed class NetWorthCalculatorTests
         calculator.ValueAt(new DateOnly(2026, 3, 15)).Total.ShouldBe(1500m + 450m);
     }
 
+    /// <summary>The current figure values a past date's balances at the newest rate, not that date's.</summary>
+    [Fact]
+    public void ValueAtLatestRates_UsesNewestRate()
+    {
+        var calculator = Calculator(
+            new FxQuote(WalletCurrency.EUR, new DateOnly(2026, 2, 10), 4.0m, "028/A/NBP/2026"),
+            new FxQuote(WalletCurrency.EUR, new DateOnly(2026, 3, 13), 4.5m, "050/A/NBP/2026"));
+
+        calculator.ValueAtLatestRates(new DateOnly(2026, 2, 28)).Total.ShouldBe(1000m + 450m);
+    }
+
     /// <summary>A foreign balance without a rate is left out and marks the point incomplete.</summary>
     [Fact]
     public void ValueAt_MissingRate_ExcludedAndIncomplete()
