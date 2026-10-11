@@ -86,7 +86,8 @@ fi
 
 # 5. `owner-approved` is the owner's merge OK: agents never put it on a PR or issue.
 #    Best effort — it catches the gh CLI routes, not every possible HTTP client.
-if grep -Eq -- "--(add-)?label[=[:space:]]+[\"']?([^[:space:]\"']*,)?owner-approved" <<< "$cmd" \
+#    The actor can't be checked either: agents act as the owner's account.
+if grep -Eq -- "(-l|--label|--add-label)[=[:space:]]+[\"']?([^\"']*,[[:space:]]*)?owner-approved" <<< "$cmd" \
    || grep -Eq "gh[[:space:]]+api[^|;&]*labels[^|;&]*owner-approved" <<< "$cmd"; then
   block "only the owner adds the owner-approved label. Ask them to add it in GitHub."
 fi

@@ -174,6 +174,8 @@ class GuardGitMergeTests(unittest.TestCase):
         for command in ("gh pr edit 7 --add-label owner-approved",
                         "gh pr edit 7 --add-label bug,owner-approved",
                         "gh pr create --label 'owner-approved' --title x",
+                        "gh pr create -l owner-approved --title x",
+                        "gh pr edit 7 --add-label 'bug, owner-approved'",
                         "gh issue edit 7 --add-label=owner-approved",
                         "gh api repos/o/r/issues/7/labels -f 'labels[]=owner-approved'"):
             with self.subTest(command=command):
