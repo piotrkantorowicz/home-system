@@ -11,7 +11,8 @@ import { Ellipsis } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { formatDate } from '../lib/dates';
+import { formatDate, todayInWarsaw } from '../lib/dates';
+import { daysBetween, isStale } from '../lib/netWorth';
 
 import type { Wallet } from '../types';
 
@@ -55,9 +56,15 @@ export function WalletRow({ wallet, ownerLabel, busy, onEdit, onToggleArchive }:
           </p>
         )}
         {wallet.rateMissing && <p className="text-warning text-meta">{t('rate_missing_short')}</p>}
-        <p className="text-muted-foreground text-meta">
-          {wallet.latestAsOf ? formatDate(wallet.latestAsOf, i18n.language) : t('no_balance_yet')}
-        </p>
+        {wallet.latestAsOf && !wallet.isArchived && isStale(wallet.latestAsOf, todayInWarsaw()) ? (
+          <p className="text-warning text-meta">
+            {t('updated_days_ago', { count: daysBetween(wallet.latestAsOf, todayInWarsaw()) })}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-meta">
+            {wallet.latestAsOf ? formatDate(wallet.latestAsOf, i18n.language) : t('no_balance_yet')}
+          </p>
+        )}
       </div>
       {wallet.isArchived ? (
         <Button

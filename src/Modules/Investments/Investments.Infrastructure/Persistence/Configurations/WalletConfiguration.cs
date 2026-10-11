@@ -36,6 +36,7 @@ internal sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
         builder.Property(x => x.Currency).HasConversion<string>().HasMaxLength(3).HasColumnName("currency");
         builder.Property(x => x.Visibility).HasConversion<string>().HasMaxLength(EnumLength).HasColumnName("visibility");
         builder.Property(x => x.IsArchived).HasColumnName("is_archived").HasDefaultValue(false);
+        builder.Property(x => x.ArchivedOn).HasColumnName("archived_on");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
 
         // Maps to PostgreSQL's xmin system column — no schema change. See Wallet.Version.
