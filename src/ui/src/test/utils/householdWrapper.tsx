@@ -8,21 +8,23 @@ export function HouseholdWrapper({
   myRole = 'Owner',
   myPersonId = 'person-1',
   members = [],
+  isLoading = false,
   children,
 }: {
   myRole?: string;
   myPersonId?: string;
   members?: HouseholdMember[];
+  isLoading?: boolean;
   children: ReactNode;
 }) {
   return (
     <HouseholdContext
       value={{
-        household: { id: 'home-1', name: 'Home', myRole, members },
-        myRole,
-        myPersonId,
+        household: isLoading ? null : { id: 'home-1', name: 'Home', myRole, members },
+        myRole: isLoading ? null : myRole,
+        myPersonId: isLoading ? null : myPersonId,
         members,
-        isLoading: false,
+        isLoading,
         isError: false,
         refetch: () => undefined,
       }}

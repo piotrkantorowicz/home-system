@@ -11,6 +11,7 @@ const DEBUG = import.meta.env.DEV;
 
 // Create the base API client
 const baseClient = createClient<paths>({ baseUrl });
+const retryRequests = new WeakMap<Request, Request>();
 
 // Add request interceptor for authentication
 baseClient.use({
@@ -23,31 +24,35 @@ baseClient.use({
     } catch (error) {
       console.error('[auth] failed to get access token:', error);
     }
+    // Keep multipart bytes readable after fetch consumes the original request body.
+    retryRequests.set(request, request.clone());
     return request;
   },
   async onResponse({ request, response }) {
+    const savedRequest = retryRequests.get(request);
+    retryRequests.delete(request);
     if (response.status === 401) {
       console.warn('[auth] got 401, attempting renewal before redirect...');
 
       const newToken = await tryRenewToken();
 
-      if (newToken) {
+      if (newToken && (savedRequest || !request.bodyUsed)) {
         if (DEBUG) console.warn('[auth] renewal after 401 succeeded, retrying request');
-        const canHaveBody = request.method !== 'GET' && request.method !== 'HEAD';
-        const retryRequest = new Request(request.url, {
-          method: request.method,
-          headers: new Headers(request.headers),
-          ...(canHaveBody ? { body: request.body } : {}),
-          credentials: request.credentials,
-        });
+        const retryRequest = savedRequest ?? request.clone();
         retryRequest.headers.set('Authorization', `Bearer ${newToken}`);
         return fetch(retryRequest);
       }
 
-      console.error('[auth] all renewal attempts failed, redirecting to login');
+      console.error('[auth] could not retry authenticated request, redirecting to login');
       redirectToLogin();
     }
+    void savedRequest?.body?.cancel();
     return response;
+  },
+  onError({ request }) {
+    const savedRequest = retryRequests.get(request);
+    retryRequests.delete(request);
+    void savedRequest?.body?.cancel();
   },
 });
 

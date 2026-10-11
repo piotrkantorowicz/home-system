@@ -12,6 +12,8 @@ import RecipeDetail from './RecipeDetail';
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
+vi.mock('react-oidc-context', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
+
 vi.mock('@shared/api/tokenInterceptor', () => ({
   getValidToken: vi.fn().mockResolvedValue(null),
   tryRenewToken: vi.fn().mockResolvedValue(null),
