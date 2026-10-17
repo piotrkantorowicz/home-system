@@ -4,7 +4,9 @@ export const queryKeys = {
   recipeImages: {
     all: (scope: string, id: string) => ['recipe-images', scope, id] as const,
     detail: (scope: string, id: string, version: string) =>
-      ['recipe-images', scope, id, version] as const,
+      ['recipe-images', scope, id, version, 'detail'] as const,
+    thumbnail: (scope: string, id: string, version: string) =>
+      ['recipe-images', scope, id, version, 'thumbnail'] as const,
   },
   meals: {
     all: () => ['meals'] as const,
