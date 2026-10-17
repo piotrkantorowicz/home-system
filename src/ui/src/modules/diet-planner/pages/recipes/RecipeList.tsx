@@ -78,7 +78,7 @@ export default function RecipeList() {
   });
   const deleteMutation = useDeleteRecipe();
 
-  const items = (data?.items ?? []) as RecipeCardData[];
+  const items: RecipeCardData[] = data?.items ?? [];
   const hasFilters = !!search || filter !== 'all';
 
   const handleDelete = async () => {

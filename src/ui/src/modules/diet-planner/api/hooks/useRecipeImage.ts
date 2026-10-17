@@ -15,11 +15,21 @@ export class RecipeImageError extends Error {
   }
 }
 
-export function recipeImageOptions(id: string, version: string, scope: string) {
+const IMAGE_PATHS = {
+  detail: '/api/v1/recipes/{id}/image',
+  thumbnail: '/api/v1/recipes/{id}/image/thumbnail',
+} as const;
+
+export function recipeImageOptions(
+  id: string,
+  version: string,
+  scope: string,
+  variant: keyof typeof IMAGE_PATHS = 'detail',
+) {
   return queryOptions({
-    queryKey: queryKeys.recipeImages.detail(scope, id, version),
+    queryKey: queryKeys.recipeImages[variant](scope, id, version),
     queryFn: async ({ signal }) => {
-      const response = await api.GET('/api/v1/recipes/{id}/image', {
+      const response = await api.GET(IMAGE_PATHS[variant], {
         params: { path: { id } },
         parseAs: 'blob',
         cache: 'no-store',
