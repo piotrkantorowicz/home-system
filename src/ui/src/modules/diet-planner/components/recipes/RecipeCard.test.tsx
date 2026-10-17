@@ -309,22 +309,26 @@ it('drops a broken image and releases its URL without a retry loop', async () =>
   expect(readThumbnail).toHaveBeenCalledOnce();
 });
 
-it('releases thumbnail bytes and URLs when a card leaves the viewport or unmounts', async () => {
+it('keeps a loaded thumbnail when the card scrolls away and releases it on unmount', async () => {
   const view = renderCard();
   setNear(true);
   await expectThumbnail();
+  expect(intersections.size).toBe(0);
   setNear(false);
-  expect(thumbnail()).toBeNull();
+  expect(thumbnail()).toHaveAttribute('src', 'blob:thumbnail-1');
+  expect(readThumbnail).toHaveBeenCalledOnce();
+  view.unmount();
   expect(revokeUrl).toHaveBeenCalledWith('blob:thumbnail-1');
   await waitFor(() => {
     expect(client.getQueriesData({ queryKey: ['recipe-images'] })).toHaveLength(0);
   });
-  setNear(true);
+});
+
+it('loads thumbnails straight away when IntersectionObserver is unavailable', async () => {
+  vi.stubGlobal('IntersectionObserver', undefined);
+  renderCard();
   await expectThumbnail();
-  expect(readThumbnail).toHaveBeenCalledTimes(2);
-  view.unmount();
-  expect(revokeUrl).toHaveBeenCalledWith('blob:thumbnail-2');
-  expect(intersections.size).toBe(0);
+  expect(readThumbnail).toHaveBeenCalledOnce();
 });
 
 it('clears images on identity changes and logout', async () => {

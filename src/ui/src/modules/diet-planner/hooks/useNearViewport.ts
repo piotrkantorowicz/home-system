@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
+/** Latches to `true` once the element comes within 200px of the viewport, and stays there. */
 export function useNearViewport() {
   const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
+  // Without IntersectionObserver there is nothing to wait for — treat every element as near.
+  const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined');
   useEffect(() => {
     const element = ref.current;
-    if (!element || typeof IntersectionObserver === 'undefined') return;
+    if (!element || near) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setNear(entry?.isIntersecting ?? false);
+        if (!entry?.isIntersecting) return;
+        setNear(true);
+        observer.disconnect();
       },
       { rootMargin: '200px' },
     );
@@ -16,6 +20,6 @@ export function useNearViewport() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [near]);
   return [ref, near] as const;
 }
