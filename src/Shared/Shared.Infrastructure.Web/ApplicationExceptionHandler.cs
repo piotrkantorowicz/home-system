@@ -11,6 +11,7 @@ using Shared.Abstractions.Cqrs;
 /// place: <see cref="CommandValidationException"/> → 400 (with an <c>errors</c> extension grouped by property),
 /// <see cref="ForbiddenException"/> → 403, <see cref="NotFoundException"/> → 404, <see cref="ConflictException"/> → 409, <see cref="DomainException"/> → 422,
 /// <see cref="OperationCanceledException"/> → 499 (empty body), <see cref="ServiceUnavailableException"/> → 503,
+/// <see cref="BadHttpRequestException"/> → its own status (400/413, no detail),
 /// anything else → 500 with no exception detail.
 /// Endpoints and handlers never build problem details themselves.
 /// </summary>
@@ -73,6 +74,7 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
             or NotFoundException
             or ConflictException
             or DomainException
+            or BadHttpRequestException
             or OperationCanceledException;
 
     private static ProblemDetails Map(Exception exception)
@@ -113,6 +115,12 @@ public sealed class ApplicationExceptionHandler(IProblemDetailsService problemDe
                 Status = StatusCodes.Status503ServiceUnavailable,
                 Title = "Service unavailable",
                 Detail = exception.Message,
+            },
+            // Thrown by the framework for an unreadable request (Development rethrows it); the parser message stays out.
+            BadHttpRequestException badRequest => new ProblemDetails
+            {
+                Status = badRequest.StatusCode,
+                Title = "Bad request",
             },
             _ => new ProblemDetails
             {
