@@ -15,26 +15,26 @@ export class RecipeImageError extends Error {
   }
 }
 
+const IMAGE_PATHS = {
+  detail: '/api/v1/recipes/{id}/image',
+  thumbnail: '/api/v1/recipes/{id}/image/thumbnail',
+} as const;
+
 export function recipeImageOptions(
   id: string,
   version: string,
   scope: string,
-  variant: 'detail' | 'thumbnail' = 'detail',
+  variant: keyof typeof IMAGE_PATHS = 'detail',
 ) {
   return queryOptions({
     queryKey: queryKeys.recipeImages[variant](scope, id, version),
     queryFn: async ({ signal }) => {
-      const response = await api.GET(
-        variant === 'thumbnail'
-          ? '/api/v1/recipes/{id}/image/thumbnail'
-          : '/api/v1/recipes/{id}/image',
-        {
-          params: { path: { id } },
-          parseAs: 'blob',
-          cache: 'no-store',
-          signal,
-        },
-      );
+      const response = await api.GET(IMAGE_PATHS[variant], {
+        params: { path: { id } },
+        parseAs: 'blob',
+        cache: 'no-store',
+        signal,
+      });
       if ([401, 403, 404].includes(response.response.status)) return null;
       if (!response.response.ok || !response.data) {
         throw new RecipeImageError(response.response.status);
