@@ -24,7 +24,9 @@ function ThumbnailContent({ id, image, scope }: RecipeThumbnailProps & { scope: 
   const query = useQuery(recipeImageOptions(id, image.version, scope, 'thumbnail'));
   const [broken, setBroken] = useState(false);
   const url = useObjectUrl(query.isError || broken ? null : query.data);
-  if (!url || broken) return null;
+  if (broken || query.isError || query.data === null) return null;
+  // Hold the slot while the bytes load so the title does not shift once the photo arrives.
+  if (!url) return <span aria-hidden="true" className="bg-muted size-12 shrink-0 rounded-lg" />;
   return (
     <img
       src={url}
@@ -32,7 +34,6 @@ function ThumbnailContent({ id, image, scope }: RecipeThumbnailProps & { scope: 
       aria-hidden="true"
       width={48}
       height={48}
-      loading="lazy"
       decoding="async"
       className="size-12 shrink-0 rounded-lg object-cover"
       onError={() => {
