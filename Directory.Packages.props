@@ -43,7 +43,7 @@
 
     <!-- Transitive override: pin to patched version per NU1903 advisories
          GHSA-37gx-xxp4-5rgx and GHSA-w3x6-4m5h-cxqf -->
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
 
     <!-- Testing -->
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
