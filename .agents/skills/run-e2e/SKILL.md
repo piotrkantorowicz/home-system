@@ -32,6 +32,10 @@ $run-e2e [spec] [--ui | --debug | --headed] [--setup]
    cleanup route used by global teardown). Use the password-injecting command from
    `$run-project` step 3. In Staging/Production this route 404s unless
    `E2ETestSupport__Enabled=true`.
+   For the `recipe-photo*` specs the backend also needs image storage: start
+   `docker-compose.image-storage.yml`, create the bucket and pass the
+   `DietPlanner__ImageStorage__*` + `AWS_*` variables (`infrastructure/README.md`
+   § Optional private recipe image storage). Without it those specs fail with 503s.
 3. **Frontend** — leave it to Playwright: `playwright.config.ts` runs
    `npm --prefix ../src/ui run dev` and reuses an existing server on `:5173`.
 

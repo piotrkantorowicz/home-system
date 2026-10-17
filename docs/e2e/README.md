@@ -29,6 +29,8 @@ This README is the hub for cross-cutting concerns and spec discovery. Linked spe
 | [pagination](pagination.md) | List pagination on Products and Recipes | 10 |
 | [products](products.md) | Products CRUD and search | 5 |
 | [recipes](recipes.md) | Recipes CRUD with ingredients | 4 |
+| `recipe-photos.spec.ts` | Photo upload/replace/remove/delete, rejected input, no-photo recipes (needs image storage) | 3 |
+| `recipe-photo-access.spec.ts` | Household Guest read-only access, visibility/household revocation, account switch (reserved invitee) | 2 |
 | [nutrition](nutrition.md) | Nutrition summary — range presets, tiles, chart, table | 13 |
 | [profile](profile.md) | Biometrics form on the profile hub | 8 |
 | [meal-schedule](meal-schedule.md) | Meal slots on the profile hub | 11 |
@@ -115,7 +117,9 @@ Most specs are independent and can run in any order. A few share state and must 
 | `household/household-invite.spec.ts` | All tests use the reserved invitee and modify their household membership. |
 | `budget/budget-two-adults.spec.ts` | Same reserved invitee, moved into a worker household as an adult (privacy, repayment, demotion and removal journeys). |
 
-Both invitee files run in their own Playwright projects (`chromium-invitee-household`, then `chromium-invitee-budget`), kept out of `chromium`, so two files never move the invitee at once. Run one with `npx playwright test --no-deps --project=chromium-invitee-budget`. Budget supported scope: equal splits, adult-only shared ledger, repayments recorded not executed; refunds, import, forgiveness and custom splits stay deferred.
+| `diet-planner/recipe-photo-access.spec.ts` | Same reserved invitee, joined as Guest/Adult; one test also logs the worker out and in as the invitee, then signs the worker back in to clean up. |
+
+The invitee files run in their own Playwright projects (`chromium-invitee-household`, then `chromium-invitee-budget`, then `chromium-invitee-recipe-photos`), kept out of `chromium`, so two files never move the invitee at once. Run one with `npx playwright test --no-deps --project=chromium-invitee-budget`. Budget supported scope: equal splits, adult-only shared ledger, repayments recorded not executed; refunds, import, forgiveness and custom splits stay deferred.
 
 Cross-spec state: a `dailyCalorieTarget` goal configured by `nutrition.spec.ts`
 (and by `weight-prediction.spec.ts`) persists for the rest of the run (it's
@@ -132,12 +136,21 @@ user-level data). `weight-prediction.spec.ts`'s empty-state test route-mocks
 # 1. Backend infra (Authentik + module databases)
 cd infrastructure && docker compose --profile diet-planner --profile household --profile notifications --profile budget up -d
 
-# 2. Backend API (inject DB passwords from infrastructure/.env)
+# 2. Recipe image storage (needed by the recipe-photo specs): start the override service and
+#    create the bucket — infrastructure/README.md § Optional private recipe image storage
+cd infrastructure && docker compose -f docker-compose.yml -f docker-compose.image-storage.yml \
+  up -d --wait recipe-image-storage
+
+# 3. Backend API (inject DB passwords from infrastructure/.env, plus the
+#    DietPlanner__ImageStorage__* and AWS_* variables from that same README section)
 # Follow $run-project --no-frontend, step 3
 
-# 3. (Optional — Playwright auto-starts it) Vite frontend
+# 4. (Optional — Playwright auto-starts it) Vite frontend
 cd src/ui && npm run dev
 ```
+
+Without image storage the API answers photo uploads with 503 and the two `recipe-photo*`
+specs fail; the rest of the suite does not need it.
 
 ### Install + run
 
@@ -192,19 +205,23 @@ What the job does, in order:
 1. Writes `infrastructure/.env` with **generated** values for everything the compose
    file interpolates (`AUTHENTIK_SECRET_KEY`, DB / Redis passwords, bootstrap account) —
    the runner is throwaway, so nothing but the E2E password needs to be a real secret.
-2. `docker compose --profile diet-planner --profile notifications --profile household --profile budget up -d --wait`
-   in `infrastructure/`, then polls `/-/health/ready/` and the
+2. `docker compose -f docker-compose.yml -f docker-compose.image-storage.yml --profile diet-planner --profile notifications --profile household --profile budget up -d --wait`
+   in `infrastructure/` (generated RustFS keys; the bucket is created with a pinned
+   `amazon/aws-cli` container), then polls `/-/health/ready/` and the
    `home-system` OIDC discovery document (bounded, 5 min each). The discovery document
    only exists once the worker has applied `authentik/blueprints/home-system.yaml`, and
    the blueprint applies atomically, so the provider, the application and
    `E2eWorker0..3` are all present at that point.
 3. Builds the host and starts it with `ASPNETCORE_ENVIRONMENT=Development` (EF / DbUp
    auto-migrate, the `test-support` purge route is mapped) and the generated passwords
-   injected as `ConnectionStrings__*`, then waits for `/health`.
+   injected as `ConnectionStrings__*` and image storage enabled, then waits for `/health`.
 4. `npm ci` in `src/ui` and `e2e`, `playwright install --with-deps chromium`,
    `npx playwright test --project=chromium` with `CI=true` — Playwright starts Vite itself
-   (`reuseExistingServer` is off on CI), retries twice, and `test.only` is an error.
-5. On failure: uploads `e2e/playwright-report` + `e2e/test-results` (artifact
+   (`reuseExistingServer` is off on CI), retries twice, and `test.only` is an error. The
+   `chromium-invitee-*` projects are not part of this run.
+5. Polls the image bucket until it is empty (≤ 4 min): specs delete their recipes, the
+   teardown purges the rest, and the backend cleanup worker must remove every photo object.
+6. On failure: uploads `e2e/playwright-report` + `e2e/test-results` (artifact
    `playwright-report`) and `backend.log` + `docker compose logs` (artifact `stack-logs`),
    14-day retention. **These artifacts can contain the e2e password** — a retry trace
    records the login form POST, and the stack logs echo whatever the containers print —
