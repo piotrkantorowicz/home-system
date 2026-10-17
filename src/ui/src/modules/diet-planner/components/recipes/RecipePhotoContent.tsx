@@ -85,7 +85,7 @@ export function RecipePhotoContent({ recipe, scope }: RecipePhotoContentProps) {
           t(
             [401, 403, 404].includes(status)
               ? 'recipe_photo.access_error'
-              : status === 400 || status === 413 || status === 415
+              : [400, 413, 415, 422].includes(status)
                 ? 'recipe_photo.invalid_file'
                 : status === 409
                   ? 'recipe_photo.conflict'
