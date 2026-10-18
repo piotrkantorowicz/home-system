@@ -135,6 +135,24 @@ export async function photoStatus(
   }
 }
 
+/** The recipe's current image revision and served detail bytes, to prove a photo did not change. */
+export async function photoSnapshot(
+  page: Page,
+  recipeId: string,
+): Promise<{ version: string | undefined; bytes: Buffer }> {
+  const api = await createApiContext(page);
+  try {
+    const recipe = (await (await api.get(`/api/v1/recipes/${recipeId}`)).json()) as {
+      image?: { version: string } | null;
+    };
+    const image = await api.get(`/api/v1/recipes/${recipeId}/image`);
+    if (!image.ok()) throw new Error(`photoSnapshot: GET image returned ${image.status()}`);
+    return { version: recipe.image?.version, bytes: await image.body() };
+  } finally {
+    await api.dispose();
+  }
+}
+
 export async function removePhotoStatus(page: Page, recipeId: string): Promise<number> {
   const api = await createApiContext(page);
   try {

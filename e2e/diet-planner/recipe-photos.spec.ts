@@ -6,6 +6,7 @@ import {
   PHOTO_A,
   PHOTO_B,
   deleteRecipe,
+  photoSnapshot,
   photoStatus,
   putPhoto,
   seedPhotoRecipe,
@@ -81,6 +82,8 @@ test.describe('Recipe photos', () => {
     const recipe = await seedPhotoRecipe(page, `Photo rejects ${stamp}`, 'Private');
     try {
       expect(await putPhoto(page, recipe.id)).toBe(200);
+      const original = await photoSnapshot(page, recipe.id);
+      expect(original.version).toBeTruthy();
       await recipes.gotoRecipe(recipe.id, recipe.name);
       await expect(recipes.detailPhoto(recipe.name)).toBeVisible();
 
@@ -90,6 +93,7 @@ test.describe('Recipe photos', () => {
       expect(malformed.status()).toBeLessThan(500);
       await expect(recipes.photoError()).toHaveText(/could not be accepted/i);
       await expect(recipes.detailPhoto(recipe.name)).toBeVisible();
+      expect(await photoSnapshot(page, recipe.id)).toEqual(original);
 
       // Oversized input never leaves the browser, and the server refuses it on its own too.
       await recipes.photoInput().setInputFiles(OVERSIZED_PHOTO);
@@ -101,7 +105,8 @@ test.describe('Recipe photos', () => {
       await page.reload();
       await expect(recipes.detailPhoto(recipe.name)).toBeVisible();
       await expect(page.getByRole('button', { name: 'Add to plan', exact: true })).toBeEnabled();
-      expect(await photoStatus(page, recipe.id)).toBe(200);
+      // Same revision, same bytes: neither rejection published anything.
+      expect(await photoSnapshot(page, recipe.id)).toEqual(original);
     } finally {
       await deleteRecipe(page, recipe.id);
     }
