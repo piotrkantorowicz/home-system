@@ -203,7 +203,7 @@ jobs:
         env:
           CI: 'true'
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: npx playwright test --project=chromium
+        run: npx playwright test
 
       # Every spec deletes its recipes and the global teardown purges the rest, so the
       # backend's cleanup worker (1-minute tick) must leave the bucket empty: no orphaned

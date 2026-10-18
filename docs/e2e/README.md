@@ -216,9 +216,9 @@ What the job does, in order:
    auto-migrate, the `test-support` purge route is mapped) and the generated passwords
    injected as `ConnectionStrings__*` and image storage enabled, then waits for `/health`.
 4. `npm ci` in `src/ui` and `e2e`, `playwright install --with-deps chromium`,
-   `npx playwright test --project=chromium` with `CI=true` — Playwright starts Vite itself
-   (`reuseExistingServer` is off on CI), retries twice, and `test.only` is an error. The
-   `chromium-invitee-*` projects are not part of this run.
+   `npx playwright test` with `CI=true` — every project, including the chained
+   `chromium-invitee-*` ones. Playwright starts Vite itself (`reuseExistingServer` is off
+   on CI), retries twice, and `test.only` is an error.
 5. Polls the image bucket until it is empty (≤ 4 min): specs delete their recipes, the
    teardown purges the rest, and the backend cleanup worker must remove every photo object.
 6. On failure: uploads `e2e/playwright-report` + `e2e/test-results` (artifact
