@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 
 import { BasePage } from './BasePage';
 
+import type { PhotoPayload } from '../utils/recipe-photos';
 import type { Page, Locator } from '@playwright/test';
 
 export class RecipesPage extends BasePage {
@@ -167,6 +168,49 @@ export class RecipesPage extends BasePage {
       }
     }
     throw new Error(`Ingredient not found: ${name}`);
+  }
+
+  // ── Photo ────────────────────────────────────────────────────────────────────
+
+  async gotoRecipe(id: string, name: string) {
+    await this.page.goto(`/diet-planner/recipes/${id}`);
+    await expect(this.page.getByRole('heading', { name, level: 1 })).toBeVisible();
+  }
+
+  /** The file input; its label switches to "Choose a replacement photo" once a photo exists. */
+  photoInput(): Locator {
+    return this.page.getByLabel(/^choose a (replacement )?photo$/i);
+  }
+
+  detailPhoto(name: string): Locator {
+    return this.page.getByRole('img', { name: `Photo of ${name}`, exact: true });
+  }
+
+  /**
+   * The library card thumbnail is decorative (alt="", aria-hidden), so it has no accessible
+   * name; it is the card's only element with an empty alt text.
+   */
+  thumbnailFor(name: string): Locator {
+    return this.recipeCardFor(name).getByAltText('', { exact: true });
+  }
+
+  photoError(): Locator {
+    return this.page.getByRole('alert').filter({ hasText: /^photo/i });
+  }
+
+  /** Selects a file and confirms the upload; resolves once the PUT has answered. */
+  async uploadPhoto(file: string | PhotoPayload) {
+    await this.photoInput().setInputFiles(file);
+    const response = this.page.waitForResponse(
+      (resp) => /\/recipes\/[^/]+\/image$/.test(resp.url()) && resp.request().method() === 'PUT',
+    );
+    await this.page.getByRole('button', { name: /^upload photo$/i }).click();
+    return response;
+  }
+
+  async removePhoto() {
+    await this.page.getByRole('button', { name: /^remove photo$/i }).click();
+    await expect(this.page.getByText('Photo removed.')).toBeVisible();
   }
 
   // ── Delete ───────────────────────────────────────────────────────────────────

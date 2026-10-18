@@ -1,7 +1,8 @@
 # Runs the Playwright suite (e2e/) against the REAL stack on a runner: Docker Compose
-# (Authentik + the three module databases, blueprints applied on first boot), the .NET
-# host in Development (auto-migrates, exposes the test-support purge route), and Vite —
-# which Playwright starts itself because CI=true turns reuseExistingServer off.
+# (Authentik + the module databases, blueprints applied on first boot, plus the private
+# S3-compatible recipe image storage), the .NET host in Development (auto-migrates, exposes
+# the test-support purge route), and Vite — which Playwright starts itself because CI=true
+# turns reuseExistingServer off.
 #
 # Runs nightly, on demand, and on PRs targeting main — the last one report-only (not a
 # required status check yet) while we watch the flake rate. See issue #379.
@@ -41,6 +42,12 @@ concurrency:
 env:
   API_URL: http://localhost:5050
   AUTHENTIK_URL: http://localhost:9000
+  # Recipe photos: the image-storage override and the bucket the API is pointed at.
+  COMPOSE_FILES: -f docker-compose.yml -f docker-compose.image-storage.yml
+  COMPOSE_PROFILES_ARGS: --profile diet-planner --profile notifications --profile household --profile budget --profile investments
+  IMAGE_BUCKET: home-system-recipe-images
+  IMAGE_ENDPOINT: http://127.0.0.1:9100
+  AWS_CLI_IMAGE: amazon/aws-cli:2.27.0
 
 jobs:
   e2e:
@@ -92,17 +99,26 @@ jobs:
           AUTHENTIK_BOOTSTRAP_EMAIL=akadmin@e2e.invalid
           AUTHENTIK_BOOTSTRAP_TOKEN=
           E2E_USER_PASSWORD=$TEST_USER_PASSWORD
+          RECIPE_IMAGE_STORAGE_ACCESS_KEY=$(openssl rand -hex 10)
+          RECIPE_IMAGE_STORAGE_SECRET_KEY=$(openssl rand -hex 20)
           EOF
 
       # The host wires DietPlanner + Notifications + Household + Budget + Investments, so every module
-      # database is needed. --wait blocks on the healthchecks (Postgres, Redis);
-      # authentik-server has none, hence the explicit readiness loop below.
+      # database is needed. --wait blocks on the healthchecks (Postgres, Redis, image
+      # storage); authentik-server has none, hence the explicit readiness loop below.
       - name: Start Docker stack
         working-directory: infrastructure
+        run: docker compose $COMPOSE_FILES $COMPOSE_PROFILES_ARGS up -d --wait --quiet-pull
+
+      # The throwaway storage keys administer RustFS; only this ephemeral runner uses them.
+      - name: Create recipe image bucket
         run: |
-          docker compose \
-            --profile diet-planner --profile notifications --profile household --profile budget --profile investments \
-            up -d --wait --quiet-pull
+          set -a; . infrastructure/.env; set +a
+          docker run --rm --network host \
+            -e AWS_ACCESS_KEY_ID="$RECIPE_IMAGE_STORAGE_ACCESS_KEY" \
+            -e AWS_SECRET_ACCESS_KEY="$RECIPE_IMAGE_STORAGE_SECRET_KEY" \
+            "$AWS_CLI_IMAGE" --endpoint-url "$IMAGE_ENDPOINT" --region us-east-1 \
+            s3api create-bucket --bucket "$IMAGE_BUCKET"
 
       # First boot runs Authentik's migrations, then the worker applies
       # /blueprints/custom/home-system.yaml (provider + application + E2eWorker0..3).
@@ -143,6 +159,13 @@ jobs:
           export ConnectionStrings__Household="Host=localhost;Port=5434;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}"
           export ConnectionStrings__Budget="Host=localhost;Port=5435;Database=budget;Username=budget;Password=${BUDGET_DB_PASSWORD}"
           export ConnectionStrings__Investments="Host=localhost;Port=5436;Database=investments;Username=investments;Password=${INVESTMENTS_DB_PASSWORD}"
+          export DietPlanner__ImageStorage__Enabled=true
+          export DietPlanner__ImageStorage__Endpoint="$IMAGE_ENDPOINT"
+          export DietPlanner__ImageStorage__Region=us-east-1
+          export DietPlanner__ImageStorage__Bucket="$IMAGE_BUCKET"
+          export DietPlanner__ImageStorage__ForcePathStyle=true
+          export AWS_ACCESS_KEY_ID="$RECIPE_IMAGE_STORAGE_ACCESS_KEY"
+          export AWS_SECRET_ACCESS_KEY="$RECIPE_IMAGE_STORAGE_SECRET_KEY"
           nohup dotnet run --project src/Apis/HomeSystem.REST --no-build --no-launch-profile --configuration Release \
             > backend.log 2>&1 &
           echo "backend pid $!"
@@ -182,7 +205,30 @@ jobs:
         env:
           CI: 'true'
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: npx playwright test --project=chromium
+        run: npx playwright test
+
+      # Every spec deletes its recipes and the global teardown purges the rest, so the
+      # backend's cleanup worker (1-minute tick) must leave the bucket empty: no orphaned
+      # photo objects. Polls for up to 4 minutes.
+      - name: Verify recipe photo objects were cleaned up
+        run: |
+          set -a; . infrastructure/.env; set +a
+          count() {
+            docker run --rm --network host \
+              -e AWS_ACCESS_KEY_ID="$RECIPE_IMAGE_STORAGE_ACCESS_KEY" \
+              -e AWS_SECRET_ACCESS_KEY="$RECIPE_IMAGE_STORAGE_SECRET_KEY" \
+              "$AWS_CLI_IMAGE" --endpoint-url "$IMAGE_ENDPOINT" --region us-east-1 \
+              s3api list-objects-v2 --bucket "$IMAGE_BUCKET" --query 'length(Contents || `[]`)' --output text
+          }
+          waited=0
+          until [[ "$(count)" == "0" ]]; do
+            if (( waited >= 240 )); then
+              echo "::error::$(count) recipe photo object(s) still in the bucket after ${waited}s"
+              exit 1
+            fi
+            sleep 15; waited=$((waited + 15))
+          done
+          echo "bucket empty after ${waited}s"
 
       # ── Diagnostics ─────────────────────────────────────────────────────────
       # Uploaded only on failure, 14-day retention, repo-read visibility. GitHub masks
@@ -196,8 +242,7 @@ jobs:
         run: |
           mkdir -p stack-logs
           cp backend.log stack-logs/ 2>/dev/null || true
-          (cd infrastructure && docker compose \
-            --profile diet-planner --profile notifications --profile household --profile budget --profile investments \
+          (cd infrastructure && docker compose $COMPOSE_FILES $COMPOSE_PROFILES_ARGS \
             logs --no-color) > stack-logs/docker-compose.log 2>&1 || true
 
       - name: Upload Playwright report
