@@ -521,6 +521,21 @@ it('waits for household scope before offering file selection', async () => {
   expect(screen.getByRole('img', { name: 'Selected photo preview' })).toBeInTheDocument();
 });
 
+it('explains a server-side rejection of the file content instead of offering a retry', async () => {
+  // The API answers 422 when the bytes fail decoding or the normalized size limits.
+  server.use(
+    http.put('http://localhost:5050/api/v1/recipes/r1/image', () =>
+      HttpResponse.json({}, { status: 422 }),
+    ),
+  );
+  renderPhoto();
+  await screen.findByRole('img', { name: 'Photo of Oats' });
+  await selectPhoto();
+  await userEvent.click(screen.getByRole('button', { name: 'Upload photo' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Photo could not be accepted');
+  expect(screen.getByRole('img', { name: 'Photo of Oats' })).toBeInTheDocument();
+});
+
 it('keeps the selected file after a conflict and offers a matching retry instruction', async () => {
   server.use(
     http.put('http://localhost:5050/api/v1/recipes/r1/image', () =>

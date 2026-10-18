@@ -2,6 +2,7 @@ namespace Shared.Web.IntegrationTests;
 
 using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
@@ -95,6 +96,29 @@ public sealed class ApplicationExceptionHandlerTests
         body.RootElement.GetProperty("detail").GetString().ShouldBe("Nothing was saved.");
         body.RootElement.GetProperty("errors").GetProperty("w1").EnumerateArray().Select(e => e.GetString())
             .ShouldBe(["wallet not found"]);
+    }
+
+    /// <summary>
+    /// Minimal APIs throw on an unreadable request body in Development (e.g. a multipart body over its limit);
+    /// the framework's own status is kept, the parser message is not echoed, and nothing is logged as a fault.
+    /// </summary>
+    [Fact]
+    public async Task TryHandle_WhenBadHttpRequestException_ReturnsItsStatusWithoutDetail()
+    {
+        var exception = new BadHttpRequestException(
+            "Failed to read parameter \"IFormFile file\" from the request body as form.",
+            StatusCodes.Status413PayloadTooLarge);
+        await using var host = await ErrorPipelineHost.StartThrowingAsync(exception);
+        using var client = host.CreateClient();
+
+        using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
+        response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe(ProblemJson);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        body.RootElement.GetProperty("title").GetString().ShouldBe("Bad request");
+        body.RootElement.TryGetProperty("detail", out _).ShouldBeFalse();
+        host.Logs.GetSnapshot().ShouldNotContain(log => log.Level >= LogLevel.Error);
     }
 
     /// <summary>A cancelled request answers 499 with no body — the client is not there to read one.</summary>
