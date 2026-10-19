@@ -37,10 +37,10 @@ $stop-project [--app-only | --infra-only | --volumes]
   (KillShell) — cleaner than pattern-killing.
 - Otherwise kill by pattern / port:
   ```bash
-  pkill -f "HomeSystem.REST"        # .NET host
-  pkill -f "dotnet run --project src/Apis/HomeSystem.REST"
-  pkill -f "vite"                    # Vite dev server (also covers Playwright's webServer)
-  pkill -f "playwright test"         # any running suite
+  # Bracket the first letter: otherwise the pattern matches this shell's own command line.
+  pkill -f "[H]omeSystem.REST"       # .NET host (also covers `dotnet run --project ...`)
+  pkill -f "[v]ite"                  # Vite dev server (also covers Playwright's webServer)
+  pkill -f "[p]laywright test"       # any running suite
   ```
 - Verify the ports are free:
   ```bash

@@ -1,6 +1,6 @@
 ---
 name: address-review
-description: "Work through the unresolved review threads on a pull request: fix what is right, push back with reasons on what is not, reply in every thread, resolve the ones you changed. Use after a bot or human review lands on the PR."
+description: "Work through the unresolved review threads on a pull request: fix what is right, push back with reasons on what is not, reply in every thread, resolve the ones you changed. Use after a bot or human review lands on the PR, or when asked to 'check review', 'check codex comments', or 'fix comments on #n'."
 ---
 
 # address-review
