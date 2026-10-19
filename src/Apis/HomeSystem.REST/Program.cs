@@ -88,11 +88,19 @@ builder.Services.AddAuthorization(options => options.AddAdminPolicy());
 // ==============================================
 // CORS
 // ==============================================
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+// Vite dev server when nothing is configured; elsewhere no origin is allowed until Cors:AllowedOrigins is set.
+if (allowedOrigins.Length == 0 && builder.Environment.IsDevelopment())
+{
+    allowedOrigins = ["http://localhost:5173", "https://localhost:5173"];
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
               .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
               .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-SignalR-User-Agent")
               .AllowCredentials();
