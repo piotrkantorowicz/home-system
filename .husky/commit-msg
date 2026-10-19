@@ -1,3 +1,2 @@
-# Strip AI attribution trailers (CLAUDE.md § Git Commit Policy) before linting.
-sed -i -E '/^(Co-Authored-By:.*(Claude|Anthropic)|Claude-Session:|.*Generated with \[Claude Code\])/Id' "$1"
+bash scripts/hooks/strip-ai-trailers.sh "$1"
 cd src/ui && npx --no -- commitlint --edit "$1"
