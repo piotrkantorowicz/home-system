@@ -171,7 +171,7 @@ export function WalletFormDialog({ wallet, onClose }: WalletFormDialogProps) {
               </Select>
             </Field>
           </div>
-          <Field id="wallet-visibility" label={t('visibility')}>
+          <Field id="wallet-visibility" label={t('wallet_visibility')}>
             <Select
               id="wallet-visibility"
               {...(wallet && !wallet.canChangeVisibility
