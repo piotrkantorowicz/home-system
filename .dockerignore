@@ -1,0 +1,18 @@
+# Build context is the repo root (see src/Apis/HomeSystem.REST/Dockerfile) — send only what the API build needs.
+**
+!global.json
+!Directory.Build.props
+!Directory.Packages.props
+!.editorconfig
+!HomeSystem.slnx
+!src/Apis/**
+!src/Modules/**
+!src/Shared/**
+
+# Build output and per-developer files inside the included trees (also catches the
+# literal "bin\Debug" directories some Windows-style builds leave behind).
+**/bin
+**/bin\\*
+**/obj
+**/*.user
+**/launchSettings.json

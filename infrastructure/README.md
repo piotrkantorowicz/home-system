@@ -298,6 +298,48 @@ To restore:
 
 Account deletion and its retention obligations remain in #513.
 
+## Running the API image
+
+CI publishes the API (`src/Apis/HomeSystem.REST/Dockerfile`, linux/amd64) to
+`ghcr.io/piotrkantorowicz/home-system-api`:
+
+| Tag | Published |
+|---|---|
+| `sha-<40-char commit>` | every commit on `main` |
+| `vX.Y.Z` | each semantic-release, built from the tagged commit |
+
+Pull requests only build and smoke-test the image; they never push. If a release
+publish fails, re-run it without cutting a new release: **Actions → API image → Run
+workflow** on `main` with `tag` = the existing `vX.Y.Z`.
+
+```bash
+docker pull ghcr.io/piotrkantorowicz/home-system-api:v1.2.3   # or sha-<commit>
+```
+
+The package inherits the repository's visibility. If it is private, `docker login ghcr.io`
+with a token that has `read:packages` first (and make sure the package grants the
+repository / your account read access under *Package settings*).
+
+**Prerequisites** (none of these ship in the image):
+
+- PostgreSQL databases `dietplanner`, `notifications`, `household`, `budget`, `investments`
+  (profiles of the same names in `docker-compose.yml`).
+- Authentik (or another OIDC provider) reachable at an **HTTPS** authority whose issuer matches
+  the tokens; the API validates JWTs against it.
+- The schema. The image runs as `Production`, where the API does **not** auto-migrate (that is
+  Development-only); apply each module's EF migrations before the first start.
+
+**Configuration** is environment variables (`__` = `:` in .NET config), listed with
+placeholders in `docker-compose.api.yml`: `Authentication__Authentik__Authority`,
+`Authentication__Authentik__Audience`, `Cors__AllowedOrigins__0` (frontend origin; none allowed by default), and `ConnectionStrings__{DietPlanner,Notifications,Household,Budget,Investments}`.
+The container runs as a non-root user and listens on `8080`; `GET /health` is the liveness probe.
+
+```bash
+export API_IMAGE_TAG=v1.2.3 API_AUTHENTIK_AUTHORITY=https://auth.example.com/application/o/home-system API_AUTHENTIK_AUDIENCE=<client-id> API_CORS_ORIGIN=https://home.example.com
+docker compose -f docker-compose.yml -f docker-compose.api.yml \
+  --profile diet-planner --profile notifications --profile household --profile budget --profile investments --profile api up -d
+```
+
 ## Authentik Initial Setup
 
 After first start, create the admin user:
