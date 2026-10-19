@@ -20,13 +20,12 @@ test.describe('Calendar CRUD & Navigation', () => {
     const importPage = new ImportPage(page);
     await importPage.goto();
     await seedMealSchedule(page);
-    // The add-meal test below needs an empty "Mon / Snack" cell — the week grid
-    // only offers "Add meal" on empty cells, and an earlier spec on this worker
-    // may have imported a full week into it.
+    // The tests below need Monday to hold only this import: the week grid offers
+    // "Add meal" on empty cells only, and an earlier spec on this worker may have
+    // imported (and on a Monday, when Monday is today, eaten) meals there too.
     await clearMealsInSlot(
       page,
       format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-      'Snack',
     );
     await importPage.runImportWizard(planData);
     await expect(page).toHaveURL(/\/diet-planner\/calendar/);

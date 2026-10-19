@@ -1,7 +1,9 @@
+import { format } from 'date-fns';
+
 import { test, expect } from './fixtures';
 import { ImportPage } from './pages';
 import { generateWeeklyPlan } from './utils/data-generator';
-import { seedGoals } from './utils/seed';
+import { clearMealsInSlot, seedGoals } from './utils/seed';
 
 test('consumed nutrition, undo, and responsive agenda work with real meals', async ({
   page,
@@ -9,6 +11,9 @@ test('consumed nutrition, undo, and responsive agenda work with real meals', asy
   test.setTimeout(180000);
   const importer = new ImportPage(page);
   await importer.goto();
+  // Start today empty: another spec on this worker may have eaten today's meals
+  // (meals.spec works on Monday, which is today once a week).
+  await clearMealsInSlot(page, format(new Date(), 'yyyy-MM-dd'));
   await importer.runImportWizard(generateWeeklyPlan(new Date()));
   // Goals are worker-shared state: another spec may already have set them, in
   // which case the dashboard's "Set up goals" CTA is gone. Seed via the API so
