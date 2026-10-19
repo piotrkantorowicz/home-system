@@ -141,7 +141,8 @@ interface MealEntryDto {
  * that adds through the grid must start from one — regardless of which other
  * specs on the worker imported plans into it earlier.
  */
-export async function clearMealsInSlot(page: Page, date: string, slotName: string): Promise<void> {
+/** Deletes the meals on `date` in `slotName`, or every meal on that day when no slot is given. */
+export async function clearMealsInSlot(page: Page, date: string, slotName?: string): Promise<void> {
   const api = await createApiContext(page);
   try {
     const res = await api.get('/api/v1/meals', {
@@ -152,7 +153,7 @@ export async function clearMealsInSlot(page: Page, date: string, slotName: strin
     }
     const meals = (await res.json()) as MealEntryDto[];
     for (const meal of meals) {
-      if (meal.mealSlotName.toLowerCase() !== slotName.toLowerCase()) continue;
+      if (slotName && meal.mealSlotName.toLowerCase() !== slotName.toLowerCase()) continue;
       const del = await api.delete(`/api/v1/meals/${meal.id}`);
       if (!del.ok()) {
         throw new Error(`clearMealsInSlot: DELETE ${meal.id} returned ${del.status()}`);
