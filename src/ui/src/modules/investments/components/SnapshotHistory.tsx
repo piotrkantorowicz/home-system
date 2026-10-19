@@ -78,7 +78,7 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
                   {t('note')}
                 </th>
                 <th scope="col" className="w-12">
-                  <span className="sr-only">{t('actions')}</span>
+                  <span className="sr-only">{t('row_actions')}</span>
                 </th>
               </tr>
             </thead>
