@@ -1,1 +1,2 @@
+bash scripts/hooks/strip-ai-trailers.sh "$1"
 cd src/ui && npx --no -- commitlint --edit "$1"
