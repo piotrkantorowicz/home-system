@@ -1,0 +1,40 @@
+# Example: run the published Home System API image next to the stack in docker-compose.yml.
+#   cd infrastructure
+#   docker compose -f docker-compose.yml -f docker-compose.api.yml \
+#     --profile diet-planner --profile notifications --profile household --profile budget --profile investments --profile api \
+#     up -d
+# See "Running the API image" in README.md for prerequisites (HTTPS Authentik URL, migrations, GHCR access).
+services:
+  api:
+    image: ghcr.io/piotrkantorowicz/home-system-api:${API_IMAGE_TAG:?set API_IMAGE_TAG, e.g. v1.2.3 or sha-<commit>}
+    container_name: home-system-api
+    restart: unless-stopped
+    profiles: ["api"]
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Must be HTTPS (JWT metadata is not fetched over plain HTTP outside Development) and must
+      # match the issuer in the tokens, i.e. the URL browsers use to reach Authentik.
+      Authentication__Authentik__Authority: ${API_AUTHENTIK_AUTHORITY:?https URL, e.g. https://auth.example.com/application/o/home-system}
+      Authentication__Authentik__Audience: ${API_AUTHENTIK_AUDIENCE:?OIDC client id of the home-system application}
+      # Browser origins allowed to call the API (add __1, __2 … for more).
+      Cors__AllowedOrigins__0: ${API_CORS_ORIGIN:?origin of the frontend, e.g. https://home.example.com}
+      ConnectionStrings__DietPlanner: Host=dietplanner-db;Database=dietplanner;Username=dietplanner;Password=${DIETPLANNER_DB_PASSWORD}
+      ConnectionStrings__Notifications: Host=notifications-db;Database=notifications;Username=notifications;Password=${NOTIFICATIONS_DB_PASSWORD}
+      ConnectionStrings__Household: Host=household-db;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}
+      ConnectionStrings__Budget: Host=budget-db;Database=budget;Username=budget;Password=${BUDGET_DB_PASSWORD}
+      ConnectionStrings__Investments: Host=investments-db;Database=investments;Username=investments;Password=${INVESTMENTS_DB_PASSWORD}
+    depends_on:
+      dietplanner-db: { condition: service_healthy }
+      notifications-db: { condition: service_healthy }
+      household-db: { condition: service_healthy }
+      budget-db: { condition: service_healthy }
+      investments-db: { condition: service_healthy }
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - home-system-shared

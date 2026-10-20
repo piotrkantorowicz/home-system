@@ -23,6 +23,8 @@ jobs:
   release:
     name: semantic-release
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -43,3 +45,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      # The tag semantic-release put on this exact commit ("" when the push released nothing).
+      - name: Resolve release tag
+        id: tag
+        run: |
+          git fetch --tags --quiet origin
+          echo "tag=$(git tag --points-at "$GITHUB_SHA" --list 'v[0-9]*.[0-9]*.[0-9]*' | head -1)" >> "$GITHUB_OUTPUT"
+
+  # Called explicitly: tags pushed with GITHUB_TOKEN do not trigger other workflows.
+  # Publishes sha-<commit> for every main commit, plus the version tag when one was released.
+  image:
+    name: API image
+    needs: release
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/api-image.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
