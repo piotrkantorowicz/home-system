@@ -64,7 +64,7 @@ internal sealed class ImportPlanResolver(
         var days = import.Schedule ?? [];
 
         if (strict && ExceedsBounds(products.Count, recipes.Count, days.Sum(d => (d.Meals ?? []).Count), Add))
-            return new ResolvedImport(issues, [], [], [], null, false);
+            return new ResolvedImport(issues, [], [], [], null, false, []);
 
         var productDefs = CollectProducts(products, fallback, Add);
         var recipeDefs = CollectRecipes(recipes, strict, fallback, Add);
@@ -216,7 +216,8 @@ internal sealed class ImportPlanResolver(
                 await ReportOccupiedSlotsAsync(personId, schedule, meals, first, last, strict && !appendToOccupiedSlots, Add, ct);
         }
 
-        return new ResolvedImport(issues, resolvedProducts, resolvedRecipes, [.. meals.Select(m => m.Meal)], schedule, createsOtherSlot);
+        return new ResolvedImport(issues, resolvedProducts, resolvedRecipes, [.. meals.Select(m => m.Meal)], schedule, createsOtherSlot,
+            [.. existingRecipes.Values.SelectMany(r => r)]);
     }
 
     private static bool ExceedsBounds(int products, int recipes, int meals, AddIssue add)
