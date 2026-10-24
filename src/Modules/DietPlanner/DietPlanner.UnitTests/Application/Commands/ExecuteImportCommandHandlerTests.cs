@@ -27,7 +27,7 @@ public sealed class ExecuteImportCommandHandlerTests
     {
         _products.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([]);
         _recipes.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([]);
-        _meals.GetByPersonAndDateRangeAsync(PersonId, Arg.Any<DateOnly?>(), Arg.Any<DateOnly?>(), Arg.Any<CancellationToken>()).Returns([]);
+        _meals.GetOccupiedSlotsAsync(PersonId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns([]);
         _sut = new ExecuteImportCommandHandler(
             new ImportPlanResolver(_products, _recipes, _meals, _schedules),
             _products, _recipes, _meals, _schedules, _unitOfWork, TestClock.Create());
