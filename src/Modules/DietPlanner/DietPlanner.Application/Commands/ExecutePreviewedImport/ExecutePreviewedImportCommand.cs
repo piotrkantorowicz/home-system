@@ -21,4 +21,8 @@ public sealed record ExecutePreviewedImportCommand(
     Guid PersonId,
     bool AppendToOccupiedSlots,
     string? ExpectedFingerprint,
-    string OperationKey) : ICommand<ExecutedImportDto>;
+    string OperationKey) : ICommand<ExecutedImportDto>
+{
+    /// <summary>Failure message when a first run has no usable preview; callers match it to explain why.</summary>
+    public const string PreviewRequired = "A valid preview is required to import this plan; preview it again.";
+}

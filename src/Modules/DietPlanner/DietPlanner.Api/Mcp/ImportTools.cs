@@ -42,7 +42,7 @@ internal sealed class ImportTools
     }
 
     [McpServerTool(Name = "execute_plan_import", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice.")]
+    [Description("Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice. Run one import at a time: two different imports in parallel can both fill the same free slots.")]
     [Authorize(Policy = DietPlannerMcp.WriteScope)]
     [Authorize(Policy = DietPlannerMcp.ImportScope)]
     public static async Task<ExecutedImportDto> ExecutePlanImport(
@@ -65,7 +65,7 @@ internal sealed class ImportTools
             return await McpErrors.AsToolErrorsAsync(() => commands.SendAsync<ExecutePreviewedImportCommand, ExecutedImportDto>(
                 new ExecutePreviewedImportCommand(plan, subject, personId, appendToOccupiedSlots, fingerprint, operationKey), ct));
         }
-        catch (McpException) when (tokenError is not null)
+        catch (McpException ex) when (tokenError is not null && ex.Message == ExecutePreviewedImportCommand.PreviewRequired)
         {
             throw new McpException(tokenError);
         }
