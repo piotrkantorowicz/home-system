@@ -68,6 +68,8 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
         services.AddScoped<HouseholdRosterProvider>();
         services.AddScoped<ImportPlanResolver>();
+        services.AddScoped<ImportPlanWriter>();
+        services.AddScoped<ImportPreviewBuilder>();
         services.AddScoped<IRecipeImageProcessor, RecipeImageProcessor>();
         services.AddScoped<IRecipeImagePersistence, RecipeImagePersistence>();
         services.AddScoped<RecipeImageCleanup>();

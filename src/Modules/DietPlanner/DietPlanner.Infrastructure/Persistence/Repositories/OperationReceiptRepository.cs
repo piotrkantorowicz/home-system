@@ -9,8 +9,8 @@ internal sealed class OperationReceiptRepository(DietPlannerDbContext dbContext)
     public async Task<bool> TryClaimAsync(OperationReceipt receipt, CancellationToken ct = default)
         => await dbContext.Database.ExecuteSqlInterpolatedAsync(
             $"""
-            INSERT INTO operation_receipts (actor_subject, operation, key, request_hash, result_id, created_at)
-            VALUES ({receipt.ActorSubject}, {receipt.Operation}, {receipt.Key}, {receipt.RequestHash}, {receipt.ResultId}, {receipt.CreatedAt})
+            INSERT INTO operation_receipts (actor_subject, operation, key, request_hash, result_id, result, created_at)
+            VALUES ({receipt.ActorSubject}, {receipt.Operation}, {receipt.Key}, {receipt.RequestHash}, {receipt.ResultId}, CAST({receipt.Result} AS jsonb), {receipt.CreatedAt})
             ON CONFLICT DO NOTHING
             """, ct) == 1;
 

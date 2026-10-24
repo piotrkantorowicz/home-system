@@ -22,7 +22,8 @@ using Shared.Infrastructure.Web;
 /// to act as one subject over REST (test scheme) and over MCP (JWT). Both resolve to the same person.
 /// </summary>
 /// <param name="connectionString">Connection string of the shared test database.</param>
-internal sealed class McpTestHost(string connectionString) : IDisposable
+/// <param name="configureServices">Extra service overrides, e.g. to inject a failure.</param>
+internal sealed class McpTestHost(string connectionString, Action<IServiceCollection>? configureServices = null) : IDisposable
 {
     public const string Issuer = "https://auth.test/application/o/home-system-mcp/";
     public const string Audience = "home-system-mcp";
@@ -122,6 +123,8 @@ internal sealed class McpTestHost(string connectionString) : IDisposable
                 options.TokenValidationParameters.ValidIssuer = Issuer;
                 options.TokenValidationParameters.IssuerSigningKey = SigningKey;
             });
+
+            configureServices?.Invoke(services);
         })));
     }
 }

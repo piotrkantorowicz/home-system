@@ -18,6 +18,7 @@ internal sealed class OperationReceiptConfiguration : IEntityTypeConfiguration<O
         builder.Property(x => x.Key).HasMaxLength(128).HasColumnName("key");
         builder.Property(x => x.RequestHash).HasMaxLength(64).HasColumnName("request_hash");
         builder.Property(x => x.ResultId).HasColumnName("result_id");
+        builder.Property(x => x.Result).HasColumnType("jsonb").HasColumnName("result");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
     }
 }
