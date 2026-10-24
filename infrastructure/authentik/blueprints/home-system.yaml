@@ -173,7 +173,12 @@ entries:
       description: "Read your diet planner data"
       expression: |
         # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
-        return {"scope": " ".join(token.scope)}
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
 
   - model: authentik_providers_oauth2.scopemapping
     id: scope-mcp-diet-write
@@ -185,7 +190,12 @@ entries:
       description: "Create products and recipes"
       expression: |
         # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
-        return {"scope": " ".join(token.scope)}
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
 
   - model: authentik_providers_oauth2.scopemapping
     id: scope-mcp-diet-import
@@ -197,7 +207,12 @@ entries:
       description: "Import monthly meal plans"
       expression: |
         # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
-        return {"scope": " ".join(token.scope)}
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
 
   - model: authentik_providers_oauth2.oauth2provider
     id: provider-home-system-mcp
