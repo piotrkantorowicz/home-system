@@ -10,7 +10,7 @@ using DietPlanner.IntegrationTests.Infrastructure;
 public sealed class McpCatalogToolsTests(DatabaseFixture db) : IDisposable
 {
     private readonly McpTestHost _mcp = new(db.ConnectionString);
-    private readonly string _tag = Guid.CreateVersion7().ToString("N")[..8];
+    private readonly string _tag = Guid.CreateVersion7().ToString("N")[^8..];
 
     /// <summary>Search returns the caller's own items and household-shared items, never another person's private ones, and keeps unknown nutrition null.</summary>
     [Fact]
