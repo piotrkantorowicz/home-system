@@ -6,6 +6,7 @@ using Amazon.S3;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Images;
+using DietPlanner.Application.ImportPlanning;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Storage;
 using DietPlanner.Application.Workers;
@@ -65,6 +66,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IDietPlannerReadDbContext>(sp => sp.GetRequiredService<DietPlannerDbContext>());
         services.AddScoped<INutritionCalculator, NutritionCalculator>();
         services.AddScoped<HouseholdRosterProvider>();
+        services.AddScoped<ImportPlanResolver>();
         services.AddScoped<IRecipeImageProcessor, RecipeImageProcessor>();
         services.AddScoped<IRecipeImagePersistence, RecipeImagePersistence>();
         services.AddScoped<RecipeImageCleanup>();

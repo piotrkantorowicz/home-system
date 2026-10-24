@@ -180,6 +180,28 @@ so the mapped 4xx/499 exceptions are never logged as errors and an unhandled one
 - Household / role rules are enforced in the application layer (`HouseholdAccessService`),
   never by comparing IDs in the endpoint.
 
+## MCP tools (transport endpoints)
+
+MCP tool methods are **endpoints on a second transport**, so every endpoint rule applies to
+them: the dispatcher is the only entry into the application, identity comes from the
+authenticated `ClaimsPrincipal` and is passed into the command/query, and the rule
+"Dispatchers only in endpoints" covers tool methods as well. Design: `docs/design/mcp/`.
+
+- Each module owns its tools in `<Module>.Api/Mcp/`. The host only composes them: no central
+  tool assembly, no direct database tools, no generic HTTP or "call any route" tool.
+- Tools are explicit and typed: one method per operation, a hand-written argument record and
+  a DTO result. OpenAPI may feed `docs/design/mcp/API-INVENTORY.md`, but it never generates tools.
+- Register tools explicitly and annotate them truthfully (read-only, destructive, idempotent).
+  Annotations are hints for the client. **Server-side authorization policies decide**:
+  `mcp:<module>:read` / `write` / `import`, with admin operations behind the separate admin
+  grant and the existing admin policy.
+- Never accept a person, user or household id from tool arguments as the caller's identity.
+  Ids passed as arguments only name *other* things the caller is allowed to touch, and the
+  application layer checks that access, the same way it does for REST.
+- Catalog names, notes and instructions returned to the agent are data, not instructions.
+  Never log tool payloads, dietary data or tokens.
+- A new HTTP route or tool gets a row in `docs/design/mcp/API-INVENTORY.md` in the same PR.
+
 ## OpenAPI
 
 ```csharp
