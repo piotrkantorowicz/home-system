@@ -11,8 +11,10 @@ using DietPlanner.Domain.ValueObjects;
 /// <param name="Definition">The import definition that wins for this name.</param>
 /// <param name="IsNew">True when executing the import creates the recipe.</param>
 /// <param name="Ingredients">Resolved ingredient lines; only meaningful when <paramref name="IsNew"/>.</param>
+/// <param name="UsedProductIds">Products the recipe will actually use: the resolved ingredients when new, the stored ones when reused.</param>
 internal sealed record ResolvedRecipe(
     RecipeId Id,
     ImportRecipeDto Definition,
     bool IsNew,
-    IReadOnlyList<ResolvedIngredient> Ingredients);
+    IReadOnlyList<ResolvedIngredient> Ingredients,
+    IReadOnlyList<ProductId> UsedProductIds);

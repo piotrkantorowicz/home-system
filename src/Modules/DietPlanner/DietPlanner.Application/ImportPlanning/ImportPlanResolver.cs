@@ -64,7 +64,7 @@ internal sealed class ImportPlanResolver(
         var days = import.Schedule ?? [];
 
         if (strict && ExceedsBounds(products.Count, recipes.Count, days.Sum(d => (d.Meals ?? []).Count), Add))
-            return new ResolvedImport(issues, [], [], [], null, false);
+            return new ResolvedImport(issues, [], [], [], null, false, []);
 
         var productDefs = CollectProducts(products, fallback, Add);
         var recipeDefs = CollectRecipes(recipes, strict, fallback, Add);
@@ -127,12 +127,12 @@ internal sealed class ImportPlanResolver(
             if (existing is null)
             {
                 var id = RecipeId.New();
-                resolvedRecipes.Add(new ResolvedRecipe(id, definition, IsNew: true, ingredients));
+                resolvedRecipes.Add(new ResolvedRecipe(id, definition, IsNew: true, ingredients, [.. ingredients.Select(i => i.ProductId)]));
                 recipeIds[name] = id;
                 continue;
             }
 
-            resolvedRecipes.Add(new ResolvedRecipe(existing.Id, definition, IsNew: false, ingredients));
+            resolvedRecipes.Add(new ResolvedRecipe(existing.Id, definition, IsNew: false, ingredients, [.. existing.Ingredients.Select(i => i.ProductId)]));
             recipeIds[name] = existing.Id;
             ReportReuse("Recipe", name, path, RecipeDifferences(definition, ingredients, existing), Add);
         }
@@ -193,7 +193,12 @@ internal sealed class ImportPlanResolver(
                     recipeId = ResolveReference(recipeIds, existingRecipes, meal.Recipe, $"{mealPath}.recipe", "Recipe", fallback, r => r.Id, Add);
 
                 if (recipeId is not null && meal.Servings is not <= 0)
-                    meals.Add((new ResolvedMeal(date, slotName, recipeId, meal.Servings ?? 1m, meal.Notes), mealPath));
+                {
+                    var recipeName = recipeDefs.TryGetValue(meal.Recipe, out var defined) ? defined.Definition.Name
+                        : existingRecipes.TryGetValue(meal.Recipe, out var stored) ? stored[0].Name
+                        : meal.Recipe;
+                    meals.Add((new ResolvedMeal(date, slotName, recipeId, recipeName, meal.Servings ?? 1m, meal.Notes), mealPath));
+                }
             }
         }
 
@@ -216,7 +221,8 @@ internal sealed class ImportPlanResolver(
                 await ReportOccupiedSlotsAsync(personId, schedule, meals, first, last, strict && !appendToOccupiedSlots, Add, ct);
         }
 
-        return new ResolvedImport(issues, resolvedProducts, resolvedRecipes, [.. meals.Select(m => m.Meal)], schedule, createsOtherSlot);
+        return new ResolvedImport(issues, resolvedProducts, resolvedRecipes, [.. meals.Select(m => m.Meal)], schedule, createsOtherSlot,
+            [.. existingRecipes.Values.SelectMany(r => r)]);
     }
 
     private static bool ExceedsBounds(int products, int recipes, int meals, AddIssue add)
