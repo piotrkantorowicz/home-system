@@ -104,7 +104,7 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
             "audience" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, audience: "home-system-spa"),
             _ => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, issuer: "https://elsewhere.test/"),
         };
-        var http = _mcp.Host.CreateClient();
+        var http = _mcp.CreateClient();
         if (token is not null)
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -118,7 +118,7 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     [Fact]
     public async Task GetProtectedResourceMetadata_Anonymously_DescribesAuthorizationServerAndScopes()
     {
-        var http = _mcp.Host.CreateClient();
+        var http = _mcp.CreateClient();
 
         var metadata = await http.GetFromJsonAsync<JsonElement>("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
 
