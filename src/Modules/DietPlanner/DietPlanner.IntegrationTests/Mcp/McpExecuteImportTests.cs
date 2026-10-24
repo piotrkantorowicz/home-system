@@ -34,6 +34,9 @@ public sealed class McpExecuteImportTests(DatabaseFixture db) : IDisposable
 
         result.Replayed.ShouldBeFalse();
         result.Stats.ShouldBe(new ImportStatsDto(2, 0, 6, 0, 186));
+        (result.From, result.To).ShouldBe((new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31)));
+        result.CreatedProductIds.Count.ShouldBe(2);
+        result.CreatedRecipeIds.ShouldBe(meals.Select(m => m.RecipeId).Distinct(), ignoreOrder: true);
         meals.Count.ShouldBe(186);
         meals.ShouldAllBe(m => m.Status == "Planned");
     }
@@ -53,8 +56,8 @@ public sealed class McpExecuteImportTests(DatabaseFixture db) : IDisposable
         await using var fresh = await restarted.ConnectAsync(me, ImportScopes);
         var third = await ExecuteAsync(fresh, plan, token, key);
 
-        second.ShouldBe(first with { Replayed = true });
-        third.ShouldBe(first with { Replayed = true });
+        second.ShouldBeEquivalentTo(first with { Replayed = true });
+        third.ShouldBeEquivalentTo(first with { Replayed = true });
         (await RestMealsAsync(restarted, me)).Count.ShouldBe(186);
     }
 
@@ -95,6 +98,21 @@ public sealed class McpExecuteImportTests(DatabaseFixture db) : IDisposable
 
         error.ShouldContain("already used for a different");
         (await RestMealsAsync(_mcp, me, "2026-11-01", "2026-11-30")).ShouldBeEmpty();
+    }
+
+    /// <summary>Without a usable token, a reused key with a different plan still reports the key conflict, not the token.</summary>
+    [Fact]
+    public async Task ExecutePlanImport_SameKeyDifferentPlanWithoutToken_ReportsKeyConflict()
+    {
+        var (me, key, plan) = ($"ex-masked-{_tag}", Key(), MonthPlan());
+        await SetScheduleAsync(_mcp, me);
+        await using var client = await _mcp.ConnectAsync(me, ImportScopes);
+        await ExecuteAsync(client, plan, await PreviewTokenAsync(client, plan), key);
+        var other = plan with { Schedule = [new ImportScheduleDto("2026-11-02", [new ImportMealDto("Lunch", $"Lunch bowl {_tag}", 1m, null)])] };
+
+        var error = await McpTestHost.CallExpectingErrorAsync(client, "execute_plan_import", Args(other, "not-a-token", key));
+
+        error.ShouldContain("already used for a different");
     }
 
     /// <summary>A slot filled after the preview is caught at execution: nothing is written, and the occupied slot is reported.</summary>

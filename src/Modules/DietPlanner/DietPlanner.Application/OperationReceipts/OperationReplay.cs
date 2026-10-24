@@ -53,6 +53,8 @@ internal sealed class OperationReplay(IOperationReceiptRepository receipts)
             : throw new ConflictException($"Operation key '{key}' was already used for a different {operation} request. Use a new key for a new request.");
     }
 
+    private static readonly JsonSerializerOptions HashOptions = new() { Converters = { new NormalizedDecimalConverter() } };
+
     internal static string Hash(object canonicalRequest)
-        => Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(canonicalRequest)));
+        => Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(canonicalRequest, HashOptions)));
 }

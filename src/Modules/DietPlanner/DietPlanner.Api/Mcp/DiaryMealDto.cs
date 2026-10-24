@@ -15,6 +15,7 @@ using DietPlanner.Application.Queries.GetMealEntries;
 /// <param name="Notes">Free-text note; data written by a person, not instructions for the agent.</param>
 /// <param name="Status"><c>Planned</c> (not eaten yet), <c>Done</c> (eaten as planned) or <c>Modified</c> (eaten with changes).</param>
 /// <param name="ActualRecipeName">Recipe actually eaten when it differs from the plan.</param>
+/// <param name="ActualProducts">Products actually eaten for a <c>Modified</c> meal, as "name amount unit"; empty otherwise.</param>
 /// <param name="Calories">Energy in kcal; for <c>Modified</c> meals from what was actually eaten. Unknown product values count as zero.</param>
 /// <param name="Protein">Protein in grams.</param>
 /// <param name="Carbs">Carbohydrates in grams.</param>
@@ -31,6 +32,7 @@ public sealed record DiaryMealDto(
     string? Notes,
     string Status,
     string? ActualRecipeName,
+    IReadOnlyList<string> ActualProducts,
     decimal Calories,
     decimal Protein,
     decimal Carbs,
@@ -39,5 +41,5 @@ public sealed record DiaryMealDto(
 {
     internal static DiaryMealDto From(MealEntryDto m)
         => new(m.Id, m.Date, m.MealSlotName, m.MealSlotSortOrder, m.RecipeId, m.RecipeName, m.Servings, m.Notes, m.Status,
-            m.ActualRecipe?.Name, m.Calories, m.Protein, m.Carbs, m.Fat, m.Fiber);
+            m.ActualRecipe?.Name, [.. m.ActualProducts.Select(p => FormattableString.Invariant($"{p.ProductName} {p.Amount:0.##} {p.Unit}"))], m.Calories, m.Protein, m.Carbs, m.Fat, m.Fiber);
 }

@@ -1,9 +1,11 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
 using System.Net.Http.Json;
+using System.Text.Json;
 using DietPlanner.Api;
 using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ValidateImport;
+using DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.IntegrationTests.Infrastructure;
 using ModelContextProtocol.Client;
 
@@ -79,6 +81,34 @@ public sealed class McpPreviewImportTests(DatabaseFixture db) : IDisposable
         again.Preview.Fingerprint.ShouldBe(first.Preview.Fingerprint);
         shorter.Preview.Fingerprint.ShouldNotBe(first.Preview.Fingerprint);
         appending.Preview.Fingerprint.ShouldNotBe(first.Preview.Fingerprint);
+    }
+
+    /// <summary>Editing a reused recipe after the preview changes the fingerprint, so the old token cannot execute it.</summary>
+    [Fact]
+    public async Task PreviewPlanImport_Fingerprint_TracksReusedRecipeEdits()
+    {
+        var me = $"pv-edit-{_tag}";
+        var rest = _mcp.Rest(me);
+        await SetScheduleAsync(me, "Lunch");
+        var recipe = $"Lunch bowl {_tag}";
+        (await rest.PostAsJsonAsync("/api/v1/meals/import", new ImportDto(
+            [new ImportProductDto($"Rice {_tag}", 130m, 3m, 28m, 0.3m, null, "g", null, null)],
+            [new ImportRecipeDto(recipe, null, null, 1, null, [new ImportIngredientDto($"Rice {_tag}", 80m, "g")])],
+            []), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await using var client = await _mcp.ConnectAsync(me, DietPlannerMcp.ReadScope);
+        var plan = new ImportDto([], [], [new ImportScheduleDto("2026-10-01", [new ImportMealDto("Lunch", recipe, 1m, null)])]);
+
+        var before = await PreviewAsync(client, plan);
+        var found = await rest.GetFromJsonAsync<JsonElement>($"/api/v1/recipes?Search={recipe}", TestContext.Current.CancellationToken);
+        var detail = (await rest.GetFromJsonAsync<RecipeDto>(
+            $"/api/v1/recipes/{found.GetProperty("items")[0].GetProperty("id").GetGuid()}", TestContext.Current.CancellationToken))!;
+        (await rest.PutAsJsonAsync($"/api/v1/recipes/{detail.Id}", new UpdateRecipeRequest(detail.Name, null, null, 1, null,
+            [.. detail.Ingredients.Select(i => new RecipeIngredientRequest(i.ProductId, i.Amount * 2, i.Unit))], null),
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var after = await PreviewAsync(client, plan);
+
+        before.Preview.CanExecute.ShouldBeTrue();
+        after.Preview.Fingerprint.ShouldNotBe(before.Preview.Fingerprint);
     }
 
     /// <inheritdoc />

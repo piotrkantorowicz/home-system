@@ -1,7 +1,6 @@
 namespace DietPlanner.Application.Commands.ExecutePreviewedImport;
 
 using System.Text.Json;
-using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.ImportPlanning;
 using DietPlanner.Application.OperationReceipts;
 using Shared.Abstractions.Core.Domain;
@@ -24,20 +23,28 @@ internal sealed class ExecutePreviewedImportCommandHandler(
 
         var now = clock.GetUtcNow().UtcDateTime;
         var operationId = Guid.CreateVersion7();
-        var stats = ImportPlanWriter.StatsOf(resolved);
+        // Everything the result reports is known before writing: new items already have their ids.
+        var result = new ExecutedImportDto(
+            operationId,
+            ImportPlanWriter.StatsOf(resolved),
+            resolved.Meals.Count > 0 ? resolved.Meals.Min(m => m.Date) : null,
+            resolved.Meals.Count > 0 ? resolved.Meals.Max(m => m.Date) : null,
+            [.. resolved.Products.Where(p => p.IsNew).Select(p => p.Id.Value)],
+            [.. resolved.Recipes.Where(r => r.IsNew).Select(r => r.Id.Value)],
+            Replayed: false);
 
         // Replay comes first: after a successful run the same plan no longer resolves cleanly (its
         // slots are now occupied), yet a retry must still get the original result.
         var earlier = await replay.ClaimOrReplayReceiptAsync(
             command.UserId, Operation, command.OperationKey,
             new { command.Import, command.AppendToOccupiedSlots },
-            operationId, JsonSerializer.Serialize(stats), now, ct);
+            operationId, JsonSerializer.Serialize(result), now, ct);
         if (earlier is not null)
-            return new ExecutedImportDto(earlier.ResultId, JsonSerializer.Deserialize<ImportStatsDto>(earlier.Result!)!, Replayed: true);
+            return JsonSerializer.Deserialize<ExecutedImportDto>(earlier.Result!)! with { Replayed = true };
 
         // From here on any failure rolls the claimed receipt back with everything else.
         if (command.ExpectedFingerprint is null)
-            throw new ConflictException("A valid preview is required to import this plan; preview it again.");
+            throw new ConflictException(ExecutePreviewedImportCommand.PreviewRequired);
 
         if (resolved.HasErrors)
             throw ImportPlanResolver.Rejection(nameof(ExecutePreviewedImportCommand), resolved);
@@ -49,6 +56,6 @@ internal sealed class ExecutePreviewedImportCommandHandler(
         await writer.StageAsync(resolved, command.UserId, command.PersonId, now, ct);
         await unitOfWork.CommitAsync(ct);
 
-        return new ExecutedImportDto(operationId, stats, Replayed: false);
+        return result;
     }
 }

@@ -3,6 +3,7 @@ namespace DietPlanner.Application.ImportPlanning;
 using DietPlanner.Application.Commands.PreviewImport;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.OperationReceipts;
+using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 
 /// <summary>
@@ -41,7 +42,8 @@ internal sealed class ImportPreviewBuilder(IProductRepository productRepository)
                 resolved.Meals.Count)
             : null;
 
-        var unknownNutrition = await ProductsWithUnknownNutritionAsync(resolved, ct);
+        var (unknownNutrition, storedProducts) = await ProductsWithUnknownNutritionAsync(resolved, ct);
+        var plannedRecipeIds = resolved.Meals.Select(m => m.RecipeId).ToHashSet();
 
         // Everything execution depends on: who, which policy, which file, and how it resolved today.
         var fingerprint = OperationReplay.Hash(new
@@ -63,17 +65,26 @@ internal sealed class ImportPreviewBuilder(IProductRepository productRepository)
                 m.Notes,
             }),
             Issues = issues,
+            // Reused items are bound by content too: an edit between preview and execute needs a new preview.
+            StoredRecipes = resolved.CatalogRecipes
+                .Where(r => plannedRecipeIds.Contains(r.Id))
+                .OrderBy(r => r.Id.Value)
+                .Select(r => new { Id = r.Id.Value, r.UpdatedAt }),
+            StoredProducts = storedProducts.Select(p => new { Id = p.Id.Value, p.UpdatedAt }),
         });
 
         return new ImportPreviewDto(canExecute, summary, issues, counts, days, products, recipes, unknownNutrition, fingerprint);
     }
 
-    private async Task<IReadOnlyList<string>> ProductsWithUnknownNutritionAsync(ResolvedImport resolved, CancellationToken ct)
+    /// <returns>Names of planned products without full nutrition, and the stored products the planned meals use.</returns>
+    private async Task<(IReadOnlyList<string> Unknown, IReadOnlyList<Product> Stored)> ProductsWithUnknownNutritionAsync(
+        ResolvedImport resolved, CancellationToken ct)
     {
         var plannedRecipeIds = resolved.Meals.Select(m => m.RecipeId).ToHashSet();
         var usedIds = resolved.Recipes
             .Where(r => plannedRecipeIds.Contains(r.Id))
             .SelectMany(r => r.UsedProductIds)
+            .Concat(resolved.CatalogRecipes.Where(r => plannedRecipeIds.Contains(r.Id)).SelectMany(r => r.Ingredients.Select(i => i.ProductId)))
             .ToHashSet();
 
         var newProducts = resolved.Products.Where(p => p.IsNew).ToDictionary(p => p.Id);
@@ -85,13 +96,13 @@ internal sealed class ImportPreviewBuilder(IProductRepository productRepository)
             .ToList();
 
         var storedIds = usedIds.Where(id => !newProducts.ContainsKey(id)).ToList();
-        if (storedIds.Count > 0)
-        {
-            unknown.AddRange((await productRepository.GetByIdsAsync(storedIds, ct))
-                .Where(p => p.Nutrition.Calories is null || p.Nutrition.Protein is null || p.Nutrition.Carbs is null || p.Nutrition.Fat is null)
-                .Select(p => p.Name));
-        }
+        IReadOnlyList<Product> stored = storedIds.Count > 0
+            ? [.. (await productRepository.GetByIdsAsync(storedIds, ct)).OrderBy(p => p.Id.Value)]
+            : [];
+        unknown.AddRange(stored
+            .Where(p => p.Nutrition.Calories is null || p.Nutrition.Protein is null || p.Nutrition.Carbs is null || p.Nutrition.Fat is null)
+            .Select(p => p.Name));
 
-        return [.. unknown.Order(StringComparer.OrdinalIgnoreCase)];
+        return ([.. unknown.Order(StringComparer.OrdinalIgnoreCase)], stored);
     }
 }
