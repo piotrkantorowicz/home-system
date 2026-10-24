@@ -658,6 +658,42 @@ namespace DietPlanner.Infrastructure.Migrations
                     b.ToTable("recipe_ingredients", (string)null);
                 });
 
+            modelBuilder.Entity("DietPlanner.Domain.Ledgers.OperationReceipt", b =>
+                {
+                    b.Property<string>("ActorSubject")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("actor_subject");
+
+                    b.Property<string>("Operation")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("operation");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("request_hash");
+
+                    b.Property<Guid>("ResultId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("result_id");
+
+                    b.HasKey("ActorSubject", "Operation", "Key");
+
+                    b.ToTable("operation_receipts", (string)null);
+                });
+
             modelBuilder.Entity("DietPlanner.Domain.Ledgers.RecipeImageRevision", b =>
                 {
                     b.Property<Guid>("Id")
