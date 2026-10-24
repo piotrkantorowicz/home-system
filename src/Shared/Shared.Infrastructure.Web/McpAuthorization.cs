@@ -33,15 +33,16 @@ public static class McpAuthorization
     /// <summary>Registers a policy named after <paramref name="scope"/> that requires an MCP token granting it.</summary>
     /// <param name="options">The authorization options to extend.</param>
     /// <param name="scope">The OAuth scope, e.g. <c>mcp:diet:read</c>; also the policy name.</param>
+    /// <param name="enabled">Operational switch: when false the policy fails for everyone, whatever the token grants.</param>
     /// <returns><paramref name="options"/> for chaining.</returns>
-    public static AuthorizationOptions AddMcpScopePolicy(this AuthorizationOptions options, string scope)
+    public static AuthorizationOptions AddMcpScopePolicy(this AuthorizationOptions options, string scope, bool enabled = true)
     {
         ArgumentNullException.ThrowIfNull(options);
 
         options.AddPolicy(scope, policy => policy
             .AddAuthenticationSchemes(SchemeName)
             .RequireAuthenticatedUser()
-            .RequireAssertion(ctx => HasScope(ctx.User, scope)));
+            .RequireAssertion(ctx => enabled && HasScope(ctx.User, scope)));
 
         return options;
     }
