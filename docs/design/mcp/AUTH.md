@@ -1,8 +1,7 @@
 # MCP authentication: decision record
 
-Status: **partially decided, 2026-10-24 (#606).** The code-level analysis and
-recommendation are complete. The real-client probe is still blocked on one owner
-decision: **which MCP client the first release targets** (see "Open decision").
+Status: **decided, 2026-10-24 (#606, #607).** The first client is **Claude Code**, and the
+real-client probe passed against local Authentik (see "Client decision and probe result").
 
 ## Where we are
 
@@ -80,19 +79,42 @@ If step 4 fails (different `sub`), stop. Do not map subjects in code. Raise a
 prerequisite issue to make the providers agree, for example by changing the sub
 mode on both, which needs a data migration of stored auth subjects.
 
-## Open decision (owner)
+## Client decision and probe result
 
-**Which client does the first release name and verify?** The choice fixes the redirect
-URIs, decides whether pre-registration works or DCR becomes a prerequisite, and
-determines the client config documented in #616. Candidates to evaluate against
-"supports a pre-registered public client id with PKCE":
+**Owner decision (2026-10-24): the first release targets Claude Code.** It runs on the
+owner's machine, so the API needs no public exposure. A later in-app assistant (#634)
+reuses the tools in-process instead of calling `/mcp`.
 
-| Client | What to confirm before choosing |
+Claude Code takes a pre-registered public client, so no DCR and no Authentik upgrade
+are needed:
+
+```
+claude mcp add --transport http --client-id home-system-mcp --callback-port 33418 \
+  home-system http://localhost:5050/mcp
+```
+
+The blueprint (`infrastructure/authentik/blueprints/home-system.yaml`) registers provider
+`home-system-mcp`: public client, PKCE, explicit consent, redirect URIs
+`http://localhost:33418/callback` and `http://127.0.0.1:33418/callback`, `hashed_user_id`,
+and the three grant scopes plus `openid` and `offline_access`.
+
+**Authentik keeps granted scopes off the JWT.** The token records them, but the access
+token had no `scope` claim, so every tool was hidden. Each grant mapping therefore returns
+`{"scope": " ".join(token.scope)}`, which puts the space-separated `scope` claim the API
+checks into the token.
+
+Probe on 2026-10-24 (Authentik 2025.2.3, Claude Code 2.1.304, API from the epic branch):
+
+| Step | Result |
 |---|---|
-| Claude Code (`claude mcp add --transport http`) | Can it use a static client id instead of DCR? What is its loopback callback URL? |
-| Claude Desktop / claude.ai custom connector | Can it use a pre-registered client? Fixed callback URL? Does it need the server reachable on the public internet? |
-| Another MCP client the owner prefers | The same three questions |
-
-Until the owner chooses, #607 can still build the host wiring, policies and
-`get_diet_context` against the test authentication handler. Only the real-client
-smoke test and the client config wait.
+| Discovery | Protected resource metadata names the `home-system-mcp` issuer and the three scopes; Authentik advertises `S256` |
+| Anonymous `POST /mcp` | 401 with `WWW-Authenticate: Bearer resource_metadata=…` |
+| Login | Authorization code + PKCE through the browser with consent; callback on port 33418 accepted |
+| Token claims | `iss`, `aud` = `home-system-mcp`, `sub`, `scope`, `exp`, `azp`, `sid`, `uid`, `acr`, `amr`, `auth_time`, `iat` |
+| Same person | MCP and SPA tokens carry the same `sub`; `get_diet_context` returns the owner's profile, goal and slots |
+| MCP token → `GET /api/v1/products` | 401 |
+| SPA token → `POST /mcp` | 401 |
+| Missing grant → tool call | Covered by `McpEndpointTests` and the per-tool grant tests (test authentication handler) |
+| Refresh with `offline_access` | Claude Code got a new access token about 14 minutes after the last browser authorization, with no new login |
+| Real import | `preview_plan_import` then `execute_plan_import` of a 30-day plan from the conversation: 120 meals, 32 products and 18 recipes reused, no conflicts |
+| Retry with the same operation key | Replayed the stored result (`replayed: true`) with a stale preview token; still 120 meals |
