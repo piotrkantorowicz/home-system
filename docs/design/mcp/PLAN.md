@@ -1,15 +1,12 @@
 # Home System MCP: monthly plan import, then API coverage
 
-Status: approved; epic #605 and child issues #606–#616 created and linked. Project-board Todo synchronization awaits valid project credentials.
+Status: approved; epic #605 and child issues #606–#616 created and linked.
 Date: 2026-10-19.
-
-Detailed review drafts (owner's local working copies, not committed):
-`docs/superpowers/specs/2026-10-19-mcp-design.md` and `docs/superpowers/plans/2026-10-19-mcp.md`.
 
 MCP-1 (#606) outputs: [authentication decision record](AUTH.md) and
 [API coverage inventory](API-INVENTORY.md).
 These refine the existing backlog with an agent-independent server contract;
-in-app assistant work is deferred. New contract/default decisions in those drafts
+in-app assistant work is deferred. New contract/default decisions in those documents
 await owner review and do not change the existing issues' approval status.
 
 ## Created GitHub issues
@@ -31,9 +28,7 @@ Epic: [#605](https://github.com/piotrkantorowicz/home-system/issues/605).
 | MCP-11 | [#616](https://github.com/piotrkantorowicz/home-system/issues/616) | test(mcp): verify conversational monthly import and document setup |
 
 All 11 children are verified native sub-issues of #605. Dependencies in issue bodies
-use GitHub issue references. Project-board Todo synchronization is pending: the
-configured board token returns `401 Bad credentials`; the working repository token
-cannot access the user project. No epic branch or implementation branch was created.
+use GitHub issue references.
 
 
 ## 1. Product outcome
