@@ -25,5 +25,7 @@ public static class DietPlannerMcp
     /// <param name="builder">The host's MCP server builder.</param>
     /// <returns><paramref name="builder"/> for chaining.</returns>
     public static IMcpServerBuilder AddDietPlannerMcpTools(this IMcpServerBuilder builder)
-        => builder.WithTools<DietContextTools>();
+        => builder
+            .WithTools<DietContextTools>()
+            .WithTools<CatalogTools>();
 }

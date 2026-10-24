@@ -5,10 +5,8 @@ using DietPlanner.Application.Queries.GetGoal;
 using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetProfile;
 using Microsoft.AspNetCore.Authorization;
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
 
 /// <summary>
@@ -25,23 +23,12 @@ internal sealed class DietContextTools
         IQueryDispatcher dispatcher,
         CancellationToken ct)
     {
-        var user = context.User ?? throw new McpException("The request is not authenticated.");
-
-        Guid personId;
-        try
-        {
-            personId = PersonalDataClaims.GetPersonId(user);
-        }
-        catch (ForbiddenException ex)
-        {
-            // Actionable for the agent: the person has not finished signing up in the app.
-            throw new McpException(ex.Message);
-        }
+        var personId = McpCaller.PersonId(context);
 
         UserProfileDto? profile = await dispatcher.SendAsync<GetProfileQuery, UserProfileDto?>(new GetProfileQuery(personId), ct);
         GoalDto? goal = await dispatcher.SendAsync<GetGoalQuery, GoalDto?>(new GetGoalQuery(personId), ct);
         MealScheduleConfigDto? schedule = await dispatcher.SendAsync<GetMealScheduleQuery, MealScheduleConfigDto?>(
-            new GetMealScheduleQuery(personId, PersonalDataClaims.GetAuthSubject(user)), ct);
+            new GetMealScheduleQuery(personId, McpCaller.AuthSubject(context)), ct);
 
         var slots = schedule?.Slots.OrderBy(s => s.SortOrder).ToList() ?? [];
         var missing = new List<string>();
