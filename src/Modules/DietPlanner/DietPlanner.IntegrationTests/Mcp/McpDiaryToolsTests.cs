@@ -12,7 +12,7 @@ using DietPlanner.IntegrationTests.Infrastructure;
 public sealed class McpDiaryToolsTests(DatabaseFixture db) : IDisposable
 {
     private readonly McpTestHost _mcp = new(db.ConnectionString);
-    private readonly string _tag = Guid.CreateVersion7().ToString("N")[..8];
+    private readonly string _tag = Guid.CreateVersion7().ToString("N")[^8..];
 
     /// <summary>A full calendar month of planned and completed meals reads the same over MCP as over REST.</summary>
     [Fact]
