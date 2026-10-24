@@ -102,6 +102,20 @@ public sealed class CreateProductCommandHandlerTests
         await _repository.DidNotReceiveWithAnyArgs().AddAsync(default!, TestContext.Current.CancellationToken);
     }
 
+    /// <summary>Retries that differ only in decimal scale or an omitted default visibility hash as the same request.</summary>
+    [Fact]
+    public async Task HandleAsync_WithEquivalentFields_ClaimsTheSameHash()
+    {
+        var hashes = new List<string>();
+        _receipts.TryClaimAsync(Arg.Do<OperationReceipt>(r => hashes.Add(r.RequestHash)), Arg.Any<CancellationToken>()).Returns(true);
+
+        await _sut.HandleAsync(Keyed("Rice") with { Calories = 300m }, TestContext.Current.CancellationToken);
+        await _sut.HandleAsync(Keyed("Rice") with { Calories = 300.00m, Visibility = "household" }, TestContext.Current.CancellationToken);
+
+        hashes.Count.ShouldBe(2);
+        hashes.Distinct().ShouldHaveSingleItem();
+    }
+
     private static CreateProductCommand Keyed(string name)
         => new(name, null, null, null, null, null, "g", null, null, null, "user-1", "key-0001");
 }
