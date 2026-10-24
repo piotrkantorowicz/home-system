@@ -21,7 +21,7 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
             .HasMaxLength(200)
             .HasColumnName("name");
 
-        builder.HasIndex(x => x.Name)
+        builder.HasIndex(x => new { x.CreatedByUserId, x.Name })
             .IsUnique()
             .HasFilter("deleted_at IS NULL");
 
