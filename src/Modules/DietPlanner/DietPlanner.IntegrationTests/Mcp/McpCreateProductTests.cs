@@ -11,7 +11,7 @@ public sealed class McpCreateProductTests(DatabaseFixture db) : IDisposable
     private static readonly string WriteScopes = $"{DietPlannerMcp.ReadScope} {DietPlannerMcp.WriteScope}";
 
     private readonly McpTestHost _mcp = new(db.ConnectionString);
-    private readonly string _tag = Guid.CreateVersion7().ToString("N")[..8];
+    private readonly string _tag = Guid.CreateVersion7().ToString("N")[^8..];
 
     /// <summary>A created product keeps unknown nutrition unknown and defaults to household visibility.</summary>
     [Fact]
