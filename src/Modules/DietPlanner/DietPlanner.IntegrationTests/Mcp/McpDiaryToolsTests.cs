@@ -1,6 +1,8 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
 using System.Net.Http.Json;
+using System.Text.Json;
+using DietPlanner.Api;
 using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
@@ -24,6 +26,10 @@ public sealed class McpDiaryToolsTests(DatabaseFixture db) : IDisposable
         var restMeals = await rest.GetFromJsonAsync<IReadOnlyList<MealEntryDto>>(
             "/api/v1/meals?from=2026-10-01&to=2026-10-31", TestContext.Current.CancellationToken);
         (await rest.PatchAsync($"/api/v1/meals/{restMeals![0].Id}/complete", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var products = await rest.GetFromJsonAsync<JsonElement>($"/api/v1/products?Search=Porridge {_tag} base", TestContext.Current.CancellationToken);
+        var productId = products.GetProperty("items")[0].GetProperty("id").GetGuid();
+        (await rest.PatchAsJsonAsync($"/api/v1/meals/{restMeals[1].Id}/override",
+            new OverrideMealEntryRequest(null, [new ActualProductRequest(productId, 50m, "g")]), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         await using var client = await _mcp.ConnectAsync(me, DietPlannerMcp.ReadScope);
         var meals = await McpTestHost.CallAsync<IReadOnlyList<DiaryMealDto>>(client, "get_meal_entries", Range("2026-10-01", "2026-10-31"));
@@ -31,7 +37,10 @@ public sealed class McpDiaryToolsTests(DatabaseFixture db) : IDisposable
         meals.Count.ShouldBe(31);
         meals.Select(m => m.Id).ShouldBe(restMeals.OrderBy(m => m.Date).Select(m => m.Id));
         meals[0].Status.ShouldBe("Done");
-        meals.Skip(1).ShouldAllBe(m => m.Status == "Planned");
+        meals[1].ShouldSatisfyAllConditions(
+            m => m.Status.ShouldBe("Modified"),
+            m => m.ActualProducts.ShouldBe([$"Porridge {_tag} base 50 g"]));
+        meals.Skip(2).ShouldAllBe(m => m.Status == "Planned" && m.ActualProducts.Count == 0);
     }
 
     /// <summary>Daily totals over MCP equal the REST nutrition summary.</summary>

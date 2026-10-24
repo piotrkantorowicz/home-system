@@ -27,6 +27,7 @@ internal sealed class CreateRecipeCommandHandler(
 
         var now = clock.GetUtcNow().UtcDateTime;
         var id = RecipeId.New();
+        var visibility = VisibilityInput.Parse(command.Visibility) ?? Visibility.Household;
 
         if (command.OperationKey is { } key)
         {
@@ -39,7 +40,7 @@ internal sealed class CreateRecipeCommandHandler(
                 command.Servings,
                 command.PrepTimeMinutes,
                 command.Ingredients,
-                command.Visibility,
+                Visibility = visibility.ToString(),
             };
             if (await replay.ClaimOrReplayAsync(command.UserId, Operation, key, canonical, id.Value, now, ct) is { } original)
                 return original;
@@ -52,7 +53,7 @@ internal sealed class CreateRecipeCommandHandler(
 
         var recipe = Recipe.Create(id, command.Name, command.Description, command.Instructions,
             command.Servings, command.PrepTimeMinutes, command.UserId, now,
-            VisibilityInput.Parse(command.Visibility) ?? Visibility.Household);
+            visibility);
 
         foreach (var ing in command.Ingredients)
             recipe.AddIngredient(RecipeIngredientId.New(), ProductId.From(ing.ProductId), ing.Amount, ing.Unit);

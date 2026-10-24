@@ -23,6 +23,7 @@ internal sealed class CreateProductCommandHandler(
 
         var now = clock.GetUtcNow().UtcDateTime;
         var id = ProductId.New();
+        var visibility = VisibilityInput.Parse(command.Visibility) ?? Visibility.Household;
 
         if (command.OperationKey is { } key)
         {
@@ -38,7 +39,7 @@ internal sealed class CreateProductCommandHandler(
                 command.DefaultUnit,
                 command.DensityGramsPerMl,
                 command.GramPerPiece,
-                command.Visibility,
+                Visibility = visibility.ToString(),
             };
             if (await replay.ClaimOrReplayAsync(command.UserId, Operation, key, canonical, id.Value, now, ct) is { } original)
                 return original;
@@ -52,7 +53,7 @@ internal sealed class CreateProductCommandHandler(
         var nutrition = new NutritionPer100g(command.Calories, command.Protein, command.Carbs, command.Fat, command.Fiber);
         var product = Product.Create(id, command.Name, nutrition, command.DefaultUnit,
             command.DensityGramsPerMl, command.GramPerPiece, command.UserId, now,
-            VisibilityInput.Parse(command.Visibility) ?? Visibility.Household);
+            visibility);
 
         await repository.AddAsync(product, ct);
         await unitOfWork.CommitAsync(ct);
