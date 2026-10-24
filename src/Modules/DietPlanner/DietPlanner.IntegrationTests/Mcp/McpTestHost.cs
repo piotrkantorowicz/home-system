@@ -23,10 +23,15 @@ using Shared.Infrastructure.Web;
 /// </summary>
 /// <param name="connectionString">Connection string of the shared test database.</param>
 /// <param name="configureServices">Extra service overrides, e.g. to inject a failure.</param>
-internal sealed class McpTestHost(string connectionString, Action<IServiceCollection>? configureServices = null) : IDisposable
+/// <param name="settings">Configuration overrides on top of the MCP defaults below.</param>
+internal sealed class McpTestHost(
+    string connectionString,
+    Action<IServiceCollection>? configureServices = null,
+    IReadOnlyDictionary<string, string?>? settings = null) : IDisposable
 {
     public const string Issuer = "https://auth.test/application/o/home-system-mcp/";
     public const string Audience = "home-system-mcp";
+    public const string PublicBaseUrl = "https://mcp.test";
     public static readonly RsaSecurityKey SigningKey = new(RSA.Create(2048)) { KeyId = "mcp-test" };
 
     private readonly List<IDisposable> _disposables = [];
@@ -37,13 +42,16 @@ internal sealed class McpTestHost(string connectionString, Action<IServiceCollec
 
     public WebApplicationFactory<Program> Host => _host ??= Build();
 
+    /// <summary>An HTTP client addressing the host by its public URL, as a real MCP client does.</summary>
+    public HttpClient CreateClient() => Host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri(PublicBaseUrl) });
+
     public HttpClient Rest(string subject)
         => Track(Host.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             services.AddSingleton(new TestUserIdOverride(subject))))).CreateClient();
 
     public async Task<McpClient> ConnectAsync(string subject, string scope)
     {
-        var http = Host.CreateClient();
+        var http = CreateClient();
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token(subject, scope));
         var transport = new HttpClientTransport(
             new HttpClientTransportOptions { Endpoint = new Uri(http.BaseAddress!, "/mcp"), TransportMode = HttpTransportMode.StreamableHttp },
@@ -104,12 +112,18 @@ internal sealed class McpTestHost(string connectionString, Action<IServiceCollec
 
     private WebApplicationFactory<Program> Build()
     {
-        var root = Track(new DietPlannerWebApplicationFactory(connectionString, settings: new Dictionary<string, string?>
+        var effective = new Dictionary<string, string?>
         {
             ["Mcp:Enabled"] = "true",
+            ["Mcp:PublicBaseUrl"] = PublicBaseUrl,
+            ["Mcp:ImportsEnabled"] = "true",
             ["Authentication:Mcp:Authority"] = Issuer,
             ["Authentication:Mcp:Audience"] = Audience,
-        }));
+        };
+        foreach (var (key, value) in settings ?? new Dictionary<string, string?>())
+            effective[key] = value;
+
+        var root = Track(new DietPlannerWebApplicationFactory(connectionString, settings: effective));
 
         return Track(root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
