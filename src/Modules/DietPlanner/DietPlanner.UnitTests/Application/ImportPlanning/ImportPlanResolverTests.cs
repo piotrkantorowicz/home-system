@@ -24,7 +24,7 @@ public sealed class ImportPlanResolverTests
     {
         _products.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([]);
         _recipes.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([]);
-        _meals.GetByPersonAndDateRangeAsync(PersonId, Arg.Any<DateOnly?>(), Arg.Any<DateOnly?>(), Arg.Any<CancellationToken>()).Returns([]);
+        _meals.GetOccupiedSlotsAsync(PersonId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns([]);
         _sut = new ImportPlanResolver(_products, _recipes, _meals, _schedules);
     }
 
@@ -204,10 +204,8 @@ public sealed class ImportPlanResolverTests
         var schedule = GivenSchedule("Lunch");
         var recipe = ExistingRecipe("Toast");
         _recipes.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([recipe]);
-        var occupied = MealEntry.Create(MealEntryId.New(), PersonId, new DateOnly(2026, 10, 2), schedule.Slots.Single().Id,
-            recipe.Id, 1m, null, null, null, TestClock.UtcNow);
-        _meals.GetByPersonAndDateRangeAsync(PersonId, new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 2), Arg.Any<CancellationToken>())
-            .Returns([occupied]);
+        _meals.GetOccupiedSlotsAsync(PersonId, new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 2), Arg.Any<CancellationToken>())
+            .Returns([(new DateOnly(2026, 10, 2), schedule.Slots.Single().Id)]);
         var import = new ImportDto([], [], [Day("2026-10-01", ("Lunch", "Toast")), Day("2026-10-02", ("Lunch", "Toast"))]);
 
         var result = await _sut.ResolveAsync(import, UserId, PersonId, strict, append, TestContext.Current.CancellationToken);
@@ -216,6 +214,40 @@ public sealed class ImportPlanResolverTests
             i => i.Severity.ShouldBe(severity),
             i => i.Category.ShouldBe("conflict"),
             i => i.Path.ShouldBe("schedule[1].meals[0].type"));
+    }
+
+    /// <summary>Two meals of the file in one slot are a conflict when strict, unless appending is chosen.</summary>
+    [Theory]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(false, false, false)]
+    public async Task ResolveAsync_SlotRepeatedInFile_RejectsOnlyWhenOccupiedIsError(bool strict, bool append, bool rejected)
+    {
+        GivenSchedule("Lunch");
+        _recipes.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([ExistingRecipe("Toast")]);
+        var import = new ImportDto([], [], [Day("2026-10-01", ("Lunch", "Toast"), ("Lunch", "Toast"))]);
+
+        var result = await _sut.ResolveAsync(import, UserId, PersonId, strict, append, TestContext.Current.CancellationToken);
+
+        result.Issues.Any(i => i.Severity == "error" && i.Path == "schedule[0].meals[1].type").ShouldBe(rejected);
+    }
+
+    /// <summary>A reused recipe's unresolvable file ingredient blocks only a strict import; legacy mode warns and reuses.</summary>
+    [Theory]
+    [InlineData(true, "error")]
+    [InlineData(false, "warning")]
+    public async Task ResolveAsync_ReusedRecipeIngredientUnknown_ReportsBySeverity(bool strict, string severity)
+    {
+        GivenSchedule("Lunch");
+        var existing = ExistingRecipe("Oatmeal");
+        _recipes.GetByNamesAsync(Arg.Any<IReadOnlyCollection<string>>(), UserId, Arg.Any<CancellationToken>()).Returns([existing]);
+        var import = new ImportDto([], [RecipeDef("Oatmeal", ("Oats", 50m, "g"))], []);
+
+        var result = await ResolveAsync(import, strict);
+
+        result.Issues.ShouldContain(i => i.Severity == severity && i.Path == "recipes[0].ingredients[0].product");
+        result.HasErrors.ShouldBe(strict);
+        result.Recipes.Single().Id.ShouldBe(existing.Id);
     }
 
     /// <summary>Strict mode bounds a plan to 31 consecutive days; legacy mode does not.</summary>
