@@ -360,7 +360,7 @@ export interface paths {
         put?: never;
         /**
          * Validate import JSON (dry run)
-         * @description Validates the import JSON structure and checks for conflicts without executing the import.
+         * @description Validates the import JSON, resolves every product and recipe name against the caller's catalog and checks the meal schedule and already planned meals, without writing anything. Fallbacks the import would apply (default schedule, "Other" slot, appending to occupied slots) are reported as warnings.
          */
         post: operations["ValidateImport"];
         delete?: never;
@@ -380,7 +380,7 @@ export interface paths {
         put?: never;
         /**
          * Import meals from JSON
-         * @description Validates and imports meal entries from JSON. Creates/updates products, recipes, and meal schedule.
+         * @description Validates and imports meal entries from JSON in one commit: creates or reuses products and recipes by name and plans the meals, creating the default schedule or an "Other" slot when needed. Returns 400 and writes nothing when validation reports an error; nothing is skipped silently.
          */
         post: operations["ExecuteImport"];
         delete?: never;
