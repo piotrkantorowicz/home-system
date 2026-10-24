@@ -23,8 +23,8 @@ Every tool is a hand-written, typed adapter (see `docs/rules/backend-api-pattern
 | Investments | 12 | 0 | 12 | 0 |
 | Notifications | 11 | 0 | 11 (5 admin) | 0 |
 | Operations | 5 | 0 | 5 (admin) | 0 |
-| Host | 4 | 0 | 0 | 4 |
-| **Total** | **122** | **14** | **102** | **6** |
+| Host | 6 | 0 | 0 | 6 |
+| **Total** | **124** | **14** | **102** | **8** |
 
 "In epic #605" counts routes whose behaviour a first-epic tool covers. Several of them
 share one tool: `get_diet_context` reads profile, goals, meal schedule and reminder
@@ -45,6 +45,8 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import` |
+| GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
 
