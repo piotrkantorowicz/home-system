@@ -24,6 +24,12 @@ public interface IProductRepository
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     /// <returns>The matching product, or <see langword="null"/>.</returns>
     Task<Product?> GetByNameAsync(string name, string userId, CancellationToken ct = default);
+    /// <summary>Finds a user's products whose names match any of <paramref name="names"/>, ignoring case, to resolve import references.</summary>
+    /// <param name="names">The names to match.</param>
+    /// <param name="userId">Auth subject of the owning user.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    /// <returns>Every matching product; several per name when the catalog holds case variants.</returns>
+    Task<IReadOnlyList<Product>> GetByNamesAsync(IReadOnlyCollection<string> names, string userId, CancellationToken ct = default);
     /// <summary>Stages a new product; it is written when the unit of work commits.</summary>
     /// <param name="product">The product to add.</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>

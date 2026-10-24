@@ -28,6 +28,19 @@ internal sealed class MealEntryRepository : IMealEntryRepository
             .ThenBy(x => x.SequenceOrder)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<(DateOnly Date, MealSlotId MealSlotId)>> GetOccupiedSlotsAsync(
+        Guid personId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default)
+    {
+        var slots = await _dbContext.MealEntries
+            .AsNoTracking()
+            .Where(x => x.PersonId == personId && x.Date >= fromDate && x.Date <= toDate)
+            .Select(x => new { x.Date, x.MealSlotId })
+            .Distinct()
+            .ToListAsync(ct);
+
+        return [.. slots.Select(x => (x.Date, x.MealSlotId))];
+    }
+
     public async Task<bool> AnyForSlotAsync(MealSlotId mealSlotId, CancellationToken ct = default)
         => await _dbContext.MealEntries.AnyAsync(x => x.MealSlotId == mealSlotId, ct);
 
