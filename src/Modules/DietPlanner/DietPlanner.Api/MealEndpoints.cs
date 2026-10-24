@@ -99,12 +99,12 @@ public static class MealEndpoints
         group.MapPost("/validate", ValidateImport)
             .WithName("ValidateImport")
             .WithSummary("Validate import JSON (dry run)")
-            .WithDescription("Validates the import JSON structure and checks for conflicts without executing the import.");
+            .WithDescription("Validates the import JSON, resolves every product and recipe name against the caller's catalog and checks the meal schedule and already planned meals, without writing anything. Fallbacks the import would apply (default schedule, \"Other\" slot, appending to occupied slots) are reported as warnings.");
 
         group.MapPost("/import", ExecuteImport)
             .WithName("ExecuteImport")
             .WithSummary("Import meals from JSON")
-            .WithDescription("Validates and imports meal entries from JSON. Creates/updates products, recipes, and meal schedule.");
+            .WithDescription("Validates and imports meal entries from JSON in one commit: creates or reuses products and recipes by name and plans the meals, creating the default schedule or an \"Other\" slot when needed. Returns 400 and writes nothing when validation reports an error; nothing is skipped silently.");
 
         return app;
     }
@@ -270,7 +270,7 @@ public static class MealEndpoints
     {
         var personId = GetPersonId(user);
         ValidationResultDto result = await dispatcher.SendAsync<ValidateImportCommand, ValidationResultDto>(
-            new ValidateImportCommand(request, PersonalDataClaims.GetAuthSubject(user)), ct);
+            new ValidateImportCommand(request, PersonalDataClaims.GetAuthSubject(user), personId), ct);
         return TypedResults.Ok(result);
     }
 
