@@ -73,6 +73,23 @@ public sealed class ImportEndpointsTests(DatabaseFixture db)
         result!.Stats.ShouldBe(new ImportStatsDto(0, 1, 0, 1, 1));
     }
 
+    /// <summary>Catalog names are unique per owner, so another user's same-name product and recipe do not block an import.</summary>
+    [Fact]
+    public async Task POST_Import_WithNamesOwnedByAnotherUser_CreatesOwnCopies()
+    {
+        var recipe = $"Shared name bowl {Guid.CreateVersion7().ToString("N")[^8..]}";
+        using var partner = Factory(out var partnerClient);
+        (await partnerClient.PostAsJsonAsync("/api/v1/meals/import", SmallPlan("Lunch", recipe), TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        using var factory = Factory(out var client);
+
+        var response = await client.PostAsJsonAsync("/api/v1/meals/import", SmallPlan("Lunch", recipe), TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<ImportResultDto>(TestContext.Current.CancellationToken);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        result!.Stats.ShouldBe(new ImportStatsDto(1, 0, 1, 0, 1));
+    }
+
     /// <summary>A strict month of 186 meals with new catalog definitions commits in full; importing it again conflicts on every occupied slot.</summary>
     [Fact]
     public async Task StrictImport_FullMonth_CommitsAllMealsThenRejectsOccupiedSlots()

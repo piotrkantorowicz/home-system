@@ -115,9 +115,14 @@ internal sealed class ImportPlanResolver(
 
         foreach (var (name, (definition, index)) in recipeDefs)
         {
-            var ingredients = ResolveIngredients(definition, index, productIds, existingProducts, strict, fallback, Add);
             var path = $"recipes[{index}].name";
             var existing = PickExisting(existingRecipes, name, path, "Recipe", fallback, Add);
+            // A reused recipe keeps its stored ingredients; the file's lines only feed the difference report,
+            // so legacy mode must not fail the import over them.
+            AddIssue addIngredientIssue = existing is not null && !strict
+                ? (severity, category, p, item, message, resolution) => Add(severity == Error ? Warning : severity, category, p, item, message, resolution)
+                : Add;
+            var ingredients = ResolveIngredients(definition, index, productIds, existingProducts, strict, fallback, addIngredientIssue);
 
             if (existing is null)
             {
@@ -488,13 +493,23 @@ internal sealed class ImportPlanResolver(
         CancellationToken ct)
     {
         var slotNameById = schedule.Slots.ToDictionary(s => s.Id, s => s.Name);
-        var occupied = (await mealEntryRepository.GetByPersonAndDateRangeAsync(personId, first, last, ct))
+        var occupied = (await mealEntryRepository.GetOccupiedSlotsAsync(personId, first, last, ct))
             .Where(e => slotNameById.ContainsKey(e.MealSlotId))
             .Select(e => (e.Date, slotNameById[e.MealSlotId]))
             .ToHashSet();
+        var planned = new HashSet<(DateOnly, string)>();
 
         foreach (var (meal, path) in meals)
         {
+            // When occupied slots are an error, a slot filled twice by the file itself is one too.
+            if (occupiedIsError && !planned.Add((meal.Date, meal.SlotName)))
+            {
+                add(Error, "conflict", $"{path}.type", meal.SlotName,
+                    $"{meal.SlotName} on {meal.Date:yyyy-MM-dd} is planned more than once in this import.",
+                    "Keep one meal per slot, or allow appending to occupied slots.");
+                continue;
+            }
+
             if (!occupied.Contains((meal.Date, meal.SlotName)))
                 continue;
 

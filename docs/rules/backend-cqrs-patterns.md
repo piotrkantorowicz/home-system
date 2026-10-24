@@ -238,5 +238,5 @@ private static async Task<Results<Ok<BudgetPlanDto>, NotFound>> GetBudgetPlan(
 | Queries use `AsNoTracking()` + `Select()` | Never load a full aggregate for a read |
 | No AutoMapper | Map explicitly with static methods or inline `Select()` |
 | Validators are separate classes | Never inline validation in handlers |
-| Dispatchers injected into endpoints | Never inject `ICommandHandler<,>` directly |
+| Dispatchers injected into endpoints | Never inject `ICommandHandler<,>` directly; MCP tool methods count as endpoints (`backend-api-patterns.md` § MCP tools) |
 | Domain event handlers publish via `IIntegrationEventBus` | The bus writes to the module's outbox in the same transaction |
