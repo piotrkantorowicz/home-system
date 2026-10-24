@@ -1,6 +1,7 @@
 using Budget.Api;
 using Budget.Infrastructure;
 using DietPlanner.Api;
+using DietPlanner.Api.Mcp;
 using DietPlanner.Infrastructure;
 using HomeSystem.REST;
 using Household.Api;
@@ -10,6 +11,8 @@ using Investments.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
+using ModelContextProtocol.AspNetCore.Authentication;
+using ModelContextProtocol.Authentication;
 using Notifications.Api;
 using Operations.Api;
 using Scalar.AspNetCore;
@@ -46,8 +49,10 @@ builder.Services
 // Authentication & Authorization
 // ==============================================
 var authentikConfig = builder.Configuration.GetSection("Authentication:Authentik");
+var mcpEnabled = builder.Configuration.GetValue<bool>("Mcp:Enabled");
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+var authentication = builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+authentication
     .AddJwtBearer(options =>
     {
         options.Authority = authentikConfig["Authority"];
@@ -84,6 +89,57 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization(options => options.AddAdminPolicy());
+
+// ==============================================
+// MCP (disabled unless Mcp:Enabled) — docs/design/mcp/AUTH.md
+// ==============================================
+if (mcpEnabled)
+{
+    // MCP tokens come from their own OAuth client: own issuer and audience, own scheme. SPA tokens
+    // cannot reach /mcp and MCP tokens cannot reach REST. Challenges go to the MCP metadata handler
+    // so a 401 points the client at /.well-known/oauth-protected-resource (RFC 9728).
+    var mcpAuthConfig = builder.Configuration.GetSection("Authentication:Mcp");
+    var mcpAuthority = mcpAuthConfig["Authority"];
+    var mcpAudience = mcpAuthConfig["Audience"];
+    if (string.IsNullOrWhiteSpace(mcpAuthority) || string.IsNullOrWhiteSpace(mcpAudience))
+        throw new InvalidOperationException("Mcp:Enabled requires Authentication:Mcp:Authority and Authentication:Mcp:Audience.");
+
+    authentication
+        .AddJwtBearer(McpAuthorization.SchemeName, options =>
+        {
+            options.Authority = mcpAuthority;
+            options.Audience = mcpAudience;
+            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+            options.ForwardChallenge = McpAuthenticationDefaults.AuthenticationScheme;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                NameClaimType = "preferred_username",
+                RoleClaimType = "roles"
+            };
+        })
+        .AddMcp(options => options.ResourceMetadata = new ProtectedResourceMetadata
+        {
+            AuthorizationServers = { mcpAuthority },
+            ScopesSupported = [.. DietPlannerMcp.Scopes],
+            ResourceName = "Home System",
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddMcpEndpointPolicy();
+        foreach (var scope in DietPlannerMcp.Scopes)
+            options.AddMcpScopePolicy(scope);
+    });
+
+    builder.Services.AddMcpServer()
+        .WithHttpTransport(options => options.Stateless = true)
+        .AddAuthorizationFilters()
+        .AddDietPlannerMcpTools();
+}
 
 // ==============================================
 // CORS
@@ -183,6 +239,9 @@ app.MapBudgetEndpoints();
 app.MapInvestmentsEndpoints();
 app.MapNotificationDeliveriesAdminEndpoints();
 app.MapOperationsEndpoints();
+
+if (mcpEnabled)
+    app.MapMcp("/mcp").RequireAuthorization(McpAuthorization.EndpointPolicy);
 
 // ==============================================
 // Dev: auto-migrate on startup
