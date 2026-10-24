@@ -154,4 +154,103 @@ entries:
     attrs:
       name: home-system
       provider: !KeyOf provider-home-system
-      policy_engine_mode: any 
+      policy_engine_mode: any
+
+  # ── MCP client (docs/design/mcp/AUTH.md) ─────────────────────────────────────
+  # Own provider for MCP clients, so SPA tokens cannot call /mcp and MCP tokens
+  # cannot call REST. First client: Claude Code with a pre-registered client id
+  # and a fixed callback port:
+  #   claude mcp add --transport http --client-id home-system-mcp --callback-port 33418 \
+  #     home-system http://localhost:5050/mcp
+  # Grants are scopes; the API checks them per tool from the token's `scope` claim.
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-diet-read
+    state: present
+    identifiers:
+      name: "home-system-mcp: diet read"
+    attrs:
+      scope_name: "mcp:diet:read"
+      description: "Read your diet planner data"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-diet-write
+    state: present
+    identifiers:
+      name: "home-system-mcp: diet write"
+    attrs:
+      scope_name: "mcp:diet:write"
+      description: "Create products and recipes"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-diet-import
+    state: present
+    identifiers:
+      name: "home-system-mcp: diet import"
+    attrs:
+      scope_name: "mcp:diet:import"
+      description: "Import monthly meal plans"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
+  - model: authentik_providers_oauth2.oauth2provider
+    id: provider-home-system-mcp
+    state: present
+    identifiers:
+      name: home-system-mcp
+    attrs:
+      authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      # Explicit consent: the user sees which grants the client asks for.
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      client_type: public
+      client_id: home-system-mcp
+      redirect_uris:
+        - url: "http://localhost:33418/callback"
+          matching_mode: strict
+        - url: "http://127.0.0.1:33418/callback"
+          matching_mode: strict
+      # Same sub mode as the SPA provider: both must issue the same `sub` for one user.
+      sub_mode: hashed_user_id
+      issuer_mode: per_provider
+      include_claims_in_id_token: true
+      access_code_validity: "minutes=1"
+      access_token_validity: "minutes=5"
+      refresh_token_validity: "days=30"
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-openid"]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-offline_access"]]
+        - !KeyOf scope-mcp-diet-read
+        - !KeyOf scope-mcp-diet-write
+        - !KeyOf scope-mcp-diet-import
+
+  - model: authentik_core.application
+    state: present
+    identifiers:
+      slug: home-system-mcp
+    attrs:
+      name: home-system-mcp
+      provider: !KeyOf provider-home-system-mcp
+      policy_engine_mode: any
