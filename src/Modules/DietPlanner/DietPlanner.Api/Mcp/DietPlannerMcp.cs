@@ -27,5 +27,6 @@ public static class DietPlannerMcp
     public static IMcpServerBuilder AddDietPlannerMcpTools(this IMcpServerBuilder builder)
         => builder
             .WithTools<DietContextTools>()
-            .WithTools<CatalogTools>();
+            .WithTools<CatalogTools>()
+            .WithTools<DiaryTools>();
 }
