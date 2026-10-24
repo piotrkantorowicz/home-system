@@ -183,6 +183,23 @@ public sealed class McpExecuteImportTests(DatabaseFixture db) : IDisposable
         (await RestMealsAsync(_mcp, me)).ShouldBeEmpty();
     }
 
+    /// <summary>Catalog names are unique per owner, so products and recipes another user already owns under the same names do not block the import.</summary>
+    [Fact]
+    public async Task ExecutePlanImport_NamesOwnedByAnotherUser_CreatesOwnCopies()
+    {
+        var (other, me, plan) = ($"ex-other-{_tag}", $"ex-same-{_tag}", MonthPlan());
+        await SetScheduleAsync(_mcp, other);
+        await SetScheduleAsync(_mcp, me);
+        await using var otherClient = await _mcp.ConnectAsync(other, ImportScopes);
+        await ExecuteAsync(otherClient, plan, await PreviewTokenAsync(otherClient, plan), Key());
+        await using var client = await _mcp.ConnectAsync(me, ImportScopes);
+
+        var result = await ExecuteAsync(client, plan, await PreviewTokenAsync(client, plan), Key());
+
+        result.Stats.ShouldBe(new ImportStatsDto(2, 0, 6, 0, 186));
+        (await RestMealsAsync(_mcp, me)).Count.ShouldBe(186);
+    }
+
     /// <summary>Someone else's preview token cannot be used.</summary>
     [Fact]
     public async Task ExecutePlanImport_WithAnotherUsersToken_Fails()

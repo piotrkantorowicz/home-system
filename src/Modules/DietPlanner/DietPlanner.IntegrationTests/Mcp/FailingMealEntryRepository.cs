@@ -35,6 +35,9 @@ internal sealed class FailingMealEntryRepository(IMealEntryRepository inner) : I
     public Task<List<MealEntry>> GetByPersonAndDateRangeAsync(Guid personId, DateOnly? fromDate, DateOnly? toDate, CancellationToken ct = default)
         => inner.GetByPersonAndDateRangeAsync(personId, fromDate, toDate, ct);
 
+    public Task<IReadOnlyList<(DateOnly Date, MealSlotId MealSlotId)>> GetOccupiedSlotsAsync(Guid personId, DateOnly fromDate, DateOnly toDate, CancellationToken ct = default)
+        => inner.GetOccupiedSlotsAsync(personId, fromDate, toDate, ct);
+
     public Task<bool> AnyForSlotAsync(MealSlotId mealSlotId, CancellationToken ct = default) => inner.AnyForSlotAsync(mealSlotId, ct);
 
     public void Update(MealEntry entry) => inner.Update(entry);
