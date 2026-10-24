@@ -3,24 +3,14 @@ namespace DietPlanner.IntegrationTests.Mcp;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
 using DietPlanner.Api;
 using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
-using Household.Contracts.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol;
-using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Integration tests for the MCP transport: SDK client → <c>/mcp</c> → JWT bearer (locally signed) →
@@ -29,11 +19,9 @@ using Shared.Infrastructure.Web;
 [Collection(DatabaseCollectionDefinition.Name)]
 public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
 {
-    private const string Issuer = "https://auth.test/application/o/home-system-mcp/";
-    private const string Audience = "home-system-mcp";
-    private static readonly RsaSecurityKey SigningKey = new(RSA.Create(2048)) { KeyId = "mcp-test" };
     private static readonly string[] AllMealSlotsMissing = ["profile", "goal", "meal_schedule"];
 
+    private readonly McpTestHost _mcp = new(db.ConnectionString);
     private readonly List<IDisposable> _disposables = [];
 
     /// <summary>With the read scope, <c>get_diet_context</c> returns the caller's own profile, goal and slots.</summary>
@@ -41,15 +29,14 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     public async Task GetDietContext_WithReadScope_ReturnsCallersSetup()
     {
         var subject = $"mcp-{Guid.CreateVersion7()}";
-        var host = McpHost();
-        var rest = RestClient(host, subject);
+        var rest = _mcp.Rest(subject);
         (await rest.PutAsJsonAsync("/api/v1/meal-schedule",
             new UpdateMealScheduleRequest([new MealSlotRequest(null, "Breakfast", "07:00"), new MealSlotRequest(null, "Dinner", "18:00")]),
             TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await rest.PostAsJsonAsync("/api/v1/goals", new { dailyCalorieTarget = 2100 }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
-        await using var client = await ConnectAsync(host, Token(subject, DietPlannerMcp.ReadScope));
+        await using var client = await _mcp.ConnectAsync(subject, DietPlannerMcp.ReadScope);
         var context = await GetDietContextAsync(client);
 
         context.MealSlots.Select(s => s.Name).ShouldBe(["Breakfast", "Dinner"]);
@@ -62,12 +49,11 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     public async Task GetDietContext_ForSecondIdentity_DoesNotSeeFirstIdentitysSetup()
     {
         var first = $"mcp-{Guid.CreateVersion7()}";
-        var host = McpHost();
-        (await RestClient(host, first).PutAsJsonAsync("/api/v1/meal-schedule",
+        (await _mcp.Rest(first).PutAsJsonAsync("/api/v1/meal-schedule",
             new UpdateMealScheduleRequest([new MealSlotRequest(null, "Lunch", "12:00")]), TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
-        await using var client = await ConnectAsync(host, Token($"mcp-{Guid.CreateVersion7()}", DietPlannerMcp.ReadScope));
+        await using var client = await _mcp.ConnectAsync($"mcp-{Guid.CreateVersion7()}", DietPlannerMcp.ReadScope);
         var context = await GetDietContextAsync(client);
 
         context.MealSlots.ShouldBeEmpty();
@@ -78,19 +64,19 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     [Fact]
     public async Task GetDietContext_WithoutPerson_ReturnsActionableError()
     {
-        await using var client = await ConnectAsync(McpHost(), Token($"{McpTestHouseholds.NoPersonPrefix}{Guid.CreateVersion7()}", DietPlannerMcp.ReadScope));
+        await using var client = await _mcp.ConnectAsync($"{McpTestHouseholds.NoPersonPrefix}{Guid.CreateVersion7()}", DietPlannerMcp.ReadScope);
 
         var result = await client.CallToolAsync("get_diet_context", cancellationToken: TestContext.Current.CancellationToken);
 
         result.IsError.ShouldBe(true);
-        Text(result).ShouldContain("household");
+        McpTestHost.Text(result).ShouldContain("household");
     }
 
     /// <summary>A token without the read scope neither lists nor runs the tool.</summary>
     [Fact]
     public async Task GetDietContext_WithoutReadScope_IsHiddenAndRejected()
     {
-        await using var client = await ConnectAsync(McpHost(), Token($"mcp-{Guid.CreateVersion7()}", "openid profile"));
+        await using var client = await _mcp.ConnectAsync($"mcp-{Guid.CreateVersion7()}", "openid profile");
 
         var tools = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
         var call = await Should.ThrowAsync<McpProtocolException>(
@@ -113,12 +99,12 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
         string? token = kind switch
         {
             "none" => null,
-            "forged" => Token(subject, DietPlannerMcp.ReadScope, key: new RsaSecurityKey(RSA.Create(2048)) { KeyId = "mcp-test" }),
-            "expired" => Token(subject, DietPlannerMcp.ReadScope, expires: TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(-10)),
-            "audience" => Token(subject, DietPlannerMcp.ReadScope, audience: "home-system-spa"),
-            _ => Token(subject, DietPlannerMcp.ReadScope, issuer: "https://elsewhere.test/"),
+            "forged" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, key: new RsaSecurityKey(RSA.Create(2048)) { KeyId = "mcp-test" }),
+            "expired" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, expires: TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(-10)),
+            "audience" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, audience: "home-system-spa"),
+            _ => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, issuer: "https://elsewhere.test/"),
         };
-        var http = McpHost().CreateClient();
+        var http = _mcp.Host.CreateClient();
         if (token is not null)
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -132,11 +118,11 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     [Fact]
     public async Task GetProtectedResourceMetadata_Anonymously_DescribesAuthorizationServerAndScopes()
     {
-        var http = McpHost().CreateClient();
+        var http = _mcp.Host.CreateClient();
 
         var metadata = await http.GetFromJsonAsync<JsonElement>("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
 
-        metadata.GetProperty("authorization_servers")[0].GetString().ShouldBe(Issuer);
+        metadata.GetProperty("authorization_servers")[0].GetString().ShouldBe(McpTestHost.Issuer);
         metadata.GetProperty("scopes_supported").EnumerateArray().Select(s => s.GetString()).ShouldBe(DietPlannerMcp.Scopes);
     }
 
@@ -154,6 +140,7 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _mcp.Dispose();
         foreach (var disposable in _disposables)
             disposable.Dispose();
     }
@@ -164,73 +151,8 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
         return disposable;
     }
 
-    private WebApplicationFactory<Program> McpHost()
-    {
-        var root = Track(new DietPlannerWebApplicationFactory(db.ConnectionString, settings: new Dictionary<string, string?>
-        {
-            ["Mcp:Enabled"] = "true",
-            ["Authentication:Mcp:Authority"] = Issuer,
-            ["Authentication:Mcp:Audience"] = Audience,
-        }));
+    private static string Token(string subject, string scope) => McpTestHost.Token(subject, scope);
 
-        return Track(root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-        {
-            services.RemoveAll<IHouseholdQueryService>();
-            services.AddSingleton<IHouseholdQueryService, McpTestHouseholds>();
-
-            // Validate locally signed tokens instead of fetching Authentik's discovery document.
-            services.PostConfigure<JwtBearerOptions>(McpAuthorization.SchemeName, options =>
-            {
-                options.ConfigurationManager = null;
-                options.TokenValidationParameters.ValidIssuer = Issuer;
-                options.TokenValidationParameters.IssuerSigningKey = SigningKey;
-            });
-        })));
-    }
-
-    private HttpClient RestClient(WebApplicationFactory<Program> host, string subject)
-        => Track(host.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-            services.AddSingleton(new TestUserIdOverride(subject))))).CreateClient();
-
-    private static async Task<McpClient> ConnectAsync(WebApplicationFactory<Program> host, string token)
-    {
-        var http = host.CreateClient();
-        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var transport = new HttpClientTransport(
-            new HttpClientTransportOptions { Endpoint = new Uri(http.BaseAddress!, "/mcp"), TransportMode = HttpTransportMode.StreamableHttp },
-            http,
-            ownsHttpClient: true);
-        return await McpClient.CreateAsync(transport, cancellationToken: TestContext.Current.CancellationToken);
-    }
-
-    private static async Task<DietContextDto> GetDietContextAsync(McpClient client)
-    {
-        var result = await client.CallToolAsync("get_diet_context", cancellationToken: TestContext.Current.CancellationToken);
-        result.IsError.ShouldNotBe(true, Text(result));
-        return JsonSerializer.Deserialize<DietContextDto>(Text(result), JsonSerializerOptions.Web)!;
-    }
-
-    private static string Text(CallToolResult result)
-        => string.Concat(result.Content.OfType<TextContentBlock>().Select(c => c.Text));
-
-    private static string Token(
-        string subject,
-        string scope,
-        SecurityKey? key = null,
-        DateTime? expires = null,
-        string audience = Audience,
-        string issuer = Issuer)
-    {
-        var expiry = expires ?? TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(10);
-        return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
-        {
-            Issuer = issuer,
-            Audience = audience,
-            Subject = new ClaimsIdentity([new Claim("sub", subject), new Claim("scope", scope)]),
-            NotBefore = expiry.AddMinutes(-20),
-            IssuedAt = expiry.AddMinutes(-20),
-            Expires = expiry,
-            SigningCredentials = new SigningCredentials(key ?? SigningKey, SecurityAlgorithms.RsaSha256),
-        });
-    }
+    private static Task<DietContextDto> GetDietContextAsync(McpClient client)
+        => McpTestHost.CallAsync<DietContextDto>(client, "get_diet_context");
 }
