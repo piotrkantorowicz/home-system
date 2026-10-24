@@ -1,6 +1,7 @@
 namespace DietPlanner.Application.Commands.CreateProduct;
 
 using DietPlanner.Application.Households;
+using DietPlanner.Application.OperationReceipts;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateProductCommandValidator : ICommandValidator<CreateProductCommand>
@@ -35,5 +36,8 @@ internal sealed class CreateProductCommandValidator : ICommandValidator<CreatePr
 
         if (command.Fiber is < 0)
             yield return new ValidationError(nameof(command.Fiber), "Fiber must be non-negative.");
+
+        if (command.OperationKey is not null && !OperationKeyInput.IsValid(command.OperationKey))
+            yield return new ValidationError(nameof(command.OperationKey), OperationKeyInput.Error);
     }
 }

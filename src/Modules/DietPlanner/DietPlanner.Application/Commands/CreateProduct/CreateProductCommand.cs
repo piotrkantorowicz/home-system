@@ -16,6 +16,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="GramPerPiece">Grams per piece, needed for the <c>piece</c> unit.</param>
 /// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; <see langword="null"/> means <c>Household</c>.</param>
 /// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
+/// <param name="OperationKey">Optional idempotency key: a retry with the same key and fields returns the original id instead of creating again; the same key with different fields is a conflict.</param>
 public sealed record CreateProductCommand(
     string Name,
     decimal? Calories,
@@ -27,4 +28,5 @@ public sealed record CreateProductCommand(
     decimal? DensityGramsPerMl,
     decimal? GramPerPiece,
     string? Visibility,
-    string UserId) : ICommand<Guid>;
+    string UserId,
+    string? OperationKey = null) : ICommand<Guid>;

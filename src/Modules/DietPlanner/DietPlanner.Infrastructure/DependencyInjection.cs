@@ -6,6 +6,7 @@ using Amazon.S3;
 using DietPlanner.Application;
 using DietPlanner.Application.Households;
 using DietPlanner.Application.Images;
+using DietPlanner.Application.OperationReceipts;
 using DietPlanner.Application.Persistence;
 using DietPlanner.Application.Storage;
 using DietPlanner.Application.Workers;
@@ -75,6 +76,8 @@ public static partial class InfrastructureDependencyInjection
         // Meal-reminder ledger + read-side
         services.AddScoped<ISentMealReminderRepository, SentMealReminderRepository>();
         services.AddScoped<IShoppingCheckRepository, ShoppingCheckRepository>();
+        services.AddScoped<IOperationReceiptRepository, OperationReceiptRepository>();
+        services.AddScoped<OperationReplay>();
         services.AddScoped<IMealReminderCandidateQueries, MealReminderCandidateQueries>();
 
         // Water-reminder ledger + read-side
