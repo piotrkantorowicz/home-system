@@ -75,6 +75,19 @@ public sealed class McpOperationsTests(DatabaseFixture db)
         response.StatusCode.ShouldBe(expected);
     }
 
+    /// <summary>A missing auth setting or a non-positive limit stops startup instead of breaking the first call.</summary>
+    [Theory]
+    [InlineData("Authentication:Mcp:Authority", "")]
+    [InlineData("Authentication:Mcp:Audience", " ")]
+    [InlineData("Mcp:RequestsPerMinute", "0")]
+    [InlineData("Mcp:MaxRequestBytes", "-1")]
+    public void Startup_WithInvalidSetting_Fails(string key, string value)
+    {
+        using var host = new McpTestHost(db.ConnectionString, settings: new Dictionary<string, string?> { [key] = value });
+
+        Should.Throw<InvalidOperationException>(() => host.CreateClient()).Message.ShouldContain(key.Split(':')[^1]);
+    }
+
     /// <summary>A caller over the per-minute limit gets 429.</summary>
     [Fact]
     public async Task RateLimit_RejectsCallsOverTheLimit()

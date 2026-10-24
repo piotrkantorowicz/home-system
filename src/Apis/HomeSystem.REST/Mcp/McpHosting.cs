@@ -30,16 +30,23 @@ internal static class McpHosting
         var publicBaseUrl = options.PublicBaseUrl is { IsAbsoluteUri: true } url
             ? url
             : throw new InvalidOperationException("Mcp:PublicBaseUrl must be an absolute URL when Mcp:Enabled is true.");
+        if (options.RequestsPerMinute < 1 || options.MaxRequestBytes < 1)
+            throw new InvalidOperationException("Mcp:RequestsPerMinute and Mcp:MaxRequestBytes must be positive.");
 
         // MCP tokens come from their own OAuth client: own issuer and audience, own scheme. SPA tokens
         // cannot reach /mcp and MCP tokens cannot reach REST. Challenges go to the MCP metadata handler
         // so a 401 points the client at the resource metadata (RFC 9728) under the pinned public URL.
         var mcpAuthConfig = builder.Configuration.GetSection("Authentication:Mcp");
+        var authority = mcpAuthConfig["Authority"];
+        var audience = mcpAuthConfig["Audience"];
+        if (string.IsNullOrWhiteSpace(authority) || string.IsNullOrWhiteSpace(audience))
+            throw new InvalidOperationException("Mcp:Enabled requires Authentication:Mcp:Authority and Authentication:Mcp:Audience.");
+
         authentication
             .AddJwtBearer(McpAuthorization.SchemeName, jwt =>
             {
-                jwt.Authority = mcpAuthConfig["Authority"];
-                jwt.Audience = mcpAuthConfig["Audience"];
+                jwt.Authority = authority;
+                jwt.Audience = audience;
                 jwt.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                 jwt.ForwardChallenge = McpAuthenticationDefaults.AuthenticationScheme;
                 jwt.TokenValidationParameters = new TokenValidationParameters
@@ -58,7 +65,7 @@ internal static class McpHosting
                 mcp.ResourceMetadata = new ProtectedResourceMetadata
                 {
                     Resource = new Uri(publicBaseUrl, "/mcp").ToString(),
-                    AuthorizationServers = { mcpAuthConfig["Authority"]! },
+                    AuthorizationServers = { authority },
                     ScopesSupported = [.. DietPlannerMcp.Scopes],
                     ResourceName = "Home System",
                 };
