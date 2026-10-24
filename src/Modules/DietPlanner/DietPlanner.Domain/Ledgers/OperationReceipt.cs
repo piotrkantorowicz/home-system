@@ -17,8 +17,9 @@ public sealed class OperationReceipt
     /// <param name="requestHash">Hash of the canonical request; a different request under the same key is a conflict.</param>
     /// <param name="resultId">Id the operation produced, returned on replay.</param>
     /// <param name="createdAtUtc">Commit time, UTC.</param>
+    /// <param name="result">Optional JSON result returned on replay, for operations whose response is more than an id.</param>
     public static OperationReceipt Create(
-        string actorSubject, string operation, string key, string requestHash, Guid resultId, DateTime createdAtUtc)
+        string actorSubject, string operation, string key, string requestHash, Guid resultId, DateTime createdAtUtc, string? result = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(actorSubject);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation);
@@ -33,6 +34,7 @@ public sealed class OperationReceipt
             RequestHash = requestHash,
             ResultId = resultId,
             CreatedAt = createdAtUtc,
+            Result = result,
         };
     }
 
@@ -46,6 +48,9 @@ public sealed class OperationReceipt
     public string RequestHash { get; private init; } = default!;
     /// <summary>Id the operation produced.</summary>
     public Guid ResultId { get; private init; }
+    /// <summary>JSON result returned on replay, when the operation stores one.</summary>
+    public string? Result { get; private init; }
+
     /// <summary>Commit time, UTC.</summary>
     public DateTime CreatedAt { get; private init; }
 }
