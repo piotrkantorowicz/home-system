@@ -2,8 +2,11 @@ namespace DietPlanner.Api.Mcp;
 
 using System.ComponentModel;
 using DietPlanner.Application.Commands.CreateProduct;
+using DietPlanner.Application.Commands.CreateRecipe;
 using DietPlanner.Application.Queries.GetProductById;
+using DietPlanner.Application.Queries.GetRecipeById;
 using DietPlanner.Application.Queries.SearchProducts;
+using DietPlanner.Application.Queries.SearchRecipes;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
@@ -45,5 +48,32 @@ internal sealed class CatalogWriteTools
         ProductDto product = await queries.SendAsync<GetProductByIdQuery, ProductDto?>(new GetProductByIdQuery(id, subject), ct)
             ?? throw new McpException($"Product {id} is no longer visible to you.");
         return new CreatedProductDto(product.Id, product.Name, product.Visibility);
+    }
+
+    [McpServerTool(Name = "create_recipe", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("Saves a new recipe in the caller's catalog from products the caller can see, with the same rules as the app. Ingredient amounts are for the whole recipe; servings says how many portions they make. Retry with the same operationKey and fields to get the original recipe back instead of a duplicate; a new recipe needs a new key.")]
+    public static async Task<CreatedRecipeDto> CreateRecipe(
+        RequestContext<CallToolRequestParams> context,
+        ICommandDispatcher commands,
+        IQueryDispatcher queries,
+        [Description("Idempotency key for this recipe, 8-128 characters (a UUID works). Reuse it only to retry this same call.")] string operationKey,
+        [Description("Recipe name, unique in the caller's catalog.")] string name,
+        [Description("Portions the ingredient amounts make; at least 1.")] int servings,
+        [Description("Ingredient lines; at least one.")] IReadOnlyList<RecipeIngredientInput> ingredients,
+        [Description("Short description, if any.")] string? description = null,
+        [Description("Preparation steps, if any.")] string? instructions = null,
+        [Description("Preparation time in minutes, if known.")] int? prepTimeMinutes = null,
+        [Description("Private or Household; Household when omitted.")] string? visibility = null,
+        CancellationToken ct = default)
+    {
+        var subject = McpCaller.AuthSubject(context);
+        Guid id = await McpErrors.AsToolErrorsAsync(() => commands.SendAsync<CreateRecipeCommand, Guid>(
+            new CreateRecipeCommand(name, description, instructions, servings, prepTimeMinutes,
+                [.. ingredients.Select(i => new CreateRecipeIngredientRequest(i.ProductId, i.Amount, i.Unit))],
+                visibility, subject, operationKey), ct));
+
+        RecipeDto recipe = await queries.SendAsync<GetRecipeByIdQuery, RecipeDto?>(new GetRecipeByIdQuery(id, subject), ct)
+            ?? throw new McpException($"Recipe {id} is no longer visible to you.");
+        return new CreatedRecipeDto(recipe.Id, recipe.Name, recipe.Visibility);
     }
 }
