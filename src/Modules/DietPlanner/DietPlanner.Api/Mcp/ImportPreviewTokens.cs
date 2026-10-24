@@ -23,9 +23,9 @@ internal sealed class ImportPreviewTokens(IDataProtectionProvider protection, Ti
         return (_protector.Protect(JsonSerializer.Serialize(payload)), expiresAt);
     }
 
-    /// <summary>Checks a token against the current request and the fingerprint of a fresh resolution.</summary>
-    /// <returns><see langword="null"/> when valid; otherwise why the preview cannot be used.</returns>
-    public string? Check(string token, string actorSubject, Guid personId, bool appendToOccupiedSlots, string fingerprint)
+    /// <summary>Opens a token for the current request and returns the fingerprint it vouches for.</summary>
+    /// <returns>The previewed fingerprint, or why the token cannot be used.</returns>
+    public (string? Fingerprint, string? Error) Read(string token, string actorSubject, Guid personId, bool appendToOccupiedSlots)
     {
         Payload? payload;
         try
@@ -34,16 +34,16 @@ internal sealed class ImportPreviewTokens(IDataProtectionProvider protection, Ti
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException or FormatException)
         {
-            return "The preview token is invalid.";
+            return (null, "The preview token is invalid or from before a restart; preview the plan again.");
         }
 
         if (payload is null || payload.ActorSubject != actorSubject || payload.PersonId != personId)
-            return "The preview token belongs to someone else.";
+            return (null, "The preview token belongs to someone else.");
         if (payload.ExpiresAt <= clock.GetUtcNow())
-            return "The preview token has expired; preview the plan again.";
-        if (payload.AppendToOccupiedSlots != appendToOccupiedSlots || payload.Fingerprint != fingerprint)
-            return "The plan, its options or the data it depends on changed since the preview; preview the plan again.";
-        return null;
+            return (null, "The preview token has expired; preview the plan again.");
+        if (payload.AppendToOccupiedSlots != appendToOccupiedSlots)
+            return (null, "The preview was made with a different appendToOccupiedSlots option; preview the plan again.");
+        return (payload.Fingerprint, null);
     }
 
     private sealed record Payload(string ActorSubject, Guid PersonId, bool AppendToOccupiedSlots, string Fingerprint, DateTimeOffset ExpiresAt);
