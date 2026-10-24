@@ -685,6 +685,10 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("request_hash");
 
+                    b.Property<string>("Result")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("result");
+
                     b.Property<Guid>("ResultId")
                         .HasColumnType("uuid")
                         .HasColumnName("result_id");

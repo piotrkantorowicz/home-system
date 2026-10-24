@@ -1,9 +1,11 @@
 namespace DietPlanner.Api.Mcp;
 
 using System.ComponentModel;
+using DietPlanner.Application.Commands.ExecutePreviewedImport;
 using DietPlanner.Application.Commands.PreviewImport;
 using DietPlanner.Application.Commands.ValidateImport;
 using Microsoft.AspNetCore.Authorization;
+using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
@@ -37,5 +39,35 @@ internal sealed class ImportTools
 
         var (token, expiresAt) = tokens.Issue(subject, personId, appendToOccupiedSlots, preview.Fingerprint);
         return new ImportPreviewResultDto(preview, token, expiresAt);
+    }
+
+    [McpServerTool(Name = "execute_plan_import", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
+    [Description("Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice.")]
+    [Authorize(Policy = DietPlannerMcp.WriteScope)]
+    [Authorize(Policy = DietPlannerMcp.ImportScope)]
+    public static async Task<ExecutedImportDto> ExecutePlanImport(
+        RequestContext<CallToolRequestParams> context,
+        ICommandDispatcher commands,
+        ImportPreviewTokens tokens,
+        [Description("Exactly the plan that was previewed.")] ImportDto plan,
+        [Description("previewToken from preview_plan_import.")] string previewToken,
+        [Description("Idempotency key for this import, 8-128 characters (a UUID works). Reuse it only to retry this same import.")] string operationKey,
+        [Description("The same appendToOccupiedSlots value used for the preview.")] bool appendToOccupiedSlots = false,
+        CancellationToken ct = default)
+    {
+        var subject = McpCaller.AuthSubject(context);
+        var personId = McpCaller.PersonId(context);
+
+        // An unusable token still lets a retry replay its earlier result; it only blocks a first run.
+        var (fingerprint, tokenError) = tokens.Read(previewToken, subject, personId, appendToOccupiedSlots);
+        try
+        {
+            return await McpErrors.AsToolErrorsAsync(() => commands.SendAsync<ExecutePreviewedImportCommand, ExecutedImportDto>(
+                new ExecutePreviewedImportCommand(plan, subject, personId, appendToOccupiedSlots, fingerprint, operationKey), ct));
+        }
+        catch (McpException) when (tokenError is not null)
+        {
+            throw new McpException(tokenError);
+        }
     }
 }

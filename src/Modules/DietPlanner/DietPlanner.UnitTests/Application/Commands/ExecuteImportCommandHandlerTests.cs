@@ -30,7 +30,9 @@ public sealed class ExecuteImportCommandHandlerTests
         _meals.GetByPersonAndDateRangeAsync(PersonId, Arg.Any<DateOnly?>(), Arg.Any<DateOnly?>(), Arg.Any<CancellationToken>()).Returns([]);
         _sut = new ExecuteImportCommandHandler(
             new ImportPlanResolver(_products, _recipes, _meals, _schedules),
-            _products, _recipes, _meals, _schedules, _unitOfWork, TestClock.Create());
+            new ImportPlanWriter(_products, _recipes, _meals, _schedules),
+            _unitOfWork,
+            TestClock.Create());
     }
 
     /// <summary>With a resolvable file: <c>HandleAsync</c> writes products, recipes and planned meals in one commit.</summary>
