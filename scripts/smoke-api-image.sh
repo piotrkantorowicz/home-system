@@ -11,7 +11,7 @@ trap 'docker rm -f "$run-api" "$run-db" >/dev/null 2>&1 || true; docker network 
 
 docker network create "$net" >/dev/null
 docker run -d --name "$run-db" --network "$net" -e POSTGRES_PASSWORD=smoke postgres:16-alpine >/dev/null
-until docker exec "$run-db" pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+until docker exec "$run-db" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; do sleep 1; done
 
 env_args=(-e ASPNETCORE_ENVIRONMENT=Production
   -e Authentication__Authentik__Authority=https://authentik.invalid/application/o/home-system
