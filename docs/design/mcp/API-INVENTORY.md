@@ -7,7 +7,8 @@ epic #605 and its follow-up epics. **A new API operation is not done until it ha
 row here.**
 
 How it was produced: route declarations (`Map{Get,Post,Put,Delete,Patch}` inside each
-module's `*.Api` project) were extracted from source and reconciled against the
+module's `*.Api` project, including sub-groups passed in as a `RouteGroupBuilder`)
+were extracted from source and reconciled against the
 OpenAPI document groups. OpenAPI assists the inventory; it never publishes a tool.
 Every tool is a hand-written, typed adapter (see `docs/rules/backend-api-patterns.md`
 § MCP tools).
@@ -16,14 +17,14 @@ Every tool is a hand-written, typed adapter (see `docs/rules/backend-api-pattern
 
 | Module | Operations | In epic #605 | Later epic | Transport-only / excluded |
 |---|---:|---:|---:|---:|
-| DietPlanner | 45 | 14 | 30 | 1 |
+| DietPlanner | 49 | 14 | 34 | 1 |
 | Household | 20 | 0 | 19 | 1 |
 | Budget | 21 | 0 | 21 | 0 |
 | Investments | 12 | 0 | 12 | 0 |
 | Notifications | 11 | 0 | 11 (5 admin) | 0 |
 | Operations | 5 | 0 | 5 (admin) | 0 |
 | Host | 4 | 0 | 0 | 4 |
-| **Total** | **118** | **14** | **98** | **6** |
+| **Total** | **122** | **14** | **102** | **6** |
 
 "In epic #605" counts routes whose behaviour a first-epic tool covers. Several of them
 share one tool: `get_diet_context` reads profile, goals, meal schedule and reminder
@@ -117,6 +118,10 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/v1/recipes` | CreateRecipe | write | `create_recipe` | #611 |
 | PUT | `/api/v1/recipes/{id:guid}` | UpdateRecipe | write | `update_recipe` | Epic B DP-2 |
 | DELETE | `/api/v1/recipes/{id:guid}` | DeleteRecipe | destructive | `delete_recipe` | Epic B DP-2 |
+| PUT | `/api/v1/recipes/{id:guid}/image` | UploadRecipeImage | write | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
+| GET | `/api/v1/recipes/{id:guid}/image` | GetRecipeImage | read | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
+| GET | `/api/v1/recipes/{id:guid}/image/thumbnail` | GetRecipeImageThumbnail | read | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
+| DELETE | `/api/v1/recipes/{id:guid}/image` | RemoveRecipeImage | destructive | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
 | DELETE | `/api/v1/test-support/purge-my-data` | PurgeMyData | excluded | — | Excluded: test-support only (E2E cleanup), not a business operation |
 | GET | `/api/v1/weekly-summary` | GetWeeklySummary | read | `get_weekly_summary` | Epic B DP-9 |
 | POST | `/api/v1/weight-entries` | LogWeightEntry | write | `log_weight` | Epic B DP-6 |
@@ -197,9 +202,9 @@ existing admin policy, never the everyday write grant).
 - Bulk import: #395 (JSON import wizard) and #500 (review step). Their
   `POST /api/v1/meals/validate` and `/import` stay the SPA contract. #612 moves both onto
   a shared resolver with a strict mode the MCP tools use.
-- Recipe photos (#563): upload/remove commands exist in the application layer, but no
-  route is mapped on `main` yet. Once routes ship they need an explicit file-transport
-  design before any tool; a text-only stand-in is not acceptable.
+- Recipe photos (#563): upload, read, thumbnail and remove are mapped
+  (`RecipeImageEndpoints`, a sub-group of `/api/v1/recipes`). They need an explicit
+  file-transport design before any tool is added. A text-only stand-in is not acceptable.
 
 ## Keeping it current
 
