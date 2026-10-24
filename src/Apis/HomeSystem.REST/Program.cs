@@ -99,11 +99,16 @@ if (mcpEnabled)
     // cannot reach /mcp and MCP tokens cannot reach REST. Challenges go to the MCP metadata handler
     // so a 401 points the client at /.well-known/oauth-protected-resource (RFC 9728).
     var mcpAuthConfig = builder.Configuration.GetSection("Authentication:Mcp");
+    var mcpAuthority = mcpAuthConfig["Authority"];
+    var mcpAudience = mcpAuthConfig["Audience"];
+    if (string.IsNullOrWhiteSpace(mcpAuthority) || string.IsNullOrWhiteSpace(mcpAudience))
+        throw new InvalidOperationException("Mcp:Enabled requires Authentication:Mcp:Authority and Authentication:Mcp:Audience.");
+
     authentication
         .AddJwtBearer(McpAuthorization.SchemeName, options =>
         {
-            options.Authority = mcpAuthConfig["Authority"];
-            options.Audience = mcpAuthConfig["Audience"];
+            options.Authority = mcpAuthority;
+            options.Audience = mcpAudience;
             options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
             options.ForwardChallenge = McpAuthenticationDefaults.AuthenticationScheme;
             options.TokenValidationParameters = new TokenValidationParameters
@@ -118,7 +123,7 @@ if (mcpEnabled)
         })
         .AddMcp(options => options.ResourceMetadata = new ProtectedResourceMetadata
         {
-            AuthorizationServers = { mcpAuthConfig["Authority"]! },
+            AuthorizationServers = { mcpAuthority },
             ScopesSupported = [.. DietPlannerMcp.Scopes],
             ResourceName = "Home System",
         });

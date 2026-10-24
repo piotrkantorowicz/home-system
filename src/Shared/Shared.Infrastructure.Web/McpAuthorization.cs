@@ -49,13 +49,13 @@ public static class McpAuthorization
     /// <summary>True when the token grants <paramref name="scope"/>.</summary>
     /// <param name="user">The authenticated caller.</param>
     /// <param name="scope">The scope to look for.</param>
-    /// <returns>Whether a <c>scope</c> (space-separated, Authentik) or <c>scp</c> claim contains it.</returns>
+    /// <returns>Whether the space-separated <c>scope</c> claim (Authentik) contains it.</returns>
     public static bool HasScope(ClaimsPrincipal user, string scope)
     {
         ArgumentNullException.ThrowIfNull(user);
 
         return user.Claims
-            .Where(c => c.Type is "scope" or "scp")
+            .Where(c => c.Type == "scope")
             .SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             .Contains(scope, StringComparer.Ordinal);
     }
