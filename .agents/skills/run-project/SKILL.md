@@ -67,8 +67,14 @@ ConnectionStrings__Notifications="Host=localhost;Port=5433;Database=notification
 ConnectionStrings__Household="Host=localhost;Port=5434;Database=household;Username=household;Password=${HOUSEHOLD_DB_PASSWORD}" \
 ConnectionStrings__Budget="Host=localhost;Port=5435;Database=budget;Username=budget;Password=${BUDGET_DB_PASSWORD}" \
 ConnectionStrings__Investments="Host=localhost;Port=5436;Database=investments;Username=investments;Password=${INVESTMENTS_DB_PASSWORD}" \
+Mcp__Enabled=true Mcp__PublicBaseUrl=http://localhost:5050 Mcp__ImportsEnabled=true \
+Authentication__Mcp__Authority=http://localhost:9000/application/o/home-system-mcp/ \
+Authentication__Mcp__Audience=home-system-mcp \
 dotnet run --project src/Apis/HomeSystem.REST
 ```
+
+The `Mcp__*` / `Authentication__Mcp__*` lines turn on the MCP endpoint at
+`http://localhost:5050/mcp` for Claude Code (setup: `docs/design/mcp/CLIENT-SETUP.md`).
 
 Run this in the background (it is long-lived). Notes:
 

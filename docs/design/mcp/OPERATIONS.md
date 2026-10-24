@@ -28,6 +28,7 @@ Switch changes take effect on restart.
 | Ingredients per recipe | 100 | strict resolver |
 | Whole-month plan (31 × 6 meals, 2 products, 6 recipes) | ≈ 16 KB JSON | well under `MaxRequestBytes` |
 | Full-month preview + execute (test host) | ≈ 2.6 s incl. host start; preview ≈ 0.9 s | one synchronous transaction |
+| Real 30-day plan (30 × 4 meals, 32 products, 18 recipes; live run with Claude Code) | ≈ 23 KB JSON | well under `MaxRequestBytes` |
 
 ## Logs
 
