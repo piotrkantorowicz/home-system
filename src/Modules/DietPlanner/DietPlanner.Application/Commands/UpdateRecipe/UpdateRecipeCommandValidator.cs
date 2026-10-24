@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateRecipe;
 
+using DietPlanner.Application.Commands.CreateRecipe;
 using DietPlanner.Application.Households;
 using Shared.Abstractions.Cqrs;
 
@@ -23,5 +24,8 @@ internal sealed class UpdateRecipeCommandValidator : ICommandValidator<UpdateRec
 
         if (!VisibilityInput.IsValid(command.Visibility))
             yield return new ValidationError(nameof(command.Visibility), VisibilityInput.Error);
+
+        foreach (var error in RecipeIngredientRules.Validate(command.Ingredients))
+            yield return error;
     }
 }

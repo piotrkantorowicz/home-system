@@ -24,6 +24,7 @@ public sealed record CreateRecipeIngredientRequest(
 /// <param name="Ingredients">The complete ingredient list; on update it replaces the existing lines.</param>
 /// <param name="Visibility"><c>Private</c>, <c>Household</c> or <c>Public</c>; <see langword="null"/> means <c>Household</c>.</param>
 /// <param name="UserId">Auth subject of the caller; the command only touches this user's data.</param>
+/// <param name="OperationKey">Optional idempotency key: a retry with the same key and fields returns the original id instead of creating again; the same key with different fields is a conflict.</param>
 public sealed record CreateRecipeCommand(
     string Name,
     string? Description,
@@ -32,4 +33,5 @@ public sealed record CreateRecipeCommand(
     int? PrepTimeMinutes,
     IReadOnlyList<CreateRecipeIngredientRequest> Ingredients,
     string? Visibility,
-    string UserId) : ICommand<Guid>;
+    string UserId,
+    string? OperationKey = null) : ICommand<Guid>;
