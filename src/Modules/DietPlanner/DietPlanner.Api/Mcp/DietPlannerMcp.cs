@@ -28,5 +28,6 @@ public static class DietPlannerMcp
         => builder
             .WithTools<DietContextTools>()
             .WithTools<CatalogTools>()
-            .WithTools<DiaryTools>();
+            .WithTools<DiaryTools>()
+            .WithTools<CatalogWriteTools>();
 }
