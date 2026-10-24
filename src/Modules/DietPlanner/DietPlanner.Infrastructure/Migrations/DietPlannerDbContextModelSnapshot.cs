@@ -294,7 +294,7 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasDatabaseName("idx_products_active")
                         .HasFilter("deleted_at IS NULL");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("CreatedByUserId", "Name")
                         .IsUnique()
                         .HasFilter("deleted_at IS NULL");
 
@@ -364,7 +364,7 @@ namespace DietPlanner.Infrastructure.Migrations
                         .HasDatabaseName("idx_recipes_active")
                         .HasFilter("deleted_at IS NULL");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("CreatedByUserId", "Name")
                         .IsUnique()
                         .HasFilter("deleted_at IS NULL");
 
