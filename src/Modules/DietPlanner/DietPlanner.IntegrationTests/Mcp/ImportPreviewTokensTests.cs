@@ -20,15 +20,17 @@ public sealed class ImportPreviewTokensTests
     {
         var (token, _) = _sut.Issue("user-1", PersonId, false, "fp-1");
 
-        _sut.Check(token, "user-1", PersonId, false, "fp-1").ShouldBeNull();
+        var (fingerprint, error) = _sut.Read(token, "user-1", PersonId, false);
+
+        error.ShouldBeNull();
+        fingerprint.ShouldBe("fp-1");
     }
 
-    /// <summary>A token is rejected for another caller, other options, a changed resolution, tampering or after expiry.</summary>
+    /// <summary>A token is rejected for another caller, other options, tampering or after expiry.</summary>
     [Theory]
     [InlineData("subject")]
     [InlineData("person")]
     [InlineData("append")]
-    [InlineData("fingerprint")]
     [InlineData("tampered")]
     [InlineData("expired")]
     public void Check_WithMismatch_Rejects(string mismatch)
@@ -39,13 +41,13 @@ public sealed class ImportPreviewTokensTests
         if (mismatch == "expired")
             _clock.Advance(ImportPreviewTokens.Lifetime);
 
-        var reason = _sut.Check(
+        var (fingerprint, error) = _sut.Read(
             token,
             mismatch == "subject" ? "user-2" : "user-1",
             mismatch == "person" ? Guid.CreateVersion7() : PersonId,
-            mismatch == "append",
-            mismatch == "fingerprint" ? "fp-2" : "fp-1");
+            mismatch == "append");
 
-        reason.ShouldNotBeNull();
+        fingerprint.ShouldBeNull();
+        error.ShouldNotBeNull();
     }
 }

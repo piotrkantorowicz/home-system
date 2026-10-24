@@ -6,6 +6,7 @@ using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.Services;
 using DietPlanner.Domain.ValueObjects;
+using Shared.Abstractions.Cqrs;
 
 /// <summary>
 /// Validates an import file and resolves every name against the caller's own catalog, meal schedule and
@@ -41,6 +42,12 @@ internal sealed class ImportPlanResolver(
         ("Dinner", new TimeOnly(18, 0)),
         ("Snack", new TimeOnly(15, 0)),
     ];
+
+    /// <summary>The validation failure for a resolution with errors: one entry per error, keyed by its JSON path.</summary>
+    public static CommandValidationException Rejection(string commandName, ResolvedImport resolved)
+        => new(commandName, [.. resolved.Issues
+            .Where(i => i.Severity == Error)
+            .Select(i => new ValidationError(i.Path ?? "import", i.Message))]);
 
     private delegate void AddIssue(string severity, string category, string? path, string? item, string message, string? resolution = null);
 
