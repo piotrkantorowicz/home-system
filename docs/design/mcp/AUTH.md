@@ -115,4 +115,6 @@ Probe on 2026-10-24 (Authentik 2025.2.3, Claude Code 2.1.304, API from the epic 
 | MCP token → `GET /api/v1/products` | 401 |
 | SPA token → `POST /mcp` | 401 |
 | Missing grant → tool call | Covered by `McpEndpointTests` and the per-tool grant tests (test authentication handler) |
-| Refresh with `offline_access` | Still open: confirm after the first 5-minute expiry in a long session |
+| Refresh with `offline_access` | Claude Code got a new access token about 14 minutes after the last browser authorization, with no new login |
+| Real import | `preview_plan_import` then `execute_plan_import` of a 30-day plan from the conversation: 120 meals, 32 products and 18 recipes reused, no conflicts |
+| Retry with the same operation key | Replayed the stored result (`replayed: true`) with a stale preview token; still 120 meals |
