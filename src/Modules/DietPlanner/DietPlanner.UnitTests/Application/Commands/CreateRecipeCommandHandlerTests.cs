@@ -1,6 +1,7 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
 using DietPlanner.Application.Commands.CreateRecipe;
+using DietPlanner.Application.OperationReceipts;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -25,7 +26,8 @@ public sealed class CreateRecipeCommandHandlerTests
             .Returns(ci => ci.Arg<IReadOnlyCollection<ProductId>>()
                 .Select(id => Product.Create(id, $"p-{id}", new NutritionPer100g(null, null, null, null, null), "g", null, null, "user-1", TestClock.UtcNow))
                 .ToList());
-        _sut = new CreateRecipeCommandHandler(_repository, _products, TestHouseholds.Solo(), _unitOfWork, _clock);
+        _sut = new CreateRecipeCommandHandler(
+            _repository, _products, TestHouseholds.Solo(), new OperationReplay(Substitute.For<IOperationReceiptRepository>()), _unitOfWork, _clock);
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds recipe and commits.</summary>
