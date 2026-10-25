@@ -1,0 +1,2 @@
+# Bank exports keep their original bytes: Windows-1250 and CRLF are what the parser must handle.
+*.csv -text
