@@ -1,4 +1,4 @@
-namespace DietPlanner.Api.Mcp;
+namespace DietPlanner.Mcp;
 
 using ModelContextProtocol;
 using Shared.Abstractions.Core.Domain;

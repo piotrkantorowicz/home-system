@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\DietPlanner\DietPlanner.Api\DietPlanner.Api.csproj" />
     <ProjectReference Include="..\..\Modules\DietPlanner\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\DietPlanner\DietPlanner.Mcp\DietPlanner.Mcp.csproj" />
     <ProjectReference Include="..\..\Modules\Notifications\Notifications.Api\Notifications.Api.csproj" />
     <ProjectReference Include="..\..\Modules\Notifications\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Household\Household.Api\Household.Api.csproj" />

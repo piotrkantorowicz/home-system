@@ -1,7 +1,7 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
-using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using Microsoft.AspNetCore.DataProtection;
 
 /// <summary>Tests for <c>ImportPreviewTokens</c>: a token only validates for its own caller, options, fingerprint and lifetime.</summary>

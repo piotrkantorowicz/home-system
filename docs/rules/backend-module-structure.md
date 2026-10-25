@@ -12,6 +12,7 @@ src/
   Modules/
     {ModuleName}/
       {ModuleName}.Api/
+      {ModuleName}.Mcp/                    # Optional — only when the module exposes MCP tools
       {ModuleName}.Application/
       {ModuleName}.Contracts/
       {ModuleName}.Domain/
@@ -97,7 +98,24 @@ Modules/BudgetPlan/
   BudgetPlan.Api/
     BudgetPlanEndpoints.cs
     DependencyInjection.cs          # AddBudgetPlanModule() public extension method
+
+  BudgetPlan.Mcp/                   # Optional: second transport for agents (see backend-api-patterns.md)
+    BudgetPlanMcp.cs                # scopes + AddBudgetPlanMcpTools(this IMcpServerBuilder)
+    McpCaller.cs                    # scoped caller from McpToolUser
+    EnvelopeTools.cs                # [McpServerToolType] classes, one per area
+    EnvelopeSummaryDto.cs           # only where the agent-facing shape diverges
 ```
+
+### The `.Mcp` project
+
+MCP tools live in `{Module}.Mcp`, never in `{Module}.Api`: the REST project carries no MCP
+SDK and no scope policies. The host composes it (`AddMcpServer()…Add{Module}McpTools()`).
+
+- **References:** `{Module}.Application` and `Shared.Infrastructure.Web` (`McpToolUser`,
+  `McpToolInvoker`). Never `{Module}.Api`, `Domain` or `Infrastructure`.
+- **DTOs:** a transport gets its own DTO only when its shape diverges from the Application
+  DTO (flattened, renamed for the agent, fields dropped); otherwise return the Application DTO.
+- `InternalsVisibleTo` the module's integration-test project, like `.Api`.
 
 ## Simple CRUD Module Anatomy
 
@@ -135,6 +153,7 @@ Domain              ← depends on Shared.Abstractions.Core only
 Application         ← depends on Domain, Shared.Abstractions.{Core,Cqrs,Messaging}
 Infrastructure      ← depends on Domain, Application, Shared.Infrastructure.{Cqrs,Messaging,Messaging.Ef,Persistence}, EF Core
 Api                 ← depends on Application (via ICommandDispatcher / IQueryDispatcher), Contracts
+Mcp                 ← depends on Application (dispatchers), Shared.Infrastructure.Web; never Api
 Contracts           ← depends on Shared.Abstractions.Messaging only (for IIntegrationEvent on integration-event records)
 
 Cross-module (OK):    ModuleA.Application → ModuleB.Contracts
