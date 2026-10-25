@@ -1,0 +1,917 @@
+[
+  {
+    "name": "create_product",
+    "title": null,
+    "description": "Saves a new product in the caller's catalog, with the same rules as the app. Nutrition is per 100 g; leave out values you do not know, never send zero for unknown. Retry with the same operationKey and fields to get the original product back instead of a duplicate; a new product needs a new key.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key for this product, 8-128 characters (a UUID works). Reuse it only to retry this same call.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Product name, unique in the caller's catalog.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Default unit: g, ml or piece.",
+          "type": "string"
+        },
+        "caloriesPer100g": {
+          "description": "Energy in kcal per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "proteinPer100g": {
+          "description": "Protein in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "carbsPer100g": {
+          "description": "Carbohydrates in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fatPer100g": {
+          "description": "Fat in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fiberPer100g": {
+          "description": "Fibre in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "densityGramsPerMl": {
+          "description": "Grams per millilitre, needed to measure it in volume units, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "gramPerPiece": {
+          "description": "Grams per piece, needed for the piece unit, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "visibility": {
+          "description": "Private or Household; Household when omitted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "name",
+        "unit"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "create_recipe",
+    "title": null,
+    "description": "Saves a new recipe in the caller's catalog from products the caller can see, with the same rules as the app. Ingredient amounts are for the whole recipe; servings says how many portions they make. Retry with the same operationKey and fields to get the original recipe back instead of a duplicate; a new recipe needs a new key.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key for this recipe, 8-128 characters (a UUID works). Reuse it only to retry this same call.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Recipe name, unique in the caller's catalog.",
+          "type": "string"
+        },
+        "servings": {
+          "description": "Portions the ingredient amounts make; at least 1.",
+          "type": "integer"
+        },
+        "ingredients": {
+          "description": "Ingredient lines; at least one.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "description": "A product the caller can see, from search_products or create_product.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "amount": {
+                "description": "Quantity for the whole recipe (all servings); must be positive.",
+                "type": "number"
+              },
+              "unit": {
+                "description": "Unit of the amount, e.g. g, ml, piece, tbsp, cup.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "productId",
+              "amount",
+              "unit"
+            ]
+          }
+        },
+        "description": {
+          "description": "Short description, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "instructions": {
+          "description": "Preparation steps, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "prepTimeMinutes": {
+          "description": "Preparation time in minutes, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        },
+        "visibility": {
+          "description": "Private or Household; Household when omitted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "name",
+        "servings",
+        "ingredients"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "execute_plan_import",
+    "title": null,
+    "description": "Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice. Run one import at a time: two different imports in parallel can both fill the same free slots.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "plan": {
+          "description": "Exactly the plan that was previewed.",
+          "type": "object",
+          "properties": {
+            "products": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "caloriesPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "proteinPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "carbsPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "fatPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "fiberPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "unit": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "densityGramsPerMl": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "gramPerPiece": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "caloriesPer100g",
+                  "proteinPer100g",
+                  "carbsPer100g",
+                  "fatPer100g",
+                  "fiberPer100g",
+                  "unit",
+                  "densityGramsPerMl",
+                  "gramPerPiece"
+                ]
+              }
+            },
+            "recipes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "instructions": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "servings": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "prepTimeMinutes": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "ingredients": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "unit": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "product",
+                        "amount",
+                        "unit"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "instructions",
+                  "servings",
+                  "prepTimeMinutes",
+                  "ingredients"
+                ]
+              }
+            },
+            "schedule": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string"
+                  },
+                  "meals": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "recipe": {
+                          "type": "string"
+                        },
+                        "servings": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "notes": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "recipe",
+                        "servings",
+                        "notes"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "date",
+                  "meals"
+                ]
+              }
+            }
+          },
+          "required": [
+            "products",
+            "recipes",
+            "schedule"
+          ]
+        },
+        "previewToken": {
+          "description": "previewToken from preview_plan_import.",
+          "type": "string"
+        },
+        "operationKey": {
+          "description": "Idempotency key for this import, 8-128 characters (a UUID works). Reuse it only to retry this same import.",
+          "type": "string"
+        },
+        "appendToOccupiedSlots": {
+          "description": "The same appendToOccupiedSlots value used for the preview.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "plan",
+        "previewToken",
+        "operationKey"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_diet_context",
+    "title": null,
+    "description": "Returns the caller's diet profile, daily goal and meal slots, plus a list of setup still missing in the app. Call it before planning meals; it never creates or changes anything.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_meal_entries",
+    "title": null,
+    "description": "Lists the caller's planned and eaten meals between two dates (inclusive, at most 31 days), ordered by date and slot. Use it to find occupied slots before planning.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "First day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        },
+        "to": {
+          "description": "Last day, ISO yyyy-MM-dd, at most 30 days after from.",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_nutrition_summary",
+    "title": null,
+    "description": "Per-day calorie and macro totals of everything planned or eaten by the caller between two dates (inclusive, at most 31 days). Modified meals count what was actually eaten; unknown product values count as zero. Days without meals are omitted.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "First day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        },
+        "to": {
+          "description": "Last day, ISO yyyy-MM-dd, at most 30 days after from.",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_product",
+    "title": null,
+    "description": "Returns one product the caller can see. Nutrition is per 100 g; null means unknown, never zero.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "description": "Product id from search_products or a recipe ingredient.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "productId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_recipe",
+    "title": null,
+    "description": "Returns one recipe the caller can see, with instructions, servings, ingredients and nutrition per serving.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "recipeId": {
+          "description": "Recipe id from search_recipes.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "recipeId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "preview_plan_import",
+    "title": null,
+    "description": "Checks a meal plan (products, recipes and dated meals, at most 31 days and 250 meals) and describes what importing it would create, reuse and plan, without changing anything. Names resolve against the caller's own catalog, ignoring case. Every problem has a JSON path such as schedule[4].meals[1].recipe. Occupied slots are conflicts unless appendToOccupiedSlots is true. When the plan can be imported, the result carries a previewToken valid for 30 minutes: show the preview to the user and pass the token to execute_plan_import once they agree.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "plan": {
+          "description": "The plan in the import file format: products (nutrition per 100 g, omit unknown values), recipes (ingredients by product name, amounts for the whole recipe) and schedule (ISO dates, meal type = one of the caller's meal slots, recipe by name).",
+          "type": "object",
+          "properties": {
+            "products": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "caloriesPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "proteinPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "carbsPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "fatPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "fiberPer100g": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "unit": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "densityGramsPerMl": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "gramPerPiece": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "caloriesPer100g",
+                  "proteinPer100g",
+                  "carbsPer100g",
+                  "fatPer100g",
+                  "fiberPer100g",
+                  "unit",
+                  "densityGramsPerMl",
+                  "gramPerPiece"
+                ]
+              }
+            },
+            "recipes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "instructions": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "servings": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "prepTimeMinutes": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "ingredients": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "unit": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "product",
+                        "amount",
+                        "unit"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "instructions",
+                  "servings",
+                  "prepTimeMinutes",
+                  "ingredients"
+                ]
+              }
+            },
+            "schedule": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string"
+                  },
+                  "meals": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "recipe": {
+                          "type": "string"
+                        },
+                        "servings": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "notes": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "recipe",
+                        "servings",
+                        "notes"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "date",
+                  "meals"
+                ]
+              }
+            }
+          },
+          "required": [
+            "products",
+            "recipes",
+            "schedule"
+          ]
+        },
+        "appendToOccupiedSlots": {
+          "description": "Allow meals in slots that already have planned meals.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "plan"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "search_products",
+    "title": null,
+    "description": "Searches products the caller can see by name. Nutrition is per 100 g; null means unknown, never zero.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "Text the name must contain; omit to list everything.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "onlyMine": {
+          "description": "Only products the caller created.",
+          "type": "boolean",
+          "default": false
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 50.",
+          "type": "integer",
+          "default": 20
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "search_recipes",
+    "title": null,
+    "description": "Searches recipes the caller can see by name, with servings, ingredients and nutrition per serving.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "Text the name must contain; omit to list everything.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "onlyMine": {
+          "description": "Only recipes the caller created.",
+          "type": "boolean",
+          "default": false
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 50.",
+          "type": "integer",
+          "default": 20
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  }
+]
