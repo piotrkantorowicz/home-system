@@ -7,7 +7,6 @@ using DietPlanner.Application.Queries.SearchProducts;
 using DietPlanner.Application.Queries.SearchRecipes;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
-using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Core.Pagination;
 using Shared.Abstractions.Cqrs;
@@ -26,7 +25,7 @@ internal sealed class CatalogTools
     [McpServerTool(Name = "search_products", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Searches products the caller can see by name. Nutrition is per 100 g; null means unknown, never zero.")]
     public static async Task<CatalogPageDto<CatalogProductDto>> SearchProducts(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         IQueryDispatcher dispatcher,
         [Description("Text the name must contain; omit to list everything.")] string? query = null,
         [Description("Only products the caller created.")] bool onlyMine = false,
@@ -36,7 +35,7 @@ internal sealed class CatalogTools
     {
         EnsurePage(page, pageSize);
         PagedList<ProductDto> result = await dispatcher.SendAsync<SearchProductsQuery, PagedList<ProductDto>>(
-            new SearchProductsQuery(query, onlyMine, McpCaller.AuthSubject(context), page, pageSize), ct);
+            new SearchProductsQuery(query, onlyMine, caller.AuthSubject(), page, pageSize), ct);
         return new CatalogPageDto<CatalogProductDto>(
             [.. result.Items.Select(CatalogProductDto.From)], result.TotalCount, result.Page, result.PageSize, result.HasNextPage);
     }
@@ -44,13 +43,13 @@ internal sealed class CatalogTools
     [McpServerTool(Name = "get_product", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Returns one product the caller can see. Nutrition is per 100 g; null means unknown, never zero.")]
     public static async Task<CatalogProductDto> GetProduct(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         IQueryDispatcher dispatcher,
         [Description("Product id from search_products or a recipe ingredient.")] Guid productId,
         CancellationToken ct = default)
     {
         ProductDto? product = await dispatcher.SendAsync<GetProductByIdQuery, ProductDto?>(
-            new GetProductByIdQuery(productId, McpCaller.AuthSubject(context)), ct);
+            new GetProductByIdQuery(productId, caller.AuthSubject()), ct);
         return product is null
             ? throw new McpException($"Product {productId} does not exist or is not visible to you.")
             : CatalogProductDto.From(product);
@@ -59,7 +58,7 @@ internal sealed class CatalogTools
     [McpServerTool(Name = "search_recipes", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Searches recipes the caller can see by name, with servings, ingredients and nutrition per serving.")]
     public static async Task<CatalogPageDto<CatalogRecipeDto>> SearchRecipes(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         IQueryDispatcher dispatcher,
         [Description("Text the name must contain; omit to list everything.")] string? query = null,
         [Description("Only recipes the caller created.")] bool onlyMine = false,
@@ -69,7 +68,7 @@ internal sealed class CatalogTools
     {
         EnsurePage(page, pageSize);
         PagedList<RecipeDto> result = await dispatcher.SendAsync<SearchRecipesQuery, PagedList<RecipeDto>>(
-            new SearchRecipesQuery(query, onlyMine, McpCaller.AuthSubject(context), page, pageSize), ct);
+            new SearchRecipesQuery(query, onlyMine, caller.AuthSubject(), page, pageSize), ct);
         return new CatalogPageDto<CatalogRecipeDto>(
             [.. result.Items.Select(CatalogRecipeDto.From)], result.TotalCount, result.Page, result.PageSize, result.HasNextPage);
     }
@@ -77,13 +76,13 @@ internal sealed class CatalogTools
     [McpServerTool(Name = "get_recipe", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Returns one recipe the caller can see, with instructions, servings, ingredients and nutrition per serving.")]
     public static async Task<CatalogRecipeDto> GetRecipe(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         IQueryDispatcher dispatcher,
         [Description("Recipe id from search_recipes.")] Guid recipeId,
         CancellationToken ct = default)
     {
         RecipeDto? recipe = await dispatcher.SendAsync<GetRecipeByIdQuery, RecipeDto?>(
-            new GetRecipeByIdQuery(recipeId, McpCaller.AuthSubject(context)), ct);
+            new GetRecipeByIdQuery(recipeId, caller.AuthSubject()), ct);
         return recipe is null
             ? throw new McpException($"Recipe {recipeId} does not exist or is not visible to you.")
             : CatalogRecipeDto.From(recipe);

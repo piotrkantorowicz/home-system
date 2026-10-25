@@ -30,6 +30,7 @@ public static class DietPlannerMcp
 
         builder.Services.AddDataProtection();
         builder.Services.AddSingleton<ImportPreviewTokens>();
+        builder.Services.AddScoped<McpCaller>();
 
         return builder
             .WithTools<DietContextTools>()

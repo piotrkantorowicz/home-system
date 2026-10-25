@@ -195,6 +195,10 @@ authenticated `ClaimsPrincipal` and is passed into the command/query, and the ru
   Annotations are hints for the client. **Server-side authorization policies decide**:
   `mcp:<module>:read` / `write` / `import`, with admin operations behind the separate admin
   grant and the existing admin policy.
+- Tools take the caller from DI (the module's scoped `McpCaller`, backed by the shared
+  `McpToolUser`), never from `RequestContext<CallToolRequestParams>`, so the same method runs over
+  `/mcp` and in-process through `McpToolInvoker`. The invoker skips the MCP scope policies; whoever
+  calls it decides what the user may run.
 - Never accept a person, user or household id from tool arguments as the caller's identity.
   Ids passed as arguments only name *other* things the caller is allowed to touch, and the
   application layer checks that access, the same way it does for REST.
