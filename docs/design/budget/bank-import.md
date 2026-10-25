@@ -103,7 +103,7 @@ Enforcement: a unique index on `(budget_id, scope, source_key)`, where `scope` i
 |---|---|---|
 | `New` | No match | Selected |
 | `AlreadyImported` | The source key exists in the caller's visible scope for the chosen envelope | Not selectable |
-| `PossibleDuplicate` | No source-key match, but the parent §6 rule matches a visible expense (exact amount, same category, within two days). This catches manual entries made before the import. Up to five matches are returned. | Not selected; the user can tick it ("Keep both") |
+| `PossibleDuplicate` | No source-key match, but a visible non-void expense has the exact amount and an `OccurredOn` within two calendar days. This is the parent §6 rule **without the category term**. A candidate's category is only a suggestion (often `Other` on a first import) and can change per row, so matching on it would miss the manual entries this status exists to catch. For the same reason, changing a row's category never re-runs the check. Up to five matches are returned. | Not selected; the user can tick it ("Keep both") |
 
 A duplicate check uses only the expenses the caller can see, as `GET /expenses` does.
 
