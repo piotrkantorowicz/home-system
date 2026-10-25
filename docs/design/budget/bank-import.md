@@ -143,7 +143,7 @@ Both routes sit under `/api/budget` and follow parent §8 conventions.
 | `POST /imports/preview` | `multipart/form-data`: `file`, `budgetAccountId` | Profile, statement period, candidates (row key, date, amount, description, suggested category, status, matches), skipped rows with reasons, parse issues. No side effects. |
 | `POST /imports` | JSON: `clientRequestId`, `budgetAccountId`, per-import defaults, selected rows (`sourceKey`, date, amount, description, category, funding, payer, participants) | `{ importId, expenseIds, skippedAlreadyImported }` |
 
-Import rows are user-asserted facts, exactly like manual entries. The server does not re-check them against a file it no longer has. A forged `sourceKey` can only affect the caller's own duplicate protection.
+Import rows are user-asserted facts, exactly like manual entries. The server does not re-check them against a file it no longer has. A `sourceKey` must be exactly 64 lowercase hex characters, otherwise the request is rejected with 400. In a personal envelope, a forged key only weakens the owner's own duplicate protection. In a household envelope, it can pre-claim a key, so another adult's later import of that row shows `AlreadyImported` or fails with 409. This residual risk is accepted: that adult can already write to the same envelope, and the row can still be recorded manually.
 
 Import replay follows parent §6, keyed on the `statement_imports` row (§5.2): the same request returns the original result, and a changed payload returns 409.
 
