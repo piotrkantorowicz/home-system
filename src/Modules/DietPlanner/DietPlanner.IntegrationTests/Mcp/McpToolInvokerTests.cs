@@ -53,17 +53,34 @@ public sealed class McpToolInvokerTests(DatabaseFixture db) : IDisposable
         McpTestHost.Text(inProcess).ShouldBe(McpTestHost.Text(overMcp));
     }
 
-    /// <summary>Expected tool errors come back as error results with the same actionable message as over <c>/mcp</c>.</summary>
+    /// <summary>Expected tool errors come back as error results with the same actionable text as over <c>/mcp</c>.</summary>
     [Fact]
-    public async Task InvokeAsync_CallerWithoutPerson_ReturnsActionableError()
+    public async Task InvokeAsync_CallerWithoutPerson_ReturnsSameErrorAsMcp()
     {
         var subject = $"{McpTestHouseholds.NoPersonPrefix}{_tag}";
         var caller = new ClaimsPrincipal(new ClaimsIdentity([new Claim("sub", subject)], "test"));
+        await using var client = await _mcp.ConnectAsync(subject, DietPlannerMcp.ReadScope);
 
-        var result = await Invoker.InvokeAsync(caller, "get_diet_context", null, TestContext.Current.CancellationToken);
+        var overMcp = await McpTestHost.CallExpectingErrorAsync(client, "get_diet_context");
+        var inProcess = await Invoker.InvokeAsync(caller, "get_diet_context", null, TestContext.Current.CancellationToken);
 
-        result.IsError.ShouldBe(true);
-        McpTestHost.Text(result).ShouldContain("household");
+        inProcess.IsError.ShouldBe(true);
+        McpTestHost.Text(inProcess).ShouldContain("household");
+        McpTestHost.Text(inProcess).ShouldBe(overMcp);
+    }
+
+    /// <summary>A missing required argument is an error result the model can correct, as over <c>/mcp</c>, not an exception.</summary>
+    [Fact]
+    public async Task InvokeAsync_MissingRequiredArgument_ReturnsSameErrorAsMcp()
+    {
+        var me = $"inproc-{_tag}";
+        await using var client = await _mcp.ConnectAsync(me, DietPlannerMcp.ReadScope);
+
+        var overMcp = await McpTestHost.CallExpectingErrorAsync(client, "get_product");
+        var inProcess = await Invoker.InvokeAsync(Caller(me), "get_product", null, TestContext.Current.CancellationToken);
+
+        inProcess.IsError.ShouldBe(true);
+        McpTestHost.Text(inProcess).ShouldBe(overMcp);
     }
 
     /// <summary>An unknown tool name is an error result, not an exception.</summary>

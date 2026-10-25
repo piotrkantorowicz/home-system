@@ -3,6 +3,7 @@ namespace Shared.Infrastructure.Web;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -12,10 +13,11 @@ using ModelContextProtocol.Server;
 /// same catalog (names, descriptions, schemas, annotations), same tool methods, same results.
 /// It does not apply the tools' MCP scope policies; the caller decides which tools a user may run.
 /// </summary>
-public sealed class McpToolInvoker : IAsyncDisposable
+public sealed partial class McpToolInvoker : IAsyncDisposable
 {
     private readonly Dictionary<string, McpServerTool> _tools;
     private readonly IServiceScopeFactory _scopes;
+    private readonly ILogger<McpToolInvoker> _logger;
 
     // ponytail: never-run server; RequestContext demands one but the tools do not talk to the client.
     // Replace with a real session if a tool ever needs sampling, elicitation or progress.
@@ -25,10 +27,12 @@ public sealed class McpToolInvoker : IAsyncDisposable
     /// <param name="tools">Every tool registered on the MCP server.</param>
     /// <param name="scopes">Creates one DI scope per call, as the transport does per request.</param>
     /// <param name="services">Root services the tools resolve against.</param>
-    public McpToolInvoker(IEnumerable<McpServerTool> tools, IServiceScopeFactory scopes, IServiceProvider services)
+    /// <param name="logger">Logs unexpected tool failures; <c>/mcp</c> call logging does not run on this path.</param>
+    public McpToolInvoker(IEnumerable<McpServerTool> tools, IServiceScopeFactory scopes, IServiceProvider services, ILogger<McpToolInvoker> logger)
     {
         _tools = tools.ToDictionary(t => t.ProtocolTool.Name, StringComparer.Ordinal);
         _scopes = scopes;
+        _logger = logger;
         _server = McpServer.Create(new StreamServerTransport(Stream.Null, Stream.Null), new McpServerOptions(), serviceProvider: services);
         Tools = [.. _tools.Values.Select(t => t.ProtocolTool).OrderBy(t => t.Name, StringComparer.Ordinal)];
     }
@@ -60,13 +64,19 @@ public sealed class McpToolInvoker : IAsyncDisposable
             User = user,
         };
 
+        // Mirrors the SDK's tools/call handling so a bad argument is a result the model can correct, not a crash.
         try
         {
             return await tool.InvokeAsync(context, ct).ConfigureAwait(false);
         }
         catch (McpException ex)
         {
-            return Error(ex.Message);
+            return Error($"An error occurred invoking '{name}': {ex.Message}");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            LogFailure(_logger, name, ex);
+            return Error($"An error occurred invoking '{name}'.");
         }
     }
 
@@ -75,4 +85,7 @@ public sealed class McpToolInvoker : IAsyncDisposable
 
     private static CallToolResult Error(string message)
         => new() { IsError = true, Content = [new TextContentBlock { Text = message }] };
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "In-process MCP tool {Tool} failed")]
+    private static partial void LogFailure(ILogger logger, string tool, Exception exception);
 }
