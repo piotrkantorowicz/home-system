@@ -9,7 +9,6 @@ using DietPlanner.Application.Queries.SearchProducts;
 using DietPlanner.Application.Queries.SearchRecipes;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
-using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
 
@@ -24,7 +23,7 @@ internal sealed class CatalogWriteTools
     [McpServerTool(Name = "create_product", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("Saves a new product in the caller's catalog, with the same rules as the app. Nutrition is per 100 g; leave out values you do not know, never send zero for unknown. Retry with the same operationKey and fields to get the original product back instead of a duplicate; a new product needs a new key.")]
     public static async Task<CreatedProductDto> CreateProduct(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         ICommandDispatcher commands,
         IQueryDispatcher queries,
         [Description("Idempotency key for this product, 8-128 characters (a UUID works). Reuse it only to retry this same call.")] string operationKey,
@@ -40,7 +39,7 @@ internal sealed class CatalogWriteTools
         [Description("Private or Household; Household when omitted.")] string? visibility = null,
         CancellationToken ct = default)
     {
-        var subject = McpCaller.AuthSubject(context);
+        var subject = caller.AuthSubject();
         Guid id = await McpErrors.AsToolErrorsAsync(() => commands.SendAsync<CreateProductCommand, Guid>(
             new CreateProductCommand(name, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g, fiberPer100g,
                 unit, densityGramsPerMl, gramPerPiece, visibility, subject, operationKey), ct));
@@ -53,7 +52,7 @@ internal sealed class CatalogWriteTools
     [McpServerTool(Name = "create_recipe", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("Saves a new recipe in the caller's catalog from products the caller can see, with the same rules as the app. Ingredient amounts are for the whole recipe; servings says how many portions they make. Retry with the same operationKey and fields to get the original recipe back instead of a duplicate; a new recipe needs a new key.")]
     public static async Task<CreatedRecipeDto> CreateRecipe(
-        RequestContext<CallToolRequestParams> context,
+        McpCaller caller,
         ICommandDispatcher commands,
         IQueryDispatcher queries,
         [Description("Idempotency key for this recipe, 8-128 characters (a UUID works). Reuse it only to retry this same call.")] string operationKey,
@@ -66,7 +65,7 @@ internal sealed class CatalogWriteTools
         [Description("Private or Household; Household when omitted.")] string? visibility = null,
         CancellationToken ct = default)
     {
-        var subject = McpCaller.AuthSubject(context);
+        var subject = caller.AuthSubject();
         Guid id = await McpErrors.AsToolErrorsAsync(() => commands.SendAsync<CreateRecipeCommand, Guid>(
             new CreateRecipeCommand(name, description, instructions, servings, prepTimeMinutes,
                 [.. ingredients.Select(i => new CreateRecipeIngredientRequest(i.ProductId, i.Amount, i.Unit))],
