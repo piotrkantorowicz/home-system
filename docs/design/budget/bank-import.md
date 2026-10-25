@@ -34,7 +34,7 @@ The household uses **PKO BP, mBank, ING Bank Śląski and Revolut** (owner, 2026
 
 ### 2.1 Bank profiles
 
-The column names below come from each bank's current export documentation. The `mbank` row was checked against a real export from the owner on 2026-10-25; its encoding and delimiter are confirmed from the raw file in #670. The other rows are **unverified until the anonymised fixture for that bank lands in #670**. If a fixture disagrees with this table, the fixture wins and #670 updates the table.
+The column names below come from each bank's current export documentation. The `mbank` row was checked against a real export from the owner on 2026-10-25; its raw bytes (Windows-1250, CRLF, `;`, no BOM) were confirmed in #670 and match the fixture. The other rows are **unverified**: their #670 fixtures follow this table, not a real export. When a real export from one of those banks is available, it replaces that fixture; where they disagree, the export wins and this table is updated.
 
 | Profile | Encoding | Delimiter | Header detection | Date | Amount | Bank reference |
 |---|---|---|---|---|---|---|
