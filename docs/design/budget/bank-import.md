@@ -130,7 +130,9 @@ Store `(budget_id, scope, merchant_key) → category`, with the same scope as §
 
 ### 5.2 Import provenance
 
-Expense creation revision 1 records `Source = Import` and the import ID (BI4). A manual entry records `Source = Manual`. Later corrections and voids work as they do today. Voiding an imported expense keeps its source key, so re-importing the file does not bring the voided row back. To re-import a row, the user records it manually.
+An import writes one `statement_imports` row: import ID, `BudgetId`, `ActorPersonId`, `ClientRequestId`, envelope, the normalised request (stored the way expense revisions store theirs, parent §6) and a timestamp. Its unique `(BudgetId, ActorPersonId, ClientRequestId)` index is the replay key for the whole import. Each imported expense also gets one `imported_transactions` row (`budget_id`, `scope`, `source_key`, `import_id`, `expense_id`) carrying the §4.2 unique index. A replay returns the expense IDs found through `import_id`.
+
+Each imported expense still writes its own revision 1. That revision cannot reuse the import's `ClientRequestId`: `ux_expense_revisions_request_identity` is unique per `(BudgetId, ActorPersonId, ClientRequestId)`, so a two-row import would collide. Revision 1 instead uses a per-row ID derived as UUIDv5(namespace = import `ClientRequestId`, name = `sourceKey`). It is deterministic on replay and unique within the import. Revision 1 records `Source = Import` and the import ID (BI4); a manual entry records `Source = Manual`. Later corrections and voids work as they do today. Voiding an imported expense keeps its source key, so re-importing the file does not bring the voided row back. To re-import a row, the user records it manually.
 
 ## 6. API shape
 
@@ -143,7 +145,7 @@ Both routes sit under `/api/budget` and follow parent §8 conventions.
 
 Import rows are user-asserted facts, exactly like manual entries. The server does not re-check them against a file it no longer has. A forged `sourceKey` can only affect the caller's own duplicate protection.
 
-Import replay follows parent §6. Unique `(BudgetId, ActorPersonId, ClientRequestId)`: the same request returns the original result, and a changed payload returns 409.
+Import replay follows parent §6, keyed on the `statement_imports` row (§5.2): the same request returns the original result, and a changed payload returns 409.
 
 Race between preview and import: if a selected key was imported in the meantime, the whole import fails with a typed 409. The UI then offers a fresh preview (#672).
 
