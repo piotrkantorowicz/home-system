@@ -149,7 +149,7 @@ Import replay follows parent §6, keyed on the `statement_imports` row (§5.2): 
 
 Race between preview and import: if a selected key was imported in the meantime, the whole import fails with a typed 409. The UI then offers a fresh preview (#672).
 
-MCP and the assistant (BI8) call the same two handlers. The file content is passed as text in the tool input, so it is also bounded by the MCP `MaxRequestBytes` setting. BI8 defines the tool schema.
+MCP and the assistant (BI8) call the same two handlers. The tool takes the file as **base64 of the raw bytes**, never as decoded text, and the server runs it through the same parser. An agent that decoded a Windows-1250 export as UTF-8 would already have replaced Polish characters with U+FFFD. The normalised descriptions, and with them the fingerprint source keys, would then differ between a UI upload and an MCP import of the same statement. Base64 adds about 33%, so at the default `Mcp:MaxRequestBytes` of 1 MiB the effective MCP file limit is about 750 KiB, below the 2 MiB in §8. BI8 defines the tool schema.
 
 ## 7. Privacy
 
@@ -163,7 +163,7 @@ MCP and the assistant (BI8) call the same two handlers. The file content is pass
 
 | Limit | Value | Reason |
 |---|---|---|
-| File size | 2 MiB | Under the host's 5 MiB `MaxRequestBodySize`. A year of personal CSV is roughly 300 KiB. |
+| File size | 2 MiB (MCP: about 750 KiB, §6) | Under the host's 5 MiB `MaxRequestBodySize`. A year of personal CSV is roughly 300 KiB. |
 | Data rows per file | 1,000 | Covers several months of one account; a larger statement is split by date range |
 | Selected rows per import | 1,000 | Matches the file limit; one Budget transaction |
 | Header search | First 60 lines | The mBank preamble alone is ~37 lines |
