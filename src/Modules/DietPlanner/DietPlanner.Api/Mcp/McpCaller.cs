@@ -2,27 +2,27 @@ namespace DietPlanner.Api.Mcp;
 
 using System.Security.Claims;
 using ModelContextProtocol;
-using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using Shared.Abstractions.Core.Domain;
+using Shared.Infrastructure.Web;
 
 /// <summary>
-/// The authenticated caller of an MCP tool, read from the request the transport authenticated. Tool
-/// arguments never name the caller.
+/// The authenticated caller of a tool, whether the call came over <c>/mcp</c> or in-process through
+/// <see cref="McpToolInvoker"/>. Tool arguments never name the caller.
 /// </summary>
-internal static class McpCaller
+/// <param name="user">The caller bound to this tool call.</param>
+internal sealed class McpCaller(McpToolUser user)
 {
-    public static ClaimsPrincipal User(RequestContext<CallToolRequestParams> context)
-        => context.User ?? throw new McpException("The request is not authenticated.");
+    public ClaimsPrincipal User()
+        => user.Principal ?? throw new McpException("The request is not authenticated.");
 
-    public static string AuthSubject(RequestContext<CallToolRequestParams> context)
-        => PersonalDataClaims.GetAuthSubject(User(context));
+    public string AuthSubject()
+        => PersonalDataClaims.GetAuthSubject(User());
 
-    public static Guid PersonId(RequestContext<CallToolRequestParams> context)
+    public Guid PersonId()
     {
         try
         {
-            return PersonalDataClaims.GetPersonId(User(context));
+            return PersonalDataClaims.GetPersonId(User());
         }
         catch (ForbiddenException ex)
         {

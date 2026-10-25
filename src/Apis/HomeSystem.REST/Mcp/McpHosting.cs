@@ -101,6 +101,8 @@ internal static class McpHosting
             .WithHttpTransport(transport => transport.Stateless = true)
             .AddAuthorizationFilters()
             .WithRequestFilters(filters => filters.AddCallToolFilter(McpCallLogging.Filter))
+            .AddInProcessToolCalls()
+            .AddInProcessToolCalls()
             .AddDietPlannerMcpTools();
     }
 
