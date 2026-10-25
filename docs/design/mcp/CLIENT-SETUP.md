@@ -12,7 +12,8 @@ Supported and verified (2026-10-24): **Claude Code 2.1.304**, `ModelContextProto
 The blueprint `infrastructure/authentik/blueprints/home-system.yaml` registers the
 `home-system-mcp` provider and application: a public client with PKCE, explicit consent,
 callbacks `http://localhost:33418/callback` and `http://127.0.0.1:33418/callback`, and
-the grants `mcp:diet:read`, `mcp:diet:write` and `mcp:diet:import`.
+the grants `mcp:diet:read`, `mcp:diet:write`, `mcp:diet:import`,
+`mcp:investments:read` and `mcp:investments:write`.
 
 A fresh stack applies it on startup. On a running stack the worker re-applies changed
 blueprints within minutes; to apply at once:
