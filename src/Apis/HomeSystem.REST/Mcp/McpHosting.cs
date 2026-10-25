@@ -102,7 +102,6 @@ internal static class McpHosting
             .AddAuthorizationFilters()
             .WithRequestFilters(filters => filters.AddCallToolFilter(McpCallLogging.Filter))
             .AddInProcessToolCalls()
-            .AddInProcessToolCalls()
             .AddDietPlannerMcpTools();
     }
 
