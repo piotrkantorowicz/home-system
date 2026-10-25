@@ -80,7 +80,6 @@ internal static class McpHosting
             authorization.AddMcpScopePolicy(DietPlannerMcp.WriteScope, enabled: options.WritesEnabled);
             authorization.AddMcpScopePolicy(DietPlannerMcp.ImportScope, enabled: options.WritesEnabled && options.ImportsEnabled);
             authorization.AddMcpScopePolicy(InvestmentsMcp.ReadScope);
-            authorization.AddMcpScopePolicy(InvestmentsMcp.WriteScope, enabled: options.WritesEnabled);
         });
 
         builder.Services.AddRateLimiter(limiter =>
