@@ -59,7 +59,7 @@ An envelope groups purpose or ownership; category describes a purchase. “Every
 
 | Draft follow-up | Scope and trigger |
 |---|---|
-| F1 — bank/CSV import | Dedicated later epic: preview, source mapping, stable imported IDs, overlap reconciliation with manual entries, and import audit. Begin when manual entry becomes the main friction. Import alone does not prevent duplicates. |
+| F1 — bank/CSV import | Dedicated later epic: preview, source mapping, stable imported IDs, overlap reconciliation with manual entries, and import audit. Begin when manual entry becomes the main friction. Import alone does not prevent duplicates. Now epic #668; design in [bank-import.md](bank-import.md). |
 | F2 — income and cash accounts | Bank balances, opening balances, deposits, transfers, actual allowance payments, and joint-pot contribution accounting. Needed when users ask “how much cash is available?” |
 | F3 — refunds | Linked partial/full refunds, original-share reversal, cumulative caps, and atomic protection against over-refunding. Needed before claiming net spending after merchant returns. v1 accepts expenses only; corrections must not be presented as refunds. |
 | F4 — recurring expenses and richer planning | Scheduled entries, recurring limit templates, rollover, annual targets, receipt attachments, custom categories, unequal/custom splits, notifications. Add only for observed use. |
