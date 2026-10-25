@@ -122,6 +122,18 @@ public sealed class StatementParserTests
         transaction.IsForeignCurrency.ShouldBeTrue();
     }
 
+    /// <summary>A UTF-8 byte-order mark before the header does not hide it (§2.1 allows one).</summary>
+    [Fact]
+    public void Parse_Utf8WithBom_DetectsHeader()
+    {
+        var file = "Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance\nCARD_PAYMENT,Current,2026-10-19 12:00:00,2026-10-19 12:00:00,Żabka,-1.00,0.00,PLN,COMPLETED,1.00";
+
+        var result = StatementParser.Parse([.. Encoding.UTF8.GetPreamble(), .. Encoding.UTF8.GetBytes(file)], BudgetCurrency.PLN);
+
+        result.Profile.ShouldBe("revolut");
+        result.Transactions.ShouldHaveSingleItem().Counterparty.ShouldBe("Żabka");
+    }
+
     /// <summary>A file no profile recognises is rejected, never guessed at.</summary>
     [Fact]
     public void Parse_UnknownFormat_Throws()

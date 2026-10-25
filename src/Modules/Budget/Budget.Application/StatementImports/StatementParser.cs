@@ -30,7 +30,7 @@ internal static class StatementParser
             throw new BudgetDomainException($"A statement file can be at most {MaxFileBytes / 1024 / 1024} MiB.");
 
         var (text, isUtf8) = Decode(content);
-        string[] lines = text.TrimStart('﻿').Split('\n');
+        string[] lines = text.TrimStart('\uFEFF').Split('\n');
         var (profile, headerLine) = Detect(lines);
         if (profile.Utf8Only && !isUtf8)
             throw new BudgetDomainException($"The {profile.Name} statement is not valid UTF-8. Export it again without converting it.");
