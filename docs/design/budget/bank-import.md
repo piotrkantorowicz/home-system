@@ -119,8 +119,10 @@ The user chooses **one target envelope per import**. Defaults are set once per i
 | `Category` | BI5 suggestion if one exists, else the import default, else `Other` | Yes |
 | `Description` | `counterparty — title`, or just the title when the counterparty is empty (mBank card payments), with bank padding and the `DATA TRANSAKCJI: …` suffix removed; normalised and truncated to `Expense.MaxDescriptionLength` (80). Example: `ALDI SP. Z O.O. /GLIWICE` | Yes |
 | Funding source | Shared envelope: chosen per import (`Individual` or `HouseholdFunds`). Personal envelope: always `Individual` with the owner as payer (parent §4). | Yes, shared envelopes only |
-| Payer | The importing actor when `Individual` | Yes, any eligible current adult |
+| Payer | The importing actor | Yes, any eligible current adult |
 | Participants | All current Owner/Adult members, as in manual entry | Yes |
+
+The payer and participants rows, defaults and overrides alike, apply only to `Individual` funding. A `HouseholdFunds` expense has no payer and no shares (parent §4).
 
 Every row is validated exactly like a manual expense: access, eligible payer and participants, money rules. One invalid row rejects the whole import with per-row errors, and nothing is written.
 
