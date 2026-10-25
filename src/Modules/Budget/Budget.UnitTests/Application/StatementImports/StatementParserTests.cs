@@ -111,6 +111,17 @@ public sealed class StatementParserTests
         ]);
     }
 
+    /// <summary>A stray quote inside an unquoted cell is text; it does not swallow the following delimiters.</summary>
+    [Fact]
+    public void Parse_MidFieldQuote_KeepsColumns()
+    {
+        var result = ParseText(MbankFile("2026-10-19;2026-10-19;ZAKUP;SKLEP 5\" EKRAN;;'';-1,00;0,00;"));
+
+        var transaction = result.Transactions.ShouldHaveSingleItem();
+        transaction.Title.ShouldBe("SKLEP 5\" EKRAN");
+        transaction.Amount.ShouldBe(-1.00m);
+    }
+
     /// <summary>A foreign row keeps its own currency and is flagged against the Budget's, not converted.</summary>
     [Fact]
     public void Parse_BudgetInEur_FlagsPlnRowsAsForeign()

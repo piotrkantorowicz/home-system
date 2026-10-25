@@ -2,7 +2,10 @@ namespace Budget.Application.StatementImports;
 
 using System.Text;
 
-/// <summary>Splits one CSV line into fields: quoted fields may hold the delimiter, <c>""</c> is a literal quote.</summary>
+/// <summary>
+/// Splits one CSV line into fields: quoted fields may hold the delimiter, <c>""</c> is a literal quote.
+/// As in RFC 4180, a quote opens a quoted field only at its start; mid-field it is plain text.
+/// </summary>
 internal static class CsvLine
 {
     // ponytail: one physical line is one record; no bank in bank-import.md §2.1 puts newlines inside a quoted field.
@@ -24,7 +27,7 @@ internal static class CsvLine
                 else
                     quoted = false;
             }
-            else if (c == '"')
+            else if (c == '"' && field.Length == 0)
                 quoted = true;
             else if (c == delimiter)
             {
