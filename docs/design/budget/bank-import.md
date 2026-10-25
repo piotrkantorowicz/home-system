@@ -170,7 +170,7 @@ MCP and the assistant (BI8) call the same two handlers. The tool takes the file 
 | Selected rows per import | 1,000 | Matches the file limit; one Budget transaction |
 | Header search | First 60 lines | The mBank preamble alone is ~37 lines |
 
-Breaking a limit returns 400 with the limit named. Nothing is partially parsed or imported.
+Breaking a limit is rejected with the limit named, and nothing is partially parsed or imported. The file-size limit is checked on the request (400). The row limit is only known while parsing, so the parser reports it as a 422 business-rule violation, the same as an unrecognised format.
 
 ## 9. Access
 
