@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using DietPlanner.Api;
+using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.SearchProducts;
 using DietPlanner.IntegrationTests.Infrastructure;
 using DietPlanner.Mcp;
@@ -99,6 +100,55 @@ public sealed class McpProductEditToolsTests(DatabaseFixture db) : IDisposable
         again.ShouldContain(id.ToString());
     }
 
+    /// <summary>What the description promises after a delete: recipes keep an Unknown line without nutrition, diary meals keep the product.</summary>
+    [Fact]
+    public async Task DeleteProduct_RecipesShowUnknownAndDiaryKeepsIt()
+    {
+        var me = $"pe-refs-{_tag}";
+        var rest = _mcp.Rest(me);
+        var (product, recipe) = ($"Paneer {_tag}", $"Curry {_tag}");
+        var import = new ImportDto(
+            [new ImportProductDto(product, 300m, 18m, 4m, 22m, 0m, "g", null, null)],
+            [new ImportRecipeDto(recipe, null, null, 1, null, [new ImportIngredientDto(product, 200m, "g")])],
+            [new ImportScheduleDto("2026-11-05", [new ImportMealDto("Lunch", recipe, 1m, null)])]);
+        (await rest.PostAsJsonAsync("/api/v1/meals/import", import, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await using var client = await _mcp.ConnectAsync(me, WriteScopes);
+        var productId = (await McpTestHost.CallAsync<CatalogPageDto<CatalogProductDto>>(client, "search_products", new() { ["query"] = product })).Items.Single().Id;
+        var recipeId = (await McpTestHost.CallAsync<CatalogPageDto<CatalogRecipeDto>>(client, "search_recipes", new() { ["query"] = recipe })).Items.Single().Id;
+        var meal = (await McpTestHost.CallAsync<IReadOnlyList<DiaryMealDto>>(client, "get_meal_entries", Day("2026-11-05"))).Single();
+        (await rest.PatchAsJsonAsync($"/api/v1/meals/{meal.Id}/override",
+            new OverrideMealEntryRequest(null, [new ActualProductRequest(productId, 50m, "g")]), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        await McpTestHost.CallAsync<DeletedItemDto>(client, "delete_product", new() { ["productId"] = productId });
+        var details = await McpTestHost.CallAsync<CatalogRecipeDto>(client, "get_recipe", new() { ["recipeId"] = recipeId });
+        var diary = (await McpTestHost.CallAsync<IReadOnlyList<DiaryMealDto>>(client, "get_meal_entries", Day("2026-11-05"))).Single();
+
+        details.Ingredients.ShouldHaveSingleItem().ProductName.ShouldBe("Unknown");
+        details.NutritionPerServing.ShouldNotBeNull().Calories.ShouldBe(0m);
+        diary.ActualProducts.ShouldBe([$"{product} 50 g"]);
+    }
+
+    /// <summary>A household adult may delete a shared product; a guest of the household may not, and it stays.</summary>
+    [Fact]
+    public async Task DeleteProduct_HouseholdAdultAllowedGuestRefused()
+    {
+        var (owner, adult, guest) = ($"pe-hh-owner-{_tag}", $"pe-hh-adult-{_tag}", $"pe-hh-guest-{_tag}");
+        _mcp.Households.Join(owner, adult, guest);
+        _mcp.Households.Contexts[guest] = _mcp.Households.Contexts[guest] with { Role = "Guest" };
+        var byAdult = await CreateAsync(owner, $"Yoghurt {_tag}", 61m, "Household");
+        var byGuest = await CreateAsync(owner, $"Cream {_tag}", 340m, "Household");
+        await using var adultClient = await _mcp.ConnectAsync(adult, WriteScopes);
+        await using var guestClient = await _mcp.ConnectAsync(guest, WriteScopes);
+
+        var deleted = await McpTestHost.CallAsync<DeletedItemDto>(adultClient, "delete_product", new() { ["productId"] = byAdult });
+        var refused = await McpTestHost.CallExpectingErrorAsync(guestClient, "delete_product", new() { ["productId"] = byGuest });
+
+        deleted.Id.ShouldBe(byAdult);
+        (await _mcp.Rest(owner).GetAsync($"/api/v1/products/{byAdult}", TestContext.Current.CancellationToken)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        refused.ShouldContain("adult of its household");
+        (await GetAsync(owner, byGuest)).Name.ShouldBe($"Cream {_tag}");
+    }
+
     /// <summary>Another person cannot see, change or delete the caller's private product; it stays untouched.</summary>
     [Fact]
     public async Task EditTools_ForStranger_FailLikeMissingAndChangeNothing()
@@ -167,6 +217,8 @@ public sealed class McpProductEditToolsTests(DatabaseFixture db) : IDisposable
             args["visibility"] = visibility;
         return args;
     }
+
+    private static Dictionary<string, object?> Day(string date) => new() { ["from"] = date, ["to"] = date };
 
     private static Dictionary<string, JsonElement> Json(Dictionary<string, object?> args)
         => args.ToDictionary(a => a.Key, a => JsonSerializer.SerializeToElement(a.Value));
