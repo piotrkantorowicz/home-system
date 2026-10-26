@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry`, `get_hydration`, `update_hydration_config`, `log_water_intake`, `delete_water_intake` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry`, `get_hydration`, `update_hydration_config`, `log_water_intake`, `delete_water_intake`, `update_meal_schedule`, `update_diet_reminders` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -80,8 +80,8 @@ existing admin policy, never the everyday write grant).
 
 | Method | Route | Operation | Kind | Proposed tool | Target |
 |---|---|---|---|---|---|
-| GET | `/api/v1/diet-reminder-settings` | GetDietReminderSettings | read | `get_diet_context` (reminders summary) | #607; settings writes DP-8 |
-| PUT | `/api/v1/diet-reminder-settings` | UpdateDietReminderSettings | write | `update_diet_reminders` | Epic B DP-8 |
+| GET | `/api/v1/diet-reminder-settings` | GetDietReminderSettings | read | `get_diet_context` (`Reminders`) | #658 |
+| PUT | `/api/v1/diet-reminder-settings` | UpdateDietReminderSettings | write | `update_diet_reminders` | #658 |
 | GET | `/api/v1/goals` | GetGoals | read | `get_diet_context` | #607 |
 | POST | `/api/v1/goals` | CreateGoals | write | `set_goals` (upsert) | #655 |
 | PUT | `/api/v1/goals` | UpdateGoals | write | `set_goals` (upsert) | #655 |
@@ -105,7 +105,7 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/v1/meals/validate` | ValidateImport | read | `preview_plan_import` (strict command, not this route) | #613 (resolver: #612) |
 | POST | `/api/v1/meals/import` | ExecuteImport | write | `execute_plan_import` (strict command + receipt) | #614 |
 | GET | `/api/v1/meal-schedule` | GetMealSchedule | read | `get_diet_context` | #607 |
-| PUT | `/api/v1/meal-schedule` | UpdateMealSchedule | write | `update_meal_schedule` | Epic B DP-8 |
+| PUT | `/api/v1/meal-schedule` | UpdateMealSchedule | write | `update_meal_schedule` | #658 |
 | GET | `/api/v1/products` | ListProducts | read | `search_products` | #608 |
 | GET | `/api/v1/products/{id:guid}` | GetProduct | read | `get_product` | #608 |
 | POST | `/api/v1/products` | CreateProduct | write | `create_product` | #610 |
