@@ -129,6 +129,63 @@ public sealed class BudgetStatementImportTests : IClassFixture<BudgetDatabaseFix
         (await CountAsync(h.Owner)).ShouldBe(1);
     }
 
+    /// <summary>Two concurrent imports of the same row with different request IDs: one wins, the other is a 409, never a 500.</summary>
+    [Fact]
+    public async Task Import_ConcurrentOverlappingImports_OneWinsOneConflicts()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var bea = await _scenario.MemberAsync(h, "Adult");
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+        var candidates = await PreviewAsync(h.Owner, account);
+
+        var responses = await Task.WhenAll(
+            ImportAsync(h.Owner, Guid.NewGuid(), account, Row(candidates[0]), Row(candidates[1])),
+            ImportAsync(bea.Client, Guid.NewGuid(), account, Row(candidates[1]), Row(candidates[2])));
+
+        responses.Select(r => r.StatusCode).Order().ShouldBe([HttpStatusCode.Created, HttpStatusCode.Conflict]);
+        (await CountAsync(h.Owner)).ShouldBe(2);
+    }
+
+    /// <summary>A retry carrying only some of the original rows returns their expenses and writes nothing (§6).</summary>
+    [Fact]
+    public async Task Import_SubsetRetry_ReplaysThoseRows()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+        var candidates = await PreviewAsync(h.Owner, account);
+        var requestId = Guid.NewGuid();
+        var created = (await (await ImportAsync(h.Owner, requestId, account, Row(candidates[0]), Row(candidates[1])))
+            .Content.ReadFromJsonAsync<ResultBody>(Ct))!;
+
+        var replay = await ImportAsync(h.Owner, requestId, account, Row(candidates[1]));
+
+        replay.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = (await replay.Content.ReadFromJsonAsync<ResultBody>(Ct))!;
+        result.ExpenseIds.ShouldBe([created.ExpenseIds[1]]);
+        result.Created.ShouldBeFalse();
+        (await CountAsync(h.Owner)).ShouldBe(2);
+    }
+
+    /// <summary>An archived envelope is an envelope error, not one about the first row; more than 1000 rows is a 400.</summary>
+    [Fact]
+    public async Task Import_ArchivedEnvelopeOrTooManyRows_IsRejected()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var created = (await (await h.Owner.PostAsJsonAsync("/api/budget/accounts", new { name = "Old", visibility = "Household" }, Ct))
+            .Content.ReadFromJsonAsync<RevisionedAccountBody>(Ct))!;
+        var candidates = await PreviewAsync(h.Owner, created.Id);
+        (await h.Owner.PostAsJsonAsync($"/api/budget/accounts/{created.Id}/archive", new { expectedRevision = created.Revision }, Ct)).EnsureSuccessStatusCode();
+
+        var archived = await ImportAsync(h.Owner, Guid.NewGuid(), created.Id, Row(candidates[0]));
+        archived.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        var body = await archived.Content.ReadAsStringAsync(Ct);
+        body.ShouldContain("This envelope is archived");
+        body.ShouldNotContain("Rows[");
+
+        var tooMany = Enumerable.Range(0, 1001).Select(i => Row(candidates[0] with { SourceKey = i.ToString("x64", System.Globalization.CultureInfo.InvariantCulture) })).ToArray();
+        (await ImportAsync(h.Owner, Guid.NewGuid(), created.Id, tooMany)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     /// <summary>A personal envelope is paid by its owner without a payer in the request; a guest cannot import at all.</summary>
     [Fact]
     public async Task Import_PersonalEnvelopeOrGuest_FollowsExpenseAccess()
@@ -144,6 +201,7 @@ public sealed class BudgetStatementImportTests : IClassFixture<BudgetDatabaseFix
     }
 
     private sealed record AccountBody(Guid Id);
+    private sealed record RevisionedAccountBody(Guid Id, int Revision);
     private sealed record PageBody(int TotalCount);
     private sealed record ResultBody(List<Guid> ExpenseIds, bool Created);
     private sealed record RevisionBody(string Operation);
