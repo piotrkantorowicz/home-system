@@ -40,7 +40,11 @@ internal sealed class CreateExpenseCommandValidator : ICommandValidator<CreateEx
         => TryParseEnum(value, out funding);
 
     private static bool TryParseEnum<T>(string? value, out T result) where T : struct, Enum
-        => Enum.TryParse(value?.Trim(), ignoreCase: true, out result)
-           && Enum.IsDefined(result)
-           && value.Trim().All(char.IsLetter); // rejects numeric enum values such as "1"
+    {
+        result = default;
+        return value?.Trim() is { } trimmed
+               && Enum.TryParse(trimmed, ignoreCase: true, out result)
+               && Enum.IsDefined(result)
+               && trimmed.All(char.IsLetter); // rejects numeric enum values such as "1"
+    }
 }
