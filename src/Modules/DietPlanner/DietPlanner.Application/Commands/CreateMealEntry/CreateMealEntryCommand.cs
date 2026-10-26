@@ -15,6 +15,7 @@ using Shared.Abstractions.Cqrs;
 /// <param name="SequenceOrder">Optional ordering among entries in the same slot.</param>
 /// <param name="AuthSubject">Auth subject of the caller; resolves their household.</param>
 /// <param name="ForPersonId">Household member the meal is for; the caller when <see langword="null"/>.</param>
+/// <param name="OperationKey">Optional idempotency key: a retry with the same key and fields returns the original id instead of planning again; the same key with different fields is a conflict.</param>
 public sealed record CreateMealEntryCommand(
     Guid PersonId,
     DateOnly Date,
@@ -25,4 +26,5 @@ public sealed record CreateMealEntryCommand(
     TimeOnly? MealTime,
     int? SequenceOrder,
     string AuthSubject,
-    Guid? ForPersonId = null) : ICommand<Guid>;
+    Guid? ForPersonId = null,
+    string? OperationKey = null) : ICommand<Guid>;

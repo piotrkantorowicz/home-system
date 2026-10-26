@@ -1,6 +1,7 @@
 namespace DietPlanner.UnitTests.Application.Commands;
 
 using DietPlanner.Application.Commands.CreateMealEntry;
+using DietPlanner.Application.OperationReceipts;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -24,7 +25,8 @@ public sealed class CreateMealEntryCommandHandlerTests
         _recipeRepository.GetByIdAsync(Arg.Any<RecipeId>(), Arg.Any<CancellationToken>())
             .Returns(ci => Recipe.Create(ci.Arg<RecipeId>(), "Oats", null, null, 1, null, "user-1", TestClock.UtcNow));
         _sut = new CreateMealEntryCommandHandler(
-            _repository, _scheduleRepository, _recipeRepository, _unitOfWork, _clock, TestHouseholds.Solo());
+            _repository, _scheduleRepository, _recipeRepository, _unitOfWork, _clock, TestHouseholds.Solo(),
+            new OperationReplay(Substitute.For<IOperationReceiptRepository>()));
     }
 
     /// <summary>With valid command: <c>HandleAsync</c> adds meal entry and commits.</summary>
