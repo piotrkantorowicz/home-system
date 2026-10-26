@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -83,8 +83,8 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/v1/diet-reminder-settings` | GetDietReminderSettings | read | `get_diet_context` (reminders summary) | #607; settings writes DP-8 |
 | PUT | `/api/v1/diet-reminder-settings` | UpdateDietReminderSettings | write | `update_diet_reminders` | Epic B DP-8 |
 | GET | `/api/v1/goals` | GetGoals | read | `get_diet_context` | #607 |
-| POST | `/api/v1/goals` | CreateGoals | write | `set_goals` | Epic B DP-5 |
-| PUT | `/api/v1/goals` | UpdateGoals | write | `set_goals` | Epic B DP-5 |
+| POST | `/api/v1/goals` | CreateGoals | write | `set_goals` (upsert) | #655 |
+| PUT | `/api/v1/goals` | UpdateGoals | write | `set_goals` (upsert) | #655 |
 | GET | `/api/v1/hydration/config` | GetHydrationConfig | read | `get_hydration` | Epic B DP-7 |
 | PUT | `/api/v1/hydration/config` | UpdateHydrationConfig | write | `update_hydration_config` | Epic B DP-7 |
 | GET | `/api/v1/hydration/intake` | GetWaterIntake | read | `get_hydration` | Epic B DP-7 |
@@ -112,9 +112,9 @@ existing admin policy, never the everyday write grant).
 | PUT | `/api/v1/products/{id:guid}` | UpdateProduct | write | `update_product` | #651 |
 | DELETE | `/api/v1/products/{id:guid}` | DeleteProduct | destructive | `delete_product` | #651 |
 | GET | `/api/v1/profile` | GetProfile | read | `get_diet_context` | #607 |
-| GET | `/api/v1/profile/prediction` | GetWeightPrediction | read | `get_weight_prediction` | Epic B DP-5 |
-| POST | `/api/v1/profile` | CreateProfile | write | `set_profile` | Epic B DP-5 |
-| PUT | `/api/v1/profile` | UpdateProfile | write | `set_profile` | Epic B DP-5 |
+| GET | `/api/v1/profile/prediction` | GetWeightPrediction | read | `get_weight_prediction` | #655 |
+| POST | `/api/v1/profile` | CreateProfile | write | `set_profile` (upsert) | #655 |
+| PUT | `/api/v1/profile` | UpdateProfile | write | `set_profile` (upsert) | #655 |
 | GET | `/api/v1/recipes` | ListRecipes | read | `search_recipes` | #608 |
 | GET | `/api/v1/recipes/{id:guid}` | GetRecipe | read | `get_recipe` | #608 |
 | POST | `/api/v1/recipes` | CreateRecipe | write | `create_recipe` | #611 |

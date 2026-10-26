@@ -730,6 +730,33 @@
     "_meta": null
   },
   {
+    "name": "get_weight_prediction",
+    "title": null,
+    "description": "Estimates from the caller's profile what eating a given number of kcal a day would do: BMR, TDEE, daily deficit (negative is a surplus), weekly weight change in kg, the date the target weight would be reached, and BMI now and at target. The same calculation as the app; an estimate, not medical advice. Needs date of birth, gender, height, current weight and activity level in the profile.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dailyCalorieTarget": {
+          "description": "Planned daily intake in kcal, e.g. the goal's daily calorie target.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "dailyCalorieTarget"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "override_meal",
     "title": null,
     "description": "Records that the caller ate something other than the plan for one meal (status Modified): a replacement recipe, individual products, or both, never neither. Replaces any earlier override of that meal. The day's nutrition then counts what was actually eaten. Recipes and products must be ones the caller can see.",
@@ -1227,6 +1254,135 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "set_goals",
+    "title": null,
+    "description": "Saves the caller's daily nutrition goal, creating it on first use. Replaces every field: values you leave out become unset, so read get_diet_context first and send back what should stay. get_weight_prediction shows what a calorie target would do to weight.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dailyCalorieTarget": {
+          "description": "Daily energy target in kcal, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        },
+        "proteinGrams": {
+          "description": "Daily protein in grams, if any.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "carbsGrams": {
+          "description": "Daily carbohydrates in grams, if any.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fatGrams": {
+          "description": "Daily fat in grams, if any.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fiberGrams": {
+          "description": "Daily fibre in grams, if any.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "set_profile",
+    "title": null,
+    "description": "Saves the caller's diet profile, creating it on first use. Replaces every field: values you leave out become unknown, so read get_diet_context first and send back what should stay. Height in cm, weights in kg.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateOfBirth": {
+          "description": "Date of birth, ISO yyyy-MM-dd, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "gender": {
+          "description": "Male, Female or Other, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "heightCm": {
+          "description": "Height in cm, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "currentWeightKg": {
+          "description": "Current weight in kg, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "targetWeightKg": {
+          "description": "Target weight in kg, if any.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "activityLevel": {
+          "description": "Sedentary, LightlyActive, ModeratelyActive, VeryActive or ExtraActive, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
