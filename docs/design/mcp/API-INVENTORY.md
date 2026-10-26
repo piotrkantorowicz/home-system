@@ -159,18 +159,18 @@ existing admin policy, never the everyday write grant).
 
 | Method | Route | Operation | Kind | Proposed tool | Target |
 |---|---|---|---|---|---|
-| GET | `/api/investments/wallets` | ListInvestmentWallets | read | tbd | Investments epic |
+| GET | `/api/investments/wallets` | ListInvestmentWallets | read | `list_wallets` | Investments epic (#665) |
 | POST | `/api/investments/wallets` | CreateInvestmentWallet | write | tbd | Investments epic |
-| GET | `/api/investments/wallets/{id:guid}` | GetInvestmentWallet | read | tbd | Investments epic |
+| GET | `/api/investments/wallets/{id:guid}` | GetInvestmentWallet | read | `get_wallet` | Investments epic (#665) |
 | PUT | `/api/investments/wallets/{id:guid}` | UpdateInvestmentWallet | write | tbd | Investments epic |
 | POST | `/api/investments/wallets/{id:guid}/archive` | ArchiveInvestmentWallet | destructive | tbd | Investments epic |
 | POST | `/api/investments/wallets/{id:guid}/restore` | RestoreInvestmentWallet | write | tbd | Investments epic |
-| GET | `/api/investments/wallets/{id:guid}/snapshots` | ListInvestmentSnapshots | read | tbd | Investments epic |
+| GET | `/api/investments/wallets/{id:guid}/snapshots` | ListInvestmentSnapshots | read | `list_snapshots` | Investments epic (#665) |
 | PUT | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | RecordInvestmentSnapshot | write | tbd | Investments epic |
 | DELETE | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | DeleteInvestmentSnapshot | destructive | tbd | Investments epic |
 | PUT | `/api/investments/snapshots` | RecordInvestmentsCheckIn | write | tbd | Investments epic |
-| GET | `/api/investments/net-worth` | GetInvestmentsNetWorth | read | tbd | Investments epic |
-| GET | `/api/investments/net-worth/history` | GetInvestmentsNetWorthHistory | read | tbd | Investments epic |
+| GET | `/api/investments/net-worth` | GetInvestmentsNetWorth | read | `get_net_worth` | Investments epic (#665) |
+| GET | `/api/investments/net-worth/history` | GetInvestmentsNetWorthHistory | read | `get_net_worth_history` | Investments epic (#665) |
 
 ### Notifications
 

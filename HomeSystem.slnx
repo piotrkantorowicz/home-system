@@ -47,6 +47,7 @@
     <Project Path="src/Modules/Investments/Investments.Application/Investments.Application.csproj" />
     <Project Path="src/Modules/Investments/Investments.Infrastructure/Investments.Infrastructure.csproj" />
     <Project Path="src/Modules/Investments/Investments.Api/Investments.Api.csproj" />
+    <Project Path="src/Modules/Investments/Investments.Mcp/Investments.Mcp.csproj" />
   </Folder>
   <Folder Name="/Host/">
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
