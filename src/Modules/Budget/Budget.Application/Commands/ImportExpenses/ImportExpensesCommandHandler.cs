@@ -61,7 +61,8 @@ internal sealed class ImportExpensesCommandHandler(
             }
             catch (BudgetDomainException e)
             {
-                throw new BudgetDomainException($"Row {i + 1}: {e.Message}");
+                // Same 0-based Rows[i] the validator uses, so the UI highlights one row for either error.
+                throw new BudgetDomainException($"Rows[{i}]: {e.Message}");
             }
 
             await expenses.AddAsync(expense, ct);

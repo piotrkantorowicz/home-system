@@ -94,7 +94,7 @@ public sealed class BudgetStatementImportTests : IClassFixture<BudgetDatabaseFix
         (await CountAsync(h.Owner)).ShouldBe(2);
     }
 
-    /// <summary>One row the household rules reject fails the whole import, naming the row, and nothing is written.</summary>
+    /// <summary>One row the household rules reject fails the whole import, naming its 0-based index like shape errors, and nothing is written.</summary>
     [Fact]
     public async Task Import_OneInvalidRow_WritesNothing()
     {
@@ -106,7 +106,7 @@ public sealed class BudgetStatementImportTests : IClassFixture<BudgetDatabaseFix
             Row(candidates[0]), Row(candidates[1], funding: "Individual", participants: [Guid.NewGuid()], payer: h.OwnerPersonId));
 
         response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
-        (await response.Content.ReadAsStringAsync(Ct)).ShouldContain("Row 2:");
+        (await response.Content.ReadAsStringAsync(Ct)).ShouldContain("Rows[1]: Participants must be current owners or adults.");
         (await CountAsync(h.Owner)).ShouldBe(0);
         (await ImportAsync(h.Owner, Guid.NewGuid(), account, Row(candidates[0]), Row(candidates[0]))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await ImportAsync(h.Owner, Guid.NewGuid(), account, Row(candidates[0] with { SourceKey = "not-a-key" }))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
