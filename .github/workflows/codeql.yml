@@ -10,7 +10,8 @@ on:
 
 concurrency:
   group: codeql-${{ github.ref }}
-  cancel-in-progress: true
+  # Only PR runs are superseded; a push or cron scan on main must finish so its results land.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
