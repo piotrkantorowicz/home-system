@@ -228,7 +228,7 @@
   {
     "name": "delete_recipe",
     "title": null,
-    "description": "Deletes a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. It disappears from search and can no longer be planned; meals already planned or eaten keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the recipe is already gone.",
+    "description": "Deletes a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. It disappears from search and can no longer be planned; meals already planned keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the recipe is already gone.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1075,7 +1075,7 @@
   {
     "name": "update_recipe",
     "title": null,
-    "description": "Replaces every field and the whole ingredient list of a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. Fields and ingredients you leave out are removed, so read the recipe first with get_recipe and send back what should stay. Ingredient amounts are for the whole recipe; servings says how many portions they make. New ingredients must be products the caller can see. Planned and eaten meals that use the recipe see the new version.",
+    "description": "Replaces every field and the whole ingredient list of a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. Fields and ingredients you leave out are removed, so read the recipe first with get_recipe and send back what should stay. Ingredient amounts are for the whole recipe; servings says how many portions they make. New ingredients must be products the caller can see. Planned meals that use the recipe see the new version.",
     "inputSchema": {
       "type": "object",
       "properties": {
