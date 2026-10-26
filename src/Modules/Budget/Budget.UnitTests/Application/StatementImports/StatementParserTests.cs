@@ -54,7 +54,7 @@ public sealed class StatementParserTests
         ]);
     }
 
-    /// <summary>ING carries its own transaction number; a pending card payment has only a blocked amount.</summary>
+    /// <summary>ING carries its own transaction number and the account in the preamble; a pending card payment has only a blocked amount.</summary>
     [Fact]
     public void Parse_IngFixture_KeepsReferenceAndMarksBlockedRows()
     {
@@ -64,9 +64,9 @@ public sealed class StatementParserTests
         result.Issues.ShouldBeEmpty();
         result.Transactions.ShouldBe(
         [
-            new(8, null, new(2026, 10, 21), new(2026, 10, 20), null, -15.40m, "PLN", false, "PIEKARNIA TESTOWA WARSZAWA PL", "Płatność kartą 20.10.2026 Nr karty 4246xx******1234", "202629400000001", "TR.KART", true),
-            new(9, null, new(2026, 10, 22), new(2026, 10, 22), null, -1250.00m, "PLN", false, "JAN TESTOWY", "PRĄD", "202629500000002", "PRZELEW", true),
-            new(10, null, new(2026, 10, 24), new(2026, 10, 24), null, -99.99m, "PLN", false, "SKLEP INTERNETOWY", "Płatność kartą 24.10.2026", null, "TR.KART", false),
+            new(8, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 21), new(2026, 10, 20), null, -15.40m, "PLN", false, "PIEKARNIA TESTOWA WARSZAWA PL", "Płatność kartą 20.10.2026 Nr karty 4246xx******1234", "202629400000001", "TR.KART", true),
+            new(9, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 22), new(2026, 10, 22), null, -1250.00m, "PLN", false, "JAN TESTOWY", "PRĄD", "202629500000002", "PRZELEW", true),
+            new(10, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 24), new(2026, 10, 24), null, -99.99m, "PLN", false, "SKLEP INTERNETOWY", "Płatność kartą 24.10.2026", null, "TR.KART", false),
         ]);
     }
 

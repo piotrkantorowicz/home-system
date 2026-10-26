@@ -84,6 +84,8 @@ Normalised description means: trim, collapse whitespace, upper-case invariant, a
 
 Only the hash is stored. Bank account numbers and bank references never reach the database in clear text.
 
+A file that names no account (PKO BP's export does not) puts the importing person in its place. Otherwise two adults paying the same amount at the same shop on the same day would share a key in the household scope, and the second real expense could not be imported. The cost: a joint account exported by both spouses yields two keys per row, so the second import shows each row as `PossibleDuplicate` (§4.3) instead of `AlreadyImported`.
+
 Accepted limitation: when a fingerprinted bank exports two files that split the same calendar day, `n` can differ between the files. Every bank in §2 exports whole days, so this does not happen in practice.
 
 ### 4.2 Uniqueness scope
@@ -132,7 +134,7 @@ Store `(budget_id, scope, merchant_key) → category`, with the same scope as §
 
 ### 5.2 Import provenance
 
-An import writes one `statement_imports` row: import ID, `BudgetId`, `ActorPersonId`, `ClientRequestId`, envelope, the normalised request (stored the way expense revisions store theirs, parent §6) and a timestamp. Its unique `(BudgetId, ActorPersonId, ClientRequestId)` index is the replay key for the whole import. Each imported expense also gets one `imported_transactions` row (`budget_id`, `scope`, `source_key`, `import_id`, `expense_id`) carrying the §4.2 unique index. A replay returns the expense IDs found through `import_id`.
+An import writes one `statement_imports` row: import ID, `BudgetId`, `ActorPersonId`, `ClientRequestId`, envelope, the normalised request (stored the way expense revisions store theirs, parent §6) and a timestamp. Its unique `(BudgetId, ActorPersonId, ClientRequestId)` index is the replay key for the whole import. Each imported expense also carries its `import_scope` and `import_source_key` as nullable columns on `expenses` (set together, enforced by `ck_expenses_import_source_complete`); the §4.2 unique index is `ux_expenses_import_source` on `(budget_id, import_scope, import_source_key)`, filtered to imported rows. A separate `imported_transactions` table would hold nothing an expense does not already own. A replay returns the expense IDs found through the import ID (#672).
 
 Each imported expense still writes its own revision 1. That revision cannot reuse the import's `ClientRequestId`: `ux_expense_revisions_request_identity` is unique per `(BudgetId, ActorPersonId, ClientRequestId)`, so a two-row import would collide. Revision 1 instead uses a per-row ID derived as UUIDv5(namespace = import `ClientRequestId`, name = `sourceKey`). It is deterministic on replay and unique within the import. Revision 1 records `Source = Import` and the import ID (BI4); a manual entry records `Source = Manual`. Later corrections and voids work as they do today. Voiding an imported expense keeps its source key, so re-importing the file does not bring the voided row back. To re-import a row, the user records it manually.
 

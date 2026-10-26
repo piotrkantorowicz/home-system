@@ -23,6 +23,7 @@ using Budget.Application.Queries.ListAccounts;
 using Budget.Application.Queries.ListExpenses;
 using Budget.Application.Queries.ListLimits;
 using Budget.Application.Queries.ListRepayments;
+using Budget.Application.Queries.PreviewStatementImport;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -81,6 +82,15 @@ internal static class BudgetEndpoints
         group.MapPost("/expenses/{id:guid}/void", VoidExpense)
             .WithName("VoidBudgetExpense")
             .WithSummary("Void an expense with a reason and expected revision; repeating adds no revision");
+        // Bearer authentication supplies no ambient cookie credentials; CSRF tokens are not used.
+        // The body limit is twice the file limit, so a file just over it gets the named 400, not a bare 413.
+        group.MapPost("/imports/preview", PreviewImport)
+            .WithName("PreviewBudgetStatementImport")
+            .WithSummary("Parse a bank statement CSV (PKO BP, mBank, ING, Revolut; 2 MiB) and classify each row for import into an envelope; writes nothing")
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(2 * PreviewStatementImportQuery.MaxFileBytes))
+            .WithFormOptions(multipartBodyLengthLimit: 2 * PreviewStatementImportQuery.MaxFileBytes, multipartHeadersLengthLimit: 4096,
+                multipartBoundaryLengthLimit: 128, valueCountLimit: 4);
         group.MapGet("/summary", GetSummary)
             .WithName("GetBudgetSummary")
             .WithSummary("Monthly spending by envelope and category for the shared or a personal scope");
@@ -117,6 +127,16 @@ internal static class BudgetEndpoints
         [FromQuery] string? search = null)
         => TypedResults.Ok(await dispatcher.SendAsync<ListExpensesQuery, ExpenseListDto>(
             new ListExpensesQuery(Sub(user), page, pageSize, accountId, category, amount, from, to, excludeId, includeVoided, search), ct));
+
+    private static async Task<Ok<StatementPreviewDto>> PreviewImport(
+        IFormFile file, [FromForm] Guid budgetAccountId, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)
+    {
+        // In memory only: the statement is never written to disk, storage or logs (bank-import.md §7).
+        using var content = new MemoryStream();
+        await file.CopyToAsync(content, ct);
+        return TypedResults.Ok(await dispatcher.SendAsync<PreviewStatementImportQuery, StatementPreviewDto>(
+            new PreviewStatementImportQuery(Sub(user), budgetAccountId, content.ToArray()), ct));
+    }
 
     private static async Task<Ok<ExpenseDto>> GetExpense(
         Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct)

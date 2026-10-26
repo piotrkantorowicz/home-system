@@ -13,6 +13,7 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         {
             t.HasCheckConstraint("ck_expenses_amount_range", "amount > 0 AND amount <= 9999999999.99");
             t.HasCheckConstraint("ck_expenses_payer_matches_funding", "(funding_source = 'HouseholdFunds') = (paid_by_person_id IS NULL)");
+            t.HasCheckConstraint("ck_expenses_import_source_complete", "(import_scope IS NULL) = (import_source_key IS NULL)");
         });
 
         builder.HasKey(x => x.Id);
@@ -40,6 +41,8 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.Property(x => x.Revision).HasColumnName("revision");
         builder.Property(x => x.IsVoided).HasColumnName("is_voided").HasDefaultValue(false);
         builder.Property(x => x.VoidedAt).HasColumnName("voided_at");
+        builder.Property(x => x.ImportScope).HasMaxLength(36).HasColumnName("import_scope");
+        builder.Property(x => x.ImportSourceKey).HasMaxLength(64).IsFixedLength().HasColumnName("import_source_key");
 
         // Maps to PostgreSQL's xmin system column — no schema change. See Expense.Version.
         builder.Property(x => x.Version).IsRowVersion();
@@ -47,6 +50,10 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         builder.HasIndex(x => new { x.BudgetId, x.OccurredOn, x.Id }).IsDescending(false, true, true)
             .HasDatabaseName("ix_expenses_budget_date_id");
         builder.HasIndex(x => new { x.BudgetId, x.Category, x.Amount, x.OccurredOn }).HasDatabaseName("ix_expenses_duplicate_lookup");
+
+        // bank-import.md §4.2: a statement row is imported at most once per budget and privacy scope.
+        builder.HasIndex(x => new { x.BudgetId, x.ImportScope, x.ImportSourceKey }).IsUnique()
+            .HasFilter("import_source_key IS NOT NULL").HasDatabaseName("ux_expenses_import_source");
 
         builder.OwnsMany(x => x.Shares, share =>
         {

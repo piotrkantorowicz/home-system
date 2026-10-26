@@ -17,6 +17,17 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <summary>Maximum length of the optional description.</summary>
     public const int MaxDescriptionLength = 80;
 
+    /// <summary>The <see cref="ImportScope"/> shared by every household envelope.</summary>
+    public const string HouseholdImportScope = "household";
+
+    /// <summary>The import scope of an envelope: shared for household envelopes, the owner for personal ones.</summary>
+    /// <param name="visibility">The envelope's visibility.</param>
+    /// <param name="ownerPersonId">The envelope's owner; always set on a personal envelope.</param>
+    public static string ImportScopeOf(AccountVisibility visibility, Guid? ownerPersonId)
+        => visibility == AccountVisibility.Household
+            ? HouseholdImportScope
+            : ownerPersonId?.ToString() ?? throw new BudgetDomainException("A personal envelope needs an owner.");
+
     private readonly List<ExpenseShare> _shares = [];
     private readonly List<ExpenseRevision> _revisions = [];
 
@@ -277,6 +288,18 @@ public sealed class Expense : AggregateRoot<ExpenseId>
 
     /// <summary>When it was voided, UTC.</summary>
     public DateTime? VoidedAt { get; private set; }
+
+    /// <summary>
+    /// Privacy scope of <see cref="ImportSourceKey"/>: <see cref="HouseholdImportScope"/> or the personal
+    /// envelope owner's ID (<c>bank-import.md</c> §4.2); <see langword="null"/> for a manual entry.
+    /// </summary>
+    public string? ImportScope { get; private set; }
+
+    /// <summary>
+    /// Hashed bank reference or fingerprint of the statement row this expense came from, unique per
+    /// budget and <see cref="ImportScope"/>; kept when voided, so a re-import does not bring the row back.
+    /// </summary>
+    public string? ImportSourceKey { get; private set; }
 
     /// <summary>
     /// Concurrency token mapped to PostgreSQL's <c>xmin</c>; never set by domain logic. Every
