@@ -15,11 +15,14 @@ internal sealed class StatementRow(
     /// <summary>1-based line number in the file.</summary>
     public int LineNumber { get; } = lineNumber;
 
-    /// <summary>The cell, whitespace collapsed; mBank's <c>''</c> placeholder reads as empty.</summary>
+    /// <summary>
+    /// The cell, whitespace collapsed and outer apostrophes removed: mBank's empty <c>''</c> and ING's
+    /// <c>'number'</c> wrap a value so spreadsheets keep it as text.
+    /// </summary>
     public string Text(string column)
     {
         var value = StatementText.Collapse(fields[Index(column)]);
-        return value == "''" ? "" : value;
+        return value is ['\'', .. var inner, '\''] ? inner : value;
     }
 
     /// <summary>The cell right after <paramref name="column"/> (ING follows every amount with its own <c>Waluta</c> column).</summary>
@@ -62,7 +65,8 @@ internal sealed class StatementRow(
     }
 
     /// <summary>A value on the line after a preamble key line (<c>#Key</c> or <c>Key:</c>), or <see langword="null"/>.</summary>
-    public string? Preamble(string key, int index = 0) => preamble.TryGetValue(key, out var values) && values.Length > index ? values[index] : null;
+    public string? Preamble(string key, Index index = default)
+        => preamble.TryGetValue(key, out var values) && index.GetOffset(values.Length) is var at && at >= 0 && at < values.Length ? values[at] : null;
 
     /// <summary>Parses an exact-format date, or <see langword="null"/>.</summary>
     public static DateOnly? ParseDate(string text, string format)

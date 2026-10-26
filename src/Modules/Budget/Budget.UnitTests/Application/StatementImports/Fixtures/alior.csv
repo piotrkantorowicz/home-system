@@ -1,0 +1,6 @@
+Kryteria transakcji: Okres: 19-10-2026 - 25-10-2026;Typ transakcji: Uznania/Obciążenia;Produkty: Konto Testowe;;;;;;;;
+Data transakcji;Data księgowania;Nazwa nadawcy;Nazwa odbiorcy;Szczegóły transakcji;Kwota operacji;Waluta operacji;Kwota w walucie rachunku;Waluta rachunku;Numer rachunku nadawcy;Numer rachunku odbiorcy
+20-10-2026;21-10-2026;;;ALLEGRO.PL POZNAN POL;-123,45;PLN;-123,45;PLN;;
+22-10-2026;22-10-2026;JAN TESTOWY;ANNA TESTOWA;Czynsz za październik;-1500,00;PLN;-1500,00;PLN;00 2490 0000 0000 0000 0000 0004;00 1020 0000 0000 0000 0000 0002
+23-10-2026;23-10-2026;ANNA TESTOWA;JAN TESTOWY;Zwrot za zakupy;45,00;PLN;45,00;PLN;00 1020 0000 0000 0000 0000 0002;00 2490 0000 0000 0000 0000 0004
+24-10-2026;24-10-2026;;;CAFE TEST PARIS FRA;-4,20;EUR;-18,30;PLN;;

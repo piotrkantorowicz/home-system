@@ -320,7 +320,7 @@
   "import_title": "Import wyciągu bankowego",
   "import_subtitle": "Wgraj eksport CSV, przejrzyj wiersze i zapisz je jako wydatki.",
   "import_file": "Plik wyciągu",
-  "import_file_hint": "Eksport CSV z mBanku, PKO BP, ING lub Revolut, do 2 MiB. Plik nie jest zapisywany.",
+  "import_file_hint": "Eksport CSV z mBanku, PKO BP, ING, Alior Banku lub Revolut, do 2 MiB. Plik nie jest zapisywany.",
   "import_file_too_large": "Ten plik jest większy niż 2 MiB.",
   "import_funding": "Płatne z",
   "import_funding_individual": "Własne pieniądze osoby",
