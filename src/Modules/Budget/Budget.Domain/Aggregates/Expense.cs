@@ -46,6 +46,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <param name="clientRequestId">Idempotency key of the submission.</param>
     /// <param name="now">Current time, UTC.</param>
     /// <param name="description">Optional short note, already normalised with <see cref="NormalizeDescription"/>.</param>
+    /// <param name="importSourceKey">The statement row's source key when imported; its scope follows from the envelope and revision 1 is an <c>Import</c>.</param>
     /// <exception cref="BudgetDomainException">The envelope is archived, the description is too long, or the funding/payer/participants combination is invalid.</exception>
     public static Expense Create(
         ExpenseId id,
@@ -59,7 +60,8 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         IReadOnlyCollection<PersonRef> participants,
         Guid clientRequestId,
         DateTime now,
-        string? description = null)
+        string? description = null,
+        string? importSourceKey = null)
     {
         if (account.IsArchived)
             throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
@@ -83,6 +85,8 @@ public sealed class Expense : AggregateRoot<ExpenseId>
             AddedByDisplayName = addedBy.DisplayName,
             CreatedAt = now,
             Revision = 1,
+            ImportScope = importSourceKey is null ? null : ImportScopeOf(account.Visibility, account.OwnerPersonId),
+            ImportSourceKey = importSourceKey,
         };
 
         if (participants.Count > 0)
@@ -90,7 +94,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
                 expense._shares.Add(new ExpenseShare(id, person, share));
 
         var request = new ExpenseRequest(
-            "Create", account.Id.Value, amount.ToString(), category, occurredOn, funding,
+            importSourceKey is null ? "Create" : "Import", account.Id.Value, amount.ToString(), category, occurredOn, funding,
             paidBy?.PersonId, [.. participants.Select(p => p.PersonId).Order()], Description: description);
         expense._revisions.Add(new ExpenseRevision(id, account.BudgetId, 1, addedBy.PersonId, addedBy.DisplayName, clientRequestId, request, null, expense.ToSnapshot(), now));
 
