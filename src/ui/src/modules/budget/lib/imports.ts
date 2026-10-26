@@ -32,7 +32,8 @@ export function isSelectable(candidate: StatementCandidate): boolean {
 
 /**
  * Review rows for a preview. New rows start selected, possible duplicates unselected. When the
- * statement is previewed again, edits to a row with the same source key are kept.
+ * statement is previewed again, edits to a row with the same source key are kept, and its tick
+ * too unless the status changed.
  */
 export function reviewRows(
   candidates: StatementCandidate[],
@@ -44,7 +45,11 @@ export function reviewRows(
     const suggested = isCategory(candidate.suggestedCategory) ? candidate.suggestedCategory : null;
     return {
       candidate,
-      selected: isSelectable(candidate) && (kept?.selected ?? candidate.status === 'New'),
+      // A tick carries over only while the status is the same: a row that turned into a possible
+      // duplicate needs a fresh, explicit "keep both".
+      selected:
+        isSelectable(candidate) &&
+        (kept?.candidate.status === candidate.status ? kept.selected : candidate.status === 'New'),
       category: kept?.category ?? suggested ?? 'Other',
       categoryChosen: kept?.categoryChosen ?? suggested !== null,
       description: kept?.description ?? candidate.description,

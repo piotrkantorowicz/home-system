@@ -46,6 +46,19 @@ describe('reviewRows', () => {
     expect(again[0]).toMatchObject({ description: 'Edited', category: 'Leisure' });
     expect(again[1]).toMatchObject({ description: 'Shop b', category: 'Other' });
   });
+
+  it('drops a tick when a row comes back as a possible duplicate', () => {
+    const first = reviewRows([candidate('a', 'New'), candidate('b', 'PossibleDuplicate')]).map(
+      (r) => ({ ...r, selected: true }),
+    );
+
+    const again = reviewRows(
+      [candidate('a', 'PossibleDuplicate'), candidate('b', 'PossibleDuplicate')],
+      first,
+    );
+
+    expect(again.map((r) => r.selected)).toEqual([false, true]);
+  });
 });
 
 describe('importRows', () => {
