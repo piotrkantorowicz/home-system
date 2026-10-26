@@ -120,7 +120,7 @@ Most specs are independent and can run in any order. A few share state and must 
 
 | `diet-planner/recipe-photo-access.spec.ts` | Same reserved invitee, joined as Guest/Adult; one test also logs the worker out and in as the invitee, then signs the worker back in to clean up. |
 
-The invitee files run in their own Playwright projects (`chromium-invitee-household`, then `chromium-invitee-budget`, then `chromium-invitee-investments`, then `chromium-invitee-recipe-photos`), kept out of `chromium`, so two files never move the invitee at once. Run one with `npx playwright test --no-deps --project=chromium-invitee-budget`. Budget supported scope: equal splits, adult-only shared ledger, repayments recorded not executed; refunds, import, forgiveness and custom splits stay deferred.
+The invitee files run in their own Playwright projects (`chromium-invitee-household`, then `chromium-invitee-budget`, then `chromium-invitee-investments`, then `chromium-invitee-recipe-photos`), kept out of `chromium`, so two files never move the invitee at once. Run one with `npx playwright test --no-deps --project=chromium-invitee-budget`. Budget supported scope: equal splits, adult-only shared ledger, repayments recorded not executed; refunds, forgiveness and custom splits stay deferred; `budget/budget-import.spec.ts` imports a synthetic mBank statement built in the spec.
 
 Cross-spec state: a `dailyCalorieTarget` goal configured by `nutrition.spec.ts`
 (and by `weight-prediction.spec.ts`) persists for the rest of the run (it's
