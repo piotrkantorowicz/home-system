@@ -1,11 +1,13 @@
 namespace Investments.IntegrationTests.Mcp;
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using global::Investments.Mcp;
 using Investments.IntegrationTests.Infrastructure;
+using ModelContextProtocol.Server;
 
 /// <summary>
 /// Pins what agents see in <c>tools/list</c> for Investments: names, descriptions, annotations and
@@ -51,12 +53,11 @@ public sealed class InvestmentsToolSchemaTests : IClassFixture<InvestmentsDataba
         _factory.Dispose();
     }
 
-    private static readonly HashSet<string> InvestmentsToolNames =
-    [
-        "list_wallets", "get_wallet", "list_snapshots", "get_net_worth", "get_net_worth_history",
-        "record_snapshot", "record_check_in", "delete_snapshot",
-        "create_wallet", "update_wallet", "archive_wallet", "restore_wallet",
-    ];
+    // Derived from the assembly so a new Investments tool cannot be listed to agents without being pinned.
+    private static readonly HashSet<string> InvestmentsToolNames = [.. typeof(InvestmentsMcp).Assembly.GetTypes()
+        .SelectMany(t => t.GetMethods())
+        .Select(m => m.GetCustomAttribute<McpServerToolAttribute>()?.Name)
+        .OfType<string>()];
 
     private static string SnapshotPath([CallerFilePath] string source = "")
         => Path.Combine(Path.GetDirectoryName(source)!, "tool-schemas.json");
