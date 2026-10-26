@@ -196,8 +196,10 @@ dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.S2326.severity = none
 
 # MCP tool types hold only static tool methods but are registered with WithTools<T>(), which a
-# static class can't satisfy. Program is a partial-class hook for WebApplicationFactory<Program>.
-[{src/Modules/DietPlanner/DietPlanner.Api/Mcp/*Tools.cs,src/Modules/Investments/Investments.Mcp/*Tools.cs,src/Apis/HomeSystem.REST/Program.cs}]
+# static class can't satisfy. Covers every <Module>.Mcp project plus DietPlanner's tools until
+# they move out of DietPlanner.Api (epic #639). Program is a partial-class hook for
+# WebApplicationFactory<Program>.
+[{src/Modules/DietPlanner/DietPlanner.Api/Mcp/*Tools.cs,src/Modules/*/*.Mcp/*Tools.cs,src/Apis/HomeSystem.REST/Program.cs}]
 dotnet_diagnostic.S1118.severity = none
 
 # Row → domain hydration rebuilds models through their private constructor and setters, so the
