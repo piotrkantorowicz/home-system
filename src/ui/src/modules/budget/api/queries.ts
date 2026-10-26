@@ -16,6 +16,7 @@ import type {
   BudgetCurrency,
   ExpenseFilters,
   ExpenseInput,
+  ImportRowInput,
   RepaymentInput,
 } from '../types';
 
@@ -416,6 +417,44 @@ export function useBudgetMutation() {
     mutationFn: mutateBudget,
     // A 409 means someone else changed the row: refetch either way so the next attempt is current.
     onSettled: async () => {
+      await client.invalidateQueries({ queryKey: budgetQueryKeys.all() });
+    },
+  });
+}
+
+/** Parses a statement file on the server. A POST, but read-only: nothing is cached or invalidated. */
+export function useStatementPreviewMutation() {
+  return useMutation({
+    mutationFn: async ({ accountId, file }: { accountId: string; file: File }) => {
+      const result = await api.POST('/api/budget/imports/preview', {
+        // The generated body types the file as a string; the serializer sends the real File.
+        body: { file: file.name, budgetAccountId: accountId },
+        bodySerializer: () => {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('budgetAccountId', accountId);
+          return form;
+        },
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing preview response');
+      return result.data;
+    },
+  });
+}
+
+export function useImportMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { requestId: string; accountId: string; rows: ImportRowInput[] }) => {
+      const result = await api.POST('/api/budget/imports', {
+        body: { clientRequestId: input.requestId, accountId: input.accountId, rows: input.rows },
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing import response');
+      return result.data;
+    },
+    onSuccess: async () => {
       await client.invalidateQueries({ queryKey: budgetQueryKeys.all() });
     },
   });
