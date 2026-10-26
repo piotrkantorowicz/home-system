@@ -264,6 +264,7 @@
   "detail_category": "Category",
   "detail_date": "Purchase date",
   "history_added": "Added by {{name}} · {{when}}",
+  "history_imported": "Imported from a bank statement by {{name}} · {{when}}",
   "history_corrected": "Corrected by {{name}} · {{when}}",
   "history_voided": "Voided by {{name}} · {{when}}",
   "history_no_changes": "No field changes",

@@ -274,6 +274,7 @@
   "detail_category": "Kategoria",
   "detail_date": "Data zakupu",
   "history_added": "Dodano: {{name}} · {{when}}",
+  "history_imported": "Zaimportowano z wyciągu bankowego: {{name}} · {{when}}",
   "history_corrected": "Poprawiono: {{name}} · {{when}}",
   "history_voided": "Anulowano: {{name}} · {{when}}",
   "history_no_changes": "Brak zmian w polach",

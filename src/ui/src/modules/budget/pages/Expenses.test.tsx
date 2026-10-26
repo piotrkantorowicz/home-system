@@ -565,6 +565,15 @@ describe('Expense detail', () => {
     expect(within(history).getByText(/Added by you/)).toBeInTheDocument();
   });
 
+  it('names a bank statement as the source of an imported expense', async () => {
+    const [first] = expense.history;
+    const imported = { ...expense, history: [{ ...first, operation: 'Import' }] };
+    server.use(http.get(`${BASE}/api/budget/expenses/e1`, () => HttpResponse.json(imported)));
+    renderAt('/budget/expenses/e1');
+    const history = await screen.findByRole('region', { name: 'History' });
+    expect(within(history).getByText(/Imported from a bank statement by you/)).toBeInTheDocument();
+  });
+
   it('shows only the changed fields of a correction, newest first', async () => {
     const [first] = expense.history;
     const corrected = {
