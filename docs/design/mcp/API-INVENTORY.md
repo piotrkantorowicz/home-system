@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -95,11 +95,11 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/v1/meals` | GetMeals | read | `get_meal_entries` | #609 |
 | GET | `/api/v1/meals/nutrition-summary` | GetNutritionSummary | read | `get_nutrition_summary` | #609 |
 | GET | `/api/v1/meals/shopping-list` | GetShoppingList | read | `get_shopping_list` | Epic B DP-9 |
-| POST | `/api/v1/meals` | CreateMealEntry | write | `plan_meal` | Epic B DP-3 |
-| PUT | `/api/v1/meals/{id:guid}` | UpdateMealEntry | write | `update_planned_meal` | Epic B DP-3 |
+| POST | `/api/v1/meals` | CreateMealEntry | write | `plan_meal` (operation key) | #653 |
+| PUT | `/api/v1/meals/{id:guid}` | UpdateMealEntry | write | `update_planned_meal` | #653 |
 | PUT | `/api/v1/meals/shopping-list/checks` | SetShoppingCheck | write | `check_shopping_item` | Epic B DP-9 |
 | DELETE | `/api/v1/meals/shopping-list/checks` | ClearShoppingChecks | destructive | `clear_shopping_checks` | Epic B DP-9 |
-| DELETE | `/api/v1/meals/{id:guid}` | DeleteMealEntry | destructive | `delete_planned_meal` | Epic B DP-3 |
+| DELETE | `/api/v1/meals/{id:guid}` | DeleteMealEntry | destructive | `delete_planned_meal` | #653 |
 | PATCH | `/api/v1/meals/{id:guid}/complete` | CompleteMealEntry | write | `complete_meal` | Epic B DP-4 |
 | PATCH | `/api/v1/meals/{id:guid}/override` | OverrideMealEntry | write | `override_meal` | Epic B DP-4 |
 | PATCH | `/api/v1/meals/{id:guid}/reset` | ResetMealEntry | write | `reset_meal` | Epic B DP-4 |

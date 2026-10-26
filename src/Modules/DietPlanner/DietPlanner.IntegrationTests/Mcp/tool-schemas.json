@@ -198,6 +198,34 @@
     "_meta": null
   },
   {
+    "name": "delete_planned_meal",
+    "title": null,
+    "description": "Removes one meal from the caller's diary, also one already marked as eaten, which drops it from the day's nutrition totals. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the meal is already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealId": {
+          "description": "Meal id from get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "mealId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "delete_product",
     "title": null,
     "description": "Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search; recipes that use it keep the ingredient line but show it as Unknown and without its nutrition; meals already in the diary keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the product is already gone.",
@@ -646,6 +674,81 @@
     "_meta": null
   },
   {
+    "name": "plan_meal",
+    "title": null,
+    "description": "Plans one meal in the caller's diary: a recipe the caller can see, in one of their meal slots (ids from get_diet_context) on a day. A slot can hold more than one meal; check get_meal_entries first so you do not plan a duplicate. Retry with the same operationKey and fields to get the original meal back instead of a second one; a new meal needs a new key.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key for this meal, 8-128 characters (a UUID works). Reuse it only to retry this same call.",
+          "type": "string"
+        },
+        "date": {
+          "description": "Calendar day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        },
+        "slotId": {
+          "description": "Meal slot id from get_diet_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "recipeId": {
+          "description": "Recipe id from search_recipes or get_recipe.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "servings": {
+          "description": "Servings of the recipe; more than 0, fractions allowed.",
+          "type": "number"
+        },
+        "notes": {
+          "description": "Short note, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "mealTime": {
+          "description": "Time overriding the slot default, HH:mm, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "time",
+          "default": null
+        },
+        "sequenceOrder": {
+          "description": "Order among meals in the same slot, if it matters.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "date",
+        "slotId",
+        "recipeId",
+        "servings"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "preview_plan_import",
     "title": null,
     "description": "Checks a meal plan (products, recipes and dated meals, at most 31 days and 250 meals) and describes what importing it would create, reuse and plan, without changing anything. Names resolve against the caller's own catalog, ignoring case. Every problem has a JSON path such as schedule[4].meals[1].recipe. Occupied slots are conflicts unless appendToOccupiedSlots is true. When the plan can be imported, the result carries a previewToken valid for 30 minutes: show the preview to the user and pass the token to execute_plan_import once they agree.",
@@ -966,6 +1069,82 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_planned_meal",
+    "title": null,
+    "description": "Replaces every field of one meal in the caller's diary: day, slot, recipe, servings, note, time and order. Fields you leave out are cleared, so read the meal first with get_meal_entries and send back what should stay. Changing the recipe needs one the caller can see. Whether the meal was eaten is kept; use the consumption tools for that.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealId": {
+          "description": "Meal id from get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "date": {
+          "description": "Calendar day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        },
+        "slotId": {
+          "description": "Meal slot id from get_diet_context or get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "recipeId": {
+          "description": "Recipe id from search_recipes or get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "servings": {
+          "description": "Servings of the recipe; more than 0, fractions allowed.",
+          "type": "number"
+        },
+        "notes": {
+          "description": "Short note, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "mealTime": {
+          "description": "Time overriding the slot default, HH:mm, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "time",
+          "default": null
+        },
+        "sequenceOrder": {
+          "description": "Order among meals in the same slot, if it matters.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "mealId",
+        "date",
+        "slotId",
+        "recipeId",
+        "servings"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null

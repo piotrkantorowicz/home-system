@@ -1,6 +1,7 @@
 namespace DietPlanner.Application.Commands.CreateMealEntry;
 
 using DietPlanner.Application.Households;
+using DietPlanner.Application.OperationReceipts;
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
@@ -13,8 +14,11 @@ internal sealed class CreateMealEntryCommandHandler(
     IRecipeRepository recipeRepository,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
-    HouseholdRosterProvider households) : ICommandHandler<CreateMealEntryCommand, Guid>
+    HouseholdRosterProvider households,
+    OperationReplay replay) : ICommandHandler<CreateMealEntryCommand, Guid>
 {
+    private const string Operation = "plan_meal";
+
     public async Task<Guid> HandleAsync(CreateMealEntryCommand command, CancellationToken ct = default)
     {
         var personId = command.ForPersonId ?? command.PersonId;
@@ -34,6 +38,24 @@ internal sealed class CreateMealEntryCommandHandler(
             throw new NotFoundException("MealSlot", command.MealSlotId);
 
         var id = MealEntryId.New();
+        if (command.OperationKey is { } key)
+        {
+            // The fields that define "the same meal"; the key and caller are scoped by the receipt itself.
+            var canonical = new
+            {
+                PersonId = personId,
+                command.Date,
+                command.MealSlotId,
+                command.RecipeId,
+                command.Servings,
+                command.Notes,
+                command.MealTime,
+                command.SequenceOrder,
+            };
+            if (await replay.ClaimOrReplayAsync(command.AuthSubject, Operation, key, canonical, id.Value, now, ct) is { } original)
+                return original;
+        }
+
         var entry = MealEntry.Create(id, personId, command.Date, slotId,
             RecipeId.From(command.RecipeId), command.Servings, command.Notes,
             command.MealTime, command.SequenceOrder, now);
