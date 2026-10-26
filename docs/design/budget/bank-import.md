@@ -34,7 +34,7 @@ The household uses **PKO BP, mBank, ING Bank Śląski and Revolut** (owner, 2026
 
 ### 2.1 Bank profiles
 
-The column names below come from each bank's current export documentation. The `mbank` row was checked against a real export from the owner on 2026-10-25; its encoding and delimiter are confirmed from the raw file in #670. The other rows are **unverified until the anonymised fixture for that bank lands in #670**. If a fixture disagrees with this table, the fixture wins and #670 updates the table.
+The column names below come from each bank's current export documentation. The `mbank` row was checked against a real export from the owner on 2026-10-25; its raw bytes (Windows-1250, CRLF, `;`, no BOM) were confirmed in #670 and match the fixture. The other rows are **unverified**: their #670 fixtures follow this table, not a real export. When a real export from one of those banks is available, it replaces that fixture; where they disagree, the export wins and this table is updated.
 
 | Profile | Encoding | Delimiter | Header detection | Date | Amount | Bank reference |
 |---|---|---|---|---|---|---|
@@ -170,7 +170,7 @@ MCP and the assistant (BI8) call the same two handlers. The tool takes the file 
 | Selected rows per import | 1,000 | Matches the file limit; one Budget transaction |
 | Header search | First 60 lines | The mBank preamble alone is ~37 lines |
 
-Breaking a limit returns 400 with the limit named. Nothing is partially parsed or imported.
+Breaking a limit is rejected with the limit named, and nothing is partially parsed or imported. The file-size limit is checked on the request (400). The row limit is only known while parsing, so the parser reports it as a 422 business-rule violation, the same as an unrecognised format.
 
 ## 9. Access
 
