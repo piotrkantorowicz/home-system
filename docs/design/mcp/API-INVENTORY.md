@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -128,9 +128,9 @@ existing admin policy, never the everyday write grant).
 | DELETE | `/api/v1/recipes/{id:guid}/image` | RemoveRecipeImage | destructive | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
 | DELETE | `/api/v1/test-support/purge-my-data` | PurgeMyData | excluded | — | Excluded: test-support only (E2E cleanup), not a business operation |
 | GET | `/api/v1/weekly-summary` | GetWeeklySummary | read | `get_weekly_summary` | Epic B DP-9 |
-| POST | `/api/v1/weight-entries` | LogWeightEntry | write | `log_weight` | Epic B DP-6 |
-| GET | `/api/v1/weight-entries` | GetWeightEntries | read | `get_weight_entries` | Epic B DP-6 |
-| DELETE | `/api/v1/weight-entries/{id:guid}` | DeleteWeightEntry | destructive | `delete_weight_entry` | Epic B DP-6 |
+| POST | `/api/v1/weight-entries` | LogWeightEntry | write | `log_weight` | #656 |
+| GET | `/api/v1/weight-entries` | GetWeightEntries | read | `get_weight_entries` | #656 |
+| DELETE | `/api/v1/weight-entries/{id:guid}` | DeleteWeightEntry | destructive | `delete_weight_entry` | #656 |
 
 ### Household
 

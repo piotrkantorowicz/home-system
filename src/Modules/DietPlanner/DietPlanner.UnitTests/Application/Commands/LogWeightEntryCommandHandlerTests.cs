@@ -68,20 +68,39 @@ public sealed class LogWeightEntryCommandHandlerTests
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }
 
-    /// <summary>Always updates profile current weight: <c>HandleAsync</c> even for retroactive entries.</summary>
+    /// <summary>When no later entry exists: <c>HandleAsync</c> updates the profile current weight even for a past day.</summary>
     [Fact]
-    public async Task HandleAsync_AlwaysUpdatesProfileCurrentWeight_EvenForRetroactiveEntries()
+    public async Task HandleAsync_WhenNoLaterEntryExists_UpdatesProfileCurrentWeight()
     {
         var pastDate = Today.AddDays(-30);
-        var command = new LogWeightEntryCommand(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), pastDate, 90m);
-        _weightRepo.GetByPersonAndDateAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), pastDate, Arg.Any<CancellationToken>())
-            .Returns((WeightEntry?)null);
-        var profile = CreateProfile(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), currentWeight: 80m);
-        _profileRepo.GetByPersonIdAsync(Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Arg.Any<CancellationToken>()).Returns(profile);
+        var personId = Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb");
+        var command = new LogWeightEntryCommand(personId, pastDate, 90m);
+        _weightRepo.GetByPersonAndDateAsync(personId, pastDate, Arg.Any<CancellationToken>()).Returns((WeightEntry?)null);
+        _weightRepo.GetLatestByPersonAsync(personId, null, Arg.Any<CancellationToken>()).Returns((WeightEntry?)null);
+        var profile = CreateProfile(personId, currentWeight: 80m);
+        _profileRepo.GetByPersonIdAsync(personId, Arg.Any<CancellationToken>()).Returns(profile);
 
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         profile.CurrentWeightKg.ShouldBe(90m);
+    }
+
+    /// <summary>When a later entry exists: <c>HandleAsync</c> keeps the profile current weight (backfill).</summary>
+    [Fact]
+    public async Task HandleAsync_WhenLaterEntryExists_KeepsProfileCurrentWeight()
+    {
+        var personId = Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb");
+        var later = WeightEntry.Create(WeightEntryId.New(), personId, Today, 80m, TestClock.UtcNow);
+        var command = new LogWeightEntryCommand(personId, Today.AddDays(-7), 90m);
+        _weightRepo.GetByPersonAndDateAsync(personId, command.Date, Arg.Any<CancellationToken>()).Returns((WeightEntry?)null);
+        _weightRepo.GetLatestByPersonAsync(personId, null, Arg.Any<CancellationToken>()).Returns(later);
+        var profile = CreateProfile(personId, currentWeight: 80m);
+        _profileRepo.GetByPersonIdAsync(personId, Arg.Any<CancellationToken>()).Returns(profile);
+
+        await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
+
+        await _weightRepo.Received(1).AddAsync(Arg.Is<WeightEntry>(e => e.Date == command.Date), Arg.Any<CancellationToken>());
+        profile.CurrentWeightKg.ShouldBe(80m);
     }
 
     /// <summary>When profile missing: <c>HandleAsync</c> throws not found exception.</summary>
