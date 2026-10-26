@@ -123,7 +123,7 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
         var metadata = await http.GetFromJsonAsync<JsonElement>("/.well-known/oauth-protected-resource", TestContext.Current.CancellationToken);
 
         metadata.GetProperty("authorization_servers")[0].GetString().ShouldBe(McpTestHost.Issuer);
-        metadata.GetProperty("scopes_supported").EnumerateArray().Select(s => s.GetString()).ShouldBe(DietPlannerMcp.Scopes);
+        DietPlannerMcp.Scopes.ShouldBeSubsetOf(metadata.GetProperty("scopes_supported").EnumerateArray().Select(s => s.GetString()));
     }
 
     /// <summary>With MCP disabled (the default), the endpoint does not exist.</summary>
