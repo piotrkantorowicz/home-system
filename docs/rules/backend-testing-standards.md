@@ -22,10 +22,21 @@ src/Modules/Household/
 src/Shared/
   Shared.Messaging.Tests/       unit tests for the bus / outbox / decorators
   Shared.Messaging.IntegrationTests/
+src/Apis/
+  HomeSystem.ArchitectureTests/ architecture rules over every module (NetArchTest)
 ```
 
 Every `*Tests.csproj` under `src/` is picked up by `dotnet test --solution HomeSystem.slnx` in CI and by
 `scripts/verify.sh` for the touched module.
+
+## Architecture Tests
+
+`HomeSystem.ArchitectureTests` references the host, so every `{Module}.{Layer}` assembly is in its
+output folder; modules are discovered from those names, so a new module is covered without edits.
+They enforce: modules reach each other only through `Contracts`; `Domain` depends on no outer
+layer and no EF / Dapper / Npgsql; `Application` depends on no `Infrastructure` / `Api` / `Mcp`;
+concrete classes are `sealed` (EF migrations exempt); `Api` / `Mcp` / host types never depend on
+`ICommandHandler` / `IQueryHandler`. A failure lists `Type → forbidden dependency`.
 
 ## Unit Tests — Domain
 

@@ -67,5 +67,6 @@
     <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
     <Project Path="src/Shared/Shared.Web.IntegrationTests/Shared.Web.IntegrationTests.csproj" />
+    <Project Path="src/Apis/HomeSystem.ArchitectureTests/HomeSystem.ArchitectureTests.csproj" />
   </Folder>
 </Solution>
