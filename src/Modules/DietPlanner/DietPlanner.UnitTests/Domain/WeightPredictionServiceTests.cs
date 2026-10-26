@@ -63,8 +63,7 @@ public sealed class WeightPredictionServiceTests
             weeklyWeightChangeKg: -0.5m,
             now: TestClock.UtcNow);
 
-        result.ShouldNotBeNull();
-        result!.Value.ShouldBeGreaterThan(TestClock.Today);
+        result.ShouldNotBeNull().ShouldBeGreaterThan(TestClock.Today);
     }
 
     /// <summary>When gaining towards higher target: <c>EstimateGoalDate</c> returns date.</summary>

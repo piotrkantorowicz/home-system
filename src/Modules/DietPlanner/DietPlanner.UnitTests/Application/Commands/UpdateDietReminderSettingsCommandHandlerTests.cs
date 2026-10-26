@@ -82,10 +82,10 @@ public sealed class UpdateDietReminderSettingsCommandHandlerTests
 
         _repository.Received(1).Update(
             Arg.Is<DietReminderSettings>(s =>
-                s.MealRemindersEnabled == false &&
+                !s.MealRemindersEnabled &&
                 s.MealReminderLeadTimeMinutes == 45 &&
                 s.WaterReminderIntervalMinutes == 90 &&
-                s.GoalAlertsEnabled == false));
+                !s.GoalAlertsEnabled));
         await _repository.DidNotReceive().AddAsync(
             Arg.Any<DietReminderSettings>(), Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());

@@ -15,15 +15,16 @@ internal static class CsvLine
         StringBuilder field = new();
         var quoted = false;
 
-        for (var i = 0; i < line.Length; i++)
+        var i = 0;
+        while (i < line.Length)
         {
-            var c = line[i];
+            var c = line[i++];
             if (quoted)
             {
                 if (c != '"')
                     field.Append(c);
-                else if (i + 1 < line.Length && line[i + 1] == '"')
-                    field.Append(line[++i]);
+                else if (i < line.Length && line[i] == '"')
+                    field.Append(line[i++]);
                 else
                     quoted = false;
             }

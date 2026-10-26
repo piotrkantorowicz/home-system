@@ -13,7 +13,7 @@ internal sealed class CreateManagedMemberCommandHandler(
     TimeProvider clock)
     : ICommandHandler<CreateManagedMemberCommand, Guid>
 {
-    public async Task<Guid> HandleAsync(CreateManagedMemberCommand command, CancellationToken ct)
+    public async Task<Guid> HandleAsync(CreateManagedMemberCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

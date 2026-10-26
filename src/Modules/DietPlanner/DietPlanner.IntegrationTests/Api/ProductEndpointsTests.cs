@@ -55,7 +55,7 @@ public sealed class ProductEndpointsTests
         var createResp = await _client.PostAsJsonAsync("/api/v1/products", createReq, cancellationToken: TestContext.Current.CancellationToken);
         createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var location = createResp.Headers.Location!.ToString();
-        var id = location.Split('/').Last();
+        var id = location.Split('/')[^1];
 
         // Act
         var deleteResp = await _client.DeleteAsync($"/api/v1/products/{id}", TestContext.Current.CancellationToken);

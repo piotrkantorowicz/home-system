@@ -33,6 +33,11 @@ Style rules live in the root `.editorconfig`. `dotnet format HomeSystem.slnx --v
 is a CI gate and part of `scripts/verify.sh` — if the build warns about IDE/CA rules, fix the
 code, do not lower the severity.
 
+**SonarAnalyzer.CSharp** is a `GlobalPackageReference` in `Directory.Packages.props`, so its
+default (Sonar way) rules run in every build and fail it like any CA rule. The few exceptions
+live in `.editorconfig`: a rule that contradicts a repo rule (S927 vs. `ct`), or a false positive
+scoped to the files it misfires on — each with a one-line reason.
+
 ## NuGet Rules
 
 - **Never** put version numbers in `.csproj` files — always `Directory.Packages.props`.

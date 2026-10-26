@@ -14,7 +14,7 @@ internal sealed class AcceptInvitationCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<AcceptInvitationCommand>
 {
-    public async Task HandleAsync(AcceptInvitationCommand command, CancellationToken ct)
+    public async Task HandleAsync(AcceptInvitationCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var caller = await access.RequirePersonAsync(command.RequestingAuthSubject, ct);

@@ -14,9 +14,9 @@ internal static class StatementRowRequestId
     public static Guid For(Guid importRequestId, string sourceKey)
     {
         // SHA-1 is what UUIDv5 specifies; this is an identifier, not a security boundary.
-#pragma warning disable CA5350
+#pragma warning disable CA5350, S4790
         var hash = SHA1.HashData([.. importRequestId.ToByteArray(bigEndian: true), .. Encoding.UTF8.GetBytes(sourceKey)]);
-#pragma warning restore CA5350
+#pragma warning restore CA5350, S4790
         var bytes = hash.AsSpan(0, 16);
         bytes[6] = (byte)((bytes[6] & 0x0F) | 0x50);
         bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);

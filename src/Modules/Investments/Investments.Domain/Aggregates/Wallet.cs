@@ -136,5 +136,5 @@ public sealed class Wallet : AggregateRoot<WalletId>
     /// Concurrency token mapped to PostgreSQL's <c>xmin</c> (see <c>WalletConfiguration</c>); never set
     /// by domain logic. Clients send it back on edit so a stale edit is a conflict.
     /// </summary>
-    public uint Version { get; private set; }
+    public uint Version { get; }
 }

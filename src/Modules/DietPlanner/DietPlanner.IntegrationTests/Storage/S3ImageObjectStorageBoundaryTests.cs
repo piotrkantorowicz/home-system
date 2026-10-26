@@ -117,7 +117,7 @@ public sealed class S3ImageObjectStorageBoundaryTests
     {
         S3ImageObjectStorage storage = CreateStorage((_, _) => throw S3Failure("NoSuchKey"));
 
-        await storage.DeleteAsync(Key, TestContext.Current.CancellationToken);
+        await Should.NotThrowAsync(() => storage.DeleteAsync(Key, TestContext.Current.CancellationToken));
     }
 
     /// <summary>Provider failures never leak credentials, endpoints, keys or provider details.</summary>
