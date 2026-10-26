@@ -1,0 +1,11 @@
+# zizmor (GitHub Actions security linter) config, run by .github/workflows/workflow-lint.yml.
+rules:
+  # Repo policy: actions are referenced by tag (@vN), never SHA-pinned — Dependabot keeps
+  # tags current. ref-pin still rejects a `uses:` with no ref at all.
+  unpinned-uses:
+    config:
+      policies:
+        "*": ref-pin
+  # `uses: ./.github/workflows/…` is GitHub's documented local reusable-workflow syntax.
+  self-repository:
+    disable: true

@@ -10,10 +10,7 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write        # tags + releases
-  issues: write          # "released in vX.Y.Z" comments
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: release-main
@@ -23,6 +20,10 @@ jobs:
   release:
     name: semantic-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write        # tags + releases
+      issues: write          # "released in vX.Y.Z" comments
+      pull-requests: write
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
