@@ -92,7 +92,7 @@ internal sealed class MealPlanTools
         IReadOnlyList<MealEntryDto> all = await queries.SendAsync<GetMealEntriesQuery, IReadOnlyList<MealEntryDto>>(
             new GetMealEntriesQuery(personId, date, date, subject), ct);
         MealEntryDto meal = all.FirstOrDefault(m => m.Id == id)
-            ?? throw new McpException($"Meal {id} was saved, but it is not in your own diary on {date:yyyy-MM-dd}.");
+            ?? throw new McpException($"Meal {id} is not in your own diary on {date:yyyy-MM-dd}; it may have been moved or deleted.");
         return DiaryMealDto.From(meal);
     }
 }

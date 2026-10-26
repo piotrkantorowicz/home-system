@@ -22,7 +22,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class RecipeEditTools
 {
     [McpServerTool(Name = "update_recipe", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Replaces every field and the whole ingredient list of a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. Fields and ingredients you leave out are removed, so read the recipe first with get_recipe and send back what should stay. Ingredient amounts are for the whole recipe; servings says how many portions they make. New ingredients must be products the caller can see. Planned and eaten meals that use the recipe see the new version.")]
+    [Description("Replaces every field and the whole ingredient list of a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. Fields and ingredients you leave out are removed, so read the recipe first with get_recipe and send back what should stay. Ingredient amounts are for the whole recipe; servings says how many portions they make. New ingredients must be products the caller can see. Planned meals that use the recipe see the new version.")]
     public static async Task<CatalogRecipeDto> UpdateRecipe(
         McpCaller caller,
         ICommandDispatcher commands,
@@ -52,7 +52,7 @@ internal sealed class RecipeEditTools
     }
 
     [McpServerTool(Name = "delete_recipe", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Deletes a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. It disappears from search and can no longer be planned; meals already planned or eaten keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the recipe is already gone.")]
+    [Description("Deletes a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. It disappears from search and can no longer be planned; meals already planned keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the recipe is already gone.")]
     public static async Task<DeletedItemDto> DeleteRecipe(
         McpCaller caller,
         ICommandDispatcher commands,
