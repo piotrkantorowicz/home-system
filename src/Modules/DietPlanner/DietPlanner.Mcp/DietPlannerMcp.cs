@@ -40,6 +40,7 @@ public static class DietPlannerMcp
             .WithTools<ProductEditTools>()
             .WithTools<RecipeEditTools>()
             .WithTools<MealPlanTools>()
+            .WithTools<MealConsumptionTools>()
             .WithTools<ImportTools>();
     }
 }
