@@ -47,7 +47,7 @@ internal sealed class DiaryTools
             new GetNutritionSummaryQuery(caller.PersonId(), from, to), ct);
     }
 
-    private static void EnsureRange(DateOnly from, DateOnly to)
+    internal static void EnsureRange(DateOnly from, DateOnly to)
     {
         if (to < from)
             throw new McpException("to must not be before from.");
