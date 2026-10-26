@@ -226,6 +226,34 @@
     "_meta": null
   },
   {
+    "name": "delete_recipe",
+    "title": null,
+    "description": "Deletes a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. It disappears from search and can no longer be planned; meals already planned or eaten keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the recipe is already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "recipeId": {
+          "description": "Recipe id from search_recipes or get_recipe.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "recipeId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "execute_plan_import",
     "title": null,
     "description": "Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice. Run one import at a time: two different imports in parallel can both fill the same free slots.",
@@ -1031,6 +1059,104 @@
         "productId",
         "name",
         "unit"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_recipe",
+    "title": null,
+    "description": "Replaces every field and the whole ingredient list of a recipe the caller may edit (their own, or a household recipe as an adult of that household), with the same rules as the app. Fields and ingredients you leave out are removed, so read the recipe first with get_recipe and send back what should stay. Ingredient amounts are for the whole recipe; servings says how many portions they make. New ingredients must be products the caller can see. Planned and eaten meals that use the recipe see the new version.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "recipeId": {
+          "description": "Recipe id from search_recipes or get_recipe.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "description": "Recipe name, unique in the caller's catalog.",
+          "type": "string"
+        },
+        "servings": {
+          "description": "Portions the ingredient amounts make; at least 1.",
+          "type": "integer"
+        },
+        "ingredients": {
+          "description": "The complete ingredient list; at least one line.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "description": "A product the caller can see, from search_products or create_product.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "amount": {
+                "description": "Quantity for the whole recipe (all servings); must be positive.",
+                "type": "number"
+              },
+              "unit": {
+                "description": "Unit of the amount, e.g. g, ml, piece, tbsp, cup.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "productId",
+              "amount",
+              "unit"
+            ]
+          }
+        },
+        "description": {
+          "description": "Short description, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "instructions": {
+          "description": "Preparation steps, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "prepTimeMinutes": {
+          "description": "Preparation time in minutes, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        },
+        "visibility": {
+          "description": "Private or Household; omit to keep the current one. Only the creator may change it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "recipeId",
+        "name",
+        "servings",
+        "ingredients"
       ]
     },
     "outputSchema": null,
