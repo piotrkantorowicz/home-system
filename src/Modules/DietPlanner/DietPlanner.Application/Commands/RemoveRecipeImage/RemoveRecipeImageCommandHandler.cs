@@ -7,7 +7,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class RemoveRecipeImageCommandHandler(IRecipeImagePersistence persistence,
     HouseholdRosterProvider households) : ICommandHandler<RemoveRecipeImageCommand>
 {
-    public Task HandleAsync(RemoveRecipeImageCommand command, CancellationToken ct)
+    public Task HandleAsync(RemoveRecipeImageCommand command, CancellationToken ct = default)
         => persistence.RemoveAsync(command.Id, async (recipe, mutationCt) =>
         {
             LibraryAccess access = await households.GetLibraryAccessAsync(command.UserId, mutationCt);

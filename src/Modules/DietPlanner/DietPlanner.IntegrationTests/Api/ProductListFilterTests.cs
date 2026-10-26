@@ -80,7 +80,7 @@ public sealed class ProductListFilterTests
         (await NamesAsync("protein", false)).ShouldBe([$"{tag}-c", $"{tag}-a", $"{tag}-b", $"{tag}-e", $"{tag}-d"]);
         (await NamesAsync("protein", true)).ShouldBe([$"{tag}-e", $"{tag}-a", $"{tag}-b", $"{tag}-c", $"{tag}-d"]);
         (await NamesAsync("name", true)).ShouldBe([$"{tag}-e", $"{tag}-d", $"{tag}-c", $"{tag}-b", $"{tag}-a"]);
-        (await NamesAsync("NAME", false)).First().ShouldBe($"{tag}-a");
+        (await NamesAsync("NAME", false))[0].ShouldBe($"{tag}-a");
     }
 
     /// <summary>Only whitelisted columns sort.</summary>

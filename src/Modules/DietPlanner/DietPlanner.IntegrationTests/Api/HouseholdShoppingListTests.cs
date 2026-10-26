@@ -60,7 +60,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
         var items = await owner.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
-        items!.Count.ShouldBe(2);
+        items.Count.ShouldBe(2);
         items.Select(i => i.TotalAmount).OrderBy(x => x).ShouldBe([100m, 250m]);
     }
 

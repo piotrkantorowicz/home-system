@@ -201,9 +201,11 @@ internal sealed class ImportPlanResolver(
 
                 if (recipeId is not null && meal.Servings is not <= 0)
                 {
-                    var recipeName = recipeDefs.TryGetValue(meal.Recipe, out var defined) ? defined.Definition.Name
-                        : existingRecipes.TryGetValue(meal.Recipe, out var stored) ? stored[0].Name
-                        : meal.Recipe;
+                    var recipeName = meal.Recipe;
+                    if (recipeDefs.TryGetValue(meal.Recipe, out var defined))
+                        recipeName = defined.Definition.Name;
+                    else if (existingRecipes.TryGetValue(meal.Recipe, out var stored))
+                        recipeName = stored[0].Name;
                     meals.Add((new ResolvedMeal(date, slotName, recipeId, recipeName, meal.Servings ?? 1m, meal.Notes), mealPath));
                 }
             }
@@ -479,7 +481,7 @@ internal sealed class ImportPlanResolver(
             differences.Add("servings");
 
         static string Key(ProductId productId, decimal amount, string unit)
-            => FormattableString.Invariant($"{productId.Value}|{amount:0.####}|{unit.ToLowerInvariant()}");
+            => string.Create(CultureInfo.InvariantCulture, $"{productId.Value}|{amount:0.####}|{unit.ToLowerInvariant()}");
 
         var imported = ingredients.Select(i => Key(i.ProductId, i.Amount, i.Unit)).Order(StringComparer.Ordinal);
         var stored = existing.Ingredients.Select(i => Key(i.ProductId, i.Amount, i.Unit)).Order(StringComparer.Ordinal);

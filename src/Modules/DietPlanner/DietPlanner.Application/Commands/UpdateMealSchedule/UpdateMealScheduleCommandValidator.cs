@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.UpdateMealSchedule;
 
+using System.Globalization;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class UpdateMealScheduleCommandValidator : ICommandValidator<UpdateMealScheduleCommand>
@@ -22,7 +23,7 @@ internal sealed class UpdateMealScheduleCommandValidator : ICommandValidator<Upd
             if (string.IsNullOrWhiteSpace(slot.Name))
                 yield return new ValidationError($"Slots[{i}].Name", "Slot name is required.");
 
-            if (!TimeOnly.TryParse(slot.DefaultTime, out _))
+            if (!TimeOnly.TryParse(slot.DefaultTime, CultureInfo.InvariantCulture, out _))
                 yield return new ValidationError($"Slots[{i}].DefaultTime", "DefaultTime must be a valid time in HH:mm format.");
         }
     }

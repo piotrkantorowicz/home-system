@@ -165,5 +165,5 @@ public sealed class Settlement : AggregateRoot<SettlementId>
     public string? VoidedByDisplayName { get; private set; }
 
     /// <summary>Concurrency token mapped to PostgreSQL's <c>xmin</c>; never set by domain logic.</summary>
-    public uint Version { get; private set; }
+    public uint Version { get; }
 }

@@ -77,7 +77,7 @@ public sealed class HouseholdContextTests : IClassFixture<HouseholdDatabaseFixtu
             sp.GetRequiredService<IHouseholdQueryService>().GetHouseholdContextForUserAsync(sub));
 
         context.ShouldNotBeNull();
-        context!.PersonId.ShouldBe(personId);
+        context.PersonId.ShouldBe(personId);
         context.Role.ShouldBe("Owner");
         context.HouseholdId.ShouldNotBe(Guid.Empty);
         context.Members.ShouldHaveSingleItem().PersonId.ShouldBe(personId);

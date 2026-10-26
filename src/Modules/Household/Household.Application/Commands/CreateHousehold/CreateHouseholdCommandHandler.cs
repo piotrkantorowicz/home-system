@@ -13,7 +13,7 @@ internal sealed class CreateHouseholdCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<CreateHouseholdCommand, Guid>
 {
-    public async Task<Guid> HandleAsync(CreateHouseholdCommand command, CancellationToken ct)
+    public async Task<Guid> HandleAsync(CreateHouseholdCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var caller = await access.RequirePersonAsync(command.RequestingAuthSubject, ct);

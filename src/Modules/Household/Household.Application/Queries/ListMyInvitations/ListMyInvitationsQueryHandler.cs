@@ -9,7 +9,7 @@ internal sealed class ListMyInvitationsQueryHandler(IHouseholdReadDbContext db, 
     : IQueryHandler<ListMyInvitationsQuery, IReadOnlyList<MyInvitationDto>>
 {
     public async Task<IReadOnlyList<MyInvitationDto>> HandleAsync(
-        ListMyInvitationsQuery query, CancellationToken ct)
+        ListMyInvitationsQuery query, CancellationToken ct = default)
     {
         var caller = await db.Persons.AsNoTracking()
             .Where(p => p.AuthSubject == query.AuthSubject)

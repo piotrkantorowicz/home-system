@@ -55,7 +55,7 @@ public sealed class BudgetSettlementTests : IClassFixture<BudgetDatabaseFixture>
     private static async Task<SettlementBody> SettlementAsync(HttpClient client)
         => (await client.GetFromJsonAsync<SettlementBody>("/api/budget/settlement", Ct))!;
 
-    private static decimal Net(SettlementBody s, Guid person)
+    private static decimal NetOf(SettlementBody s, Guid person)
         => decimal.Parse(s.Balances.Single(b => b.PersonId == person).Net, CultureInfo.InvariantCulture);
 
     private async Task<(BudgetScenario.Household H, BudgetScenario.Member Bea, Guid Account)> TwoAdultsAsync()
@@ -87,8 +87,8 @@ public sealed class BudgetSettlementTests : IClassFixture<BudgetDatabaseFixture>
 
         var s = await SettlementAsync(h.Owner);
 
-        Net(s, h.OwnerPersonId).ShouldBe(40m);
-        Net(s, bea.PersonId).ShouldBe(-40m);
+        NetOf(s, h.OwnerPersonId).ShouldBe(40m);
+        NetOf(s, bea.PersonId).ShouldBe(-40m);
         s.Balances.Sum(b => decimal.Parse(b.Net, CultureInfo.InvariantCulture)).ShouldBe(0m);
         s.IsSettled.ShouldBeFalse();
         s.Currency.ShouldBe("PLN");
@@ -106,7 +106,7 @@ public sealed class BudgetSettlementTests : IClassFixture<BudgetDatabaseFixture>
 
         var s = await SettlementAsync(h.Owner);
 
-        Net(s, bea.PersonId).ShouldBe(-15m);
+        NetOf(s, bea.PersonId).ShouldBe(-15m);
     }
 
     /// <summary>Voided expenses contribute nothing; with nothing outstanding the household is settled with no suggestions.</summary>
@@ -172,8 +172,8 @@ public sealed class BudgetSettlementTests : IClassFixture<BudgetDatabaseFixture>
         (await h.Owner.PutAsJsonAsync($"/api/households/{h.Id}/members/{cy.PersonId}/role", new { role = "Child" }, Ct)).EnsureSuccessStatusCode();
         var s = await SettlementAsync(h.Owner);
 
-        Net(s, bea.PersonId).ShouldBe(-30m);
-        Net(s, cy.PersonId).ShouldBe(-30m);
+        NetOf(s, bea.PersonId).ShouldBe(-30m);
+        NetOf(s, cy.PersonId).ShouldBe(-30m);
         s.Balances.Single(b => b.PersonId == bea.PersonId).IsFormerAdult.ShouldBeTrue();
         s.Balances.Single(b => b.PersonId == cy.PersonId).IsFormerAdult.ShouldBeTrue();
         s.Balances.Single(b => b.PersonId == h.OwnerPersonId).IsFormerAdult.ShouldBeFalse();

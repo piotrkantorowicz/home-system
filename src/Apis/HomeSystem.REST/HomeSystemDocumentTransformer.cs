@@ -92,12 +92,12 @@ public sealed class HomeSystemDocumentTransformer : IOpenApiDocumentTransformer
         var validationSchema = await ReferenceSchemaAsync(document, context, typeof(HttpValidationProblemDetails), ct);
         var problemSchema = await ReferenceSchemaAsync(document, context, typeof(ProblemDetails), ct);
 
-        foreach (var path in document.Paths.Values)
+        foreach (var operations in document.Paths.Values.Select(path => path.Operations))
         {
-            if (path.Operations is null)
+            if (operations is null)
                 continue;
 
-            foreach (var operation in path.Operations.Values)
+            foreach (var operation in operations.Values)
             {
                 operation.Responses ??= [];
 

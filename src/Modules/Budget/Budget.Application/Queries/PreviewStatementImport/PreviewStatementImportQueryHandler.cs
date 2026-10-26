@@ -107,7 +107,11 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
             ? []
             : [.. nearby.Where(e => e.Amount == amount && Math.Abs(e.OccurredOn.DayNumber - t.TransactionDate.DayNumber) <= DuplicateWindowDays).Take(MaxMatches)];
         var merchant = StatementText.MerchantKey(t);
-        var status = imported.Contains(key) ? "AlreadyImported" : matches.Count > 0 ? "PossibleDuplicate" : "New";
+        var status = "New";
+        if (imported.Contains(key))
+            status = "AlreadyImported";
+        else if (matches.Count > 0)
+            status = "PossibleDuplicate";
 
         return new StatementCandidateDto(
             t.LineNumber, key, t.TransactionDate, F(amount), StatementText.ExpenseDescription(t), merchant,
