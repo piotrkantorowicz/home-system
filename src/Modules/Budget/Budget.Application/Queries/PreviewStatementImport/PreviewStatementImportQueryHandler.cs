@@ -40,7 +40,7 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
             .Select(a => new { a.Visibility, a.OwnerPersonId, a.IsArchived })
             .FirstOrDefaultAsync(ct) ?? throw new NotFoundException("Envelope", query.BudgetAccountId);
         if (account.IsArchived)
-            throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
+            throw new BudgetDomainException(Expense.ArchivedEnvelopeMessage);
 
         var statement = StatementParser.Parse(query.Content, budget.Currency);
         var keys = StatementSourceKey.ForAll(statement.Profile, caller.PersonId, statement.Transactions);
