@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using DietPlanner.IntegrationTests.Infrastructure;
 using Household.Contracts.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -60,11 +61,14 @@ internal sealed class McpTestHost(
         return await McpClient.CreateAsync(transport, cancellationToken: TestContext.Current.CancellationToken);
     }
 
+    // The MCP SDK writes enums as names (e.g. "Monday"); the converter also reads numbers.
+    private static readonly JsonSerializerOptions ResultJson = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
+
     public static async Task<T> CallAsync<T>(McpClient client, string tool, Dictionary<string, object?>? arguments = null)
     {
         var result = await client.CallToolAsync(tool, arguments, cancellationToken: TestContext.Current.CancellationToken);
         result.IsError.ShouldNotBe(true, Text(result));
-        return JsonSerializer.Deserialize<T>(Text(result), JsonSerializerOptions.Web)!;
+        return JsonSerializer.Deserialize<T>(Text(result), ResultJson)!;
     }
 
     public static async Task<string> CallExpectingErrorAsync(McpClient client, string tool, Dictionary<string, object?>? arguments = null)

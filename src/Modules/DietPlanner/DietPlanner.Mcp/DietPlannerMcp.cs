@@ -46,6 +46,7 @@ public static class DietPlannerMcp
             .WithTools<WeightTools>()
             .WithTools<HydrationReadTools>()
             .WithTools<HydrationTools>()
+            .WithTools<ScheduleTools>()
             .WithTools<ImportTools>();
     }
 }
