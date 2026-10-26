@@ -1,4 +1,4 @@
-"Data operacji","Data waluty","Typ transakcji","Kwota","Waluta","Saldo po transakcji","Opis transakcji","","","",""
-"2026-10-20","2026-10-21","P≥atnoúÊ kartπ","-25.50","PLN","+974.50","Tytu≥: 000498849 74230786294010271651447","Lokalizacja: Adres: SKLEP TESTOWY Miasto: KRAKOW Kraj: POLSKA","Data wykonania operacji: 2026-10-20","Oryginalna kwota operacji: 25.50 PLN","Numer karty: 425125******1234"
-"2026-10-22","2026-10-22","Przelew z rachunku","-1200.00","PLN","-225.50","Rachunek odbiorcy: 00 1020 0000 0000 0000 0000 0002","Nazwa odbiorcy: JAN TESTOWY","Tytu≥: CZYNSZ PAèDZIERNIK","",""
-"2026-10-23","2026-10-24","P≥atnoúÊ kartπ","-10.00","EUR","+15.00","Tytu≥: 000498849 74230786294010271651448","Lokalizacja: Adres: CAFE TEST Miasto: PARIS Kraj: FRANCJA","","",""
+Data operacji;Data waluty;Typ transakcji;Kwota;Waluta;Saldo po transakcji;Opis transakcji;;;;
+2026-10-20;2026-10-21;P≈Çatno≈õƒá kartƒÖ;-25.50;PLN;+974.50;Tytu≈Ç: 000498849 74230786294010271651447;Lokalizacja: Adres: SKLEP TESTOWY Miasto: KRAKOW Kraj: POLSKA;Data wykonania operacji: 2026-10-20;Oryginalna kwota operacji: 25.50 PLN;Numer karty: 425125******1234
+2026-10-22;2026-10-22;Przelew z rachunku;-1200.00;PLN;-225.50;Rachunek odbiorcy: 00 1020 0000 0000 0000 0000 0002;Nazwa odbiorcy: JAN TESTOWY;Adres odbiorcy: UL. TESTOWA 1 00-000 WARSZAWA;Tytu≈Ç: CZYNSZ PA≈πDZIERNIK;Referencje w≈Çasne zleceniodawcy: 000000000001
+2026-10-23;2026-10-24;P≈Çatno≈õƒá kartƒÖ;-10.00;EUR;+15.00;Tytu≈Ç: 000498849 74230786294010271651448;Lokalizacja: Adres: CAFE TEST Miasto: PARIS Kraj: FRANCJA;;;

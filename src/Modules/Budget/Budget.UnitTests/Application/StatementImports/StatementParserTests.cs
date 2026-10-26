@@ -61,12 +61,14 @@ public sealed class StatementParserTests
         var result = ParseFixture("ing.csv");
 
         result.Profile.ShouldBe("ing");
+        result.PeriodFrom.ShouldBe(new DateOnly(2026, 10, 19));
+        result.PeriodTo.ShouldBe(new DateOnly(2026, 10, 25));
         result.Issues.ShouldBeEmpty();
         result.Transactions.ShouldBe(
         [
-            new(8, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 21), new(2026, 10, 20), null, -15.40m, "PLN", false, "PIEKARNIA TESTOWA WARSZAWA PL", "Płatność kartą 20.10.2026 Nr karty 4246xx******1234", "202629400000001", "TR.KART", true),
-            new(9, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 22), new(2026, 10, 22), null, -1250.00m, "PLN", false, "JAN TESTOWY", "PRĄD", "202629500000002", "PRZELEW", true),
-            new(10, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 24), new(2026, 10, 24), null, -99.99m, "PLN", false, "SKLEP INTERNETOWY", "Płatność kartą 24.10.2026", null, "TR.KART", false),
+            new(14, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 21), new(2026, 10, 20), null, -15.40m, "PLN", false, "PIEKARNIA TESTOWA WARSZAWA PL", "Płatność kartą 20.10.2026 Nr karty 4246xx******1234", "202629400000001", "TR.KART", true),
+            new(15, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 22), new(2026, 10, 22), null, -1250.00m, "PLN", false, "JAN TESTOWY", "PRĄD", "202629500000002", "PRZELEW", true),
+            new(16, "00 1050 0000 0000 0000 0000 0003", new(2026, 10, 24), new(2026, 10, 24), null, -99.99m, "PLN", false, "SKLEP INTERNETOWY", "Płatność kartą 24.10.2026", null, "", false),
         ]);
     }
 
@@ -84,6 +86,41 @@ public sealed class StatementParserTests
             new(3, "Current:PLN", new(2026, 10, 21), new(2026, 10, 21), new(18, 0, 0), -30.00m, "PLN", false, "Pending Shop", "", null, "CARD_PAYMENT", false),
             new(4, "Current:PLN", new(2026, 10, 22), new(2026, 10, 22), new(9, 0, 0), -101.00m, "PLN", false, "Exchanged to EUR", "", null, "EXCHANGE", true),
             new(5, "Current:EUR", new(2026, 10, 23), new(2026, 10, 23), new(10, 0, 0), -4.20m, "EUR", true, "Cafe Paris", "", null, "CARD_PAYMENT", true),
+        ]);
+    }
+
+    /// <summary>The Polish-language export: localised headers and states read like the English ones.</summary>
+    [Fact]
+    public void Parse_RevolutPolishFixture_ReadsLocalisedColumns()
+    {
+        var result = ParseFixture("revolut-pl.csv");
+
+        result.Profile.ShouldBe("revolut");
+        result.Issues.ShouldBeEmpty();
+        result.Transactions.ShouldBe(
+        [
+            new(2, "Bieżące:PLN", new(2026, 10, 20), new(2026, 10, 19), new(12, 3, 44), -12.50m, "PLN", false, "Kawiarnia Żółta", "", null, "Płatność kartą", true),
+            new(3, "Bieżące:PLN", new(2026, 10, 21), new(2026, 10, 21), new(18, 0, 0), -30.00m, "PLN", false, "Sklep W Toku", "", null, "Płatność kartą", false),
+            new(4, "Bieżące:PLN", new(2026, 10, 22), new(2026, 10, 22), new(9, 0, 0), -101.00m, "PLN", false, "Wymieniono na EUR", "", null, "Wymiana", true),
+        ]);
+    }
+
+    /// <summary>Alior: period from the criteria line, the other party by direction, the amount in the account's currency.</summary>
+    [Fact]
+    public void Parse_AliorFixture_ReadsPeriodAndAccountCurrencyAmounts()
+    {
+        var result = ParseFixture("alior.csv");
+
+        result.Profile.ShouldBe("alior");
+        result.PeriodFrom.ShouldBe(new DateOnly(2026, 10, 19));
+        result.PeriodTo.ShouldBe(new DateOnly(2026, 10, 25));
+        result.Issues.ShouldBeEmpty();
+        result.Transactions.ShouldBe(
+        [
+            new(3, null, new(2026, 10, 21), new(2026, 10, 20), null, -123.45m, "PLN", false, "", "ALLEGRO.PL POZNAN POL", null, "", true),
+            new(4, null, new(2026, 10, 22), new(2026, 10, 22), null, -1500.00m, "PLN", false, "ANNA TESTOWA", "Czynsz za październik", null, "", true),
+            new(5, null, new(2026, 10, 23), new(2026, 10, 23), null, 45.00m, "PLN", false, "ANNA TESTOWA", "Zwrot za zakupy", null, "", true),
+            new(6, null, new(2026, 10, 24), new(2026, 10, 24), null, -18.30m, "PLN", false, "", "CAFE TEST PARIS FRA", null, "", true),
         ]);
     }
 

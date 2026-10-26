@@ -96,21 +96,28 @@ internal static class StatementParser
 
         return matches.Count == 1
             ? matches[0]
-            : throw new BudgetDomainException("Unrecognised statement format. Export the account history as CSV from PKO BP, mBank, ING or Revolut.");
+            : throw new BudgetDomainException("Unrecognised statement format. Export the account history as CSV from PKO BP, mBank, ING, Alior Bank or Revolut.");
     }
 
     /// <summary>
     /// <c>#Key</c> and <c>Key:</c> lines and the values on the line after each (mBank's account, currency and
-    /// period; ING's <c>Wybrane rachunki:</c>).
+    /// period; ING's <c>Wybrane rachunki:</c>), or after the key on its own line (ING's <c>Zakres dat:</c>),
+    /// and <c>Key: value</c> in one cell (Alior's criteria line).
     /// </summary>
     private static Dictionary<string, string[]> ReadPreamble(ReadOnlySpan<string> lines, char delimiter)
     {
         Dictionary<string, string[]> preamble = [];
-        for (var i = 0; i + 1 < lines.Length; i++)
+        for (var i = 0; i < lines.Length; i++)
         {
             string[] key = Cells(lines[i], delimiter);
-            if (key.Length > 0 && (key[0].StartsWith('#') || key[0].EndsWith(':')))
-                preamble.TryAdd(key[0], Cells(lines[i + 1], delimiter));
+            if (key.Length == 0)
+                continue;
+            if (key.Length > 1 && key[0].EndsWith(':'))
+                preamble.TryAdd(key[0], key[1..]);
+            else if (key[0].StartsWith('#') || key[0].EndsWith(':'))
+                preamble.TryAdd(key[0], i + 1 < lines.Length ? Cells(lines[i + 1], delimiter) : []);
+            else if (key[0].IndexOf(':', StringComparison.Ordinal) is > 0 and var colon)
+                preamble.TryAdd(key[0][..(colon + 1)], [key[0][(colon + 1)..].Trim()]);
         }
 
         return preamble;

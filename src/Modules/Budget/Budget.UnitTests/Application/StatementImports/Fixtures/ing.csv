@@ -1,10 +1,19 @@
-"Lista transakcji"
-"Dokument nr 0000001"
-"Wygenerowany dnia: 2026-10-25"
-"Wybrane rachunki:"
-"Konto Direct";"(PLN)";"00 1050 0000 0000 0000 0000 0003"
-""
-"Data transakcji";"Data ksiêgowania";"Dane kontrahenta";"Tytu³";"Nr rachunku";"Nazwa banku";"Szczegó³y";"Nr transakcji";"Kwota transakcji (waluta rachunku)";"Waluta";"Kwota blokady/zwolnienie blokady";"Waluta";"Kwota p³atnoœci w walucie";"Waluta";"Saldo po transakcji";"Waluta";
-2026-10-20;2026-10-21;"PIEKARNIA TESTOWA  WARSZAWA PL";"P³atnoœæ kart¹ 20.10.2026 Nr karty 4246xx******1234";"";"";"TR.KART";"202629400000001";-15,40;PLN;;;-15,40;PLN;984,60;PLN;
-2026-10-22;2026-10-22;"JAN TESTOWY";"PR¥D";"'00 1020 0000 0000 0000 0000 0002'";"PKO BP";"PRZELEW";"202629500000002";-1 250,00;PLN;;;;;-265,40;PLN;
-2026-10-24;;"SKLEP INTERNETOWY";"P³atnoœæ kart¹ 24.10.2026";"";"";"TR.KART";"";;;-99,99;PLN;;;;;
+Lista transakcji;;;;;ING Bank ÅšlÄ…ski S.A. ul. Testowa 1, 00-000 Katowice;;;;;;;;;;;;;;;;
+Dokument nr 0000001_000001;;;;;;;;;;;;;;;;;;;;
+Wygenerowany dnia: 2026-10-25, 10:00;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+Dane UÅ¼ytkownika:;;;;;;;;;;;;;;;;;;;;
+JAN TESTOWY, UL. TESTOWA 1/2 00-000 WARSZAWA;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+Wybrane rachunki:;;;;;;;;;;;;;;;;;;;;
+Konto Direct (PLN);;00 1050 0000 0000 0000 0000 0003;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+Zakres dat:;2026-10-19 - 2026-10-25;Typy transakcji:;wszystkie;;Liczba transakcji:;3;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+Data transakcji;Data ksiÄ™gowania;Dane kontrahenta;TytuÅ‚;Nr rachunku;Nazwa banku;SzczegÃ³Å‚y;Nr transakcji;Kwota transakcji (waluta rachunku);Waluta;Kwota blokady/zwolnienie blokady;Waluta;Kwota pÅ‚atnoÅ›ci w walucie;Waluta;Bank;Saldo po transakcji;Waluta;;;;
+2026-10-20;2026-10-21; PIEKARNIA TESTOWA  WARSZAWA PL ;PÅ‚atnoÅ›Ä‡ kartÄ… 20.10.2026 Nr karty 4246xx******1234;;ING Bank ÅšlÄ…ski S.A.;TR.KART  ;'202629400000001';-15,40;PLN;;;;;ING Bank ÅšlÄ…ski S.A.;984,60;PLN;;;;
+2026-10-22;2026-10-22;JAN TESTOWY;PRÄ„D;'00 1020 0000 0000 0000 0000 0002';PKO BP;PRZELEW  ;'202629500000002';-1 250,00;PLN;;;;;ING Bank ÅšlÄ…ski S.A.;-265,40;PLN;;;;
+2026-10-24;;SKLEP INTERNETOWY;PÅ‚atnoÅ›Ä‡ kartÄ… 24.10.2026;;;;;;;-99,99;PLN;;;ING Bank ÅšlÄ…ski S.A.;0;PLN;;;;
+;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+Dokument ma charakter informacyjny, nie stanowi dowodu ksiÄ™gowego;;;;;;;;;;;;;;;;;;;;

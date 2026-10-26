@@ -4,8 +4,9 @@ namespace Budget.Application.StatementImports;
 internal static class StatementCandidateRules
 {
     // ponytail: matched by substring of the bank's upper-cased operation type. Only the mBank card
-    // repayment is seen in a real export; extend these lists as real PKO, ING and Revolut exports arrive.
-    private static readonly string[] OwnTransferTypes = ["SPŁATA KARTY", "PRZELEW WŁASNY", "RACHUNEK WŁASNY", "EXCHANGE", "TOPUP"];
+    // repayment is seen in a real export (Alior has no type column); the Polish Revolut WYMIANA and
+    // DOŁADOWANIE are Revolut's own terms, not yet seen in an export. Extend as real files show more.
+    private static readonly string[] OwnTransferTypes = ["SPŁATA KARTY", "PRZELEW WŁASNY", "RACHUNEK WŁASNY", "EXCHANGE", "TOPUP", "WYMIANA", "DOŁADOWANIE"];
     private static readonly string[] CashWithdrawalTypes = ["BANKOMA", "WYPŁATA GOTÓWKI", "ATM"]; // BANKOMA: BANKOMAT, W BANKOMACIE
 
     /// <summary>Why the row is skipped, or <see langword="null"/> when it is a candidate.</summary>

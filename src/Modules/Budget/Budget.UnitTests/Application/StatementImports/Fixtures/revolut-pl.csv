@@ -1,0 +1,4 @@
+Rodzaj,Produkt,Data rozpoczęcia,Data zrealizowania,Opis,Kwota,Opłata,Waluta,State,Saldo
+Płatność kartą,Bieżące,2026-10-19 12:03:44,2026-10-20 08:11:02,Kawiarnia Żółta,-12.50,0.00,PLN,ZAKOŃCZONO,987.50
+Płatność kartą,Bieżące,2026-10-21 18:00:00,,Sklep W Toku,-30.00,0.00,PLN,OCZEKUJĄCE,
+Wymiana,Bieżące,2026-10-22 09:00:00,2026-10-22 09:00:00,Wymieniono na EUR,-100.00,1.00,PLN,ZAKOŃCZONO,856.50
