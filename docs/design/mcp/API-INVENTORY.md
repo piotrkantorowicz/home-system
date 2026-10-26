@@ -166,9 +166,9 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/investments/wallets/{id:guid}/archive` | ArchiveInvestmentWallet | destructive | tbd | Investments epic |
 | POST | `/api/investments/wallets/{id:guid}/restore` | RestoreInvestmentWallet | write | tbd | Investments epic |
 | GET | `/api/investments/wallets/{id:guid}/snapshots` | ListInvestmentSnapshots | read | `list_snapshots` | Investments epic (#665) |
-| PUT | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | RecordInvestmentSnapshot | write | tbd | Investments epic |
-| DELETE | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | DeleteInvestmentSnapshot | destructive | tbd | Investments epic |
-| PUT | `/api/investments/snapshots` | RecordInvestmentsCheckIn | write | tbd | Investments epic |
+| PUT | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | RecordInvestmentSnapshot | write | `record_snapshot` | Investments epic (#666) |
+| DELETE | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | DeleteInvestmentSnapshot | destructive | `delete_snapshot` | Investments epic (#666) |
+| PUT | `/api/investments/snapshots` | RecordInvestmentsCheckIn | write | `record_check_in` | Investments epic (#666) |
 | GET | `/api/investments/net-worth` | GetInvestmentsNetWorth | read | `get_net_worth` | Investments epic (#665) |
 | GET | `/api/investments/net-worth/history` | GetInvestmentsNetWorthHistory | read | `get_net_worth_history` | Investments epic (#665) |
 
