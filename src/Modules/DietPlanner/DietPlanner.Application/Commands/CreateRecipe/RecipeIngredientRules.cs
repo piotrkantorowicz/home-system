@@ -10,6 +10,8 @@ internal static class RecipeIngredientRules
 
     public static IEnumerable<ValidationError> Validate(IReadOnlyList<CreateRecipeIngredientRequest> ingredients)
     {
+        if (ingredients.Count == 0)
+            yield return new ValidationError("Ingredients", "Recipe must have at least one ingredient.");
         if (ingredients.Count > MaxIngredients)
             yield return new ValidationError("Ingredients", $"Recipe must not have more than {MaxIngredients} ingredients.");
 

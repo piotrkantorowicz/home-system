@@ -31,6 +31,11 @@ public sealed class UpdateRecipeCommandValidatorTests
         _sut.Validate(Command(lines)).ShouldHaveSingleItem().PropertyName.ShouldBe("Ingredients");
     }
 
+    /// <summary>An update cannot empty the ingredient list, which create would reject.</summary>
+    [Fact]
+    public void Validate_WithNoIngredients_ReportsIngredients()
+        => _sut.Validate(Command([])).ShouldHaveSingleItem().PropertyName.ShouldBe("Ingredients");
+
     private static UpdateRecipeCommand Command(IReadOnlyList<CreateRecipeIngredientRequest> ingredients)
         => new(Guid.CreateVersion7(), "Soup", null, null, 1, null, ingredients, null, "user-1");
 }
