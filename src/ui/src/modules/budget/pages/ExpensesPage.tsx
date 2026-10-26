@@ -14,14 +14,15 @@ import {
   Skeleton,
 } from '@shared/components/ui';
 import { useFormat } from '@shared/hooks/useFormat';
-import { Plus, Receipt } from 'lucide-react';
+import { FileUp, Plus, Receipt } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAccountsQuery, useBudgetQuery, useExpensesQuery } from '../api/queries';
 import { ExpenseFormDialog } from '../components/ExpenseFormDialog';
 import { ExpenseRow } from '../components/ExpenseRow';
+import { useBudgetAccess } from '../hooks/useBudgetAccess';
 import {
   currentMonth,
   formatMonth,
@@ -38,6 +39,7 @@ export default function ExpensesPage() {
   const { t, i18n } = useTranslation('budget');
   const { dayShort } = useFormat();
   const { myPersonId } = useHousehold();
+  const { level } = useBudgetAccess();
   const budget = useBudgetQuery();
   const accounts = useAccountsQuery();
   // `?add=1` opens the form: the phone tab bar's raised "Add expense" button links here.
@@ -109,15 +111,25 @@ export default function ExpensesPage() {
         title={t('expenses')}
         subtitle={currency ? t('overview_subtitle_plain', { currency }) : undefined}
         actions={
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setAdding(true);
-            }}
-          >
-            <Plus className="size-4" />
-            {t('add_expense')}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {level === 'adult' && (
+              <Button variant="outline" className="gap-2" asChild>
+                <Link to="/budget/import">
+                  <FileUp className="size-4" />
+                  {t('import_statement')}
+                </Link>
+              </Button>
+            )}
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setAdding(true);
+              }}
+            >
+              <Plus className="size-4" />
+              {t('add_expense')}
+            </Button>
+          </div>
         }
       />
 
