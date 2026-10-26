@@ -1,5 +1,6 @@
 namespace DietPlanner.Api.Mcp;
 
+using System.Globalization;
 using DietPlanner.Application.Queries.GetMealEntries;
 
 /// <summary>
@@ -41,5 +42,5 @@ public sealed record DiaryMealDto(
 {
     internal static DiaryMealDto From(MealEntryDto m)
         => new(m.Id, m.Date, m.MealSlotName, m.MealSlotSortOrder, m.RecipeId, m.RecipeName, m.Servings, m.Notes, m.Status,
-            m.ActualRecipe?.Name, [.. m.ActualProducts.Select(p => FormattableString.Invariant($"{p.ProductName} {p.Amount:0.###} {p.Unit}"))], m.Calories, m.Protein, m.Carbs, m.Fat, m.Fiber);
+            m.ActualRecipe?.Name, [.. m.ActualProducts.Select(p => string.Create(CultureInfo.InvariantCulture, $"{p.ProductName} {p.Amount:0.###} {p.Unit}"))], m.Calories, m.Protein, m.Carbs, m.Fat, m.Fiber);
 }

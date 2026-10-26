@@ -12,7 +12,7 @@ internal sealed class ListPendingInvitationsQueryHandler(IHouseholdReadDbContext
     private readonly IHouseholdReadDbContext _db = db;
 
     public async Task<IReadOnlyList<InvitationDto>> HandleAsync(
-        ListPendingInvitationsQuery query, CancellationToken ct)
+        ListPendingInvitationsQuery query, CancellationToken ct = default)
     {
         var householdId = HouseholdId.From(query.HouseholdId);
 

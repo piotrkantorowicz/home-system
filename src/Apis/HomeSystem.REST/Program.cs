@@ -212,5 +212,3 @@ await app.RunAsync();
 /// <c>WebApplicationFactory&lt;Program&gt;</c> to the real pipeline.
 /// </summary>
 public partial class Program { }
-
-internal sealed record HealthResponse(string Status, DateTime Timestamp, string Version);

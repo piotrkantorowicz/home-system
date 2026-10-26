@@ -64,7 +64,7 @@ public sealed class WeightPredictionServiceTests
             now: TestClock.UtcNow);
 
         result.ShouldNotBeNull();
-        result!.Value.ShouldBeGreaterThan(TestClock.Today);
+        result.Value.ShouldBeGreaterThan(TestClock.Today);
     }
 
     /// <summary>When gaining towards higher target: <c>EstimateGoalDate</c> returns date.</summary>

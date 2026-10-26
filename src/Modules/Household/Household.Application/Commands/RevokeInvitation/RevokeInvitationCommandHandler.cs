@@ -12,7 +12,7 @@ internal sealed class RevokeInvitationCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<RevokeInvitationCommand>
 {
-    public async Task HandleAsync(RevokeInvitationCommand command, CancellationToken ct)
+    public async Task HandleAsync(RevokeInvitationCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

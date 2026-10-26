@@ -7,7 +7,7 @@ internal static class EnumValue
         where TEnum : struct, Enum
         => Enum.TryParse(value?.Trim(), ignoreCase: true, out result)
            && Enum.IsDefined(result)
-           && value!.Trim().All(char.IsLetter); // rejects numeric values such as "1"
+           && value.Trim().All(char.IsLetter); // rejects numeric values such as "1"
 
     public static TEnum Parse<TEnum>(string value)
         where TEnum : struct, Enum

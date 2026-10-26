@@ -176,6 +176,9 @@ dotnet_diagnostic.IDE0005.severity = warning  # unnecessary using
 dotnet_diagnostic.IDE0055.severity = warning  # formatting
 dotnet_diagnostic.IDE0161.severity = warning  # file-scoped namespace
 
+# SonarAnalyzer.CSharp (Directory.Packages.props). Sonar way severities apply; exceptions below.
+dotnet_diagnostic.S927.severity = none        # wants base-class parameter names; Rule 5 names every token `ct`
+
 # Test projects: the required Method_State_Expected test-method convention
 # (backend-testing-standards.md) contains underscores by design, so CA1707 is
 # switched off for test code only. Every other analyzer keeps its severity here.
@@ -186,6 +189,25 @@ dotnet_diagnostic.CA1707.severity = none
 # src/Shared/* uses it by design — Rule 6: namespace = folder path — so renaming isn't an option.
 [src/Shared/**.cs]
 dotnet_diagnostic.CA1716.severity = none
+
+# ICommand<TResult> / IQuery<TResult> are markers: TResult is never used as a member type on
+# purpose, it ties the request to its handler's return type.
+[src/Shared/Shared.Abstractions.Cqrs/{ICommand,IQuery}.cs]
+dotnet_diagnostic.S2326.severity = none
+
+# MCP tool types hold only static tool methods but are registered with WithTools<T>(), which a
+# static class can't satisfy. Program is a partial-class hook for WebApplicationFactory<Program>.
+[{src/Modules/DietPlanner/DietPlanner.Api/Mcp/*Tools.cs,src/Modules/Investments/Investments.Mcp/*Tools.cs,src/Apis/HomeSystem.REST/Program.cs}]
+dotnet_diagnostic.S1118.severity = none
+
+# Row → domain hydration rebuilds models through their private constructor and setters, so the
+# domain keeps no public setters (Rule 3) — the accessibility bypass is the mapping.
+[src/Modules/Notifications/Notifications.Infrastructure/Persistence/Repositories/NotificationMapping.cs]
+dotnet_diagnostic.S3011.severity = none
+
+# NBP's public rates API has one fixed address; it is not deployment configuration.
+[src/Modules/Investments/Investments.Infrastructure/DependencyInjection.cs]
+dotnet_diagnostic.S1075.severity = none
 
 # Generated EF migrations: leave alone
 [**/Migrations/*.cs]

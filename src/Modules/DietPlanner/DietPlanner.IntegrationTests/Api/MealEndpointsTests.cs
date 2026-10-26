@@ -145,7 +145,7 @@ public sealed class MealEndpointsTests
         var meals = await client.GetFromJsonAsync<List<MealEntryDto>>($"/api/v1/meals?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         meals.ShouldNotBeNull();
-        var meal = meals!.Single(m => m.RecipeId == recipeId);
+        var meal = meals.Single(m => m.RecipeId == recipeId);
         meal.Calories.ShouldBe(80m);
     }
 
@@ -179,7 +179,7 @@ public sealed class MealEndpointsTests
         var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={date:yyyy-MM-dd}&To={date:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
-        items!.Count.ShouldBe(1);
+        items.Count.ShouldBe(1);
 
         var item = items.Single();
         item.TotalAmount.ShouldBe(240m);
@@ -209,7 +209,7 @@ public sealed class MealEndpointsTests
 
         items.ShouldNotBeNull();
         // Only the planned recipe's ingredient should appear (80g), not the replacement.
-        items!.Count.ShouldBe(1);
+        items.Count.ShouldBe(1);
         items.Single().TotalAmount.ShouldBe(80m);
     }
 
@@ -223,7 +223,7 @@ public sealed class MealEndpointsTests
         var items = await client.GetFromJsonAsync<List<ShoppingListItemDto>>($"/api/v1/meals/shopping-list?From={farFuture:yyyy-MM-dd}&To={farFuture:yyyy-MM-dd}", cancellationToken: TestContext.Current.CancellationToken);
 
         items.ShouldNotBeNull();
-        items!.ShouldBeEmpty();
+        items.ShouldBeEmpty();
     }
 
     /// <summary>Renaming slot in place: <c>PUT</c> meal schedule preserves entries.</summary>

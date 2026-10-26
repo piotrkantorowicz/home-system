@@ -27,6 +27,10 @@ public sealed class BudgetExpenseTotalsTests : IClassFixture<BudgetDatabaseFixtu
         HttpClient client, Guid account, string amount, string date, string? description = null, Guid? paidBy = null, Guid[]? participants = null,
         bool personal = false)
     {
+        string? fundingSource = null;
+        if (!personal)
+            fundingSource = paidBy is null ? "HouseholdFunds" : "Individual";
+
         var response = await client.PostAsJsonAsync("/api/budget/expenses", new
         {
             clientRequestId = Guid.NewGuid(),
@@ -34,7 +38,7 @@ public sealed class BudgetExpenseTotalsTests : IClassFixture<BudgetDatabaseFixtu
             amount,
             occurredOn = date,
             category = "Groceries",
-            fundingSource = personal ? null : paidBy is null ? "HouseholdFunds" : "Individual",
+            fundingSource,
             paidByPersonId = paidBy,
             participantIds = participants,
             description,

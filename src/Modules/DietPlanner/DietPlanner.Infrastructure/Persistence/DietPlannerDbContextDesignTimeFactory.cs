@@ -8,7 +8,7 @@ internal sealed class DietPlannerDbContextDesignTimeFactory : IDesignTimeDbConte
     public DietPlannerDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<DietPlannerDbContext>()
-            .UseNpgsql("Host=localhost;Database=design-time;Username=design;Password=design")
+            .UseNpgsql("Host=localhost;Database=design-time;Username=design")
             .Options;
 
         return new DietPlannerDbContext(options);

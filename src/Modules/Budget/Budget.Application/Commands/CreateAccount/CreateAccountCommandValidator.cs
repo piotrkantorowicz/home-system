@@ -21,5 +21,5 @@ internal sealed class CreateAccountCommandValidator : ICommandValidator<CreateAc
     internal static bool TryParseVisibility(string? value, out AccountVisibility visibility)
         => Enum.TryParse(value?.Trim(), ignoreCase: true, out visibility)
            && Enum.IsDefined(visibility)
-           && value!.Trim().All(char.IsLetter); // rejects numeric enum values such as "1"
+           && value.Trim().All(char.IsLetter); // rejects numeric enum values such as "1"
 }

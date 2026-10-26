@@ -73,14 +73,6 @@ public sealed class DietReminderSettingsTests
         act.ShouldThrow<ArgumentException>();
     }
 
-    /// <summary>With whitespace user id: <c>Create</c> throws argument exception.</summary>
-    [Fact]
-    public void Create_WithWhitespacePersonId_ThrowsArgumentException()
-    {
-        var act = () => DietReminderSettings.Create(DietReminderSettingsId.New(), Guid.Empty, TestClock.UtcNow);
-
-        act.ShouldThrow<ArgumentException>();
-    }
 
     /// <summary>With non positive lead time: <c>Create</c> throws domain exception.</summary>
     [Theory]

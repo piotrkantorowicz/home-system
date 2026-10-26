@@ -13,7 +13,7 @@ internal sealed class ConvertManagedMemberToAccountCommandHandler(
     TimeProvider clock)
     : ICommandHandler<ConvertManagedMemberToAccountCommand>
 {
-    public async Task HandleAsync(ConvertManagedMemberToAccountCommand command, CancellationToken ct)
+    public async Task HandleAsync(ConvertManagedMemberToAccountCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

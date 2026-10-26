@@ -3,6 +3,10 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Analyzers referenced by every project (build-time only, never shipped) -->
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- ASP.NET Core -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.3.0" />

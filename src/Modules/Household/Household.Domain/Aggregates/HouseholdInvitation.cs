@@ -94,7 +94,7 @@ public sealed class HouseholdInvitation : AggregateRoot<HouseholdInvitationId>
     /// requests could both read <c>Pending</c> and the loser would silently overwrite the winner's
     /// outcome instead of failing with a concurrency exception.
     /// </summary>
-    public uint Version { get; private set; }
+    public uint Version { get; }
 
     /// <summary>Whether the invitation can still be accepted or revoked.</summary>
     public bool IsPending => Status == InvitationStatus.Pending;
