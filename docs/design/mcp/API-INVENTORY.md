@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -118,8 +118,8 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/v1/recipes` | ListRecipes | read | `search_recipes` | #608 |
 | GET | `/api/v1/recipes/{id:guid}` | GetRecipe | read | `get_recipe` | #608 |
 | POST | `/api/v1/recipes` | CreateRecipe | write | `create_recipe` | #611 |
-| PUT | `/api/v1/recipes/{id:guid}` | UpdateRecipe | write | `update_recipe` | Epic B DP-2 |
-| DELETE | `/api/v1/recipes/{id:guid}` | DeleteRecipe | destructive | `delete_recipe` | Epic B DP-2 |
+| PUT | `/api/v1/recipes/{id:guid}` | UpdateRecipe | write | `update_recipe` | #652 |
+| DELETE | `/api/v1/recipes/{id:guid}` | DeleteRecipe | destructive | `delete_recipe` | #652 |
 | PUT | `/api/v1/recipes/{id:guid}/image` | UploadRecipeImage | write | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
 | GET | `/api/v1/recipes/{id:guid}/image` | GetRecipeImage | read | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |
 | GET | `/api/v1/recipes/{id:guid}/image/thumbnail` | GetRecipeImageThumbnail | read | tbd | Recipe photo follow-up (#563): needs an explicit file-transport design |

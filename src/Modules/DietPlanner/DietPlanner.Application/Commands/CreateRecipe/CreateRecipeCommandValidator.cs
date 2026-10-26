@@ -22,9 +22,6 @@ internal sealed class CreateRecipeCommandValidator : ICommandValidator<CreateRec
         if (!VisibilityInput.IsValid(command.Visibility))
             yield return new ValidationError(nameof(command.Visibility), VisibilityInput.Error);
 
-        if (command.Ingredients.Count == 0)
-            yield return new ValidationError(nameof(command.Ingredients), "Recipe must have at least one ingredient.");
-
         foreach (var error in RecipeIngredientRules.Validate(command.Ingredients))
             yield return error;
 
