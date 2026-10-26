@@ -160,11 +160,11 @@ existing admin policy, never the everyday write grant).
 | Method | Route | Operation | Kind | Proposed tool | Target |
 |---|---|---|---|---|---|
 | GET | `/api/investments/wallets` | ListInvestmentWallets | read | `list_wallets` | Investments epic (#665) |
-| POST | `/api/investments/wallets` | CreateInvestmentWallet | write | tbd | Investments epic |
+| POST | `/api/investments/wallets` | CreateInvestmentWallet | write | `create_wallet` | Investments epic (#667) |
 | GET | `/api/investments/wallets/{id:guid}` | GetInvestmentWallet | read | `get_wallet` | Investments epic (#665) |
-| PUT | `/api/investments/wallets/{id:guid}` | UpdateInvestmentWallet | write | tbd | Investments epic |
-| POST | `/api/investments/wallets/{id:guid}/archive` | ArchiveInvestmentWallet | destructive | tbd | Investments epic |
-| POST | `/api/investments/wallets/{id:guid}/restore` | RestoreInvestmentWallet | write | tbd | Investments epic |
+| PUT | `/api/investments/wallets/{id:guid}` | UpdateInvestmentWallet | write | `update_wallet` | Investments epic (#667) |
+| POST | `/api/investments/wallets/{id:guid}/archive` | ArchiveInvestmentWallet | destructive | `archive_wallet` | Investments epic (#667) |
+| POST | `/api/investments/wallets/{id:guid}/restore` | RestoreInvestmentWallet | write | `restore_wallet` | Investments epic (#667) |
 | GET | `/api/investments/wallets/{id:guid}/snapshots` | ListInvestmentSnapshots | read | `list_snapshots` | Investments epic (#665) |
 | PUT | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | RecordInvestmentSnapshot | write | `record_snapshot` | Investments epic (#666) |
 | DELETE | `/api/investments/wallets/{id:guid}/snapshots/{asOf}` | DeleteInvestmentSnapshot | destructive | `delete_snapshot` | Investments epic (#666) |
