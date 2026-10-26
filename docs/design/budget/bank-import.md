@@ -84,6 +84,8 @@ Normalised description means: trim, collapse whitespace, upper-case invariant, a
 
 Only the hash is stored. Bank account numbers and bank references never reach the database in clear text.
 
+A file that names no account (PKO BP's export does not) puts the importing person in its place. Otherwise two adults paying the same amount at the same shop on the same day would share a key in the household scope, and the second real expense could not be imported. The cost: a joint account exported by both spouses yields two keys per row, so the second import shows each row as `PossibleDuplicate` (§4.3) instead of `AlreadyImported`.
+
 Accepted limitation: when a fingerprinted bank exports two files that split the same calendar day, `n` can differ between the files. Every bank in §2 exports whole days, so this does not happen in practice.
 
 ### 4.2 Uniqueness scope

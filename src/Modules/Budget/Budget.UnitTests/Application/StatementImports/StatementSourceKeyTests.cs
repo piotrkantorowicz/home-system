@@ -10,7 +10,9 @@ public sealed class StatementSourceKeyTests
         bool booked = true, bool foreign = false, string counterparty = "", int line = 1)
         => new(line, account, new(2026, 10, 20), new(2026, 10, 19), null, amount, foreign ? "EUR" : "PLN", foreign, counterparty, title, reference, type, booked);
 
-    private static string Key(StatementTransaction row) => StatementSourceKey.ForAll("mbank", [row]).Single();
+    private static readonly Guid Alex = Guid.CreateVersion7();
+
+    private static string Key(StatementTransaction row) => StatementSourceKey.ForAll("mbank", Alex, [row]).Single();
 
     /// <summary>The same row always hashes to the same 64-character lowercase hex key.</summary>
     [Fact]
@@ -26,7 +28,7 @@ public sealed class StatementSourceKeyTests
     [Fact]
     public void ForAll_IdenticalRows_GetDistinctKeys()
     {
-        var keys = StatementSourceKey.ForAll("mbank", [Row(), Row(), Row(title: "OTHER")]);
+        var keys = StatementSourceKey.ForAll("mbank", Alex, [Row(), Row(), Row(title: "OTHER")]);
 
         keys.Distinct().Count().ShouldBe(3);
         keys[0].ShouldBe(Key(Row()));
@@ -39,7 +41,18 @@ public sealed class StatementSourceKeyTests
         Key(Row(title: "sklep   Nr karty 4246xx******1234")).ShouldBe(Key(Row()));
         Key(Row(amount: -10.01m)).ShouldNotBe(Key(Row()));
         Key(Row(account: "00 1140 2")).ShouldNotBe(Key(Row()));
-        StatementSourceKey.ForAll("ing", [Row()]).Single().ShouldNotBe(Key(Row()));
+        StatementSourceKey.ForAll("ing", Alex, [Row()]).Single().ShouldNotBe(Key(Row()));
+    }
+
+    /// <summary>
+    /// An account-less row is keyed by the importing person, so two adults' identical purchases stay
+    /// importable; a row with an account is the same whoever imports it.
+    /// </summary>
+    [Fact]
+    public void ForAll_NoAccount_KeysByImporter()
+    {
+        StatementSourceKey.ForAll("pko-bp", Alex, [Row(account: null)]).ShouldNotBe(StatementSourceKey.ForAll("pko-bp", Guid.CreateVersion7(), [Row(account: null)]));
+        StatementSourceKey.ForAll("pko-bp", Alex, [Row()]).ShouldBe(StatementSourceKey.ForAll("pko-bp", Guid.CreateVersion7(), [Row()]));
     }
 
     /// <summary>With a bank reference, the reference alone identifies the row; the text may change between exports.</summary>

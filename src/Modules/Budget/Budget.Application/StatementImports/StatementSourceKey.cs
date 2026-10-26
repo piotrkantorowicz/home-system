@@ -14,16 +14,18 @@ internal static class StatementSourceKey
     /// One key per transaction, in order. With a bank reference: <c>profile | account | reference</c>.
     /// Otherwise the fingerprint <c>profile | account | booking date | amount | description | n</c>, where
     /// <c>n</c> is the 1-based occurrence of that exact tuple in the file, so two identical coffees on the
-    /// same day stay two rows.
+    /// same day stay two rows. A file that names no account (PKO BP) uses the importing person instead, so
+    /// two adults' identical purchases do not collide in the household scope; a joint account exported by
+    /// both then shows as <c>PossibleDuplicate</c> rather than being blocked.
     /// </summary>
-    public static IReadOnlyList<string> ForAll(string profile, IReadOnlyList<StatementTransaction> transactions)
+    public static IReadOnlyList<string> ForAll(string profile, Guid importerPersonId, IReadOnlyList<StatementTransaction> transactions)
     {
         Dictionary<string, int> occurrences = [];
         List<string> keys = new(transactions.Count);
 
         foreach (var t in transactions)
         {
-            var account = t.AccountId is null ? "" : StatementText.NormalizeForMatching(t.AccountId);
+            var account = t.AccountId is null ? $"person:{importerPersonId}" : StatementText.NormalizeForMatching(t.AccountId);
             string material;
             if (t.BankReference is { } reference)
                 material = $"{profile}|{account}|ref|{reference}";

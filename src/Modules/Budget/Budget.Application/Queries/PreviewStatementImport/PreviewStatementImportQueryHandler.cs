@@ -43,7 +43,7 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
             throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
 
         var statement = StatementParser.Parse(query.Content, budget.Currency);
-        var keys = StatementSourceKey.ForAll(statement.Profile, statement.Transactions);
+        var keys = StatementSourceKey.ForAll(statement.Profile, caller.PersonId, statement.Transactions);
         var rows = statement.Transactions.Select((t, i) => (Transaction: t, Key: keys[i], Skip: StatementCandidateRules.SkipReason(t))).ToList();
         var candidates = rows.Where(r => r.Skip is null).ToList();
 
