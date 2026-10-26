@@ -50,10 +50,11 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
         var scope = Expense.ImportScopeOf(account.Visibility, account.OwnerPersonId);
         var imported = await AlreadyImportedAsync(budget.Id, scope, [.. candidates.Select(c => c.Key)], ct);
         var nearby = await NearbyExpensesAsync(caller, [.. candidates.Select(c => c.Transaction)], ct);
+        var rules = await CategoryRulesAsync(budget.Id, scope, [.. candidates.Select(c => StatementText.MerchantKey(c.Transaction)).OfType<string>().Distinct()], ct);
 
         return new StatementPreviewDto(
             statement.Profile, statement.PeriodFrom, statement.PeriodTo, query.BudgetAccountId,
-            [.. candidates.Select(c => ToCandidate(c.Transaction, c.Key, imported, nearby, caller))],
+            [.. candidates.Select(c => ToCandidate(c.Transaction, c.Key, imported, nearby, rules, caller))],
             [.. rows.Where(r => r.Skip is not null).Select(r => new StatementSkippedRowDto(
                 r.Transaction.LineNumber, r.Transaction.TransactionDate, F(r.Transaction.Amount), r.Transaction.Currency,
                 StatementText.ExpenseDescription(r.Transaction), $"{r.Skip}"))],
@@ -68,6 +69,14 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
                 .Where(e => e.BudgetId == budgetId && e.ImportScope == scope && keys.Contains(e.ImportSourceKey!))
                 .Select(e => e.ImportSourceKey!)
                 .ToListAsync(ct)];
+
+    /// <summary>Categories learned for these merchants in this privacy scope (§5.1); exact match only.</summary>
+    private async Task<Dictionary<string, ExpenseCategory>> CategoryRulesAsync(BudgetId budgetId, string scope, string[] merchantKeys, CancellationToken ct)
+        => merchantKeys.Length == 0
+            ? []
+            : await db.CategoryRules.AsNoTracking()
+                .Where(r => r.BudgetId == budgetId && r.ImportScope == scope && merchantKeys.Contains(r.MerchantKey))
+                .ToDictionaryAsync(r => r.MerchantKey, r => r.Category, ct);
 
     /// <summary>
     /// Visible non-void expenses that could be the same purchase as a candidate: exact amount, date within
@@ -90,16 +99,19 @@ internal sealed class PreviewStatementImportQueryHandler(BudgetAccessService acc
     }
 
     private static StatementCandidateDto ToCandidate(
-        StatementTransaction t, string key, HashSet<string> imported, List<ExpenseRow> nearby, BudgetCaller caller)
+        StatementTransaction t, string key, HashSet<string> imported, List<ExpenseRow> nearby,
+        Dictionary<string, ExpenseCategory> rules, BudgetCaller caller)
     {
         var amount = -t.Amount;
         List<ExpenseRow> matches = imported.Contains(key)
             ? []
             : [.. nearby.Where(e => e.Amount == amount && Math.Abs(e.OccurredOn.DayNumber - t.TransactionDate.DayNumber) <= DuplicateWindowDays).Take(MaxMatches)];
+        var merchant = StatementText.MerchantKey(t);
         var status = imported.Contains(key) ? "AlreadyImported" : matches.Count > 0 ? "PossibleDuplicate" : "New";
 
         return new StatementCandidateDto(
-            t.LineNumber, key, t.TransactionDate, F(amount), StatementText.ExpenseDescription(t), null, status,
+            t.LineNumber, key, t.TransactionDate, F(amount), StatementText.ExpenseDescription(t), merchant,
+            merchant is not null && rules.TryGetValue(merchant, out var category) ? category.ToString() : null, status,
             [.. matches.Select(m => m.ToDto(caller))]);
     }
 

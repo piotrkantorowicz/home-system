@@ -23,6 +23,9 @@ public interface IBudgetReadDbContext
     /// <summary>Every expense revision, in every budget.</summary>
     DbSet<ExpenseRevision> ExpenseRevisions { get; }
 
+    /// <summary>Every merchant → category rule learned from imports, in every budget.</summary>
+    DbSet<CategoryRule> CategoryRules { get; }
+
     /// <summary>Every monthly limit, in every budget.</summary>
     DbSet<MonthlyLimit> MonthlyLimits { get; }
 

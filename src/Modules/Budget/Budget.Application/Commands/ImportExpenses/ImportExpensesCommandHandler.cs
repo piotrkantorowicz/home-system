@@ -18,6 +18,7 @@ internal sealed class ImportExpensesCommandHandler(
     IBudgetRepository budgets,
     IBudgetAccountRepository accounts,
     IExpenseRepository expenses,
+    ICategoryRuleRepository categoryRules,
     IBudgetUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<ImportExpensesCommand, ImportExpensesResult>
 {
@@ -73,8 +74,37 @@ internal sealed class ImportExpensesCommandHandler(
             ids.Add(expense.Id.Value);
         }
 
+        await LearnCategoriesAsync(account.BudgetId, scope, rows, now, ct);
         await unitOfWork.CommitAsync(ct);
         return new ImportExpensesResult(ids, Created: true);
+    }
+
+    /// <summary>
+    /// Upserts the merchant → category rule for every row that names a merchant (§5.1); within one import
+    /// the last row wins. Safe without its own lock: the caller holds the import-scope lock.
+    /// </summary>
+    private async Task LearnCategoriesAsync(
+        BudgetId budgetId, string scope, List<(ImportExpenseRow Row, Money Amount, Guid RequestId, ExpenseRequest Request)> rows,
+        DateTime now, CancellationToken ct)
+    {
+        Dictionary<string, ExpenseCategory> chosen = [];
+        foreach (var (row, _, _, request) in rows)
+        {
+            if (row.MerchantKey is not null && StatementText.MerchantKey(row.MerchantKey) is { } merchant)
+                chosen[merchant] = request.Category;
+        }
+
+        if (chosen.Count == 0)
+            return;
+
+        var existing = (await categoryRules.GetAsync(budgetId, scope, chosen.Keys, ct)).ToDictionary(r => r.MerchantKey);
+        foreach (var (merchant, category) in chosen)
+        {
+            if (existing.TryGetValue(merchant, out var rule))
+                rule.Learn(category, now);
+            else
+                await categoryRules.AddAsync(CategoryRule.Create(CategoryRuleId.New(), budgetId, scope, merchant, category, now), ct);
+        }
     }
 
     /// <summary>The row's normalised request, as stored on its revision and compared on replay.</summary>
