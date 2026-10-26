@@ -1,7 +1,7 @@
 import { ToastProvider } from '@shared/context/ToastContext';
 import { initI18n } from '@shared/lib/i18n';
 import { QueryClient } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -303,6 +303,21 @@ describe('Import statement', () => {
     await userEvent.click(again);
 
     expect(previewForms).toHaveLength(2);
+    expect(await screen.findByDisplayValue('Vitamins')).toBeInTheDocument();
+  });
+
+  it("keeps the edits when the form's Preview again re-reads the same file", async () => {
+    const review = await previewStatement();
+    const description = within(review).getAllByRole('textbox')[0];
+    if (!description) throw new Error('row missing');
+    await userEvent.clear(description);
+    await userEvent.type(description, 'Vitamins');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Preview again' }));
+
+    await waitFor(() => {
+      expect(previewForms).toHaveLength(2);
+    });
     expect(await screen.findByDisplayValue('Vitamins')).toBeInTheDocument();
   });
 

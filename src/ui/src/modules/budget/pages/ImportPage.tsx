@@ -157,7 +157,8 @@ export default function ImportPage() {
             aria-label={t('import_title')}
             onSubmit={(event) => {
               event.preventDefault();
-              handlePreview();
+              // Previewing the same file again keeps the review edits; a new file or envelope resets.
+              handlePreview(step.kind === 'review' ? step.rows : []);
             }}
           >
             <Field id="import-envelope" label={t('envelope')}>
