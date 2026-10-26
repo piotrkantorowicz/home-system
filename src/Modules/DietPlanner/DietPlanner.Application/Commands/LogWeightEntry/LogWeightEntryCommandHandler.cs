@@ -23,6 +23,8 @@ internal sealed class LogWeightEntryCommandHandler(
         var existing = await weightEntryRepository.GetByPersonAndDateAsync(
             command.PersonId, command.Date, ct);
 
+        var latest = await weightEntryRepository.GetLatestByPersonAsync(command.PersonId, existing?.Id, ct);
+
         bool created;
         WeightEntry entry;
         if (existing is null)
@@ -38,8 +40,12 @@ internal sealed class LogWeightEntryCommandHandler(
             created = false;
         }
 
-        profile.UpdateCurrentWeight(command.WeightKg, now);
-        userProfileRepository.Update(profile);
+        // A backfilled day older than the latest weigh-in must not overwrite the current weight.
+        if (latest is null || latest.Date <= command.Date)
+        {
+            profile.UpdateCurrentWeight(command.WeightKg, now);
+            userProfileRepository.Update(profile);
+        }
 
         await unitOfWork.CommitAsync(ct);
 

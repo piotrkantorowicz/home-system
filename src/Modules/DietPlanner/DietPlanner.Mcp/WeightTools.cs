@@ -16,7 +16,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class WeightTools
 {
     [McpServerTool(Name = "log_weight", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Records the caller's weight in kilograms for a day, not in the future. A day holds one weigh-in: logging a day that already has one replaces it, so a retry never adds a second entry. Also sets the profile's current weight, so the caller needs a profile first (set_profile). Returns the entry id and whether it was new.")]
+    [Description("Records the caller's weight in kilograms for a day, not in the future. A day holds one weigh-in: logging a day that already has one replaces it, so a retry never adds a second entry. Also sets the profile's current weight, unless a later weigh-in exists, so the caller needs a profile first (set_profile). Returns the entry id and whether it was new.")]
     public static async Task<LogWeightEntryResult> LogWeight(
         McpCaller caller,
         ICommandDispatcher commands,
