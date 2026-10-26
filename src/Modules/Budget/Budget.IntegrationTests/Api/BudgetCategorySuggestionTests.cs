@@ -35,10 +35,13 @@ public sealed class BudgetCategorySuggestionTests : IClassFixture<BudgetDatabase
         return (await response.Content.ReadFromJsonAsync<PreviewBody>(Ct))!.Candidates;
     }
 
-    private static async Task ImportAsync(HttpClient client, Guid accountId, params object[] rows)
+    private static Task ImportAsync(HttpClient client, Guid accountId, params object[] rows)
+        => ImportAsync(client, Guid.NewGuid(), accountId, HttpStatusCode.Created, rows);
+
+    private static async Task ImportAsync(HttpClient client, Guid requestId, Guid accountId, HttpStatusCode expected, params object[] rows)
     {
-        var response = await client.PostAsJsonAsync("/api/budget/imports", new { clientRequestId = Guid.NewGuid(), accountId, rows }, Ct);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync(Ct));
+        var response = await client.PostAsJsonAsync("/api/budget/imports", new { clientRequestId = requestId, accountId, rows }, Ct);
+        response.StatusCode.ShouldBe(expected, await response.Content.ReadAsStringAsync(Ct));
     }
 
     private static object Row(CandidateBody c, string category, string? sourceKey = null, string? funding = "HouseholdFunds")
@@ -85,6 +88,44 @@ public sealed class BudgetCategorySuggestionTests : IClassFixture<BudgetDatabase
         var personal = (await (await h.Owner.PostAsJsonAsync("/api/budget/accounts", new { name = "Mine", visibility = "Personal" }, Ct))
             .Content.ReadFromJsonAsync<AccountBody>(Ct))!.Id;
         (await PreviewAsync(h.Owner, personal)).ShouldAllBe(c => c.SuggestedCategory == null);
+    }
+
+    /// <summary>Within one import the last row for a merchant wins; replaying an older import relearns nothing.</summary>
+    [Fact]
+    public async Task Import_SameMerchantTwiceAndReplay_LastChoiceStands()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+        var c = (await PreviewAsync(h.Owner, account))[0];
+        var first = Guid.NewGuid();
+        object[] rows = [Row(c, "Health"), Row(c, "Leisure", sourceKey: new string('e', 64))];
+
+        await ImportAsync(h.Owner, first, account, HttpStatusCode.Created, rows);
+        (await PreviewAsync(h.Owner, account))[0].SuggestedCategory.ShouldBe("Leisure");
+
+        await ImportAsync(h.Owner, account, Row(c, "Transport", sourceKey: new string('d', 64)));
+        await ImportAsync(h.Owner, first, account, HttpStatusCode.OK, rows);
+        (await PreviewAsync(h.Owner, account))[0].SuggestedCategory.ShouldBe("Transport");
+    }
+
+    /// <summary>A rule learned in a personal envelope is suggested to its owner there, never in the household envelope or to another adult.</summary>
+    [Fact]
+    public async Task Preview_PersonalRule_StaysWithItsOwner()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var adult = await _scenario.MemberAsync(h, "Adult");
+        var personal = (await (await h.Owner.PostAsJsonAsync("/api/budget/accounts", new { name = "Mine", visibility = "Personal" }, Ct))
+            .Content.ReadFromJsonAsync<AccountBody>(Ct))!.Id;
+        var theirs = (await (await adult.Client.PostAsJsonAsync("/api/budget/accounts", new { name = "Theirs", visibility = "Personal" }, Ct))
+            .Content.ReadFromJsonAsync<AccountBody>(Ct))!.Id;
+        var household = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+
+        await ImportAsync(h.Owner, personal, [.. (await PreviewAsync(h.Owner, personal)).Select(c => Row(c, "Health", funding: null))]);
+
+        (await PreviewAsync(h.Owner, personal)).ShouldAllBe(c => c.SuggestedCategory == "Health");
+        (await PreviewAsync(h.Owner, household)).ShouldAllBe(c => c.SuggestedCategory == null);
+        (await PreviewAsync(adult.Client, household)).ShouldAllBe(c => c.SuggestedCategory == null);
+        (await PreviewAsync(adult.Client, theirs)).ShouldAllBe(c => c.SuggestedCategory == null);
     }
 
     /// <summary>A blank or oversized merchant key rejects the import with the row's position.</summary>
