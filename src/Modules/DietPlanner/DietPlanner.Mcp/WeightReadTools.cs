@@ -12,7 +12,7 @@ using Shared.Abstractions.Cqrs;
 /// </summary>
 [McpServerToolType]
 [Authorize(Policy = DietPlannerMcp.ReadScope)]
-internal sealed class WeightLogTools
+internal sealed class WeightReadTools
 {
     [McpServerTool(Name = "get_weight_entries", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Lists the caller's weigh-ins (kilograms, one per day) oldest first, optionally between two dates (inclusive). Leave both dates out for the whole log.")]
