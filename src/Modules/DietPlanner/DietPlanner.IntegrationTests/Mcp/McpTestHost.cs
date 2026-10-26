@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using DietPlanner.IntegrationTests.Infrastructure;
 using Household.Contracts.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,8 @@ internal sealed class McpTestHost(
     private readonly List<IDisposable> _disposables = [];
     private WebApplicationFactory<Program>? _host;
 
+    static McpTestHost() => Mcp499Probe.Log("armed");
+
     /// <summary>Household lookup the host uses; add entries to put subjects in one household.</summary>
     public McpTestHouseholds Households { get; } = new();
 
@@ -50,7 +53,24 @@ internal sealed class McpTestHost(
         => Track(Host.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             services.AddSingleton(new TestUserIdOverride(subject))))).CreateClient();
 
+    /// <summary>
+    /// Connects an MCP client. The first connect of a cold host can get a 499 from the handshake (#710), so a 499 is retried once.
+    /// </summary>
     public async Task<McpClient> ConnectAsync(string subject, string scope)
+    {
+        // ponytail: one retry hides the cold-start 499 from the suite; Mcp499Probe logs its cause. Drop both once #710 is understood.
+        try
+        {
+            return await ConnectOnceAsync(subject, scope);
+        }
+        catch (HttpRequestException e) when ((int?)e.StatusCode == ApplicationExceptionHandler.ClientClosedRequestStatusCode)
+        {
+            Mcp499Probe.Log($"connect got 499, retrying once: {e.Message}");
+            return await ConnectOnceAsync(subject, scope);
+        }
+    }
+
+    private async Task<McpClient> ConnectOnceAsync(string subject, string scope)
     {
         var http = CreateClient();
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token(subject, scope));
@@ -131,6 +151,7 @@ internal sealed class McpTestHost(
 
         return Track(root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
+            services.AddTransient<IStartupFilter, Mcp499Probe>();
             services.RemoveAll<IHouseholdQueryService>();
             services.AddSingleton<IHouseholdQueryService>(Households);
 

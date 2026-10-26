@@ -74,5 +74,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: backend-test-results
-          path: TestResults/**/*.trx
+          path: |
+            TestResults/**/*.trx
+            src/**/bin/**/mcp-499-probe.log
           retention-days: 7
