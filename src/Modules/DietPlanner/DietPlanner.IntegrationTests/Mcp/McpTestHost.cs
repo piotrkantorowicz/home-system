@@ -7,6 +7,7 @@ using System.Text.Json;
 using DietPlanner.IntegrationTests.Infrastructure;
 using Household.Contracts.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,43 +35,10 @@ internal sealed class McpTestHost(
     public const string PublicBaseUrl = "https://mcp.test";
     public static readonly RsaSecurityKey SigningKey = new(RSA.Create(2048)) { KeyId = "mcp-test" };
 
-    private static readonly string ProbeLog = Path.Combine(AppContext.BaseDirectory, "mcp-499-probe.log");
-    private static int _connectsInFlight;
-    private static int _probed;
-
     private readonly List<IDisposable> _disposables = [];
     private WebApplicationFactory<Program>? _host;
 
-    /// <summary>
-    /// Evidence for #710: <c>ApplicationExceptionHandler</c> answers any <see cref="OperationCanceledException"/> with a silent
-    /// 499, so log the first few thrown while a connect is in flight to see where the cancellation comes from.
-    /// </summary>
-    static McpTestHost()
-    {
-        Probe("armed");
-        AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
-        {
-            if (Volatile.Read(ref _connectsInFlight) > 0 && e.Exception is OperationCanceledException && Interlocked.Increment(ref _probed) <= 10)
-                Probe(e.Exception.ToString());
-        };
-    }
-
-    /// <summary>
-    /// A passing test's console output never reaches the CI log, and the retry makes the flaky test pass, so the line also goes
-    /// to a file next to the test assembly that the backend CI uploads as an artifact.
-    /// </summary>
-    private static void Probe(string message)
-    {
-        Console.WriteLine($"[mcp-499-probe] {message}");
-        try
-        {
-            File.AppendAllText(ProbeLog, $"{TimeProvider.System.GetUtcNow():O} {message}{Environment.NewLine}");
-        }
-        catch (IOException)
-        {
-            // Best effort: the probe must never fail a test.
-        }
-    }
+    static McpTestHost() => Mcp499Probe.Log("armed");
 
     /// <summary>Household lookup the host uses; add entries to put subjects in one household.</summary>
     public McpTestHouseholds Households { get; } = new();
@@ -89,14 +57,14 @@ internal sealed class McpTestHost(
     /// </summary>
     public async Task<McpClient> ConnectAsync(string subject, string scope)
     {
-        // ponytail: one retry hides the cold-start 499 from the suite; the probe below logs its cause. Drop both once #710 is understood.
+        // ponytail: one retry hides the cold-start 499 from the suite; Mcp499Probe logs its cause. Drop both once #710 is understood.
         try
         {
             return await ConnectOnceAsync(subject, scope);
         }
         catch (HttpRequestException e) when ((int?)e.StatusCode == ApplicationExceptionHandler.ClientClosedRequestStatusCode)
         {
-            Probe($"connect got 499, retrying once: {e.Message}");
+            Mcp499Probe.Log($"connect got 499, retrying once: {e.Message}");
             return await ConnectOnceAsync(subject, scope);
         }
     }
@@ -109,15 +77,7 @@ internal sealed class McpTestHost(
             new HttpClientTransportOptions { Endpoint = new Uri(http.BaseAddress!, "/mcp"), TransportMode = HttpTransportMode.StreamableHttp },
             http,
             ownsHttpClient: true);
-        Interlocked.Increment(ref _connectsInFlight);
-        try
-        {
-            return await McpClient.CreateAsync(transport, cancellationToken: TestContext.Current.CancellationToken);
-        }
-        finally
-        {
-            Interlocked.Decrement(ref _connectsInFlight);
-        }
+        return await McpClient.CreateAsync(transport, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     public static async Task<T> CallAsync<T>(McpClient client, string tool, Dictionary<string, object?>? arguments = null)
@@ -187,6 +147,7 @@ internal sealed class McpTestHost(
 
         return Track(root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
+            services.AddTransient<IStartupFilter, Mcp499Probe>();
             services.RemoveAll<IHouseholdQueryService>();
             services.AddSingleton<IHouseholdQueryService>(Households);
 
