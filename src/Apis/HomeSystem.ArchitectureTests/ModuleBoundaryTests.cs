@@ -39,15 +39,12 @@ public sealed class ModuleBoundaryTests
     [Fact]
     public void Domain_Always_DependsOnNoOuterLayerOrDataAccess()
     {
-        var violations = new List<string>();
-        foreach (var module in ModuleAssemblies.ByModule.Keys)
-        {
-            if (ModuleAssemblies.Find(module, "Domain") is not { } domain)
-                continue;
-
-            string[] forbidden = [.. OuterLayers(module, "Application", "Infrastructure", "Api", "Mcp"), .. DataAccessNamespaces];
-            violations.AddRange(FailingTypes(domain, forbidden));
-        }
+        string[] violations =
+        [
+            .. ModuleAssemblies.WithLayer("Domain").SelectMany(d => FailingTypes(
+                d.Assembly,
+                [.. OuterLayers(d.Module, "Application", "Infrastructure", "Api", "Mcp"), .. DataAccessNamespaces])),
+        ];
 
         violations.ShouldBeEmpty();
     }
@@ -56,14 +53,12 @@ public sealed class ModuleBoundaryTests
     [Fact]
     public void Application_Always_DependsOnNoInfrastructureOrEndpoints()
     {
-        var violations = new List<string>();
-        foreach (var module in ModuleAssemblies.ByModule.Keys)
-        {
-            if (ModuleAssemblies.Find(module, "Application") is not { } application)
-                continue;
-
-            violations.AddRange(FailingTypes(application, [.. OuterLayers(module, "Infrastructure", "Api", "Mcp")]));
-        }
+        string[] violations =
+        [
+            .. ModuleAssemblies.WithLayer("Application").SelectMany(a => FailingTypes(
+                a.Assembly,
+                [.. OuterLayers(a.Module, "Infrastructure", "Api", "Mcp")])),
+        ];
 
         violations.ShouldBeEmpty();
     }

@@ -1,7 +1,8 @@
 namespace HomeSystem.ArchitectureTests;
 
-using System.Reflection;
 using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using NetArchTest.Rules;
 
 /// <summary>Non-negotiable coding rules from CLAUDE.md that the compiler alone does not enforce.</summary>
@@ -38,9 +39,8 @@ public sealed class CodingRuleTests
     {
         string[] violations =
         [
-            .. ModuleAssemblies.ByModule.Keys
-                .SelectMany(module => new[] { ModuleAssemblies.Find(module, "Api"), ModuleAssemblies.Find(module, "Mcp") })
-                .OfType<Assembly>()
+            .. ModuleAssemblies.WithLayer("Api").Concat(ModuleAssemblies.WithLayer("Mcp"))
+                .Select(e => e.Assembly)
                 .Append(typeof(Program).Assembly)
                 .Select(assembly => Types.InAssembly(assembly).ShouldNot().HaveDependencyOnAny(HandlerInterfaces).GetResult())
                 .Where(result => !result.IsSuccessful)
@@ -50,8 +50,11 @@ public sealed class CodingRuleTests
         violations.ShouldBeEmpty();
     }
 
+    // EF scaffolds migrations and the model snapshot unsealed; exempt them by base type so a
+    // hand-written class in a Migrations folder is still checked.
     private static bool IsGenerated(Type type)
         => type.IsDefined(typeof(CompilerGeneratedAttribute), inherit: false)
            || type.Name.Contains('<', StringComparison.Ordinal)
-           || type.Namespace?.EndsWith(".Migrations", StringComparison.Ordinal) == true;
+           || typeof(Migration).IsAssignableFrom(type)
+           || typeof(ModelSnapshot).IsAssignableFrom(type);
 }
