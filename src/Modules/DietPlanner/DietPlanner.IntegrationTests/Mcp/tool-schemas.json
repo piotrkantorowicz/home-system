@@ -645,7 +645,7 @@
   {
     "name": "get_diet_context",
     "title": null,
-    "description": "Returns the caller's diet profile, daily goal and meal slots, plus a list of setup still missing in the app. Call it before planning meals; it never creates or changes anything.",
+    "description": "Returns the caller's diet profile, daily goal, meal slots and reminder settings, plus a list of setup still missing. Call it before planning meals or changing settings; it never creates or changes anything.",
     "inputSchema": {
       "type": "object",
       "properties": {}
@@ -1589,6 +1589,95 @@
     "_meta": null
   },
   {
+    "name": "update_diet_reminders",
+    "title": null,
+    "description": "Replaces all of the caller's reminder settings, creating them on first use: meal reminders, water reminders, the weekly summary and goal alerts. Every value is required, so read get_diet_context first and send back what should stay. Times are local wall-clock HH:mm in the caller's configured time zone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealRemindersEnabled": {
+          "description": "Remind before planned meals.",
+          "type": "boolean"
+        },
+        "mealReminderLeadTimeMinutes": {
+          "description": "Minutes before a meal to remind, 1-120.",
+          "type": "integer"
+        },
+        "mealMissedGraceMinutes": {
+          "description": "Minutes after a meal's time before it counts as missed, 1-240.",
+          "type": "integer"
+        },
+        "waterRemindersEnabled": {
+          "description": "Remind to drink water.",
+          "type": "boolean"
+        },
+        "waterReminderIntervalMinutes": {
+          "description": "Minutes between water reminders, 15-480.",
+          "type": "integer"
+        },
+        "waterWindowStart": {
+          "description": "Start of the water reminder window, HH:mm.",
+          "type": "string",
+          "format": "time"
+        },
+        "waterWindowEnd": {
+          "description": "End of the water reminder window, HH:mm, after the start.",
+          "type": "string",
+          "format": "time"
+        },
+        "weeklySummaryEnabled": {
+          "description": "Send a weekly summary.",
+          "type": "boolean"
+        },
+        "weeklySummaryDayOfWeek": {
+          "description": "Day of the weekly summary, e.g. Sunday.",
+          "type": "string",
+          "enum": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ]
+        },
+        "weeklySummaryTimeOfDay": {
+          "description": "Time of the weekly summary, HH:mm.",
+          "type": "string",
+          "format": "time"
+        },
+        "goalAlertsEnabled": {
+          "description": "Notify on goal milestones.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mealRemindersEnabled",
+        "mealReminderLeadTimeMinutes",
+        "mealMissedGraceMinutes",
+        "waterRemindersEnabled",
+        "waterReminderIntervalMinutes",
+        "waterWindowStart",
+        "waterWindowEnd",
+        "weeklySummaryEnabled",
+        "weeklySummaryDayOfWeek",
+        "weeklySummaryTimeOfDay",
+        "goalAlertsEnabled"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "update_hydration_config",
     "title": null,
     "description": "Saves the caller's hydration settings, creating them on first use and replacing all three values afterwards. Changes settings only; logged drinks stay as they are.",
@@ -1612,6 +1701,59 @@
         "dailyWaterTargetMl",
         "glassSizeMl",
         "trackWaterIntake"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_meal_schedule",
+    "title": null,
+    "description": "Replaces the caller's meal slots (1-8, in display order), creating the schedule on first use. Send every slot that should stay with its id from get_diet_context; a slot without an id is new, and a slot left out is removed. Removing a slot that still has meals in the diary is refused; delete or move those meals first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "slots": {
+          "description": "The complete list of slots, in display order.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Id of an existing slot to keep, from get_diet_context; omit for a new slot.",
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "name": {
+                "description": "Display name, e.g. Breakfast.",
+                "type": "string"
+              },
+              "defaultTime": {
+                "description": "Usual time of the meal, HH:mm.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "defaultTime"
+            ]
+          }
+        }
+      },
+      "required": [
+        "slots"
       ]
     },
     "outputSchema": null,

@@ -1,6 +1,7 @@
 namespace DietPlanner.Mcp;
 
 using System.ComponentModel;
+using DietPlanner.Application.Queries.GetDietReminderSettings;
 using DietPlanner.Application.Queries.GetGoal;
 using DietPlanner.Application.Queries.GetMealSchedule;
 using DietPlanner.Application.Queries.GetProfile;
@@ -18,7 +19,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class DietContextTools
 {
     [McpServerTool(Name = "get_diet_context", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
-    [Description("Returns the caller's diet profile, daily goal and meal slots, plus a list of setup still missing in the app. Call it before planning meals; it never creates or changes anything.")]
+    [Description("Returns the caller's diet profile, daily goal, meal slots and reminder settings, plus a list of setup still missing. Call it before planning meals or changing settings; it never creates or changes anything.")]
     public static async Task<DietContextDto> GetDietContext(
         McpCaller caller,
         IQueryDispatcher dispatcher,
@@ -37,7 +38,9 @@ internal sealed class DietContextTools
         if (goal is null) missing.Add("goal");
         if (slots.Count == 0) missing.Add("meal_schedule");
 
-        return new DietContextDto(profile, goal, slots, missing);
+        DietReminderSettingsDto? reminders = await dispatcher.SendAsync<GetDietReminderSettingsQuery, DietReminderSettingsDto?>(
+            new GetDietReminderSettingsQuery(personId), ct);
+        return new DietContextDto(profile, goal, slots, missing, reminders);
     }
 
     [McpServerTool(Name = "get_weight_prediction", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
