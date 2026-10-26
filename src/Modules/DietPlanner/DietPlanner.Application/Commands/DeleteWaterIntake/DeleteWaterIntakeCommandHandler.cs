@@ -1,6 +1,5 @@
 namespace DietPlanner.Application.Commands.DeleteWaterIntake;
 
-using DietPlanner.Domain.Exceptions;
 using DietPlanner.Domain.Repositories;
 using DietPlanner.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
@@ -19,8 +18,9 @@ internal sealed class DeleteWaterIntakeCommandHandler : ICommandHandler<DeleteWa
         var intake = await _repository.GetByIdAsync(WaterIntakeId.From(command.Id), ct)
             ?? throw new NotFoundException("WaterIntake", command.Id);
 
+        // Someone else's entry reads as missing, so its id does not confirm it exists.
         if (intake.PersonId != command.PersonId)
-            throw new DietPlannerDomainException("You can only delete your own water intake entries.");
+            throw new NotFoundException("WaterIntake", command.Id);
 
         _repository.Delete(intake);
         await _unitOfWork.CommitAsync(ct);

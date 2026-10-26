@@ -54,4 +54,17 @@ public sealed class DeleteWaterIntakeCommandHandlerTests
 
         await act.ShouldThrowAsync<NotFoundException>();
     }
+
+    /// <summary>Another person's entry reads as missing and is not deleted.</summary>
+    [Fact]
+    public async Task HandleAsync_WhenEntryBelongsToSomeoneElse_ThrowsNotFoundAndKeepsIt()
+    {
+        var intake = WaterIntake.Create(WaterIntakeId.New(), Guid.CreateVersion7(), new DateOnly(2026, 1, 5), 250, null, TestClock.UtcNow);
+        _repository.GetByIdAsync(intake.Id, Arg.Any<CancellationToken>()).Returns(intake);
+
+        var act = async () => await _sut.HandleAsync(new DeleteWaterIntakeCommand(intake.Id.Value, Guid.CreateVersion7()), TestContext.Current.CancellationToken);
+
+        await act.ShouldThrowAsync<NotFoundException>();
+        _repository.DidNotReceive().Delete(Arg.Any<WaterIntake>());
+    }
 }
