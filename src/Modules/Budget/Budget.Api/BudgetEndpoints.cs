@@ -6,6 +6,7 @@ using Budget.Application.Commands.ArchiveAccount;
 using Budget.Application.Commands.ClearMonthlyLimit;
 using Budget.Application.Commands.CreateAccount;
 using Budget.Application.Commands.CreateExpense;
+using Budget.Application.Commands.ImportExpenses;
 using Budget.Application.Commands.InitializeBudget;
 using Budget.Application.Commands.RecordRepayment;
 using Budget.Application.Commands.RenameAccount;
@@ -91,6 +92,9 @@ internal static class BudgetEndpoints
             .WithMetadata(new RequestSizeLimitAttribute(2 * PreviewStatementImportQuery.MaxFileBytes))
             .WithFormOptions(multipartBodyLengthLimit: 2 * PreviewStatementImportQuery.MaxFileBytes, multipartHeadersLengthLimit: 4096,
                 multipartBoundaryLengthLimit: 128, valueCountLimit: 4);
+        group.MapPost("/imports", ImportExpenses)
+            .WithName("ImportBudgetExpenses")
+            .WithSummary("Record reviewed statement rows (up to 1000) as expenses in one envelope, all or none; a retry with the same clientRequestId returns the original result; 409 when a row was imported since the preview");
         group.MapGet("/summary", GetSummary)
             .WithName("GetBudgetSummary")
             .WithSummary("Monthly spending by envelope and category for the shared or a personal scope");
@@ -204,6 +208,18 @@ internal static class BudgetEndpoints
         => TypedResults.Ok(await dispatcher.SendAsync<VoidExpenseCommand, ExpenseMutationResult>(
             new VoidExpenseCommand(Sub(user), id, request.ClientRequestId, request.ExpectedRevision, request.Reason), ct));
 
+    private static async Task<Results<Created<ImportExpensesResult>, Ok<ImportExpensesResult>>> ImportExpenses(
+        ImportExpensesRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var result = await dispatcher.SendAsync<ImportExpensesCommand, ImportExpensesResult>(
+            new ImportExpensesCommand(
+                Sub(user), request.ClientRequestId, request.AccountId,
+                [.. (request.Rows ?? []).Select(r => new ImportExpenseRow(
+                    r.SourceKey, r.Amount, r.OccurredOn, r.Category, r.FundingSource, r.PaidByPersonId, r.ParticipantIds, r.Description))]), ct);
+
+        return result.Created ? TypedResults.Created((string?)null, result) : TypedResults.Ok(result);
+    }
+
     private static async Task<Results<Created<ExpenseMutationResult>, Ok<ExpenseMutationResult>>> CreateExpense(
         CreateExpenseRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
     {
@@ -305,6 +321,33 @@ internal sealed record AccountRevisionRequest(int ExpectedRevision);
 internal sealed record CreateExpenseRequest(
     Guid ClientRequestId,
     Guid AccountId,
+    string Amount,
+    DateOnly OccurredOn,
+    string Category,
+    string? FundingSource,
+    Guid? PaidByPersonId,
+    IReadOnlyList<Guid>? ParticipantIds,
+    string? Description = null);
+
+/// <summary>Body of <c>POST /api/budget/imports</c>: the rows the user kept after the preview.</summary>
+/// <param name="ClientRequestId">Idempotency key of the whole import; reuse it when retrying.</param>
+/// <param name="AccountId">The envelope every row is recorded in.</param>
+/// <param name="Rows">Selected rows, 1–1000.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record ImportExpensesRequest(Guid ClientRequestId, Guid AccountId, IReadOnlyList<ImportExpenseRowRequest>? Rows);
+
+/// <summary>One row of <see cref="ImportExpensesRequest"/>, with the values the user confirmed.</summary>
+/// <param name="SourceKey">The preview's <c>sourceKey</c>.</param>
+/// <param name="Amount">Positive decimal string such as <c>"123.45"</c>.</param>
+/// <param name="OccurredOn">Purchase date, <c>YYYY-MM-DD</c>.</param>
+/// <param name="Category">Category code.</param>
+/// <param name="FundingSource"><c>Individual</c> (default) or <c>HouseholdFunds</c>.</param>
+/// <param name="PaidByPersonId">Payer of an individually funded shared expense.</param>
+/// <param name="ParticipantIds">Adults sharing the cost equally.</param>
+/// <param name="Description">Optional short note, at most 80 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record ImportExpenseRowRequest(
+    string SourceKey,
     string Amount,
     DateOnly OccurredOn,
     string Category,

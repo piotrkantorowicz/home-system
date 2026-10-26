@@ -41,6 +41,27 @@ public sealed class ExpenseTests
         revision.Snapshot.AddedByDisplayName.ShouldBe("Alex");
     }
 
+    /// <summary>An imported expense keeps its source key in the envelope's scope, and revision 1 is an <c>Import</c>.</summary>
+    [Fact]
+    public void Create_WithSourceKey_RecordsImport()
+    {
+        var personal = BudgetAccount.Create(BudgetAccountId.New(), BudgetId.New(), "Mine", AccountVisibility.Personal, Bea.PersonId, TestClock.UtcNow);
+        var key = new string('a', 64);
+
+        var shared = Expense.Create(
+            ExpenseId.New(), Account(), Money.FromMinorUnits(500), ExpenseCategory.Other, new DateOnly(2026, 10, 1), FundingSource.HouseholdFunds,
+            null, Alex, [], Guid.CreateVersion7(), TestClock.UtcNow, importSourceKey: key);
+        var mine = Expense.Create(
+            ExpenseId.New(), personal, Money.FromMinorUnits(500), ExpenseCategory.Other, new DateOnly(2026, 10, 1), FundingSource.Individual,
+            Bea, Bea, [], Guid.CreateVersion7(), TestClock.UtcNow, importSourceKey: key);
+
+        (shared.ImportScope, shared.ImportSourceKey).ShouldBe((Expense.HouseholdImportScope, key));
+        shared.Revisions.Single().Operation.ShouldBe("Import");
+        mine.ImportScope.ShouldBe(Bea.PersonId.ToString());
+        Create().Revisions.Single().Operation.ShouldBe("Create");
+        Create().ImportScope.ShouldBeNull();
+    }
+
     /// <summary>Household funds credit nobody and are not split.</summary>
     [Fact]
     public void Create_HouseholdFunds_HasNoPayerOrShares()
