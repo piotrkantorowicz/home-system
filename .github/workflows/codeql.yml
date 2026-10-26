@@ -40,7 +40,14 @@ jobs:
           # C# is extracted from source, no solution build — keeps the job independent
           # of backend-ci and the .NET SDK version.
           build-mode: none
-          queries: security-and-quality
+          # actions/unpinned-tag is excluded: repo policy references actions by tag, not SHA
+          # (Dependabot keeps the tags current).
+          config: |
+            queries:
+              - uses: security-and-quality
+            query-filters:
+              - exclude:
+                  id: actions/unpinned-tag
 
       - uses: github/codeql-action/analyze@v4
         with:

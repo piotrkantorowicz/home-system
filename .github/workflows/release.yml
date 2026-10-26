@@ -62,6 +62,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write   # api-image.yml uploads its Trivy scan
     uses: ./.github/workflows/api-image.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
