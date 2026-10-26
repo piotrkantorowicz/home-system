@@ -27,8 +27,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # build-mode none: C# is extracted from source, no solution build — keeps the job
-        # independent of backend-ci and the .NET SDK version.
         language: [csharp, javascript-typescript, actions]
 
     steps:
@@ -37,6 +35,8 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          # C# is extracted from source, no solution build — keeps the job independent
+          # of backend-ci and the .NET SDK version.
           build-mode: none
           queries: security-and-quality
 
