@@ -825,7 +825,7 @@
   {
     "name": "log_weight",
     "title": null,
-    "description": "Records the caller's weight in kilograms for a day, not in the future. A day holds one weigh-in: logging a day that already has one replaces it, so a retry never adds a second entry. Also sets the profile's current weight, so the caller needs a profile first (set_profile). Returns the entry id and whether it was new.",
+    "description": "Records the caller's weight in kilograms for a day, not in the future. A day holds one weigh-in: logging a day that already has one replaces it, so a retry never adds a second entry. Also sets the profile's current weight, unless a later weigh-in exists, so the caller needs a profile first (set_profile). Returns the entry id and whether it was new.",
     "inputSchema": {
       "type": "object",
       "properties": {
