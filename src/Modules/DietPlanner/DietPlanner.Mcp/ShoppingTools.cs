@@ -37,7 +37,7 @@ internal sealed class ShoppingTools
     }
 
     [McpServerTool(Name = "clear_shopping_checks", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Unticks every row of the household's shopping list for exactly this date range; lists over other ranges keep their ticks. Affects everyone in the household: confirm with the user first.")]
+    [Description("Unticks every row of the household's shopping list for exactly this date range; lists over other ranges keep their ticks. Affects everyone in the household: confirm with the user first. Guests may not change the list.")]
     public static async Task<ClearedShoppingChecksDto> ClearShoppingChecks(
         McpCaller caller,
         ICommandDispatcher commands,

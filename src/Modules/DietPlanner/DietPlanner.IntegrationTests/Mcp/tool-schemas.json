@@ -52,7 +52,7 @@
   {
     "name": "clear_shopping_checks",
     "title": null,
-    "description": "Unticks every row of the household's shopping list for exactly this date range; lists over other ranges keep their ticks. Affects everyone in the household: confirm with the user first.",
+    "description": "Unticks every row of the household's shopping list for exactly this date range; lists over other ranges keep their ticks. Affects everyone in the household: confirm with the user first. Guests may not change the list.",
     "inputSchema": {
       "type": "object",
       "properties": {

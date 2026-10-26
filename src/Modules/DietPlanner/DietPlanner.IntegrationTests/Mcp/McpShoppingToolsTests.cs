@@ -70,7 +70,7 @@ public sealed class McpShoppingToolsTests(DatabaseFixture db) : IDisposable
         after.IsChecked.ShouldBeFalse();
     }
 
-    /// <summary>A household guest may read the list but not tick it.</summary>
+    /// <summary>A household guest may read the list but not tick it or clear the household's ticks.</summary>
     [Fact]
     public async Task CheckShoppingItem_ByGuest_IsRefused()
     {
@@ -79,12 +79,16 @@ public sealed class McpShoppingToolsTests(DatabaseFixture db) : IDisposable
         _mcp.Households.Contexts[guest] = _mcp.Households.Contexts[guest] with { Role = "Guest" };
         await PlanAsync(owner, "Oats", "2026-11-03");
         await using var client = await _mcp.ConnectAsync(guest, WriteScopes);
+        await using var ownerClient = await _mcp.ConnectAsync(owner, WriteScopes);
         var item = (await McpTestHost.CallAsync<IReadOnlyList<ShoppingListItemDto>>(client, "get_shopping_list", Range())).Single();
 
         var error = await McpTestHost.CallExpectingErrorAsync(client, "check_shopping_item", Check(item, true));
+        (await McpTestHost.CallAsync<ShoppingCheckDto>(ownerClient, "check_shopping_item", Check(item, true))).IsChecked.ShouldBeTrue();
+        var clearError = await McpTestHost.CallExpectingErrorAsync(client, "clear_shopping_checks", Range());
 
         error.ShouldContain("does not allow changing the shopping list");
-        (await McpTestHost.CallAsync<IReadOnlyList<ShoppingListItemDto>>(client, "get_shopping_list", Range())).Single().IsChecked.ShouldBeFalse();
+        clearError.ShouldContain("does not allow changing the shopping list");
+        (await McpTestHost.CallAsync<IReadOnlyList<ShoppingListItemDto>>(client, "get_shopping_list", Range())).Single().IsChecked.ShouldBeTrue();
     }
 
     /// <summary>Someone outside the household sees none of the caller's items, and their ticks do not reach the caller's list.</summary>
