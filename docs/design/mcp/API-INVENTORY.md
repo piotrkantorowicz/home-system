@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry`, `get_hydration`, `update_hydration_config`, `log_water_intake`, `delete_water_intake` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -85,11 +85,11 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/v1/goals` | GetGoals | read | `get_diet_context` | #607 |
 | POST | `/api/v1/goals` | CreateGoals | write | `set_goals` (upsert) | #655 |
 | PUT | `/api/v1/goals` | UpdateGoals | write | `set_goals` (upsert) | #655 |
-| GET | `/api/v1/hydration/config` | GetHydrationConfig | read | `get_hydration` | Epic B DP-7 |
-| PUT | `/api/v1/hydration/config` | UpdateHydrationConfig | write | `update_hydration_config` | Epic B DP-7 |
-| GET | `/api/v1/hydration/intake` | GetWaterIntake | read | `get_hydration` | Epic B DP-7 |
-| POST | `/api/v1/hydration/intake` | LogWaterIntake | write | `log_water_intake` | Epic B DP-7 |
-| DELETE | `/api/v1/hydration/intake/{id:guid}` | DeleteWaterIntake | destructive | `delete_water_intake` | Epic B DP-7 |
+| GET | `/api/v1/hydration/config` | GetHydrationConfig | read | `get_hydration` | #657 |
+| PUT | `/api/v1/hydration/config` | UpdateHydrationConfig | write | `update_hydration_config` | #657 |
+| GET | `/api/v1/hydration/intake` | GetWaterIntake | read | `get_hydration` | #657 |
+| POST | `/api/v1/hydration/intake` | LogWaterIntake | write | `log_water_intake` (operation key) | #657 |
+| DELETE | `/api/v1/hydration/intake/{id:guid}` | DeleteWaterIntake | destructive | `delete_water_intake` | #657 |
 | GET | `/api/v1/meals` | GetMeals | read | `get_meal_entries` | #609 |
 | GET | `/api/v1/meals/nutrition-summary` | GetNutritionSummary | read | `get_nutrition_summary` | #609 |
 | GET | `/api/v1/meals/shopping-list` | GetShoppingList | read | `get_shopping_list` | Epic B DP-9 |

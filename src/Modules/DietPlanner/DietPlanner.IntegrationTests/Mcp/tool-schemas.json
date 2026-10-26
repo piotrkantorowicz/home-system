@@ -338,6 +338,34 @@
     "_meta": null
   },
   {
+    "name": "delete_water_intake",
+    "title": null,
+    "description": "Removes one drink from the caller's log, lowering that day's total. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the drink is already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intakeId": {
+          "description": "Drink entry id from get_hydration.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "intakeId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "delete_weight_entry",
     "title": null,
     "description": "Deletes one weigh-in from the caller's weight log; the profile's current weight falls back to the latest remaining entry, or becomes unknown. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the entry is already gone.",
@@ -634,6 +662,34 @@
     "_meta": null
   },
   {
+    "name": "get_hydration",
+    "title": null,
+    "description": "Returns the caller's hydration settings (daily water target, glass size, whether tracking is on; null until set) and the drinks logged on one day with their total, all in millilitres.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "Calendar day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "date"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "get_meal_entries",
     "title": null,
     "description": "Lists the caller's planned and eaten meals between two dates (inclusive, at most 31 days), ordered by date and slot. Use it to find occupied slots before planning.",
@@ -818,6 +874,52 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "log_water_intake",
+    "title": null,
+    "description": "Adds one drink to the caller's log for a day, in millilitres (a glass is the configured glass size from get_hydration). Each call adds another drink: retry with the same operationKey and fields to get the original entry back instead of counting it twice; a new drink needs a new key.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key for this drink, 8-128 characters (a UUID works). Reuse it only to retry this same call.",
+          "type": "string"
+        },
+        "date": {
+          "description": "Calendar day the drink counts towards, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        },
+        "amountMl": {
+          "description": "Volume in millilitres, 1-5000.",
+          "type": "integer"
+        },
+        "note": {
+          "description": "Short note, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "date",
+        "amountMl"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
@@ -1474,6 +1576,43 @@
           "default": null
         }
       }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_hydration_config",
+    "title": null,
+    "description": "Saves the caller's hydration settings, creating them on first use and replacing all three values afterwards. Changes settings only; logged drinks stay as they are.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dailyWaterTargetMl": {
+          "description": "Daily water target in millilitres, 100-10000.",
+          "type": "integer"
+        },
+        "glassSizeMl": {
+          "description": "Size of one glass in millilitres, 50-2000.",
+          "type": "integer"
+        },
+        "trackWaterIntake": {
+          "description": "Whether the app tracks water intake for the caller.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "dailyWaterTargetMl",
+        "glassSizeMl",
+        "trackWaterIntake"
+      ]
     },
     "outputSchema": null,
     "annotations": {
