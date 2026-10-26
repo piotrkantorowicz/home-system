@@ -37,6 +37,7 @@ public static class DietPlannerMcp
             .WithTools<CatalogTools>()
             .WithTools<DiaryTools>()
             .WithTools<CatalogWriteTools>()
+            .WithTools<ProductEditTools>()
             .WithTools<ImportTools>();
     }
 }

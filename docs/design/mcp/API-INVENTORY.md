@@ -45,7 +45,7 @@ existing admin policy, never the everyday write grant).
 | GET | `/openapi/{documentName}.json` | excluded | API description; feeds this inventory |
 | GET | `/scalar/*` | excluded | Development-only API explorer |
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
-| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import` |
+| POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
 
 ## Operations by module
@@ -109,8 +109,8 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/v1/products` | ListProducts | read | `search_products` | #608 |
 | GET | `/api/v1/products/{id:guid}` | GetProduct | read | `get_product` | #608 |
 | POST | `/api/v1/products` | CreateProduct | write | `create_product` | #610 |
-| PUT | `/api/v1/products/{id:guid}` | UpdateProduct | write | `update_product` | Epic B DP-1 |
-| DELETE | `/api/v1/products/{id:guid}` | DeleteProduct | destructive | `delete_product` | Epic B DP-1 |
+| PUT | `/api/v1/products/{id:guid}` | UpdateProduct | write | `update_product` | #651 |
+| DELETE | `/api/v1/products/{id:guid}` | DeleteProduct | destructive | `delete_product` | #651 |
 | GET | `/api/v1/profile` | GetProfile | read | `get_diet_context` | #607 |
 | GET | `/api/v1/profile/prediction` | GetWeightPrediction | read | `get_weight_prediction` | Epic B DP-5 |
 | POST | `/api/v1/profile` | CreateProfile | write | `set_profile` | Epic B DP-5 |
