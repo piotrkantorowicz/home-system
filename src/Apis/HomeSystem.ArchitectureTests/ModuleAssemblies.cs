@@ -49,10 +49,10 @@ internal static partial class ModuleAssemblies
         var pending = new Queue<Assembly>([typeof(Program).Assembly]);
         while (pending.TryDequeue(out var assembly))
         {
-            foreach (var reference in assembly.GetReferencedAssemblies())
+            foreach (var reference in assembly.GetReferencedAssemblies()
+                .Where(reference => reference.Name is { } name && IsModuleAssembly(name) && seen.Add(name)))
             {
-                if (reference.Name is { } name && IsModuleAssembly(name) && seen.Add(name))
-                    pending.Enqueue(Assembly.Load(reference));
+                pending.Enqueue(Assembly.Load(reference));
             }
         }
 
