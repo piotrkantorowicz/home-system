@@ -58,6 +58,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v6
@@ -108,7 +110,9 @@ jobs:
       # storage); authentik-server has none, hence the explicit readiness loop below.
       - name: Start Docker stack
         working-directory: infrastructure
-        run: docker compose $COMPOSE_FILES $COMPOSE_PROFILES_ARGS up -d --wait --quiet-pull
+        run: |
+          # shellcheck disable=SC2086 # both vars expand to several -f / --profile args on purpose
+          docker compose $COMPOSE_FILES $COMPOSE_PROFILES_ARGS up -d --wait --quiet-pull
 
       # The throwaway storage keys administer RustFS; only this ephemeral runner uses them.
       - name: Create recipe image bucket
@@ -242,6 +246,7 @@ jobs:
         run: |
           mkdir -p stack-logs
           cp backend.log stack-logs/ 2>/dev/null || true
+          # shellcheck disable=SC2086 # both vars expand to several -f / --profile args on purpose
           (cd infrastructure && docker compose $COMPOSE_FILES $COMPOSE_PROFILES_ARGS \
             logs --no-color) > stack-logs/docker-compose.log 2>&1 || true
 

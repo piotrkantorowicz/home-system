@@ -33,6 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           sparse-checkout: scripts/board.sh
           sparse-checkout-cone-mode: false
 
