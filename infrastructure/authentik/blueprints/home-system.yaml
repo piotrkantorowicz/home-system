@@ -238,7 +238,7 @@ entries:
       name: "home-system-mcp: investments write"
     attrs:
       scope_name: "mcp:investments:write"
-      description: "Record and delete your investment balances"
+      description: "Manage your investment wallets and balances"
       expression: |
         # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
         # Discovery evaluates mappings without a token, so return nothing there.
