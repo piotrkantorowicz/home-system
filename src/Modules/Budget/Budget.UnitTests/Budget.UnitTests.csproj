@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Application/StatementImports/Fixtures/*.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
     <Using Include="NSubstitute" />
