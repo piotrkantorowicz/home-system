@@ -39,6 +39,30 @@ public interface IExpenseRepository
     /// <param name="ct">Cancellation token.</param>
     Task<ExpenseRevision?> FindRevisionByRequestAsync(BudgetId budgetId, Guid actorPersonId, Guid clientRequestId, CancellationToken ct);
 
+    /// <summary>Finds the revisions any of <paramref name="clientRequestIds"/> already produced; one batched lookup for an import.</summary>
+    /// <param name="budgetId">The budget.</param>
+    /// <param name="actorPersonId">The submitting person; other actors' keys are never matched.</param>
+    /// <param name="clientRequestIds">The idempotency keys.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyList<ExpenseRevision>> FindRevisionsByRequestsAsync(
+        BudgetId budgetId, Guid actorPersonId, IReadOnlyCollection<Guid> clientRequestIds, CancellationToken ct);
+
+    /// <summary>
+    /// Serialises imports into one privacy scope for the rest of the transaction, so the
+    /// already-imported check cannot race another import into a unique violation.
+    /// </summary>
+    /// <param name="budgetId">The budget.</param>
+    /// <param name="importScope">The scope, see <see cref="Expense.ImportScopeOf"/>.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task LockImportScopeAsync(BudgetId budgetId, string importScope, CancellationToken ct);
+
+    /// <summary>Whether any of <paramref name="sourceKeys"/> was already imported in the scope, voided expenses included.</summary>
+    /// <param name="budgetId">The budget.</param>
+    /// <param name="importScope">The scope.</param>
+    /// <param name="sourceKeys">Statement row source keys.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<bool> AnyImportedAsync(BudgetId budgetId, string importScope, IReadOnlyCollection<string> sourceKeys, CancellationToken ct);
+
     /// <summary>Loads an expense with its shares for modification, or <see langword="null"/> when it is not in the budget.</summary>
     /// <param name="id">The expense.</param>
     /// <param name="budgetId">The budget it must belong to.</param>

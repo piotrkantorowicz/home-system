@@ -30,6 +30,23 @@ internal sealed class ExpenseRepository(BudgetDbContext dbContext) : IExpenseRep
         => await dbContext.ExpenseRevisions.AsNoTracking().FirstOrDefaultAsync(
             r => r.BudgetId == budgetId && r.ActorPersonId == actorPersonId && r.ClientRequestId == clientRequestId, ct);
 
+    public async Task<IReadOnlyList<ExpenseRevision>> FindRevisionsByRequestsAsync(
+        BudgetId budgetId, Guid actorPersonId, IReadOnlyCollection<Guid> clientRequestIds, CancellationToken ct)
+        => await dbContext.ExpenseRevisions.AsNoTracking()
+            .Where(r => r.BudgetId == budgetId && r.ActorPersonId == actorPersonId && clientRequestIds.Contains(r.ClientRequestId))
+            .ToListAsync(ct);
+
+    public async Task LockImportScopeAsync(BudgetId budgetId, string importScope, CancellationToken ct)
+    {
+        var key = $"expense-import:{budgetId.Value}:{importScope}";
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
+    }
+
+    public async Task<bool> AnyImportedAsync(BudgetId budgetId, string importScope, IReadOnlyCollection<string> sourceKeys, CancellationToken ct)
+        => await dbContext.Expenses.AnyAsync(
+            e => e.BudgetId == budgetId && e.ImportScope == importScope && sourceKeys.Contains(e.ImportSourceKey!), ct);
+
     public async Task<Expense?> GetAsync(ExpenseId id, BudgetId budgetId, CancellationToken ct)
         => await dbContext.Expenses.Include(e => e.Shares).FirstOrDefaultAsync(e => e.Id == id && e.BudgetId == budgetId, ct);
 }

@@ -52,7 +52,9 @@ export function ExpenseHistory({ history, currency, myPersonId }: ExpenseHistory
         const name = r.actorPersonId === myPersonId ? t('you').toLowerCase() : r.actorDisplayName;
         const title =
           changes === null
-            ? 'history_added'
+            ? r.operation === 'Import'
+              ? 'history_imported'
+              : 'history_added'
             : r.operation === 'Void'
               ? 'history_voided'
               : 'history_corrected';

@@ -3,7 +3,6 @@ namespace Budget.Application.Commands.CreateExpense;
 using Budget.Application.Common;
 using Budget.Domain.Abstractions;
 using Budget.Domain.Aggregates;
-using Budget.Domain.Exceptions;
 using Budget.Domain.ValueObjects;
 using Shared.Abstractions.Core.Domain;
 using Shared.Abstractions.Cqrs;
@@ -48,9 +47,7 @@ internal sealed class CreateExpenseCommandHandler(
                 : throw new ConflictException("This request ID was already used for a different request.");
         }
 
-        var (paidBy, participants) = isPersonal
-            ? ResolvePersonal(caller, account, command, funding)
-            : ResolveShared(caller, command, funding);
+        var (paidBy, participants) = ExpenseParties.Resolve(caller, account, funding, command.PaidByPersonId, command.ParticipantIds);
 
         var expense = Expense.Create(
             ExpenseId.New(), account, amount, category, command.OccurredOn, funding, paidBy, caller.Self, participants,
@@ -60,40 +57,5 @@ internal sealed class CreateExpenseCommandHandler(
         await unitOfWork.CommitAsync(ct);
 
         return new ExpenseMutationResult(expense.Id.Value, expense.Revision, Created: true);
-    }
-
-    private static (PersonRef?, List<PersonRef>) ResolvePersonal(
-        BudgetCaller caller, BudgetAccount account, CreateExpenseCommand command, FundingSource funding)
-    {
-        if (funding != FundingSource.Individual)
-            throw new BudgetDomainException("A personal envelope is funded individually.");
-        if (command.PaidByPersonId is { } p && p != account.OwnerPersonId)
-            throw new BudgetDomainException("A personal expense is paid by the envelope's owner.");
-        if (command.ParticipantIds is { Count: > 0 })
-            throw new BudgetDomainException("A personal expense is not shared.");
-
-        var owner = caller.FindMember(account.OwnerPersonId!.Value)
-            ?? throw new NotFoundException("Envelope", account.Id.Value);
-        return (owner, []);
-    }
-
-    private static (PersonRef?, List<PersonRef>) ResolveShared(BudgetCaller caller, CreateExpenseCommand command, FundingSource funding)
-    {
-        var ids = command.ParticipantIds ?? [];
-        if (funding == FundingSource.HouseholdFunds)
-            return (command.PaidByPersonId is null ? null : throw new BudgetDomainException("Household funds have no payer."),
-                ids.Count == 0 ? [] : throw new BudgetDomainException("Household funds are not split."));
-
-        var payer = command.PaidByPersonId is { } payerId
-            ? caller.FindAdult(payerId) ?? throw new BudgetDomainException("The payer must be a current owner or adult.")
-            : throw new BudgetDomainException("An individually funded expense needs a payer.");
-
-        if (ids.Count == 0)
-            throw new BudgetDomainException("Choose at least one adult to share the cost.");
-
-        var participants = ids
-            .Select(id => caller.FindAdult(id) ?? throw new BudgetDomainException("Participants must be current owners or adults."))
-            .ToList();
-        return (payer, participants);
     }
 }

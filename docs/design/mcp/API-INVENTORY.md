@@ -19,12 +19,12 @@ Every tool is a hand-written, typed adapter (see `docs/rules/backend-api-pattern
 |---|---:|---:|---:|---:|
 | DietPlanner | 49 | 14 | 34 | 1 |
 | Household | 20 | 0 | 19 | 1 |
-| Budget | 22 | 0 | 22 | 0 |
+| Budget | 23 | 0 | 23 | 0 |
 | Investments | 12 | 0 | 12 | 0 |
 | Notifications | 11 | 0 | 11 (5 admin) | 0 |
 | Operations | 5 | 0 | 5 (admin) | 0 |
 | Host | 6 | 0 | 0 | 6 |
-| **Total** | **125** | **14** | **103** | **8** |
+| **Total** | **126** | **14** | **104** | **8** |
 
 "In epic #605" counts routes whose behaviour a first-epic tool covers. Several of them
 share one tool: `get_diet_context` reads profile, goals, meal schedule and reminder
@@ -68,6 +68,7 @@ existing admin policy, never the everyday write grant).
 | PUT | `/api/budget/expenses/{id:guid}` | UpdateBudgetExpense | write | tbd | Budget epic |
 | POST | `/api/budget/expenses/{id:guid}/void` | VoidBudgetExpense | destructive | tbd | Budget epic |
 | POST | `/api/budget/imports/preview` | PreviewBudgetStatementImport | read | tbd | Budget epic |
+| POST | `/api/budget/imports` | ImportBudgetExpenses | write | tbd | Budget epic |
 | GET | `/api/budget/summary` | GetBudgetSummary | read | tbd | Budget epic |
 | GET | `/api/budget/limits` | ListBudgetLimits | read | tbd | Budget epic |
 | PUT | `/api/budget/accounts/{id:guid}/limits/{month}` | SetBudgetLimit | write | tbd | Budget epic |
