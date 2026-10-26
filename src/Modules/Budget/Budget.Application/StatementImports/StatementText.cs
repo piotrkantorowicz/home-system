@@ -1,6 +1,7 @@
 namespace Budget.Application.StatementImports;
 
 using System.Text.RegularExpressions;
+using Budget.Domain.Aggregates;
 
 /// <summary>Text clean-up shared by the bank profiles and the duplicate fingerprint.</summary>
 internal static partial class StatementText
@@ -14,6 +15,17 @@ internal static partial class StatementText
     /// </summary>
     public static string NormalizeForMatching(string value)
         => Collapse(CardMask().Replace(Collapse(value).ToUpperInvariant(), " "));
+
+    /// <summary>
+    /// The expense description proposed for a row (§5): <c>counterparty — title</c>, or whichever is
+    /// present, cut to the expense description limit.
+    /// </summary>
+    public static string ExpenseDescription(StatementTransaction transaction)
+    {
+        string[] parts = [.. new[] { transaction.Counterparty, transaction.Title }.Where(p => p.Length > 0)];
+        var description = string.Join(" — ", parts);
+        return description.Length <= Expense.MaxDescriptionLength ? description : description[..Expense.MaxDescriptionLength].TrimEnd();
+    }
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();

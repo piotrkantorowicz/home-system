@@ -99,14 +99,17 @@ internal static class StatementParser
             : throw new BudgetDomainException("Unrecognised statement format. Export the account history as CSV from PKO BP, mBank, ING or Revolut.");
     }
 
-    /// <summary><c>#Key</c> lines and the values on the line after each (mBank's account, currency and period).</summary>
+    /// <summary>
+    /// <c>#Key</c> and <c>Key:</c> lines and the values on the line after each (mBank's account, currency and
+    /// period; ING's <c>Wybrane rachunki:</c>).
+    /// </summary>
     private static Dictionary<string, string[]> ReadPreamble(ReadOnlySpan<string> lines, char delimiter)
     {
         Dictionary<string, string[]> preamble = [];
         for (var i = 0; i + 1 < lines.Length; i++)
         {
             string[] key = Cells(lines[i], delimiter);
-            if (key.Length > 0 && key[0].StartsWith('#'))
+            if (key.Length > 0 && (key[0].StartsWith('#') || key[0].EndsWith(':')))
                 preamble.TryAdd(key[0], Cells(lines[i + 1], delimiter));
         }
 

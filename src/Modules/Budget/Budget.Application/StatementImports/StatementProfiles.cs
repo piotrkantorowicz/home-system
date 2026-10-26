@@ -84,7 +84,7 @@ internal static partial class StatementProfiles
 
         return new StatementTransaction(
             row.LineNumber,
-            null,
+            row.Preamble("Wybrane rachunki:", 2), // "Konto Direct";"(PLN)";"<account number>"
             isBooked ? row.Date("Data księgowania", IsoDate) : transactionDate,
             transactionDate,
             null,

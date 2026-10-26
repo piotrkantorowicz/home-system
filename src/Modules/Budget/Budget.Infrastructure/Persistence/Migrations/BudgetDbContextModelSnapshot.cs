@@ -158,6 +158,17 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("funding_source");
 
+                    b.Property<string>("ImportScope")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)")
+                        .HasColumnName("import_scope");
+
+                    b.Property<string>("ImportSourceKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("import_source_key")
+                        .IsFixedLength();
+
                     b.Property<bool>("IsVoided")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -195,6 +206,11 @@ namespace Budget.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BudgetAccountId", "BudgetId");
 
+                    b.HasIndex("BudgetId", "ImportScope", "ImportSourceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_expenses_import_source")
+                        .HasFilter("import_source_key IS NOT NULL");
+
                     b.HasIndex("BudgetId", "OccurredOn", "Id")
                         .IsDescending(false, true, true)
                         .HasDatabaseName("ix_expenses_budget_date_id");
@@ -205,6 +221,8 @@ namespace Budget.Infrastructure.Persistence.Migrations
                     b.ToTable("expenses", null, t =>
                         {
                             t.HasCheckConstraint("ck_expenses_amount_range", "amount > 0 AND amount <= 9999999999.99");
+
+                            t.HasCheckConstraint("ck_expenses_import_source_complete", "(import_scope IS NULL) = (import_source_key IS NULL)");
 
                             t.HasCheckConstraint("ck_expenses_payer_matches_funding", "(funding_source = 'HouseholdFunds') = (paid_by_person_id IS NULL)");
                         });
