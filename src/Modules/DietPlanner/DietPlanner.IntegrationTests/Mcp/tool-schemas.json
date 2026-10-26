@@ -1,5 +1,61 @@
 [
   {
+    "name": "complete_day",
+    "title": null,
+    "description": "Marks every Planned meal of one day in the caller's diary as Done. Done and Modified meals are left as they are. Returns how many meals changed; 0 on a repeat.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "Calendar day, ISO yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "date"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "complete_meal",
+    "title": null,
+    "description": "Marks one meal in the caller's diary as eaten exactly as planned (status Done). Already Done stays Done. A Modified meal is refused: if the user now ate it as planned, call reset_meal first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealId": {
+          "description": "Meal id from get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "mealId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "create_product",
     "title": null,
     "description": "Saves a new product in the caller's catalog, with the same rules as the app. Nutrition is per 100 g; leave out values you do not know, never send zero for unknown. Retry with the same operationKey and fields to get the original product back instead of a duplicate; a new product needs a new key.",
@@ -674,6 +730,80 @@
     "_meta": null
   },
   {
+    "name": "override_meal",
+    "title": null,
+    "description": "Records that the caller ate something other than the plan for one meal (status Modified): a replacement recipe, individual products, or both, never neither. Replaces any earlier override of that meal. The day's nutrition then counts what was actually eaten. Recipes and products must be ones the caller can see.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealId": {
+          "description": "Meal id from get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "actualRecipeId": {
+          "description": "Recipe eaten instead of the planned one, from search_recipes; omit when only products were eaten.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        },
+        "actualProducts": {
+          "description": "Products eaten; may be empty when a recipe is given.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "productId": {
+                "description": "A product the caller can see, from search_products or create_product.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "amount": {
+                "description": "Quantity eaten; must be positive.",
+                "type": "number"
+              },
+              "unit": {
+                "description": "Unit of the amount, e.g. g, ml, piece, tbsp, cup.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "productId",
+              "amount",
+              "unit"
+            ]
+          },
+          "default": null
+        }
+      },
+      "required": [
+        "mealId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "plan_meal",
     "title": null,
     "description": "Plans one meal in the caller's diary: a recipe the caller can see, in one of their meal slots (ids from get_diet_context) on a day. A slot can hold more than one meal; check get_meal_entries first so you do not plan a duplicate. Retry with the same operationKey and fields to get the original meal back instead of a second one; a new meal needs a new key.",
@@ -983,6 +1113,34 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "reset_meal",
+    "title": null,
+    "description": "Returns one meal in the caller's diary to Planned, discarding that it was eaten and any override. Already Planned stays Planned.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mealId": {
+          "description": "Meal id from get_meal_entries.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "mealId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
