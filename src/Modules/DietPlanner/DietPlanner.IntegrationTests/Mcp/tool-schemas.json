@@ -338,6 +338,34 @@
     "_meta": null
   },
   {
+    "name": "delete_weight_entry",
+    "title": null,
+    "description": "Deletes one weigh-in from the caller's weight log; the profile's current weight falls back to the latest remaining entry, or becomes unknown. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the entry is already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "entryId": {
+          "description": "Weight entry id from get_weight_entries.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "entryId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "execute_plan_import",
     "title": null,
     "description": "Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice. Run one import at a time: two different imports in parallel can both fill the same free slots.",
@@ -730,6 +758,44 @@
     "_meta": null
   },
   {
+    "name": "get_weight_entries",
+    "title": null,
+    "description": "Lists the caller's weigh-ins (kilograms, one per day) oldest first, optionally between two dates (inclusive). Leave both dates out for the whole log.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "First day, ISO yyyy-MM-dd, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "to": {
+          "description": "Last day, ISO yyyy-MM-dd, if any.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "get_weight_prediction",
     "title": null,
     "description": "Estimates from the caller's profile what eating a given number of kcal a day would do: BMR, TDEE, daily deficit (negative is a surplus), weekly weight change in kg, the date the target weight would be reached, and BMI now and at target. The same calculation as the app; an estimate, not medical advice. Needs date of birth, gender, height, current weight and activity level in the profile.",
@@ -752,6 +818,39 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "log_weight",
+    "title": null,
+    "description": "Records the caller's weight in kilograms for a day, not in the future. A day holds one weigh-in: logging a day that already has one replaces it, so a retry never adds a second entry. Also sets the profile's current weight, so the caller needs a profile first (set_profile). Returns the entry id and whether it was new.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "Calendar day of the weigh-in, ISO yyyy-MM-dd; today or earlier.",
+          "type": "string",
+          "format": "date"
+        },
+        "weightKg": {
+          "description": "Weight in kilograms (convert from lb or st first); more than 0, at most 999.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "date",
+        "weightKg"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null

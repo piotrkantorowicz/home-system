@@ -42,6 +42,8 @@ public static class DietPlannerMcp
             .WithTools<MealPlanTools>()
             .WithTools<MealConsumptionTools>()
             .WithTools<DietSetupTools>()
+            .WithTools<WeightLogTools>()
+            .WithTools<WeightTools>()
             .WithTools<ImportTools>();
     }
 }
