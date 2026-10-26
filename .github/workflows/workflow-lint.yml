@@ -1,0 +1,39 @@
+# Lints GitHub Actions workflows: actionlint (syntax, expressions, shellcheck on run:)
+# and zizmor (security: template injection, permissions, credential persistence).
+# zizmor config: .github/zizmor.yml.
+name: Workflow lint
+
+on:
+  pull_request:
+    branches: [main, 'epic/**']
+    paths:
+      - '.github/workflows/**'
+      - '.github/zizmor.yml'
+
+concurrency:
+  group: workflow-lint-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: actionlint & zizmor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+      - name: zizmor
+        uses: docker://ghcr.io/zizmorcore/zizmor:1.31.1
+        env:
+          GH_TOKEN: ${{ github.token }}   # online audits: known-vulnerable-actions, impostor-commit, ref-confusion
+        with:
+          args: --config .github/zizmor.yml .github/workflows
