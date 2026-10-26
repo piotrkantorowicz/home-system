@@ -40,11 +40,14 @@ public sealed class CategoryRule : AggregateRoot<CategoryRuleId>
         };
     }
 
-    /// <summary>Replaces the category with the user's latest choice.</summary>
+    /// <summary>Replaces the category with the user's latest choice; an unchanged category writes nothing.</summary>
     /// <param name="category">The chosen category.</param>
     /// <param name="now">Current time, UTC.</param>
     public void Learn(ExpenseCategory category, DateTime now)
     {
+        if (category == Category)
+            return;
+
         Category = category;
         UpdatedAt = now;
     }
