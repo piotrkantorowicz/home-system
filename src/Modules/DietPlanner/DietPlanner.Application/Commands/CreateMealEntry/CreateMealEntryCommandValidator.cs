@@ -1,5 +1,6 @@
 namespace DietPlanner.Application.Commands.CreateMealEntry;
 
+using DietPlanner.Application.OperationReceipts;
 using Shared.Abstractions.Cqrs;
 
 internal sealed class CreateMealEntryCommandValidator : ICommandValidator<CreateMealEntryCommand>
@@ -17,5 +18,8 @@ internal sealed class CreateMealEntryCommandValidator : ICommandValidator<Create
 
         if (command.Servings <= 0)
             yield return new ValidationError(nameof(command.Servings), "Servings must be positive.");
+
+        if (command.OperationKey is not null && !OperationKeyInput.IsValid(command.OperationKey))
+            yield return new ValidationError(nameof(command.OperationKey), OperationKeyInput.Error);
     }
 }
