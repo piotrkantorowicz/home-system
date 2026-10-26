@@ -1,4 +1,4 @@
-namespace DietPlanner.Api.Mcp;
+namespace DietPlanner.Mcp;
 
 using Microsoft.Extensions.DependencyInjection;
 

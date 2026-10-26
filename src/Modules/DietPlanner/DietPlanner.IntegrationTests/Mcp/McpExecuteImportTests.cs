@@ -2,11 +2,11 @@ namespace DietPlanner.IntegrationTests.Mcp;
 
 using System.Net.Http.Json;
 using DietPlanner.Api;
-using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ExecutePreviewedImport;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 

@@ -17,6 +17,7 @@
     <Project Path="src/Modules/DietPlanner/DietPlanner.Contracts/DietPlanner.Contracts.csproj" />
     <Project Path="src/Modules/DietPlanner/DietPlanner.Infrastructure/DietPlanner.Infrastructure.csproj" />
     <Project Path="src/Modules/DietPlanner/DietPlanner.Api/DietPlanner.Api.csproj" />
+    <Project Path="src/Modules/DietPlanner/DietPlanner.Mcp/DietPlanner.Mcp.csproj" />
   </Folder>
   <Folder Name="/Modules/Notifications/">
     <Project Path="src/Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />

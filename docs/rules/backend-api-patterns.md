@@ -187,7 +187,7 @@ them: the dispatcher is the only entry into the application, identity comes from
 authenticated `ClaimsPrincipal` and is passed into the command/query, and the rule
 "Dispatchers only in endpoints" covers tool methods as well. Design: `docs/design/mcp/`.
 
-- Each module owns its tools in `<Module>.Api/Mcp/`. The host only composes them: no central
+- Each module owns its tools in its `<Module>.Mcp` project (see `backend-module-structure.md`). The host only composes them: no central
   tool assembly, no direct database tools, no generic HTTP or "call any route" tool.
 - Tools are explicit and typed: one method per operation, a hand-written argument record and
   a DTO result. OpenAPI may feed `docs/design/mcp/API-INVENTORY.md`, but it never generates tools.

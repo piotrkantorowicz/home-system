@@ -3,10 +3,10 @@ namespace DietPlanner.IntegrationTests.Mcp;
 using System.Net.Http.Json;
 using System.Text.Json;
 using DietPlanner.Api;
-using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.SearchRecipes;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using ModelContextProtocol.Client;
 
 /// <summary>Integration tests for <c>preview_plan_import</c>: a whole month previews without writing, invalid plans get paths and no token.</summary>

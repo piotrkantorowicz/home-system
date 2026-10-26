@@ -95,7 +95,7 @@ AI client -> HTTPS MCP endpoint
 
 - Prefer official `ModelContextProtocol.AspNetCore` with stateless HTTP. MCP-1 pins
   a released SDK and protocol version proven against the chosen client.
-- Keep Diet Planner tool adapters in `DietPlanner.Api/Mcp/`; host only composes.
+- Keep Diet Planner tool adapters in `DietPlanner.Mcp`; host only composes.
   Other modules own their adapters. No central tool assembly importing every
   module's application/domain internals, direct database tools or generic HTTP tool.
 - Document MCP tool methods as transport endpoints under the existing rule
@@ -259,7 +259,7 @@ grants fail. Disabled endpoint is unavailable. Existing REST/SPA login still wor
 Discovery metadata exceptions to endpoint authentication are explicit and bounded.
 
 **Likely files:** Host/config, central packages, Authentik blueprint,
-`DietPlanner.Api/Mcp/`, claims pipeline and integration-test fixtures.
+`DietPlanner.Mcp`, claims pipeline and integration-test fixtures.
 **Test plan:** MCP SDK client through real ASP.NET auth/dispatchers/databases;
 negative token/scope/context cases and real Authentik smoke.
 **Out of scope:** Catalog writes and import execution.
@@ -278,7 +278,7 @@ results, safe errors and bounded pages (proposed default 20, maximum 50).
 unknown nutrition stays null; pagination and missing-resource behavior are stable;
 recipe details expose the information required for planning and ingredient reuse.
 
-**Likely files:** `DietPlanner.Api/Mcp/` and module integration tests.
+**Likely files:** `DietPlanner.Mcp` and module integration tests.
 **Test plan:** Real database fixtures for public/own/shared/private items and two
 identities; search/detail, bounds and empty-result cases through MCP.
 **Out of scope:** Catalog mutation and photos.
@@ -296,7 +296,7 @@ identities; search/detail, bounds and empty-result cases through MCP.
 fails; MCP values match REST for planned/completed fixtures; other users' diary
 data remains inaccessible. No caller-identity or alternate-person argument.
 
-**Likely files:** `DietPlanner.Api/Mcp/`, existing query DTO mappings and tests.
+**Likely files:** `DietPlanner.Mcp`, existing query DTO mappings and tests.
 **Test plan:** REST/MCP behavioral comparison, fixed dates, empty month and identity
 isolation through real dispatchers/PostgreSQL.
 **Out of scope:** New nutrition formulas and household-member delegation.
