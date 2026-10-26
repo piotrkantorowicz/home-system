@@ -12,8 +12,11 @@ public static class InvestmentsMcp
     /// <summary>Read wallets, balances and net worth.</summary>
     public const string ReadScope = "mcp:investments:read";
 
+    /// <summary>Record and delete balances.</summary>
+    public const string WriteScope = "mcp:investments:write";
+
     /// <summary>Every scope Investments tools use, for policy registration and resource metadata.</summary>
-    public static IReadOnlyList<string> Scopes { get; } = [ReadScope];
+    public static IReadOnlyList<string> Scopes { get; } = [ReadScope, WriteScope];
 
     /// <summary>Registers Investments' tools on the host's MCP server.</summary>
     /// <param name="builder">The host's MCP server builder.</param>
@@ -24,6 +27,7 @@ public static class InvestmentsMcp
 
         return builder
             .WithTools<WalletTools>()
-            .WithTools<NetWorthTools>();
+            .WithTools<NetWorthTools>()
+            .WithTools<SnapshotWriteTools>();
     }
 }
