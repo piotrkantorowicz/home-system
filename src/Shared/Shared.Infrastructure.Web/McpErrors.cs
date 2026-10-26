@@ -1,4 +1,4 @@
-namespace DietPlanner.Mcp;
+namespace Shared.Infrastructure.Web;
 
 using ModelContextProtocol;
 using Shared.Abstractions.Core.Domain;
@@ -8,10 +8,16 @@ using Shared.Abstractions.Cqrs;
 /// Turns expected application failures into tool errors the agent can act on. Anything else stays
 /// an unexpected error, which the SDK reports without its message.
 /// </summary>
-internal static class McpErrors
+public static class McpErrors
 {
+    /// <summary>Runs <paramref name="action"/>, mapping validation and domain failures to <see cref="McpException"/>.</summary>
+    /// <typeparam name="T">The tool result type.</typeparam>
+    /// <param name="action">The dispatcher call.</param>
+    /// <returns>The tool result.</returns>
     public static async Task<T> AsToolErrorsAsync<T>(Func<Task<T>> action)
     {
+        ArgumentNullException.ThrowIfNull(action);
+
         try
         {
             return await action();

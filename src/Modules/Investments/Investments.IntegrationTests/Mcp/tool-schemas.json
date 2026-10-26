@@ -1,0 +1,478 @@
+[
+  {
+    "name": "archive_wallet",
+    "title": null,
+    "description": "Archives a wallet: it leaves active lists and net worth totals; its balance history stays and restore_wallet brings it back. Repeating the call changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "walletId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "create_wallet",
+    "title": null,
+    "description": "Creates an investment wallet in the caller's household, for the caller or a member the caller manages. Not idempotent: after a lost response, check list_wallets before calling again. An invalid institution, kind or currency lists the allowed values.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Display name, 1-80 characters.",
+          "type": "string"
+        },
+        "institution": {
+          "description": "Institution, e.g. XTB or PKOBP.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Account kind, e.g. Brokerage, IKE, IKZE or Savings.",
+          "type": "string"
+        },
+        "currency": {
+          "description": "PLN, EUR or USD; cannot change later.",
+          "type": "string"
+        },
+        "visibility": {
+          "description": "Shared (the household sees it) or Private (owner and managing adults only).",
+          "type": "string"
+        },
+        "ownerPersonId": {
+          "description": "Owner person id, for a member the caller manages; the caller when omitted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "institution",
+        "kind",
+        "currency",
+        "visibility"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "delete_snapshot",
+    "title": null,
+    "description": "Deletes a wallet's balance for one date. Cannot be undone. Fails when nothing is recorded for that date, so a repeat reports it as already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "asOf": {
+          "description": "Date of the balance to delete, yyyy-MM-dd.",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "walletId",
+        "asOf"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_net_worth",
+    "title": null,
+    "description": "Returns net worth in PLN on a date, broken down by wallet kind, owner and wallet, with the NBP rates used. Incomplete is true when a foreign balance had no rate and is left out of the total.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "asOf": {
+          "description": "Reference date, YYYY-MM-DD; today when omitted; not in the future.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "scope": {
+          "description": "\"household\" (default) or \"mine\".",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_net_worth_history",
+    "title": null,
+    "description": "Returns month-end net worth in PLN over a date range (default the last 12 months, at most 10 years), oldest first, plus the last date itself.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "First date, YYYY-MM-DD; twelve months before 'to' when omitted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "to": {
+          "description": "Last date, YYYY-MM-DD; today when omitted; not in the future.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "scope": {
+          "description": "\"household\" (default) or \"mine\".",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_wallet",
+    "title": null,
+    "description": "Returns one investment wallet the caller can see, with its latest balance and its PLN value.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "walletId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "list_snapshots",
+    "title": null,
+    "description": "Pages a wallet's recorded balances, newest first, each with the previous balance and its PLN value. Amounts are decimal strings in the wallet's currency.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 100.",
+          "type": "integer",
+          "default": 20
+        }
+      },
+      "required": [
+        "walletId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "list_wallets",
+    "title": null,
+    "description": "Pages the investment wallets the caller can see, by kind then name, each with its latest balance and its PLN value. Amounts are decimal strings.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "includeArchived": {
+          "description": "Also return archived wallets.",
+          "type": "boolean",
+          "default": false
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 100.",
+          "type": "integer",
+          "default": 50
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "record_check_in",
+    "title": null,
+    "description": "Records balances for several wallets on one date, all or nothing: one bad entry saves none and names the wallet. Wallets left out are untouched. Repeating the call changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "asOf": {
+          "description": "Date of every balance, yyyy-MM-dd; not in the future.",
+          "type": "string",
+          "format": "date"
+        },
+        "entries": {
+          "description": "One entry per wallet, at most 100: walletId from list_wallets, amount as a decimal string such as \"12450.10\", optional note.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "walletId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "amount": {
+                "type": "string"
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "walletId",
+              "amount",
+              "note"
+            ]
+          }
+        }
+      },
+      "required": [
+        "asOf",
+        "entries"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "record_snapshot",
+    "title": null,
+    "description": "Records a wallet's balance for a date, or corrects the one already recorded for that date. Repeating the call changes nothing. Created is false for a correction or repeat.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "asOf": {
+          "description": "Date of the balance, yyyy-MM-dd; not in the future.",
+          "type": "string",
+          "format": "date"
+        },
+        "amount": {
+          "description": "Balance in the wallet's currency as a decimal string, e.g. \"12450.10\": not negative, at most two decimals.",
+          "type": "string"
+        },
+        "note": {
+          "description": "Optional note, at most 200 characters.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "walletId",
+        "asOf",
+        "amount"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "restore_wallet",
+    "title": null,
+    "description": "Makes an archived wallet active again. Repeating the call changes nothing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets with includeArchived.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "walletId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_wallet",
+    "title": null,
+    "description": "Renames a wallet and/or changes its visibility; owner, kind and currency cannot change. Send both fields and the version from get_wallet. A version conflict means it changed since: call get_wallet and decide again.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "description": "Display name, 1-80 characters; send the current one to keep it.",
+          "type": "string"
+        },
+        "visibility": {
+          "description": "Shared or Private; send the current one to keep it. Changing it needs the owner or an adult managing them.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The wallet's version from get_wallet or list_wallets.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "walletId",
+        "name",
+        "visibility",
+        "version"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  }
+]

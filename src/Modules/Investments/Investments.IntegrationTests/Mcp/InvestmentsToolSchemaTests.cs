@@ -1,0 +1,63 @@
+namespace Investments.IntegrationTests.Mcp;
+
+using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using global::Investments.Mcp;
+using Investments.IntegrationTests.Infrastructure;
+
+/// <summary>
+/// Pins what agents see in <c>tools/list</c> for Investments: names, descriptions, annotations and
+/// input/output schemas against the checked-in <c>tool-schemas.json</c>.
+/// Run with <c>MCP_SCHEMA_UPDATE=1</c> to rewrite the file after an intended change.
+/// </summary>
+public sealed class InvestmentsToolSchemaTests : IClassFixture<InvestmentsDatabaseFixture>, IDisposable
+{
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+    private readonly InvestmentsApiFactory _factory;
+    private readonly InvestmentsMcpHost _mcp;
+
+    /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
+    /// <param name="fixture">The shared databases for this class.</param>
+    public InvestmentsToolSchemaTests(InvestmentsDatabaseFixture fixture)
+    {
+        _factory = new InvestmentsApiFactory(fixture);
+        _mcp = new InvestmentsMcpHost(_factory);
+    }
+
+    /// <summary>The listed tools match the checked-in snapshot exactly.</summary>
+    [Fact]
+    public async Task ListTools_MatchesCheckedInSchemas()
+    {
+        await using var client = await _mcp.ConnectAsync($"schema-{Guid.CreateVersion7()}", string.Join(' ', InvestmentsMcp.Scopes));
+
+        var tools = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var actual = new JsonArray([.. tools.Where(t => InvestmentsToolNames.Contains(t.Name)).OrderBy(t => t.Name, StringComparer.Ordinal)
+            .Select(t => JsonSerializer.SerializeToNode(t.ProtocolTool, JsonSerializerOptions.Web))]).ToJsonString(Indented);
+
+        var path = SnapshotPath();
+        if (Environment.GetEnvironmentVariable("MCP_SCHEMA_UPDATE") == "1")
+            await File.WriteAllTextAsync(path, actual + "\n", TestContext.Current.CancellationToken);
+
+        actual.ShouldBe((await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken)).TrimEnd());
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _mcp.Dispose();
+        _factory.Dispose();
+    }
+
+    private static readonly HashSet<string> InvestmentsToolNames =
+    [
+        "list_wallets", "get_wallet", "list_snapshots", "get_net_worth", "get_net_worth_history",
+        "record_snapshot", "record_check_in", "delete_snapshot",
+        "create_wallet", "update_wallet", "archive_wallet", "restore_wallet",
+    ];
+
+    private static string SnapshotPath([CallerFilePath] string source = "")
+        => Path.Combine(Path.GetDirectoryName(source)!, "tool-schemas.json");
+}
