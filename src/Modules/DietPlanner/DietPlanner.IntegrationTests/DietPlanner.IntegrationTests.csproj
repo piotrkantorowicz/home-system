@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\..\Apis\HomeSystem.REST\HomeSystem.REST.csproj" />
     <ProjectReference Include="..\DietPlanner.Api\DietPlanner.Api.csproj" />
     <ProjectReference Include="..\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
+    <ProjectReference Include="..\DietPlanner.Mcp\DietPlanner.Mcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

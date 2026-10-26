@@ -1,4 +1,4 @@
-namespace DietPlanner.Api.Mcp;
+namespace DietPlanner.Mcp;
 
 /// <summary>
 /// One page of catalog search results.

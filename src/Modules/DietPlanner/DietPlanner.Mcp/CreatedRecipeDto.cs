@@ -1,4 +1,4 @@
-namespace DietPlanner.Api.Mcp;
+namespace DietPlanner.Mcp;
 
 /// <summary>
 /// The recipe a <c>create_recipe</c> call created, or created on an earlier call with the same operation key.
