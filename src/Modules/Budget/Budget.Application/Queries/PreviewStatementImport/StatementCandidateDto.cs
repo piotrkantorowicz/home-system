@@ -8,7 +8,8 @@ using Budget.Application.Queries.GetExpense;
 /// <param name="OccurredOn">Purchase date.</param>
 /// <param name="Amount">Positive decimal string, fees included.</param>
 /// <param name="Description">Proposed description, at most 80 characters.</param>
-/// <param name="SuggestedCategory">Category learned from earlier imports; <see langword="null"/> until #673.</param>
+/// <param name="MerchantKey">Merchant the category is learned for; send back on import. <see langword="null"/> when the row names none.</param>
+/// <param name="SuggestedCategory">Category last imported for this merchant in the envelope's scope; <see langword="null"/> when none.</param>
 /// <param name="Status"><c>New</c>, <c>AlreadyImported</c> (not selectable) or <c>PossibleDuplicate</c>.</param>
 /// <param name="Matches">For <c>PossibleDuplicate</c>: up to five visible expenses with the same amount within two days.</param>
 public sealed record StatementCandidateDto(
@@ -17,6 +18,7 @@ public sealed record StatementCandidateDto(
     DateOnly OccurredOn,
     string Amount,
     string Description,
+    string? MerchantKey,
     string? SuggestedCategory,
     string Status,
     IReadOnlyList<ExpenseDto> Matches);
