@@ -198,6 +198,34 @@
     "_meta": null
   },
   {
+    "name": "delete_product",
+    "title": null,
+    "description": "Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search; recipes that use it keep the ingredient line but show it as Unknown and without its nutrition; meals already in the diary keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the product is already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "description": "Product id from search_products or get_product.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "productId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "execute_plan_import",
     "title": null,
     "description": "Imports a previewed plan in one all-or-nothing transaction: new products and recipes plus every planned meal (never marked eaten). Pass the exact plan and options you previewed, the previewToken, and a new operationKey. If anything changed since the preview, nothing is written and you must preview again. If the response is lost, call again with the same operationKey and plan to get the original result instead of importing twice. Run one import at a time: two different imports in parallel can both fill the same free slots.",
@@ -910,6 +938,108 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_product",
+    "title": null,
+    "description": "Replaces every field of a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. Fields you leave out become unknown, so read the product first with get_product and send back what should stay. Nutrition is per 100 g; never send zero for unknown. Recipes and meals that use the product see the new values.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "description": "Product id from search_products or get_product.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "description": "Product name, unique in the caller's catalog.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Default unit: g, ml or piece.",
+          "type": "string"
+        },
+        "caloriesPer100g": {
+          "description": "Energy in kcal per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "proteinPer100g": {
+          "description": "Protein in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "carbsPer100g": {
+          "description": "Carbohydrates in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fatPer100g": {
+          "description": "Fat in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "fiberPer100g": {
+          "description": "Fibre in grams per 100 g, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "densityGramsPerMl": {
+          "description": "Grams per millilitre, needed to measure it in volume units, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "gramPerPiece": {
+          "description": "Grams per piece, needed for the piece unit, if known.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "default": null
+        },
+        "visibility": {
+          "description": "Private or Household; omit to keep the current one. Only the creator may change it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "productId",
+        "name",
+        "unit"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
