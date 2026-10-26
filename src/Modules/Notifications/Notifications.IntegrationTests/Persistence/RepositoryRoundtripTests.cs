@@ -141,6 +141,6 @@ public sealed class RepositoryRoundtripTests
     {
         var (_, _) = CreateScope();
         Notifications.Infrastructure.Persistence.Migrations.DbUpRunner.Run(_fixture.ConnectionString);
-        Notifications.Infrastructure.Persistence.Migrations.DbUpRunner.Run(_fixture.ConnectionString);
+        Should.NotThrow(() => Notifications.Infrastructure.Persistence.Migrations.DbUpRunner.Run(_fixture.ConnectionString));
     }
 }

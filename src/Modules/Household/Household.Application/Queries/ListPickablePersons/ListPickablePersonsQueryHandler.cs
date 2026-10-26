@@ -12,7 +12,7 @@ internal sealed class ListPickablePersonsQueryHandler
     public ListPickablePersonsQueryHandler(IHouseholdReadDbContext db) => _db = db;
 
     public async Task<IReadOnlyList<PickablePersonDto>> HandleAsync(
-        ListPickablePersonsQuery query, CancellationToken ct)
+        ListPickablePersonsQuery query, CancellationToken ct = default)
     {
         var takenPersonIds = _db.Households.AsNoTracking().SelectMany(h => h.Members).Select(m => m.PersonId);
 

@@ -11,7 +11,7 @@ internal sealed class GetMyHouseholdQueryHandler : IQueryHandler<GetMyHouseholdQ
 
     public GetMyHouseholdQueryHandler(IHouseholdReadDbContext db) => _db = db;
 
-    public async Task<MyHouseholdDto?> HandleAsync(GetMyHouseholdQuery query, CancellationToken ct)
+    public async Task<MyHouseholdDto?> HandleAsync(GetMyHouseholdQuery query, CancellationToken ct = default)
     {
         var meId = await _db.Persons.AsNoTracking()
             .Where(p => p.AuthSubject == query.AuthSubject)

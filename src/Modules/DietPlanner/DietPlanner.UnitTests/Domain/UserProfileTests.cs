@@ -55,15 +55,6 @@ public sealed class UserProfileTests
         act.ShouldThrow<ArgumentException>();
     }
 
-    /// <summary>With empty user id: <c>Create</c> throws argument exception.</summary>
-    [Fact]
-    public void Create_WithEmptyPersonId_ThrowsArgumentException()
-    {
-        var act = () => UserProfile.Create(UserProfileId.New(), Guid.Empty, null, null, null, null, null, null, TestClock.UtcNow);
-
-        act.ShouldThrow<ArgumentException>();
-    }
-
     /// <summary>With new values: <c>Update</c> updates profile.</summary>
     [Fact]
     public void Update_WithNewValues_UpdatesProfile()

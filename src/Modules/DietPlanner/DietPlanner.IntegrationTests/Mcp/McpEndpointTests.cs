@@ -151,8 +151,6 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
         return disposable;
     }
 
-    private static string Token(string subject, string scope) => McpTestHost.Token(subject, scope);
-
     private static Task<DietContextDto> GetDietContextAsync(McpClient client)
         => McpTestHost.CallAsync<DietContextDto>(client, "get_diet_context");
 }

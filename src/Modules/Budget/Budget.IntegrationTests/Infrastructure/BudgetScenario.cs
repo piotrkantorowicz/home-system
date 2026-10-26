@@ -46,7 +46,7 @@ internal sealed class BudgetScenario(BudgetApiFactory factory)
         var created = await household.Owner.PostAsJsonAsync($"/api/households/{household.Id}/managed-members",
             new { displayName = "Kid", email = (string?)null, role = "Child", nickname = (string?)null }, Ct);
         created.EnsureSuccessStatusCode();
-        return Guid.Parse(created.Headers.Location!.ToString().Split('/').Last());
+        return Guid.Parse(created.Headers.Location!.ToString().Split('/')[^1]);
     }
 
     /// <summary>The shared default envelope created at initialisation.</summary>

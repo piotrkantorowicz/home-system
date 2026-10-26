@@ -11,7 +11,7 @@ internal sealed class SyncCurrentPersonCommandHandler(
     TimeProvider clock)
     : ICommandHandler<SyncCurrentPersonCommand, Guid>
 {
-    public async Task<Guid> HandleAsync(SyncCurrentPersonCommand command, CancellationToken ct)
+    public async Task<Guid> HandleAsync(SyncCurrentPersonCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var email = PersonEmail.CreateOrNull(command.Email);

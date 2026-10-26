@@ -16,7 +16,7 @@ internal sealed class UploadRecipeImageCommandHandler(
     IRecipeImageProcessor processor, IRecipeImagePersistence persistence,
     IImageObjectStorage storage, TimeProvider clock) : ICommandHandler<UploadRecipeImageCommand, RecipeImageDto>
 {
-    public async Task<RecipeImageDto> HandleAsync(UploadRecipeImageCommand command, CancellationToken ct)
+    public async Task<RecipeImageDto> HandleAsync(UploadRecipeImageCommand command, CancellationToken ct = default)
     {
         // Persistence owns independent transactions; do not retain an enlisted read connection during S3 writes.
         using var suppression = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled);

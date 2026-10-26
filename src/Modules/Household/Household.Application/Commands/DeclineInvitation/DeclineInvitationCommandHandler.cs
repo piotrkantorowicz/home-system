@@ -12,7 +12,7 @@ internal sealed class DeclineInvitationCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<DeclineInvitationCommand>
 {
-    public async Task HandleAsync(DeclineInvitationCommand command, CancellationToken ct)
+    public async Task HandleAsync(DeclineInvitationCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var caller = await access.RequirePersonAsync(command.RequestingAuthSubject, ct);

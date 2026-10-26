@@ -55,7 +55,7 @@ public sealed class CreateProductCommandHandlerTests
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         captured.ShouldNotBeNull();
-        captured!.Nutrition.Calories.ShouldBe(155m);
+        captured.Nutrition.Calories.ShouldBe(155m);
         captured.Nutrition.Protein.ShouldBe(13m);
         captured.GramPerPiece.ShouldBe(50m);
     }

@@ -153,6 +153,7 @@ public sealed class WeightEntryEndpointsTests
         await EnsureProfileExists(client);
 
         var olderResponse = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today.AddDays(-1), 81m), cancellationToken: TestContext.Current.CancellationToken);
+        olderResponse.EnsureSuccessStatusCode();
         var latestResponse = await client.PostAsJsonAsync("/api/v1/weight-entries", new LogWeightEntryRequest(Today, 80m), cancellationToken: TestContext.Current.CancellationToken);
         var latestBody = await latestResponse.Content.ReadFromJsonAsync<LogWeightEntryResponse>(cancellationToken: TestContext.Current.CancellationToken);
 

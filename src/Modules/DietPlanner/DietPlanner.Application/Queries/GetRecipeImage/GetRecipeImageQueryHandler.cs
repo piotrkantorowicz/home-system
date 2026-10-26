@@ -11,7 +11,7 @@ using Shared.Abstractions.Cqrs;
 internal sealed class GetRecipeImageQueryHandler(IDietPlannerReadDbContext db,
     HouseholdRosterProvider households, IImageObjectStorage storage) : IQueryHandler<GetRecipeImageQuery, ImageObjectRead?>
 {
-    public async Task<ImageObjectRead?> HandleAsync(GetRecipeImageQuery query, CancellationToken ct)
+    public async Task<ImageObjectRead?> HandleAsync(GetRecipeImageQuery query, CancellationToken ct = default)
     {
         LibraryAccess access = await households.GetLibraryAccessAsync(query.UserId, ct);
         Guid? version = await access.Visible(db.Recipes.AsNoTracking())

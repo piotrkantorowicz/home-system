@@ -12,7 +12,7 @@ internal sealed class InvitePersonByEmailCommandHandler(
     : ICommandHandler<InvitePersonByEmailCommand, InvitePersonByEmailResult>
 {
     public async Task<InvitePersonByEmailResult> HandleAsync(
-        InvitePersonByEmailCommand command, CancellationToken ct)
+        InvitePersonByEmailCommand command, CancellationToken ct = default)
     {
         var (caller, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);

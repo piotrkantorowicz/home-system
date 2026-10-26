@@ -57,7 +57,7 @@ public sealed class S3ImageObjectStorageTests(ImageStorageFixture fixture)
         CancellationToken ct = TestContext.Current.CancellationToken;
 
         await storage.DeleteAsync(key, ct);
-        await storage.DeleteAsync(key, ct);
+        await Should.NotThrowAsync(() => storage.DeleteAsync(key, ct));
     }
 
     /// <summary>A nonexistent bucket is unavailable, not a missing object.</summary>

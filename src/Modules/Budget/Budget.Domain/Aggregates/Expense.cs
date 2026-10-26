@@ -282,7 +282,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// Concurrency token mapped to PostgreSQL's <c>xmin</c>; never set by domain logic. Every
     /// update — including share-only ones — rewrites this row, so the check always applies.
     /// </summary>
-    public uint Version { get; private set; }
+    public uint Version { get; }
 
     /// <summary>The stored equal shares; empty unless individually funded and shared.</summary>
     public IReadOnlyCollection<ExpenseShare> Shares => _shares;

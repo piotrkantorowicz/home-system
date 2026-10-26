@@ -102,10 +102,10 @@ public sealed class BudgetExpenseCorrectionTests : IClassFixture<BudgetDatabaseF
         detail.Shares.Sum(s => decimal.Parse(s.Amount, System.Globalization.CultureInfo.InvariantCulture)).ShouldBe(60.01m);
         detail.History!.Select(r => (r.RevisionNumber, r.Operation)).ShouldBe([(1, "Create"), (2, "Update")]);
         detail.History![0].Snapshot.Amount.ShouldBe("100.00");
-        detail.History![0].Snapshot.Shares.Select(s => s.Amount).Order().ShouldBe(["50.00", "50.00"]);
-        detail.History![1].Snapshot.Amount.ShouldBe("60.01");
-        detail.History![1].ActorPersonId.ShouldBe(bea.PersonId);
-        detail.History![1].Reason.ShouldBe("typo");
+        detail.History[0].Snapshot.Shares.Select(s => s.Amount).Order().ShouldBe(["50.00", "50.00"]);
+        detail.History[1].Snapshot.Amount.ShouldBe("60.01");
+        detail.History[1].ActorPersonId.ShouldBe(bea.PersonId);
+        detail.History[1].Reason.ShouldBe("typo");
     }
 
     /// <summary>A share-only edit (participants change, amount same) still enforces parent concurrency.</summary>

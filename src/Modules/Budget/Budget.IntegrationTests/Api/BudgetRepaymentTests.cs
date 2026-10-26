@@ -43,7 +43,7 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
     private static async Task<SettlementBody> BalancesAsync(HttpClient client)
         => (await client.GetFromJsonAsync<SettlementBody>("/api/budget/settlement", Ct))!;
 
-    private static decimal Net(SettlementBody s, Guid person)
+    private static decimal NetOf(SettlementBody s, Guid person)
         => decimal.Parse(s.Balances.Single(b => b.PersonId == person).Net, CultureInfo.InvariantCulture);
 
     private static async Task<PageBody> ListAsync(HttpClient client, string query = "")
@@ -83,13 +83,13 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
 
         var repayment = await RecordedAsync(bea.Client, Body(bea.PersonId, h.OwnerPersonId));
         var after = await BalancesAsync(h.Owner);
-        Net(after, h.OwnerPersonId).ShouldBe(15m);
-        Net(after, bea.PersonId).ShouldBe(-15m);
+        NetOf(after, h.OwnerPersonId).ShouldBe(15m);
+        NetOf(after, bea.PersonId).ShouldBe(-15m);
         after.Suggestions.Single().Amount.ShouldBe("15.00");
 
         (await VoidAsync(h.Owner, repayment.RepaymentId)).EnsureSuccessStatusCode();
         var restored = await BalancesAsync(h.Owner);
-        Net(restored, h.OwnerPersonId).ShouldBe(40m);
+        NetOf(restored, h.OwnerPersonId).ShouldBe(40m);
 
         (await h.Owner.GetFromJsonAsync<SummaryBody>("/api/budget/summary?month=2026-10&scope=shared", Ct))!.TotalSpent.ShouldBe(spendingBefore);
     }
@@ -103,8 +103,8 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
         await RecordedAsync(bea.Client, Body(bea.PersonId, h.OwnerPersonId, "60.00"));
         var s = await BalancesAsync(h.Owner);
 
-        Net(s, h.OwnerPersonId).ShouldBe(-20m);
-        Net(s, bea.PersonId).ShouldBe(20m);
+        NetOf(s, h.OwnerPersonId).ShouldBe(-20m);
+        NetOf(s, bea.PersonId).ShouldBe(20m);
         var transfer = s.Suggestions.Single();
         (transfer.FromPersonId, transfer.ToPersonId, transfer.Amount).ShouldBe((h.OwnerPersonId, bea.PersonId, "20.00"));
     }
@@ -229,7 +229,7 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
 
         var s = await BalancesAsync(h.Owner);
 
-        Net(s, bea.PersonId).ShouldBe(-40m);
+        NetOf(s, bea.PersonId).ShouldBe(-40m);
         s.IsSettled.ShouldBeFalse();
     }
 
@@ -248,7 +248,7 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
         replay.RepaymentId.ShouldBe(first.RepaymentId);
         replay.Revision.ShouldBe(1);
         (await ListAsync(h.Owner)).TotalCount.ShouldBe(1);
-        Net(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(30m);
+        NetOf(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(30m);
     }
 
     /// <summary>A retry after the repayment was voided still returns the original creation result and does not re-record.</summary>
@@ -266,7 +266,7 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
         var replay = (await retry.Content.ReadFromJsonAsync<ResultBody>(Ct))!;
         (replay.RepaymentId, replay.Revision).ShouldBe((first.RepaymentId, 1));
         (await ListAsync(h.Owner)).TotalCount.ShouldBe(1);
-        Net(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(40m);
+        NetOf(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(40m);
     }
 
     /// <summary>A reused key with a different payload is a 409; another actor's key is independent.</summary>
@@ -332,7 +332,7 @@ public sealed class BudgetRepaymentTests : IClassFixture<BudgetDatabaseFixture>,
         responses.ShouldAllBe(r => r.StatusCode == HttpStatusCode.OK);
         var listed = (await ListAsync(h.Owner)).Items.Single();
         (listed.IsVoided, listed.Revision).ShouldBe((true, 2));
-        Net(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(40m);
+        NetOf(await BalancesAsync(h.Owner), h.OwnerPersonId).ShouldBe(40m);
     }
 
     /// <summary>The list is newest payment first, paged and capped, and keeps voided entries marked.</summary>

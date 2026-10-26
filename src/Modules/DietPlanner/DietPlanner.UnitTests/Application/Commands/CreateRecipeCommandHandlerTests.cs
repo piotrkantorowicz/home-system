@@ -63,7 +63,7 @@ public sealed class CreateRecipeCommandHandlerTests
         await _sut.HandleAsync(command, TestContext.Current.CancellationToken);
 
         captured.ShouldNotBeNull();
-        captured!.Ingredients.ShouldHaveSingleItem();
+        captured.Ingredients.ShouldHaveSingleItem();
         captured.Ingredients.First().ProductId.Value.ShouldBe(productId);
         captured.Ingredients.First().Amount.ShouldBe(300m);
     }
