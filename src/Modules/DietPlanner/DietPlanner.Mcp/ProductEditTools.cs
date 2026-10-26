@@ -13,7 +13,9 @@ using Shared.Abstractions.Cqrs;
 /// <summary>
 /// Changes to existing products, through the same commands and ownership rules as REST: the creator,
 /// or an adult of the creator's household for a shared product. Repeating a call has no further
-/// effect, so these take no operation key.
+/// effect, so these take no operation key (a repeated delete reports not-found).
+/// Full replace without a version check: an app edit between the agent's read and its update is
+/// overwritten, the same as two app tabs today.
 /// </summary>
 [McpServerToolType]
 [Authorize(Policy = DietPlannerMcp.WriteScope)]
@@ -52,7 +54,7 @@ internal sealed class ProductEditTools
     }
 
     [McpServerTool(Name = "delete_product", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search and from the details of recipes that use it; meals already in the diary keep showing it. There is no undo: confirm with the user first.")]
+    [Description("Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search; recipes that use it keep the ingredient line but show it as Unknown and without its nutrition; meals already in the diary keep showing it. There is no undo: confirm with the user first. Repeating the call reports the product as not found, which means it is already gone.")]
     public static async Task<DeletedItemDto> DeleteProduct(
         McpCaller caller,
         ICommandDispatcher commands,
