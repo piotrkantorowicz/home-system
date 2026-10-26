@@ -3,11 +3,11 @@ namespace DietPlanner.IntegrationTests.Mcp;
 using System.Net.Http.Json;
 using System.Text.Json;
 using DietPlanner.Api;
-using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.Application.Queries.GetNutritionSummary;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 
 /// <summary>Integration tests for the diary MCP tools: the caller's month matches REST, ranges are bounded and other people's diaries stay out.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]

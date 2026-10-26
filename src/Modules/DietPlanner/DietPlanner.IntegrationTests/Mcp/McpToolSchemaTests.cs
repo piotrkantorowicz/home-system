@@ -4,8 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 
 /// <summary>
 /// Pins what agents see in <c>tools/list</c>: names, descriptions, annotations and input/output schemas

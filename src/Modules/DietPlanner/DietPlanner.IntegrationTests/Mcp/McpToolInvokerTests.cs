@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using DietPlanner.Api;
-using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure.Web;
 

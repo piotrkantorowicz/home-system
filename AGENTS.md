@@ -19,7 +19,7 @@ src/
   Apis/
     HomeSystem.REST/          # Host project — wires modules, no business logic
   Modules/
-    DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api
+    DietPlanner/              # DDD module: Domain / Application / Contracts / Infrastructure / Api / Mcp
                               # + DietPlanner.UnitTests / DietPlanner.IntegrationTests (co-located)
   Shared/
     Shared.Abstractions.Core/                # Domain primitives (IDomainEvent, AggregateRoot, Entity, IUnitOfWork, exceptions, PagedList)

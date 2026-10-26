@@ -1,4 +1,4 @@
-namespace DietPlanner.Api.Mcp;
+namespace DietPlanner.Mcp;
 
 using System.ComponentModel;
 using DietPlanner.Application.Queries.GetMealEntries;

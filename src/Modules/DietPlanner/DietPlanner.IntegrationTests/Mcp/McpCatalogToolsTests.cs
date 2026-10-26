@@ -2,8 +2,8 @@ namespace DietPlanner.IntegrationTests.Mcp;
 
 using System.Net.Http.Json;
 using DietPlanner.Api;
-using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 
 /// <summary>Integration tests for the catalog MCP tools: visibility, details and paging match REST through real dispatchers and PostgreSQL.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]

@@ -1,7 +1,7 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
-using DietPlanner.Api.Mcp;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using ModelContextProtocol;
 
 /// <summary>Integration tests for <c>create_product</c>: REST-equivalent creation plus durable operation replay on PostgreSQL.</summary>

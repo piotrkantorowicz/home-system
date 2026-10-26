@@ -62,6 +62,17 @@ Then generate all of the following, adapting names for the given module:
 - `{ModuleName}Endpoints.cs` — MapGroup with Create + Get endpoints
 - `DependencyInjection.cs` — public `Add{ModuleName}Module()` extension method
 
+**`{ModuleName}.Mcp/`** — only when the user asks for agent (MCP) tools
+- `{ModuleName}Mcp.cs` — `mcp:<module>:read|write` scope constants, `Scopes`, and a public
+  `Add{ModuleName}McpTools(this IMcpServerBuilder)` registering `McpCaller` (scoped) and the tool types
+- `McpCaller.cs` — internal sealed, takes `McpToolUser`; `AuthSubject()` from the principal
+- `{ModuleName}Tools.cs` — `[McpServerToolType]` + `[Authorize(Policy = …ReadScope)]`, one read tool
+  calling `IQueryDispatcher`, returning the Application DTO unless its shape must diverge
+- References `{ModuleName}.Application` + `Shared.Infrastructure.Web`, package
+  `ModelContextProtocol.AspNetCore`, never `{ModuleName}.Api`
+- Host: add scope policies + `.Add{ModuleName}McpTools()` in `HomeSystem.REST/Mcp/McpHosting.cs`;
+  add the tools to `docs/design/mcp/API-INVENTORY.md` and refresh the module's schema snapshot
+
 ### For `--crud` mode, generate:
 
 Same as above but **without** the Domain project and Contracts project. No aggregates, no domain events, no repository interface — the handler works directly with `DbContext`.

@@ -1,9 +1,9 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
 using System.Net.Http.Json;
-using DietPlanner.Api.Mcp;
 using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.IntegrationTests.Infrastructure;
+using DietPlanner.Mcp;
 using ModelContextProtocol.Client;
 
 /// <summary>Integration tests for <c>create_recipe</c>: authorized product references, quantity rules, replay and reuse by import.</summary>

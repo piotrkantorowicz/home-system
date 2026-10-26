@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="ModelContextProtocol.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,7 +16,6 @@
     <ProjectReference Include="..\DietPlanner.Application\DietPlanner.Application.csproj" />
     <ProjectReference Include="..\DietPlanner.Contracts\DietPlanner.Contracts.csproj" />
     <ProjectReference Include="..\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Web\Shared.Infrastructure.Web.csproj" />
   </ItemGroup>
 
 </Project>

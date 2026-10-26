@@ -2,7 +2,7 @@ namespace HomeSystem.REST.Mcp;
 
 using System.Security.Claims;
 using System.Threading.RateLimiting;
-using DietPlanner.Api.Mcp;
+using DietPlanner.Mcp;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
