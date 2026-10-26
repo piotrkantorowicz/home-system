@@ -45,6 +45,10 @@ export interface ExpenseInput {
   description?: string | null;
 }
 
+export type StatementPreview = components['schemas']['StatementPreviewDto'];
+export type StatementCandidate = components['schemas']['StatementCandidateDto'];
+export type ImportRowInput = components['schemas']['ImportExpenseRowRequest'];
+
 export type Settlement = components['schemas']['SettlementDto'];
 export type Repayment = components['schemas']['RepaymentDto'];
 

@@ -12,6 +12,7 @@ const SettlementPage = lazy(() => import('./pages/SettlementPage'));
 const EnvelopesPage = lazy(() => import('./pages/EnvelopesPage'));
 const ExpensesPage = lazy(() => import('./pages/ExpensesPage'));
 const ExpenseDetailPage = lazy(() => import('./pages/ExpenseDetailPage'));
+const ImportPage = lazy(() => import('./pages/ImportPage'));
 
 export const budgetModule: AppModule = {
   name: 'budget',
@@ -58,6 +59,7 @@ export const budgetModule: AppModule = {
         { index: true, Component: BudgetPage },
         { path: 'expenses', Component: ExpensesPage },
         { path: 'expenses/:id', Component: ExpenseDetailPage },
+        { path: 'import', Component: ImportPage },
         { path: 'settlement', Component: SettlementPage },
         { path: 'envelopes', Component: EnvelopesPage },
       ],
