@@ -33,5 +33,7 @@ jobs:
 
       - name: zizmor
         uses: docker://ghcr.io/zizmorcore/zizmor:1.31.1
+        env:
+          GH_TOKEN: ${{ github.token }}   # online audits: known-vulnerable-actions, impostor-commit, ref-confusion
         with:
-          args: --offline --config .github/zizmor.yml .github/workflows
+          args: --config .github/zizmor.yml .github/workflows
