@@ -127,5 +127,5 @@ public sealed class BudgetAccount : AggregateRoot<BudgetAccountId>
     /// Concurrency token mapped to PostgreSQL's <c>xmin</c> (see <c>BudgetAccountConfiguration</c>);
     /// never set by domain logic. Catches two writers racing past the <see cref="Revision"/> check.
     /// </summary>
-    public uint Version { get; private set; }
+    public uint Version { get; }
 }

@@ -12,7 +12,7 @@ internal sealed class ChangeMemberRoleCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<ChangeMemberRoleCommand>
 {
-    public async Task HandleAsync(ChangeMemberRoleCommand command, CancellationToken ct)
+    public async Task HandleAsync(ChangeMemberRoleCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

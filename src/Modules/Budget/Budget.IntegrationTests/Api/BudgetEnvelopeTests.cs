@@ -54,7 +54,7 @@ public sealed class BudgetEnvelopeTests : IClassFixture<BudgetDatabaseFixture>, 
         var created = await h.Owner.PostAsJsonAsync($"/api/households/{h.Id}/managed-members",
             new { displayName = "Kid", email = (string?)null, role = "Child", nickname = (string?)null }, Ct);
         created.EnsureSuccessStatusCode();
-        return Guid.Parse(created.Headers.Location!.ToString().Split('/').Last());
+        return Guid.Parse(created.Headers.Location!.ToString().Split('/')[^1]);
     }
 
     private static async Task<AccountBody> CreateAsync(HttpClient client, string name, string visibility, Guid? owner = null)

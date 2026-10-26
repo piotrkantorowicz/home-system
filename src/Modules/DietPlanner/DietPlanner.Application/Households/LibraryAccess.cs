@@ -55,11 +55,8 @@ internal sealed record LibraryAccess(
     public void DemandReadable(IEnumerable<Product> found, IEnumerable<ProductId> requested)
     {
         var readable = found.Where(p => CanRead(p.CreatedByUserId, p.Visibility)).Select(p => p.Id).ToHashSet();
-        foreach (var id in requested)
-        {
-            if (!readable.Contains(id))
-                throw new NotFoundException("Product", id.Value);
-        }
+        if (requested.FirstOrDefault(id => !readable.Contains(id)) is { } missing)
+            throw new NotFoundException("Product", missing.Value);
     }
 
     /// <summary>Throws 404 for an item the caller cannot see, 403 for one they see but may not edit.</summary>

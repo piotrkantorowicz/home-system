@@ -9,7 +9,7 @@ internal sealed class RenameHouseholdCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<RenameHouseholdCommand>
 {
-    public async Task HandleAsync(RenameHouseholdCommand command, CancellationToken ct)
+    public async Task HandleAsync(RenameHouseholdCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

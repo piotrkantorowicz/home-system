@@ -51,7 +51,7 @@ public sealed class InProcessIntegrationEventTransportTests
         await sut.DispatchAsync(message, TestContext.Current.CancellationToken);
 
         captured.ShouldNotBeNull();
-        captured!.Payload.ShouldBe("x");
+        captured.Payload.ShouldBe("x");
     }
 
     /// <summary>With no handler registered: <c>DispatchAsync</c> does not throw.</summary>

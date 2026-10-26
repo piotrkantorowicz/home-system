@@ -36,23 +36,14 @@ public sealed class WeightEntryTests
         act.ShouldThrow<ArgumentException>();
     }
 
-    /// <summary>With non positive weight: <c>Create</c> throws domain exception.</summary>
+    /// <summary>With non positive or excessive weight: <c>Create</c> throws domain exception.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(-0.5)]
-    public void Create_WithNonPositiveWeight_ThrowsDomainException(decimal weight)
-    {
-        var act = () => WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, weight, TestClock.UtcNow);
-
-        act.ShouldThrow<DietPlannerDomainException>();
-    }
-
-    /// <summary>With excessive weight: <c>Create</c> throws domain exception.</summary>
-    [Theory]
     [InlineData(1000)]
     [InlineData(1500)]
-    public void Create_WithExcessiveWeight_ThrowsDomainException(decimal weight)
+    public void Create_WithOutOfRangeWeight_ThrowsDomainException(decimal weight)
     {
         var act = () => WeightEntry.Create(WeightEntryId.New(), Guid.Parse("d35a2a2a-d1d1-55ed-90a7-348c3da59deb"), Today, weight, TestClock.UtcNow);
 

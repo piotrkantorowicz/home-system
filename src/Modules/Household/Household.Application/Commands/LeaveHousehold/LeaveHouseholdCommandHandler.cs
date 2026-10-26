@@ -9,7 +9,7 @@ internal sealed class LeaveHouseholdCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<LeaveHouseholdCommand>
 {
-    public async Task HandleAsync(LeaveHouseholdCommand command, CancellationToken ct)
+    public async Task HandleAsync(LeaveHouseholdCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (caller, household) = await access.RequireMemberAsync(

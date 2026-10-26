@@ -103,11 +103,8 @@ public sealed class MealScheduleConfig : AggregateRoot<MealScheduleConfigId>
             .ToHashSet();
 
         // Validate: every supplied id must reference an existing slot
-        foreach (var u in upserts)
-        {
-            if (u.Id is not null && _slots.All(s => s.Id != u.Id))
-                throw new DietPlannerDomainException($"Unknown meal slot id '{u.Id.Value}'.");
-        }
+        if (upserts.FirstOrDefault(u => u.Id is not null && _slots.All(s => s.Id != u.Id)) is { Id: { } unknownId })
+            throw new DietPlannerDomainException($"Unknown meal slot id '{unknownId.Value}'.");
 
         _slots.RemoveAll(s => !keptIds.Contains(s.Id));
 

@@ -12,7 +12,7 @@ internal sealed class GetCurrentPersonQueryHandler
     public GetCurrentPersonQueryHandler(IHouseholdReadDbContext dbContext)
         => _dbContext = dbContext;
 
-    public async Task<CurrentPersonDto?> HandleAsync(GetCurrentPersonQuery query, CancellationToken ct)
+    public async Task<CurrentPersonDto?> HandleAsync(GetCurrentPersonQuery query, CancellationToken ct = default)
         => await _dbContext.Persons
             .AsNoTracking()
             .Where(p => p.AuthSubject == query.AuthSubject)

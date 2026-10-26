@@ -10,7 +10,7 @@ internal sealed class RemoveMemberCommandHandler(
     IHouseholdUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<RemoveMemberCommand>
 {
-    public async Task HandleAsync(RemoveMemberCommand command, CancellationToken ct)
+    public async Task HandleAsync(RemoveMemberCommand command, CancellationToken ct = default)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var (_, household) = await access.RequireOwnerAsync(

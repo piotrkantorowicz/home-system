@@ -14,7 +14,7 @@ internal sealed class AddExistingPersonAsMemberCommandHandler(
     : ICommandHandler<AddExistingPersonAsMemberCommand, AddExistingPersonAsMemberResult>
 {
     public async Task<AddExistingPersonAsMemberResult> HandleAsync(
-        AddExistingPersonAsMemberCommand command, CancellationToken ct)
+        AddExistingPersonAsMemberCommand command, CancellationToken ct = default)
     {
         var (caller, household) = await access.RequireOwnerAsync(
             command.RequestingAuthSubject, command.HouseholdId, ct);
