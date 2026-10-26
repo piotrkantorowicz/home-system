@@ -61,8 +61,8 @@ internal sealed class StatementRow(
             : throw new StatementRowException(StatementIssueCode.ExcessPrecision);
     }
 
-    /// <summary>The first value on the line after a <c>#Key</c> preamble line, or <see langword="null"/>.</summary>
-    public string? Preamble(string key) => preamble.TryGetValue(key, out var values) && values.Length > 0 ? values[0] : null;
+    /// <summary>A value on the line after a preamble key line (<c>#Key</c> or <c>Key:</c>), or <see langword="null"/>.</summary>
+    public string? Preamble(string key, int index = 0) => preamble.TryGetValue(key, out var values) && values.Length > index ? values[index] : null;
 
     /// <summary>Parses an exact-format date, or <see langword="null"/>.</summary>
     public static DateOnly? ParseDate(string text, string format)
