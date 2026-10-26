@@ -20,6 +20,9 @@ public sealed class Expense : AggregateRoot<ExpenseId>
     /// <summary>The <see cref="ImportScope"/> shared by every household envelope.</summary>
     public const string HouseholdImportScope = "household";
 
+    /// <summary>Why an archived envelope rejects a new expense, shared by the import paths that check it early.</summary>
+    public const string ArchivedEnvelopeMessage = "This envelope is archived and cannot receive new expenses.";
+
     /// <summary>The import scope of an envelope: shared for household envelopes, the owner for personal ones.</summary>
     /// <param name="visibility">The envelope's visibility.</param>
     /// <param name="ownerPersonId">The envelope's owner; always set on a personal envelope.</param>
@@ -64,7 +67,7 @@ public sealed class Expense : AggregateRoot<ExpenseId>
         string? importSourceKey = null)
     {
         if (account.IsArchived)
-            throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
+            throw new BudgetDomainException(ArchivedEnvelopeMessage);
 
         ValidateFunding(funding, paidBy, participants);
         description = NormalizeDescription(description);

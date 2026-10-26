@@ -42,7 +42,7 @@ internal sealed class ImportExpensesCommandHandler(
 
         // An envelope problem, not a row one: checked here so the per-row catch below never labels it Rows[0].
         if (account.IsArchived)
-            throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
+            throw new BudgetDomainException(Expense.ArchivedEnvelopeMessage);
 
         var scope = Expense.ImportScopeOf(account.Visibility, account.OwnerPersonId);
         await expenses.LockImportScopeAsync(account.BudgetId, scope, ct);
