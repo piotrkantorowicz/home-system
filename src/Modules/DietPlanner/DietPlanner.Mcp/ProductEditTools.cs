@@ -54,7 +54,7 @@ internal sealed class ProductEditTools
     }
 
     [McpServerTool(Name = "delete_product", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
-    [Description("Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search; recipes that use it keep the ingredient line but show it as Unknown and without its nutrition; meals already in the diary keep showing it. There is no undo: confirm with the user first. Repeating the call reports the product as not found, which means it is already gone.")]
+    [Description("Deletes a product the caller may edit (their own, or a household product as an adult of that household), with the same rules as the app. It disappears from search; recipes that use it keep the ingredient line but show it as Unknown and without its nutrition; meals already in the diary keep showing it. There is no undo: confirm with the user first. Repeating the call after a successful delete reports not found; the product is already gone.")]
     public static async Task<DeletedItemDto> DeleteProduct(
         McpCaller caller,
         ICommandDispatcher commands,
