@@ -308,7 +308,7 @@
   "import_title": "Import bank statement",
   "import_subtitle": "Upload a CSV export, review the rows and record them as expenses.",
   "import_file": "Statement file",
-  "import_file_hint": "CSV export from mBank, PKO BP, ING or Revolut, up to 2 MiB. The file is not stored.",
+  "import_file_hint": "CSV export from mBank, PKO BP, ING, Alior Bank or Revolut, up to 2 MiB. The file is not stored.",
   "import_file_too_large": "This file is larger than 2 MiB.",
   "import_funding": "Paid from",
   "import_funding_individual": "A person's own money",

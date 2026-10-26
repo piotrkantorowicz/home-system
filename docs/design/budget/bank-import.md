@@ -27,21 +27,22 @@ Slices:
 
 ## 2. Formats
 
-The household uses **PKO BP, mBank, ING Bank Śląski and Revolut** (owner, 2026-10-25). None of these banks offers ISO 20022 CAMT.053 on personal accounts (PKO offers it only in iPKO biznes). All four export CSV. v1 therefore ships **CSV with one column profile per bank**.
+The household uses **PKO BP, mBank, ING Bank Śląski, Alior Bank and Revolut** (owner, 2026-10-25; Alior added 2026-10-26, #712). None of these banks offers ISO 20022 CAMT.053 on personal accounts (PKO offers it only in iPKO biznes). All five export CSV. v1 therefore ships **CSV with one column profile per bank**.
 
 - **CAMT.053 is deferred.** Add it as one more profile when a bank in use exports it. The parser contract in §2.2 already fits it.
 - **MT940 is not supported.** Each bank above has a CSV alternative.
 
 ### 2.1 Bank profiles
 
-The column names below come from each bank's current export documentation. The `mbank` row was checked against a real export from the owner on 2026-10-25; its raw bytes (Windows-1250, CRLF, `;`, no BOM) were confirmed in #670 and match the fixture. The other rows are **unverified**: their #670 fixtures follow this table, not a real export. When a real export from one of those banks is available, it replaces that fixture; where they disagree, the export wins and this table is updated.
+Every row below was checked against a real export from the owner: `mbank` on 2026-10-25 (#670), the others on 2026-10-26 (#712). Only the structure was read; the fixtures reproduce each layout with synthetic data. Where a bank's documentation and its export disagree, the export wins.
 
 | Profile | Encoding | Delimiter | Header detection | Date | Amount | Bank reference |
 |---|---|---|---|---|---|---|
-| `pko-bp` | Windows-1250 | `,` (quoted) | `"Data operacji","Data waluty","Typ transakcji","Kwota","Waluta"…` | `YYYY-MM-DD` | `-12.34`, sign carries direction | None → fingerprint |
+| `pko-bp` | UTF-8 (Windows-1250 accepted) | `;`, unquoted | `Data operacji;Data waluty;Typ transakcji;Kwota;Waluta;Saldo po transakcji;Opis transakcji;;;;` — the description spreads over unnamed `Key: value` columns | `YYYY-MM-DD` | `-12.34`, sign carries direction | None → fingerprint |
 | `mbank` | Windows-1250 | `;` | "Elektroniczne zestawienie operacji": ~37 preamble lines (`#Klient`, `#Za okres:`, `#Waluta`, `#Numer rachunku`, turnover summary, opening balance), then `#Data księgowania;#Data operacji;#Opis operacji;#Tytuł;#Nadawca/Odbiorca;#Numer konta;#Kwota;#Saldo po operacji;` | `YYYY-MM-DD`; period in preamble as `DD.MM.YYYY` | `-5 682,80`: comma decimal, space thousands separator, no currency (taken from `#Waluta`) | None → fingerprint |
-| `ing` | Windows-1250 | `;` | Preamble lines, then `"Data transakcji";"Data księgowania";"Dane kontrahenta";"Tytuł";…;"Nr transakcji";"Kwota transakcji (waluta rachunku)";"Waluta"…` | `YYYY-MM-DD` | `-12,34`, comma decimal | `Nr transakcji` |
-| `revolut` | UTF-8 | `,` | `Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance` | `YYYY-MM-DD HH:mm:ss` | `-12.34`; spent = `-(Amount) + Fee` | None → fingerprint |
+| `ing` | UTF-8 (Windows-1250 accepted) | `;`, unquoted | ~18 preamble lines: `Wybrane rachunki:` then `<name> (PLN);;<account number>`, `Zakres dat:;YYYY-MM-DD - YYYY-MM-DD`; then `Data transakcji;Data księgowania;Dane kontrahenta;Tytuł;…;Nr transakcji;Kwota transakcji (waluta rachunku);Waluta;…;Bank;Saldo po transakcji;Waluta` | `YYYY-MM-DD` | `-12,34`, comma decimal | `Nr transakcji` (wrapped in apostrophes, which are dropped) |
+| `revolut` | UTF-8 | `,` | English `Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance` or Polish `Rodzaj,Produkt,Data rozpoczęcia,Data zrealizowania,Opis,Kwota,Opłata,Waluta,State,Saldo` (completed = `COMPLETED` / `ZAKOŃCZONO`) | `YYYY-MM-DD HH:mm:ss` | `-12.34`; spent = `-(Amount) + Fee` | None → fingerprint |
+| `alior` | UTF-8 (Windows-1250 accepted) | `;`, unquoted | One criteria line (`Kryteria transakcji: Okres: DD-MM-YYYY - DD-MM-YYYY;…`), then `Data transakcji;Data księgowania;Nazwa nadawcy;Nazwa odbiorcy;Szczegóły transakcji;Kwota operacji;Waluta operacji;Kwota w walucie rachunku;Waluta rachunku;…` | `DD-MM-YYYY` | `Kwota w walucie rachunku`, comma decimal; a foreign card payment is a candidate in the account currency | None → fingerprint; no account number in the file (§4.1) |
 
 Profile detection is automatic. The parser looks for the header row of each profile within the first 60 lines. The user never picks a bank. No match, or more than one match, returns 422 "Unrecognised statement format". The server never guesses.
 
@@ -63,7 +64,7 @@ Amounts are parsed with `decimal` using the profile's decimal and thousands sepa
 A row is a **candidate** when all of these hold:
 
 1. The amount is negative, i.e. money leaving the account.
-2. The row is booked: Revolut `State = COMPLETED`, and not an mBank or ING blocked-funds row (`blokada`).
+2. The row is booked: Revolut `State = COMPLETED` (Polish export: `ZAKOŃCZONO`), and not an mBank or ING blocked-funds row (`blokada`).
 3. Its currency is the Budget currency. A row in another currency is listed as skipped with `CurrencyMismatch`, which covers Revolut's multi-currency pockets. Card payments made abroad on a PLN account are booked in PLN and are candidates. Revolut's per-currency balance groups make this obvious.
 4. It is not an own-account movement. This covers Revolut `Type` of `EXCHANGE` or `TOPUP` and pocket transfers, each Polish bank's own-transfer type (`Przelew własny`, `Przelew na rachunek własny`; #670 confirms the exact strings), and credit-card repayments (mBank `RĘCZNA SPŁATA KARTY KREDYT.`, plus the automatic variant). A card repayment moves money to the card, so treating it as spending would count the card purchases twice. Where a bank has no own-transfer marker, the row stays a candidate and the user deselects it in the review.
 
@@ -84,7 +85,7 @@ Normalised description means: trim, collapse whitespace, upper-case invariant, a
 
 Only the hash is stored. Bank account numbers and bank references never reach the database in clear text.
 
-A file that names no account (PKO BP's export does not) puts the importing person in its place. Otherwise two adults paying the same amount at the same shop on the same day would share a key in the household scope, and the second real expense could not be imported. The cost: a joint account exported by both spouses yields two keys per row, so the second import shows each row as `PossibleDuplicate` (§4.3) instead of `AlreadyImported`.
+A file that names no account (PKO BP's and Alior's exports do not) puts the importing person in its place. Otherwise two adults paying the same amount at the same shop on the same day would share a key in the household scope, and the second real expense could not be imported. The cost: a joint account exported by both spouses yields two keys per row, so the second import shows each row as `PossibleDuplicate` (§4.3) instead of `AlreadyImported`.
 
 Accepted limitation: when a fingerprinted bank exports two files that split the same calendar day, `n` can differ between the files. Every bank in §2 exports whole days, so this does not happen in practice.
 
