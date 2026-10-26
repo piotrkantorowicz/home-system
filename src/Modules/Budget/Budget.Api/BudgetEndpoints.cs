@@ -215,7 +215,8 @@ internal static class BudgetEndpoints
             new ImportExpensesCommand(
                 Sub(user), request.ClientRequestId, request.AccountId,
                 [.. (request.Rows ?? []).Select(r => new ImportExpenseRow(
-                    r.SourceKey, r.Amount, r.OccurredOn, r.Category, r.FundingSource, r.PaidByPersonId, r.ParticipantIds, r.Description))]), ct);
+                    r.SourceKey, r.Amount, r.OccurredOn, r.Category, r.FundingSource, r.PaidByPersonId, r.ParticipantIds, r.Description,
+                    r.MerchantKey))]), ct);
 
         return result.Created ? TypedResults.Created((string?)null, result) : TypedResults.Ok(result);
     }
@@ -345,6 +346,7 @@ internal sealed record ImportExpensesRequest(Guid ClientRequestId, Guid AccountI
 /// <param name="PaidByPersonId">Payer of an individually funded shared expense.</param>
 /// <param name="ParticipantIds">Adults sharing the cost equally.</param>
 /// <param name="Description">Optional short note, at most 80 characters.</param>
+/// <param name="MerchantKey">The preview's <c>merchantKey</c>; the chosen category is remembered for it.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record ImportExpenseRowRequest(
     string SourceKey,
@@ -354,7 +356,8 @@ internal sealed record ImportExpenseRowRequest(
     string? FundingSource,
     Guid? PaidByPersonId,
     IReadOnlyList<Guid>? ParticipantIds,
-    string? Description = null);
+    string? Description = null,
+    string? MerchantKey = null);
 
 /// <summary>Body of <c>PUT /api/budget/expenses/{id}</c>; the envelope and recorder cannot be changed.</summary>
 /// <param name="ClientRequestId">Idempotency key; reuse it when retrying the same submission.</param>

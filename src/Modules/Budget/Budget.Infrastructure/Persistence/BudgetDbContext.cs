@@ -19,6 +19,7 @@ internal sealed class BudgetDbContext : DbContext, IBudgetUnitOfWork, IBudgetRea
     public DbSet<MonthlyLimit> MonthlyLimits => Set<MonthlyLimit>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<ExpenseRevision> ExpenseRevisions => Set<ExpenseRevision>();
+    public DbSet<CategoryRule> CategoryRules => Set<CategoryRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
