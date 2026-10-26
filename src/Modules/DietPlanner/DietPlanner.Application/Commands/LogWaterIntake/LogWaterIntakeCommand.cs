@@ -9,8 +9,10 @@ using Shared.Abstractions.Cqrs;
 /// <param name="Date">The calendar day the drink counts towards.</param>
 /// <param name="AmountMl">Volume in millilitres; positive.</param>
 /// <param name="Note">Optional free-text note.</param>
+/// <param name="OperationKey">Optional idempotency key: a retry with the same key and fields returns the original id instead of logging again; the same key with different fields is a conflict.</param>
 public sealed record LogWaterIntakeCommand(
     Guid PersonId,
     DateOnly Date,
     int AmountMl,
-    string? Note) : ICommand<Guid>;
+    string? Note,
+    string? OperationKey = null) : ICommand<Guid>;

@@ -2,6 +2,7 @@ namespace DietPlanner.UnitTests.Application.Commands;
 
 #pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Commands.LogWaterIntake;
+using DietPlanner.Application.OperationReceipts;
 #pragma warning restore IDE0005
 using DietPlanner.Domain.Aggregates;
 using DietPlanner.Domain.Repositories;
@@ -18,7 +19,7 @@ public sealed class LogWaterIntakeCommandHandlerTests
 
     /// <summary>Builds the system under test with substituted collaborators.</summary>
     public LogWaterIntakeCommandHandlerTests()
-        => _sut = new LogWaterIntakeCommandHandler(_repository, _unitOfWork, _clock);
+        => _sut = new LogWaterIntakeCommandHandler(_repository, _unitOfWork, _clock, new OperationReplay(Substitute.For<IOperationReceiptRepository>()));
 
     /// <summary>With valid command: <c>HandleAsync</c> adds entry and commits.</summary>
     [Fact]
