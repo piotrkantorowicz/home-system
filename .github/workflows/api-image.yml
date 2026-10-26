@@ -41,6 +41,9 @@ jobs:
   build:
     name: Build & smoke test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # Trivy SARIF upload
     steps:
       - uses: actions/checkout@v7
         with:
@@ -72,6 +75,38 @@ jobs:
 
       - name: Smoke test
         run: scripts/smoke-api-image.sh home-system-api:ci
+
+      # Report first, gate second: the SARIF run always uploads so findings reach code
+      # scanning even when the gate fails. Accepted findings go in a root .trivyignore (read by
+      # default), one CVE per line with a reason comment.
+      - name: Scan image (report)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: home-system-api:ci
+          version: v0.76.1
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+
+      # Dependabot and fork PRs get a read-only token, so the upload can't succeed there;
+      # the gate below still runs for them.
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-api-image
+
+      - name: Scan image (gate)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: home-system-api:ci
+          version: v0.76.1
+          skip-setup-trivy: true
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
 
   publish:
     name: Publish to GHCR
