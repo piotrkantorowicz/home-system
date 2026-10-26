@@ -1,6 +1,7 @@
 namespace Budget.Application.Commands.ImportExpenses;
 
 using Budget.Application.Commands.CreateExpense;
+using Budget.Domain.Aggregates;
 using Budget.Domain.ValueObjects;
 using Shared.Abstractions.Cqrs;
 
@@ -46,6 +47,9 @@ internal sealed class ImportExpensesCommandValidator : ICommandValidator<ImportE
 
             if (!CreateExpenseCommandValidator.ValidDescription(row.Description))
                 yield return new ValidationError($"{at}.{nameof(row.Description)}", "A description can be at most 80 characters.");
+
+            if (row.MerchantKey is { } merchant && (string.IsNullOrWhiteSpace(merchant) || merchant.Length > CategoryRule.MaxMerchantKeyLength))
+                yield return new ValidationError($"{at}.{nameof(row.MerchantKey)}", $"A merchant key is 1 to {CategoryRule.MaxMerchantKeyLength} characters.");
         }
     }
 

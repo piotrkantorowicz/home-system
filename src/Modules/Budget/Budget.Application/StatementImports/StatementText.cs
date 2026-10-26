@@ -27,6 +27,21 @@ internal static partial class StatementText
         return description.Length <= Expense.MaxDescriptionLength ? description : description[..Expense.MaxDescriptionLength].TrimEnd();
     }
 
+    /// <summary>
+    /// The merchant a category rule is keyed on (§5.1): the counterparty, or when it is empty the title up to
+    /// its first <c>/</c> (<c>KAUFLAND 6663 /GLIWICE</c> → <c>KAUFLAND 6663</c>); <see langword="null"/> when both are empty.
+    /// </summary>
+    public static string? MerchantKey(StatementTransaction transaction)
+        => MerchantKey(transaction.Counterparty.Length > 0 ? transaction.Counterparty : transaction.Title.Split('/')[0]);
+
+    /// <summary>Normalises a merchant as <see cref="NormalizeForMatching"/> does, cut to the rule key limit. Idempotent.</summary>
+    public static string? MerchantKey(string value)
+    {
+        var key = NormalizeForMatching(value);
+        key = key.Length <= CategoryRule.MaxMerchantKeyLength ? key : key[..CategoryRule.MaxMerchantKeyLength].TrimEnd();
+        return key.Length == 0 ? null : key;
+    }
+
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
 

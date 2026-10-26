@@ -109,6 +109,47 @@ namespace Budget.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Budget.Domain.Aggregates.CategoryRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("budget_id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("ImportScope")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)")
+                        .HasColumnName("import_scope");
+
+                    b.Property<string>("MerchantKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("merchant_key");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetId", "ImportScope", "MerchantKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_category_rules_merchant");
+
+                    b.ToTable("category_rules", (string)null);
+                });
+
             modelBuilder.Entity("Budget.Domain.Aggregates.Expense", b =>
                 {
                     b.Property<Guid>("Id")
@@ -615,6 +656,15 @@ namespace Budget.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Budget.Domain.Aggregates.BudgetAccount", b =>
+                {
+                    b.HasOne("Budget.Domain.Aggregates.Budget", null)
+                        .WithMany()
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Budget.Domain.Aggregates.CategoryRule", b =>
                 {
                     b.HasOne("Budget.Domain.Aggregates.Budget", null)
                         .WithMany()
