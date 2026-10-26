@@ -34,7 +34,8 @@ internal sealed class McpTestHost(
     public const string PublicBaseUrl = "https://mcp.test";
     public static readonly RsaSecurityKey SigningKey = new(RSA.Create(2048)) { KeyId = "mcp-test" };
 
-    private static volatile bool _connecting;
+    private static readonly string ProbeLog = Path.Combine(AppContext.BaseDirectory, "mcp-499-probe.log");
+    private static int _connectsInFlight;
     private static int _probed;
 
     private readonly List<IDisposable> _disposables = [];
@@ -45,11 +46,31 @@ internal sealed class McpTestHost(
     /// 499, so log the first few thrown while a connect is in flight to see where the cancellation comes from.
     /// </summary>
     static McpTestHost()
-        => AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
+    {
+        Probe("armed");
+        AppDomain.CurrentDomain.FirstChanceException += (_, e) =>
         {
-            if (_connecting && e.Exception is OperationCanceledException && Interlocked.Increment(ref _probed) <= 10)
-                Console.WriteLine($"[mcp-499-probe] {e.Exception}");
+            if (Volatile.Read(ref _connectsInFlight) > 0 && e.Exception is OperationCanceledException && Interlocked.Increment(ref _probed) <= 10)
+                Probe(e.Exception.ToString());
         };
+    }
+
+    /// <summary>
+    /// A passing test's console output never reaches the CI log, and the retry makes the flaky test pass, so the line also goes
+    /// to a file next to the test assembly that the backend CI uploads as an artifact.
+    /// </summary>
+    private static void Probe(string message)
+    {
+        Console.WriteLine($"[mcp-499-probe] {message}");
+        try
+        {
+            File.AppendAllText(ProbeLog, $"{TimeProvider.System.GetUtcNow():O} {message}{Environment.NewLine}");
+        }
+        catch (IOException)
+        {
+            // Best effort: the probe must never fail a test.
+        }
+    }
 
     /// <summary>Household lookup the host uses; add entries to put subjects in one household.</summary>
     public McpTestHouseholds Households { get; } = new();
@@ -75,7 +96,7 @@ internal sealed class McpTestHost(
         }
         catch (HttpRequestException e) when ((int?)e.StatusCode == ApplicationExceptionHandler.ClientClosedRequestStatusCode)
         {
-            Console.WriteLine($"[mcp-499-probe] connect got 499, retrying once: {e.Message}");
+            Probe($"connect got 499, retrying once: {e.Message}");
             return await ConnectOnceAsync(subject, scope);
         }
     }
@@ -88,14 +109,14 @@ internal sealed class McpTestHost(
             new HttpClientTransportOptions { Endpoint = new Uri(http.BaseAddress!, "/mcp"), TransportMode = HttpTransportMode.StreamableHttp },
             http,
             ownsHttpClient: true);
-        _connecting = true;
+        Interlocked.Increment(ref _connectsInFlight);
         try
         {
             return await McpClient.CreateAsync(transport, cancellationToken: TestContext.Current.CancellationToken);
         }
         finally
         {
-            _connecting = false;
+            Interlocked.Decrement(ref _connectsInFlight);
         }
     }
 
