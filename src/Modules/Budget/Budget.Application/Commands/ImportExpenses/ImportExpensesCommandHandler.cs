@@ -40,6 +40,10 @@ internal sealed class ImportExpensesCommandHandler(
                 : throw new ConflictException("This request ID was already used for a different request.");
         }
 
+        // An envelope problem, not a row one: checked here so the per-row catch below never labels it Rows[0].
+        if (account.IsArchived)
+            throw new BudgetDomainException("This envelope is archived and cannot receive new expenses.");
+
         var scope = Expense.ImportScopeOf(account.Visibility, account.OwnerPersonId);
         await expenses.LockImportScopeAsync(account.BudgetId, scope, ct);
         if (await expenses.AnyImportedAsync(account.BudgetId, scope, [.. rows.Select(r => r.Row.SourceKey)], ct))
