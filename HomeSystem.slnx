@@ -43,6 +43,7 @@
     <Project Path="src/Modules/Budget/Budget.Application/Budget.Application.csproj" />
     <Project Path="src/Modules/Budget/Budget.Infrastructure/Budget.Infrastructure.csproj" />
     <Project Path="src/Modules/Budget/Budget.Api/Budget.Api.csproj" />
+    <Project Path="src/Modules/Budget/Budget.Mcp/Budget.Mcp.csproj" />
   </Folder>
   <Folder Name="/Modules/Investments/">
     <Project Path="src/Modules/Investments/Investments.Domain/Investments.Domain.csproj" />

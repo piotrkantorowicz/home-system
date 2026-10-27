@@ -1,0 +1,176 @@
+[
+  {
+    "name": "get_budget_context",
+    "title": null,
+    "description": "Returns the household budget (null until it is set up in the app), the active envelopes the caller can see, the category and funding source codes, and the owners and adults who can pay for or share a household expense. Call it first: other budget tools take ids and codes from it.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_budget_summary",
+    "title": null,
+    "description": "Returns one month's spending by envelope and by category, with exact totals as decimal strings. \"Shared\" covers household envelopes (owners and adults only); \"Personal\" covers one person's envelopes. Voided expenses never count.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "month": {
+          "description": "Month, YYYY-MM.",
+          "type": "string"
+        },
+        "scope": {
+          "description": "\"Shared\" (default) or \"Personal\".",
+          "type": "string",
+          "default": "Shared"
+        },
+        "ownerPersonId": {
+          "description": "Personal scope only: whose envelopes, the ownerPersonId of a personal envelope from get_budget_context; the caller when omitted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        }
+      },
+      "required": [
+        "month"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_expense",
+    "title": null,
+    "description": "Returns one expense the caller can see, with its stored shares and its full correction history, oldest first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "expenseId": {
+          "description": "Expense id from search_expenses.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "expenseId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "search_expenses",
+    "title": null,
+    "description": "Pages the expenses the caller can see, newest purchase first, with exact totals over the whole filter (not just the page). Every filter is optional. Amounts are decimal strings.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Only this envelope, an account id from get_budget_context.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        },
+        "category": {
+          "description": "Only this category code from get_budget_context.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "amount": {
+          "description": "Only this exact amount, decimal string such as \"123.45\".",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "from": {
+          "description": "Earliest purchase date, YYYY-MM-DD, inclusive.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "to": {
+          "description": "Latest purchase date, YYYY-MM-DD, inclusive.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "default": null
+        },
+        "search": {
+          "description": "Case-insensitive text matched against the description.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "includeVoided": {
+          "description": "Also return voided expenses; they never count towards totals.",
+          "type": "boolean",
+          "default": false
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 100.",
+          "type": "integer",
+          "default": 25
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  }
+]

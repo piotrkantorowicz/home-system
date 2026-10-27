@@ -248,6 +248,40 @@ entries:
             return {}
         return {"scope": " ".join(granted)}
 
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-budget-read
+    state: present
+    identifiers:
+      name: "home-system-mcp: budget read"
+    attrs:
+      scope_name: "mcp:budget:read"
+      description: "Read your budget envelopes, expenses and summaries"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-budget-write
+    state: present
+    identifiers:
+      name: "home-system-mcp: budget write"
+    attrs:
+      scope_name: "mcp:budget:write"
+      description: "Record expenses and manage your budget"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
   - model: authentik_providers_oauth2.oauth2provider
     id: provider-home-system-mcp
     state: present
@@ -281,6 +315,8 @@ entries:
         - !KeyOf scope-mcp-diet-import
         - !KeyOf scope-mcp-investments-read
         - !KeyOf scope-mcp-investments-write
+        - !KeyOf scope-mcp-budget-read
+        - !KeyOf scope-mcp-budget-write
 
   - model: authentik_core.application
     state: present
