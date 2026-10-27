@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Catalog writes. Every write takes a caller-chosen operation key so a retried call returns the

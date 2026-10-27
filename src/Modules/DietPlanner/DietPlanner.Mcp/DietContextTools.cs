@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Read-only planning context for the caller: profile, goal, meal slots and the weight prediction.

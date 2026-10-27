@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// The caller's own meal schedule and reminder settings, through the same commands as REST PUT.

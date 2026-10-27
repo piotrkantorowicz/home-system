@@ -28,6 +28,7 @@
     <ProjectReference Include="..\Investments.Infrastructure\Investments.Infrastructure.csproj" />
     <ProjectReference Include="..\Investments.Mcp\Investments.Mcp.csproj" />
     <ProjectReference Include="..\..\Household\Household.Infrastructure\Household.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Testing.Mcp\Shared.Testing.Mcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

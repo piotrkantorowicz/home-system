@@ -9,6 +9,7 @@
     <Project Path="src/Shared/Shared.Infrastructure.Messaging/Shared.Infrastructure.Messaging.csproj" />
     <Project Path="src/Shared/Shared.Infrastructure.Messaging.Ef/Shared.Infrastructure.Messaging.Ef.csproj" />
     <Project Path="src/Shared/Shared.Infrastructure.Messaging.Dapper/Shared.Infrastructure.Messaging.Dapper.csproj" />
+    <Project Path="src/Shared/Shared.Testing.Mcp/Shared.Testing.Mcp.csproj" />
   </Folder>
   <Folder Name="/Modules/" />
   <Folder Name="/Modules/DietPlanner/">

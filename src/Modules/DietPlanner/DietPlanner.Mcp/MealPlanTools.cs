@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Single planned meals in the caller's diary, through the same commands and access checks as REST.

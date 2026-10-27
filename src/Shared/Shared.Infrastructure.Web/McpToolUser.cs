@@ -1,6 +1,7 @@
 namespace Shared.Infrastructure.Web;
 
 using System.Security.Claims;
+using ModelContextProtocol;
 
 /// <summary>
 /// The authenticated caller of the current tool call, one per call scope. The <c>/mcp</c> transport and
@@ -24,4 +25,11 @@ public sealed class McpToolUser
 
         _principal = principal;
     }
+
+    /// <summary>The caller's auth subject, as the claims pipeline sets it for both transports.</summary>
+    /// <returns>The subject id.</returns>
+    /// <exception cref="McpException">Nothing authenticated this call.</exception>
+    public string AuthSubject()
+        => _principal?.FindFirstValue(ClaimTypes.NameIdentifier) ?? _principal?.FindFirstValue("sub")
+           ?? throw new McpException("The request is not authenticated.");
 }

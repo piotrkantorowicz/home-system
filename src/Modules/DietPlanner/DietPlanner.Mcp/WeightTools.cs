@@ -6,6 +6,7 @@ using DietPlanner.Application.Commands.LogWeightEntry;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Writes to the caller's weight log, through the same commands as REST. A day holds one weigh-in,

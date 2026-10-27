@@ -28,6 +28,7 @@
     <ProjectReference Include="..\DietPlanner.Api\DietPlanner.Api.csproj" />
     <ProjectReference Include="..\DietPlanner.Infrastructure\DietPlanner.Infrastructure.csproj" />
     <ProjectReference Include="..\DietPlanner.Mcp\DietPlanner.Mcp.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Testing.Mcp\Shared.Testing.Mcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

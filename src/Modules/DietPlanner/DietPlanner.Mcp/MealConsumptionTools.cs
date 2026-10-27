@@ -8,6 +8,7 @@ using DietPlanner.Application.Commands.ResetMealEntry;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Records what the caller ate, through the same commands and status transitions as REST:

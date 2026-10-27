@@ -6,6 +6,7 @@ using DietPlanner.Application.Commands.SetShoppingCheck;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol.Server;
 using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Web;
 
 /// <summary>
 /// Ticks on the household's shopping list, through the same commands as REST. A tick belongs to
