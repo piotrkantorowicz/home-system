@@ -62,6 +62,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: read      # api-image.yml's build job declares it for paths-filter
       security-events: write   # api-image.yml uploads its Trivy scan
     uses: ./.github/workflows/api-image.yml
     with:
