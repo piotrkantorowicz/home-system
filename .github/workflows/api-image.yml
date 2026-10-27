@@ -9,18 +9,10 @@
 name: API image
 
 on:
+  # No on.paths: `Build & smoke test` is a required check and must report on every PR.
+  # The job skips its work when no image input changed (see the filter step).
   pull_request:
     branches: [main, 'epic/**']
-    paths:
-      - 'src/Apis/**'
-      - 'src/Modules/**'
-      - 'src/Shared/**'
-      - 'Directory.Build.props'
-      - 'Directory.Packages.props'
-      - 'global.json'
-      - '.dockerignore'
-      - 'scripts/smoke-api-image.sh'
-      - '.github/workflows/api-image.yml'
   workflow_call:
     inputs:
       tag:
@@ -43,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read      # paths-filter lists the PR's files
       security-events: write   # Trivy SARIF upload
     steps:
       - uses: actions/checkout@v7
@@ -50,6 +43,24 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || '' }}
+
+      - name: Check for relevant changes
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - 'src/Apis/**'
+              - 'src/Modules/**'
+              - 'src/Shared/**'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'global.json'
+              - '.dockerignore'
+              - '.trivyignore'
+              - 'scripts/smoke-api-image.sh'
+              - '.github/workflows/api-image.yml'
 
       - name: Validate release tag
         if: inputs.tag != ''
@@ -61,8 +72,10 @@ jobs:
           git merge-base --is-ancestor HEAD FETCH_HEAD || { echo "::error::$TAG is not on main"; exit 1; }
 
       - uses: docker/setup-buildx-action@v4
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
 
       - name: Build image
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -74,12 +87,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Smoke test
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         run: scripts/smoke-api-image.sh home-system-api:ci
 
       # Report first, gate second: the SARIF run always uploads so findings reach code
       # scanning even when the gate fails. Accepted findings go in a root .trivyignore (read by
       # default), one CVE per line with a reason comment.
       - name: Scan image (report)
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: home-system-api:ci
@@ -91,13 +106,14 @@ jobs:
       # Dependabot and fork PRs get a read-only token, so the upload is skipped there;
       # the gate below still runs for them. Everywhere else an upload failure fails the job.
       - name: Upload scan results
-        if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
+        if: github.event_name != 'pull_request' || (steps.filter.outputs.relevant == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
           category: trivy-api-image
 
       - name: Scan image (gate)
+        if: github.event_name != 'pull_request' || steps.filter.outputs.relevant == 'true'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: home-system-api:ci
