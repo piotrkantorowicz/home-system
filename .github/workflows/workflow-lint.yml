@@ -3,12 +3,10 @@
 # zizmor config: .github/zizmor.yml.
 name: Workflow lint
 
+# No on.paths: a required check must report on every PR, and the job takes seconds.
 on:
   pull_request:
     branches: [main, 'epic/**']
-    paths:
-      - '.github/workflows/**'
-      - '.github/zizmor.yml'
 
 concurrency:
   group: workflow-lint-${{ github.event.pull_request.number }}
