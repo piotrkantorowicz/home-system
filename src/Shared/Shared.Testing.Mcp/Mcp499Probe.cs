@@ -1,4 +1,4 @@
-namespace DietPlanner.IntegrationTests.Mcp;
+namespace Shared.Testing.Mcp;
 
 using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
@@ -15,10 +15,11 @@ using Shared.Infrastructure.Web;
 /// A passing test's console output never reaches the CI log, and the connect retry makes the flaky test pass, so lines also go
 /// to <c>mcp-499-probe.log</c> next to the test assembly, which the backend CI uploads with the test results.
 /// </remarks>
-internal sealed class Mcp499Probe : IStartupFilter
+public sealed class Mcp499Probe : IStartupFilter
 {
     private static readonly string LogPath = Path.Combine(AppContext.BaseDirectory, "mcp-499-probe.log");
 
+    /// <summary>Writes one probe line to the console and to the probe log file.</summary>
     public static void Log(string message)
     {
         Console.WriteLine($"[mcp-499-probe] {message}");
@@ -32,6 +33,7 @@ internal sealed class Mcp499Probe : IStartupFilter
         }
     }
 
+    /// <inheritdoc />
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         => app =>
         {
