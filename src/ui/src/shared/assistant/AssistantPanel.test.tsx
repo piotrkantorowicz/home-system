@@ -205,6 +205,95 @@ describe('AssistantPanel', () => {
     expect(window.localStorage.getItem('home-system-assistant:user-a')).toBeNull();
   });
 
+  describe('pending actions', () => {
+    const held = {
+      token: 'signed-token',
+      name: 'create_wallet',
+      summary: 'name: Savings',
+      arguments: { name: 'Savings', currency: 'PLN' },
+      destructive: false,
+    };
+
+    function holdThenAnswer(bodies: unknown[]) {
+      server.use(
+        http.post(`${BASE}/messages`, async ({ request }) => {
+          bodies.push(await request.json());
+          return bodies.length === 1
+            ? eventStream(
+                sse('pending_action', held),
+                sse('history', { messages: [{ role: 'user' }, { role: 'assistant' }] }),
+                sse('done', {}),
+              )
+            : eventStream(sse('text', { text: 'Done, the wallet exists.' }), sse('done', {}));
+        }),
+      );
+    }
+
+    it('shows the held arguments on a card and blocks new messages until decided', async () => {
+      holdThenAnswer([]);
+      renderPanel();
+      await openPanel();
+
+      await ask('Create a wallet');
+
+      const card = await screen.findByRole('region', { name: 'Confirm this change' });
+      expect(card).toHaveTextContent('create_wallet');
+      expect(card).toHaveTextContent('Savings');
+      expect(card).toHaveTextContent('PLN');
+      expect(screen.getByRole('textbox', { name: 'Message to the assistant' })).toBeDisabled();
+    });
+
+    it('confirm sends only the token with the history and shows the follow-up', async () => {
+      const bodies: unknown[] = [];
+      holdThenAnswer(bodies);
+      renderPanel();
+      await openPanel();
+      await ask('Create a wallet');
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      expect(await screen.findByText('Done, the wallet exists.')).toBeInTheDocument();
+      expect(screen.getByText('Confirmed')).toBeInTheDocument();
+      expect(bodies[1]).toEqual({
+        confirm: 'signed-token',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        messages: [{ role: 'user' }, { role: 'assistant' }],
+      });
+      expect(screen.getByRole('textbox', { name: 'Message to the assistant' })).toBeEnabled();
+    });
+
+    it('cancel sends the token as a cancel', async () => {
+      const bodies: unknown[] = [];
+      holdThenAnswer(bodies);
+      renderPanel();
+      await openPanel();
+      await ask('Create a wallet');
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+      expect(await screen.findByText('Cancelled')).toBeInTheDocument();
+      expect(bodies[1]).toMatchObject({ cancel: 'signed-token' });
+    });
+
+    it('warns on a destructive action', async () => {
+      server.use(
+        http.post(`${BASE}/messages`, () =>
+          eventStream(sse('pending_action', { ...held, destructive: true }), sse('done', {})),
+        ),
+      );
+      renderPanel();
+      await openPanel();
+
+      await ask('Archive it');
+
+      expect(
+        await screen.findByRole('region', {
+          name: 'Confirm this change — it removes or overwrites data',
+        }),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('renders nothing while the assistant is switched off', async () => {
     server.use(http.get(BASE, () => new HttpResponse(null, { status: 404 })));
     const client = new QueryClient();

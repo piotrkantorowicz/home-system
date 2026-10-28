@@ -10,7 +10,7 @@ import {
 } from './conversation';
 import { readEvents } from './readEvents';
 
-import type { AssistantEntry, Conversation, ToolActivity } from './conversation';
+import type { AssistantEntry, Conversation, PendingAction, ToolActivity } from './conversation';
 import type { ServerEvent } from './readEvents';
 
 type AssistantReply = Extract<AssistantEntry, { role: 'assistant' }>;
@@ -18,7 +18,11 @@ type AssistantReply = Extract<AssistantEntry, { role: 'assistant' }>;
 export interface AssistantChat {
   entries: AssistantEntry[];
   streaming: boolean;
+  /** An action waits for Confirm or Cancel; the model cannot take a new message until it is decided. */
+  waiting: boolean;
   send: (message: string) => Promise<void>;
+  /** Confirms or cancels the action waiting on entry `index`. */
+  decide: (index: number, confirm: boolean) => Promise<void>;
   clear: () => void;
 }
 
@@ -55,6 +59,18 @@ function applyEvent(reply: AssistantReply, event: ServerEvent): AssistantReply {
       const ok = field(event.data, 'ok') === true;
       return { ...reply, tools: reply.tools.map((t, i) => (i === index ? { ...t, ok } : t)) };
     }
+    case 'pending_action': {
+      const args = field(event.data, 'arguments');
+      const pending: PendingAction = {
+        token: text(event.data, 'token'),
+        name: text(event.data, 'name'),
+        arguments:
+          typeof args === 'object' && args !== null ? (args as Record<string, unknown>) : {},
+        destructive: field(event.data, 'destructive') === true,
+        status: 'waiting',
+      };
+      return { ...reply, pending };
+    }
     case 'error':
       return { ...reply, error: text(event.data, 'message') };
     default:
@@ -79,20 +95,20 @@ export function useAssistantChat(subject: string): AssistantChat {
     [],
   );
 
-  async function send(message: string): Promise<void> {
-    const trimmed = message.trim();
-    if (!trimmed || streaming) return;
+  const waiting = conversation.entries.some(
+    (entry) => entry.role === 'assistant' && entry.pending?.status === 'waiting',
+  );
 
+  // One request: `request` is the turn's body; `shown` are the entries placed before the new reply.
+  async function runTurn(request: Record<string, unknown>, shown: AssistantEntry[]): Promise<void> {
     const controller = new AbortController();
     abortRef.current = controller;
     setStreaming(true);
 
-    const base = conversation;
-    const user: AssistantEntry = { role: 'user', text: trimmed };
     let reply: AssistantReply = { role: 'assistant', text: '', tools: [] };
-    let history = base.history;
+    let history = conversation.history;
     const show = () => {
-      setConversation({ history, entries: [...base.entries, user, reply] });
+      setConversation({ history, entries: [...shown, reply] });
     };
     show();
 
@@ -101,9 +117,9 @@ export function useAssistantChat(subject: string): AssistantChat {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: trimmed,
+          ...request,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          messages: base.history,
+          messages: conversation.history,
         }),
         signal: controller.signal,
       });
@@ -135,7 +151,28 @@ export function useAssistantChat(subject: string): AssistantChat {
     }
 
     show();
-    saveConversation(subject, { history, entries: [...base.entries, user, reply] });
+    saveConversation(subject, { history, entries: [...shown, reply] });
+  }
+
+  async function send(message: string): Promise<void> {
+    const trimmed = message.trim();
+    if (!trimmed || streaming || waiting) return;
+    await runTurn({ message: trimmed }, [...conversation.entries, { role: 'user', text: trimmed }]);
+  }
+
+  async function decide(index: number, confirm: boolean): Promise<void> {
+    const entry = conversation.entries[index];
+    if (streaming || entry?.role !== 'assistant' || entry.pending?.status !== 'waiting') return;
+
+    const decided: AssistantEntry = {
+      ...entry,
+      pending: { ...entry.pending, status: confirm ? 'confirmed' : 'cancelled' },
+    };
+    const shown = conversation.entries.map((e, i) => (i === index ? decided : e));
+    await runTurn(
+      confirm ? { confirm: entry.pending.token } : { cancel: entry.pending.token },
+      shown,
+    );
   }
 
   function clear(): void {
@@ -146,5 +183,5 @@ export function useAssistantChat(subject: string): AssistantChat {
     clearConversation(subject);
   }
 
-  return { entries: conversation.entries, streaming, send, clear };
+  return { entries: conversation.entries, streaming, waiting, send, decide, clear };
 }

@@ -113,6 +113,13 @@
     "failed": "The assistant could not answer. Try again.",
     "tool_running": "Running",
     "tool_ok": "Done",
-    "tool_failed": "Failed"
+    "tool_failed": "Failed",
+    "decide_first": "Confirm or cancel the change above first.",
+    "pending_title": "Confirm this change",
+    "pending_destructive": "Confirm this change — it removes or overwrites data",
+    "confirm_action": "Confirm",
+    "cancel_action": "Cancel",
+    "action_confirmed": "Confirmed",
+    "action_cancelled": "Cancelled"
   }
 }

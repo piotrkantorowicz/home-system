@@ -9,7 +9,7 @@ import {
   Textarea,
 } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
-import { Check, Loader2, SendHorizontal, Trash2, Wrench, X } from 'lucide-react';
+import { Check, Loader2, SendHorizontal, ShieldAlert, Trash2, Wrench, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +17,7 @@ import { useAssistantStatus } from './assistantStatus';
 import { clearAllConversations } from './conversation';
 import { useAssistantChat } from './useAssistantChat';
 
-import type { AssistantEntry, ToolActivity } from './conversation';
+import type { AssistantEntry, PendingAction, ToolActivity } from './conversation';
 
 export const OPEN_ASSISTANT_EVENT = 'home-system:open-assistant';
 
@@ -86,7 +86,16 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
               {t('assistant.empty')}
             </p>
           ) : (
-            chat.entries.map((entry, i) => <Entry key={i} entry={entry} />)
+            chat.entries.map((entry, i) => (
+              <Entry
+                key={i}
+                entry={entry}
+                busy={chat.streaming}
+                onDecide={(confirm) => {
+                  void chat.decide(i, confirm);
+                }}
+              />
+            ))
           )}
         </div>
 
@@ -105,7 +114,8 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
             }}
             onKeyDown={handleKeyDown}
             aria-label={t('assistant.message_label')}
-            placeholder={t('assistant.placeholder')}
+            placeholder={t(chat.waiting ? 'assistant.decide_first' : 'assistant.placeholder')}
+            disabled={chat.waiting}
             maxLength={8000}
             rows={2}
             className="min-h-0 resize-none"
@@ -121,7 +131,11 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
               <Trash2 className="size-4" />
               {t('assistant.clear')}
             </Button>
-            <Button type="submit" size="xs" disabled={chat.streaming || !draft.trim()}>
+            <Button
+              type="submit"
+              size="xs"
+              disabled={chat.streaming || chat.waiting || !draft.trim()}
+            >
               {chat.streaming ? (
                 <Loader2 className="size-4 animate-spin motion-reduce:animate-none" />
               ) : (
@@ -136,7 +150,13 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
   );
 }
 
-function Entry({ entry }: { entry: AssistantEntry }) {
+interface EntryProps {
+  entry: AssistantEntry;
+  busy: boolean;
+  onDecide: (confirm: boolean) => void;
+}
+
+function Entry({ entry, busy, onDecide }: EntryProps) {
   if (entry.role === 'user') {
     return (
       <p className="bg-primary text-primary-foreground max-w-[85%] self-end rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">
@@ -157,6 +177,7 @@ function Entry({ entry }: { entry: AssistantEntry }) {
       {entry.text && (
         <p className="bg-muted rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">{entry.text}</p>
       )}
+      {entry.pending && <PendingCard action={entry.pending} busy={busy} onDecide={onDecide} />}
       {entry.error && (
         <p role="alert" className="text-destructive text-sm">
           {entry.error}
@@ -187,5 +208,77 @@ function ToolLine({ tool }: { tool: ToolActivity }) {
         )}
       />
     </li>
+  );
+}
+
+interface PendingCardProps {
+  action: PendingAction;
+  busy: boolean;
+  onDecide: (confirm: boolean) => void;
+}
+
+/** The preview of a held write: exactly the arguments Confirm will run (design §6). */
+function PendingCard({ action, busy, onDecide }: PendingCardProps) {
+  const { t } = useTranslation();
+  const titleId = `pending-${action.token.slice(-12)}`;
+
+  return (
+    <section
+      aria-labelledby={titleId}
+      className={cn(
+        'bg-card flex flex-col gap-2 rounded-lg border p-3 text-sm',
+        action.destructive ? 'border-destructive' : 'border-border',
+      )}
+    >
+      <h3 id={titleId} className="flex items-center gap-1.5 font-medium">
+        {action.destructive && <ShieldAlert className="text-destructive size-4 shrink-0" />}
+        {t(action.destructive ? 'assistant.pending_destructive' : 'assistant.pending_title')}
+      </h3>
+      <p className="text-muted-foreground text-xs">{action.name}</p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+        {Object.entries(action.arguments).map(([key, value]) => (
+          <div key={key} className="contents">
+            <dt className="text-muted-foreground">{key}</dt>
+            <dd className="break-words">
+              {typeof value === 'string' ? value : JSON.stringify(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {action.status === 'waiting' ? (
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            disabled={busy}
+            onClick={() => {
+              onDecide(false);
+            }}
+          >
+            {t('assistant.cancel_action')}
+          </Button>
+          <Button
+            type="button"
+            variant={action.destructive ? 'destructive' : 'default'}
+            size="xs"
+            disabled={busy}
+            onClick={() => {
+              onDecide(true);
+            }}
+          >
+            {t('assistant.confirm_action')}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-xs">
+          {t(
+            action.status === 'confirmed'
+              ? 'assistant.action_confirmed'
+              : 'assistant.action_cancelled',
+          )}
+        </p>
+      )}
+    </section>
   );
 }

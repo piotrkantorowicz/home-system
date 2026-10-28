@@ -7,9 +7,25 @@ export interface ToolActivity {
   ok: boolean | null;
 }
 
+/** A write the server holds until the user confirms or cancels it on its card (design §6). */
+export interface PendingAction {
+  /** Signed by the server; Confirm and Cancel send it back unchanged. */
+  token: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  destructive: boolean;
+  status: 'waiting' | 'confirmed' | 'cancelled';
+}
+
 export type AssistantEntry =
   | { role: 'user'; text: string }
-  | { role: 'assistant'; text: string; tools: ToolActivity[]; error?: string };
+  | {
+      role: 'assistant';
+      text: string;
+      tools: ToolActivity[];
+      error?: string;
+      pending?: PendingAction;
+    };
 
 /**
  * One user's conversation on this device (design §4). `history` is what the server's `history`

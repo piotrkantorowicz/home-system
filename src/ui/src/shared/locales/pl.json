@@ -113,6 +113,13 @@
     "failed": "Asystent nie mógł odpowiedzieć. Spróbuj ponownie.",
     "tool_running": "W toku",
     "tool_ok": "Gotowe",
-    "tool_failed": "Błąd"
+    "tool_failed": "Błąd",
+    "decide_first": "Najpierw potwierdź lub anuluj zmianę powyżej.",
+    "pending_title": "Potwierdź tę zmianę",
+    "pending_destructive": "Potwierdź tę zmianę — usuwa lub nadpisuje dane",
+    "confirm_action": "Potwierdź",
+    "cancel_action": "Anuluj",
+    "action_confirmed": "Potwierdzono",
+    "action_cancelled": "Anulowano"
   }
 }
