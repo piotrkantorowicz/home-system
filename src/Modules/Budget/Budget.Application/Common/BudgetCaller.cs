@@ -17,10 +17,13 @@ internal sealed record BudgetCaller(Guid HouseholdId, Guid PersonId, string Role
     /// <summary>The caller as a name-snapshotted reference.</summary>
     public PersonRef Self => new(PersonId, Members.FirstOrDefault(m => m.PersonId == PersonId)?.DisplayName ?? "Unknown");
 
+    /// <summary>Current Owner/Adult members: the people who may pay for or share an expense.</summary>
+    public IEnumerable<HouseholdContextMember> Adults => Members.Where(m => m.Role is "Owner" or "Adult");
+
     /// <summary>Resolves a current Owner/Adult member (eligible payer or participant), or <see langword="null"/>.</summary>
     /// <param name="personId">The person.</param>
     public PersonRef? FindAdult(Guid personId)
-        => Members.FirstOrDefault(m => m.PersonId == personId && m.Role is "Owner" or "Adult") is { } m
+        => Adults.FirstOrDefault(m => m.PersonId == personId) is { } m
             ? new PersonRef(m.PersonId, m.DisplayName)
             : null;
 

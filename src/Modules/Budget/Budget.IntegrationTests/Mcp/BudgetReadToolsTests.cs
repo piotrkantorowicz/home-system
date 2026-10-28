@@ -142,6 +142,28 @@ public sealed class BudgetReadToolsTests : IClassFixture<BudgetDatabaseFixture>,
         invalid.ShouldContain("Month");
     }
 
+    /// <summary>An owner of another household neither finds nor reads this household's shared expense.</summary>
+    [Fact]
+    public async Task ExpenseTools_ForOtherHouseholdsOwner_SeeNothing()
+    {
+        var a = await _scenario.NewHouseholdAsync();
+        var b = await _scenario.NewHouseholdAsync();
+        var expense = await SpendAsync(a.Owner, await BudgetScenario.DefaultEnvelopeAsync(a.Owner), "42.50", "HouseholdFunds", "Market");
+        await BudgetScenario.DefaultEnvelopeAsync(b.Owner);
+        var absent = Guid.CreateVersion7();
+
+        await using var client = await _mcp.ConnectAsync(BudgetMcpHost.Subject(b.Owner), BudgetMcp.ReadScope);
+        var list = JsonSerializer.Deserialize<ExpenseListDto>(await BudgetMcpHost.CallAsync(client, "search_expenses"), JsonSerializerOptions.Web)!;
+        var foreign = await BudgetMcpHost.CallExpectingErrorAsync(client, "get_expense", new() { ["expenseId"] = expense });
+        var missing = await BudgetMcpHost.CallExpectingErrorAsync(client, "get_expense", new() { ["expenseId"] = absent });
+
+        list.Items.ShouldBeEmpty();
+        list.TotalCount.ShouldBe(0);
+        list.TotalAmount.ShouldBe("0.00");
+        foreign.Replace(expense.ToString(), "{id}", StringComparison.Ordinal)
+            .ShouldBe(missing.Replace(absent.ToString(), "{id}", StringComparison.Ordinal));
+    }
+
     /// <summary>Someone outside any household gets an error from every read tool, never data.</summary>
     [Fact]
     public async Task ReadTools_ForNonMember_ReturnErrors()
