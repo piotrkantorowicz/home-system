@@ -69,6 +69,9 @@ internal static class AssistantEndpoints
         }
     }
 
-    private static bool IsAllowed(ChatMessage message)
-        => HistoryRoles.Contains(message.Role) && message.Contents.All(c => HistoryContents.Contains(c.GetType()));
+    // JSON nulls deserialize into the list despite its non-nullable type, so check for them.
+    private static bool IsAllowed(ChatMessage? message)
+        => message is not null
+           && HistoryRoles.Contains(message.Role)
+           && message.Contents.All(c => c is not null && HistoryContents.Contains(c.GetType()));
 }

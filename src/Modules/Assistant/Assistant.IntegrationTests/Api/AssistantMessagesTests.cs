@@ -94,6 +94,22 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
         _factory.Model.Calls.ShouldBeEmpty();
     }
 
+    /// <summary>JSON nulls in the history are bad input (400), not a server error.</summary>
+    /// <param name="messages">The raw history.</param>
+    [Theory]
+    [InlineData("[null]")]
+    [InlineData("""[{"role":"user","contents":[null]}]""")]
+    public async Task SendMessage_NullInHistory_Returns400(string messages)
+    {
+        var me = await _factory.HouseholdOwnerAsync();
+        using var body = new StringContent($$"""{"message":"Hi","messages":{{messages}}}""", System.Text.Encoding.UTF8, "application/json");
+
+        var response = await me.PostAsync("/api/assistant/messages", body, Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        _factory.Model.Calls.ShouldBeEmpty();
+    }
+
     /// <summary>A provider failure ends the stream with a readable error, then done.</summary>
     [Fact]
     public async Task SendMessage_ProviderFails_StreamsErrorThenDone()
