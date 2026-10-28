@@ -105,6 +105,40 @@ public sealed class BudgetExpenseWriteToolsTests : IClassFixture<BudgetDatabaseF
         error.ShouldContain("Category:");
     }
 
+    /// <summary>An all-zero operation key is refused under the name the agent sent, on every expense write tool.</summary>
+    [Fact]
+    public async Task WriteTools_WithEmptyOperationKey_NameOperationKey()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+
+        await using var client = await _mcp.ConnectAsync(BudgetMcpHost.Subject(h.Owner), BudgetMcp.WriteScope);
+        var create = await BudgetMcpHost.CallExpectingErrorAsync(client, "create_expense", NewExpense(Guid.Empty, account));
+        var update = await BudgetMcpHost.CallExpectingErrorAsync(client, "update_expense", new()
+        {
+            ["expenseId"] = Guid.CreateVersion7(),
+            ["operationKey"] = Guid.Empty,
+            ["expectedRevision"] = 1,
+            ["reason"] = "x",
+            ["amount"] = "1.00",
+            ["occurredOn"] = "2026-10-01",
+            ["category"] = "Groceries",
+        });
+        var voided = await BudgetMcpHost.CallExpectingErrorAsync(client, "void_expense", new()
+        {
+            ["expenseId"] = Guid.CreateVersion7(),
+            ["operationKey"] = Guid.Empty,
+            ["expectedRevision"] = 1,
+            ["reason"] = "x",
+        });
+
+        foreach (var error in new[] { create, update, voided })
+        {
+            error.ShouldContain("operationKey");
+            error.ShouldNotContain("ClientRequestId");
+        }
+    }
+
     /// <summary>A stale revision is a conflict the agent can act on.</summary>
     [Fact]
     public async Task VoidExpense_WithStaleRevision_ReturnsToolError()
