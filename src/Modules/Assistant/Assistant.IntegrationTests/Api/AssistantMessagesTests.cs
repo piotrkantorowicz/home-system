@@ -39,12 +39,13 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
         toolResult.ShouldNotContain($"Theirs {_tag}");
     }
 
-    /// <summary>Only read tools are offered; a write the model calls anyway is refused before it reaches the tool.</summary>
+    /// <summary>With <c>Mcp:WritesEnabled</c> off only read tools are offered; a write the model calls anyway is refused before it reaches the tool.</summary>
     [Fact]
-    public async Task SendMessage_ScriptedWriteToolCall_IsRefusedWithoutExecuting()
+    public async Task SendMessage_WritesDisabled_WriteToolCallIsRefusedWithoutExecuting()
     {
-        var me = await _factory.HouseholdOwnerAsync();
-        _factory.Model.CallsTool("create_wallet", new()
+        using var factory = new AssistantApiFactory(databases, new Dictionary<string, string?> { ["Mcp:WritesEnabled"] = "false" });
+        var me = await factory.HouseholdOwnerAsync();
+        factory.Model.CallsTool("create_wallet", new()
         {
             ["name"] = $"Sneaky {_tag}",
             ["institution"] = "XTB",
@@ -52,15 +53,15 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
             ["currency"] = "PLN",
             ["visibility"] = "Private",
         });
-        _factory.Model.Answers("I cannot do that.");
+        factory.Model.Answers("I cannot do that.");
 
         List<SseItem<string>> events = await AssistantApiFactory.SendAsync(me, new { message = "Create a wallet" });
 
         Data(events, "tool_result").GetProperty("ok").GetBoolean().ShouldBeFalse();
-        ToolResults(_factory.Model.Calls.Last().Messages).ShouldContain("not available");
+        ToolResults(factory.Model.Calls.Last().Messages).ShouldContain("not available");
         (await me.GetStringAsync("/api/investments/wallets", Ct)).ShouldNotContain($"Sneaky {_tag}");
 
-        IList<AITool> offered = _factory.Model.Calls.First().Options!.Tools!;
+        IList<AITool> offered = factory.Model.Calls.First().Options!.Tools!;
         offered.Select(t => t.Name).ShouldContain("list_wallets");
         offered.Select(t => t.Name).ShouldNotContain("create_wallet");
     }

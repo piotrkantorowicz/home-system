@@ -20,6 +20,8 @@ public static class AssistantModule
     public static IServiceCollection AddAssistantModule(this IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration.GetSection(AssistantOptions.SectionName).Get<AssistantOptions>() ?? new AssistantOptions();
+        options.WritesEnabled = configuration.GetValue("Mcp:WritesEnabled", true);
+        options.ImportsEnabled = configuration.GetValue("Mcp:ImportsEnabled", false);
         services.AddSingleton(options);
         if (!options.Enabled)
             return services;
@@ -31,6 +33,7 @@ public static class AssistantModule
 
         AddChatClient(services, options);
         services.AddSingleton<AssistantUsage>();
+        services.AddSingleton<PendingActions>();
         services.AddSingleton<AssistantAgent>();
         return services;
     }
