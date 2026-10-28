@@ -99,8 +99,13 @@ the read tools expose; it is the same for every user apart from those values, so
 
 ## 4. Conversation storage
 
-- History lives in the browser only (`localStorage` key `home-system-assistant`), one
-  conversation per user per device; the panel has a clear action. No server persistence.
+- History lives in the browser only, under a per-user key `home-system-assistant:<sub>`
+  (auth subject from the ID token), one conversation per user per device; the panel has a
+  clear action. No server persistence.
+- **Sign-out clears it**, wherever sign-out runs (today `Sidebar` and `MoreSheet`), so the
+  next person on a shared device never loads, or sends to the model, someone else's
+  history. A Vitest case covers it: user A signs out, user B signs in, the panel starts
+  empty.
 - The server treats incoming history as **untrusted input**: a user who edits it only
   misleads their own model session, because tools still run as that user and every write
   still needs a server-signed pending action (§6).
