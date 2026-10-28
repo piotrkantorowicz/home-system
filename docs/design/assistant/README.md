@@ -237,8 +237,12 @@ Configuration (`Assistant` section):
 - **Runaway guards:** `MaxToolRounds` per request, `MaxOutputTokens` per call, request body
   size cap, history trimmed to the most recent turns that fit a fixed token allowance (older
   turns are dropped server-side before the model call).
-- Over budget or over rate → 429 with a readable message, **without calling the model**.
-  The panel shows today's usage from the `usage` event.
+- Over budget or over rate at the start of a request → 429 with a readable message,
+  **without calling the model**. The panel shows today's usage from the `usage` event.
+- **The budget is re-checked before every model call inside the loop**, not only once per
+  request: one request can make up to `MaxToolRounds` calls, each resending the growing
+  history. When the counter is exceeded mid-request, the loop stops and streams `error`
+  then `done`. The overshoot is bounded by one model call.
 - **Cost estimate** (recorded at planning, 2026-10-25): about $3–6 per month for 4 active
   users on Haiku. Not re-checked against today's price list. #646 measures the real figure:
   one log line per request with token counts, summed per day.
