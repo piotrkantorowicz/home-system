@@ -113,6 +113,22 @@ public sealed class AssistantLimitsTests(AssistantDatabaseFixture databases) : I
             .ShouldBe(["Recent question", "Recent answer", "Now"]);
     }
 
+    /// <summary>A call that fails after streaming is still charged, so failing every request cannot dodge the daily budget.</summary>
+    [Fact]
+    public async Task SendMessage_ProviderFailsMidStream_StillCountsTokens()
+    {
+        using var factory = Factory(("Assistant:DailyTokenBudget", "100"));
+        var me = await factory.HouseholdOwnerAsync();
+        factory.Model.FailsAfterStreaming("Partial");
+
+        List<SseItem<string>> events = await AssistantApiFactory.SendAsync(me, new { message = "First" });
+        var next = await PostAsync(me, "Second");
+
+        events.Select(e => e.EventType).ShouldBe(["text", "error", "done"]);
+        next.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+        factory.Model.Calls.Count.ShouldBe(1);
+    }
+
     private AssistantApiFactory Factory(params (string Key, string Value)[] settings)
         => new(databases, settings.ToDictionary(s => s.Key, s => (string?)s.Value));
 

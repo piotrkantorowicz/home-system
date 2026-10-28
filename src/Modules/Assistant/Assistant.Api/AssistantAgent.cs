@@ -108,8 +108,8 @@ internal sealed partial class AssistantAgent(
                 break;
             }
 
-            // Each round resends the growing history, so the budget is checked before every call;
-            // the overshoot is at most one call.
+            // Each round resends the growing history, so the budget is checked before every call; the
+            // overshoot is at most one call per concurrent request (requests in flight all pass the start check).
             if (usage.IsOverBudget(subject))
             {
                 yield return Event("error", new { message = "You have used today's assistant allowance. It resets tomorrow." });
@@ -117,16 +117,27 @@ internal sealed partial class AssistantAgent(
             }
 
             List<ChatResponseUpdate> updates = [];
-            await foreach (ChatResponseUpdate update in chat.GetStreamingResponseAsync(messages, chatOptions, ct))
+            UsageDetails callUsage = new();
+            try
             {
-                updates.Add(update);
-                if (update.Text is { Length: > 0 } text)
-                    yield return Event("text", new { text });
+                await foreach (ChatResponseUpdate update in chat.GetStreamingResponseAsync(messages, chatOptions, ct))
+                {
+                    updates.Add(update);
+                    foreach (UsageContent reported in update.Contents.OfType<UsageContent>())
+                        callUsage.Add(reported.Details);
+                    if (update.Text is { Length: > 0 } text)
+                        yield return Event("text", new { text });
+                }
+            }
+            finally
+            {
+                // Counted even when the stream is cut short (the user aborts, the provider fails): the
+                // provider bills what it produced. Usage the provider never reported cannot be counted.
+                usage.Add(subject, (callUsage.InputTokenCount ?? 0) + (callUsage.OutputTokenCount ?? 0));
             }
 
             ChatResponse response = updates.ToChatResponse();
-            long callInput = response.Usage?.InputTokenCount ?? 0, callOutput = response.Usage?.OutputTokenCount ?? 0;
-            usage.Add(subject, callInput + callOutput);
+            long callInput = callUsage.InputTokenCount ?? 0, callOutput = callUsage.OutputTokenCount ?? 0;
             inputTokens += callInput;
             outputTokens += callOutput;
             messages.AddRange(response.Messages);
