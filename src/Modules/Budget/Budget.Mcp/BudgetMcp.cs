@@ -32,6 +32,9 @@ public static class BudgetMcp
             .WithTools<BudgetContextTools>()
             .WithTools<ExpenseTools>()
             .WithTools<ExpenseWriteTools>()
+            .WithTools<AccountWriteTools>()
+            .WithTools<SettlementTools>()
+            .WithTools<SettlementWriteTools>()
             .WithTools<StatementImportTools>();
     }
 }
