@@ -12,7 +12,7 @@ public sealed class ModuleBoundaryTests
     [Fact]
     public void ModuleAssemblies_Always_DiscoversEveryModule()
         => ModuleAssemblies.ByModule.Keys.ShouldBe(
-            ["Budget", "DietPlanner", "Household", "Investments", "Notifications", "Operations"],
+            ["Assistant", "Budget", "DietPlanner", "Household", "Investments", "Notifications", "Operations"],
             ignoreOrder: true);
 
     /// <summary>A module reaches another module only through its Contracts.</summary>
