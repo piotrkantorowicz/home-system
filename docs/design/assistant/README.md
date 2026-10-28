@@ -118,10 +118,13 @@ scope the gate does not recognise, is **not offered**.
 | No scope, or any unrecognised scope | **Not offered** |
 | At least one scope, all of them `*:read`, and `ReadOnly = true` | **Run now** |
 | Any write scope (`mcp:diet:write`, `mcp:investments:write`, Budget's write scope) | **Hold** for confirmation (§6) |
-| Import scope (`mcp:diet:import`) | **Hold**; offered only when `Mcp:WritesEnabled && Mcp:ImportsEnabled` |
+| Any `*:import` scope (`mcp:diet:import` today; every module's import scope) | **Hold**; offered only when `Mcp:WritesEnabled && Mcp:ImportsEnabled` |
 | Write scope while `Mcp:WritesEnabled = false` | Not offered |
 | `Destructive = true` | Held; card uses destructive styling |
 
+- Bulk imports must carry an `*:import` scope so the switch reaches them, as
+  `execute_plan_import` does and Budget's `execute_expense_import` does in #730
+  (`BudgetMcp.WriteScope` + `BudgetMcp.ImportScope`).
 - The signed-in user gets every grant implicitly; what a user may see or change is still
   enforced inside each tool and its handlers (household visibility, ownership), exactly as
   over `/mcp`.
