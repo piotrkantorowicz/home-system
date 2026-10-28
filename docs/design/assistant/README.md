@@ -109,11 +109,14 @@ the read tools expose; it is the same for every user apart from those values, so
 
 ## 5. Tools and capabilities
 
-Every tool in `McpToolInvoker.Tools` is a candidate. For each, the capability gate derives:
+Every tool in `McpToolInvoker.Tools` is a candidate. For each, the capability gate derives
+the result below. **The gate fails closed:** a tool with no `[Authorize]` scope, or with any
+scope the gate does not recognise, is **not offered**.
 
 | Tool metadata | Result |
 |---|---|
-| All `[Authorize]` scopes are `*:read` and `ReadOnly = true` | **Run now** |
+| No scope, or any unrecognised scope | **Not offered** |
+| At least one scope, all of them `*:read`, and `ReadOnly = true` | **Run now** |
 | Any write scope (`mcp:diet:write`, `mcp:investments:write`, Budget's write scope) | **Hold** for confirmation (§6) |
 | Import scope (`mcp:diet:import`) | **Hold**; offered only when `Mcp:WritesEnabled && Mcp:ImportsEnabled` |
 | Write scope while `Mcp:WritesEnabled = false` | Not offered |
@@ -124,9 +127,10 @@ Every tool in `McpToolInvoker.Tools` is a candidate. For each, the capability ga
   over `/mcp`.
 - **Server-side refusal:** a call to a tool the gate does not offer is answered with a tool
   error and never reaches the invoker, whatever the model sends.
-- **Guard test:** a test asserts that scopes and annotations agree for every registered tool
-  (read-only scope ⇔ `ReadOnly = true`), so a mis-annotated new tool fails CI instead of
-  running unconfirmed.
+- **Guard test:** a test asserts, for every registered tool, that it has at least one scope,
+  that every scope is one the gate recognises, and that scopes and annotations agree
+  (read-only scopes ⇔ `ReadOnly = true`). A new tool missing `[Authorize]`, using an unknown
+  scope or mis-annotated fails CI instead of being silently hidden or running unconfirmed.
 - Delivery order follows the epic: #645 offers run-now tools only; #648 adds held tools.
 
 ## 6. Write confirmation
