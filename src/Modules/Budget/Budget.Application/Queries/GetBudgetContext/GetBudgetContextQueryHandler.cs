@@ -33,8 +33,7 @@ internal sealed class GetBudgetContextQueryHandler(BudgetAccessService access, I
                 .Select(AccountVisibilityFilter.ToDto)
                 .ToListAsync(ct);
 
-        List<BudgetParticipantDto> participants = caller.Members
-            .Where(m => m.Role is "Owner" or "Adult")
+        List<BudgetParticipantDto> participants = caller.Adults
             .OrderBy(m => m.DisplayName, StringComparer.Ordinal).ThenBy(m => m.PersonId)
             .Select(m => new BudgetParticipantDto(m.PersonId, m.DisplayName))
             .ToList();

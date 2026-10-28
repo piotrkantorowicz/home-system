@@ -9,7 +9,7 @@ using Shared.Abstractions.Cqrs;
 /// </summary>
 /// <param name="AuthSubject">Auth subject of the caller.</param>
 /// <param name="Page">1-based page number.</param>
-/// <param name="PageSize">Items per page, capped at 100.</param>
+/// <param name="PageSize">Items per page, capped at <see cref="MaxPageSize"/>.</param>
 /// <param name="AccountId">Only this envelope.</param>
 /// <param name="Category">Only this category code.</param>
 /// <param name="Amount">Only this exact amount (decimal string).</param>
@@ -29,4 +29,8 @@ public sealed record ListExpensesQuery(
     DateOnly? To = null,
     Guid? ExcludeId = null,
     bool IncludeVoided = false,
-    string? Search = null) : IQuery<ExpenseListDto>;
+    string? Search = null) : IQuery<ExpenseListDto>
+{
+    /// <summary>The largest page; bigger requests are clamped to it.</summary>
+    public const int MaxPageSize = 100;
+}
