@@ -57,11 +57,11 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/budget` | GetBudget | read | `get_budget_context` (`Budget`) | Budget epic (#660) |
 | POST | `/api/budget` | InitializeBudget | write | tbd | Budget epic |
 | GET | `/api/budget/accounts` | ListBudgetAccounts | read | `get_budget_context` (`Accounts`, active only) | Budget epic (#660) |
-| POST | `/api/budget/accounts` | CreateBudgetAccount | write | tbd | Budget epic |
-| GET | `/api/budget/accounts/{id:guid}` | GetBudgetAccount | read | tbd | Budget epic |
-| PUT | `/api/budget/accounts/{id:guid}` | RenameBudgetAccount | write | tbd | Budget epic |
-| POST | `/api/budget/accounts/{id:guid}/archive` | ArchiveBudgetAccount | destructive | tbd | Budget epic |
-| POST | `/api/budget/accounts/{id:guid}/restore` | RestoreBudgetAccount | write | tbd | Budget epic |
+| POST | `/api/budget/accounts` | CreateBudgetAccount | write | `create_account` | Budget epic (#662) |
+| GET | `/api/budget/accounts/{id:guid}` | GetBudgetAccount | read | `get_account` | Budget epic (#662) |
+| PUT | `/api/budget/accounts/{id:guid}` | RenameBudgetAccount | write | `rename_account` | Budget epic (#662) |
+| POST | `/api/budget/accounts/{id:guid}/archive` | ArchiveBudgetAccount | destructive | `archive_account` | Budget epic (#662) |
+| POST | `/api/budget/accounts/{id:guid}/restore` | RestoreBudgetAccount | write | `restore_account` | Budget epic (#662) |
 | GET | `/api/budget/expenses` | ListBudgetExpenses | read | `search_expenses` | Budget epic (#660) |
 | GET | `/api/budget/expenses/{id:guid}` | GetBudgetExpense | read | `get_expense` | Budget epic (#660) |
 | POST | `/api/budget/expenses` | CreateBudgetExpense | write | tbd | Budget epic |
@@ -70,9 +70,9 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/budget/imports/preview` | PreviewBudgetStatementImport | read | tbd | Budget epic |
 | POST | `/api/budget/imports` | ImportBudgetExpenses | write | tbd | Budget epic |
 | GET | `/api/budget/summary` | GetBudgetSummary | read | `get_budget_summary` | Budget epic (#660) |
-| GET | `/api/budget/limits` | ListBudgetLimits | read | tbd | Budget epic |
-| PUT | `/api/budget/accounts/{id:guid}/limits/{month}` | SetBudgetLimit | write | tbd | Budget epic |
-| DELETE | `/api/budget/accounts/{id:guid}/limits/{month}` | ClearBudgetLimit | destructive | tbd | Budget epic |
+| GET | `/api/budget/limits` | ListBudgetLimits | read | `list_limits` | Budget epic (#662) |
+| PUT | `/api/budget/accounts/{id:guid}/limits/{month}` | SetBudgetLimit | write | `set_limit` | Budget epic (#662) |
+| DELETE | `/api/budget/accounts/{id:guid}/limits/{month}` | ClearBudgetLimit | destructive | `clear_limit` | Budget epic (#662) |
 | GET | `/api/budget/settlement` | GetBudgetSettlement | read | tbd | Budget epic |
 | GET | `/api/budget/settlements` | ListBudgetRepayments | read | tbd | Budget epic |
 | POST | `/api/budget/settlements` | RecordBudgetRepayment | write | tbd | Budget epic |
