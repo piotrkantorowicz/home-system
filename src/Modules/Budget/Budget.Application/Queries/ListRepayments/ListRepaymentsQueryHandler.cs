@@ -10,13 +10,11 @@ using Shared.Abstractions.Cqrs;
 internal sealed class ListRepaymentsQueryHandler(BudgetAccessService access, IBudgetReadDbContext db)
     : IQueryHandler<ListRepaymentsQuery, PagedList<RepaymentDto>>
 {
-    private const int MaxPageSize = 100;
-
     public async Task<PagedList<RepaymentDto>> HandleAsync(ListRepaymentsQuery query, CancellationToken ct = default)
     {
         var caller = await access.RequireAdultAsync(query.AuthSubject, ct);
         var page = Math.Max(query.Page, 1);
-        var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+        var pageSize = Math.Clamp(query.PageSize, 1, ListRepaymentsQuery.MaxPageSize);
 
         var repayments = db.Settlements.AsNoTracking()
             .Where(s => db.Budgets.Any(b => b.Id == s.BudgetId && b.HouseholdId == caller.HouseholdId));
