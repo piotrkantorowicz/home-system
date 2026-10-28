@@ -301,7 +301,7 @@ Configuration (`Assistant` section):
 | D9 | Capabilities from tool scopes + annotations + existing switches; guard test keeps them consistent | Taken 2026-10-28 |
 | D10 | Writes held as signed pending actions; operation key minted at hold; one pending action at a time | Taken 2026-10-28 |
 | D11 | Usage counted in memory; provider console spend limit is the hard bill cap | Taken 2026-10-28 |
-| D12 | No epic lane: slices merge to `main` behind `Assistant:Enabled` (off until #646) | Taken 2026-10-28 |
+| D12 | Epic lane `epic/634-in-app-assistant-mcp-tools`: slices merge there and reach `main` together; `Assistant:Enabled` stays off until #646 | Taken 2026-10-28, revised the same day (was: no lane) |
 | D13 | Sonnet opt-in for large plans deferred until #650 shows Haiku cannot build a week | Taken 2026-10-28 |
 | D14 | Local models (Ollama) out of scope for this epic | Taken 2026-10-28 |
 

@@ -52,6 +52,9 @@
     <Project Path="src/Modules/Investments/Investments.Api/Investments.Api.csproj" />
     <Project Path="src/Modules/Investments/Investments.Mcp/Investments.Mcp.csproj" />
   </Folder>
+  <Folder Name="/Modules/Assistant/">
+    <Project Path="src/Modules/Assistant/Assistant.Api/Assistant.Api.csproj" />
+  </Folder>
   <Folder Name="/Host/">
     <Project Path="src/Apis/HomeSystem.REST/HomeSystem.REST.csproj" />
   </Folder>
@@ -66,6 +69,7 @@
     <Project Path="src/Modules/Budget/Budget.UnitTests/Budget.UnitTests.csproj" />
     <Project Path="src/Modules/Investments/Investments.IntegrationTests/Investments.IntegrationTests.csproj" />
     <Project Path="src/Modules/Investments/Investments.UnitTests/Investments.UnitTests.csproj" />
+    <Project Path="src/Modules/Assistant/Assistant.IntegrationTests/Assistant.IntegrationTests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.Tests/Shared.Messaging.Tests.csproj" />
     <Project Path="src/Shared/Shared.Messaging.IntegrationTests/Shared.Messaging.IntegrationTests.csproj" />
     <Project Path="src/Shared/Shared.Web.IntegrationTests/Shared.Web.IntegrationTests.csproj" />

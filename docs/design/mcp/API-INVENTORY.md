@@ -23,8 +23,8 @@ Every tool is a hand-written, typed adapter (see `docs/rules/backend-api-pattern
 | Investments | 12 | 0 | 12 | 0 |
 | Notifications | 11 | 0 | 11 (5 admin) | 0 |
 | Operations | 5 | 0 | 5 (admin) | 0 |
-| Host | 6 | 0 | 0 | 6 |
-| **Total** | **126** | **14** | **104** | **8** |
+| Host | 7 | 0 | 0 | 7 |
+| **Total** | **127** | **14** | **104** | **9** |
 
 "In epic #605" counts routes whose behaviour a first-epic tool covers. Several of them
 share one tool: `get_diet_context` reads profile, goals, meal schedule and reminder
@@ -47,6 +47,7 @@ existing admin policy, never the everyday write grant).
 | WS | `/hubs/notifications` | transport-only | SignalR push channel. Inbox state is covered by the Notifications REST reads |
 | POST | `/mcp` | transport-only | The MCP endpoint itself (Streamable HTTP, stateless; only when `Mcp:Enabled`). Serves the epic #605 tools: `get_diet_context`, `search_products`, `get_product`, `search_recipes`, `get_recipe`, `get_meal_entries`, `get_nutrition_summary`, `create_product`, `create_recipe`, `preview_plan_import`, `execute_plan_import`; epic #639 adds `update_product`, `delete_product`, `update_recipe`, `delete_recipe`, `plan_meal`, `update_planned_meal`, `delete_planned_meal`, `complete_meal`, `override_meal`, `reset_meal`, `complete_day`, `set_profile`, `set_goals`, `get_weight_prediction`, `log_weight`, `get_weight_entries`, `delete_weight_entry`, `get_hydration`, `update_hydration_config`, `log_water_intake`, `delete_water_intake`, `update_meal_schedule`, `update_diet_reminders`, `get_shopping_list`, `check_shopping_item`, `clear_shopping_checks`, `get_weekly_summary` |
 | GET | `/.well-known/oauth-protected-resource` | transport-only | RFC 9728 metadata for MCP clients; the only anonymous route MCP adds |
+| POST | `/api/assistant/messages` | transport-only | In-app assistant (#645, only when `Assistant:Enabled`): runs the same tools in-process as the SPA user through `McpToolInvoker`; streams server-sent events. Design: `docs/design/assistant/README.md` |
 
 ## Operations by module
 
