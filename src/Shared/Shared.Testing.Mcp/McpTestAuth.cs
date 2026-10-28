@@ -3,7 +3,6 @@ namespace Shared.Testing.Mcp;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -38,11 +37,10 @@ public static class McpTestAuth
 
     /// <summary>
     /// Makes the <c>McpBearer</c> scheme validate tokens signed with <see cref="SigningKey"/> instead of fetching
-    /// Authentik's discovery document, and arms <see cref="Mcp499Probe"/>.
+    /// Authentik's discovery document.
     /// </summary>
     public static void AddTestMcpAuth(this IServiceCollection services)
     {
-        services.AddTransient<IStartupFilter, Mcp499Probe>();
         services.PostConfigure<JwtBearerOptions>(McpAuthorization.SchemeName, options =>
         {
             options.ConfigurationManager = null;
