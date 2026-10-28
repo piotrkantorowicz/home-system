@@ -28,6 +28,8 @@ public static class BudgetMcp
         return builder
             .WithTools<BudgetContextTools>()
             .WithTools<ExpenseTools>()
+            .WithTools<ExpenseWriteTools>()
+            .WithTools<AccountWriteTools>()
             .WithTools<SettlementTools>()
             .WithTools<SettlementWriteTools>();
     }
