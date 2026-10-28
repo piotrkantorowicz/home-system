@@ -200,9 +200,11 @@ sequenceDiagram
 - Prompt caching: Anthropic uses explicit cache control on the system prompt and tool
   definitions; OpenAI and xAI cache automatically, so their setting is a no-op.
 - Delivery: #645 registers Anthropic only (default **Claude Haiku 5.5**); #732 adds OpenAI
-  and xAI, with startup failing on an unknown provider or a missing key. Before #732 ships,
-  confirm the xAI path against xAI's current docs (OpenAI client with a custom endpoint, or
-  their native API).
+  and xAI, with startup failing on an unknown provider, a missing key or (for OpenAI / xAI) a
+  missing model. xAI was checked against its docs on 2026-10-28: the OpenAI client works against
+  `https://api.x.ai/v1`. Both run on Chat Completions, which xAI now lists as legacy next to its
+  Responses API; it is still served and keeps calls stateless. Move to Responses (with storage
+  off) if xAI retires it.
 - Local models (Ollama and similar) are out of scope for now.
 - A test provider (`Fake`) returning scripted responses is registered only in
   `Development` / E2E configuration, for #650.
@@ -213,9 +215,9 @@ Configuration (`Assistant` section):
 |---|---|---|
 | `Enabled` | `false` | Maps the endpoint; off → 404 and the panel is hidden. Stays off in production until #646 is merged. |
 | `Provider` | `Anthropic` | `Anthropic`, `OpenAI`, `XAI` (`Fake` outside production) |
-| `Model` | `claude-haiku-5-5` | Provider model id |
+| `Model` | `claude-haiku-5-5` for Anthropic | Provider model id; required for `OpenAI` and `XAI` |
 | `ApiKey` | — | Required when enabled; secret store / environment only |
-| `BaseUrl` | provider default | Override, e.g. the xAI endpoint |
+| `BaseUrl` | provider default (`https://api.x.ai/v1` for `XAI`) | Endpoint override for `OpenAI` / `XAI` |
 | `DailyTokenBudget` | `500000` | Input + output tokens per user per server day |
 | `RequestsPerMinute` | `10` | Per user, fixed window |
 | `MaxToolRounds` | `10` | Model ↔ tool round trips per request |
