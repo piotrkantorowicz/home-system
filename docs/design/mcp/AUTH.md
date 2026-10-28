@@ -32,7 +32,7 @@ changes as long as that holds.
    audience check is relaxed, and no shared multi-audience list is needed.
 3. **Grants as scopes on the MCP provider only:** `mcp:diet:read`, `mcp:diet:write`,
    `mcp:diet:import`, plus `read` / `write` per further module, each added
-   with its first tool (`mcp:investments:read`, `mcp:investments:write`). Read tools need `read`. Write tools need `write`. Execute
+   with its first tool (`mcp:investments:read`, `mcp:investments:write`, `mcp:budget:read`, `mcp:budget:write`). Read tools need `read`. Write tools need `write`. Execute
    import needs `write` **and** `import`. Tool annotations describe behaviour, but
    only the server-side policy is authoritative.
 4. **Protected Resource Metadata** (`/.well-known/oauth-protected-resource`,
