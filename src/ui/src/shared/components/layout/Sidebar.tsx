@@ -1,3 +1,4 @@
+import { AssistantButton } from '@shared/assistant/AssistantButton';
 import { useUserRoles } from '@shared/auth/useUserRoles';
 import { UserProfileDropdown } from '@shared/components/ui';
 import { useHouseholdRole } from '@shared/context/HouseholdRoleContext';
@@ -139,6 +140,7 @@ export function Sidebar() {
             </>,
           ),
         )}
+        <AssistantButton withLabel className={itemClass(false)} />
         {settings
           ? link(
               settings.href,
