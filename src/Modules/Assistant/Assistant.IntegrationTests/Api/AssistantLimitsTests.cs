@@ -129,8 +129,8 @@ public sealed class AssistantLimitsTests(AssistantDatabaseFixture databases) : I
         factory.Model.Calls.Count.ShouldBe(1);
     }
 
-    private AssistantApiFactory Factory(params (string Key, string Value)[] settings)
-        => new(databases, settings.ToDictionary(s => s.Key, s => (string?)s.Value));
+    private AssistantApiFactory Factory(params (string Key, string? Value)[] settings)
+        => new(databases, settings.ToDictionary(s => s.Key, s => s.Value));
 
     private static Task<HttpResponseMessage> PostAsync(HttpClient client, string message)
         => client.PostAsJsonAsync("/api/assistant/messages", new { message }, Ct);
