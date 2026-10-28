@@ -64,9 +64,9 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/budget/accounts/{id:guid}/restore` | RestoreBudgetAccount | write | tbd | Budget epic |
 | GET | `/api/budget/expenses` | ListBudgetExpenses | read | `search_expenses` | Budget epic (#660) |
 | GET | `/api/budget/expenses/{id:guid}` | GetBudgetExpense | read | `get_expense` | Budget epic (#660) |
-| POST | `/api/budget/expenses` | CreateBudgetExpense | write | tbd | Budget epic |
-| PUT | `/api/budget/expenses/{id:guid}` | UpdateBudgetExpense | write | tbd | Budget epic |
-| POST | `/api/budget/expenses/{id:guid}/void` | VoidBudgetExpense | destructive | tbd | Budget epic |
+| POST | `/api/budget/expenses` | CreateBudgetExpense | write | `create_expense` (`operationKey` = ClientRequestId) | Budget epic (#661) |
+| PUT | `/api/budget/expenses/{id:guid}` | UpdateBudgetExpense | write | `update_expense` | Budget epic (#661) |
+| POST | `/api/budget/expenses/{id:guid}/void` | VoidBudgetExpense | destructive | `void_expense` | Budget epic (#661) |
 | POST | `/api/budget/imports/preview` | PreviewBudgetStatementImport | read | tbd | Budget epic |
 | POST | `/api/budget/imports` | ImportBudgetExpenses | write | tbd | Budget epic |
 | GET | `/api/budget/summary` | GetBudgetSummary | read | `get_budget_summary` | Budget epic (#660) |
