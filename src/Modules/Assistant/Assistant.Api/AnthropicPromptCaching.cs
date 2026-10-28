@@ -4,9 +4,10 @@ using Anthropic.Models.Messages;
 using Microsoft.Extensions.AI;
 
 /// <summary>
-/// Puts an Anthropic cache breakpoint after the first system message. Tools render before the system
-/// prompt, so the tool definitions and the fixed instructions are cached together; the date line that
-/// follows stays outside the cached prefix. Keeps the loop provider-neutral.
+/// Places two Anthropic cache breakpoints on every call: after the first system message and after the
+/// last message. Tools render before the system prompt, so the first caches the tool definitions with
+/// the fixed instructions (the date line that follows stays outside it); the second lets each tool round
+/// read the previous round's history and tool results from cache. Keeps the loop provider-neutral.
 /// </summary>
 /// <param name="inner">The Anthropic chat client.</param>
 internal sealed class AnthropicPromptCaching(IChatClient inner) : DelegatingChatClient(inner)
@@ -14,17 +15,24 @@ internal sealed class AnthropicPromptCaching(IChatClient inner) : DelegatingChat
     /// <inheritdoc />
     public override Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-        => base.GetResponseAsync(MarkInstructions(messages), options, cancellationToken);
+        => base.GetResponseAsync(MarkBreakpoints(messages), options, cancellationToken);
 
     /// <inheritdoc />
     public override IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-        => base.GetStreamingResponseAsync(MarkInstructions(messages), options, cancellationToken);
+        => base.GetStreamingResponseAsync(MarkBreakpoints(messages), options, cancellationToken);
 
-    private static List<ChatMessage> MarkInstructions(IEnumerable<ChatMessage> messages)
+    private static List<ChatMessage> MarkBreakpoints(IEnumerable<ChatMessage> messages)
     {
         List<ChatMessage> list = [.. messages];
+
+        // The loop resends the same content objects every round and the browser history is untrusted,
+        // so clear every earlier mark first: the API rejects more than four breakpoints.
+        foreach (AIContent content in list.SelectMany(m => m.Contents))
+            content.WithCacheControl((CacheControlEphemeral?)null);
+
         list.FirstOrDefault(m => m.Role == ChatRole.System)?.Contents.LastOrDefault()?.WithCacheControl(new CacheControlEphemeral());
+        list.LastOrDefault()?.Contents.LastOrDefault()?.WithCacheControl(new CacheControlEphemeral());
         return list;
     }
 }

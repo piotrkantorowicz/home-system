@@ -9,6 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Assistant.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure.Web\Shared.Infrastructure.Web.csproj" />
   </ItemGroup>
 
