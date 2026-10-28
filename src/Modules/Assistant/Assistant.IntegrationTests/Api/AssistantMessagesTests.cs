@@ -110,6 +110,16 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
         _factory.Model.Calls.ShouldBeEmpty();
     }
 
+    /// <summary>Design D8: the assistant registers the tools, but <c>/mcp</c> and its metadata stay unmapped while <c>Mcp:Enabled</c> is off.</summary>
+    [Fact]
+    public async Task AssistantOnly_McpEndpointAndMetadata_Return404()
+    {
+        var client = _factory.CreateClientFor($"auth|{_tag}");
+
+        (await client.PostAsJsonAsync("/mcp", new { jsonrpc = "2.0", id = 1, method = "tools/list" }, Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await client.GetAsync("/.well-known/oauth-protected-resource", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     /// <summary>A provider failure ends the stream with a readable error, then done.</summary>
     [Fact]
     public async Task SendMessage_ProviderFails_StreamsErrorThenDone()
