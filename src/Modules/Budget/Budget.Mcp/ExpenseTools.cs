@@ -16,8 +16,6 @@ using Shared.Infrastructure.Web;
 [Authorize(Policy = BudgetMcp.ReadScope)]
 internal sealed class ExpenseTools
 {
-    public const int MaxPageSize = 100;
-
     [McpServerTool(Name = "search_expenses", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Pages the expenses the caller can see, newest purchase first, with exact totals over the whole filter (not just the page). Every filter is optional. Amounts are decimal strings.")]
     public static async Task<ExpenseListDto> SearchExpenses(
@@ -36,8 +34,8 @@ internal sealed class ExpenseTools
     {
         if (page < 1)
             throw new McpException("page must be 1 or greater.");
-        if (pageSize is < 1 or > MaxPageSize)
-            throw new McpException($"pageSize must be between 1 and {MaxPageSize}.");
+        if (pageSize is < 1 or > ListExpensesQuery.MaxPageSize)
+            throw new McpException($"pageSize must be between 1 and {ListExpensesQuery.MaxPageSize}.");
 
         return await McpErrors.AsToolErrorsAsync(() => dispatcher.SendAsync<ListExpensesQuery, ExpenseListDto>(
             new ListExpensesQuery(user.AuthSubject(), page, pageSize, accountId, category, amount, from, to,

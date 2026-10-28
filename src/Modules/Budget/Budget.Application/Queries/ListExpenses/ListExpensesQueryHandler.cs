@@ -11,7 +11,6 @@ using Shared.Abstractions.Cqrs;
 internal sealed class ListExpensesQueryHandler(BudgetAccessService access, IBudgetReadDbContext db)
     : IQueryHandler<ListExpensesQuery, ExpenseListDto>
 {
-    private const int MaxPageSize = 100;
 
     public async Task<ExpenseListDto> HandleAsync(ListExpensesQuery query, CancellationToken ct = default)
     {
@@ -21,7 +20,7 @@ internal sealed class ListExpensesQueryHandler(BudgetAccessService access, IBudg
 
         var caller = await access.RequireAccessAsync(query.AuthSubject, ct);
         var page = Math.Max(query.Page, 1);
-        var pageSize = Math.Clamp(query.PageSize, 1, MaxPageSize);
+        var pageSize = Math.Clamp(query.PageSize, 1, ListExpensesQuery.MaxPageSize);
 
         var expenses = db.VisibleTo(caller);
         if (!query.IncludeVoided) expenses = expenses.Where(e => !e.IsVoided);
