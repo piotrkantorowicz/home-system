@@ -2,6 +2,7 @@ namespace HomeSystem.REST.Mcp;
 
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Assistant.Api;
 using DietPlanner.Mcp;
 using Investments.Mcp;
 using Microsoft.AspNetCore.Authentication;
@@ -26,7 +27,12 @@ internal static class McpHosting
         var options = builder.Configuration.GetSection(McpOptions.SectionName).Get<McpOptions>() ?? new McpOptions();
         builder.Services.AddSingleton(options);
         if (!options.Enabled)
+        {
+            // The assistant calls the same tools in-process; /mcp itself stays unmapped.
+            if (builder.Configuration.GetValue<bool>($"{AssistantOptions.SectionName}:{nameof(AssistantOptions.Enabled)}"))
+                builder.Services.AddMcpServer().AddModuleTools();
             return;
+        }
 
         var publicBaseUrl = options.PublicBaseUrl is { IsAbsoluteUri: true } url
             ? url
@@ -104,10 +110,15 @@ internal static class McpHosting
             .WithHttpTransport(transport => transport.Stateless = true)
             .AddAuthorizationFilters()
             .WithRequestFilters(filters => filters.AddCallToolFilter(McpCallLogging.Filter))
+            .AddModuleTools();
+    }
+
+    // Every module's tools plus McpToolInvoker: served by /mcp, by the assistant, or both.
+    private static void AddModuleTools(this IMcpServerBuilder mcp)
+        => mcp
             .AddInProcessToolCalls()
             .AddDietPlannerMcpTools()
             .AddInvestmentsMcpTools();
-    }
 
     public static void MapHomeSystemMcp(this WebApplication app)
     {
