@@ -1,5 +1,117 @@
 [
   {
+    "name": "archive_account",
+    "title": null,
+    "description": "Archives an envelope: it disappears from get_budget_context and new-expense choices and takes no new limits; its expenses stay. Reversible with restore_account. Needs the revision from get_account.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The envelope's revision from get_account.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "accountId",
+        "expectedRevision"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "clear_limit",
+    "title": null,
+    "description": "Removes an envelope's limit for one month, back to no limit. Needs the revision from list_limits. Clearing a limit that is already gone succeeds.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "month": {
+          "description": "Month, YYYY-MM.",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "description": "The limit's revision from list_limits.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "accountId",
+        "month",
+        "expectedRevision"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "create_account",
+    "title": null,
+    "description": "Creates an envelope in the caller's household budget. Not idempotent: after a lost response, check get_budget_context before calling again. Household envelopes are for owners and adults; personal ones belong to the caller or a member the caller manages.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Display name, 1-80 characters.",
+          "type": "string"
+        },
+        "visibility": {
+          "description": "Household (shared) or Personal.",
+          "type": "string"
+        },
+        "ownerPersonId": {
+          "description": "Personal only: owner person id, for a member the caller manages; the caller when omitted. Omit for Household.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "visibility"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "create_expense",
     "title": null,
     "description": "Records an expense in an envelope the caller can use. Idempotent per operationKey: repeat the same call with the same key after a lost response and you get the original expense (created=false), never a duplicate. Use a new key for a new expense. Validation errors name the field, e.g. \"Amount: ...\". Read get_budget_context first for envelope ids, category codes, funding sources and adults.",
@@ -82,6 +194,34 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "get_account",
+    "title": null,
+    "description": "Returns one envelope the caller can see, archived or not, with the revision that rename_account, archive_account and restore_account need. get_budget_context lists only active envelopes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "accountId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
     },
     "icons": null,
     "_meta": null
@@ -175,6 +315,104 @@
     "_meta": null
   },
   {
+    "name": "list_limits",
+    "title": null,
+    "description": "Lists the monthly limits set for one month on envelopes the caller can see, each with the revision that set_limit (when changing) and clear_limit need. Envelopes without a limit are absent; \"0.00\" is a real limit.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "month": {
+          "description": "Month, YYYY-MM.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "month"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "rename_account",
+    "title": null,
+    "description": "Renames an envelope the caller may manage. Needs the revision from get_account; a revision conflict means it changed since: call get_account and decide again.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The envelope's revision from get_account.",
+          "type": "integer"
+        },
+        "name": {
+          "description": "New display name, 1-80 characters.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "accountId",
+        "expectedRevision",
+        "name"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "restore_account",
+    "title": null,
+    "description": "Restores an archived envelope so it can take new expenses again. Needs the revision from get_account.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_account (archived envelopes are not in get_budget_context).",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The envelope's revision from get_account.",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "accountId",
+        "expectedRevision"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "search_expenses",
     "title": null,
     "description": "Pages the expenses the caller can see, newest purchase first, with exact totals over the whole filter (not just the page). Every filter is optional. Amounts are decimal strings.",
@@ -256,6 +494,52 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "set_limit",
+    "title": null,
+    "description": "Sets or changes an envelope's spending limit for one month; \"0.00\" is allowed and differs from no limit. Setting for the first time sends no revision; changing an existing limit needs its revision from list_limits. Not allowed on archived envelopes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "month": {
+          "description": "Month, YYYY-MM.",
+          "type": "string"
+        },
+        "amount": {
+          "description": "Decimal string with at most two decimals, e.g. \"1500.00\".",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "description": "The existing limit's revision from list_limits; omit when setting for the first time.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "accountId",
+        "month",
+        "amount"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
