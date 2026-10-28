@@ -21,6 +21,7 @@ using Shared.Infrastructure.Web;
 /// <param name="invoker">Runs module tools in-process.</param>
 /// <param name="tools">Every registered tool; only <see cref="ToolCapability.RunNow"/> ones are offered.</param>
 /// <param name="options">Assistant settings.</param>
+/// <param name="usage">Per-user token budget, checked before and counted after every model call.</param>
 /// <param name="clock">Source of today's date for the instructions.</param>
 /// <param name="logger">Logs tool names, outcomes, durations and token counts; never prompts, arguments or results.</param>
 internal sealed partial class AssistantAgent(
@@ -28,6 +29,7 @@ internal sealed partial class AssistantAgent(
     McpToolInvoker invoker,
     IEnumerable<McpServerTool> tools,
     AssistantOptions options,
+    AssistantUsage usage,
     TimeProvider clock,
     ILogger<AssistantAgent> logger)
 {
@@ -84,13 +86,14 @@ internal sealed partial class AssistantAgent(
         ClaimsPrincipal user, IReadOnlyList<ChatMessage> history, string message, TimeZoneInfo zone,
         [EnumeratorCancellation] CancellationToken ct)
     {
+        string subject = AssistantUsage.SubjectOf(user);
         DateTimeOffset now = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), zone);
         List<ChatMessage> added = [new(ChatRole.User, message)];
         List<ChatMessage> messages =
         [
             new(ChatRole.System, Instructions),
             new(ChatRole.System, $"Today is {now:dddd, yyyy-MM-dd} in the user's time zone ({zone.Id})."),
-            .. history,
+            .. Recent(history, options.MaxHistoryTokens),
             .. added,
         ];
         var chatOptions = new ChatOptions { Tools = _offered, MaxOutputTokens = options.MaxOutputTokens };
@@ -105,6 +108,14 @@ internal sealed partial class AssistantAgent(
                 break;
             }
 
+            // Each round resends the growing history, so the budget is checked before every call;
+            // the overshoot is at most one call.
+            if (usage.IsOverBudget(subject))
+            {
+                yield return Event("error", new { message = "You have used today's assistant allowance. It resets tomorrow." });
+                break;
+            }
+
             List<ChatResponseUpdate> updates = [];
             await foreach (ChatResponseUpdate update in chat.GetStreamingResponseAsync(messages, chatOptions, ct))
             {
@@ -114,8 +125,10 @@ internal sealed partial class AssistantAgent(
             }
 
             ChatResponse response = updates.ToChatResponse();
-            inputTokens += response.Usage?.InputTokenCount ?? 0;
-            outputTokens += response.Usage?.OutputTokenCount ?? 0;
+            long callInput = response.Usage?.InputTokenCount ?? 0, callOutput = response.Usage?.OutputTokenCount ?? 0;
+            usage.Add(subject, callInput + callOutput);
+            inputTokens += callInput;
+            outputTokens += callOutput;
             messages.AddRange(response.Messages);
             added.AddRange(response.Messages);
 
@@ -139,7 +152,27 @@ internal sealed partial class AssistantAgent(
 
         LogTurn(logger, inputTokens, outputTokens);
         yield return Event("history", new { messages = JsonSerializer.SerializeToElement(added, AIJsonUtilities.DefaultOptions) });
-        yield return Event("usage", new { inputTokens, outputTokens });
+        yield return Event("usage", new { inputTokens, outputTokens, todayTokens = usage.Today(subject), dailyBudget = usage.DailyBudget });
+    }
+
+    // Keeps the newest turns that fit the allowance. Cuts only at a user text message, so a tool call is
+    // never separated from its result.
+    // ponytail: size is estimated as serialized JSON length / 4, not real tokens; good enough for a cap.
+    private static IEnumerable<ChatMessage> Recent(IReadOnlyList<ChatMessage> history, int maxTokens)
+    {
+        const int charsPerToken = 4;
+        long size = 0;
+        int start = history.Count;
+        for (int i = history.Count - 1; i >= 0; i--)
+        {
+            size += JsonSerializer.Serialize(history[i], AIJsonUtilities.DefaultOptions).Length / charsPerToken;
+            if (size > maxTokens)
+                break;
+            if (history[i].Role == ChatRole.User && history[i].Contents.All(c => c is TextContent))
+                start = i;
+        }
+
+        return history.Skip(start);
     }
 
     // Server-side refusal: a tool the gate does not offer never reaches the invoker, whatever the model sends.
