@@ -282,6 +282,23 @@ entries:
             return {}
         return {"scope": " ".join(granted)}
 
+  - model: authentik_providers_oauth2.scopemapping
+    id: scope-mcp-budget-import
+    state: present
+    identifiers:
+      name: "home-system-mcp: budget import"
+    attrs:
+      scope_name: "mcp:budget:import"
+      description: "Import bank statements into your budget"
+      expression: |
+        # Authentik keeps granted scopes off the JWT; the API reads them from this claim.
+        # Discovery evaluates mappings without a token, so return nothing there.
+        try:
+            granted = token.scope
+        except NameError:
+            return {}
+        return {"scope": " ".join(granted)}
+
   - model: authentik_providers_oauth2.oauth2provider
     id: provider-home-system-mcp
     state: present
@@ -317,6 +334,7 @@ entries:
         - !KeyOf scope-mcp-investments-write
         - !KeyOf scope-mcp-budget-read
         - !KeyOf scope-mcp-budget-write
+        - !KeyOf scope-mcp-budget-import
 
   - model: authentik_core.application
     state: present
