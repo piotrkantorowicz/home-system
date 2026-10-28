@@ -15,8 +15,11 @@ public static class BudgetMcp
     /// <summary>Record and correct expenses, manage envelopes, limits and repayments.</summary>
     public const string WriteScope = "mcp:budget:write";
 
+    /// <summary>Execute a bank statement import of up to 1000 expenses; requires <see cref="WriteScope"/> as well.</summary>
+    public const string ImportScope = "mcp:budget:import";
+
     /// <summary>Every scope Budget tools use, for policy registration and resource metadata.</summary>
-    public static IReadOnlyList<string> Scopes { get; } = [ReadScope, WriteScope];
+    public static IReadOnlyList<string> Scopes { get; } = [ReadScope, WriteScope, ImportScope];
 
     /// <summary>Registers Budget's tools on the host's MCP server.</summary>
     /// <param name="builder">The host's MCP server builder.</param>

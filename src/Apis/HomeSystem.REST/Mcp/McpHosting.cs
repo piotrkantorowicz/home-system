@@ -84,6 +84,7 @@ internal static class McpHosting
             authorization.AddMcpScopePolicy(InvestmentsMcp.WriteScope, enabled: options.WritesEnabled);
             authorization.AddMcpScopePolicy(BudgetMcp.ReadScope);
             authorization.AddMcpScopePolicy(BudgetMcp.WriteScope, enabled: options.WritesEnabled);
+            authorization.AddMcpScopePolicy(BudgetMcp.ImportScope, enabled: options.WritesEnabled && options.ImportsEnabled);
         });
 
         builder.Services.AddRateLimiter(limiter =>

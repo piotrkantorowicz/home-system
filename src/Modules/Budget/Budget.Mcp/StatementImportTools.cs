@@ -31,6 +31,7 @@ internal sealed class StatementImportTools
     [McpServerTool(Name = "execute_expense_import", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("Records the confirmed statement rows as expenses in one envelope, all or none (1 to 1000 rows). Only call it after the user has seen the preview and agreed. Each row needs the sourceKey and merchantKey from preview_expense_import plus the confirmed amount, date and category code (the same fields as create_expense). Idempotent per operationKey: repeat the same call after a lost response and you get the original expenses (created=false). Rows already imported are rejected.")]
     [Authorize(Policy = BudgetMcp.WriteScope)]
+    [Authorize(Policy = BudgetMcp.ImportScope)]
     public static Task<ImportExpensesResult> ExecuteExpenseImport(
         McpToolUser user,
         ICommandDispatcher commands,
@@ -39,5 +40,5 @@ internal sealed class StatementImportTools
         [Description("The confirmed rows, in file order.")] ImportExpenseRow[] rows,
         CancellationToken ct = default)
         => McpErrors.AsToolErrorsAsync(() => commands.SendAsync<ImportExpensesCommand, ImportExpensesResult>(
-            new ImportExpensesCommand(user.AuthSubject(), operationKey, accountId, rows), ct));
+            new ImportExpensesCommand(user.AuthSubject(), OperationKey.Require(operationKey), accountId, rows), ct));
 }

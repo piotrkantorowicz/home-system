@@ -144,4 +144,47 @@ public sealed class BudgetStatementImportToolsTests : IClassFixture<BudgetDataba
         tools.ShouldNotContain(t => t.Name == "execute_expense_import");
         call.Message.ShouldContain("forbidden", Case.Insensitive);
     }
+
+    /// <summary>Bulk import needs the import grant on top of write; an empty operation key is refused by name.</summary>
+    [Fact]
+    public async Task Execute_NeedsImportGrantAndAKey()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+        var withoutImport = $"{BudgetMcp.ReadScope} {BudgetMcp.WriteScope}";
+
+        await using var writer = await _mcp.ConnectAsync(BudgetMcpHost.Subject(h.Owner), withoutImport);
+        var tools = await writer.ListToolsAsync(cancellationToken: Ct);
+        var call = await Should.ThrowAsync<McpProtocolException>(() => writer.CallToolAsync("execute_expense_import",
+            new Dictionary<string, object?> { ["operationKey"] = Guid.CreateVersion7(), ["accountId"] = account, ["rows"] = Array.Empty<object>() },
+            cancellationToken: Ct).AsTask());
+
+        await using var importer = await _mcp.ConnectAsync(BudgetMcpHost.Subject(h.Owner), string.Join(' ', BudgetMcp.Scopes));
+        var empty = await BudgetMcpHost.CallExpectingErrorAsync(importer, "execute_expense_import",
+            new() { ["operationKey"] = Guid.Empty, ["accountId"] = account, ["rows"] = Array.Empty<object>() });
+
+        tools.ShouldContain(t => t.Name == "create_expense");
+        tools.ShouldNotContain(t => t.Name == "execute_expense_import");
+        call.Message.ShouldContain("forbidden", Case.Insensitive);
+        empty.ShouldContain("operationKey");
+    }
+
+    /// <summary>With imports switched off, the tool is hidden and rejected even for a token holding every grant.</summary>
+    [Fact]
+    public async Task Execute_WithImportsSwitchedOff_IsHiddenAndRejected()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var account = await BudgetScenario.DefaultEnvelopeAsync(h.Owner);
+        using var off = new BudgetMcpHost(_factory, importsEnabled: false);
+
+        await using var client = await off.ConnectAsync(BudgetMcpHost.Subject(h.Owner), string.Join(' ', BudgetMcp.Scopes));
+        var tools = await client.ListToolsAsync(cancellationToken: Ct);
+        var call = await Should.ThrowAsync<McpProtocolException>(() => client.CallToolAsync("execute_expense_import",
+            new Dictionary<string, object?> { ["operationKey"] = Guid.CreateVersion7(), ["accountId"] = account, ["rows"] = Array.Empty<object>() },
+            cancellationToken: Ct).AsTask());
+
+        tools.ShouldContain(t => t.Name == "preview_expense_import");
+        tools.ShouldNotContain(t => t.Name == "execute_expense_import");
+        call.Message.ShouldContain("forbidden", Case.Insensitive);
+    }
 }
