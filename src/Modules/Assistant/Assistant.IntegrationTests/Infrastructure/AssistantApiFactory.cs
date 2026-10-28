@@ -24,6 +24,9 @@ public sealed class AssistantApiFactory(AssistantDatabaseFixture databases, IRea
 {
     private Task? _migrated;
 
+    /// <summary>The server clock: 2026-10-28 21:30 UTC until a test advances it.</summary>
+    public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 28, 21, 30, 0, TimeSpan.Zero));
+
     /// <summary>The scripted model every request in this host talks to.</summary>
     public ScriptedChatClient Model { get; } = new();
 
@@ -86,7 +89,7 @@ public sealed class AssistantApiFactory(AssistantDatabaseFixture databases, IRea
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<TimeProvider>();
-            services.AddSingleton<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(2026, 10, 28, 21, 30, 0, TimeSpan.Zero)));
+            services.AddSingleton<TimeProvider>(Clock);
             services.RemoveAll<IChatClient>();
             services.AddSingleton<IChatClient>(Model);
 

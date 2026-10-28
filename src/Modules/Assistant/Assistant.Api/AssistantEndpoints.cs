@@ -32,8 +32,8 @@ internal static class AssistantEndpoints
         return app;
     }
 
-    private static Results<ServerSentEventsResult<object>, ValidationProblem> SendMessage(
-        AssistantMessageRequest request, ClaimsPrincipal user, AssistantAgent agent, CancellationToken ct)
+    private static Results<ServerSentEventsResult<object>, ValidationProblem, ProblemHttpResult> SendMessage(
+        AssistantMessageRequest request, ClaimsPrincipal user, AssistantAgent agent, AssistantUsage usage, CancellationToken ct)
     {
         Dictionary<string, string[]> errors = [];
 
@@ -48,9 +48,14 @@ internal static class AssistantEndpoints
         if (history is null || !history.All(IsAllowed))
             errors["messages"] = ["History contains a message the assistant does not accept."];
 
-        return errors.Count > 0
-            ? TypedResults.ValidationProblem(errors)
-            : TypedResults.ServerSentEvents(agent.RunAsync(user, history!, request.Message, zone, ct)); // history is non-null when there are no errors
+        if (errors.Count > 0)
+            return TypedResults.ValidationProblem(errors);
+
+        // Over budget or over rate: refused before the model is called.
+        if (usage.TryStartRequest(AssistantUsage.SubjectOf(user)) is { } refusal)
+            return TypedResults.Problem(refusal, statusCode: StatusCodes.Status429TooManyRequests, title: "Assistant limit reached");
+
+        return TypedResults.ServerSentEvents(agent.RunAsync(user, history!, request.Message, zone, ct)); // history is non-null when there are no errors
     }
 
     // Null when the history is not a list of messages.

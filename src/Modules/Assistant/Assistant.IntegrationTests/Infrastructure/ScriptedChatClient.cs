@@ -11,6 +11,7 @@ using Microsoft.Extensions.AI;
 public sealed class ScriptedChatClient : IChatClient
 {
     private readonly ConcurrentQueue<Func<ChatResponse>> _script = new();
+    private readonly ConcurrentDictionary<ChatResponse, byte> _failsAfterStreaming = new();
 
     /// <summary>Every call the agent made, in order.</summary>
     public ConcurrentQueue<(IReadOnlyList<ChatMessage> Messages, ChatOptions? Options)> Calls { get; } = new();
@@ -26,6 +27,15 @@ public sealed class ScriptedChatClient : IChatClient
     /// <param name="text">The answer.</param>
     public void Answers(string text) => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, text)));
 
+    /// <summary>Queues a model turn that streams its text and usage, then fails like a dropped connection.</summary>
+    /// <param name="text">The text streamed before the failure.</param>
+    public void FailsAfterStreaming(string text) => _script.Enqueue(() =>
+    {
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, text));
+        _failsAfterStreaming[response] = 0;
+        return response;
+    });
+
     /// <summary>Queues a model turn that fails like an unreachable provider.</summary>
     public void Fails() => _script.Enqueue(() => throw new HttpRequestException("provider down"));
 
@@ -38,8 +48,12 @@ public sealed class ScriptedChatClient : IChatClient
         IEnumerable<ChatMessage> messages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await Task.Yield();
-        foreach (ChatResponseUpdate update in Next(messages, options).ToChatResponseUpdates())
+        ChatResponse response = Next(messages, options);
+        foreach (ChatResponseUpdate update in response.ToChatResponseUpdates())
             yield return update;
+
+        if (_failsAfterStreaming.ContainsKey(response))
+            throw new HttpRequestException("connection dropped");
     }
 
     /// <inheritdoc />
