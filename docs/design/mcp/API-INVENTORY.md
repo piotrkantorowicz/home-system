@@ -73,10 +73,10 @@ existing admin policy, never the everyday write grant).
 | GET | `/api/budget/limits` | ListBudgetLimits | read | `list_limits` | Budget epic (#662) |
 | PUT | `/api/budget/accounts/{id:guid}/limits/{month}` | SetBudgetLimit | write | `set_limit` | Budget epic (#662) |
 | DELETE | `/api/budget/accounts/{id:guid}/limits/{month}` | ClearBudgetLimit | destructive | `clear_limit` | Budget epic (#662) |
-| GET | `/api/budget/settlement` | GetBudgetSettlement | read | tbd | Budget epic |
-| GET | `/api/budget/settlements` | ListBudgetRepayments | read | tbd | Budget epic |
-| POST | `/api/budget/settlements` | RecordBudgetRepayment | write | tbd | Budget epic |
-| POST | `/api/budget/settlements/{id:guid}/void` | VoidBudgetRepayment | destructive | tbd | Budget epic |
+| GET | `/api/budget/settlement` | GetBudgetSettlement | read | `get_settlement` | Budget epic (#663) |
+| GET | `/api/budget/settlements` | ListBudgetRepayments | read | `list_repayments` | Budget epic (#663) |
+| POST | `/api/budget/settlements` | RecordBudgetRepayment | write | `record_repayment` (`operationKey` = ClientRequestId) | Budget epic (#663) |
+| POST | `/api/budget/settlements/{id:guid}/void` | VoidBudgetRepayment | destructive | `void_repayment` | Budget epic (#663) |
 
 ### DietPlanner
 

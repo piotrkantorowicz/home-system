@@ -315,6 +315,25 @@
     "_meta": null
   },
   {
+    "name": "get_settlement",
+    "title": null,
+    "description": "Returns who owes whom across all recorded shared expenses and repayments: each adult's net balance and the suggested payments that would settle everyone. Owners and adults only. Amounts are decimal strings.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "list_limits",
     "title": null,
     "description": "Lists the monthly limits set for one month on envelopes the caller can see, each with the revision that set_limit (when changing) and clear_limit need. Envelopes without a limit are absent; \"0.00\" is a real limit.",
@@ -337,6 +356,95 @@
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "list_repayments",
+    "title": null,
+    "description": "Pages recorded repayments, newest payment date first, voided ones included and marked. Each carries the revision that void_repayment needs. Owners and adults only.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 100.",
+          "type": "integer",
+          "default": 20
+        }
+      }
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "record_repayment",
+    "title": null,
+    "description": "Records that one adult actually paid another; no money moves through the app. Owners and adults only, and either party may be named. Idempotent per operationKey: repeat the same call with the same key after a lost response and you get the original repayment (created=false), never a duplicate. A payment larger than the suggestion is recorded as stated. Person ids come from get_settlement or get_budget_context.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key: a fresh GUID per logical repayment, reused only when retrying that same call.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "fromPersonId": {
+          "description": "Person id of who paid.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "toPersonId": {
+          "description": "Person id of who received; must differ from the payer.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "amount": {
+          "description": "Positive decimal string with at most two decimals, e.g. \"40.00\".",
+          "type": "string"
+        },
+        "paidOn": {
+          "description": "Date the payment was made, YYYY-MM-DD.",
+          "type": "string",
+          "format": "date"
+        },
+        "note": {
+          "description": "Optional note, up to 200 characters.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "fromPersonId",
+        "toPersonId",
+        "amount",
+        "paidOn"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "icons": null,
     "_meta": null
@@ -670,6 +778,44 @@
       "required": [
         "expenseId",
         "operationKey",
+        "expectedRevision",
+        "reason"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "void_repayment",
+    "title": null,
+    "description": "Voids a recorded repayment so the debt it reduced is restored; it cannot be undone (record a new repayment instead). Needs the revision from list_repayments and a reason. Repeating a completed void adds nothing. Owners and adults only.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "repaymentId": {
+          "description": "Repayment id from list_repayments.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The repayment's revision from list_repayments.",
+          "type": "integer"
+        },
+        "reason": {
+          "description": "Why it is voided, 1-200 characters.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repaymentId",
         "expectedRevision",
         "reason"
       ]
