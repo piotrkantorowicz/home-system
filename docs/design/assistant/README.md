@@ -75,6 +75,9 @@ flowchart LR
 
 ### 3.3 Request and stream contract
 
+`GET /api/assistant` — SPA bearer token; `{ provider }` when `Assistant:Enabled`, else 404. The
+panel asks it first: 404 hides the panel, `provider` is shown in it (§11).
+
 `POST /api/assistant/messages` — SPA bearer token, `Assistant:Enabled` else 404.
 
 Request body: `messages` (the browser-held history, trimmed per §8), the new user message

@@ -158,6 +158,26 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    /// <summary>The panel asks first whether the assistant is on and which provider it uses.</summary>
+    [Fact]
+    public async Task GetStatus_Enabled_ReturnsProvider()
+    {
+        var response = await _factory.CreateClientFor($"auth|{_tag}").GetFromJsonAsync<JsonElement>("/api/assistant", Ct);
+
+        response.GetProperty("provider").GetString().ShouldBe("Anthropic");
+    }
+
+    /// <summary>With the switch off the status endpoint is gone too, so the panel hides itself.</summary>
+    [Fact]
+    public async Task GetStatus_Disabled_Returns404()
+    {
+        using var factory = new AssistantApiFactory(databases, new Dictionary<string, string?> { ["Assistant:Enabled"] = "false" });
+
+        var response = await factory.CreateClientFor($"auth|{_tag}").GetAsync("/api/assistant", Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     /// <inheritdoc />
     public void Dispose() => _factory.Dispose();
 

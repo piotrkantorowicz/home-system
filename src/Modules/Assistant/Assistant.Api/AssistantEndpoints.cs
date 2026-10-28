@@ -25,12 +25,19 @@ internal static class AssistantEndpoints
             .RequireAuthorization()
             .WithTags("Assistant");
 
+        group.MapGet("", GetStatus)
+            .WithName("GetAssistantStatus")
+            .WithSummary("Report that the assistant is on and which provider it uses; 404 when it is off");
+
         group.MapPost("/messages", SendMessage)
             .WithName("SendAssistantMessage")
             .WithSummary("Run one assistant turn and stream text, tool activity, history and usage as server-sent events");
 
         return app;
     }
+
+    private static Ok<AssistantStatusResponse> GetStatus(AssistantOptions options)
+        => TypedResults.Ok(new AssistantStatusResponse(options.Provider));
 
     private static Results<ServerSentEventsResult<object>, ValidationProblem, ProblemHttpResult> SendMessage(
         AssistantMessageRequest request, ClaimsPrincipal user, AssistantAgent agent, AssistantUsage usage, CancellationToken ct)
