@@ -87,6 +87,109 @@
     "_meta": null
   },
   {
+    "name": "execute_expense_import",
+    "title": null,
+    "description": "Records the confirmed statement rows as expenses in one envelope, all or none (1 to 1000 rows). Only call it after the user has seen the preview and agreed. Each row needs the sourceKey and merchantKey from preview_expense_import plus the confirmed amount, date and category code (the same fields as create_expense). Idempotent per operationKey: repeat the same call after a lost response and you get the original expenses (created=false). Rows already imported are rejected.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key for this whole import: a fresh GUID, reused only when retrying this same call.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "accountId": {
+          "description": "Envelope id the rows are recorded in; the one previewed.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "rows": {
+          "description": "The confirmed rows, in file order.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sourceKey": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              },
+              "occurredOn": {
+                "type": "string",
+                "format": "date"
+              },
+              "category": {
+                "type": "string"
+              },
+              "fundingSource": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "paidByPersonId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "participantIds": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "merchantKey": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "sourceKey",
+              "amount",
+              "occurredOn",
+              "category",
+              "fundingSource",
+              "paidByPersonId",
+              "participantIds",
+              "description"
+            ]
+          }
+        }
+      },
+      "required": [
+        "operationKey",
+        "accountId",
+        "rows"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "get_budget_context",
     "title": null,
     "description": "Returns the household budget (null until it is set up in the app), the active envelopes the caller can see, the category and funding source codes, and the owners and adults who can pay for or share a household expense. Call it first: other budget tools take ids and codes from it.",
@@ -161,6 +264,39 @@
       },
       "required": [
         "expenseId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "preview_expense_import",
+    "title": null,
+    "description": "Parses a bank statement (CSV or XML export, passed as its full text) and classifies each row for import into one envelope, without changing anything. Candidates are outgoing booked rows with a sourceKey, a suggestedCategory when that merchant was imported before, and a status: New, AlreadyImported (cannot be imported again) or PossibleDuplicate (matches lists the similar expenses). Skipped rows and unparseable issues are listed. Show the candidates to the user, settle categories (ask when unsure), then call execute_expense_import with only the rows they confirmed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Envelope id from get_budget_context that the rows would be imported into.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "statement": {
+          "description": "The statement file's full text, exactly as exported.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "accountId",
+        "statement"
       ]
     },
     "outputSchema": null,
