@@ -28,8 +28,10 @@ internal sealed class AnthropicPromptCaching(IChatClient inner) : DelegatingChat
 
         // The loop resends the same content objects every round and the browser history is untrusted,
         // so clear every earlier mark first: the API rejects more than four breakpoints.
+        // A typed null: a bare null literal matches both WithCacheControl overloads (CS0121).
+        CacheControlEphemeral? none = null;
         foreach (AIContent content in list.SelectMany(m => m.Contents))
-            content.WithCacheControl((CacheControlEphemeral?)null);
+            content.WithCacheControl(none);
 
         list.FirstOrDefault(m => m.Role == ChatRole.System)?.Contents.LastOrDefault()?.WithCacheControl(new CacheControlEphemeral());
         list.LastOrDefault()?.Contents.LastOrDefault()?.WithCacheControl(new CacheControlEphemeral());
