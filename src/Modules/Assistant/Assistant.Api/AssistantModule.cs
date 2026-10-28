@@ -27,7 +27,7 @@ public static class AssistantModule
         if (options.MaxToolRounds < 1 || options.MaxOutputTokens < 1)
             throw new InvalidOperationException("Assistant:MaxToolRounds and Assistant:MaxOutputTokens must be positive.");
 
-        services.AddSingleton<IChatClient>(CreateChatClient(options));
+        AddChatClient(services, options);
         services.AddSingleton<AssistantAgent>();
         return services;
     }
@@ -38,18 +38,22 @@ public static class AssistantModule
     public static IEndpointRouteBuilder MapAssistantEndpoints(this IEndpointRouteBuilder app)
         => app.ServiceProvider.GetRequiredService<AssistantOptions>().Enabled ? app.MapAssistantEndpointsGroup() : app;
 
-    // One provider and model per deployment, chosen at startup. The only provider-specific code;
-    // the return type widens to IChatClient when #732 adds OpenAI and xAI.
-    private static AnthropicPromptCaching CreateChatClient(AssistantOptions options)
+    // One provider and model per deployment, checked at startup. The only provider-specific code.
+    // Clients come from factories so the container owns and disposes them.
+    private static void AddChatClient(IServiceCollection services, AssistantOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ApiKey))
             throw new InvalidOperationException("Assistant:ApiKey is required when Assistant:Enabled is true.");
 
-        return options.Provider switch
+        switch (options.Provider)
         {
-            "Anthropic" => new AnthropicPromptCaching(
-                new AnthropicClient { ApiKey = options.ApiKey }.AsIChatClient(options.Model, options.MaxOutputTokens)),
-            _ => throw new InvalidOperationException($"Assistant:Provider '{options.Provider}' is not supported."),
-        };
+            case "Anthropic":
+                services.AddSingleton<IAnthropicClient>(_ => new AnthropicClient { ApiKey = options.ApiKey });
+                services.AddSingleton<IChatClient>(sp => new AnthropicPromptCaching(
+                    sp.GetRequiredService<IAnthropicClient>().AsIChatClient(options.Model, options.MaxOutputTokens)));
+                break;
+            default:
+                throw new InvalidOperationException($"Assistant:Provider '{options.Provider}' is not supported.");
+        }
     }
 }
