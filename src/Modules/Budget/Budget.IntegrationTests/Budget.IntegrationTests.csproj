@@ -26,7 +26,9 @@
     <ProjectReference Include="..\..\..\Apis\HomeSystem.REST\HomeSystem.REST.csproj" />
     <ProjectReference Include="..\Budget.Api\Budget.Api.csproj" />
     <ProjectReference Include="..\Budget.Infrastructure\Budget.Infrastructure.csproj" />
+    <ProjectReference Include="..\Budget.Mcp\Budget.Mcp.csproj" />
     <ProjectReference Include="..\..\Household\Household.Infrastructure\Household.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Testing.Mcp\Shared.Testing.Mcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

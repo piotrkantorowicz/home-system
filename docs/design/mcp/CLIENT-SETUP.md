@@ -13,7 +13,7 @@ The blueprint `infrastructure/authentik/blueprints/home-system.yaml` registers t
 `home-system-mcp` provider and application: a public client with PKCE, explicit consent,
 callbacks `http://localhost:33418/callback` and `http://127.0.0.1:33418/callback`, and
 the grants `mcp:diet:read`, `mcp:diet:write`, `mcp:diet:import`,
-`mcp:investments:read` and `mcp:investments:write`.
+`mcp:investments:read`, `mcp:investments:write`, `mcp:budget:read` and `mcp:budget:write`.
 
 A fresh stack applies it on startup. On a running stack the worker re-applies changed
 blueprints within minutes; to apply at once:

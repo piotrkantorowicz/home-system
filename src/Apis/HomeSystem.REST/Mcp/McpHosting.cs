@@ -2,6 +2,7 @@ namespace HomeSystem.REST.Mcp;
 
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Budget.Mcp;
 using DietPlanner.Mcp;
 using Investments.Mcp;
 using Microsoft.AspNetCore.Authentication;
@@ -67,7 +68,7 @@ internal static class McpHosting
                 {
                     Resource = new Uri(publicBaseUrl, "/mcp").ToString(),
                     AuthorizationServers = { authority },
-                    ScopesSupported = [.. DietPlannerMcp.Scopes, .. InvestmentsMcp.Scopes],
+                    ScopesSupported = [.. DietPlannerMcp.Scopes, .. InvestmentsMcp.Scopes, .. BudgetMcp.Scopes],
                     ResourceName = "Home System",
                 };
             });
@@ -81,6 +82,8 @@ internal static class McpHosting
             authorization.AddMcpScopePolicy(DietPlannerMcp.ImportScope, enabled: options.WritesEnabled && options.ImportsEnabled);
             authorization.AddMcpScopePolicy(InvestmentsMcp.ReadScope);
             authorization.AddMcpScopePolicy(InvestmentsMcp.WriteScope, enabled: options.WritesEnabled);
+            authorization.AddMcpScopePolicy(BudgetMcp.ReadScope);
+            authorization.AddMcpScopePolicy(BudgetMcp.WriteScope, enabled: options.WritesEnabled);
         });
 
         builder.Services.AddRateLimiter(limiter =>
@@ -106,7 +109,8 @@ internal static class McpHosting
             .WithRequestFilters(filters => filters.AddCallToolFilter(McpCallLogging.Filter))
             .AddInProcessToolCalls()
             .AddDietPlannerMcpTools()
-            .AddInvestmentsMcpTools();
+            .AddInvestmentsMcpTools()
+            .AddBudgetMcpTools();
     }
 
     public static void MapHomeSystemMcp(this WebApplication app)
