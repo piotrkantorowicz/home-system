@@ -24,10 +24,13 @@ public static class AssistantModule
         if (!options.Enabled)
             return services;
 
-        if (options.MaxToolRounds < 1 || options.MaxOutputTokens < 1)
-            throw new InvalidOperationException("Assistant:MaxToolRounds and Assistant:MaxOutputTokens must be positive.");
+        if (options.MaxToolRounds < 1 || options.MaxOutputTokens < 1 || options.DailyTokenBudget < 1
+            || options.RequestsPerMinute < 1 || options.MaxHistoryTokens < 1)
+            throw new InvalidOperationException(
+                "Assistant:MaxToolRounds, MaxOutputTokens, DailyTokenBudget, RequestsPerMinute and MaxHistoryTokens must be positive.");
 
         AddChatClient(services, options);
+        services.AddSingleton<AssistantUsage>();
         services.AddSingleton<AssistantAgent>();
         return services;
     }
