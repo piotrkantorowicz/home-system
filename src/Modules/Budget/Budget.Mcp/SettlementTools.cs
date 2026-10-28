@@ -18,8 +18,6 @@ using Shared.Infrastructure.Web;
 [Authorize(Policy = BudgetMcp.ReadScope)]
 internal sealed class SettlementTools
 {
-    public const int MaxPageSize = 100;
-
     [McpServerTool(Name = "get_settlement", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Returns who owes whom across all recorded shared expenses and repayments: each adult's net balance and the suggested payments that would settle everyone. Owners and adults only. Amounts are decimal strings.")]
     public static Task<SettlementDto> GetSettlement(
@@ -40,8 +38,8 @@ internal sealed class SettlementTools
     {
         if (page < 1)
             throw new McpException("page must be 1 or greater.");
-        if (pageSize is < 1 or > MaxPageSize)
-            throw new McpException($"pageSize must be between 1 and {MaxPageSize}.");
+        if (pageSize is < 1 or > ListRepaymentsQuery.MaxPageSize)
+            throw new McpException($"pageSize must be between 1 and {ListRepaymentsQuery.MaxPageSize}.");
 
         return await McpErrors.AsToolErrorsAsync(() => dispatcher.SendAsync<ListRepaymentsQuery, PagedList<RepaymentDto>>(
             new ListRepaymentsQuery(user.AuthSubject(), page, pageSize), ct));
