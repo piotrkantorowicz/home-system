@@ -112,6 +112,93 @@
     "_meta": null
   },
   {
+    "name": "create_expense",
+    "title": null,
+    "description": "Records an expense in an envelope the caller can use. Idempotent per operationKey: repeat the same call with the same key after a lost response and you get the original expense (created=false), never a duplicate. Use a new key for a new expense. Validation errors name the field, e.g. \"Amount: ...\". Read get_budget_context first for envelope ids, category codes, funding sources and adults.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "operationKey": {
+          "description": "Idempotency key: a fresh GUID per logical expense, reused only when retrying that same call.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "accountId": {
+          "description": "Envelope id from get_budget_context.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "amount": {
+          "description": "Positive decimal string with at most two decimals, e.g. \"123.45\".",
+          "type": "string"
+        },
+        "occurredOn": {
+          "description": "Purchase date, YYYY-MM-DD.",
+          "type": "string",
+          "format": "date"
+        },
+        "category": {
+          "description": "Category code from get_budget_context.",
+          "type": "string"
+        },
+        "fundingSource": {
+          "description": "Individual (default) or HouseholdFunds.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "paidByPersonId": {
+          "description": "Payer person id; only for an individually funded shared expense.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        },
+        "participantIds": {
+          "description": "Adult person ids sharing the cost equally; required for an individually funded shared expense, omit otherwise.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "default": null
+        },
+        "description": {
+          "description": "Optional short note, at most 80 characters.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "operationKey",
+        "accountId",
+        "amount",
+        "occurredOn",
+        "category"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "get_account",
     "title": null,
     "description": "Returns one envelope the caller can see, archived or not, with the revision that rename_account, archive_account and restore_account need. get_budget_context lists only active envelopes.",
@@ -450,6 +537,147 @@
     "annotations": {
       "title": null,
       "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "update_expense",
+    "title": null,
+    "description": "Corrects an expense in place; envelope and recorder cannot change. Send every field (current values to keep them), the revision from get_expense and a reason. A revision conflict means it changed since: call get_expense and decide again. Idempotent per operationKey. Voided expenses cannot be edited.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "expenseId": {
+          "description": "Expense id from search_expenses.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "operationKey": {
+          "description": "Idempotency key: a fresh GUID per correction, reused only when retrying that same call.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The expense's current revision from get_expense.",
+          "type": "integer"
+        },
+        "reason": {
+          "description": "Why it is corrected, 1-200 characters.",
+          "type": "string"
+        },
+        "amount": {
+          "description": "Positive decimal string with at most two decimals.",
+          "type": "string"
+        },
+        "occurredOn": {
+          "description": "Purchase date, YYYY-MM-DD.",
+          "type": "string",
+          "format": "date"
+        },
+        "category": {
+          "description": "Category code from get_budget_context.",
+          "type": "string"
+        },
+        "fundingSource": {
+          "description": "Individual (default) or HouseholdFunds.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "paidByPersonId": {
+          "description": "Payer person id; only for an individually funded shared expense.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "default": null
+        },
+        "participantIds": {
+          "description": "Adult person ids sharing the cost equally.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "default": null
+        },
+        "description": {
+          "description": "Short note, at most 80 characters; omitted or blank clears it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "expenseId",
+        "operationKey",
+        "expectedRevision",
+        "reason",
+        "amount",
+        "occurredOn",
+        "category"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "void_expense",
+    "title": null,
+    "description": "Voids an expense: it stops counting towards totals and can no longer be edited; its history stays and this cannot be undone. Needs the revision from get_expense and a reason. Repeating a completed void adds no revision.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "expenseId": {
+          "description": "Expense id from search_expenses.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "operationKey": {
+          "description": "Idempotency key: a fresh GUID per void, reused only when retrying that same call.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "description": "The expense's current revision from get_expense.",
+          "type": "integer"
+        },
+        "reason": {
+          "description": "Why it is voided, 1-200 characters.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expenseId",
+        "operationKey",
+        "expectedRevision",
+        "reason"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
       "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": false
