@@ -11,12 +11,14 @@ using Shared.Testing.Mcp;
 /// signed tokens, so one subject can act over REST (test headers) and over MCP (JWT) on the same databases.
 /// </summary>
 /// <param name="factory">The REST host whose databases the MCP host shares.</param>
-internal sealed class BudgetMcpHost(BudgetApiFactory factory) : IDisposable
+/// <param name="importsEnabled">Whether <c>Mcp:ImportsEnabled</c> is on; off in production by default.</param>
+internal sealed class BudgetMcpHost(BudgetApiFactory factory, bool importsEnabled = true) : IDisposable
 {
     private readonly WebApplicationFactory<Program> _host = factory.WithWebHostBuilder(builder =>
     {
         foreach (var (key, value) in McpTestAuth.Settings)
             builder.UseSetting(key, value);
+        builder.UseSetting("Mcp:ImportsEnabled", importsEnabled ? "true" : "false");
         builder.ConfigureTestServices(services => services.AddTestMcpAuth());
     });
 

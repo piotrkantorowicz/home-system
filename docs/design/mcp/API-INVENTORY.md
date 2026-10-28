@@ -67,8 +67,8 @@ existing admin policy, never the everyday write grant).
 | POST | `/api/budget/expenses` | CreateBudgetExpense | write | `create_expense` (`operationKey` = ClientRequestId) | Budget epic (#661) |
 | PUT | `/api/budget/expenses/{id:guid}` | UpdateBudgetExpense | write | `update_expense` | Budget epic (#661) |
 | POST | `/api/budget/expenses/{id:guid}/void` | VoidBudgetExpense | destructive | `void_expense` | Budget epic (#661) |
-| POST | `/api/budget/imports/preview` | PreviewBudgetStatementImport | read | tbd | Budget epic |
-| POST | `/api/budget/imports` | ImportBudgetExpenses | write | tbd | Budget epic |
+| POST | `/api/budget/imports/preview` | PreviewBudgetStatementImport | read | `preview_expense_import` (statement as text) | Budget epic (#676) |
+| POST | `/api/budget/imports` | ImportBudgetExpenses | write | `execute_expense_import` (`operationKey` = ClientRequestId) | Budget epic (#676) |
 | GET | `/api/budget/summary` | GetBudgetSummary | read | `get_budget_summary` | Budget epic (#660) |
 | GET | `/api/budget/limits` | ListBudgetLimits | read | `list_limits` | Budget epic (#662) |
 | PUT | `/api/budget/accounts/{id:guid}/limits/{month}` | SetBudgetLimit | write | `set_limit` | Budget epic (#662) |
