@@ -34,7 +34,7 @@ internal sealed class ExpenseWriteTools
         [Description("Optional short note, at most 80 characters.")] string? description = null,
         CancellationToken ct = default)
         => McpErrors.AsToolErrorsAsync(() => commands.SendAsync<CreateExpenseCommand, ExpenseMutationResult>(
-            new CreateExpenseCommand(user.AuthSubject(), operationKey, accountId, amount, occurredOn, category, fundingSource,
+            new CreateExpenseCommand(user.AuthSubject(), OperationKey.Require(operationKey), accountId, amount, occurredOn, category, fundingSource,
                 paidByPersonId, participantIds, description), ct));
 
     [McpServerTool(Name = "update_expense", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
@@ -55,7 +55,7 @@ internal sealed class ExpenseWriteTools
         [Description("Short note, at most 80 characters; omitted or blank clears it.")] string? description = null,
         CancellationToken ct = default)
         => McpErrors.AsToolErrorsAsync(() => commands.SendAsync<UpdateExpenseCommand, ExpenseMutationResult>(
-            new UpdateExpenseCommand(user.AuthSubject(), expenseId, operationKey, expectedRevision, reason, amount, occurredOn,
+            new UpdateExpenseCommand(user.AuthSubject(), expenseId, OperationKey.Require(operationKey), expectedRevision, reason, amount, occurredOn,
                 category, fundingSource, paidByPersonId, participantIds, description), ct));
 
     [McpServerTool(Name = "void_expense", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
@@ -69,5 +69,5 @@ internal sealed class ExpenseWriteTools
         [Description("Why it is voided, 1-200 characters.")] string reason,
         CancellationToken ct = default)
         => McpErrors.AsToolErrorsAsync(() => commands.SendAsync<VoidExpenseCommand, ExpenseMutationResult>(
-            new VoidExpenseCommand(user.AuthSubject(), expenseId, operationKey, expectedRevision, reason), ct));
+            new VoidExpenseCommand(user.AuthSubject(), expenseId, OperationKey.Require(operationKey), expectedRevision, reason), ct));
 }
