@@ -29,7 +29,7 @@ internal sealed class SettlementWriteTools
         [Description("Optional note, up to 200 characters.")] string? note = null,
         CancellationToken ct = default)
         => McpErrors.AsToolErrorsAsync(() => commands.SendAsync<RecordRepaymentCommand, RepaymentMutationResult>(
-            new RecordRepaymentCommand(user.AuthSubject(), operationKey, fromPersonId, toPersonId, amount, paidOn, note), ct));
+            new RecordRepaymentCommand(user.AuthSubject(), OperationKey.Require(operationKey), fromPersonId, toPersonId, amount, paidOn, note), ct));
 
     [McpServerTool(Name = "void_repayment", ReadOnly = false, Destructive = true, Idempotent = true, OpenWorld = false)]
     [Description("Voids a recorded repayment so the debt it reduced is restored; it cannot be undone (record a new repayment instead). Needs the revision from list_repayments and a reason. Repeating a completed void adds nothing. Owners and adults only.")]

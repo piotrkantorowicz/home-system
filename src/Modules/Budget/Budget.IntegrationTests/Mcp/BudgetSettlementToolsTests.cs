@@ -120,6 +120,26 @@ public sealed class BudgetSettlementToolsTests : IClassFixture<BudgetDatabaseFix
         after.IsSettled.ShouldBeFalse();
     }
 
+    /// <summary>An all-zero operation key is refused under the name the agent sent.</summary>
+    [Fact]
+    public async Task RecordRepayment_WithEmptyOperationKey_NamesOperationKey()
+    {
+        var (h, bea) = await OwedAsync();
+
+        await using var client = await _mcp.ConnectAsync(BudgetMcpHost.Subject(h.Owner), BudgetMcp.WriteScope);
+        var error = await BudgetMcpHost.CallExpectingErrorAsync(client, "record_repayment", new()
+        {
+            ["operationKey"] = Guid.Empty,
+            ["fromPersonId"] = bea.PersonId,
+            ["toPersonId"] = h.OwnerPersonId,
+            ["amount"] = "1.00",
+            ["paidOn"] = "2026-10-02",
+        });
+
+        error.ShouldContain("operationKey");
+        error.ShouldNotContain("ClientRequestId");
+    }
+
     /// <summary>Children, guests and non-members get errors from every settlement tool, never data or a write.</summary>
     [Fact]
     public async Task Tools_ForNonAdultsAndNonMembers_ReturnErrors()
