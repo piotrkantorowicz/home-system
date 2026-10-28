@@ -216,10 +216,11 @@ Configuration (`Assistant` section):
 | `Model` | `claude-haiku-5-5` | Provider model id |
 | `ApiKey` | — | Required when enabled; secret store / environment only |
 | `BaseUrl` | provider default | Override, e.g. the xAI endpoint |
-| `DailyTokenBudget` | per #646 | Input + output tokens per user per day |
-| `RequestsPerMinute` | per #646 | Per user, fixed window |
+| `DailyTokenBudget` | `500000` | Input + output tokens per user per server day |
+| `RequestsPerMinute` | `10` | Per user, fixed window |
 | `MaxToolRounds` | `10` | Model ↔ tool round trips per request |
-| `MaxOutputTokens` | per #645 | Per model call |
+| `MaxOutputTokens` | `4096` | Per model call |
+| `MaxHistoryTokens` | `20000` | Allowance for browser history (estimated as JSON length / 4); older turns are dropped |
 
 ## 8. Limits and cost (#646)
 
@@ -233,7 +234,8 @@ Configuration (`Assistant` section):
   migrations for a module that otherwise has no store.)*
 - **Hard ceiling outside the app:** set a monthly spend limit in the provider console. The
   in-app budget is the per-user fairness cap; the console limit is the bill cap.
-- **Rate limit:** ASP.NET rate limiter per auth subject, as `/mcp` does.
+- **Rate limit:** per auth subject, fixed one-minute window, counted next to the budget on the same
+  `TimeProvider` (one 429 path, testable with a fake clock) rather than the ASP.NET rate limiter `/mcp` uses.
 - **Runaway guards:** `MaxToolRounds` per request, `MaxOutputTokens` per call, request body
   size cap, history trimmed to the most recent turns that fit a fixed token allowance (older
   turns are dropped server-side before the model call).
