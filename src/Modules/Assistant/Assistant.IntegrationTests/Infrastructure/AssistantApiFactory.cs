@@ -2,6 +2,7 @@ namespace Assistant.IntegrationTests.Infrastructure;
 
 using System.Net.Http.Json;
 using System.Net.ServerSentEvents;
+using Assistant.Api;
 using Household.Infrastructure;
 using Investments.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
@@ -19,7 +20,9 @@ using Microsoft.Extensions.Time.Testing;
 /// </summary>
 /// <param name="databases">The class's databases.</param>
 /// <param name="settings">Configuration overrides on top of the assistant defaults below.</param>
-public sealed class AssistantApiFactory(AssistantDatabaseFixture databases, IReadOnlyDictionary<string, string?>? settings = null)
+/// <param name="realProvider">Keep the configured provider's client instead of <see cref="Model"/>; its HTTP goes to <see cref="Provider"/>.</param>
+public sealed class AssistantApiFactory(
+    AssistantDatabaseFixture databases, IReadOnlyDictionary<string, string?>? settings = null, bool realProvider = false)
     : WebApplicationFactory<Program>
 {
     private Task? _migrated;
@@ -29,6 +32,9 @@ public sealed class AssistantApiFactory(AssistantDatabaseFixture databases, IRea
 
     /// <summary>The scripted model every request in this host talks to.</summary>
     public ScriptedChatClient Model { get; } = new();
+
+    /// <summary>The provider's HTTP endpoint when <c>realProvider</c> is set.</summary>
+    public StubProviderHandler Provider { get; } = new();
 
     /// <summary>A client acting as <paramref name="subject"/>.</summary>
     /// <param name="subject">Auth subject; unique per test.</param>
@@ -90,8 +96,15 @@ public sealed class AssistantApiFactory(AssistantDatabaseFixture databases, IRea
         {
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
-            services.RemoveAll<IChatClient>();
-            services.AddSingleton<IChatClient>(Model);
+            if (realProvider)
+            {
+                services.AddHttpClient(AssistantModule.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => Provider);
+            }
+            else
+            {
+                services.RemoveAll<IChatClient>();
+                services.AddSingleton<IChatClient>(Model);
+            }
 
             services.AddAuthentication(TestAuthHandler.SchemeName)
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
