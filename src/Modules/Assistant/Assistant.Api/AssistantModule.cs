@@ -1,10 +1,13 @@
 namespace Assistant.Api;
 
+using System.ClientModel;
+using System.ClientModel.Primitives;
 using Anthropic;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI;
 
 /// <summary>
 /// The Assistant module: an in-app agent that answers through the modules' MCP tools, called in-process
@@ -13,6 +16,12 @@ using Microsoft.Extensions.DependencyInjection;
 /// </summary>
 public static class AssistantModule
 {
+    /// <summary>Named <see cref="HttpClient"/> the OpenAI-compatible providers send through.</summary>
+    public const string HttpClientName = "Assistant";
+
+    private const string DefaultAnthropicModel = "claude-haiku-5-5";
+    private static readonly Uri XaiEndpoint = new("https://api.x.ai/v1");
+
     /// <summary>Registers the assistant when <c>Assistant:Enabled</c>; the host registers the tools.</summary>
     /// <param name="services">The host service collection.</param>
     /// <param name="configuration">The host configuration.</param>
@@ -51,12 +60,37 @@ public static class AssistantModule
         switch (options.Provider)
         {
             case "Anthropic":
+                string model = string.IsNullOrWhiteSpace(options.Model) ? DefaultAnthropicModel : options.Model;
                 services.AddSingleton<IAnthropicClient>(_ => new AnthropicClient { ApiKey = options.ApiKey });
                 services.AddSingleton<IChatClient>(sp => new AnthropicPromptCaching(
-                    sp.GetRequiredService<IAnthropicClient>().AsIChatClient(options.Model, options.MaxOutputTokens)));
+                    sp.GetRequiredService<IAnthropicClient>().AsIChatClient(model, options.MaxOutputTokens)));
                 break;
+
+            // OpenAI and xAI cache prompts automatically, so they need no caching wrapper.
+            // ponytail: Chat Completions, which xAI now lists as legacy next to its Responses API. Both
+            // providers still serve it and it keeps the call stateless; move to Responses (with store off)
+            // if xAI retires it.
+            case "OpenAI":
+            case "XAI":
+                if (string.IsNullOrWhiteSpace(options.Model))
+                    throw new InvalidOperationException($"Assistant:Model is required for Assistant:Provider '{options.Provider}'.");
+
+                Uri? endpoint = options.BaseUrl ?? (options.Provider == "XAI" ? XaiEndpoint : null);
+                services.AddHttpClient(HttpClientName);
+                services.AddSingleton<IChatClient>(sp => new OpenAIClient(
+                        new ApiKeyCredential(options.ApiKey),
+                        new OpenAIClientOptions
+                        {
+                            Endpoint = endpoint,
+                            Transport = new HttpClientPipelineTransport(sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)),
+                        })
+                    .GetChatClient(options.Model)
+                    .AsIChatClient());
+                break;
+
             default:
-                throw new InvalidOperationException($"Assistant:Provider '{options.Provider}' is not supported.");
+                throw new InvalidOperationException(
+                    $"Assistant:Provider '{options.Provider}' is not supported. Use Anthropic, OpenAI or XAI.");
         }
     }
 }
