@@ -9,6 +9,6 @@ public enum ToolCapability
     /// <summary>Read-only: runs as soon as the model calls it.</summary>
     RunNow,
 
-    /// <summary>Changes state: held for the user's confirmation (#648). Not offered yet.</summary>
+    /// <summary>Changes state: held as a pending action until the user confirms it.</summary>
     Hold,
 }

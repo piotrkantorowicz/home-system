@@ -98,5 +98,28 @@
     "diet_settings": "Ustawienia diety",
     "example": "Przykład",
     "delete_unavailable": "Usuwanie konta nie jest jeszcze dostępne."
+  },
+  "assistant": {
+    "title": "Asystent",
+    "open": "Otwórz asystenta",
+    "provider_notice": "Odpowiedzi generuje {{provider}}. Twoje wiadomości i dane, które asystent dla Ciebie odczytuje, są tam wysyłane.",
+    "conversation": "Rozmowa z asystentem",
+    "empty": "Zapytaj o posiłki, budżet lub inwestycje.",
+    "message_label": "Wiadomość do asystenta",
+    "placeholder": "Zapytaj o coś…",
+    "send": "Wyślij",
+    "clear": "Wyczyść rozmowę",
+    "limit_reached": "Osiągnięto limit asystenta. Spróbuj później.",
+    "failed": "Asystent nie mógł odpowiedzieć. Spróbuj ponownie.",
+    "tool_running": "W toku",
+    "tool_ok": "Gotowe",
+    "tool_failed": "Błąd",
+    "decide_first": "Najpierw potwierdź lub anuluj zmianę powyżej.",
+    "pending_title": "Potwierdź tę zmianę",
+    "pending_destructive": "Potwierdź tę zmianę — usuwa lub nadpisuje dane",
+    "confirm_action": "Potwierdź",
+    "cancel_action": "Anuluj",
+    "action_confirmed": "Potwierdzono",
+    "action_cancelled": "Anulowano"
   }
 }

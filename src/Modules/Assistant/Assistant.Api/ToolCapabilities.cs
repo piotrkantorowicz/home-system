@@ -30,18 +30,27 @@ public static partial class ToolCapabilities
     /// <returns>Whether the scope only reads.</returns>
     public static bool IsRead(string? scope) => IsRecognised(scope) && scope!.EndsWith(":read", StringComparison.Ordinal);
 
-    /// <summary>Classifies one tool.</summary>
+    /// <summary>True for a recognised <c>*:import</c> scope.</summary>
+    /// <param name="scope">A scope from <see cref="Scopes"/>.</param>
+    /// <returns>Whether the scope is a bulk import.</returns>
+    public static bool IsImport(string? scope) => IsRecognised(scope) && scope!.EndsWith(":import", StringComparison.Ordinal);
+
+    /// <summary>Classifies one tool under the deployment's switches (<c>Mcp:WritesEnabled</c>, <c>Mcp:ImportsEnabled</c>).</summary>
     /// <param name="tool">A registered tool.</param>
+    /// <param name="writesEnabled">Write tools may be offered.</param>
+    /// <param name="importsEnabled">Import tools may be offered (only with writes).</param>
     /// <returns>What the assistant may do with it.</returns>
-    public static ToolCapability Of(McpServerTool tool)
+    public static ToolCapability Of(McpServerTool tool, bool writesEnabled, bool importsEnabled)
     {
         IReadOnlyList<string?> scopes = Scopes(tool);
         if (scopes.Count == 0 || !scopes.All(IsRecognised))
             return ToolCapability.NotOffered;
 
-        return scopes.All(IsRead) && tool.ProtocolTool.Annotations?.ReadOnlyHint == true
-            ? ToolCapability.RunNow
-            : ToolCapability.Hold;
+        if (scopes.All(IsRead) && tool.ProtocolTool.Annotations?.ReadOnlyHint == true)
+            return ToolCapability.RunNow;
+
+        bool allowed = scopes.Any(IsImport) ? writesEnabled && importsEnabled : writesEnabled;
+        return allowed ? ToolCapability.Hold : ToolCapability.NotOffered;
     }
 
     [GeneratedRegex("^mcp:[a-z]+:(read|write|import)$")]

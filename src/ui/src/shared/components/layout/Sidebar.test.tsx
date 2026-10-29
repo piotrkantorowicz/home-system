@@ -1,12 +1,17 @@
+import { OPEN_ASSISTANT_EVENT } from '@shared/assistant/AssistantPanel';
 import { HouseholdRoleContext } from '@shared/context/HouseholdRoleContext';
 import { NavigationAccessContext } from '@shared/context/NavigationAccessContext';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OPEN_COMMAND_PALETTE_EVENT } from './CommandPalette';
 import { Sidebar } from './Sidebar';
+
+import { server } from '@/test/mocks/server';
+import { createWrapper } from '@/test/utils/queryWrapper';
 
 const icon = () => <svg />;
 const Unread = () => <span>3 unread</span>;
@@ -138,6 +143,7 @@ function renderSidebar(
         </NavigationAccessContext>
       </HouseholdRoleContext>
     </MemoryRouter>,
+    { wrapper: createWrapper() },
   );
 }
 
@@ -223,6 +229,20 @@ describe('Sidebar', () => {
     await userEvent.click(screen.getByRole('button', { name: /common.search_everything/ }));
     expect(opened).toHaveBeenCalledOnce();
     window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, opened);
+  });
+
+  it('opens the assistant from the footer when it is switched on', async () => {
+    server.use(
+      http.get('http://localhost:5050/api/assistant', () =>
+        HttpResponse.json({ provider: 'Anthropic' }),
+      ),
+    );
+    const opened = vi.fn();
+    window.addEventListener(OPEN_ASSISTANT_EVENT, opened);
+    renderSidebar();
+    await userEvent.click(await screen.findByRole('button', { name: 'assistant.title' }));
+    expect(opened).toHaveBeenCalledOnce();
+    window.removeEventListener(OPEN_ASSISTANT_EVENT, opened);
   });
 
   it('shows the user and the account menu trigger', () => {

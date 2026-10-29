@@ -75,6 +75,9 @@ flowchart LR
 
 ### 3.3 Request and stream contract
 
+`GET /api/assistant` — SPA bearer token; `{ provider }` when `Assistant:Enabled`, else 404. The
+panel asks it first: 404 hides the panel, `provider` is shown in it (§11).
+
 `POST /api/assistant/messages` — SPA bearer token, `Assistant:Enabled` else 404.
 
 Request body: `messages` (the browser-held history, trimmed per §8), the new user message
@@ -139,7 +142,7 @@ scope the gate does not recognise, is **not offered**.
   that every scope is one the gate recognises, and that scopes and annotations agree
   (read-only scopes ⇔ `ReadOnly = true`). A new tool missing `[Authorize]`, using an unknown
   scope or mis-annotated fails CI instead of being silently hidden or running unconfirmed.
-- Delivery order follows the epic: #645 offers run-now tools only; #648 adds held tools.
+- Delivery order follows the epic: #645 offered run-now tools only; #648 added held tools.
 
 ## 6. Write confirmation
 
@@ -172,10 +175,15 @@ sequenceDiagram
     end
 ```
 
-- **Pending action token:** Data Protection payload with auth subject, tool name, SHA-256 of
-  the canonical arguments JSON, the arguments themselves, a server-generated operation key
-  and an expiry (30 min, like preview tokens). Confirm runs exactly the arguments inside the
-  token; arguments sent beside it are ignored, so tampering cannot change what runs.
+- **Pending action token:** Data Protection payload with auth subject, tool name, the model's
+  call id, the arguments themselves (server-generated operation key included) and an expiry
+  (30 min, like preview tokens). Data Protection encrypts and authenticates the payload, so no
+  separate argument hash is needed. Confirm runs exactly the arguments inside the token; the
+  request carries only the token, so tampering cannot change what runs. The write switches are
+  read again on confirm: a tool switched off since it was held does not run.
+- **Request:** exactly one of `message`, `confirm` (token) or `cancel` (token), plus the
+  history. While an action waits, the panel accepts no new message (the history ends with an
+  unanswered call the provider would reject).
 - **Operation key is minted when the action is held**, not at confirm: a double-click or a
   retried confirm replays the original receipt instead of writing twice. The server replaces
   any `operationKey` the model put in the arguments; models invent keys such as

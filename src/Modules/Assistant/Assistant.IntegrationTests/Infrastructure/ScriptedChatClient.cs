@@ -23,6 +23,12 @@ public sealed class ScriptedChatClient : IChatClient
         => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant,
             [new FunctionCallContent($"call-{Guid.CreateVersion7():N}", tool, arguments ?? [])])));
 
+    /// <summary>Queues a model turn that calls several tools at once.</summary>
+    /// <param name="calls">Tool names with their arguments.</param>
+    public void CallsTools(params (string Tool, Dictionary<string, object?> Arguments)[] calls)
+        => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant,
+            [.. calls.Select(c => (AIContent)new FunctionCallContent($"call-{Guid.CreateVersion7():N}", c.Tool, c.Arguments))])));
+
     /// <summary>Queues a model turn that answers with text.</summary>
     /// <param name="text">The answer.</param>
     public void Answers(string text) => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, text)));

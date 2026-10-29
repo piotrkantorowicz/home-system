@@ -380,7 +380,13 @@ export const weightEntryHandlers = [
   }),
 ];
 
+// The assistant is off unless a test turns it on.
+const assistantHandlers = [
+  http.get(`${BASE}/api/assistant`, () => new HttpResponse(null, { status: 404 })),
+];
+
 export const handlers = [
+  ...assistantHandlers,
   ...productHandlers,
   ...importHandlers,
   ...mealHandlers,

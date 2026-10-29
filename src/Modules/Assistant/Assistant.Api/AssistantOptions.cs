@@ -35,6 +35,12 @@ public sealed class AssistantOptions
     /// <summary>Assistant requests one user may start per minute.</summary>
     public int RequestsPerMinute { get; set; } = 10;
 
+    /// <summary>Copied from <c>Mcp:WritesEnabled</c>: the switch acts for every client, the assistant included.</summary>
+    internal bool WritesEnabled { get; set; } = true;
+
+    /// <summary>Copied from <c>Mcp:ImportsEnabled</c>; imports also need <see cref="WritesEnabled"/>.</summary>
+    internal bool ImportsEnabled { get; set; }
+
     /// <summary>Rough token allowance for the browser history; older turns beyond it are dropped before the model call.</summary>
     public int MaxHistoryTokens { get; set; } = 20_000;
 }

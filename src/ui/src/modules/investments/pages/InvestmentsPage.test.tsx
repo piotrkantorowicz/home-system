@@ -221,10 +221,12 @@ describe('InvestmentsPage net worth', () => {
   });
 
   it('flags a wallet whose latest balance is older than 45 days', async () => {
-    const old = new Date();
-    old.setDate(old.getDate() - 46);
+    // Day arithmetic on the Warsaw calendar date, so a DST change inside the window or a run near
+    // midnight cannot turn 46 days into 45.
+    const old = new Date(`${todayInWarsaw()}T00:00:00Z`);
+    old.setUTCDate(old.getUTCDate() - 46);
     wallets = [
-      { ...xtb, latestAsOf: todayInWarsaw(old) },
+      { ...xtb, latestAsOf: old.toISOString().slice(0, 10) },
       { ...ike, latestAsOf: todayInWarsaw() },
     ];
     renderPage();

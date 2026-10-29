@@ -1,4 +1,5 @@
 import { NotificationsPanel } from '@modules/notifications/components/NotificationsPanel';
+import { AssistantButton } from '@shared/assistant/AssistantButton';
 import { useModuleLabels } from '@shared/context/ModuleLabelsContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from 'react-oidc-context';
@@ -40,6 +41,7 @@ export function Header() {
       </ModuleSwitcher>
 
       <div className="ml-auto flex items-center gap-2.5">
+        <AssistantButton className="text-muted-foreground hover:text-foreground hover:bg-accent/60 focus-visible:ring-primary inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none [&>svg]:size-5" />
         <NotificationsPanel />
       </div>
     </header>
