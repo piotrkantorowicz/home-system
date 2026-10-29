@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OpenAI;
 
 /// <summary>
@@ -25,8 +26,9 @@ public static class AssistantModule
     /// <summary>Registers the assistant when <c>Assistant:Enabled</c>; the host registers the tools.</summary>
     /// <param name="services">The host service collection.</param>
     /// <param name="configuration">The host configuration.</param>
+    /// <param name="environment">The host environment; the <c>Fake</c> provider is refused in Production.</param>
     /// <returns><paramref name="services"/> for chaining.</returns>
-    public static IServiceCollection AddAssistantModule(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAssistantModule(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var options = configuration.GetSection(AssistantOptions.SectionName).Get<AssistantOptions>() ?? new AssistantOptions();
         options.WritesEnabled = configuration.GetValue("Mcp:WritesEnabled", true);
@@ -40,7 +42,18 @@ public static class AssistantModule
             throw new InvalidOperationException(
                 "Assistant:MaxToolRounds, MaxOutputTokens, DailyTokenBudget, RequestsPerMinute and MaxHistoryTokens must be positive.");
 
-        AddChatClient(services, options);
+        // The scripted model for E2E runs; it needs no key and must never answer real users.
+        if (options.Provider == "Fake")
+        {
+            if (environment.IsProduction())
+                throw new InvalidOperationException("Assistant:Provider 'Fake' is for E2E runs and is refused in Production.");
+            services.AddSingleton<IChatClient>(sp => new FakeChatClient(sp.GetRequiredService<TimeProvider>()));
+        }
+        else
+        {
+            AddChatClient(services, options);
+        }
+
         services.AddSingleton<AssistantUsage>();
         services.AddSingleton<PendingActions>();
         services.AddSingleton<AssistantAgent>();

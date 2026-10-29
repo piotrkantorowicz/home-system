@@ -70,8 +70,13 @@ ConnectionStrings__Investments="Host=localhost;Port=5436;Database=investments;Us
 Mcp__Enabled=true Mcp__PublicBaseUrl=http://localhost:5050 Mcp__ImportsEnabled=true \
 Authentication__Mcp__Authority=http://localhost:9000/application/o/home-system-mcp/ \
 Authentication__Mcp__Audience=home-system-mcp \
+Assistant__Enabled=true Assistant__Provider=Fake \
 dotnet run --project src/Apis/HomeSystem.REST
 ```
+
+`Assistant__*` turns on the in-app assistant with the scripted `Fake` model the E2E
+`assistant.spec.ts` needs (no API key, refused in Production). For a real model set
+`Assistant__Provider` / `Assistant__ApiKey` instead (`docs/design/assistant/README.md` §7).
 
 The `Mcp__*` / `Authentication__Mcp__*` lines turn on the MCP endpoint at
 `http://localhost:5050/mcp` for Claude Code (setup: `docs/design/mcp/CLIENT-SETUP.md`).
