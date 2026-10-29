@@ -120,6 +120,14 @@
     "confirm_action": "Confirm",
     "cancel_action": "Cancel",
     "action_confirmed": "Confirmed",
-    "action_cancelled": "Cancelled"
+    "action_cancelled": "Cancelled",
+    "attach_image": "Attach image",
+    "remove_image": "Remove image",
+    "image_preview": "Image to send",
+    "image_attached": "Image attached",
+    "image_type": "Attach a JPEG, PNG or WebP image.",
+    "image_size": "The image is too large, even after shrinking.",
+    "image_unreadable": "The image could not be read.",
+    "image_rejected": "The assistant could not accept this image."
   }
 }

@@ -4,6 +4,8 @@ import { assistantFetch } from './client';
 
 export interface AssistantStatus {
   provider: string;
+  /** The model accepts image attachments. */
+  images: boolean;
 }
 
 /** `null` when the assistant is switched off (the endpoint answers 404); the panel then hides. */
