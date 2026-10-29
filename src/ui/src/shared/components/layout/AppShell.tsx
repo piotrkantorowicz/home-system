@@ -1,4 +1,5 @@
 import { useNotificationStream } from '@modules/notifications/api/hooks/useNotificationStream';
+import { AssistantPanel } from '@shared/assistant/AssistantPanel';
 import { usePreferenceEffects } from '@shared/hooks/usePreferences';
 import { useEffect } from 'react';
 import { useAuth } from 'react-oidc-context';
@@ -45,6 +46,9 @@ export function AppShell() {
 
       <BottomTabBar />
       <CommandPalette />
+      {auth.user?.profile.sub ? (
+        <AssistantPanel key={auth.user.profile.sub} subject={auth.user.profile.sub} />
+      ) : null}
     </div>
   );
 }
