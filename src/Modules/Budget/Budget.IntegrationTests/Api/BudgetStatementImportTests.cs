@@ -7,7 +7,7 @@ using Budget.IntegrationTests.Infrastructure;
 /// <summary>#672 — importing previewed rows: all or none, replay, overlap and the import as revision source.</summary>
 public sealed class BudgetStatementImportTests : IClassFixture<BudgetDatabaseFixture>, IDisposable
 {
-    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
+    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Join(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
 
     private readonly BudgetApiFactory _factory;
     private readonly BudgetScenario _scenario;

@@ -7,7 +7,7 @@ using Budget.IntegrationTests.Infrastructure;
 /// <summary>#673 — the preview suggests the category last imported for a merchant, per budget and scope.</summary>
 public sealed class BudgetCategorySuggestionTests : IClassFixture<BudgetDatabaseFixture>, IDisposable
 {
-    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
+    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Join(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
 
     private readonly BudgetApiFactory _factory;
     private readonly BudgetScenario _scenario;

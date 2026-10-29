@@ -60,5 +60,5 @@ public sealed class BudgetToolSchemaTests : IClassFixture<BudgetDatabaseFixture>
         .OfType<string>()];
 
     private static string SnapshotPath([CallerFilePath] string source = "")
-        => Path.Combine(Path.GetDirectoryName(source)!, "tool-schemas.json");
+        => Path.Join(Path.GetDirectoryName(source)!, "tool-schemas.json");
 }

@@ -14,7 +14,7 @@ using ModelContextProtocol;
 /// <summary>#676 (tools half) — statement preview and import over MCP: same candidates as REST, confirmed rows only, replay, duplicates reported, scope enforced.</summary>
 public sealed class BudgetStatementImportToolsTests : IClassFixture<BudgetDatabaseFixture>, IDisposable
 {
-    private static readonly byte[] MbankBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
+    private static readonly byte[] MbankBytes = File.ReadAllBytes(Path.Join(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
 
     private readonly BudgetApiFactory _factory;
     private readonly BudgetScenario _scenario;
