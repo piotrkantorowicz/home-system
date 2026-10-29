@@ -11,14 +11,17 @@ public sealed class AssistantOptions
     /// <summary>Maps the endpoint and registers the tools at all. Off by default: the endpoint answers 404.</summary>
     public bool Enabled { get; set; }
 
-    /// <summary>Model provider for the whole deployment. Only <c>Anthropic</c> today.</summary>
+    /// <summary>Model provider for the whole deployment: <c>Anthropic</c>, <c>OpenAI</c> or <c>XAI</c>.</summary>
     public string Provider { get; set; } = "Anthropic";
 
-    /// <summary>Provider model id.</summary>
-    public string Model { get; set; } = "claude-haiku-5-5";
+    /// <summary>Provider model id. Defaults to <c>claude-haiku-5-5</c> for Anthropic; required for OpenAI and XAI.</summary>
+    public string? Model { get; set; }
 
     /// <summary>Provider API key; secret store or environment only, never logged or sent to the browser.</summary>
     public string? ApiKey { get; set; }
+
+    /// <summary>Endpoint override for the OpenAI-compatible providers; XAI defaults to <c>https://api.x.ai/v1</c>.</summary>
+    public Uri? BaseUrl { get; set; }
 
     /// <summary>Model ↔ tool round trips one request may make.</summary>
     public int MaxToolRounds { get; set; } = 10;
