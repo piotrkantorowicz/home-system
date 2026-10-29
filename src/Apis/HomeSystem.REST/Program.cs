@@ -33,7 +33,7 @@ builder.Services.AddHouseholdModule(builder.Configuration);
 builder.Services.AddBudgetModule(builder.Configuration);
 builder.Services.AddInvestmentsModule(builder.Configuration);
 builder.Services.AddOperationsModule();
-builder.Services.AddAssistantModule(builder.Configuration);
+builder.Services.AddAssistantModule(builder.Configuration, builder.Environment);
 
 // CQRS dispatcher chain — registered once, shared by every module's handlers.
 builder.Services.AddCqrsDispatchers();
