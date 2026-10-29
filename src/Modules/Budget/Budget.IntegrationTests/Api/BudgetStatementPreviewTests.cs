@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 /// <summary>#671 — statement preview: candidates, skipped rows, already-imported and possible duplicates; writes nothing.</summary>
 public sealed class BudgetStatementPreviewTests : IClassFixture<BudgetDatabaseFixture>, IDisposable
 {
-    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
+    private static readonly byte[] Mbank = File.ReadAllBytes(Path.Join(AppContext.BaseDirectory, "Fixtures", "mbank.csv"));
 
     private readonly BudgetApiFactory _factory;
     private readonly BudgetScenario _scenario;

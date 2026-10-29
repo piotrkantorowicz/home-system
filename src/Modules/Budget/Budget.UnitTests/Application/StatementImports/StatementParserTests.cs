@@ -11,7 +11,7 @@ public sealed class StatementParserTests
     private const string MbankAccount = "00 1140 0000 0000 0000 0000 0001";
 
     private static StatementParseResult ParseFixture(string name)
-        => StatementParser.Parse(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Application", "StatementImports", "Fixtures", name)), BudgetCurrency.PLN);
+        => StatementParser.Parse(File.ReadAllBytes(Path.Join(AppContext.BaseDirectory, "Application", "StatementImports", "Fixtures", name)), BudgetCurrency.PLN);
 
     private static StatementParseResult ParseText(string text)
         => StatementParser.Parse(Encoding.UTF8.GetBytes(text), BudgetCurrency.PLN);

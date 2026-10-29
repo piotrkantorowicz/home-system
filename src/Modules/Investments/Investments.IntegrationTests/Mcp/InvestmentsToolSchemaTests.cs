@@ -60,5 +60,5 @@ public sealed class InvestmentsToolSchemaTests : IClassFixture<InvestmentsDataba
         .OfType<string>()];
 
     private static string SnapshotPath([CallerFilePath] string source = "")
-        => Path.Combine(Path.GetDirectoryName(source)!, "tool-schemas.json");
+        => Path.Join(Path.GetDirectoryName(source)!, "tool-schemas.json");
 }
