@@ -74,7 +74,7 @@ public static partial class InfrastructureDependencyInjection
             await dbContext.Database.MigrateAsync();
             LogMigrationsApplied(logger);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogMigrationsFailed(logger, ex);
         }
