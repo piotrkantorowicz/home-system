@@ -52,6 +52,25 @@ public sealed class AssistantWritesTests(AssistantDatabaseFixture databases) : I
         answer.Result!.ToString()!.ShouldContain($"Confirmed {_tag}");
     }
 
+    /// <summary>Thinking that came with the held call is left out of stored history but sent back before the call on confirm.</summary>
+    [Fact]
+    public async Task Confirm_HeldWriteWithReasoning_SendsReasoningBeforeTheCall()
+    {
+        var me = await _factory.HouseholdOwnerAsync();
+        _factory.Model.ThinksThenCallsTool($"thought {_tag}", "create_wallet", Wallet($"Reasoned {_tag}"));
+        List<SseItem<string>> held = await AssistantApiFactory.SendAsync(me, new { message = "Create a wallet" });
+        JsonElement history = Data(held, "history").GetProperty("messages");
+        history.ToString().ShouldNotContain($"thought {_tag}");
+        _factory.Model.Answers("Your wallet is ready.");
+
+        List<SseItem<string>> events = await AssistantApiFactory.SendAsync(
+            me, new { confirm = Data(held, "pending_action").GetProperty("token").GetString(), messages = history });
+
+        ChatMessage call = _factory.Model.Calls.Last().Messages.Single(m => m.Contents.OfType<FunctionCallContent>().Any());
+        call.Contents[0].ShouldBeOfType<TextReasoningContent>().Text.ShouldBe($"thought {_tag}");
+        Data(events, "history").GetProperty("messages").ToString().ShouldNotContain($"thought {_tag}");
+    }
+
     /// <summary>Cancel writes nothing and tells the model the user declined.</summary>
     [Fact]
     public async Task Cancel_HeldWrite_WritesNothingAndTellsModel()

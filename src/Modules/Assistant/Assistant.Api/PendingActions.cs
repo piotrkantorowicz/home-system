@@ -23,9 +23,10 @@ internal sealed class PendingActions(IDataProtectionProvider protection, TimePro
     /// <param name="tool">Tool name.</param>
     /// <param name="callId">The model's call id.</param>
     /// <param name="arguments">The arguments to run on confirm.</param>
+    /// <param name="reasoning">Reasoning content that came with the call, if any.</param>
     /// <returns>The token.</returns>
-    public string Hold(string subject, string tool, string callId, JsonElement arguments)
-        => _protector.Protect(JsonSerializer.Serialize(new PendingAction(subject, tool, callId, arguments, clock.GetUtcNow() + Lifetime)));
+    public string Hold(string subject, string tool, string callId, JsonElement arguments, JsonElement? reasoning)
+        => _protector.Protect(JsonSerializer.Serialize(new PendingAction(subject, tool, callId, arguments, reasoning, clock.GetUtcNow() + Lifetime)));
 
     /// <summary>Opens a token for <paramref name="subject"/>.</summary>
     /// <param name="token">The token from the panel.</param>

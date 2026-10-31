@@ -66,6 +66,44 @@ public sealed class AssistantMessagesTests(AssistantDatabaseFixture databases) :
         offered.Select(t => t.Name).ShouldNotContain("create_wallet");
     }
 
+    /// <summary>A reasoning block is kept for the next tool round of this turn, and left out of the history the browser stores.</summary>
+    [Fact]
+    public async Task SendMessage_ReasoningWithToolCall_StaysInTurnAndLeavesHistory()
+    {
+        var me = await _factory.HouseholdOwnerAsync();
+        _factory.Model.ThinksThenCallsTool($"thought {_tag}", "list_wallets");
+        _factory.Model.Answers("You have wallets.");
+
+        List<SseItem<string>> events = await AssistantApiFactory.SendAsync(me, new { message = "Wallets?" });
+
+        _factory.Model.Calls.ElementAt(1).Messages.SelectMany(m => m.Contents).OfType<TextReasoningContent>()
+            .Select(c => c.Text).ShouldContain($"thought {_tag}");
+        Data(events, "history").GetProperty("messages").ToString().ShouldNotContain($"thought {_tag}");
+        Data(events, "history").GetProperty("messages").ToString().ShouldContain("list_wallets");
+    }
+
+    /// <summary>History already saved with a thinking block is replayed without it, so a signature from another prefix cannot fail the next message.</summary>
+    [Fact]
+    public async Task SendMessage_HistoryWithReasoning_DropsItBeforeTheModel()
+    {
+        var me = await _factory.HouseholdOwnerAsync();
+        var history = JsonSerializer.SerializeToElement(
+            new List<ChatMessage>
+            {
+                new(ChatRole.User, "Earlier"),
+                new(ChatRole.Assistant, [new TextReasoningContent($"stale {_tag}"), new TextContent("Earlier answer")]),
+            },
+            AIJsonUtilities.DefaultOptions);
+        _factory.Model.Answers("Now.");
+
+        List<SseItem<string>> events = await AssistantApiFactory.SendAsync(me, new { message = "Next", messages = history });
+
+        events.Select(e => e.EventType).ShouldContain("text");
+        IReadOnlyList<ChatMessage> sent = _factory.Model.Calls.Single().Messages;
+        sent.SelectMany(m => m.Contents).OfType<TextReasoningContent>().ShouldBeEmpty();
+        sent.Where(m => m.Role != ChatRole.System).Select(m => m.Text).ShouldBe(["Earlier", "Earlier answer", "Next"]);
+    }
+
     /// <summary>History from an earlier turn goes back to the model, after the instructions and today's date in the user's time zone.</summary>
     [Fact]
     public async Task SendMessage_WithHistoryAndTimeZone_SendsBothToModel()
