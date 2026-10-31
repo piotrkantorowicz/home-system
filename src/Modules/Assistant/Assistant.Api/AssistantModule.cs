@@ -38,9 +38,9 @@ public static class AssistantModule
             return services;
 
         if (options.MaxToolRounds < 1 || options.MaxOutputTokens < 1 || options.DailyTokenBudget < 1
-            || options.RequestsPerMinute < 1 || options.MaxHistoryTokens < 1)
+            || options.RequestsPerMinute < 1 || options.MaxHistoryTokens < 1 || options.MaxImageBytes < 1)
             throw new InvalidOperationException(
-                "Assistant:MaxToolRounds, MaxOutputTokens, DailyTokenBudget, RequestsPerMinute and MaxHistoryTokens must be positive.");
+                "Assistant:MaxToolRounds, MaxOutputTokens, DailyTokenBudget, RequestsPerMinute, MaxHistoryTokens and MaxImageBytes must be positive.");
 
         // The scripted model for E2E runs; it needs no key and must never answer real users.
         if (options.Provider == "Fake")

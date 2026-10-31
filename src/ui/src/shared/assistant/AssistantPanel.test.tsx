@@ -6,6 +6,8 @@ import { http, HttpResponse } from 'msw';
 
 import { AssistantPanel, OPEN_ASSISTANT_EVENT } from './AssistantPanel';
 
+import type * as DownscaleModule from './downscaleImage';
+
 import { server } from '@/test/mocks/server';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -18,6 +20,12 @@ vi.mock('@shared/auth/userManager', () => ({
       removeUserUnloaded: (h: () => void) => unloadHandlers.delete(h),
     },
   },
+}));
+// jsdom has no canvas or createImageBitmap; downscaling itself is browser work, the panel flow is tested here.
+const downscale = vi.hoisted(() => vi.fn());
+vi.mock('./downscaleImage', async (importOriginal) => ({
+  ...(await importOriginal<typeof DownscaleModule>()),
+  downscaleImage: downscale,
 }));
 vi.mock('@shared/api/tokenInterceptor', () => ({
   getValidToken: vi.fn().mockResolvedValue('token'),
@@ -291,6 +299,85 @@ describe('AssistantPanel', () => {
           name: 'Confirm this change — it removes or overwrites data',
         }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('image attachments', () => {
+    const photo = new File(['raw'], 'receipt.png', { type: 'image/png' });
+
+    beforeAll(() => {
+      Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true });
+    });
+
+    beforeEach(() => {
+      server.use(http.get(BASE, () => HttpResponse.json({ provider: 'Anthropic', images: true })));
+      downscale.mockResolvedValue({
+        ok: true,
+        image: { mediaType: 'image/jpeg', data: 'c21hbGw=', previewUrl: 'blob:preview' },
+      });
+    });
+
+    it('sends the downscaled image once and keeps only a note in the conversation', async () => {
+      let body: unknown;
+      server.use(
+        http.post(`${BASE}/messages`, async ({ request }) => {
+          body = await request.json();
+          return eventStream(sse('text', { text: 'A grocery receipt.' }), sse('done', {}));
+        }),
+      );
+      renderPanel();
+      await openPanel();
+
+      await userEvent.upload(screen.getByLabelText('Attach image'), photo);
+      expect(await screen.findByRole('img', { name: 'Image to send' })).toBeInTheDocument();
+      await ask('What is this?');
+
+      expect(await screen.findByText('A grocery receipt.')).toBeInTheDocument();
+      expect(body).toMatchObject({
+        message: 'What is this?',
+        image: { mediaType: 'image/jpeg', data: 'c21hbGw=' },
+      });
+      expect(screen.getByText('Image attached')).toBeInTheDocument();
+      expect(screen.queryByRole('img', { name: 'Image to send' })).not.toBeInTheDocument();
+      expect(window.localStorage.getItem('home-system-assistant:alex')).not.toContain('c21hbGw=');
+    });
+
+    it('explains a file it cannot use', async () => {
+      downscale.mockResolvedValue({ ok: false, reason: 'type' });
+      renderPanel();
+      await openPanel();
+
+      await userEvent.upload(screen.getByLabelText('Attach image'), photo);
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Attach a JPEG, PNG or WebP image.',
+      );
+      expect(screen.queryByRole('img', { name: 'Image to send' })).not.toBeInTheDocument();
+    });
+
+    it('says so when the server refuses the image', async () => {
+      server.use(
+        http.post(`${BASE}/messages`, () =>
+          HttpResponse.json({ errors: { image: ['too large'] } }, { status: 400 }),
+        ),
+      );
+      renderPanel();
+      await openPanel();
+
+      await userEvent.upload(screen.getByLabelText('Attach image'), photo);
+      await ask('Read this');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'The assistant could not accept this image.',
+      );
+    });
+
+    it('offers no attachment when the model takes text only', async () => {
+      server.use(http.get(BASE, () => HttpResponse.json({ provider: 'Anthropic', images: false })));
+      renderPanel();
+      await openPanel();
+
+      expect(screen.queryByRole('button', { name: 'Attach image' })).not.toBeInTheDocument();
     });
   });
 
