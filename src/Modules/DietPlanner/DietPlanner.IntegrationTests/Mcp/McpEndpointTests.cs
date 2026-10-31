@@ -96,10 +96,11 @@ public sealed class McpEndpointTests(DatabaseFixture db) : IDisposable
     public async Task PostMcp_WithInvalidToken_Returns401WithResourceMetadata(string kind)
     {
         var subject = $"mcp-{Guid.CreateVersion7()}";
+        using var forgedKey = RSA.Create(2048);
         string? token = kind switch
         {
             "none" => null,
-            "forged" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, key: new RsaSecurityKey(RSA.Create(2048)) { KeyId = "mcp-test" }),
+            "forged" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, key: new RsaSecurityKey(forgedKey) { KeyId = "mcp-test" }),
             "expired" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, expires: TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(-10)),
             "audience" => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, audience: "home-system-spa"),
             _ => McpTestHost.Token(subject, DietPlannerMcp.ReadScope, issuer: "https://elsewhere.test/"),
