@@ -1,0 +1,9 @@
+# Accepted Trivy findings for the API image. One CVE per line, each with a reason.
+# `exp:` makes the entry lapse so it is re-reviewed (e.g. once Ubuntu ships a fix).
+
+# glibc fopen heap overflow: needs an attacker-controlled fopen mode string; .NET never
+# passes one. Unfixed in Ubuntu 24.04 libc6.
+CVE-2026-18374 exp:2027-01-31
+
+# glibc nscd stack overflow: the chiseled image ships no nscd daemon. Unfixed in Ubuntu 24.04 libc6.
+CVE-2026-89092 exp:2027-01-31

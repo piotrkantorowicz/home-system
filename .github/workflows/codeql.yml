@@ -45,6 +45,9 @@ jobs:
           config: |
             queries:
               - uses: security-and-quality
+            # docs/** holds static design prototypes, not shipped code.
+            paths-ignore:
+              - docs/**
             query-filters:
               - exclude:
                   id: actions/unpinned-tag

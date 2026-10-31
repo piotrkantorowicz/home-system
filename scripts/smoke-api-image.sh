@@ -33,8 +33,9 @@ for _ in $(seq 60); do
 done
 curl -fsS "http://127.0.0.1:$port/health" | grep -q '"healthy"' || fail "/health not healthy"
 
-uid=$(docker exec "$run-api" id -u)
-[[ $uid != 0 ]] || fail "runs as root"
+# The chiseled image has no shell or `id`; read the user the container was started with.
+uid=$(docker inspect -f '{{.Config.User}}' "$run-api")
+[[ -n $uid && $uid != 0 && $uid != root ]] || fail "runs as root"
 [[ $(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/openapi/v1.json") == 200 ]] || fail "OpenAPI doc not served"
 [[ $(docker inspect -f '{{.State.Running}}' "$run-api") == true ]] || fail "container died after readiness"
 echo "SMOKE OK ($image, uid $uid)"
