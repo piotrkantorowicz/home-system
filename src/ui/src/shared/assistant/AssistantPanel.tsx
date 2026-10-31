@@ -42,7 +42,7 @@ export interface AssistantPanelProps {
 }
 
 /**
- * The assistant side panel (full-screen sheet on phones), opened through
+ * The assistant as a floating, non-modal card (full-screen sheet on phones), opened through
  * {@link OPEN_ASSISTANT_EVENT}. Stays mounted while closed so a reply keeps streaming.
  * Renders nothing while the assistant is switched off. Design §9.
  */
@@ -111,8 +111,15 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="right" className="bg-card flex h-full flex-col gap-0 p-0">
+    // Non-modal: no overlay, the page stays usable; only Escape or the close button dismiss it.
+    <Sheet open={open} onOpenChange={setOpen} modal={false}>
+      <SheetContent
+        side="right"
+        onInteractOutside={(event) => {
+          event.preventDefault();
+        }}
+        className="bg-card flex h-full flex-col gap-0 p-0 sm:inset-auto sm:right-4 sm:bottom-4 sm:h-160 sm:max-h-[85dvh] sm:w-96 sm:rounded-xl sm:border sm:shadow-xl"
+      >
         <SheetHeader className="border-border border-b pe-12 pb-4">
           <SheetTitle>{t('assistant.title')}</SheetTitle>
           <SheetDescription>
