@@ -2,7 +2,9 @@ namespace Assistant.IntegrationTests.Infrastructure;
 
 using System.Net.Http.Json;
 using System.Net.ServerSentEvents;
+using System.Text.Json;
 using Assistant.Api;
+using Budget.Infrastructure;
 using Household.Infrastructure;
 using Investments.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
@@ -16,7 +18,7 @@ using Microsoft.Extensions.Time.Testing;
 
 /// <summary>
 /// The real host with the assistant on, <c>/mcp</c> off, the model replaced by <see cref="Model"/>,
-/// Investments and Household on Testcontainers Postgres and header-driven test auth.
+/// Investments, Budget and Household on Testcontainers Postgres and header-driven test auth.
 /// </summary>
 /// <param name="databases">The class's databases.</param>
 /// <param name="settings">Configuration overrides on top of the assistant defaults below.</param>
@@ -65,6 +67,17 @@ public sealed class AssistantApiFactory(
         => (await client.PostAsJsonAsync("/api/investments/wallets",
             new { name, institution = "XTB", kind = "Brokerage", currency = "PLN", visibility = "Private" }, Ct)).EnsureSuccessStatusCode();
 
+    /// <summary>Starts the owner's household budget and creates one shared envelope over REST.</summary>
+    /// <param name="client">The owner.</param>
+    /// <returns>The envelope id.</returns>
+    public static async Task<Guid> CreateEnvelopeAsync(HttpClient client)
+    {
+        (await client.PostAsJsonAsync("/api/budget", new { }, Ct)).EnsureSuccessStatusCode();
+        HttpResponseMessage created = await client.PostAsJsonAsync("/api/budget/accounts", new { name = "Home", visibility = "Household" }, Ct);
+        created.EnsureSuccessStatusCode();
+        return (await created.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("id").GetGuid();
+    }
+
     /// <summary>Sends one assistant message and reads the whole event stream.</summary>
     /// <param name="client">The caller.</param>
     /// <param name="body">Request body.</param>
@@ -85,6 +98,7 @@ public sealed class AssistantApiFactory(
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Investments", databases.InvestmentsConnectionString);
+        builder.UseSetting("ConnectionStrings:Budget", databases.BudgetConnectionString);
         builder.UseSetting("ConnectionStrings:Household", databases.HouseholdConnectionString);
         builder.UseSetting("Investments:NbpFx:Enabled", "false");
         builder.UseSetting("Assistant:Enabled", "true");
@@ -115,6 +129,7 @@ public sealed class AssistantApiFactory(
     {
         await Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
         await Services.MigrateInvestmentsDatabaseAsync(NullLogger.Instance, Ct);
+        await Services.MigrateBudgetDatabaseAsync(NullLogger.Instance);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

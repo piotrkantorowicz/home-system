@@ -218,7 +218,7 @@ describe('AssistantPanel', () => {
       token: 'signed-token',
       name: 'create_wallet',
       summary: 'name: Savings',
-      arguments: { name: 'Savings', currency: 'PLN' },
+      arguments: { name: 'Savings', currency: 'PLN', operationKey: 'op-key-123' },
       destructive: false,
     };
 
@@ -248,6 +248,7 @@ describe('AssistantPanel', () => {
       expect(card).toHaveTextContent('create_wallet');
       expect(card).toHaveTextContent('Savings');
       expect(card).toHaveTextContent('PLN');
+      expect(card).not.toHaveTextContent('op-key-123');
       expect(screen.getByRole('textbox', { name: 'Message to the assistant' })).toBeDisabled();
     });
 

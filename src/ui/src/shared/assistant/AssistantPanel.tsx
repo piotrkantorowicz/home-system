@@ -330,14 +330,17 @@ function PendingCard({ action, busy, onDecide }: PendingCardProps) {
       </h3>
       <p className="text-muted-foreground text-xs">{action.name}</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-        {Object.entries(action.arguments).map(([key, value]) => (
-          <div key={key} className="contents">
-            <dt className="text-muted-foreground">{key}</dt>
-            <dd className="break-words">
-              {typeof value === 'string' ? value : JSON.stringify(value)}
-            </dd>
-          </div>
-        ))}
+        {Object.entries(action.arguments)
+          // The server mints the key for retries; it means nothing to the user.
+          .filter(([key]) => key !== 'operationKey')
+          .map(([key, value]) => (
+            <div key={key} className="contents">
+              <dt className="text-muted-foreground">{key}</dt>
+              <dd className="break-words">
+                {typeof value === 'string' ? value : JSON.stringify(value)}
+              </dd>
+            </div>
+          ))}
       </dl>
       {action.status === 'waiting' ? (
         <div className="flex justify-end gap-2">

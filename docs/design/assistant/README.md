@@ -284,6 +284,9 @@ Configuration (`Assistant` section):
   endpoint reports it as `images`, the panel shows the attach button only then, and with it off
   an attachment is refused with a readable message.
 - Enables #664 (receipt → expense) and, for text attachments, #731 (bank statement import).
+- **Receipts (#664):** the instructions tell the model to read the total, date and merchant, take
+  envelope, category and funding from `get_budget_context`, and propose `create_expense` — or ask
+  when any of them is unclear. The card hides the server-minted `operationKey`.
 
 ## 11. Security and privacy
 
