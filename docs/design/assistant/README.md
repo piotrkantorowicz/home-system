@@ -287,6 +287,13 @@ Configuration (`Assistant` section):
 - **Receipts (#664):** the instructions tell the model to read the total, date and merchant, take
   envelope, category and funding from `get_budget_context`, and propose `create_expense` — or ask
   when any of them is unclear. The card hides the server-minted `operationKey`.
+- **Bank statements (#731):** the panel attaches a CSV/XML export as `document: { name, text }`,
+  decoded in the browser (strict UTF-8, else Windows-1250, the parser's order). The model gets only
+  a note naming the file; when a run-now tool with a `statement` argument is called in that turn
+  (`preview_expense_import`), the server puts the file text there. The file is gone after that
+  request, so the preview must happen in the turn it was attached. `execute_expense_import` is held
+  like any import; its card shows the rows as a table without matching keys. Ceiling: the model
+  writes every row of the import call, so a very long statement can hit `MaxOutputTokens`.
 
 ## 11. Security and privacy
 

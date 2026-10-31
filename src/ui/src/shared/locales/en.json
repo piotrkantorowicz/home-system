@@ -128,6 +128,10 @@
     "image_type": "Attach a JPEG, PNG or WebP image.",
     "image_size": "The image is too large, even after shrinking.",
     "image_unreadable": "The image could not be read.",
-    "image_rejected": "The assistant could not accept this image."
+    "image_rejected": "The assistant could not accept this image.",
+    "attach_document": "Attach statement",
+    "remove_document": "Remove file",
+    "document_attached": "Attached {{name}}",
+    "document_rejected": "The assistant could not accept this file."
   }
 }
