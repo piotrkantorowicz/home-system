@@ -16,6 +16,14 @@ public sealed class ScriptedChatClient : IChatClient
     /// <summary>Every call the agent made, in order.</summary>
     public ConcurrentQueue<(IReadOnlyList<ChatMessage> Messages, ChatOptions? Options)> Calls { get; } = new();
 
+    /// <summary>Queues a model turn that reasons, then calls one tool. The reasoning block stays on the response so a later round in the same turn can be checked for it.</summary>
+    /// <param name="thought">Reasoning text.</param>
+    /// <param name="tool">Tool name.</param>
+    /// <param name="arguments">Tool arguments.</param>
+    public void ThinksThenCallsTool(string thought, string tool, Dictionary<string, object?>? arguments = null)
+        => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant,
+            [new TextReasoningContent(thought), new FunctionCallContent($"call-{Guid.CreateVersion7():N}", tool, arguments ?? [])])));
+
     /// <summary>Queues a model turn that calls one tool.</summary>
     /// <param name="tool">Tool name.</param>
     /// <param name="arguments">Tool arguments.</param>

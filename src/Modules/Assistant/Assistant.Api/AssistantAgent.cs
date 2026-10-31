@@ -130,7 +130,7 @@ internal sealed partial class AssistantAgent(
         [
             new(ChatRole.System, Instructions),
             new(ChatRole.System, $"Today is {now:dddd, yyyy-MM-dd} in the user's time zone ({zone.Id})."),
-            .. Recent(history, options.MaxHistoryTokens),
+            .. Recent(WithoutReasoning(history), options.MaxHistoryTokens),
             .. asked,
         ];
         var chatOptions = new ChatOptions { Tools = Offered, MaxOutputTokens = options.MaxOutputTokens };
@@ -139,6 +139,12 @@ internal sealed partial class AssistantAgent(
         // The user decided on the held call: its result answers that call, then the model continues.
         if (action is not null)
         {
+            // The browser's copy of the held call has no reasoning, but Anthropic rejects a tool result
+            // whose call lost its thinking block. The token carried it here; it is sent, never stored.
+            int at = messages.FindIndex(m => m.Contents.OfType<FunctionCallContent>().Any(c => c.CallId == action.CallId));
+            if (at >= 0 && action.Reasoning?.Deserialize<List<AIContent>>(AIJsonUtilities.DefaultOptions) is { Count: > 0 } reasoning)
+                messages[at] = new ChatMessage(messages[at].Role, [.. reasoning, .. messages[at].Contents]);
+
             string result = DeclinedResult;
             if (confirmed)
             {
@@ -220,7 +226,7 @@ internal sealed partial class AssistantAgent(
                     JsonElement heldArguments = HeldArguments(call.Name, arguments);
                     yield return Event("pending_action", new
                     {
-                        token = pending.Hold(subject, call.Name, call.CallId, heldArguments),
+                        token = pending.Hold(subject, call.Name, call.CallId, heldArguments, HeldReasoning(response)),
                         name = call.Name,
                         summary = Summary(Arguments(heldArguments)),
                         arguments = heldArguments,
@@ -247,14 +253,44 @@ internal sealed partial class AssistantAgent(
         }
 
         LogTurn(logger, inputTokens, outputTokens);
-        yield return Event("history", new { messages = JsonSerializer.SerializeToElement(added, AIJsonUtilities.DefaultOptions) });
+        // Reasoning blocks carry a provider signature bound to this request's prefix. The browser
+        // sends history back on the next turn, so they must not be stored. The in-memory list still
+        // has them for later tool rounds of this turn.
+        yield return Event("history", new { messages = JsonSerializer.SerializeToElement(WithoutReasoning(added), AIJsonUtilities.DefaultOptions) });
         yield return Event("usage", new { inputTokens, outputTokens, todayTokens = usage.Today(subject), dailyBudget = usage.DailyBudget });
+    }
+
+    // Drops provider reasoning (Anthropic thinking signatures). A message that is only reasoning goes
+    // away; text, tool calls and tool results stay.
+    private static List<ChatMessage> WithoutReasoning(IReadOnlyList<ChatMessage> messages)
+    {
+        List<ChatMessage> kept = new(messages.Count);
+        foreach (ChatMessage message in messages)
+        {
+            if (!message.Contents.Any(c => c is TextReasoningContent))
+            {
+                kept.Add(message);
+                continue;
+            }
+
+            List<AIContent> contents = message.Contents.Where(c => c is not TextReasoningContent).ToList();
+            if (contents.Count > 0)
+                kept.Add(new ChatMessage(message.Role, contents));
+        }
+
+        return kept;
+    }
+
+    private static JsonElement? HeldReasoning(ChatResponse response)
+    {
+        List<AIContent> reasoning = [.. response.Messages.SelectMany(m => m.Contents).OfType<TextReasoningContent>()];
+        return reasoning.Count == 0 ? null : JsonSerializer.SerializeToElement(reasoning, AIJsonUtilities.DefaultOptions);
     }
 
     // Keeps the newest turns that fit the allowance. Cuts only at a user text message, so a tool call is
     // never separated from its result.
     // ponytail: size is estimated as serialized JSON length / 4, not real tokens; good enough for a cap.
-    private static IEnumerable<ChatMessage> Recent(IReadOnlyList<ChatMessage> history, int maxTokens)
+    private static IEnumerable<ChatMessage> Recent(List<ChatMessage> history, int maxTokens)
     {
         const int charsPerToken = 4;
         long size = 0;
