@@ -28,6 +28,8 @@
     <!-- Read tools need real data: Investments wallets, resolved through Household. -->
     <ProjectReference Include="..\..\Investments\Investments.Infrastructure\Investments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Household\Household.Infrastructure\Household.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Budget\Budget.Infrastructure\Budget.Infrastructure.csproj" />
+    <None Include="../../Budget/Budget.UnitTests/Application/StatementImports/Fixtures/mbank.csv" Link="Fixtures/mbank.csv" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

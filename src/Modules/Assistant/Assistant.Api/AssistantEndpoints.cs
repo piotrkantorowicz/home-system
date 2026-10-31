@@ -80,6 +80,16 @@ internal static class AssistantEndpoints
                 errors["image"] = [imageError];
         }
 
+        if (request.Document is { } document)
+        {
+            if (request.Message is null)
+                errors["document"] = ["A file goes with a message."];
+            else if (string.IsNullOrWhiteSpace(document.Name) || string.IsNullOrWhiteSpace(document.Text))
+                errors["document"] = ["The file is empty."];
+            else if (document.Text.Length > options.MaxDocumentChars)
+                errors["document"] = [$"The file is longer than {options.MaxDocumentChars} characters."];
+        }
+
         TimeZoneInfo zone = TimeZoneInfo.Utc;
         if (request.TimeZone is { } id && !TimeZoneInfo.TryFindSystemTimeZoneById(id, out zone!))
             errors["timeZone"] = ["Unknown time zone."];
@@ -97,7 +107,7 @@ internal static class AssistantEndpoints
 
         // history is non-null and exactly one of message / action is set when there are no errors
         return TypedResults.ServerSentEvents(action is null
-            ? agent.RunAsync(user, history!, request.Message!, image, zone, ct)
+            ? agent.RunAsync(user, history!, request.Message!, image, request.Document, zone, ct)
             : agent.DecideAsync(user, history!, action, request.Confirm is not null, zone, ct));
     }
 

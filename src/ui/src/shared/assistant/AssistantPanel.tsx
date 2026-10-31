@@ -11,6 +11,7 @@ import {
 import { cn } from '@shared/lib/utils';
 import {
   Check,
+  FileText,
   ImageIcon,
   Loader2,
   Paperclip,
@@ -26,10 +27,12 @@ import { useTranslation } from 'react-i18next';
 import { useAssistantStatus } from './assistantStatus';
 import { clearAllConversations } from './conversation';
 import { ACCEPTED_IMAGE_TYPES, downscaleImage } from './downscaleImage';
+import { ACCEPTED_DOCUMENT_TYPES, readDocument } from './readDocument';
 import { useAssistantChat } from './useAssistantChat';
 
 import type { AssistantEntry, PendingAction, ToolActivity } from './conversation';
 import type { AttachedImage } from './downscaleImage';
+import type { AttachedDocument } from './readDocument';
 
 export const OPEN_ASSISTANT_EVENT = 'home-system:open-assistant';
 
@@ -51,7 +54,9 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
   const [draft, setDraft] = useState('');
   const [image, setImage] = useState<AttachedImage | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [document, setDocument] = useState<AttachedDocument | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const documentInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onOpen = () => {
@@ -90,6 +95,12 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
     } else {
       setImageError(t(`assistant.image_${result.reason}`));
     }
+  }
+
+  async function handleDocument(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) setDocument(await readDocument(file));
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -137,8 +148,12 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
           onSubmit={(event) => {
             event.preventDefault();
             setDraft('');
-            void chat.send(draft, image ?? undefined);
+            void chat.send(draft, {
+              ...(image ? { image } : {}),
+              ...(document ? { document } : {}),
+            });
             dropImage();
+            setDocument(null);
             setImageError(null);
           }}
           className="border-border flex flex-col gap-2 border-t p-4"
@@ -156,6 +171,23 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
                 size="xs"
                 onClick={dropImage}
                 aria-label={t('assistant.remove_image')}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          )}
+          {document && (
+            <div className="flex items-center gap-2 text-xs">
+              <FileText className="text-muted-foreground size-4 shrink-0" />
+              <span className="truncate">{document.name}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={() => {
+                  setDocument(null);
+                }}
+                aria-label={t('assistant.remove_document')}
               >
                 <X className="size-4" />
               </Button>
@@ -190,6 +222,27 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
               <Trash2 className="size-4" />
               {t('assistant.clear')}
             </Button>
+            <input
+              ref={documentInput}
+              type="file"
+              accept={ACCEPTED_DOCUMENT_TYPES.join(',')}
+              className="hidden"
+              aria-label={t('assistant.attach_document')}
+              onChange={(event) => {
+                void handleDocument(event);
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="ms-auto"
+              disabled={chat.waiting}
+              onClick={() => documentInput.current?.click()}
+            >
+              <FileText className="size-4" />
+              {t('assistant.attach_document')}
+            </Button>
             {status.images && (
               <>
                 <input
@@ -206,7 +259,6 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
                   type="button"
                   variant="ghost"
                   size="xs"
-                  className="ms-auto"
                   disabled={chat.waiting}
                   onClick={() => fileInput.current?.click()}
                 >
@@ -253,6 +305,12 @@ function Entry({ entry, busy, onDecide }: EntryProps) {
           <span className="text-muted-foreground flex items-center gap-1 text-xs">
             <ImageIcon className="size-3.5" />
             {t('assistant.image_attached')}
+          </span>
+        )}
+        {entry.document && (
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+            <FileText className="size-3.5" />
+            {t('assistant.document_attached', { name: entry.document })}
           </span>
         )}
       </div>
@@ -330,14 +388,23 @@ function PendingCard({ action, busy, onDecide }: PendingCardProps) {
       </h3>
       <p className="text-muted-foreground text-xs">{action.name}</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-        {Object.entries(action.arguments).map(([key, value]) => (
-          <div key={key} className="contents">
-            <dt className="text-muted-foreground">{key}</dt>
-            <dd className="break-words">
-              {typeof value === 'string' ? value : JSON.stringify(value)}
-            </dd>
-          </div>
-        ))}
+        {Object.entries(action.arguments)
+          // The server mints the key for retries; it means nothing to the user.
+          .filter(([key]) => key !== 'operationKey')
+          .map(([key, value]) => (
+            <div key={key} className="contents">
+              <dt className="text-muted-foreground">{key}</dt>
+              {isRows(value) ? (
+                <dd className="col-span-2 overflow-x-auto">
+                  <RowsTable rows={value} />
+                </dd>
+              ) : (
+                <dd className="break-words">
+                  {typeof value === 'string' ? value : JSON.stringify(value)}
+                </dd>
+              )}
+            </div>
+          ))}
       </dl>
       {action.status === 'waiting' ? (
         <div className="flex justify-end gap-2">
@@ -374,5 +441,57 @@ function PendingCard({ action, busy, onDecide }: PendingCardProps) {
         </p>
       )}
     </section>
+  );
+}
+
+type Row = Record<string, unknown>;
+
+function isRows(value: unknown): value is Row[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === 'object' && item !== null && !Array.isArray(item))
+  );
+}
+
+// Matching keys and person ids mean nothing to the user; the card shows what gets recorded.
+const HIDDEN_COLUMN = /(Key|Id|Ids)$/;
+
+/** An argument that is a list of records (an import's rows) as a compact table. */
+function RowsTable({ rows }: { rows: Row[] }) {
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))].filter(
+    (key) => !HIDDEN_COLUMN.test(key),
+  );
+
+  return (
+    <table className="w-full text-start">
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th key={column} scope="col" className="text-muted-foreground pe-2 font-normal">
+              {column}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, i) => (
+          <tr key={i}>
+            {columns.map((column) => {
+              const cell = row[column];
+              return (
+                <td key={column} className="pe-2 align-top">
+                  {cell === null || cell === undefined
+                    ? ''
+                    : typeof cell === 'string'
+                      ? cell
+                      : JSON.stringify(cell)}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
