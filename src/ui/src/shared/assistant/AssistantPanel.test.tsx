@@ -464,6 +464,21 @@ describe('AssistantPanel', () => {
     });
   });
 
+  it('stays open while the rest of the page is used', async () => {
+    render(
+      <>
+        <button type="button">Elsewhere</button>
+        <AssistantPanel subject="alex" />
+      </>,
+      { wrapper: createWrapper(new QueryClient()) },
+    );
+    await openPanel();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Elsewhere' }));
+
+    expect(screen.getByRole('dialog', { name: 'Assistant' })).toBeInTheDocument();
+  });
+
   it('renders nothing while the assistant is switched off', async () => {
     server.use(http.get(BASE, () => new HttpResponse(null, { status: 404 })));
     const client = new QueryClient();
