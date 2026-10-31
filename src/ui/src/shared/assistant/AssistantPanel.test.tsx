@@ -1,6 +1,6 @@
 import { initI18n } from '@shared/lib/i18n';
 import { QueryClient } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 
@@ -218,7 +218,7 @@ describe('AssistantPanel', () => {
       token: 'signed-token',
       name: 'create_wallet',
       summary: 'name: Savings',
-      arguments: { name: 'Savings', currency: 'PLN' },
+      arguments: { name: 'Savings', currency: 'PLN', operationKey: 'op-key-123' },
       destructive: false,
     };
 
@@ -248,6 +248,7 @@ describe('AssistantPanel', () => {
       expect(card).toHaveTextContent('create_wallet');
       expect(card).toHaveTextContent('Savings');
       expect(card).toHaveTextContent('PLN');
+      expect(card).not.toHaveTextContent('op-key-123');
       expect(screen.getByRole('textbox', { name: 'Message to the assistant' })).toBeDisabled();
     });
 
@@ -281,6 +282,41 @@ describe('AssistantPanel', () => {
 
       expect(await screen.findByText('Cancelled')).toBeInTheDocument();
       expect(bodies[1]).toMatchObject({ cancel: 'signed-token' });
+    });
+
+    it('shows an import’s rows as a table without the matching keys', async () => {
+      server.use(
+        http.post(`${BASE}/messages`, () =>
+          eventStream(
+            sse('pending_action', {
+              ...held,
+              name: 'execute_expense_import',
+              arguments: {
+                rows: [
+                  {
+                    sourceKey: 'source-key-1',
+                    amount: '29.38',
+                    occurredOn: '2026-10-21',
+                    category: 'Groceries',
+                    merchantKey: 'merchant-key-1',
+                  },
+                ],
+              },
+            }),
+            sse('done', {}),
+          ),
+        ),
+      );
+      renderPanel();
+      await openPanel();
+
+      await ask('Import them');
+
+      const card = await screen.findByRole('region', { name: 'Confirm this change' });
+      expect(within(card).getByRole('columnheader', { name: 'amount' })).toBeInTheDocument();
+      expect(within(card).getByRole('cell', { name: 'Groceries' })).toBeInTheDocument();
+      expect(card).not.toHaveTextContent('source-key-1');
+      expect(card).not.toHaveTextContent('merchant-key-1');
     });
 
     it('warns on a destructive action', async () => {
@@ -378,6 +414,53 @@ describe('AssistantPanel', () => {
       await openPanel();
 
       expect(screen.queryByRole('button', { name: 'Attach image' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('statement attachments', () => {
+    const statement = new File(['Data;Kwota\n2026-10-21;-29,38'], 'mbank.csv', {
+      type: 'text/csv',
+    });
+
+    it('sends the statement once and keeps only its name in the conversation', async () => {
+      let body: unknown;
+      server.use(
+        http.post(`${BASE}/messages`, async ({ request }) => {
+          body = await request.json();
+          return eventStream(sse('text', { text: 'One new row.' }), sse('done', {}));
+        }),
+      );
+      renderPanel();
+      await openPanel();
+
+      await userEvent.upload(screen.getByLabelText('Attach statement'), statement);
+      expect(await screen.findByText('mbank.csv')).toBeInTheDocument();
+      await ask('Import this');
+
+      expect(await screen.findByText('One new row.')).toBeInTheDocument();
+      expect(body).toMatchObject({
+        message: 'Import this',
+        document: { name: 'mbank.csv', text: 'Data;Kwota\n2026-10-21;-29,38' },
+      });
+      expect(screen.getByText('Attached mbank.csv')).toBeInTheDocument();
+      expect(window.localStorage.getItem('home-system-assistant:alex')).not.toContain('29,38');
+    });
+
+    it('says so when the server refuses the file', async () => {
+      server.use(
+        http.post(`${BASE}/messages`, () =>
+          HttpResponse.json({ errors: { document: ['too long'] } }, { status: 400 }),
+        ),
+      );
+      renderPanel();
+      await openPanel();
+
+      await userEvent.upload(screen.getByLabelText('Attach statement'), statement);
+      await ask('Import this');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'The assistant could not accept this file.',
+      );
     });
   });
 
