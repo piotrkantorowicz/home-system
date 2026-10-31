@@ -120,6 +120,14 @@
     "confirm_action": "Potwierdź",
     "cancel_action": "Anuluj",
     "action_confirmed": "Potwierdzono",
-    "action_cancelled": "Anulowano"
+    "action_cancelled": "Anulowano",
+    "attach_image": "Dołącz zdjęcie",
+    "remove_image": "Usuń zdjęcie",
+    "image_preview": "Zdjęcie do wysłania",
+    "image_attached": "Dołączono zdjęcie",
+    "image_type": "Dołącz zdjęcie JPEG, PNG lub WebP.",
+    "image_size": "Zdjęcie jest za duże, nawet po zmniejszeniu.",
+    "image_unreadable": "Nie udało się odczytać zdjęcia.",
+    "image_rejected": "Asystent nie przyjął tego zdjęcia."
   }
 }

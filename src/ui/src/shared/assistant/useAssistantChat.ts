@@ -20,7 +20,7 @@ export interface AssistantChat {
   streaming: boolean;
   /** An action waits for Confirm or Cancel; the model cannot take a new message until it is decided. */
   waiting: boolean;
-  send: (message: string) => Promise<void>;
+  send: (message: string, image?: { mediaType: string; data: string }) => Promise<void>;
   /** Confirms or cancels the action waiting on entry `index`. */
   decide: (index: number, confirm: boolean) => Promise<void>;
   clear: () => void;
@@ -127,7 +127,13 @@ export function useAssistantChat(subject: string): AssistantChat {
       if (!response.ok || !response.body) {
         reply = {
           ...reply,
-          error: t(response.status === 429 ? 'assistant.limit_reached' : 'assistant.failed'),
+          error: t(
+            response.status === 429
+              ? 'assistant.limit_reached'
+              : response.status === 400 && 'image' in request
+                ? 'assistant.image_rejected'
+                : 'assistant.failed',
+          ),
         };
       } else {
         for await (const event of readEvents(response.body)) {
@@ -154,10 +160,19 @@ export function useAssistantChat(subject: string): AssistantChat {
     saveConversation(subject, { history, entries: [...shown, reply] });
   }
 
-  async function send(message: string): Promise<void> {
+  async function send(message: string, image?: { mediaType: string; data: string }): Promise<void> {
     const trimmed = message.trim();
     if (!trimmed || streaming || waiting) return;
-    await runTurn({ message: trimmed }, [...conversation.entries, { role: 'user', text: trimmed }]);
+    // The image goes to the server once; the conversation keeps only that one was attached.
+    const user: AssistantEntry = image
+      ? { role: 'user', text: trimmed, image: true }
+      : { role: 'user', text: trimmed };
+    await runTurn(
+      image
+        ? { message: trimmed, image: { mediaType: image.mediaType, data: image.data } }
+        : { message: trimmed },
+      [...conversation.entries, user],
+    );
   }
 
   async function decide(index: number, confirm: boolean): Promise<void> {

@@ -19,6 +19,13 @@ internal static class AssistantEndpoints
     private static readonly HashSet<Type> HistoryContents =
         [typeof(TextContent), typeof(TextReasoningContent), typeof(FunctionCallContent), typeof(FunctionResultContent)];
 
+    private static readonly Dictionary<string, Func<byte[], bool>> ImageSignatures = new(StringComparer.Ordinal)
+    {
+        ["image/jpeg"] = b => b is [0xFF, 0xD8, 0xFF, ..],
+        ["image/png"] = b => b is [0x89, (byte)'P', (byte)'N', (byte)'G', ..],
+        ["image/webp"] = b => b is [(byte)'R', (byte)'I', (byte)'F', (byte)'F', _, _, _, _, (byte)'W', (byte)'E', (byte)'B', (byte)'P', ..],
+    };
+
     internal static IEndpointRouteBuilder MapAssistantEndpointsGroup(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/assistant")
@@ -37,11 +44,11 @@ internal static class AssistantEndpoints
     }
 
     private static Ok<AssistantStatusResponse> GetStatus(AssistantOptions options)
-        => TypedResults.Ok(new AssistantStatusResponse(options.Provider));
+        => TypedResults.Ok(new AssistantStatusResponse(options.Provider, options.ImagesEnabled));
 
     private static Results<ServerSentEventsResult<object>, ValidationProblem, ProblemHttpResult> SendMessage(
         AssistantMessageRequest request, ClaimsPrincipal user, AssistantAgent agent, AssistantUsage usage, PendingActions pending,
-        CancellationToken ct)
+        AssistantOptions options, CancellationToken ct)
     {
         Dictionary<string, string[]> errors = [];
         string subject = AssistantUsage.SubjectOf(user);
@@ -65,6 +72,14 @@ internal static class AssistantEndpoints
             errors["message"] = [$"Message is required and at most {MaxMessageLength} characters."];
         }
 
+        DataContent? image = null;
+        if (request.Image is { } attached)
+        {
+            (image, string? imageError) = request.Message is null ? (null, "An image goes with a message.") : ReadImage(attached, options);
+            if (imageError is not null)
+                errors["image"] = [imageError];
+        }
+
         TimeZoneInfo zone = TimeZoneInfo.Utc;
         if (request.TimeZone is { } id && !TimeZoneInfo.TryFindSystemTimeZoneById(id, out zone!))
             errors["timeZone"] = ["Unknown time zone."];
@@ -82,8 +97,36 @@ internal static class AssistantEndpoints
 
         // history is non-null and exactly one of message / action is set when there are no errors
         return TypedResults.ServerSentEvents(action is null
-            ? agent.RunAsync(user, history!, request.Message!, zone, ct)
+            ? agent.RunAsync(user, history!, request.Message!, image, zone, ct)
             : agent.DecideAsync(user, history!, action, request.Confirm is not null, zone, ct));
+    }
+
+    // The bytes must be what the media type says (checked by signature, not trusted from the browser)
+    // and within the size cap; the image is passed on to the model and dropped with the request.
+    private static (DataContent? Image, string? Error) ReadImage(AssistantImage attached, AssistantOptions options)
+    {
+        if (!options.ImagesEnabled)
+            return (null, "This assistant does not accept images.");
+        if (!ImageSignatures.TryGetValue(attached.MediaType, out Func<byte[], bool>? matches))
+            return (null, "Attach a JPEG, PNG or WebP image.");
+
+        string tooLarge = $"The image is larger than {options.MaxImageBytes / 1_000_000.0:0.#} MB.";
+        if (attached.Data.Length / 4L * 3 > options.MaxImageBytes + 2)
+            return (null, tooLarge);
+
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(attached.Data);
+        }
+        catch (FormatException)
+        {
+            return (null, "The image could not be read.");
+        }
+
+        if (bytes.Length > options.MaxImageBytes)
+            return (null, tooLarge);
+        return matches(bytes) ? (new DataContent(bytes, attached.MediaType), null) : (null, "The image could not be read.");
     }
 
     // Null when the history is not a list of messages.

@@ -9,15 +9,27 @@ import {
   Textarea,
 } from '@shared/components/ui';
 import { cn } from '@shared/lib/utils';
-import { Check, Loader2, SendHorizontal, ShieldAlert, Trash2, Wrench, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  Check,
+  ImageIcon,
+  Loader2,
+  Paperclip,
+  SendHorizontal,
+  ShieldAlert,
+  Trash2,
+  Wrench,
+  X,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAssistantStatus } from './assistantStatus';
 import { clearAllConversations } from './conversation';
+import { ACCEPTED_IMAGE_TYPES, downscaleImage } from './downscaleImage';
 import { useAssistantChat } from './useAssistantChat';
 
 import type { AssistantEntry, PendingAction, ToolActivity } from './conversation';
+import type { AttachedImage } from './downscaleImage';
 
 export const OPEN_ASSISTANT_EVENT = 'home-system:open-assistant';
 
@@ -37,6 +49,9 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
   const chat = useAssistantChat(subject);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const [image, setImage] = useState<AttachedImage | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onOpen = () => {
@@ -57,6 +72,25 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
   }, []);
 
   if (!status) return null;
+
+  function dropImage() {
+    if (image) URL.revokeObjectURL(image.previewUrl);
+    setImage(null);
+  }
+
+  async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const result = await downscaleImage(file);
+    dropImage();
+    if (result.ok) {
+      setImage(result.image);
+      setImageError(null);
+    } else {
+      setImageError(t(`assistant.image_${result.reason}`));
+    }
+  }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -103,10 +137,35 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
           onSubmit={(event) => {
             event.preventDefault();
             setDraft('');
-            void chat.send(draft);
+            void chat.send(draft, image ?? undefined);
+            dropImage();
+            setImageError(null);
           }}
           className="border-border flex flex-col gap-2 border-t p-4"
         >
+          {image && (
+            <div className="flex items-center gap-2">
+              <img
+                src={image.previewUrl}
+                alt={t('assistant.image_preview')}
+                className="border-border size-14 rounded-md border object-cover"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={dropImage}
+                aria-label={t('assistant.remove_image')}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          )}
+          {imageError && (
+            <p role="alert" className="text-destructive text-xs">
+              {imageError}
+            </p>
+          )}
           <Textarea
             value={draft}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -131,6 +190,31 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
               <Trash2 className="size-4" />
               {t('assistant.clear')}
             </Button>
+            {status.images && (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                  className="hidden"
+                  aria-label={t('assistant.attach_image')}
+                  onChange={(event) => {
+                    void handleFile(event);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className="ms-auto"
+                  disabled={chat.waiting}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <Paperclip className="size-4" />
+                  {t('assistant.attach_image')}
+                </Button>
+              </>
+            )}
             <Button
               type="submit"
               size="xs"
@@ -157,11 +241,21 @@ interface EntryProps {
 }
 
 function Entry({ entry, busy, onDecide }: EntryProps) {
+  const { t } = useTranslation();
+
   if (entry.role === 'user') {
     return (
-      <p className="bg-primary text-primary-foreground max-w-[85%] self-end rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">
-        {entry.text}
-      </p>
+      <div className="flex max-w-[85%] flex-col items-end gap-1 self-end">
+        <p className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">
+          {entry.text}
+        </p>
+        {entry.image && (
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+            <ImageIcon className="size-3.5" />
+            {t('assistant.image_attached')}
+          </span>
+        )}
+      </div>
     );
   }
 

@@ -41,6 +41,12 @@ public sealed class AssistantOptions
     /// <summary>Copied from <c>Mcp:ImportsEnabled</c>; imports also need <see cref="WritesEnabled"/>.</summary>
     internal bool ImportsEnabled { get; set; }
 
+    /// <summary>The configured model accepts images. Turn off for a text-only model; attachments are then refused.</summary>
+    public bool ImagesEnabled { get; set; } = true;
+
+    /// <summary>Largest accepted image after decoding; the panel downscales before sending.</summary>
+    public int MaxImageBytes { get; set; } = 2_000_000;
+
     /// <summary>Rough token allowance for the browser history; older turns beyond it are dropped before the model call.</summary>
     public int MaxHistoryTokens { get; set; } = 20_000;
 }
