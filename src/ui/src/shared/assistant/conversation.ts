@@ -21,7 +21,7 @@ export interface PendingAction {
 }
 
 export type AssistantEntry =
-  | { role: 'user'; text: string; image?: boolean }
+  | { role: 'user'; text: string; image?: boolean; document?: string }
   | {
       role: 'assistant';
       text: string;
