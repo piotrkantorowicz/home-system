@@ -11,7 +11,9 @@ RUN dotnet publish src/Apis/HomeSystem.REST/HomeSystem.REST.csproj \
     --output /app \
     -p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# Chiseled: no shell or package manager, so far fewer OS CVEs. `-extra` keeps ICU and tzdata
+# (culture formatting, FindSystemTimeZoneById).
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
 COPY --from=build /app .
 # The base image ships an unprivileged `app` user; listen on 8080 (non-root cannot bind 80).
