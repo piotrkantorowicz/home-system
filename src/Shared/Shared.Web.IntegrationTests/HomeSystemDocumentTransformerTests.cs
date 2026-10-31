@@ -25,7 +25,9 @@ public sealed class HomeSystemDocumentTransformerTests
     [Fact]
     public async Task Transform_OnTheRealHost_AddsSharedProblemResponsesToEveryOperation()
     {
-        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        // Disposing the root factory also disposes the one WithWebHostBuilder derives from it.
+        await using var root = new WebApplicationFactory<Program>();
+        var factory = root.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
             // Outside Development the bearer handler refuses an http:// authority on every request.

@@ -16,18 +16,22 @@ using Shared.Infrastructure.Messaging.Serialization;
 /// Proves the Household module composes into the real host without breaking DI —
 /// the scaffold acceptance for #214. Endpoint + auth coverage arrives with #217 / #226.
 /// </summary>
-public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixture>
+public sealed class HostCompositionTests : IClassFixture<HouseholdDatabaseFixture>, IDisposable
 {
+    private readonly WebApplicationFactory<Program> _root = new();
     private readonly WebApplicationFactory<Program> _factory;
 
     /// <summary>Creates the test class instance for one test, wired to the shared fixture.</summary>
     /// <param name="fixture">The shared fixture for this collection.</param>
     public HostCompositionTests(HouseholdDatabaseFixture fixture)
-        => _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        => _factory = _root.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
             builder.UseSetting("ConnectionStrings:Household", fixture.ConnectionString);
         });
+
+    /// <summary>Disposes the application factory (and the one derived from it) created for this test instance.</summary>
+    public void Dispose() => _root.Dispose();
 
     /// <summary><c>HouseholdModule</c> resolves its scoped services and from the host.</summary>
     [Fact]

@@ -37,7 +37,8 @@ public sealed class OutboxAdminEndpointsTests : IClassFixture<HouseholdDatabaseF
     {
         var client = _factory.CreateClientFor($"auth|{Guid.NewGuid():N}");
 
-        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), url), TestContext.Current.CancellationToken);
+        using var request = new HttpRequestMessage(new HttpMethod(method), url);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
