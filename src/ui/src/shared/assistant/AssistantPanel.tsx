@@ -246,9 +246,10 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
               className="ms-auto"
               disabled={chat.waiting}
               onClick={() => documentInput.current?.click()}
+              title={t('assistant.attach_document')}
             >
               <FileText className="size-4" />
-              {t('assistant.attach_document')}
+              <span className="sr-only">{t('assistant.attach_document')}</span>
             </Button>
             {status.images && (
               <>
@@ -268,9 +269,10 @@ export function AssistantPanel({ subject }: AssistantPanelProps) {
                   size="xs"
                   disabled={chat.waiting}
                   onClick={() => fileInput.current?.click()}
+                  title={t('assistant.attach_image')}
                 >
                   <Paperclip className="size-4" />
-                  {t('assistant.attach_image')}
+                  <span className="sr-only">{t('assistant.attach_image')}</span>
                 </Button>
               </>
             )}
@@ -325,7 +327,7 @@ function Entry({ entry, busy, onDecide }: EntryProps) {
   }
 
   return (
-    <div className="flex max-w-[85%] flex-col gap-1.5 self-start">
+    <div className="flex max-w-[85%] min-w-0 flex-col gap-1.5 self-start">
       {entry.tools.length > 0 && (
         <ul className="flex flex-col gap-1">
           {entry.tools.map((tool, i) => (
@@ -394,10 +396,10 @@ function PendingCard({ action, busy, onDecide }: PendingCardProps) {
         {t(action.destructive ? 'assistant.pending_destructive' : 'assistant.pending_title')}
       </h3>
       <p className="text-muted-foreground text-xs">{action.name}</p>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
         {Object.entries(action.arguments)
-          // The server mints the key for retries; it means nothing to the user.
-          .filter(([key]) => key !== 'operationKey')
+          // Server-minted keys for retries and plan previews; they mean nothing to the user.
+          .filter(([key]) => key !== 'operationKey' && key !== 'previewToken')
           .map(([key, value]) => (
             <div key={key} className="contents">
               <dt className="text-muted-foreground">{key}</dt>
@@ -406,7 +408,7 @@ function PendingCard({ action, busy, onDecide }: PendingCardProps) {
                   <RowsTable rows={value} />
                 </dd>
               ) : (
-                <dd className="break-words">
+                <dd className="wrap-anywhere">
                   {typeof value === 'string' ? value : JSON.stringify(value)}
                 </dd>
               )}

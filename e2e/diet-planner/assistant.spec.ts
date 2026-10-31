@@ -2,7 +2,7 @@ import { addDays, format } from 'date-fns';
 
 import { test, expect } from './fixtures';
 import { AssistantPanel, CalendarPage } from './pages';
-import { createApiContext } from './utils/seed';
+import { createApiContext, seedMealSchedule } from './utils/seed';
 
 interface PlannedMeal {
   recipeName: string;
@@ -21,6 +21,8 @@ test('a week planned through the assistant shows up in the planner, not eaten', 
   const assistant = new AssistantPanel(page);
   const calendar = new CalendarPage(page);
   await calendar.goto();
+  // The Fake plans lunches; a fresh worker has no meal slots, so the preview would refuse it.
+  await seedMealSchedule(page);
 
   await assistant.open();
   await assistant.ask(recipe);
