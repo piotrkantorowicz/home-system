@@ -10,7 +10,7 @@ import { archiveTrackedEnvelopes, createEnvelope, ensureBudget, today } from './
 function mbankStatement(run: string, rows: { merchant: string; amount: string }[]): Buffer {
   const day = today();
   const period = day.split('-').reverse().join('.');
-  const account = Array.from({ length: 26 }, () => Math.floor(Math.random() * 10)).join('');
+  const account = Array.from(crypto.getRandomValues(new Uint8Array(26)), (b) => b % 10).join('');
   const lines = [
     'mBank S.A. Bankowość Detaliczna;',
     '#Za okres:;',
