@@ -63,8 +63,6 @@ function readOidcEntry(
  * rejects it (e.g. after a server restart).
  */
 export async function tryRefreshTokens(authFile: string): Promise<OidcUser | null> {
-  if (!fs.existsSync(authFile)) return null;
-
   let state: StorageState;
   try {
     state = JSON.parse(fs.readFileSync(authFile, 'utf-8')) as StorageState;
