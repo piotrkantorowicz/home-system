@@ -11,16 +11,23 @@ import {
 import { readEvents } from './readEvents';
 
 import type { AssistantEntry, Conversation, PendingAction, ToolActivity } from './conversation';
+import type { AttachedDocument } from './readDocument';
 import type { ServerEvent } from './readEvents';
 
 type AssistantReply = Extract<AssistantEntry, { role: 'assistant' }>;
+
+/** Files sent with one message; the server uses them for that turn only. */
+export interface Attachments {
+  image?: { mediaType: string; data: string };
+  document?: AttachedDocument;
+}
 
 export interface AssistantChat {
   entries: AssistantEntry[];
   streaming: boolean;
   /** An action waits for Confirm or Cancel; the model cannot take a new message until it is decided. */
   waiting: boolean;
-  send: (message: string, image?: { mediaType: string; data: string }) => Promise<void>;
+  send: (message: string, attachments?: Attachments) => Promise<void>;
   /** Confirms or cancels the action waiting on entry `index`. */
   decide: (index: number, confirm: boolean) => Promise<void>;
   clear: () => void;
@@ -132,7 +139,9 @@ export function useAssistantChat(subject: string): AssistantChat {
               ? 'assistant.limit_reached'
               : response.status === 400 && 'image' in request
                 ? 'assistant.image_rejected'
-                : 'assistant.failed',
+                : response.status === 400 && 'document' in request
+                  ? 'assistant.document_rejected'
+                  : 'assistant.failed',
           ),
         };
       } else {
@@ -160,17 +169,22 @@ export function useAssistantChat(subject: string): AssistantChat {
     saveConversation(subject, { history, entries: [...shown, reply] });
   }
 
-  async function send(message: string, image?: { mediaType: string; data: string }): Promise<void> {
+  async function send(message: string, { image, document }: Attachments = {}): Promise<void> {
     const trimmed = message.trim();
     if (!trimmed || streaming || waiting) return;
-    // The image goes to the server once; the conversation keeps only that one was attached.
-    const user: AssistantEntry = image
-      ? { role: 'user', text: trimmed, image: true }
-      : { role: 'user', text: trimmed };
+    // Files go to the server once; the conversation keeps only that they were attached.
+    const user: AssistantEntry = {
+      role: 'user',
+      text: trimmed,
+      ...(image ? { image: true } : {}),
+      ...(document ? { document: document.name } : {}),
+    };
     await runTurn(
-      image
-        ? { message: trimmed, image: { mediaType: image.mediaType, data: image.data } }
-        : { message: trimmed },
+      {
+        message: trimmed,
+        ...(image ? { image: { mediaType: image.mediaType, data: image.data } } : {}),
+        ...(document ? { document } : {}),
+      },
       [...conversation.entries, user],
     );
   }

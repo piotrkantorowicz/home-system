@@ -47,6 +47,9 @@ public sealed class AssistantOptions
     /// <summary>Largest accepted image after decoding; the panel downscales before sending.</summary>
     public int MaxImageBytes { get; set; } = 2_000_000;
 
+    /// <summary>Longest accepted attached text file, in characters; a month's bank statement is well under it.</summary>
+    public int MaxDocumentChars { get; set; } = 1_000_000;
+
     /// <summary>Rough token allowance for the browser history; older turns beyond it are dropped before the model call.</summary>
     public int MaxHistoryTokens { get; set; } = 20_000;
 }
