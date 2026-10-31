@@ -75,6 +75,9 @@ flowchart LR
 
 ### 3.3 Request and stream contract
 
+`GET /api/assistant` — SPA bearer token; `{ provider }` when `Assistant:Enabled`, else 404. The
+panel asks it first: 404 hides the panel, `provider` is shown in it (§11).
+
 `POST /api/assistant/messages` — SPA bearer token, `Assistant:Enabled` else 404.
 
 Request body: `messages` (the browser-held history, trimmed per §8), the new user message
@@ -139,7 +142,7 @@ scope the gate does not recognise, is **not offered**.
   that every scope is one the gate recognises, and that scopes and annotations agree
   (read-only scopes ⇔ `ReadOnly = true`). A new tool missing `[Authorize]`, using an unknown
   scope or mis-annotated fails CI instead of being silently hidden or running unconfirmed.
-- Delivery order follows the epic: #645 offers run-now tools only; #648 adds held tools.
+- Delivery order follows the epic: #645 offered run-now tools only; #648 added held tools.
 
 ## 6. Write confirmation
 
@@ -172,10 +175,15 @@ sequenceDiagram
     end
 ```
 
-- **Pending action token:** Data Protection payload with auth subject, tool name, SHA-256 of
-  the canonical arguments JSON, the arguments themselves, a server-generated operation key
-  and an expiry (30 min, like preview tokens). Confirm runs exactly the arguments inside the
-  token; arguments sent beside it are ignored, so tampering cannot change what runs.
+- **Pending action token:** Data Protection payload with auth subject, tool name, the model's
+  call id, the arguments themselves (server-generated operation key included) and an expiry
+  (30 min, like preview tokens). Data Protection encrypts and authenticates the payload, so no
+  separate argument hash is needed. Confirm runs exactly the arguments inside the token; the
+  request carries only the token, so tampering cannot change what runs. The write switches are
+  read again on confirm: a tool switched off since it was held does not run.
+- **Request:** exactly one of `message`, `confirm` (token) or `cancel` (token), plus the
+  history. While an action waits, the panel accepts no new message (the history ends with an
+  unanswered call the provider would reject).
 - **Operation key is minted when the action is held**, not at confirm: a double-click or a
   retried confirm replays the original receipt instead of writing twice. The server replaces
   any `operationKey` the model put in the arguments; models invent keys such as
@@ -200,9 +208,11 @@ sequenceDiagram
 - Prompt caching: Anthropic uses explicit cache control on the system prompt and tool
   definitions; OpenAI and xAI cache automatically, so their setting is a no-op.
 - Delivery: #645 registers Anthropic only (default **Claude Haiku 5.5**); #732 adds OpenAI
-  and xAI, with startup failing on an unknown provider or a missing key. Before #732 ships,
-  confirm the xAI path against xAI's current docs (OpenAI client with a custom endpoint, or
-  their native API).
+  and xAI, with startup failing on an unknown provider, a missing key or (for OpenAI / xAI) a
+  missing model. xAI was checked against its docs on 2026-10-28: the OpenAI client works against
+  `https://api.x.ai/v1`. Both run on Chat Completions, which xAI now lists as legacy next to its
+  Responses API; it is still served and keeps calls stateless. Move to Responses (with storage
+  off) if xAI retires it.
 - Local models (Ollama and similar) are out of scope for now.
 - A test provider (`Fake`) returning scripted responses is registered only in
   `Development` / E2E configuration, for #650.
@@ -213,13 +223,16 @@ Configuration (`Assistant` section):
 |---|---|---|
 | `Enabled` | `false` | Maps the endpoint; off → 404 and the panel is hidden. Stays off in production until #646 is merged. |
 | `Provider` | `Anthropic` | `Anthropic`, `OpenAI`, `XAI` (`Fake` outside production) |
-| `Model` | `claude-haiku-5-5` | Provider model id |
+| `Model` | `claude-haiku-5-5` for Anthropic | Provider model id; required for `OpenAI` and `XAI` |
 | `ApiKey` | — | Required when enabled; secret store / environment only |
-| `BaseUrl` | provider default | Override, e.g. the xAI endpoint |
-| `DailyTokenBudget` | per #646 | Input + output tokens per user per day |
-| `RequestsPerMinute` | per #646 | Per user, fixed window |
+| `BaseUrl` | provider default (`https://api.x.ai/v1` for `XAI`) | Endpoint override for `OpenAI` / `XAI` |
+| `DailyTokenBudget` | `500000` | Input + output tokens per user per server day |
+| `RequestsPerMinute` | `10` | Per user, fixed window |
 | `MaxToolRounds` | `10` | Model ↔ tool round trips per request |
-| `MaxOutputTokens` | per #645 | Per model call |
+| `MaxOutputTokens` | `4096` | Per model call |
+| `MaxHistoryTokens` | `20000` | Allowance for browser history (estimated as JSON length / 4); older turns are dropped |
+| `ImagesEnabled` | `true` | The configured model accepts image attachments (§10) |
+| `MaxImageBytes` | `2000000` | Largest accepted image after decoding |
 
 ## 8. Limits and cost (#646)
 
@@ -233,7 +246,8 @@ Configuration (`Assistant` section):
   migrations for a module that otherwise has no store.)*
 - **Hard ceiling outside the app:** set a monthly spend limit in the provider console. The
   in-app budget is the per-user fairness cap; the console limit is the bill cap.
-- **Rate limit:** ASP.NET rate limiter per auth subject, as `/mcp` does.
+- **Rate limit:** per auth subject, fixed one-minute window, counted next to the budget on the same
+  `TimeProvider` (one 429 path, testable with a fake clock) rather than the ASP.NET rate limiter `/mcp` uses.
 - **Runaway guards:** `MaxToolRounds` per request, `MaxOutputTokens` per call, request body
   size cap, history trimmed to the most recent turns that fit a fixed token allowance (older
   turns are dropped server-side before the model call).
@@ -242,7 +256,8 @@ Configuration (`Assistant` section):
 - **The budget is re-checked before every model call inside the loop**, not only once per
   request: one request can make up to `MaxToolRounds` calls, each resending the growing
   history. When the counter is exceeded mid-request, the loop stops and streams `error`
-  then `done`. The overshoot is bounded by one model call.
+  then `done`. The overshoot is bounded by one model call per concurrent request, and a
+  call that is aborted or fails mid-stream is still charged for the usage the provider had reported.
 - **Cost estimate** (recorded at planning, 2026-10-25): about $3–6 per month for 4 active
   users on Haiku. Not re-checked against today's price list. #646 measures the real figure:
   one log line per request with token counts, summed per day.
@@ -257,11 +272,28 @@ Configuration (`Assistant` section):
 
 ## 10. Images (#649)
 
-- Attach or take a photo in the panel; downscaled client-side.
-- Server accepts JPEG / PNG / WebP up to a size cap, sends it as an image content block,
-  and never stores it. The configured model must accept images; #649 checks this at startup
-  or refuses attachments with a readable message.
+- Attach or take a photo in the panel (a file picker that offers the camera on phones). The
+  panel shrinks it to a 1568 px long edge and re-encodes it as JPEG before sending.
+- The request carries `image: { mediaType, data }` next to `message`. The server accepts
+  JPEG / PNG / WebP up to `MaxImageBytes`, checks that the bytes start with the declared
+  type's signature, and sends the image as an image content block in that turn's user message.
+- **Never stored, not even in the browser:** the `history` event returns the user message with
+  a note ("an image was attached … not kept") instead of the bytes, so later turns do not resend
+  it and browser storage stays small. The history check keeps rejecting image content.
+- `ImagesEnabled` (default `true`) says whether the configured model accepts images; the status
+  endpoint reports it as `images`, the panel shows the attach button only then, and with it off
+  an attachment is refused with a readable message.
 - Enables #664 (receipt → expense) and, for text attachments, #731 (bank statement import).
+- **Receipts (#664):** the instructions tell the model to read the total, date and merchant, take
+  envelope, category and funding from `get_budget_context`, and propose `create_expense` — or ask
+  when any of them is unclear. The card hides the server-minted `operationKey`.
+- **Bank statements (#731):** the panel attaches a CSV/XML export as `document: { name, text }`,
+  decoded in the browser (strict UTF-8, else Windows-1250, the parser's order). The model gets only
+  a note naming the file; when a run-now tool with a `statement` argument is called in that turn
+  (`preview_expense_import`), the server puts the file text there. The file is gone after that
+  request, so the preview must happen in the turn it was attached. `execute_expense_import` is held
+  like any import; its card shows the rows as a table without matching keys. Ceiling: the model
+  writes every row of the import call, so a very long statement can hit `MaxOutputTokens`.
 
 ## 11. Security and privacy
 
@@ -301,7 +333,7 @@ Configuration (`Assistant` section):
 | D9 | Capabilities from tool scopes + annotations + existing switches; guard test keeps them consistent | Taken 2026-10-28 |
 | D10 | Writes held as signed pending actions; operation key minted at hold; one pending action at a time | Taken 2026-10-28 |
 | D11 | Usage counted in memory; provider console spend limit is the hard bill cap | Taken 2026-10-28 |
-| D12 | No epic lane: slices merge to `main` behind `Assistant:Enabled` (off until #646) | Taken 2026-10-28 |
+| D12 | Epic lane `epic/634-in-app-assistant-mcp-tools`: slices merge there and reach `main` together; `Assistant:Enabled` stays off until #646 | Taken 2026-10-28, revised the same day (was: no lane) |
 | D13 | Sonnet opt-in for large plans deferred until #650 shows Haiku cannot build a week | Taken 2026-10-28 |
 | D14 | Local models (Ollama) out of scope for this epic | Taken 2026-10-28 |
 
