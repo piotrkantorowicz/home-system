@@ -231,6 +231,8 @@ Configuration (`Assistant` section):
 | `MaxToolRounds` | `10` | Model ↔ tool round trips per request |
 | `MaxOutputTokens` | `4096` | Per model call |
 | `MaxHistoryTokens` | `20000` | Allowance for browser history (estimated as JSON length / 4); older turns are dropped |
+| `ImagesEnabled` | `true` | The configured model accepts image attachments (§10) |
+| `MaxImageBytes` | `2000000` | Largest accepted image after decoding |
 
 ## 8. Limits and cost (#646)
 
@@ -270,10 +272,17 @@ Configuration (`Assistant` section):
 
 ## 10. Images (#649)
 
-- Attach or take a photo in the panel; downscaled client-side.
-- Server accepts JPEG / PNG / WebP up to a size cap, sends it as an image content block,
-  and never stores it. The configured model must accept images; #649 checks this at startup
-  or refuses attachments with a readable message.
+- Attach or take a photo in the panel (a file picker that offers the camera on phones). The
+  panel shrinks it to a 1568 px long edge and re-encodes it as JPEG before sending.
+- The request carries `image: { mediaType, data }` next to `message`. The server accepts
+  JPEG / PNG / WebP up to `MaxImageBytes`, checks that the bytes start with the declared
+  type's signature, and sends the image as an image content block in that turn's user message.
+- **Never stored, not even in the browser:** the `history` event returns the user message with
+  a note ("an image was attached … not kept") instead of the bytes, so later turns do not resend
+  it and browser storage stays small. The history check keeps rejecting image content.
+- `ImagesEnabled` (default `true`) says whether the configured model accepts images; the status
+  endpoint reports it as `images`, the panel shows the attach button only then, and with it off
+  an attachment is refused with a readable message.
 - Enables #664 (receipt → expense) and, for text attachments, #731 (bank statement import).
 
 ## 11. Security and privacy
