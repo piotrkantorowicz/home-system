@@ -7,3 +7,7 @@ CVE-2026-18374 exp:2027-01-31
 
 # glibc nscd stack overflow: the chiseled image ships no nscd daemon. Unfixed in Ubuntu 24.04 libc6.
 CVE-2026-89092 exp:2027-01-31
+
+# ICU SRBRoot::addTag stack overflow: reached only when compiling resource bundles (genrb),
+# never by ICU's runtime APIs the app uses. Unfixed in Ubuntu 24.04 libicu74.
+CVE-2025-5222 exp:2027-01-31
