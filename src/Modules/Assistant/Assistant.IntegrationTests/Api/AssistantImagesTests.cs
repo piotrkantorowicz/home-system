@@ -72,7 +72,7 @@ public sealed class AssistantImagesTests(AssistantDatabaseFixture databases) : I
             "disguised" => new { message = "Hi", image = new { mediaType = "image/png", data = Convert.ToBase64String(Jpeg) } },
             "oversized" => new { message = "Hi", image = new { mediaType = "image/jpeg", data = Convert.ToBase64String([.. Jpeg, .. new byte[100]]) } },
             "not-base64" => new { message = "Hi", image = new { mediaType = "image/jpeg", data = "not base64!" } },
-            _ => (object)new { confirm = "x", image = new { mediaType = "image/jpeg", data = Convert.ToBase64String(Jpeg) } },
+            _ => new { confirm = "x", image = new { mediaType = "image/jpeg", data = Convert.ToBase64String(Jpeg) } },
         };
 
         var response = await me.PostAsJsonAsync("/api/assistant/messages", body, Ct);
