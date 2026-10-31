@@ -92,27 +92,21 @@ public sealed class HomeSystemDocumentTransformer : IOpenApiDocumentTransformer
         var validationSchema = await ReferenceSchemaAsync(document, context, typeof(HttpValidationProblemDetails), ct);
         var problemSchema = await ReferenceSchemaAsync(document, context, typeof(ProblemDetails), ct);
 
-        foreach (var operations in document.Paths.Values.Select(path => path.Operations))
+        foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations?.Values ?? Enumerable.Empty<OpenApiOperation>()))
         {
-            if (operations is null)
-                continue;
+            operation.Responses ??= [];
 
-            foreach (var operation in operations.Values)
+            foreach (var (statusCode, description) in SharedProblemResponses)
             {
-                operation.Responses ??= [];
-
-                foreach (var (statusCode, description) in SharedProblemResponses)
+                var schema = statusCode == "400" ? validationSchema : problemSchema;
+                operation.Responses.TryAdd(statusCode, new OpenApiResponse
                 {
-                    var schema = statusCode == "400" ? validationSchema : problemSchema;
-                    operation.Responses.TryAdd(statusCode, new OpenApiResponse
+                    Description = description,
+                    Content = new Dictionary<string, OpenApiMediaType>
                     {
-                        Description = description,
-                        Content = new Dictionary<string, OpenApiMediaType>
-                        {
-                            [ProblemJsonMediaType] = new() { Schema = schema },
-                        },
-                    });
-                }
+                        [ProblemJsonMediaType] = new() { Schema = schema },
+                    },
+                });
             }
         }
     }

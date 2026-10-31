@@ -7,7 +7,6 @@ import {
   ensureBudget,
   get,
   minor,
-  myPersonId,
   send,
   today,
 } from './utils/seed';

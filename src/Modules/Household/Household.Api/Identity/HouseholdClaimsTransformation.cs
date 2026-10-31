@@ -45,7 +45,7 @@ internal sealed partial class HouseholdClaimsTransformation : IClaimsTransformat
         {
             context = await _households.GetHouseholdContextForUserAsync(authSubject);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogContextUnresolved(ex);
             return principal;
