@@ -2,9 +2,10 @@
 branch=$(git rev-parse --abbrev-ref HEAD)
 pattern='^(feat|fix|hotfix|chore|refactor|docs|test|epic)/[0-9]+-[a-z0-9-]+$'
 
-if [ "$branch" = "main" ]; then
-  exit 0
-fi
+# main, and Dependabot branches (a maintainer may push a fix onto one; CI exempts them too).
+case "$branch" in
+  main|dependabot/*) exit 0 ;;
+esac
 
 if ! printf '%s\n' "$branch" | grep -Eq "$pattern"; then
   echo "❌ Branch name '$branch' does not follow naming convention."
