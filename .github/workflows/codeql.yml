@@ -48,9 +48,17 @@ jobs:
             # docs/** holds static design prototypes, not shipped code.
             paths-ignore:
               - docs/**
+            # Style-only C# queries whose flagged code is intended: the upcasts pick an overload or type
+            # a null, the Where candidates use TryGetValue(out), the Select candidates have side effects.
             query-filters:
               - exclude:
                   id: actions/unpinned-tag
+              - exclude:
+                  id: cs/useless-upcast
+              - exclude:
+                  id: cs/linq/missed-where
+              - exclude:
+                  id: cs/linq/missed-select
 
       - uses: github/codeql-action/analyze@v4
         with:
