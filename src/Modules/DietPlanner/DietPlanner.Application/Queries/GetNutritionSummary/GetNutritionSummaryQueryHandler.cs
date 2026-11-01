@@ -95,26 +95,22 @@ internal sealed class GetNutritionSummaryQueryHandler
             .GroupBy(e => e.Date)
             .Select(g =>
             {
-                decimal calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0;
+                var total = NutritionInfo.Zero;
 
                 foreach (var entry in g)
                 {
-                    AccumulateRecipe(entry, recipes, products,
-                        ref calories, ref protein, ref carbs, ref fat, ref fiber);
+                    total = total.Add(RecipeNutrition(entry, recipes, products));
 
                     if (entry.Status == MealEntryStatus.Modified)
-                    {
-                        AccumulateActualProducts(entry, products,
-                            ref calories, ref protein, ref carbs, ref fat, ref fiber);
-                    }
+                        total = total.Add(ActualProductsNutrition(entry, products));
                 }
 
                 return new DailyNutritionDto(g.Key,
-                    Math.Round(calories, 1),
-                    Math.Round(protein, 1),
-                    Math.Round(carbs, 1),
-                    Math.Round(fat, 1),
-                    Math.Round(fiber, 1));
+                    Math.Round(total.Calories, 1),
+                    Math.Round(total.Protein, 1),
+                    Math.Round(total.Carbs, 1),
+                    Math.Round(total.Fat, 1),
+                    Math.Round(total.Fiber, 1));
             })
             .OrderBy(x => x.Date)
             .ToList();
@@ -123,17 +119,18 @@ internal sealed class GetNutritionSummaryQueryHandler
     private static RecipeId? EffectiveRecipeId(EntryProjection entry)
         => entry.Status == MealEntryStatus.Modified ? entry.ActualRecipeId : entry.PlannedRecipeId;
 
-    private static void AccumulateRecipe(
+    private static NutritionInfo RecipeNutrition(
         EntryProjection entry,
         IReadOnlyDictionary<RecipeId, RecipeProjection> recipes,
-        IReadOnlyDictionary<ProductId, ProductProjection> products,
-        ref decimal calories, ref decimal protein, ref decimal carbs, ref decimal fat, ref decimal fiber)
+        IReadOnlyDictionary<ProductId, ProductProjection> products)
     {
         var recipeId = EffectiveRecipeId(entry);
-        if (recipeId is null || !recipes.TryGetValue(recipeId, out var recipe)) return;
+        if (recipeId is null || !recipes.TryGetValue(recipeId, out var recipe)) return NutritionInfo.Zero;
 
         var multiplier = recipe.Servings > 0 ? entry.Servings / recipe.Servings : 0;
-        if (multiplier == 0) return;
+        if (multiplier == 0) return NutritionInfo.Zero;
+
+        var total = NutritionInfo.Zero;
 
         foreach (var ing in recipe.Ingredients)
         {
@@ -143,19 +140,17 @@ internal sealed class GetNutritionSummaryQueryHandler
                 ing.Amount, ing.Unit, product.DensityGramsPerMl, product.GramPerPiece);
             var factor = grams / 100m * multiplier;
 
-            calories += (product.Calories ?? 0) * factor;
-            protein += (product.Protein ?? 0) * factor;
-            carbs += (product.Carbs ?? 0) * factor;
-            fat += (product.Fat ?? 0) * factor;
-            fiber += (product.Fiber ?? 0) * factor;
+            total = total.Add(Scaled(product, factor));
         }
+
+        return total;
     }
 
-    private static void AccumulateActualProducts(
+    private static NutritionInfo ActualProductsNutrition(
         EntryProjection entry,
-        IReadOnlyDictionary<ProductId, ProductProjection> products,
-        ref decimal calories, ref decimal protein, ref decimal carbs, ref decimal fat, ref decimal fiber)
+        IReadOnlyDictionary<ProductId, ProductProjection> products)
     {
+        var total = NutritionInfo.Zero;
         foreach (var ap in entry.ActualProducts)
         {
             if (!products.TryGetValue(ap.ProductId, out var product)) continue;
@@ -164,13 +159,18 @@ internal sealed class GetNutritionSummaryQueryHandler
                 ap.Amount, ap.Unit, product.DensityGramsPerMl, product.GramPerPiece);
             var factor = grams / 100m;
 
-            calories += (product.Calories ?? 0) * factor;
-            protein += (product.Protein ?? 0) * factor;
-            carbs += (product.Carbs ?? 0) * factor;
-            fat += (product.Fat ?? 0) * factor;
-            fiber += (product.Fiber ?? 0) * factor;
+            total = total.Add(Scaled(product, factor));
         }
+
+        return total;
     }
+
+    private static NutritionInfo Scaled(ProductProjection product, decimal factor) => new(
+        (product.Calories ?? 0) * factor,
+        (product.Protein ?? 0) * factor,
+        (product.Carbs ?? 0) * factor,
+        (product.Fat ?? 0) * factor,
+        (product.Fiber ?? 0) * factor);
 
     private sealed class EntryProjection
     {
