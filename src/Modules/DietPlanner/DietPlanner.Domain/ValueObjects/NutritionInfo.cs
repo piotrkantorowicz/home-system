@@ -19,4 +19,18 @@ public sealed record NutritionInfo(
 {
     /// <summary>The additive identity — the starting point for summing servings.</summary>
     public static NutritionInfo Zero => new(0, 0, 0, 0, 0);
+
+    /// <summary>Sums the two totals component by component.</summary>
+    /// <param name="other">The totals to add.</param>
+    /// <returns>A new instance; neither operand changes.</returns>
+    public NutritionInfo Add(NutritionInfo other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return new(
+            Calories + other.Calories,
+            Protein + other.Protein,
+            Carbs + other.Carbs,
+            Fat + other.Fat,
+            Fiber + other.Fiber);
+    }
 }
