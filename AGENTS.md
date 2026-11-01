@@ -209,6 +209,15 @@ implicitly by task match.
 | `$pr-summary` | Concise PR body summary from the diff vs `main` |
 | `$handoff` | Save a session summary that auto-loads into the next session after `/clear` |
 
+**Learned know-how** (written by the autoharness plugin):
+
+| Skill | What it does |
+|---|---|
+| `$assistant-held-actions` | Assistant write tools and the Confirm card (held actions) |
+| `$budget-statement-import` | Budget bank statement import, encodings and dedupe |
+| `$dependabot-pr-triage` | Triage Dependabot PRs: secret scope, E2E flakes, major bumps |
+| `$github-code-scanning-alerts` | Check CodeQL / code scanning alerts, browser fallback on 403 |
+
 ---
 
 ## Non-negotiable Rules (Always Apply)
