@@ -119,3 +119,8 @@ Thumbs.db
 .worktrees/
 .codex/
 __pycache__/
+
+# autoharness plugin runtime state
+.claude/autoharness/
+.agents/skills/**/.ledger.jsonl
+.agents/skills/**/.sidecar.json
