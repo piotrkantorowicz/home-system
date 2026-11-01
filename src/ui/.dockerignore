@@ -1,0 +1,8 @@
+# Build context is src/ui (see Dockerfile); the image installs its own node_modules.
+node_modules
+dist
+coverage
+playwright
+playwright-report
+test-results
+.env*

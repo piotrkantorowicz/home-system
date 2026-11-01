@@ -67,3 +67,15 @@ jobs:
     uses: ./.github/workflows/api-image.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
+
+  ui-image:
+    name: UI image
+    needs: release
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read      # ui-image.yml's build job declares it for paths-filter
+      security-events: write   # ui-image.yml uploads its Trivy scan
+    uses: ./.github/workflows/ui-image.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
