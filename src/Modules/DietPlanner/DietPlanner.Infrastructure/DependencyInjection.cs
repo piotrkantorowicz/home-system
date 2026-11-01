@@ -161,24 +161,30 @@ public static partial class InfrastructureDependencyInjection
 
     /// <summary>
     /// Applies pending EF Core migrations to the Diet Planner database. Called by the host at startup in
-    /// Development only; failures are logged, not thrown, so a missing database does not stop the host.
+    /// Development and by the <c>migrate</c> command; failures are logged, not thrown, so a missing
+    /// database does not stop the dev host.
     /// </summary>
     /// <param name="serviceProvider">The built host provider; a scope is created from it.</param>
     /// <param name="logger">Receives the outcome.</param>
-    public static async Task MigrateDietPlannerDatabaseAsync(
+    /// <param name="ct">Cancels the migration; cancellation propagates instead of being logged as a failure.</param>
+    /// <returns><see langword="false"/> when the migration failed.</returns>
+    public static async Task<bool> MigrateDietPlannerDatabaseAsync(
         this IServiceProvider serviceProvider,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken ct)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DietPlannerDbContext>();
         try
         {
-            await dbContext.Database.MigrateAsync();
+            await dbContext.Database.MigrateAsync(ct);
             LogMigrationsApplied(logger);
+            return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogMigrationsFailed(logger, ex);
+            return false;
         }
     }
 

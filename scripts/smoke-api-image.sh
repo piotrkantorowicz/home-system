@@ -21,6 +21,10 @@ for m in DietPlanner Notifications Household Budget Investments; do
   docker exec "$run-db" createdb -U postgres "$db"
   env_args+=(-e "ConnectionStrings__$m=Host=$run-db;Database=$db;Username=postgres;Password=smoke")
 done
+# The deploy's migrate Job: must apply every module's migrations and exit 0 without serving.
+timeout 120 docker run --rm --network "$net" "${env_args[@]}" "$image" migrate >/dev/null \
+  || { echo "SMOKE FAIL: migrate command failed or did not exit" >&2; exit 1; }
+
 docker run -d --name "$run-api" --network "$net" -p 127.0.0.1::8080 "${env_args[@]}" "$image" >/dev/null
 port=$(docker port "$run-api" 8080/tcp | head -1 | sed 's/.*://')
 

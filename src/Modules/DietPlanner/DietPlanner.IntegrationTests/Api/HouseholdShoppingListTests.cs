@@ -33,7 +33,7 @@ public sealed class HouseholdShoppingListTests : IClassFixture<HouseholdShopping
         var ownerFactory = FactoryFor($"hh-owner-{Guid.NewGuid():N}");
         var memberFactory = FactoryFor($"hh-member-{Guid.NewGuid():N}");
 
-        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
+        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance, TestContext.Current.CancellationToken);
 
         var owner = ownerFactory.CreateClient();
         var member = memberFactory.CreateClient();

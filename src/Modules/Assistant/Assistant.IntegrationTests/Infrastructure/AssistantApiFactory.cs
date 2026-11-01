@@ -127,9 +127,9 @@ public sealed class AssistantApiFactory(
 
     private async Task MigrateAsync()
     {
-        await Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
+        await Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance, Ct);
         await Services.MigrateInvestmentsDatabaseAsync(NullLogger.Instance, Ct);
-        await Services.MigrateBudgetDatabaseAsync(NullLogger.Instance);
+        await Services.MigrateBudgetDatabaseAsync(NullLogger.Instance, Ct);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

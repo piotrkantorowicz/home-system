@@ -138,7 +138,7 @@ public sealed class HouseholdMealPlanTests : IClassFixture<HouseholdShoppingList
         var ct = TestContext.Current.CancellationToken;
         var tag = Guid.NewGuid().ToString("N");
         var ownerFactory = FactoryFor($"mp-owner-{tag}");
-        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
+        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance, TestContext.Current.CancellationToken);
 
         var owner = ownerFactory.CreateClient();
         (await owner.PostAsync("/api/persons/me/sync", null, ct)).EnsureSuccessStatusCode();
