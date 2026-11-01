@@ -13,7 +13,7 @@ import type { ESLint } from 'eslint';
 const jsxA11y: { configs: { recommended: { rules: Record<string, unknown> } } } = require('eslint-plugin-jsx-a11y') as { configs: { recommended: { rules: Record<string, unknown> } } }; // eslint-disable-line @typescript-eslint/no-require-imports
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules', 'build', '.eslintcache', 'coverage', '**/api/generated/**', '*.js']),
+  globalIgnores(['dist', 'public', 'node_modules', 'build', '.eslintcache', 'coverage', '**/api/generated/**', '*.js']),
 
   // Base JS rules
   js.configs.recommended,

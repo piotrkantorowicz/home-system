@@ -2,9 +2,26 @@ import { WebStorageStateStore } from 'oidc-client-ts';
 
 import type { UserManagerSettings } from 'oidc-client-ts';
 
-function requireEnv(name: string, fallback?: string): string {
+// Deploy-time settings from /config.js (public/config.js, replaced by a ConfigMap in the cluster),
+// so one image serves every environment. They win over the build-time VITE_* variables.
+interface RuntimeConfig {
+  authentikDomain?: string;
+  authentikApp?: string;
+  oidcClientId?: string;
+  redirectUri?: string;
+}
+
+declare global {
+  interface Window {
+    __CONFIG__?: RuntimeConfig;
+  }
+}
+
+const runtimeConfig: RuntimeConfig = window.__CONFIG__ ?? {};
+
+function requireEnv(name: string, runtimeValue: string | undefined, fallback?: string): string {
   const raw: unknown = import.meta.env[name];
-  const value = (typeof raw === 'string' ? raw : undefined) ?? fallback;
+  const value = runtimeValue ?? (typeof raw === 'string' ? raw : undefined) ?? fallback;
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -13,19 +30,23 @@ function requireEnv(name: string, fallback?: string): string {
 
 const AUTHENTIK_DOMAIN = requireEnv(
   'VITE_AUTHENTIK_DOMAIN',
+  runtimeConfig.authentikDomain,
   import.meta.env.DEV ? 'http://localhost:9000' : undefined,
 );
+const AUTHENTIK_APP = runtimeConfig.authentikApp ?? 'home-system';
 const CLIENT_ID = requireEnv(
   'VITE_OIDC_CLIENT_ID',
+  runtimeConfig.oidcClientId,
   import.meta.env.DEV ? 'I476Ik4ahckZS00sx9zmad8ennJdhDr7Fb1LpoMH' : undefined,
 );
 const REDIRECT_URI = requireEnv(
   'VITE_REDIRECT_URI',
+  runtimeConfig.redirectUri,
   import.meta.env.DEV ? 'http://localhost:5173' : undefined,
 );
 
 export const oidcConfig: UserManagerSettings = {
-  authority: `${AUTHENTIK_DOMAIN}/application/o/home-system/`,
+  authority: `${AUTHENTIK_DOMAIN}/application/o/${AUTHENTIK_APP}/`,
   client_id: CLIENT_ID,
   redirect_uri: `${REDIRECT_URI}/callback`,
   post_logout_redirect_uri: REDIRECT_URI,
@@ -62,9 +83,3 @@ export const oidcConfig: UserManagerSettings = {
 
   // PKCE is automatically enabled for public clients
 };
-
-// API configuration
-export const API_BASE_URL = requireEnv(
-  'VITE_API_BASE_URL',
-  import.meta.env.DEV ? 'http://localhost:5050' : undefined,
-);
