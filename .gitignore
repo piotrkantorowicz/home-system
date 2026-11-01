@@ -124,3 +124,4 @@ __pycache__/
 .claude/autoharness/
 .agents/skills/**/.ledger.jsonl
 .agents/skills/**/.sidecar.json
+.agents/skills/**/references/evidence-*.md
