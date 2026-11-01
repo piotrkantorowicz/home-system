@@ -8,7 +8,7 @@ category: dependency-management
 
 Diagnose each Dependabot failure before touching code. Most are config or scope problems, not test failures.
 
-- **"Repository secret X is not set" is not a test failure.** Dependabot runs read only the Dependabot secret scope. Check with `gh secret list --app dependabot`; fix with `gh secret set <NAME> --app dependabot` using the same value as the Actions secret, then rerun.
+- **"Repository secret X is not set" is not a test failure.** Dependabot runs read only the Dependabot secret scope. Check with `gh secret list --app dependabot`. Do not set secrets yourself: report the missing name and ask the owner to run `gh secret set <NAME> --app dependabot` with the same value as the Actions secret, then rerun.
 - **Authentik startup timeout in E2E is a runner flake.** Rerun the job. Do not change code.
 - **Major bumps break the build.** Fix the call sites on the bot branch, then run `/verify`. Known migrations: `references/major-bumps.md`.
 - **Push fixes onto the `dependabot/*` branch**, not a new branch, so the PR updates. The pre-push branch-name check blocks `dependabot/*` until the exemption from #781 / PR #782 is merged. Do not `--no-verify` without asking.
