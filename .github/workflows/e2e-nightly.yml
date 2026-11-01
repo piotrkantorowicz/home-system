@@ -170,6 +170,10 @@ jobs:
           export DietPlanner__ImageStorage__ForcePathStyle=true
           export AWS_ACCESS_KEY_ID="$RECIPE_IMAGE_STORAGE_ACCESS_KEY"
           export AWS_SECRET_ACCESS_KEY="$RECIPE_IMAGE_STORAGE_SECRET_KEY"
+          # assistant.spec.ts: scripted model (refused in Production), imports for its week plan
+          export Assistant__Enabled=true
+          export Assistant__Provider=Fake
+          export Mcp__ImportsEnabled=true
           nohup dotnet run --project src/Apis/HomeSystem.REST --no-build --no-launch-profile --configuration Release \
             > backend.log 2>&1 &
           echo "backend pid $!"

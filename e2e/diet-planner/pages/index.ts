@@ -1,3 +1,4 @@
+export { AssistantPanel } from './assistant.panel';
 export { BasePage } from './BasePage';
 export { CalendarPage } from './calendar.page';
 export { DashboardPage } from './dashboard.page';

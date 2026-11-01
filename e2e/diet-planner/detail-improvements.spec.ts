@@ -1,6 +1,7 @@
 import { test } from './fixtures';
 import { ProductsPage, RecipesPage, MealSchedulePage } from './pages';
 import { DetailReviewPage } from './pages/detail-review.page';
+import { seedMealSchedule } from './utils/seed';
 
 test('product nutrition, recipe scaling, planning, and Today navigation', async ({
   page,
@@ -13,11 +14,8 @@ test('product nutrition, recipe scaling, planning, and Today navigation', async 
   const detail = new DetailReviewPage(page);
   const schedule = new MealSchedulePage(page);
   await schedule.goto();
-  if ((await schedule.slotCount()) === 0) await schedule.addSlot('Breakfast', '08:00');
-  else await schedule.slotNameInput(0).fill('Breakfast');
-  await schedule.slotTimeInput(0).fill('08:00');
-  await schedule.save();
-  await schedule.successMessage.waitFor();
+  // API upsert, not the form: a worker another spec already seeded leaves the form pristine.
+  await seedMealSchedule(page);
   await products.goto();
   await products.createProduct({
     name,

@@ -1,3 +1,4 @@
+using Assistant.Api;
 using Budget.Api;
 using Budget.Infrastructure;
 using DietPlanner.Api;
@@ -32,6 +33,7 @@ builder.Services.AddHouseholdModule(builder.Configuration);
 builder.Services.AddBudgetModule(builder.Configuration);
 builder.Services.AddInvestmentsModule(builder.Configuration);
 builder.Services.AddOperationsModule();
+builder.Services.AddAssistantModule(builder.Configuration, builder.Environment);
 
 // CQRS dispatcher chain — registered once, shared by every module's handlers.
 builder.Services.AddCqrsDispatchers();
@@ -88,7 +90,7 @@ authentication
 builder.Services.AddAuthorization(options => options.AddAdminPolicy());
 
 // ==============================================
-// MCP (disabled unless Mcp:Enabled) — docs/design/mcp/
+// MCP (disabled unless Mcp:Enabled) — docs/design/mcp/. Also registers the tools for the assistant.
 // ==============================================
 builder.AddHomeSystemMcp(authentication);
 
@@ -190,6 +192,7 @@ app.MapBudgetEndpoints();
 app.MapInvestmentsEndpoints();
 app.MapNotificationDeliveriesAdminEndpoints();
 app.MapOperationsEndpoints();
+app.MapAssistantEndpoints();
 
 app.MapHomeSystemMcp();
 
