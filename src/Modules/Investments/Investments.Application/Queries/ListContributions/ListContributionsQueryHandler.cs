@@ -26,7 +26,7 @@ internal sealed class ListContributionsQueryHandler(InvestmentsAccessService acc
 
         var total = await contributions.CountAsync(ct);
         var rows = await contributions
-            .OrderByDescending(c => c.Date).ThenByDescending(c => c.RecordedAt)
+            .OrderByDescending(c => c.Date).ThenByDescending(c => c.RecordedAt).ThenByDescending(c => c.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(c => new { c.Id, c.Date, c.Direction, c.Amount, c.Note, c.RecordedByPersonId, c.RecordedByName, c.RecordedAt })
             .ToListAsync(ct);
