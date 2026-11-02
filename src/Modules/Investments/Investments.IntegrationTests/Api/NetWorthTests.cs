@@ -219,6 +219,26 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
         netWorth.Incomplete.ShouldBeTrue();
     }
 
+    /// <summary>
+    /// Invested follows the balance's rate: today's on the current figure, the month end's in history.
+    /// USD only, like <see cref="NetWorth_UsesTodaysRate_HistoryKeepsMonthEndRate"/>, whose rates it reuses.
+    /// </summary>
+    [Fact]
+    public async Task Contributions_Foreign_UseBalanceRate()
+    {
+        _factory.Nbp.Publish(WalletCurrency.USD, new DateOnly(2026, 6, 30), 4.0m);
+        _factory.Nbp.Publish(WalletCurrency.USD, new DateOnly(2026, 9, 11), 4.5m);
+        var h = await _scenario.NewHouseholdAsync();
+        var wallet = await WalletWithBalanceAsync(h.Owner, "IBKR", "100", currency: "USD", asOf: "2026-06-15");
+        await ContributeAsync(h.Owner, wallet, "2026-06-01", "80");
+
+        var netWorth = await NetWorthAsync(h.Owner, "?asOf=2026-06-30");
+        var history = await h.Owner.GetFromJsonAsync<History>("/api/investments/net-worth/history?from=2026-06-01&to=2026-06-30", Ct);
+
+        netWorth.Wallets.ShouldHaveSingleItem().InvestedPln.ShouldBe("360.00");
+        history!.Points.ShouldHaveSingleItem().Invested.ShouldBe("320.00");
+    }
+
     /// <summary>Another adult's private wallet's contributions never reach the caller's totals.</summary>
     [Fact]
     public async Task Contributions_PrivateWalletOfAnotherAdult_Hidden()
