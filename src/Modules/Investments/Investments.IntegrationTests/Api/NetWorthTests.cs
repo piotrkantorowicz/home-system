@@ -28,11 +28,13 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
 
     private sealed record OwnerTotal(Guid PersonId, string Name, string Total);
 
-    private sealed record WalletValue(Guid Id, string Name, string? Balance, string? BalancePln, bool RateMissing);
+    private sealed record WalletValue(
+        Guid Id, string Name, string? Balance, string? BalancePln, bool RateMissing, string? Invested, string? InvestedPln, string? GainPln);
 
-    private sealed record NetWorth(string Total, bool Incomplete, List<KindTotal> ByKind, List<OwnerTotal> ByOwner, List<WalletValue> Wallets);
+    private sealed record NetWorth(
+        string Total, bool Incomplete, List<KindTotal> ByKind, List<OwnerTotal> ByOwner, List<WalletValue> Wallets, string? Invested, string? Gain);
 
-    private sealed record Point(DateOnly Date, string Total, bool Incomplete);
+    private sealed record Point(DateOnly Date, string Total, bool Incomplete, string? Invested = null);
 
     private sealed record History(List<Point> Points);
 
@@ -45,6 +47,10 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
             .EnsureSuccessStatusCode();
         return wallet.Id;
     }
+
+    private static async Task ContributeAsync(HttpClient client, Guid walletId, string date, string amount, string direction = "Deposit")
+        => (await client.PostAsJsonAsync($"/api/investments/wallets/{walletId}/contributions", new { date, direction, amount }, Ct))
+            .EnsureSuccessStatusCode();
 
     private static async Task<NetWorth> NetWorthAsync(HttpClient client, string query = "")
         => (await client.GetFromJsonAsync<NetWorth>($"/api/investments/net-worth{query}", Ct))!;
@@ -158,6 +164,75 @@ public sealed class NetWorthTests : IClassFixture<InvestmentsDatabaseFixture>, I
 
         history!.Points.Select(p => (p.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), p.Total))
             .ShouldBe([("2026-06-30", "0.00"), ("2026-07-31", "100.00"), ("2026-08-31", "200.00"), ("2026-09-12", "200.00")]);
+    }
+
+    /// <summary>
+    /// Net contributions on or before the date are invested and balance − invested is the gain; a wallet without
+    /// contributions shows <c>invested: null</c> and stays out of the totals.
+    /// </summary>
+    [Fact]
+    public async Task Contributions_InvestedAndGain()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var funded = await WalletWithBalanceAsync(h.Owner, "Funded", "1500");
+        var bare = await WalletWithBalanceAsync(h.Owner, "Bare", "700");
+        await ContributeAsync(h.Owner, funded, "2026-07-01", "1000");
+        await ContributeAsync(h.Owner, funded, "2026-08-01", "500");
+        await ContributeAsync(h.Owner, funded, "2026-08-20", "200", "Withdrawal");
+        await ContributeAsync(h.Owner, funded, "2026-09-10", "5000");
+
+        var netWorth = await NetWorthAsync(h.Owner, "?asOf=2026-09-01");
+
+        var wallet = netWorth.Wallets.Single(w => w.Id == funded);
+        (wallet.Invested, wallet.InvestedPln, wallet.GainPln).ShouldBe(("1300.00", "1300.00", "200.00"));
+        netWorth.Wallets.Single(w => w.Id == bare).Invested.ShouldBeNull();
+        (netWorth.Invested, netWorth.Gain).ShouldBe(("1300.00", "200.00"));
+    }
+
+    /// <summary>History points carry the invested capital as of each month end.</summary>
+    [Fact]
+    public async Task History_InvestedPerMonthEnd()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var wallet = await WalletWithBalanceAsync(h.Owner, "XTB", "100", asOf: "2026-07-15");
+        await ContributeAsync(h.Owner, wallet, "2026-07-10", "90");
+        await ContributeAsync(h.Owner, wallet, "2026-08-10", "50");
+
+        var history = await h.Owner.GetFromJsonAsync<History>("/api/investments/net-worth/history?from=2026-06-01&to=2026-08-31", Ct);
+
+        history!.Points.Select(p => p.Invested).ShouldBe([null, "90.00", "140.00"]);
+    }
+
+    /// <summary>A foreign wallet without a rate has no PLN invested figure and is left out of the totals.</summary>
+    [Fact]
+    public async Task Contributions_MissingRate_Excluded()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var eur = await WalletWithBalanceAsync(h.Owner, "No rate", "50", currency: "EUR", asOf: "2019-05-06");
+        await ContributeAsync(h.Owner, eur, "2019-05-01", "40");
+
+        var netWorth = await NetWorthAsync(h.Owner, "?asOf=2026-09-12");
+
+        var wallet = netWorth.Wallets.Single(w => w.Id == eur);
+        (wallet.Invested, wallet.InvestedPln, wallet.GainPln).ShouldBe(("40.00", null, null));
+        (netWorth.Invested, netWorth.Gain).ShouldBe((null, null));
+        netWorth.Incomplete.ShouldBeTrue();
+    }
+
+    /// <summary>Another adult's private wallet's contributions never reach the caller's totals.</summary>
+    [Fact]
+    public async Task Contributions_PrivateWalletOfAnotherAdult_Hidden()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var adult = await _scenario.MemberAsync(h, "Adult");
+        var mine = await WalletWithBalanceAsync(h.Owner, "Mine", "300");
+        var hidden = await WalletWithBalanceAsync(adult.Client, "Adult secret", "700", "Private");
+        await ContributeAsync(h.Owner, mine, "2026-08-01", "250");
+        await ContributeAsync(adult.Client, hidden, "2026-08-01", "600");
+
+        var netWorth = await NetWorthAsync(h.Owner);
+
+        (netWorth.Invested, netWorth.Gain).ShouldBe(("250.00", "50.00"));
     }
 
     /// <summary>Bad scope, inverted, over-long or future ranges are rejected.</summary>

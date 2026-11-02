@@ -6,19 +6,26 @@ using Investments.Domain.ValueObjects;
 /// <summary>
 /// Net worth on a date: for each wallet, its latest balance on or before the date, converted to PLN
 /// at the rate for that date (history) or at today's rate (the current figure). A foreign balance without a rate is left out and marks the result
-/// incomplete — never guessed.
+/// incomplete — never guessed. Net contributions on or before the date are converted at the balance's rate,
+/// so gain excludes currency moves (design §14).
 /// </summary>
 public sealed class NetWorthCalculator
 {
     private readonly IReadOnlyList<NetWorthWallet> _wallets;
     private readonly Dictionary<WalletId, NetWorthBalance[]> _balances;
+    private readonly ILookup<WalletId, NetWorthContribution> _contributions;
     private readonly FxRateBook _rates;
 
     /// <summary>Creates a calculator over a fixed set of wallets, their balances and rates.</summary>
     /// <param name="wallets">The wallets in scope.</param>
     /// <param name="balances">Their balances, any order; balances of other wallets are ignored.</param>
     /// <param name="rates">Rates covering the dates to value.</param>
-    public NetWorthCalculator(IReadOnlyList<NetWorthWallet> wallets, IEnumerable<NetWorthBalance> balances, FxRateBook rates)
+    /// <param name="contributions">Their deposits and withdrawals, any order; none when omitted.</param>
+    public NetWorthCalculator(
+        IReadOnlyList<NetWorthWallet> wallets,
+        IEnumerable<NetWorthBalance> balances,
+        FxRateBook rates,
+        IEnumerable<NetWorthContribution>? contributions = null)
     {
         ArgumentNullException.ThrowIfNull(wallets);
         ArgumentNullException.ThrowIfNull(balances);
@@ -27,6 +34,7 @@ public sealed class NetWorthCalculator
         _balances = balances
             .GroupBy(b => b.WalletId)
             .ToDictionary(g => g.Key, g => g.OrderBy(b => b.AsOf).ToArray());
+        _contributions = (contributions ?? []).ToLookup(c => c.WalletId);
     }
 
     /// <summary>Net worth on <paramref name="date"/>, at that date's rates. A wallet archived on or before the date doesn't count.</summary>
@@ -43,7 +51,14 @@ public sealed class NetWorthCalculator
         foreach (var wallet in _wallets.Where(w => !(w.ArchivedOn <= date)))
         {
             var balance = _balances.TryGetValue(wallet.Id, out var history) ? history.LastOrDefault(b => b.AsOf <= date) : null;
-            values.Add(new WalletValue(wallet, balance, balance is null ? null : _rates.ToPln(balance.Amount, wallet.Currency, rateDate)));
+            var flows = _contributions[wallet.Id].Where(c => c.Date <= date).ToList();
+            decimal? invested = flows.Count == 0 ? null : flows.Sum(c => c.Amount);
+            values.Add(new WalletValue(
+                wallet,
+                balance,
+                balance is null ? null : _rates.ToPln(balance.Amount, wallet.Currency, rateDate),
+                invested,
+                invested is null ? null : _rates.ToPln(invested.Value, wallet.Currency, rateDate)));
         }
 
         return new NetWorthPoint(

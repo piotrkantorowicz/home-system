@@ -166,8 +166,8 @@ All routes require authentication; handlers enforce access. Typed results, opera
 | `POST /wallets/{id}/contributions` | Record one: `{ date, direction: Deposit\|Withdrawal, amount, note? }`. |
 | `DELETE /wallets/{id}/contributions/{contributionId}` | Remove one. |
 | `PUT /snapshots` | Check-in batch: `{ asOf, entries: [{ walletId, amount, note? }] }`. All or nothing. |
-| `GET /net-worth?asOf=&scope=household\|mine` | Total PLN, breakdown by kind, by owner, by wallet; `incomplete` flag; rates used. |
-| `GET /net-worth/history?from=&to=&scope=` | Month-end series in PLN; each point carries `incomplete`. Range capped at 10 years. |
+| `GET /net-worth?asOf=&scope=household\|mine` | Total PLN, breakdown by kind, by owner, by wallet; `incomplete` flag; rates used; invested and gain per wallet and in total (§14). |
+| `GET /net-worth/history?from=&to=&scope=` | Month-end series in PLN; each point carries `incomplete` and `invested` (§14). Range capped at 10 years. |
 
 Status codes: 400 invalid input, 403 disallowed action on a visible resource, 404 invisible/unknown, 409 stale concurrency token, 422 domain violation (future date, archived wallet, precision). List endpoints use `PagedList<T>`, page size cap 100, stable ordering.
 

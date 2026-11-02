@@ -26,7 +26,8 @@ internal sealed class GetNetWorthHistoryQueryHandler(InvestmentsAccessService ac
             scope,
             [.. NetWorthCalculator.MonthEnds(from, to)
                 .Select(calculator.ValueAt)
-                .Select(p => new NetWorthHistoryPointDto(p.Date, p.Total.ToString("F2", CultureInfo.InvariantCulture), p.Incomplete))]);
+                .Select(p => new NetWorthHistoryPointDto(
+                    p.Date, p.Total.ToString("F2", CultureInfo.InvariantCulture), p.Incomplete, WalletReadExtensions.Format(p.Invested)))]);
     }
 
     private static void Validate(DateOnly from, DateOnly to, DateOnly today)

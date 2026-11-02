@@ -2,12 +2,13 @@ namespace Investments.Application.Common;
 
 using Investments.Application.Persistence;
 using Investments.Domain.NetWorth;
+using Investments.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 internal static class NetWorthLoader
 {
     /// <summary>
-    /// Loads the in-scope wallets, their balances up to <paramref name="to"/> and the rates for
+    /// Loads the in-scope wallets, their balances and contributions up to <paramref name="to"/> and the rates for
     /// <c>[from, to]</c> — or only today's rates when <paramref name="latestRates"/>. Small by design
     /// (≈10 wallets × ≈120 months); computed in memory.
     /// </summary>
@@ -24,12 +25,16 @@ internal static class NetWorthLoader
             .Where(s => s.AsOf <= to && walletsInScope.Any(w => w.Id == s.WalletId))
             .Select(s => new NetWorthBalance(s.WalletId, s.AsOf, s.Amount))
             .ToListAsync(ct);
+        var contributions = await db.Contributions.AsNoTracking()
+            .Where(c => c.Date <= to && walletsInScope.Any(w => w.Id == c.WalletId))
+            .Select(c => new NetWorthContribution(c.WalletId, c.Date, c.Direction == ContributionDirection.Deposit ? c.Amount : -c.Amount))
+            .ToListAsync(ct);
         var rates = latestRates
             ? await db.LoadLatestRatesAsync(wallets.Select(w => w.Currency), ct)
             : await db.LoadRatesAsync(wallets.SelectMany(w => new[] { (w.Currency, from), (w.Currency, to) }), ct);
 
         var calculator = new NetWorthCalculator(
-            [.. wallets.Select(w => w.ToNetWorthWallet())], balances, rates);
+            [.. wallets.Select(w => w.ToNetWorthWallet())], balances, rates, contributions);
         return (calculator, wallets);
     }
 }
