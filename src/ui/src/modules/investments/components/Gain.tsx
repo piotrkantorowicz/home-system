@@ -9,7 +9,7 @@ export interface GainProps {
   /** API decimal string, signed. */
   amount: string;
   currency: string;
-  /** What the gain is measured against; adds a percent when positive. */
+  /** What the gain is measured against; adds a percent whenever it is above zero. */
   invested?: string;
   className?: string;
 }
