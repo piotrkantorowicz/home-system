@@ -69,23 +69,34 @@ fi
 #    owner, so that's all of them), the `owner-approved` label — added by the owner, never an agent.
 #    A child PR into an epic branch needs no owner OK: the newest reviewer marker
 #    `<!-- epic-review: approve sha=<head sha> -->` (comment or review body) must match the
-#    current head, so any push after the review needs a new one. The owner reviews the epic → main
-#    PR instead (docs/design/epic-autopilot/README.md §5). Required checks are the epic ruleset's job.
+#    current head, so any push after the review needs a new one, and must be the body's last line
+#    (a quoted marker doesn't count). The merge must pin that head with --match-head-commit so a push
+#    between this check and the merge fails it. The owner reviews the epic → main PR instead
+#    (docs/design/epic-autopilot/README.md §5). Required checks are the epic ruleset's job.
+#    The PR is named by number right after `merge`, never a URL / branch / --repo: the check below
+#    looks up that number, so any other target could make it vet one PR and merge another.
 if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
-  pr=$(grep -Eo 'merge[[:space:]]+[0-9]+' <<< "$cmd" | grep -Eo '[0-9]+' || true)
+  pr=$(grep -Eo 'pr[[:space:]]+merge([[:space:]]+[^[:space:];&|]+)?' <<< "$cmd" | head -1 | awk '{print $3}')
+  [[ "$pr" =~ ^[0-9]+$ ]] || block "name the PR by number right after merge (gh pr merge <n> ...), not a URL, branch or flag."
+  grep -Eq -- '(^|[[:space:]])(-R|--repo)([=[:space:]]|$)' <<< "$cmd" && block "merge PRs of this repo only — drop -R/--repo."
   # jq decides (exact label match, no string joining to fool); '|' separator because whitespace
   # would collapse an empty reviewDecision; the branch name goes last so a '|' in it can't shift fields.
-  IFS='|' read -r ok decision head < <(cd "$target" && gh pr view ${pr:-} \
+  IFS='|' read -r ok decision approved head < <(cd "$target" && gh pr view "$pr" \
     --json reviewDecision,headRefName,labels,baseRefName,headRefOid,comments,reviews \
     -q '([((.comments // [])[] | {t: .createdAt, b: .body}), ((.reviews // [])[] | {t: .submittedAt, b: .body})]
-          | sort_by(.t) | map([.b // "" | capture("<!-- epic-review: (?<v>approve|request-changes) sha=(?<s>[0-9a-f]{40}) -->"; "g")])
+          | sort_by(.t) | map([.b // "" | capture("<!-- epic-review: (?<v>approve|request-changes) sha=(?<s>[0-9a-f]{40}) -->\\s*$")])
           | add // [] | last) as $marker
         | [(if .reviewDecision == "APPROVED" or any(.labels[]; .name == "owner-approved") then "yes"
             elif ((.baseRefName // "") | startswith("epic/")) and (.headRefName | startswith("epic/") | not)
-                 and $marker.v == "approve" and $marker.s == .headRefOid then "yes"
+                 and $marker.v == "approve" and $marker.s == .headRefOid then "marker"
             else "no" end),
-           .reviewDecision, .headRefName] | join("|")' 2>/dev/null)
+           .reviewDecision, ($marker.s // ""), .headRefName] | join("|")' 2>/dev/null)
   decision=${decision:-NONE}; head=${head:-}
+  if [[ "${ok:-no}" == "marker" ]]; then
+    grep -Eq -- "--match-head-commit[=[:space:]]+[\"']?${approved}([\"'[:space:]]|$)" <<< "$cmd" \
+      || block "PR ${pr} merges on the reviewer marker — pin the reviewed head: --match-head-commit ${approved}"
+    ok=yes
+  fi
   [[ "${ok:-no}" == "yes" ]] \
     || block "PR ${pr:-for this branch} is not approved (reviewDecision=$decision, no owner-approved label, no reviewer approve marker on the current head for an epic child). Merge happens after the owner's OK."
   if [[ "$head" == epic/* ]]; then

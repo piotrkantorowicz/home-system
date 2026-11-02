@@ -51,7 +51,7 @@ Advisory bot review. It **comments**; approval is the owner's.
    current head (`gh pr view <n> --json headRefOid -q .headRefOid`):
    `<!-- epic-review: approve sha=<40-char sha> -->` when nothing 🔴 is open, else
    `<!-- epic-review: request-changes sha=<40-char sha> -->`. `guard-git.sh` lets an agent
-   squash-merge an epic child only on the newest marker being `approve` for the current head;
+   squash-merge an epic child only on the newest marker being `approve` for the current head (and the merge pinned with `--match-head-commit <sha>`);
    a re-review after fixes posts a new comment ending with a fresh marker.
 8. Print the counts and the review URL.
 

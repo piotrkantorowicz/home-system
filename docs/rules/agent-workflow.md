@@ -64,7 +64,7 @@ until its last slice — open an **epic lane**:
 | Stage | Skill | What happens |
 |---|---|---|
 | Open | `start-epic <e>` | `epic/<e>-<slug>` created on origin via API — no local commit. Noted on the epic issue as `Epic branch:`. |
-| Children | `start-issue <c>` / `ship` | Detect `Part of #<e>` + the `Epic branch:` line → branch off and PR against the epic branch. Same review loop. Squash-merged into the epic by the agent once the reviewer agent's newest `<!-- epic-review: approve sha=… -->` marker matches the head — no owner OK; the owner reviews the epic → `main` PR. One Conventional Commit per child, body `Closes #<c>`. |
+| Children | `start-issue <c>` / `ship` | Detect `Part of #<e>` + the `Epic branch:` line → branch off and PR against the epic branch. Same review loop. Squash-merged into the epic by the agent once the reviewer agent's newest `<!-- epic-review: approve sha=… -->` marker matches the head (merge pinned with `--match-head-commit <sha>`, PR named by number) — no owner OK; the owner reviews the epic → `main` PR. One Conventional Commit per child, body `Closes #<c>`. |
 | Close | `ship-epic <e>` | All children merged → rebase the epic onto fresh `main` (`--force-with-lease`, the one allowed push) → verify → PR `epic/… → main`, `Closes #<e>`. |
 | Merge | owner | **Rebase and merge.** Each child commit lands on `main` as-is; `release.yml` analyses them one by one. Never squash an epic PR. |
 
