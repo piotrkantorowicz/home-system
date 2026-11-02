@@ -38,6 +38,9 @@ public static partial class InfrastructureDependencyInjection
                 .UseNpgsql(configuration.GetConnectionString("Household"))
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
 
+        // /health/ready fails while the module cannot reach its database.
+        services.AddHealthChecks().AddDbContextCheck<HouseholdDbContext>("household-db", tags: ["ready"]);
+
         services.AddOutbox<HouseholdDbContext>();
 
         // Module-scoped unit of work + read context — never the global IUnitOfWork

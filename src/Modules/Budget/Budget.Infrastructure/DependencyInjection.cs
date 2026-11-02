@@ -36,6 +36,9 @@ public static partial class InfrastructureDependencyInjection
                 .UseNpgsql(configuration.GetConnectionString("Budget"))
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
 
+        // /health/ready fails while the module cannot reach its database.
+        services.AddHealthChecks().AddDbContextCheck<BudgetDbContext>("budget-db", tags: ["ready"]);
+
         // Registered per repository convention; Budget publishes no integration events yet.
         services.AddOutbox<BudgetDbContext>();
 
