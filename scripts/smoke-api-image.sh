@@ -36,6 +36,9 @@ for _ in $(seq 60); do
   sleep 1
 done
 curl -fsS "http://127.0.0.1:$port/health" | grep -q '"healthy"' || fail "/health not healthy"
+# The chart's probes. Every database is up; Authentik (authentik.invalid) is not, which only degrades ready.
+[[ $(curl -fsS "http://127.0.0.1:$port/health/live") == Healthy ]] || fail "/health/live not healthy"
+[[ $(curl -fsS "http://127.0.0.1:$port/health/ready") == Degraded ]] || fail "/health/ready not degraded"
 
 # The chiseled image has no shell or `id`; read the user the container was started with.
 uid=$(docker inspect -f '{{.Config.User}}' "$run-api")

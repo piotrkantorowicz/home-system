@@ -45,6 +45,9 @@ public static class InfrastructureDependencyInjection
         services.AddSingleton<INpgsqlConnectionFactory>(
             sp => sp.GetRequiredService<NotificationsConnectionFactory>());
 
+        // /health/ready fails while the module cannot reach its database.
+        services.AddHealthChecks().AddCheck<NotificationsDatabaseHealthCheck>("notifications-db", tags: ["ready"]);
+
         services.AddScoped<DapperUnitOfWork>();
         // IUnitOfWork is intentionally NOT registered globally to avoid colliding with
         // DietPlanner's binding. Application handlers commit through INotificationsUnitOfWork

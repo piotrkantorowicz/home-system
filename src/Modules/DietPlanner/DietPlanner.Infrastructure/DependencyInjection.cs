@@ -22,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -50,6 +51,9 @@ public static partial class InfrastructureDependencyInjection
             options
                 .UseNpgsql(configuration.GetConnectionString("DietPlanner"))
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
+
+        // /health/ready fails while the module cannot reach its database.
+        services.AddHealthChecks().AddDbContextCheck<DietPlannerDbContext>("diet-planner-db", tags: ["ready"]);
 
         services.AddOutbox<DietPlannerDbContext>();
 
@@ -119,6 +123,9 @@ public static partial class InfrastructureDependencyInjection
                 ? new S3ImageObjectStorage(sp.GetRequiredKeyedService<IAmazonS3>(typeof(S3ImageObjectStorage)), options)
                 : new UnavailableImageObjectStorage();
         });
+        // Degraded, not unhealthy: only image upload and display need the bucket.
+        services.AddHealthChecks().AddCheck<ImageStorageHealthCheck>(
+            "image-storage", HealthStatus.Degraded, ["ready"], TimeSpan.FromSeconds(3));
         services.AddKeyedSingleton<IAmazonS3>(typeof(S3ImageObjectStorage), (sp, _) =>
         {
             ImageStorageOptions options = sp.GetRequiredService<IOptions<ImageStorageOptions>>().Value;
