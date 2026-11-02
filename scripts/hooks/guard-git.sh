@@ -79,7 +79,7 @@ if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
   [[ $(grep -Eo 'pr[[:space:]]+merge' <<< "$cmd" | wc -l) -eq 1 ]] || block "one PR merge per command — the check below vets a single PR."
   pr=$(grep -Eo 'pr[[:space:]]+merge([[:space:]]+[^[:space:];&|]+)?' <<< "$cmd" | head -1 | awk '{print $3}')
   [[ "$pr" =~ ^[0-9]+$ ]] || block "name the PR by number right after merge (gh pr merge <n> ...), not a URL, branch or flag."
-  grep -Eq -- '(^|[[:space:]])(-R|--repo)([=[:space:]]|$)' <<< "$cmd" && block "merge PRs of this repo only — drop -R/--repo."
+  grep -Eq -- '(^|[[:space:]])(-R|--repo)|GH_REPO' <<< "$cmd" && block "merge PRs of this repo only — drop -R/--repo/GH_REPO."
   # jq decides (exact label match, no string joining to fool); '|' separator because whitespace
   # would collapse an empty reviewDecision; the branch name goes last so a '|' in it can't shift fields.
   IFS='|' read -r ok decision approved head < <(cd "$target" && gh pr view "$pr" \
@@ -94,7 +94,8 @@ if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
            .reviewDecision, ($marker.s // ""), .headRefName] | join("|")' 2>/dev/null)
   decision=${decision:-NONE}; head=${head:-}
   if [[ "${ok:-no}" == "marker" ]]; then
-    grep -Eq -- "--match-head-commit[=[:space:]]+[\"']?${approved}([\"'[:space:]]|$)" <<< "$cmd" \
+    [[ $(grep -Eo -- '--match-head-commit' <<< "$cmd" | wc -l) -eq 1 ]] \
+      && grep -Eq -- "--match-head-commit[=[:space:]]+[\"']?${approved}([\"'[:space:]]|$)" <<< "$cmd" \
       || block "PR ${pr} merges on the reviewer marker — pin the reviewed head: --match-head-commit ${approved}"
     ok=yes
   fi

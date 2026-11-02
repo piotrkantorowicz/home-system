@@ -225,7 +225,8 @@ class GuardGitMergeTests(unittest.TestCase):
 
     def test_epic_child_merge_must_pin_the_reviewed_head(self):
         approve = [("2026-11-02T10:00:00Z", marker())]
-        for suffix, code in (("", 2), (" --match-head-commit " + "b" * 40, 2), (f" --match-head-commit={SHA}", 0), (PIN, 0)):
+        for suffix, code in (("", 2), (" --match-head-commit " + "b" * 40, 2), (f" --match-head-commit={SHA}", 0), (PIN, 0),
+                             (PIN + " --match-head-commit " + "b" * 40, 2)):
             with self.subTest(suffix=suffix):
                 self.assertEqual(code, self.decision("gh pr merge 7 --squash" + suffix, base=EPIC, comments=approve).returncode)
 
@@ -236,6 +237,8 @@ class GuardGitMergeTests(unittest.TestCase):
                         "gh pr merge --squash",
                         "gh pr merge 7 --squash -R o/other",
                         "gh pr merge 7 --squash --repo=o/other",
+                        "gh pr merge 7 --squash -Ro/other",
+                        "GH_REPO=o/other gh pr merge 7 --squash",
                         "gh pr merge 7 --squash; gh pr merge 99 --squash",
                         "gh pr merge 7 --squash && gh pr  merge 99 --squash"):
             with self.subTest(command=command):
