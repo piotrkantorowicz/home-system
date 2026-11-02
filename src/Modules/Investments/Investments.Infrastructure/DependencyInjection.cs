@@ -37,6 +37,9 @@ public static partial class InfrastructureDependencyInjection
                 .UseNpgsql(configuration.GetConnectionString("Investments"))
                 .AddInterceptors(sp.GetServices<ISaveChangesInterceptor>()));
 
+        // /health/ready fails while the module cannot reach its database.
+        services.AddHealthChecks().AddDbContextCheck<InvestmentsDbContext>("investments-db", tags: ["ready"]);
+
         // No outbox: Investments publishes no integration events (design §6).
 
         // Module-scoped unit of work + read context — never the global IUnitOfWork

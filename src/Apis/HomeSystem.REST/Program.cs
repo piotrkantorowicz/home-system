@@ -10,7 +10,9 @@ using Household.Infrastructure;
 using Investments.Api;
 using Investments.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Notifications.Api;
 using Operations.Api;
@@ -88,6 +90,11 @@ authentication
     });
 
 builder.Services.AddAuthorization(options => options.AddAdminPolicy());
+
+// Modules add their own database / storage checks, tagged "ready". Degraded still answers 200: an Authentik
+// outage must not pull every pod out of the Service.
+builder.Services.AddHealthChecks()
+    .AddCheck<AuthentikHealthCheck>("authentik", HealthStatus.Degraded, ["ready"], TimeSpan.FromSeconds(3));
 
 // ==============================================
 // MCP (disabled unless Mcp:Enabled) — docs/design/mcp/. Also registers the tools for the assistant.
@@ -201,6 +208,13 @@ app.UseAuthorization();
 app.MapGet("/health", (TimeProvider clock) => TypedResults.Ok(new HealthResponse("healthy", clock.GetUtcNow().UtcDateTime, "1.0.0")))
     .WithName("HealthCheck")
     .WithTags("Health")
+    .AllowAnonymous();
+
+// Kubernetes probes. live: the process serves requests (no checks). ready: every "ready" check; plain-text status
+// only, the failing check is in the log.
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false })
+    .AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
     .AllowAnonymous();
 
 app.MapDietPlannerEndpoints();
