@@ -153,6 +153,27 @@ public sealed class ContributionTests : IClassFixture<InvestmentsDatabaseFixture
         (await ListAsync(adult.Client, hidden.Id)).TotalCount.ShouldBe(1);
     }
 
+    /// <summary>Another adult on the owner's shared wallet can list, record and delete, including the owner's entries.</summary>
+    [Fact]
+    public async Task SharedWallet_OtherAdult_CanListRecordAndDelete()
+    {
+        var h = await _scenario.NewHouseholdAsync();
+        var adult = await _scenario.MemberAsync(h, "Adult");
+        var shared = await InvestmentsScenario.CreateWalletAsync(h.Owner, "Family IKE", kind: "IKE");
+        var ownerEntry = await CreateAsync(h.Owner, shared.Id, "2026-09-01", "100");
+
+        var list = await adult.Client.GetAsync($"/api/investments/wallets/{shared.Id}/contributions", Ct);
+        var post = await PostAsync(adult.Client, shared.Id, "2026-09-02", "25", "Withdrawal");
+        var delete = await adult.Client.DeleteAsync($"/api/investments/wallets/{shared.Id}/contributions/{ownerEntry.Id}", Ct);
+
+        list.StatusCode.ShouldBe(HttpStatusCode.OK);
+        post.StatusCode.ShouldBe(HttpStatusCode.Created);
+        delete.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ListAsync(h.Owner, shared.Id)).Items.ShouldHaveSingleItem()
+            .ShouldBe(new Contribution(
+                (await post.Content.ReadFromJsonAsync<Contribution>(Ct))!.Id, new DateOnly(2026, 9, 2), "Withdrawal", "25.00", null, "Adult"));
+    }
+
     /// <summary>The list is newest first and pages; several entries on one date are all kept.</summary>
     [Fact]
     public async Task List_PagesNewestFirst()
