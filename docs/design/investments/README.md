@@ -162,6 +162,9 @@ All routes require authentication; handlers enforce access. Typed results, opera
 | `GET /wallets/{id}/snapshots` | Paged history, newest first, each with PLN value and rate used. |
 | `PUT /wallets/{id}/snapshots/{asOf}` | Upsert one snapshot. |
 | `DELETE /wallets/{id}/snapshots/{asOf}` | Remove one snapshot. |
+| `GET /wallets/{id}/contributions` | Paged deposits and withdrawals, newest first (§14). |
+| `POST /wallets/{id}/contributions` | Record one: `{ date, direction: Deposit\|Withdrawal, amount, note? }`. |
+| `DELETE /wallets/{id}/contributions/{contributionId}` | Remove one. |
 | `PUT /snapshots` | Check-in batch: `{ asOf, entries: [{ walletId, amount, note? }] }`. All or nothing. |
 | `GET /net-worth?asOf=&scope=household\|mine` | Total PLN, breakdown by kind, by owner, by wallet; `incomplete` flag; rates used. |
 | `GET /net-worth/history?from=&to=&scope=` | Month-end series in PLN; each point carries `incomplete`. Range capped at 10 years. |
@@ -232,3 +235,13 @@ Delivered through the epic lane `epic/571-investments-phase-1-net-worth`. This d
 | 2026-10-10 | Architecture: new `Investments` module, DDD + EF, market data inside the module. |
 | 2026-10-10 | Every wallet has a legal owner; visibility Shared/Private is separate and owner-changeable. No workspace/initialize step; reporting currency PLN fixed. |
 | 2026-10-10 | UI: Dashboard A (timeline first); monthly check-in included in phase 1. |
+| 2026-11-02 | Invested capital (§14): a per-wallet deposit/withdrawal ledger pulled forward from phase 2, ahead of full transactions (epic #793). |
+
+## 14. Invested capital
+
+Balances alone cannot tell growth from top-ups. A **contribution** records money put into (`Deposit`) or taken out of (`Withdrawal`) a wallet; their net sum on or before a date is the wallet's **invested capital**, and balance − invested is its **gain**.
+
+- `Contribution` is its own aggregate (table `contributions`): wallet, household (composite FK as for snapshots), date, direction, amount in the wallet's currency (> 0, two decimals), optional note ≤ 200, recorded-by snapshot. Several per date are allowed; entries are immutable — correct by delete and re-add.
+- Date rules match snapshots: not in the future, not before 2002-01-02. An archived wallet takes no new entries; deleting stays allowed. Access is the snapshot permission matrix; invisible wallets are 404.
+- Net worth (#795): invested and gain per wallet and in total. Net contributions are converted to PLN at the reference date's NBP rate — the same rate as the balance — so gain is measured in the wallet's currency and excludes currency moves. A wallet with no contributions has `invested: null` and is left out of the gain instead of counting its whole balance as profit.
+- Phase 2 `Deposit` / `Withdrawal` transactions (§10) replace this ledger for transaction-mode wallets; snapshot-mode wallets keep it.

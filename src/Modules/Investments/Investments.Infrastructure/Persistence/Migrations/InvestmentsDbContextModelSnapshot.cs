@@ -17,7 +17,7 @@ namespace Investments.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -79,6 +79,68 @@ namespace Investments.Infrastructure.Persistence.Migrations
                     b.ToTable("balance_snapshots", null, t =>
                         {
                             t.HasCheckConstraint("ck_balance_snapshots_amount_range", "amount >= 0 AND amount <= 9999999999.99");
+                        });
+                });
+
+            modelBuilder.Entity("Investments.Domain.Aggregates.Contribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("direction");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("household_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<string>("RecordedByName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("recorded_by_name");
+
+                    b.Property<Guid>("RecordedByPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by_person_id");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wallet_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId", "Date")
+                        .HasDatabaseName("ix_contributions_wallet_date");
+
+                    b.HasIndex("WalletId", "HouseholdId");
+
+                    b.ToTable("contributions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_contributions_amount_range", "amount > 0 AND amount <= 9999999999.99");
+
+                            t.HasCheckConstraint("ck_contributions_direction", "direction IN ('Deposit', 'Withdrawal')");
                         });
                 });
 
@@ -200,6 +262,16 @@ namespace Investments.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Investments.Domain.Aggregates.BalanceSnapshot", b =>
+                {
+                    b.HasOne("Investments.Domain.Aggregates.Wallet", null)
+                        .WithMany()
+                        .HasForeignKey("WalletId", "HouseholdId")
+                        .HasPrincipalKey("Id", "HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Investments.Domain.Aggregates.Contribution", b =>
                 {
                     b.HasOne("Investments.Domain.Aggregates.Wallet", null)
                         .WithMany()

@@ -20,7 +20,7 @@ internal sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
         });
 
         builder.HasKey(x => x.Id);
-        builder.HasAlternateKey(x => new { x.Id, x.HouseholdId }); // target of snapshots' composite FK
+        builder.HasAlternateKey(x => new { x.Id, x.HouseholdId }); // target of snapshots' and contributions' composite FKs
         builder.Property(x => x.Id)
             .HasConversion(id => id.Value, value => WalletId.From(value))
             .HasColumnName("id");
