@@ -47,6 +47,12 @@ Advisory bot review. It **comments**; approval is the owner's.
    ```
    Summary body = severity-ordered list (🔴 blocking / 🟡 should fix / 🔵 nit) + the
    contract check result + "Reviewed by <Claude Code | Codex> — advisory, not an approval."
+   When the PR's base is `epic/*`, the summary's **last line** is the merge marker for the
+   current head (`gh pr view <n> --json headRefOid -q .headRefOid`):
+   `<!-- epic-review: approve sha=<40-char sha> -->` when nothing 🔴 is open, else
+   `<!-- epic-review: request-changes sha=<40-char sha> -->`. `guard-git.sh` lets an agent
+   squash-merge an epic child only on the newest marker being `approve` for the current head (and the merge pinned with `--match-head-commit <sha>`);
+   a re-review after fixes posts a new comment ending with a fresh marker.
 8. Print the counts and the review URL.
 
 ## Rules
