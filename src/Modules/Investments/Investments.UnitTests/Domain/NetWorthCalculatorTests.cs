@@ -74,6 +74,69 @@ public sealed class NetWorthCalculatorTests
         point.Incomplete.ShouldBeFalse();
     }
 
+    /// <summary>Net contributions on or before the date are invested; balance − invested is the gain.</summary>
+    [Fact]
+    public void ValueAt_WithContributions_InvestedAndGain()
+    {
+        var calculator = new NetWorthCalculator(
+            [Pln], Balances, new FxRateBook([]),
+            [
+                new(Pln.Id, new DateOnly(2026, 1, 5), 1000m),
+                new(Pln.Id, new DateOnly(2026, 2, 5), 500m),
+                new(Pln.Id, new DateOnly(2026, 3, 1), -200m),
+                new(Pln.Id, new DateOnly(2026, 4, 1), 9999m),
+            ]);
+
+        var point = calculator.ValueAt(new DateOnly(2026, 3, 31));
+
+        var wallet = point.Wallets.ShouldHaveSingleItem();
+        wallet.Invested.ShouldBe(1300m);
+        wallet.GainPln.ShouldBe(200m);
+        point.Invested.ShouldBe(1300m);
+        point.Gain.ShouldBe(200m);
+    }
+
+    /// <summary>A wallet without contributions has no invested figure and stays out of the totals.</summary>
+    [Fact]
+    public void ValueAt_WithoutContributions_InvestedNull()
+    {
+        var point = Calculator().ValueAt(new DateOnly(2026, 3, 31));
+
+        point.Wallets.ShouldAllBe(v => v.Invested == null && v.GainPln == null);
+        point.Invested.ShouldBeNull();
+        point.Gain.ShouldBeNull();
+    }
+
+    /// <summary>Foreign net contributions are converted at the balance's rate, so gain excludes currency moves.</summary>
+    [Fact]
+    public void ValueAt_ForeignContributions_ConvertedAtBalanceRate()
+    {
+        var calculator = new NetWorthCalculator(
+            [Eur], Balances, new FxRateBook([new FxQuote(WalletCurrency.EUR, new DateOnly(2026, 2, 27), 4.3m, "040/A/NBP/2026")]),
+            [new(Eur.Id, new DateOnly(2026, 2, 1), 80m)]);
+
+        var wallet = calculator.ValueAt(new DateOnly(2026, 2, 28)).Wallets.ShouldHaveSingleItem();
+
+        wallet.InvestedPln!.Amount.ShouldBe(344m);
+        wallet.GainPln.ShouldBe(86m);
+    }
+
+    /// <summary>A foreign wallet without a rate is left out of invested and gain; incomplete is unchanged.</summary>
+    [Fact]
+    public void ValueAt_ForeignContributionsMissingRate_Excluded()
+    {
+        var calculator = new NetWorthCalculator(
+            [Pln, Eur], Balances, new FxRateBook([]),
+            [new(Pln.Id, new DateOnly(2026, 1, 5), 1000m), new(Eur.Id, new DateOnly(2026, 2, 1), 80m)]);
+
+        var point = calculator.ValueAt(new DateOnly(2026, 2, 28));
+
+        point.Wallets.Single(v => v.Wallet == Eur).InvestedPln!.Amount.ShouldBeNull();
+        point.Invested.ShouldBe(1000m);
+        point.Gain.ShouldBe(0m);
+        point.Incomplete.ShouldBeTrue();
+    }
+
     /// <summary>Month ends inside the range, plus the last date when it is mid-month.</summary>
     [Fact]
     public void MonthEnds_IncludesCurrentMonthSoFar()
