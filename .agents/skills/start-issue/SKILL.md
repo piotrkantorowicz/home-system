@@ -1,6 +1,7 @@
 ---
 name: start-issue
 description: "Start work on a GitHub issue: create the correctly named branch off fresh origin/main, assign the issue, load the rule docs for its area, and restate scope + acceptance criteria. Use when asked to start, pick up, or begin an issue."
+model: sonnet
 ---
 
 # start-issue
@@ -48,10 +49,12 @@ description: "Start work on a GitHub issue: create the correctly named branch of
    gh issue comment <n> --body "Started on branch \`<branch>\` (base \`<base>\`)."
    scripts/board.sh add <n> "In Progress"
    ```
-6. **Load context.** From the labels / title, read the matching rule docs (Quick Reference
-   in `CLAUDE.md` / `AGENTS.md`) and `docs/rules/definition-of-done.md`. If the issue
-   links a design doc section, read that section.
+6. **Load context.** Pick at most two rule docs from the Quick Reference that match the
+   labels / title. List each doc's headings (`grep -n '^#' <doc>`) and read only the
+   sections the issue touches. Skip `definition-of-done.md` — `ship` checks it. If the issue
+   links a design doc section, read only that section.
 7. **Restate the job** in the transcript: scope bullets, acceptance criteria as a checklist,
    likely files. Flag anything in the issue that is ambiguous *before* writing code.
 
-Then implement. When done: `/verify`, then `/ship`.
+Stop here and wait for the user to say go. Implementation runs on the session model, not
+this skill's. When done: `/verify`, then `/ship`.
