@@ -84,6 +84,40 @@
     "_meta": null
   },
   {
+    "name": "delete_contribution",
+    "title": null,
+    "description": "Deletes one deposit or withdrawal. Cannot be undone. Fails when it no longer exists, so a repeat reports it as already gone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "contributionId": {
+          "description": "Contribution id from list_contributions.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "walletId",
+        "contributionId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "delete_snapshot",
     "title": null,
     "description": "Deletes a wallet's balance for one date. Cannot be undone. Fails when nothing is recorded for that date, so a repeat reports it as already gone.",
@@ -229,6 +263,44 @@
     "_meta": null
   },
   {
+    "name": "list_contributions",
+    "title": null,
+    "description": "Pages a wallet's deposits and withdrawals, newest first. Amounts are positive decimal strings in the wallet's currency; direction says which way the money moved.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "page": {
+          "description": "1-based page number.",
+          "type": "integer",
+          "default": 1
+        },
+        "pageSize": {
+          "description": "Items per page, 1 to 100.",
+          "type": "integer",
+          "default": 20
+        }
+      },
+      "required": [
+        "walletId"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
     "name": "list_snapshots",
     "title": null,
     "description": "Pages a wallet's recorded balances, newest first, each with the previous balance and its PLN value. Amounts are decimal strings in the wallet's currency.",
@@ -351,6 +423,58 @@
       "title": null,
       "destructiveHint": false,
       "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "icons": null,
+    "_meta": null
+  },
+  {
+    "name": "record_contribution",
+    "title": null,
+    "description": "Records money put into (Deposit) or taken out of (Withdrawal) a wallet; their net sum is the wallet's invested capital in get_net_worth. Not idempotent: after a lost response, check list_contributions before calling again.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "description": "Wallet id from list_wallets; not archived.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "date": {
+          "description": "When the money moved, yyyy-MM-dd; not in the future.",
+          "type": "string",
+          "format": "date"
+        },
+        "direction": {
+          "description": "Deposit or Withdrawal.",
+          "type": "string"
+        },
+        "amount": {
+          "description": "Amount in the wallet's currency as a decimal string, e.g. \"500.00\": greater than zero, at most two decimals.",
+          "type": "string"
+        },
+        "note": {
+          "description": "Optional note, at most 200 characters.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "walletId",
+        "date",
+        "direction",
+        "amount"
+      ]
+    },
+    "outputSchema": null,
+    "annotations": {
+      "title": null,
+      "destructiveHint": false,
+      "idempotentHint": false,
       "openWorldHint": false,
       "readOnlyHint": false
     },
