@@ -12,6 +12,7 @@ internal sealed class InvestmentsDbContext : DbContext, IInvestmentsUnitOfWork, 
 
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<BalanceSnapshot> BalanceSnapshots => Set<BalanceSnapshot>();
+    public DbSet<Contribution> Contributions => Set<Contribution>();
     public DbSet<FxRate> FxRates => Set<FxRate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

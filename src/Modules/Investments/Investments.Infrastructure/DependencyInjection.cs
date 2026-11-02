@@ -49,6 +49,7 @@ public static partial class InfrastructureDependencyInjection
 
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<IBalanceSnapshotRepository, BalanceSnapshotRepository>();
+        services.AddScoped<IContributionRepository, ContributionRepository>();
         services.AddScoped<InvestmentsAccessService>();
 
         // NBP rates: typed client, idempotent store, sync service, hourly worker.

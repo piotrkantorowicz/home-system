@@ -4,14 +4,17 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Investments.Application.Commands.ArchiveWallet;
 using Investments.Application.Commands.CreateWallet;
+using Investments.Application.Commands.DeleteContribution;
 using Investments.Application.Commands.DeleteSnapshot;
 using Investments.Application.Commands.RecordCheckIn;
+using Investments.Application.Commands.RecordContribution;
 using Investments.Application.Commands.RecordSnapshot;
 using Investments.Application.Commands.RestoreWallet;
 using Investments.Application.Commands.UpdateWallet;
 using Investments.Application.Queries.GetNetWorth;
 using Investments.Application.Queries.GetNetWorthHistory;
 using Investments.Application.Queries.GetWallet;
+using Investments.Application.Queries.ListContributions;
 using Investments.Application.Queries.ListSnapshots;
 using Investments.Application.Queries.ListWallets;
 using Microsoft.AspNetCore.Builder;
@@ -58,6 +61,16 @@ internal static class InvestmentsEndpoints
         group.MapDelete("/wallets/{id:guid}/snapshots/{asOf}", DeleteSnapshot)
             .WithName("DeleteInvestmentSnapshot")
             .WithSummary("Remove a wallet's balance for a date");
+
+        group.MapGet("/wallets/{id:guid}/contributions", ListContributions)
+            .WithName("ListInvestmentContributions")
+            .WithSummary("Page a visible wallet's deposits and withdrawals, newest first");
+        group.MapPost("/wallets/{id:guid}/contributions", RecordContribution)
+            .WithName("RecordInvestmentContribution")
+            .WithSummary("Record money put into (Deposit) or taken out of (Withdrawal) a wallet");
+        group.MapDelete("/wallets/{id:guid}/contributions/{contributionId:guid}", DeleteContribution)
+            .WithName("DeleteInvestmentContribution")
+            .WithSummary("Remove a deposit or withdrawal");
 
         group.MapPut("/snapshots", RecordCheckIn)
             .WithName("RecordInvestmentsCheckIn")
@@ -133,6 +146,27 @@ internal static class InvestmentsEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<Ok<PagedList<ContributionDto>>> ListContributions(
+        Guid id, ClaimsPrincipal user, IQueryDispatcher dispatcher, CancellationToken ct,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        => TypedResults.Ok(await dispatcher.SendAsync<ListContributionsQuery, PagedList<ContributionDto>>(
+            new ListContributionsQuery(Sub(user), id, page, pageSize), ct));
+
+    private static async Task<Created<ContributionDto>> RecordContribution(
+        Guid id, RecordContributionRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        var contribution = await dispatcher.SendAsync<RecordContributionCommand, ContributionDto>(
+            new RecordContributionCommand(Sub(user), id, request.Date, request.Direction, request.Amount, request.Note), ct);
+        return TypedResults.Created($"/api/investments/wallets/{id}/contributions/{contribution.Id}", contribution);
+    }
+
+    private static async Task<NoContent> DeleteContribution(
+        Guid id, Guid contributionId, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(new DeleteContributionCommand(Sub(user), id, contributionId), ct);
+        return TypedResults.NoContent();
+    }
+
     private static async Task<Ok<RecordCheckInResult>> RecordCheckIn(
         RecordCheckInRequest request, ClaimsPrincipal user, ICommandDispatcher dispatcher, CancellationToken ct)
         => TypedResults.Ok(await dispatcher.SendAsync<RecordCheckInCommand, RecordCheckInResult>(
@@ -181,6 +215,14 @@ internal sealed record UpdateWalletRequest(string Name, string Visibility, uint 
 /// <param name="Note">Optional note, at most 200 characters.</param>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record RecordSnapshotRequest(string Amount, string? Note);
+
+/// <summary>Body of <c>POST /api/investments/wallets/{id}/contributions</c>.</summary>
+/// <param name="Date">When the money moved, <c>YYYY-MM-DD</c>; not in the future.</param>
+/// <param name="Direction"><c>Deposit</c> or <c>Withdrawal</c>.</param>
+/// <param name="Amount">Decimal string, greater than zero, at most two decimals, e.g. <c>"500.00"</c>.</param>
+/// <param name="Note">Optional note, at most 200 characters.</param>
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+internal sealed record RecordContributionRequest(DateOnly Date, string Direction, string Amount, string? Note);
 
 /// <summary>Body of <c>PUT /api/investments/snapshots</c> (monthly check-in).</summary>
 /// <param name="AsOf">The date for every entry, <c>YYYY-MM-DD</c>.</param>
