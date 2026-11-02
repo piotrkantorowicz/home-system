@@ -43,3 +43,8 @@ export type NetWorth = components['schemas']['NetWorthDto'];
 
 export const NET_WORTH_SCOPES = ['household', 'mine'] as const;
 export type NetWorthScope = (typeof NET_WORTH_SCOPES)[number];
+
+export type Contribution = components['schemas']['ContributionDto'];
+
+export const CONTRIBUTION_DIRECTIONS = ['Deposit', 'Withdrawal'] as const;
+export type ContributionDirection = (typeof CONTRIBUTION_DIRECTIONS)[number];
