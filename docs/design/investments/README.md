@@ -166,8 +166,8 @@ All routes require authentication; handlers enforce access. Typed results, opera
 | `POST /wallets/{id}/contributions` | Record one: `{ date, direction: Deposit\|Withdrawal, amount, note? }`. |
 | `DELETE /wallets/{id}/contributions/{contributionId}` | Remove one. |
 | `PUT /snapshots` | Check-in batch: `{ asOf, entries: [{ walletId, amount, note? }] }`. All or nothing. |
-| `GET /net-worth?asOf=&scope=household\|mine` | Total PLN, breakdown by kind, by owner, by wallet; `incomplete` flag; rates used. |
-| `GET /net-worth/history?from=&to=&scope=` | Month-end series in PLN; each point carries `incomplete`. Range capped at 10 years. |
+| `GET /net-worth?asOf=&scope=household\|mine` | Total PLN, breakdown by kind, by owner, by wallet; `incomplete` flag; rates used; invested and gain per wallet and in total (§14). |
+| `GET /net-worth/history?from=&to=&scope=` | Month-end series in PLN; each point carries `incomplete` and `invested` (§14). Range capped at 10 years. |
 
 Status codes: 400 invalid input, 403 disallowed action on a visible resource, 404 invisible/unknown, 409 stale concurrency token, 422 domain violation (future date, archived wallet, precision). List endpoints use `PagedList<T>`, page size cap 100, stable ordering.
 
@@ -243,5 +243,5 @@ Balances alone cannot tell growth from top-ups. A **contribution** records money
 
 - `Contribution` is its own aggregate (table `contributions`): wallet, household (composite FK as for snapshots), date, direction, amount in the wallet's currency (> 0, two decimals), optional note ≤ 200, recorded-by snapshot. Several per date are allowed; entries are immutable — correct by delete and re-add.
 - Date rules match snapshots: not in the future, not before 2002-01-02. An archived wallet takes no new entries; deleting stays allowed. Access is the snapshot permission matrix; invisible wallets are 404.
-- Net worth (#795): invested and gain per wallet and in total. Net contributions are converted to PLN at the reference date's NBP rate — the same rate as the balance — so gain is measured in the wallet's currency and excludes currency moves. A wallet with no contributions has `invested: null` and is left out of the gain instead of counting its whole balance as profit.
+- Net worth (#795): invested and gain per wallet and in total. Net contributions are converted to PLN at the reference date's NBP rate — the same rate as the balance — so gain is measured in the wallet's currency and excludes currency moves. A wallet with no contributions has `invested: null` and is left out of the gain instead of counting its whole balance as profit. Invested is as of the reference date while the balance is the latest check-in on or before it, so a deposit made after the last check-in shows as a loss until the next balance is recorded; the wallet's `balanceAsOf` lets the UI flag it.
 - Phase 2 `Deposit` / `Withdrawal` transactions (§10) replace this ledger for transaction-mode wallets; snapshot-mode wallets keep it.

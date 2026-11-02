@@ -9,6 +9,8 @@ namespace Investments.Application.Queries.GetNetWorth;
 /// <param name="ByOwner">PLN total per owner, largest first.</param>
 /// <param name="Wallets">Every in-scope wallet's contribution.</param>
 /// <param name="RatesUsed">The NBP rates the conversion used.</param>
+/// <param name="Invested">PLN invested over wallets with contributions, a balance and a rate; <see langword="null"/> when none.</param>
+/// <param name="Gain">PLN gain over the same wallets; <see langword="null"/> when none.</param>
 public sealed record NetWorthDto(
     DateOnly AsOf,
     string Scope,
@@ -17,4 +19,6 @@ public sealed record NetWorthDto(
     IReadOnlyList<NetWorthKindDto> ByKind,
     IReadOnlyList<NetWorthOwnerDto> ByOwner,
     IReadOnlyList<NetWorthWalletDto> Wallets,
-    IReadOnlyList<NetWorthRateDto> RatesUsed);
+    IReadOnlyList<NetWorthRateDto> RatesUsed,
+    string? Invested,
+    string? Gain);

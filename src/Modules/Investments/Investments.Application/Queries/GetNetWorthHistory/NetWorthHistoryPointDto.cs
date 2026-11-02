@@ -4,4 +4,5 @@ namespace Investments.Application.Queries.GetNetWorthHistory;
 /// <param name="Date">The date.</param>
 /// <param name="Total">PLN total of every value that has a rate.</param>
 /// <param name="Incomplete">Some foreign balance had no rate on that date.</param>
-public sealed record NetWorthHistoryPointDto(DateOnly Date, string Total, bool Incomplete);
+/// <param name="Invested">PLN invested over wallets with contributions, a balance and a rate on that date; <see langword="null"/> when none.</param>
+public sealed record NetWorthHistoryPointDto(DateOnly Date, string Total, bool Incomplete, string? Invested);

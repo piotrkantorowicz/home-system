@@ -46,9 +46,14 @@ internal sealed class GetNetWorthQueryHandler(InvestmentsAccessService access, I
                 WalletReadExtensions.Format(v.Balance?.Amount),
                 v.Balance?.AsOf,
                 WalletReadExtensions.Format(v.Pln?.Amount),
-                v.Pln?.RateMissing ?? false))],
+                v.Pln?.RateMissing ?? false,
+                WalletReadExtensions.Format(v.Invested),
+                WalletReadExtensions.Format(v.InvestedPln?.Amount),
+                WalletReadExtensions.Format(v.GainPln)))],
             [.. point.Wallets.Select(v => v.Pln?.Rate).OfType<FxQuote>().Distinct()
                 .OrderBy(r => r.Currency)
-                .Select(r => new NetWorthRateDto(r.Currency.ToString(), r.Mid.ToString("F6", CultureInfo.InvariantCulture), r.EffectiveDate, r.TableNo))]);
+                .Select(r => new NetWorthRateDto(r.Currency.ToString(), r.Mid.ToString("F6", CultureInfo.InvariantCulture), r.EffectiveDate, r.TableNo))],
+            WalletReadExtensions.Format(point.Invested),
+            WalletReadExtensions.Format(point.Gain));
     }
 }
