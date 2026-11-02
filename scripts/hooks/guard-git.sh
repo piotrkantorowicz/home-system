@@ -67,16 +67,27 @@ fi
 #    everything else is squash-merged (one Conventional Commit per PR).
 #    The OK is an approving review or, for PRs the owner can't approve (agents push as the
 #    owner, so that's all of them), the `owner-approved` label — added by the owner, never an agent.
+#    A child PR into an epic branch needs no owner OK: the newest reviewer marker
+#    `<!-- epic-review: approve sha=<head sha> -->` (comment or review body) must match the
+#    current head, so any push after the review needs a new one. The owner reviews the epic → main
+#    PR instead (docs/design/epic-autopilot/README.md §5). Required checks are the epic ruleset's job.
 if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
   pr=$(grep -Eo 'merge[[:space:]]+[0-9]+' <<< "$cmd" | grep -Eo '[0-9]+' || true)
   # jq decides (exact label match, no string joining to fool); '|' separator because whitespace
   # would collapse an empty reviewDecision; the branch name goes last so a '|' in it can't shift fields.
-  IFS='|' read -r ok decision head < <(cd "$target" && gh pr view ${pr:-} --json reviewDecision,headRefName,labels \
-    -q '[(if .reviewDecision == "APPROVED" or any(.labels[]; .name == "owner-approved") then "yes" else "no" end),
-         .reviewDecision, .headRefName] | join("|")' 2>/dev/null)
+  IFS='|' read -r ok decision head < <(cd "$target" && gh pr view ${pr:-} \
+    --json reviewDecision,headRefName,labels,baseRefName,headRefOid,comments,reviews \
+    -q '([((.comments // [])[] | {t: .createdAt, b: .body}), ((.reviews // [])[] | {t: .submittedAt, b: .body})]
+          | sort_by(.t) | map([.b // "" | capture("<!-- epic-review: (?<v>approve|request-changes) sha=(?<s>[0-9a-f]{40}) -->"; "g")])
+          | add // [] | last) as $marker
+        | [(if .reviewDecision == "APPROVED" or any(.labels[]; .name == "owner-approved") then "yes"
+            elif ((.baseRefName // "") | startswith("epic/")) and (.headRefName | startswith("epic/") | not)
+                 and $marker.v == "approve" and $marker.s == .headRefOid then "yes"
+            else "no" end),
+           .reviewDecision, .headRefName] | join("|")' 2>/dev/null)
   decision=${decision:-NONE}; head=${head:-}
   [[ "${ok:-no}" == "yes" ]] \
-    || block "PR ${pr:-for this branch} is not approved (reviewDecision=$decision, no owner-approved label). Merge happens after the owner's OK."
+    || block "PR ${pr:-for this branch} is not approved (reviewDecision=$decision, no owner-approved label, no reviewer approve marker on the current head for an epic child). Merge happens after the owner's OK."
   if [[ "$head" == epic/* ]]; then
     grep -Eq -- '--rebase' <<< "$cmd" || block "PR ${pr} is an epic branch — merge it with --rebase so the child commits stay on main."
   else

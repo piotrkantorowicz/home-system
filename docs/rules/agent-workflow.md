@@ -64,7 +64,7 @@ until its last slice — open an **epic lane**:
 | Stage | Skill | What happens |
 |---|---|---|
 | Open | `start-epic <e>` | `epic/<e>-<slug>` created on origin via API — no local commit. Noted on the epic issue as `Epic branch:`. |
-| Children | `start-issue <c>` / `ship` | Detect `Part of #<e>` + the `Epic branch:` line → branch off and PR against the epic branch. Same review loop. Squash-merged into the epic: one Conventional Commit per child. |
+| Children | `start-issue <c>` / `ship` | Detect `Part of #<e>` + the `Epic branch:` line → branch off and PR against the epic branch. Same review loop. Squash-merged into the epic by the agent once the reviewer agent's newest `<!-- epic-review: approve sha=… -->` marker matches the head — no owner OK; the owner reviews the epic → `main` PR. One Conventional Commit per child, body `Closes #<c>`. |
 | Close | `ship-epic <e>` | All children merged → rebase the epic onto fresh `main` (`--force-with-lease`, the one allowed push) → verify → PR `epic/… → main`, `Closes #<e>`. |
 | Merge | owner | **Rebase and merge.** Each child commit lands on `main` as-is; `release.yml` analyses them one by one. Never squash an epic PR. |
 
@@ -75,7 +75,8 @@ Rules the tooling enforces:
   `main` or an `epic/*` branch.
 - `guard-git.sh` blocks `commit` / `merge` / `cherry-pick` / `revert` on an `epic/*`
   checkout and any push to an epic branch without `--force-with-lease`; `gh pr merge`
-  must be `--rebase` for an `epic/*` head and `--squash` for everything else.
+  must be `--rebase` for an `epic/*` head and `--squash` for everything else. A PR into
+  `epic/*` merges on the reviewer marker for its current head instead of the owner's OK.
 - Keep epics short. Rebasing the epic onto `main` rewrites its history, so it only happens
   in `ship-epic`, with no child PR open.
 
@@ -114,7 +115,7 @@ Claude and Codex can work different issues at the same time without sharing an i
 
 | Hook | Blocks |
 |---|---|
-| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` or the `owner-approved` label, or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`); adding the `owner-approved` label via `gh` (best effort — a trust signal, not a security boundary) |
+| `guard-git.sh` (PreToolUse Bash) | commit/push on `main`; `--force` push; `--force-with-lease` to `main`; `commit` / `merge` / `cherry-pick` / `revert` on `epic/*`; push to `epic/*` without `--force-with-lease`; `reset --hard`, `clean -f`, `checkout -- .`; `gh pr merge` without `reviewDecision == APPROVED` or the `owner-approved` label (a child PR into `epic/*` may instead carry a current `epic-review: approve` marker), or with the wrong strategy (`epic/*` → `--rebase`, else `--squash`); adding the `owner-approved` label via `gh` (best effort — a trust signal, not a security boundary) |
 
 `guard-git.sh` checks the branch of the checkout the command targets: `git -C <dir>` wins, then a
 leading `cd <dir>` (literal path — shell variables defined inside the same command are not

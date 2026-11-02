@@ -9,6 +9,12 @@ import unittest
 
 
 HOOK = Path(__file__).resolve().parents[1] / "hooks/guard-git.sh"
+SHA = "a" * 40
+EPIC = "epic/8-lane"
+
+
+def marker(verdict="approve", sha=SHA):
+    return f"Summary.\n\n<!-- epic-review: {verdict} sha={sha} -->"
 
 
 class GuardGitTests(unittest.TestCase):
@@ -134,8 +140,11 @@ class GuardGitMergeTests(unittest.TestCase):
         gh.chmod(0o755)
         self.path = f"{bin_dir}:{os.environ['PATH']}"
 
-    def decision(self, command, decision="", head="feat/7-thing", labels=()):
-        pr = {"reviewDecision": decision, "headRefName": head, "labels": [{"name": n} for n in labels]}
+    def decision(self, command, decision="", head="feat/7-thing", labels=(), base="main", comments=(), reviews=()):
+        pr = {"reviewDecision": decision, "headRefName": head, "labels": [{"name": n} for n in labels],
+              "baseRefName": base, "headRefOid": SHA,
+              "comments": [{"createdAt": t, "body": b} for t, b in comments],
+              "reviews": [{"submittedAt": t, "body": b} for t, b in reviews]}
         return subprocess.run(
             ["bash", str(HOOK)], cwd=self.root / "repo", text=True, capture_output=True,
             env={**os.environ, "PATH": self.path, "FAKE_GH_PR": json.dumps(pr)},
@@ -169,6 +178,38 @@ class GuardGitMergeTests(unittest.TestCase):
         self.assertEqual(2, self.decision("gh pr merge 7 --rebase", labels=ok).returncode)
         self.assertEqual(2, self.decision("gh pr merge 8 --squash", head="epic/8-lane", labels=ok).returncode)
         self.assertEqual(0, self.decision("gh pr merge 8 --rebase", head="epic/8-lane", labels=ok).returncode)
+
+    def test_epic_child_merges_on_approve_marker_for_head(self):
+        for where in ("comments", "reviews"):
+            with self.subTest(where=where):
+                result = self.decision("gh pr merge 7 --squash", base=EPIC, **{where: [("2026-11-02T10:00:00Z", marker())]})
+                self.assertEqual(0, result.returncode)
+
+    def test_epic_child_marker_must_match_head_and_be_newest(self):
+        stale = [("2026-11-02T10:00:00Z", marker(sha="b" * 40))]
+        changes_after = [("2026-11-02T10:00:00Z", marker()), ("2026-11-02T11:00:00Z", marker("request-changes"))]
+        approve_after = [("2026-11-02T10:00:00Z", marker("request-changes")), ("2026-11-02T11:00:00Z", marker())]
+        truncated = [("2026-11-02T10:00:00Z", "<!-- epic-review: approve sha=" + SHA[:39] + " -->")]
+        for comments, code in ((stale, 2), (changes_after, 2), (approve_after, 0), (truncated, 2), ([], 2)):
+            with self.subTest(comments=comments):
+                self.assertEqual(code, self.decision("gh pr merge 7 --squash", base=EPIC, comments=comments).returncode)
+
+    def test_epic_child_newest_marker_across_comments_and_reviews(self):
+        result = self.decision("gh pr merge 7 --squash", base=EPIC,
+                               reviews=[("2026-11-02T10:00:00Z", marker())],
+                               comments=[("2026-11-02T11:00:00Z", marker("request-changes"))])
+        self.assertEqual(2, result.returncode)
+
+    def test_marker_does_not_open_main_or_epic_heads(self):
+        approve = [("2026-11-02T10:00:00Z", marker())]
+        self.assertEqual(2, self.decision("gh pr merge 7 --squash", base="main", comments=approve).returncode)
+        self.assertEqual(2, self.decision("gh pr merge 8 --rebase", head=EPIC, base="main", comments=approve).returncode)
+        self.assertEqual(2, self.decision("gh pr merge 7 --squash", base="epic-notes", comments=approve).returncode)
+
+    def test_epic_child_still_squash_only(self):
+        approve = [("2026-11-02T10:00:00Z", marker())]
+        self.assertEqual(2, self.decision("gh pr merge 7 --rebase", base=EPIC, comments=approve).returncode)
+        self.assertEqual(2, self.decision("gh pr merge 7 --merge", base=EPIC, comments=approve).returncode)
 
     def test_agents_cannot_add_the_owner_approved_label(self):
         for command in ("gh pr edit 7 --add-label owner-approved",
