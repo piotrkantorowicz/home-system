@@ -235,7 +235,9 @@ class GuardGitMergeTests(unittest.TestCase):
                         "gh pr merge --squash 99",
                         "gh pr merge --squash",
                         "gh pr merge 7 --squash -R o/other",
-                        "gh pr merge 7 --squash --repo=o/other"):
+                        "gh pr merge 7 --squash --repo=o/other",
+                        "gh pr merge 7 --squash; gh pr merge 99 --squash",
+                        "gh pr merge 7 --squash && gh pr  merge 99 --squash"):
             with self.subTest(command=command):
                 self.assertEqual(2, self.decision(command, labels=["owner-approved"]).returncode)
 

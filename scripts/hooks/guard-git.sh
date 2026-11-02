@@ -76,6 +76,7 @@ fi
 #    The PR is named by number right after `merge`, never a URL / branch / --repo: the check below
 #    looks up that number, so any other target could make it vet one PR and merge another.
 if grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' <<< "$cmd"; then
+  [[ $(grep -Eo 'pr[[:space:]]+merge' <<< "$cmd" | wc -l) -eq 1 ]] || block "one PR merge per command — the check below vets a single PR."
   pr=$(grep -Eo 'pr[[:space:]]+merge([[:space:]]+[^[:space:];&|]+)?' <<< "$cmd" | head -1 | awk '{print $3}')
   [[ "$pr" =~ ^[0-9]+$ ]] || block "name the PR by number right after merge (gh pr merge <n> ...), not a URL, branch or flag."
   grep -Eq -- '(^|[[:space:]])(-R|--repo)([=[:space:]]|$)' <<< "$cmd" && block "merge PRs of this repo only — drop -R/--repo."
