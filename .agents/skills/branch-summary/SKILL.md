@@ -1,6 +1,7 @@
 ---
 name: branch-summary
 description: "Produce a commit-body-style summary of unmerged commits on the current branch"
+disable-model-invocation: true
 ---
 
 # branch-summary

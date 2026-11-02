@@ -1,6 +1,7 @@
 ---
 name: start-issue
 description: "Start work on a GitHub issue: create the correctly named branch off fresh origin/main, assign the issue, load the rule docs for its area, and restate scope + acceptance criteria. Use when asked to start, pick up, or begin an issue."
+model: sonnet
 ---
 
 # start-issue

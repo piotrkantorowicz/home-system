@@ -1,6 +1,7 @@
 ---
 name: scaffold-module
 description: "Scaffold a complete new module following the project's architecture conventions"
+disable-model-invocation: true
 ---
 
 # scaffold-module

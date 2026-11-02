@@ -1,6 +1,7 @@
 ---
 name: github-code-scanning-alerts
 description: Use when checking GitHub code scanning or CodeQL alerts.
+disable-model-invocation: true
 category: github-workflow
 ---
 

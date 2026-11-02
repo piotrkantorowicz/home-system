@@ -1,6 +1,7 @@
 ---
 name: scaffold-aggregate
 description: "Add a new aggregate root (and related files) to an existing DDD module"
+disable-model-invocation: true
 ---
 
 # scaffold-aggregate
