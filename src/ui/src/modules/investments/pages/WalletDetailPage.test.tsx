@@ -402,6 +402,86 @@ describe('WalletDetailPage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('steps back a page after deleting the last contribution on a later page', async () => {
+    contributions = Array.from({ length: 21 }, (_, i) => ({
+      id: `c${String(i + 1)}`,
+      date: `2026-08-${String(i + 1).padStart(2, '0')}`,
+      direction: 'Deposit',
+      amount: '10.00',
+      note: null,
+    }));
+    server.use(
+      http.get(`${BASE}/api/investments/wallets/w1/contributions`, ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        const page = Number(query.get('page'));
+        const pageSize = Number(query.get('pageSize'));
+        return HttpResponse.json({
+          items: contributions.slice((page - 1) * pageSize, page * pageSize).map(contribution),
+          totalCount: contributions.length,
+          page,
+          pageSize,
+        });
+      }),
+      http.delete(`${BASE}/api/investments/wallets/w1/contributions/:cid`, ({ params }) => {
+        contributions = contributions.filter((c) => c.id !== params.cid);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+
+    const section = await screen.findByRole('region', { name: 'Deposits and withdrawals' });
+    await userEvent.click(await within(section).findByRole('button', { name: 'Next' }));
+    await userEvent.click(
+      await within(section).findByRole('button', { name: /Delete Deposit of/ }),
+    );
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    await waitFor(() => {
+      expect(within(section).getAllByRole('listitem')).toHaveLength(20);
+    });
+    expect(within(section).queryByText(/No deposits or withdrawals yet/)).not.toBeInTheDocument();
+  });
+
+  it('steps back a page after deleting the last balance on a later page', async () => {
+    let balances = Array.from({ length: 21 }, (_, i) => {
+      const first = history[0];
+      if (!first) throw new Error('no history');
+      return { ...first, asOf: `2026-07-${String(i + 1).padStart(2, '0')}` };
+    });
+    server.use(
+      http.get(`${BASE}/api/investments/wallets/w1/snapshots`, ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        const page = Number(query.get('page'));
+        const pageSize = Number(query.get('pageSize'));
+        return HttpResponse.json({
+          items: balances.slice((page - 1) * pageSize, page * pageSize),
+          totalCount: balances.length,
+          page,
+          pageSize,
+        });
+      }),
+      http.delete(`${BASE}/api/investments/wallets/w1/snapshots/:asOf`, ({ params }) => {
+        balances = balances.filter((b) => b.asOf !== params.asOf);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+
+    const section = await screen.findByRole('region', { name: 'History' });
+    await userEvent.click(await within(section).findByRole('button', { name: 'Next' }));
+    await userEvent.click(await within(section).findByRole('button', { name: /Delete balance/ }));
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    await waitFor(() => {
+      expect(within(section).getAllByRole('row')).toHaveLength(21);
+    });
+    expect(within(section).queryByText('No balances recorded yet.')).not.toBeInTheDocument();
+  });
+
   it('shows not-found for a missing or private wallet', async () => {
     wallet = null;
     renderPage();
