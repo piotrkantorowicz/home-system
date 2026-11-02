@@ -9,7 +9,9 @@ import { useParams } from 'react-router-dom';
 
 import { errorStatus } from '../api/client';
 import { useWalletMutation, useWalletQuery } from '../api/queries';
+import { ContributionList } from '../components/ContributionList';
 import { RecordBalanceForm } from '../components/RecordBalanceForm';
+import { RecordContributionForm } from '../components/RecordContributionForm';
 import { SnapshotHistory } from '../components/SnapshotHistory';
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { formatDate } from '../lib/dates';
@@ -140,6 +142,8 @@ export default function WalletDetailPage() {
         </Card>
         <RecordBalanceForm wallet={wallet} />
         <SnapshotHistory wallet={wallet} />
+        {!wallet.isArchived && <RecordContributionForm wallet={wallet} />}
+        <ContributionList wallet={wallet} />
       </div>
       {editing && (
         <WalletFormDialog

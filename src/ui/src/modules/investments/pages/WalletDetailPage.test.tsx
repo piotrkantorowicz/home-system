@@ -71,6 +71,29 @@ const history = [
   rateMissing: false,
 }));
 
+interface Contribution {
+  id: string;
+  date: string;
+  direction: string;
+  amount: string;
+  note: string | null;
+}
+let contributions: Contribution[];
+
+function contribution(c: Contribution) {
+  return { ...c, recordedByName: 'Alex', recordedAt: '2026-09-01T10:00:00Z' };
+}
+
+/** Net deposits as the server sums them: `null` when none. */
+function invested(): string | null {
+  if (contributions.length === 0) return null;
+  const minor = contributions.reduce(
+    (sum, c) => sum + (c.direction === 'Deposit' ? 1 : -1) * Math.round(Number(c.amount) * 100),
+    0,
+  );
+  return (minor / 100).toFixed(2);
+}
+
 function rowAt(rows: HTMLElement[], index: number): HTMLElement {
   const row = rows[index];
   if (!row) throw new Error(`no row ${String(index)}`);
@@ -101,7 +124,46 @@ beforeEach(() => {
   initI18n([investmentsModule]);
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   wallet = xtb;
+  contributions = [];
   server.use(
+    http.get(`${BASE}/api/investments/wallets/w1/contributions`, () =>
+      HttpResponse.json({
+        items: contributions.map(contribution),
+        totalCount: contributions.length,
+        page: 1,
+        pageSize: 20,
+      }),
+    ),
+    http.get(`${BASE}/api/investments/net-worth`, () =>
+      HttpResponse.json({
+        asOf: '2026-09-02',
+        scope: 'household',
+        total: '300.00',
+        incomplete: false,
+        byKind: [],
+        byOwner: [],
+        ratesUsed: [],
+        invested: invested(),
+        gain: null,
+        wallets: wallet?.isArchived
+          ? []
+          : [
+              {
+                id: 'w1',
+                name: 'XTB main',
+                kind: 'Brokerage',
+                currency: 'PLN',
+                balance: '300.00',
+                balanceAsOf: '2026-09-01',
+                balancePln: '300.00',
+                rateMissing: false,
+                invested: invested(),
+                investedPln: invested(),
+                gainPln: null,
+              },
+            ],
+      }),
+    ),
     http.get(`${BASE}/api/investments/wallets/w1`, () =>
       wallet ? HttpResponse.json(wallet) : new HttpResponse(null, { status: 404 }),
     ),
@@ -224,6 +286,120 @@ describe('WalletDetailPage', () => {
     await waitFor(() => {
       expect(remove).toHaveBeenCalledWith('2026-08-31');
     });
+  });
+
+  it('shows an empty state, not the whole balance as gain, without contributions', async () => {
+    renderPage();
+
+    expect(await screen.findByText(/No deposits or withdrawals yet/)).toBeInTheDocument();
+    expect(screen.queryByText('Gain')).not.toBeInTheDocument();
+  });
+
+  it('shows contributions with the invested capital and gain', async () => {
+    contributions = [
+      { id: 'c2', date: '2026-08-20', direction: 'Withdrawal', amount: '50.00', note: null },
+      { id: 'c1', date: '2026-08-01', direction: 'Deposit', amount: '250.00', note: 'start' },
+    ];
+    renderPage();
+
+    const list = await within(
+      await screen.findByRole('region', { name: 'Deposits and withdrawals' }),
+    ).findByRole('list');
+    expect(within(list).getAllByRole('listitem')[0]).toHaveTextContent(/Withdrawal.*−50.00 PLN/);
+    expect(within(list).getAllByRole('listitem')[1]).toHaveTextContent(
+      /Deposit.*\+250.00 PLN.*start/,
+    );
+    expect((await screen.findByText('Invested')).parentElement).toHaveTextContent('200.00 PLN');
+    expect(screen.getByText('Gain').parentElement).toHaveTextContent('+100.00 PLN (+50%)');
+  });
+
+  it('records a deposit typed with a decimal comma and updates invested without reload', async () => {
+    const post = vi.fn();
+    server.use(
+      http.post(`${BASE}/api/investments/wallets/w1/contributions`, async ({ request }) => {
+        const body = (await request.json()) as Omit<Contribution, 'id'>;
+        post(body);
+        const added = { ...body, id: 'c9' };
+        contributions = [added, ...contributions];
+        return HttpResponse.json(contribution(added), { status: 201 });
+      }),
+    );
+    renderPage();
+
+    await userEvent.type(await screen.findByLabelText('Amount (PLN)'), '150,5');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith({
+        date: todayInWarsaw(),
+        direction: 'Deposit',
+        amount: '150.5',
+        note: null,
+      });
+    });
+    const section = screen.getByRole('region', { name: 'Deposits and withdrawals' });
+    expect(await within(section).findByRole('listitem')).toHaveTextContent('+150.50 PLN');
+    expect((await screen.findByText('Invested')).parentElement).toHaveTextContent('150.50 PLN');
+  });
+
+  it('rejects a zero contribution before sending', async () => {
+    const post = vi.fn();
+    server.use(
+      http.post(`${BASE}/api/investments/wallets/w1/contributions`, () => {
+        post();
+        return HttpResponse.json({});
+      }),
+    );
+    renderPage();
+
+    await userEvent.type(await screen.findByLabelText('Amount (PLN)'), '0');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText(/greater than zero/)).toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('deletes a contribution and updates the totals', async () => {
+    contributions = [
+      { id: 'c1', date: '2026-08-01', direction: 'Deposit', amount: '250.00', note: null },
+    ];
+    server.use(
+      http.delete(`${BASE}/api/investments/wallets/w1/contributions/:cid`, ({ params }) => {
+        contributions = contributions.filter((c) => c.id !== params.cid);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Delete Deposit of/ }));
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    expect(await screen.findByText(/No deposits or withdrawals yet/)).toBeInTheDocument();
+    expect(screen.queryByText('Invested')).not.toBeInTheDocument();
+  });
+
+  it('flags a balance older than the latest contribution', async () => {
+    contributions = [
+      { id: 'c1', date: '2026-09-02', direction: 'Deposit', amount: '100.00', note: null },
+    ];
+    renderPage();
+
+    expect(await screen.findByText(/latest balance is older/)).toBeInTheDocument();
+  });
+
+  it('hides the contribution form on an archived wallet but keeps the list and delete', async () => {
+    wallet = { ...xtb, isArchived: true };
+    contributions = [
+      { id: 'c1', date: '2026-08-01', direction: 'Deposit', amount: '250.00', note: null },
+    ];
+    renderPage();
+
+    expect(await screen.findByRole('button', { name: /Delete Deposit of/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Record a deposit or withdrawal' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows not-found for a missing or private wallet', async () => {

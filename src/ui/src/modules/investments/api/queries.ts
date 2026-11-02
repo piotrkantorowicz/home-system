@@ -5,7 +5,7 @@ import { useAuth } from 'react-oidc-context';
 import { api, checkResponse, errorStatus } from './client';
 import { investmentsQueryKeys } from './queryKeys';
 
-import type { NetWorthScope, NewWallet, WalletVisibility } from '../types';
+import type { ContributionDirection, NetWorthScope, NewWallet, WalletVisibility } from '../types';
 
 export function walletsOptions(subject: string | undefined, householdId: string | undefined) {
   return queryOptions({
@@ -112,6 +112,76 @@ export function useSnapshotMutation() {
   return useMutation({
     mutationFn: mutateSnapshot,
     // The wallet's latest balance and the history both change.
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: investmentsQueryKeys.all() });
+    },
+  });
+}
+
+export function contributionsOptions(
+  subject: string | undefined,
+  householdId: string | undefined,
+  id: string,
+  page: number,
+  pageSize: number,
+) {
+  return queryOptions({
+    queryKey: investmentsQueryKeys.contributions(subject, householdId, id, page, pageSize),
+    queryFn: async ({ signal }) => {
+      const result = await api.GET('/api/investments/wallets/{id}/contributions', {
+        params: { path: { id }, query: { page, pageSize } },
+        signal,
+      });
+      checkResponse(result);
+      if (!result.data) throw new Error('Missing contributions response');
+      return result.data;
+    },
+  });
+}
+
+export function useContributionsQuery(id: string, page: number, pageSize: number) {
+  const auth = useAuth();
+  const { household } = useHousehold();
+  return useQuery({
+    ...contributionsOptions(auth.user?.profile.sub, household?.id, id, page, pageSize),
+    enabled: auth.isAuthenticated && !!household,
+  });
+}
+
+export type ContributionAction =
+  | {
+      kind: 'record';
+      walletId: string;
+      date: string;
+      direction: ContributionDirection;
+      amount: string;
+      note: string | null;
+    }
+  | { kind: 'delete'; walletId: string; contributionId: string };
+
+async function mutateContribution(action: ContributionAction) {
+  const result =
+    action.kind === 'record'
+      ? await api.POST('/api/investments/wallets/{id}/contributions', {
+          params: { path: { id: action.walletId } },
+          body: {
+            date: action.date,
+            direction: action.direction,
+            amount: action.amount,
+            note: action.note,
+          },
+        })
+      : await api.DELETE('/api/investments/wallets/{id}/contributions/{contributionId}', {
+          params: { path: { id: action.walletId, contributionId: action.contributionId } },
+        });
+  checkResponse(result);
+}
+
+export function useContributionMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: mutateContribution,
+    // Invested and gain change in the net worth and its history too.
     onSettled: async () => {
       await client.invalidateQueries({ queryKey: investmentsQueryKeys.all() });
     },
