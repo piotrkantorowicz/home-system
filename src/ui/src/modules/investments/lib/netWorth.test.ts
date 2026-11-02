@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { changeSinceJanuary, isStale } from './netWorth';
+import { changeSinceJanuary, gainPercent, isStale } from './netWorth';
 
 describe('isStale', () => {
   it('flags a balance only when it is older than 45 days', () => {
@@ -49,5 +49,17 @@ describe('changeSinceJanuary', () => {
         '10.00',
       ),
     ).toEqual({ amount: '10.00', percent: null });
+  });
+});
+
+describe('gainPercent', () => {
+  it('is the gain against what was put in, signed', () => {
+    expect(gainPercent('100.00', '200.00')).toBe(50);
+    expect(gainPercent('-25.00', '200.00')).toBe(-12.5);
+  });
+
+  it('is null when nothing was put in', () => {
+    expect(gainPercent('100.00', '0.00')).toBeNull();
+    expect(gainPercent('100.00', '-50.00')).toBeNull();
   });
 });
