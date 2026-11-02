@@ -67,6 +67,7 @@ export default function InvestmentsPage() {
       key={wallet.id}
       wallet={wallet}
       ownerLabel={ownerLabel(wallet)}
+      gainPln={netWorth.data?.wallets.find((w) => w.id === wallet.id)?.gainPln ?? null}
       busy={mutation.isPending}
       onEdit={() => {
         setEditing(wallet);

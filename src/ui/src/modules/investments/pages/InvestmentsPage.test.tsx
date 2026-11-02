@@ -143,6 +143,8 @@ beforeEach(() => {
     byOwner: [],
     wallets: [],
     ratesUsed: [],
+    invested: null,
+    gain: null,
   };
   server.use(
     http.get(`${BASE}/api/investments/net-worth`, ({ request }) => {
@@ -168,6 +170,45 @@ describe('investmentsModule', () => {
 });
 
 describe('InvestmentsPage net worth', () => {
+  it('shows invested capital and gain with its percent', async () => {
+    netWorth = { ...netWorth, invested: '100000.00', gain: '12500.00' };
+    renderPage();
+
+    expect((await screen.findByText('Invested')).parentElement).toHaveTextContent(/100.000.00 PLN/);
+    expect(screen.getByText('Gain').parentElement).toHaveTextContent(/\+12.500.00 PLN \(\+12.5%\)/);
+  });
+
+  it('shows a loss with its sign and colour', async () => {
+    netWorth = { ...netWorth, invested: '100000.00', gain: '-5000.00' };
+    renderPage();
+
+    const loss = await screen.findByText(/5.000.00 PLN/, { selector: 'dd span' });
+    expect(loss).toHaveTextContent(/[−-]5.000.00 PLN \([−-]5%\)/);
+    expect(loss).toHaveClass('text-destructive');
+  });
+
+  it('shows no invested or gain without contributions', async () => {
+    renderPage();
+
+    expect(await screen.findByTestId('net-worth-total')).toBeInTheDocument();
+    expect(screen.queryByText('Invested')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gain')).not.toBeInTheDocument();
+  });
+
+  it('shows the gain of a wallet with contributions', async () => {
+    netWorth = {
+      ...netWorth,
+      wallets: [{ id: 'w1', gainPln: '250.00' }],
+    };
+    renderPage();
+
+    const row = (await screen.findByRole('link', { name: 'XTB main' })).closest('li');
+    if (!row) throw new Error('no row');
+    expect(row).toHaveTextContent(/Gain \+250.00 PLN/);
+    const other = screen.getByRole('link', { name: 'Retirement' }).closest('li');
+    expect(other).not.toHaveTextContent('Gain');
+  });
+
   it('shows the household total and its change since 1 January', async () => {
     renderPage();
 

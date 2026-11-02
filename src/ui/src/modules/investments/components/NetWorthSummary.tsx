@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { changeSinceJanuary } from '../lib/netWorth';
 
+import { Gain } from './Gain';
+
 import type { HistoryPoint } from '../lib/netWorth';
 import type { NetWorth } from '../types';
 
@@ -41,6 +43,24 @@ export function NetWorthSummary({ netWorth, history }: NetWorthSummaryProps) {
             })
           : t('change_since_january_unknown')}
       </p>
+      {netWorth.invested !== null && (
+        <dl className="text-meta flex flex-wrap gap-x-6 gap-y-1">
+          <div className="flex gap-2">
+            <dt className="text-muted-foreground">{t('invested')}</dt>
+            <dd data-testid="net-worth-invested" className="tnum">
+              {money(netWorth.invested, { currency: 'PLN' })}
+            </dd>
+          </div>
+          {netWorth.gain !== null && (
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">{t('gain')}</dt>
+              <dd data-testid="net-worth-gain">
+                <Gain amount={netWorth.gain} currency="PLN" invested={netWorth.invested} />
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
       {netWorth.incomplete && (
         <Banner variant="warning">
           {t('incomplete_warning', { wallets: missing.join(', ') })}

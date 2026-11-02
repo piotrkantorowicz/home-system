@@ -18,7 +18,9 @@ import { useTranslation } from 'react-i18next';
 
 import { useContributionMutation, useContributionsQuery, useNetWorthQuery } from '../api/queries';
 import { formatDate } from '../lib/dates';
-import { change, toMinor } from '../lib/money';
+import { change } from '../lib/money';
+
+import { Gain } from './Gain';
 
 import type { Wallet } from '../types';
 
@@ -44,14 +46,6 @@ export function ContributionList({ wallet }: ContributionListProps) {
   const balance = entry?.balance ?? null;
   // In the wallet's currency, so currency moves don't count as gain (§14).
   const gain = invested === null || balance === null ? null : change(balance, invested);
-  const percent =
-    gain !== null && invested !== null && toMinor(invested) > 0
-      ? new Intl.NumberFormat(i18n.language, {
-          style: 'percent',
-          maximumFractionDigits: 1,
-          signDisplay: 'always',
-        }).format(toMinor(gain) / toMinor(invested))
-      : null;
   const newest = page === 1 ? items[0]?.date : undefined;
   const balanceStale = newest !== undefined && !!entry?.balanceAsOf && newest > entry.balanceAsOf;
 
@@ -68,15 +62,12 @@ export function ContributionList({ wallet }: ContributionListProps) {
           </div>
           <div>
             <p className="text-muted-foreground text-meta">{t('gain')}</p>
-            <p
-              className={cn(
-                'text-body tnum font-semibold',
-                gain?.startsWith('-') ? 'text-destructive' : 'text-good',
+            <p className="text-body font-semibold">
+              {gain === null ? (
+                '—'
+              ) : (
+                <Gain amount={gain} currency={wallet.currency} invested={invested} />
               )}
-            >
-              {gain === null
-                ? '—'
-                : `${gain.startsWith('-') ? '' : '+'}${money(gain, currency)}${percent ? ` (${percent})` : ''}`}
             </p>
           </div>
           {balanceStale && (
@@ -176,6 +167,10 @@ export function ContributionList({ wallet }: ContributionListProps) {
                 mutation.mutate(
                   { kind: 'delete', walletId: wallet.id, contributionId: pendingDelete.id },
                   {
+                    // Deleting the last entry on a later page would leave an empty page.
+                    onSuccess: () => {
+                      if (items.length === 1 && page > 1) setPage(page - 1);
+                    },
                     onSettled: () => {
                       setPendingDelete(null);
                     },

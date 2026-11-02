@@ -2,6 +2,7 @@ import { useFormat } from '@shared/hooks/useFormat';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -24,8 +25,11 @@ export function NetWorthChart({ points }: NetWorthChartProps) {
   const data = points.map((p) => ({
     label: month.format(new Date(`${p.date}T00:00:00Z`)),
     total: Number(p.total),
+    invested: p.invested ? Number(p.invested) : null,
     point: p,
   }));
+  // No contributions anywhere → no invested series.
+  const hasInvested = points.some((p) => !!p.invested);
 
   return (
     <figure aria-label={t('history_chart')} className="h-56">
@@ -44,12 +48,19 @@ export function NetWorthChart({ points }: NetWorthChartProps) {
             stroke="var(--color-border)"
           />
           <Tooltip
-            formatter={(_value, _name, item: { payload?: { point: HistoryPoint } }) =>
-              item.payload
-                ? `${money(item.payload.point.total, { currency: 'PLN' })}${item.payload.point.incomplete ? ` · ${t('incomplete_short')}` : ''}`
-                : ''
-            }
+            formatter={(
+              _value,
+              _name,
+              item: { dataKey?: unknown; payload?: { point: HistoryPoint } },
+            ) => {
+              const point = item.payload?.point;
+              if (!point) return '';
+              if (item.dataKey === 'invested')
+                return point.invested ? money(point.invested, { currency: 'PLN' }) : '—';
+              return `${money(point.total, { currency: 'PLN' })}${point.incomplete ? ` · ${t('incomplete_short')}` : ''}`;
+            }}
           />
+          {hasInvested && <Legend wrapperStyle={{ fontSize: 12 }} />}
           <Line
             type="monotone"
             dataKey="total"
@@ -58,6 +69,17 @@ export function NetWorthChart({ points }: NetWorthChartProps) {
             strokeWidth={2}
             dot={false}
           />
+          {hasInvested && (
+            <Line
+              type="monotone"
+              dataKey="invested"
+              name={t('invested')}
+              stroke="var(--color-text-2)"
+              strokeWidth={2}
+              strokeDasharray="5 4"
+              dot={false}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </figure>

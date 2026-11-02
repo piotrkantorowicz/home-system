@@ -14,19 +14,30 @@ import { Link } from 'react-router-dom';
 import { formatDate, todayInWarsaw } from '../lib/dates';
 import { daysBetween, isStale } from '../lib/netWorth';
 
+import { Gain } from './Gain';
+
 import type { Wallet } from '../types';
 
 export interface WalletRowProps {
   wallet: Wallet;
   /** Owner line for wallets that are not the caller's own; `null` for their own. */
   ownerLabel: string | null;
+  /** Gain in PLN from net worth; `null` when the wallet has no contributions or is out of scope. */
+  gainPln: string | null;
   busy: boolean;
   onEdit: () => void;
   onToggleArchive: () => void;
 }
 
 /** One wallet: name, institution and currency, owner and a private chip, and a ⋯ menu. */
-export function WalletRow({ wallet, ownerLabel, busy, onEdit, onToggleArchive }: WalletRowProps) {
+export function WalletRow({
+  wallet,
+  ownerLabel,
+  gainPln,
+  busy,
+  onEdit,
+  onToggleArchive,
+}: WalletRowProps) {
   const { t, i18n } = useTranslation('investments');
   const { money } = useFormat();
   const meta = [t(`institution_${wallet.institution}`), wallet.currency, ownerLabel].filter(
@@ -53,6 +64,12 @@ export function WalletRow({ wallet, ownerLabel, busy, onEdit, onToggleArchive }:
         {wallet.currency !== 'PLN' && wallet.latestBalancePln !== null && (
           <p className="text-text-2 text-meta tnum">
             ≈ {money(wallet.latestBalancePln, { currency: 'PLN' })}
+          </p>
+        )}
+        {gainPln !== null && (
+          <p className="text-meta">
+            <span className="text-muted-foreground">{t('gain')} </span>
+            <Gain amount={gainPln} currency="PLN" />
           </p>
         )}
         {wallet.rateMissing && <p className="text-warning text-meta">{t('rate_missing_short')}</p>}
