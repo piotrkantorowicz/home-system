@@ -39,13 +39,18 @@ export async function status(page: Page, path: string): Promise<number> {
 }
 
 export const netWorth = (page: Page, scope = 'household') =>
-  json<{ total: string; wallets: { id: string; name: string }[] }>(
-    page,
-    `/api/investments/net-worth?scope=${scope}`,
-  );
+  json<{
+    total: string;
+    invested: string | null;
+    gain: string | null;
+    wallets: { id: string; name: string; invested: string | null; gainPln: string | null }[];
+  }>(page, `/api/investments/net-worth?scope=${scope}`);
 
 export const netWorthHistory = (page: Page) =>
-  json<{ points: { date: string; total: string }[] }>(page, '/api/investments/net-worth/history');
+  json<{ points: { date: string; total: string; invested: string | null }[] }>(
+    page,
+    '/api/investments/net-worth/history',
+  );
 
 export const listWallets = (page: Page) =>
   json<{ items: { id: string; name: string }[] }>(

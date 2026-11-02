@@ -172,6 +172,10 @@ export function SnapshotHistory({ wallet }: SnapshotHistoryProps) {
                 mutation.mutate(
                   { kind: 'delete', walletId: wallet.id, asOf: pendingDelete.asOf },
                   {
+                    // Deleting the last balance on a later page would leave an empty page.
+                    onSuccess: () => {
+                      if (items.length === 1 && page > 1) setPage(page - 1);
+                    },
                     onSettled: () => {
                       setPendingDelete(null);
                     },

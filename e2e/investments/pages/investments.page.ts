@@ -27,6 +27,20 @@ export class InvestmentsPage extends BasePage {
     return this.page.getByTestId('net-worth-total');
   }
 
+  /** Invested and gain under the total (shared test ids with `InvestmentsPage.test.tsx`). */
+  invested(): Locator {
+    return this.page.getByTestId('net-worth-invested');
+  }
+
+  gain(): Locator {
+    return this.page.getByTestId('net-worth-gain');
+  }
+
+  /** The wallet's row in the list, found through its link. */
+  walletRow(name: string): Locator {
+    return this.page.getByRole('listitem').filter({ has: this.walletLink(name) });
+  }
+
   walletLink(name: string): Locator {
     return this.page.getByRole('link', { name, exact: true });
   }
@@ -51,12 +65,28 @@ export class WalletDetailPage extends BasePage {
   readonly amountInput: Locator;
   readonly saveBalanceButton: Locator;
   readonly history: Locator;
+  readonly contributionAmountInput: Locator;
+  readonly saveContributionButton: Locator;
+  readonly contributions: Locator;
 
   constructor(page: Page) {
     super(page);
     this.amountInput = page.getByLabel(/^Balance \(/);
     this.saveBalanceButton = page.getByRole('button', { name: 'Save balance' });
     this.history = page.getByRole('table');
+    this.contributionAmountInput = page.getByLabel(/^Amount \(/);
+    this.saveContributionButton = page.getByRole('button', { name: 'Save', exact: true });
+    this.contributions = page.getByRole('region', { name: 'Deposits and withdrawals' });
+  }
+
+  /** Records a deposit for today (the form's default date and direction). */
+  async recordDeposit(amount: string) {
+    await this.contributionAmountInput.fill(amount);
+    const saved = this.page.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/contributions'),
+    );
+    await this.saveContributionButton.click();
+    await saved;
   }
 
   async recordBalance(amount: string) {

@@ -17,6 +17,8 @@ export interface HistoryPoint {
   date: string;
   total: string;
   incomplete: boolean;
+  /** Net deposits by that date in PLN; `null` without contributions. */
+  invested?: string | null;
 }
 
 export interface ChangeSinceJanuary {
@@ -44,4 +46,10 @@ export function changeSinceJanuary(
     amount: minorToDecimal(delta),
     percent: base === 0 ? null : Math.round((delta / base) * 1000) / 10,
   };
+}
+
+/** Gain as a percent of `invested`, one decimal; `null` when nothing (or less) was put in. */
+export function gainPercent(gain: string, invested: string): number | null {
+  const base = toMinor(invested);
+  return base <= 0 ? null : Math.round((toMinor(gain) / base) * 1000) / 10;
 }
