@@ -2,6 +2,7 @@ namespace Investments.Mcp;
 
 using System.ComponentModel;
 using Investments.Application.Queries.GetWallet;
+using Investments.Application.Queries.ListContributions;
 using Investments.Application.Queries.ListSnapshots;
 using Investments.Application.Queries.ListWallets;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,7 @@ using Shared.Abstractions.Cqrs;
 using Shared.Infrastructure.Web;
 
 /// <summary>
-/// Read-only wallets and their balance history: what the caller may see in the app, through the same
+/// Read-only wallets, their balance history and contributions: what the caller may see in the app, through the same
 /// queries as REST.
 /// </summary>
 [McpServerToolType]
@@ -59,6 +60,21 @@ internal sealed class WalletTools
         EnsurePage(page, pageSize);
         return await McpErrors.AsToolErrorsAsync(() => dispatcher.SendAsync<ListSnapshotsQuery, PagedList<SnapshotDto>>(
             new ListSnapshotsQuery(user.AuthSubject(), walletId, page, pageSize), ct));
+    }
+
+    [McpServerTool(Name = "list_contributions", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Pages a wallet's deposits and withdrawals, newest first. Amounts are positive decimal strings in the wallet's currency; direction says which way the money moved.")]
+    public static async Task<PagedList<ContributionDto>> ListContributions(
+        McpToolUser user,
+        IQueryDispatcher dispatcher,
+        [Description("Wallet id from list_wallets.")] Guid walletId,
+        [Description("1-based page number.")] int page = 1,
+        [Description("Items per page, 1 to 100.")] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        EnsurePage(page, pageSize);
+        return await McpErrors.AsToolErrorsAsync(() => dispatcher.SendAsync<ListContributionsQuery, PagedList<ContributionDto>>(
+            new ListContributionsQuery(user.AuthSubject(), walletId, page, pageSize), ct));
     }
 
     private static void EnsurePage(int page, int pageSize)
