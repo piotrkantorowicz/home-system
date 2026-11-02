@@ -188,7 +188,7 @@ public sealed class HouseholdLibraryVisibilityTests : IClassFixture<HouseholdSho
     {
         var tag = Guid.NewGuid().ToString("N");
         var ownerFactory = FactoryFor($"lib-owner-{tag}");
-        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
+        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance, TestContext.Current.CancellationToken);
 
         var owner = await NewHouseholdAsync(ownerFactory.CreateClient());
         var householdId = (await owner.GetFromJsonAsync<IdBody>("/api/households/me", Ct))!.Id;

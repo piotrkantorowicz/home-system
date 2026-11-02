@@ -29,7 +29,7 @@ public sealed class ShoppingChecksTests : IClassFixture<HouseholdShoppingListFix
     private async Task<(HttpClient Owner, HttpClient Member, HttpClient Guest)> HouseholdAsync()
     {
         var ownerFactory = FactoryFor($"chk-owner-{Guid.NewGuid():N}");
-        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance);
+        await ownerFactory.Services.MigrateHouseholdDatabaseAsync(NullLogger.Instance, TestContext.Current.CancellationToken);
         var owner = ownerFactory.CreateClient();
         (await owner.PostAsync("/api/persons/me/sync", null, Ct)).EnsureSuccessStatusCode();
         (await owner.PostAsJsonAsync("/api/households", new { name = "Checks" }, Ct)).EnsureSuccessStatusCode();

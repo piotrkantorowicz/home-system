@@ -4,7 +4,8 @@
 # - workflow_call (from release.yml, every push to main): publishes ghcr.io/<repo>-api:sha-<commit>,
 #   plus :vX.Y.Z when `tag` is set. The tag's own commit is checked out, so a version can only
 #   ever point at the commit semantic-release tagged.
-# - workflow_dispatch: retry publishing an existing release tag (no new release is created).
+# - workflow_dispatch: publish main's head (empty tag) or (re)publish an existing release tag
+#   (no new release is created).
 # Publishing uses the workflow's GITHUB_TOKEN; no PAT.
 name: API image
 
@@ -22,9 +23,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to (re)publish, e.g. v1.4.2'
+        description: 'Existing release tag to (re)publish, e.g. v1.4.2; empty publishes sha-<commit> of main'
         type: string
-        required: true
+        default: ''
 
 permissions:
   contents: read
@@ -38,6 +39,13 @@ jobs:
       pull-requests: read      # paths-filter lists the PR's files
       security-events: write   # Trivy SARIF upload
     steps:
+      # Before checkout: the tag becomes a git ref there. publish needs this job, so it is covered.
+      - name: Check tag format
+        if: inputs.tag != ''
+        env:
+          TAG: ${{ inputs.tag }}
+        run: '[[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::''$TAG'' is not vX.Y.Z"; exit 1; }'
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -67,7 +75,6 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
-          [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$TAG' is not vX.Y.Z"; exit 1; }
           git fetch --no-tags origin main
           git merge-base --is-ancestor HEAD FETCH_HEAD || { echo "::error::$TAG is not on main"; exit 1; }
 

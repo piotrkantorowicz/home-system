@@ -150,6 +150,25 @@ builder.Services.AddExceptionHandler<ApplicationExceptionHandler>();
 var app = builder.Build();
 
 // ==============================================
+// `migrate` command (the deploy's migrate Job): apply every module's migrations, then exit without
+// serving. A failed module sets a non-zero exit code so the Job, and the sync, fail.
+// ==============================================
+if (args is ["migrate"])
+{
+    var ct = app.Lifetime.ApplicationStopping;
+    app.Services.MigrateNotificationsDatabase();
+    bool[] migrated =
+    [
+        await app.Services.MigrateDietPlannerDatabaseAsync(app.Logger, ct),
+        await app.Services.MigrateHouseholdDatabaseAsync(app.Logger, ct),
+        await app.Services.MigrateBudgetDatabaseAsync(app.Logger, ct),
+        await app.Services.MigrateInvestmentsDatabaseAsync(app.Logger, ct),
+    ];
+    Environment.ExitCode = migrated.All(ok => ok) ? 0 : 1;
+    return;
+}
+
+// ==============================================
 // Middleware Pipeline
 // ==============================================
 app.MapOpenApi();
@@ -201,10 +220,10 @@ app.MapHomeSystemMcp();
 // ==============================================
 if (app.Environment.IsDevelopment())
 {
-    await app.Services.MigrateDietPlannerDatabaseAsync(app.Logger);
+    await app.Services.MigrateDietPlannerDatabaseAsync(app.Logger, app.Lifetime.ApplicationStopping);
     app.Services.MigrateNotificationsDatabase();
-    await app.Services.MigrateHouseholdDatabaseAsync(app.Logger);
-    await app.Services.MigrateBudgetDatabaseAsync(app.Logger);
+    await app.Services.MigrateHouseholdDatabaseAsync(app.Logger, app.Lifetime.ApplicationStopping);
+    await app.Services.MigrateBudgetDatabaseAsync(app.Logger, app.Lifetime.ApplicationStopping);
     await app.Services.MigrateInvestmentsDatabaseAsync(app.Logger, app.Lifetime.ApplicationStopping);
 }
 
