@@ -1,7 +1,6 @@
 ---
 name: dependabot-pr-triage
 description: Use when triaging Dependabot PRs: E2E secrets, major bumps.
-disable-model-invocation: true
 category: dependency-management
 ---
 

@@ -1,7 +1,6 @@
 ---
 name: scaffold-feature
 description: "Scaffold a new frontend feature module following the project's architecture conventions"
-disable-model-invocation: true
 ---
 
 # scaffold-feature

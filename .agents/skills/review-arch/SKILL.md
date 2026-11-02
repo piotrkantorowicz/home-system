@@ -1,7 +1,6 @@
 ---
 name: review-arch
 description: Review a file or directory for violations of this repo's backend (DDD/CQRS/EF) and frontend (React/TS/Tailwind) architecture rules. Use when asked to review architecture, check rule compliance, or audit a slice before a PR.
-disable-model-invocation: true
 ---
 
 # review-arch

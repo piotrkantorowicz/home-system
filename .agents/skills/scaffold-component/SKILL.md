@@ -1,7 +1,6 @@
 ---
 name: scaffold-component
 description: "Create a new shared UI component with variants, tests, and proper exports"
-disable-model-invocation: true
 ---
 
 # scaffold-component

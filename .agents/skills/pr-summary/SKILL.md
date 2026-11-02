@@ -1,7 +1,6 @@
 ---
 name: pr-summary
 description: "Generate a concise PR body summary from diff vs main"
-disable-model-invocation: true
 ---
 
 # pr-summary
