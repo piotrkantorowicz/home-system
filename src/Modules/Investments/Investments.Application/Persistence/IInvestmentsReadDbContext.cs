@@ -16,6 +16,9 @@ public interface IInvestmentsReadDbContext
     /// <summary>Every balance snapshot, in every household.</summary>
     DbSet<BalanceSnapshot> BalanceSnapshots { get; }
 
+    /// <summary>Every deposit and withdrawal, in every household.</summary>
+    DbSet<Contribution> Contributions { get; }
+
     /// <summary>Every stored NBP rate.</summary>
     DbSet<FxRate> FxRates { get; }
 }
