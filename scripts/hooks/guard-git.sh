@@ -9,14 +9,32 @@ cmd=$(jq -r '.tool_input.command // empty' <<< "$input" 2>/dev/null)
 
 block() { echo "🛑 guard-git: $1" >&2; exit 2; }
 
+# 0. Options that make an auto-approved git / gh command run arbitrary code or delete things.
+#    The allowlist approves `git fetch:*`, `git push:*`, `gh api:*` by prefix, so the arguments
+#    must be vetted here.
+if grep -Eq -- '(^|[[:space:]])--(upload-pack|receive-pack|exec)([=[:space:]]|$)' <<< "$cmd" \
+   || grep -Eq -- '(^|[;&|[:space:]])git([[:space:]]+-C[[:space:]]+[^[:space:]]+)?[[:space:]]+(-c|--config-env)([=[:space:]]|$)' <<< "$cmd"; then
+  block "git --upload-pack/--receive-pack/--exec and 'git -c' overrides can run arbitrary commands. Ask the user to run it themselves."
+fi
+if grep -Eq -- 'gh[[:space:]]+api([[:space:]].*)?[[:space:]](-X|--method)[=[:space:]]*["'"'"']?DELETE' <<< "$cmd"; then
+  block "gh api DELETE is not allowed. Ask the user to run it themselves."
+fi
+
 # Which checkout does the command act on? With worktrees the hook's own cwd can sit on a
 # different branch than the one the command touches. Priority:
 # `git -C <dir>` > leading `cd <dir>` (after `;`, `&&`, `|` too) > hook cwd.
 target=$(grep -Eo -- 'git[[:space:]]+-C[[:space:]]+[^[:space:];&|]+' <<< "$cmd" | head -1 | awk '{print $3}')
 [[ -z "$target" ]] && target=$(grep -Eo -- '(^|[;&|][[:space:]]*)cd[[:space:]]+[^[:space:];&|]+' <<< "$cmd" | head -1 | sed -E 's/.*cd[[:space:]]+//')
 [[ -z "$target" ]] && target=$(jq -r '.cwd // empty' <<< "$input" 2>/dev/null)
-# expand $VAR / ~ the way the shell would; fall back to "." on anything odd
-target=$(eval "printf '%s' \"${target:-.}\"" 2>/dev/null || printf '.')
+# Expand a leading ~ and one plain $VAR / ${VAR} prefix; never eval command text (the hook
+# runs before the permission check, so eval would execute whatever the command embeds).
+target=${target:-.}
+target=${target#[\"\']}; target=${target%[\"\']}
+case "$target" in '~'|'~/'*) target="$HOME${target#\~}" ;; esac
+if [[ "$target" =~ ^\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?(/.*)?$ ]]; then
+  v=${BASH_REMATCH[1]}; target="${!v:-}${BASH_REMATCH[2]}"
+fi
+[[ "$target" == *[\$\`\"\\]* ]] && target=.
 [[ -d "$target" ]] || target=.
 
 # --show-current also works on an unborn branch (fresh clone / worktree, test repos).
