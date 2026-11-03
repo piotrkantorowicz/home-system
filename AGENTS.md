@@ -180,6 +180,8 @@ implicitly by task match.
 
 **Delivery loop** (see `docs/rules/agent-workflow.md`):
 
+Skills marked † live in the shared `dev-loop` plugin ([agent-skills](https://github.com/piotrkantorowicz/agent-skills)); edit them there, not here. Codex reads them through `~/.agents/skills/` symlinks.
+
 | Skill | What it does |
 |---|---|
 | `$plan-issue` | Turn an epic / design-doc section into one issue per vertical slice |
@@ -187,10 +189,10 @@ implicitly by task match.
 | `$verify` | Run `scripts/verify.sh --branch` — path-aware build, format, tests |
 | `$ship` | Clean commits, push, open the PR from the template with `Closes #n` |
 | `$review-pr` | Review a PR (arch + correctness + tests + security), post inline comments — run in the *other* tool |
-| `$address-review` | Fix unresolved review threads, reply per thread, resolve what changed |
+| `$address-review` † | Fix unresolved review threads, reply per thread, resolve what changed |
 | `$start-epic` | Open an epic lane: `epic/<n>-<slug>` on origin, children PR into it instead of `main` |
 | `$ship-epic` | All children merged → rebase the epic onto `main`, open the epic → main PR (rebase-merged) |
-| `$babysit-pr` | Loop: watch CI + review threads on a PR until green and approved |
+| `$babysit-pr` † | Loop: watch CI + review threads on a PR until green and approved |
 
 **Scaffolding & local stack:**
 
@@ -205,9 +207,9 @@ implicitly by task match.
 | `$run-project` | Bring the full stack up locally (Docker infra + backend + frontend) |
 | `$stop-project` | Stop the local stack and free the ports |
 | `$run-e2e` | Run the Playwright E2E suite against the real stack |
-| `$branch-summary` | Commit-body-style summary of unmerged commits on the branch |
+| `$branch-summary` † | Commit-body-style summary of unmerged commits on the branch |
 | `$pr-summary` | Concise PR body summary from the diff vs `main` |
-| `$handoff` | Save a session summary that auto-loads into the next session after `/clear` |
+| `$handoff` † | Save a session summary that auto-loads into the next session after `/clear` |
 
 **Learned know-how** (written by the autoharness plugin):
 
@@ -216,7 +218,7 @@ implicitly by task match.
 | `$assistant-held-actions` | Assistant write tools and the Confirm card (held actions) |
 | `$budget-statement-import` | Budget bank statement import, encodings and dedupe |
 | `$dependabot-pr-triage` | Triage Dependabot PRs: secret scope, E2E flakes, major bumps |
-| `$github-code-scanning-alerts` | Check CodeQL / code scanning alerts, browser fallback on 403 |
+| `$github-code-scanning-alerts` † | Check CodeQL / code scanning alerts, browser fallback on 403 |
 
 ---
 

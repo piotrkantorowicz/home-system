@@ -46,18 +46,6 @@
     ]
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/hooks/load-handoff.sh\"",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -92,5 +80,16 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "pk": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:piotrkantorowicz/agent-skills.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "dev-loop@pk": true
   }
 }
