@@ -67,6 +67,10 @@ class GuardGitTests(unittest.TestCase):
         for command in ("git fetch --upload-pack='touch x' origin",
                         "git push --receive-pack=x origin HEAD",
                         "git push --exec=x origin HEAD",
+                        "git push --rece=x origin HEAD",
+                        "git fetch --upl=x origin",
+                        "git fetch \"--upload-pack=x\" origin",
+                        "git -C . fetch --upl=x",
                         "git -c core.sshCommand=x fetch",
                         "git -C . -c core.pager=x log",
                         "gh api -X DELETE repos/o/r",
@@ -74,6 +78,7 @@ class GuardGitTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(2, self.decision(command))
         for command in ("git fetch origin main",
+                        "git log --exec-path",
                         "gh api repos/o/r/pulls/1/comments/2/replies -f body='use -c'"):
             with self.subTest(command=command):
                 self.assertEqual(0, self.decision(command))

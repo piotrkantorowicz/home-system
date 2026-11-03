@@ -12,7 +12,10 @@ block() { echo "🛑 guard-git: $1" >&2; exit 2; }
 # 0. Options that make an auto-approved git / gh command run arbitrary code or delete things.
 #    The allowlist approves `git fetch:*`, `git push:*`, `gh api:*` by prefix, so the arguments
 #    must be vetted here.
-if grep -Eq -- '(^|[[:space:]])--(upload-pack|receive-pack|exec)([=[:space:]]|$)' <<< "$cmd" \
+# Best effort only: git takes any unambiguous abbreviation (--rece=, --upl=, --e=) and quotes
+# hide the option boundary. The real guard is the narrow git fetch/push allowlist in settings.
+git_segments=$(grep -Eo 'git[[:space:]][^;&|]*' <<< "$cmd" | grep -E '[[:space:]](fetch|pull|push|clone|ls-remote|archive|submodule)([[:space:]]|$)')
+if grep -Eq -- "(^|[[:space:]\"'])--(upl|rece|e)[a-z-]*([=[:space:]\"']|$)" <<< "$git_segments" \
    || grep -Eq -- '(^|[;&|[:space:]])git([[:space:]]+-C[[:space:]]+[^[:space:]]+)?[[:space:]]+(-c|--config-env)([=[:space:]]|$)' <<< "$cmd"; then
   block "git --upload-pack/--receive-pack/--exec and 'git -c' overrides can run arbitrary commands. Ask the user to run it themselves."
 fi
