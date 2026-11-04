@@ -246,6 +246,27 @@ services:
     networks:
       - home-system-shared
 
+  # ============================================
+  # Aspire dashboard — local OTLP viewer (traces, metrics, logs), data in memory
+  # Use: docker compose --profile observability up -d
+  # then run the API with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+  # Auth is off: ports bind to 127.0.0.1 only. Never run this outside a dev machine.
+  # ============================================
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.6.2
+    container_name: aspire-dashboard
+    restart: unless-stopped
+    profiles: ["observability"]
+    ports:
+      - "127.0.0.1:18888:18888" # UI
+      - "127.0.0.1:4317:18889"  # OTLP gRPC (API)
+      - "127.0.0.1:4318:18890"  # OTLP HTTP (browser, via the /otlp proxy)
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    logging: *default-logging
+    networks:
+      - home-system-shared
+
 networks:
   home-system-shared:
     driver: bridge
