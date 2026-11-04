@@ -42,9 +42,16 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
+| `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 
-Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
+`HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
+failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
+and metric tags are the same: `cqrs.kind` (`command` / `query`), `cqrs.name` (request type name),
+`cqrs.outcome` (`success`, `validation_error`, `not_found`, `error`). Only `error` sets the span status to Error;
+validation and not-found are caller mistakes.
+
+Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
 `homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
 seconds.
 
@@ -91,11 +98,11 @@ internal sealed class CqrsMetrics
     public CqrsMetrics(IMeterFactory meters)
     {
         var meter = meters.Create(MeterName);
-        _duration = meter.CreateHistogram<double>("homesystem.cqrs.dispatch.duration", unit: "s");
+        _duration = meter.CreateHistogram<double>("homesystem.cqrs.duration", unit: "s");
     }
 
     public void RecordDispatch(string requestType, string outcome, TimeSpan elapsed)
-        => _duration.Record(elapsed.TotalSeconds, new("homesystem.request.type", requestType), new("outcome", outcome));
+        => _duration.Record(elapsed.TotalSeconds, new("cqrs.name", requestType), new("cqrs.outcome", outcome));
 }
 
 // registration (module / shared Extensions): services.AddSingleton<CqrsMetrics>();
