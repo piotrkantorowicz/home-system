@@ -53,6 +53,36 @@ class GuardGitTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(0, self.decision(command))
 
+    def test_cd_target_is_never_executed(self):
+        # The hook runs before the permission prompt: it must not run what the command embeds.
+        canary = self.root / "pwned"
+        for command in (f"cd $(touch${{IFS}}{canary}) && git status",
+                        f"cd `touch {canary}` && git status"):
+            with self.subTest(command=command):
+                self.decision(command)
+                self.assertFalse(canary.exists())
+
+    def test_code_running_options_are_blocked(self):
+        # git fetch/push and gh api are allowlisted by prefix; these arguments turn them into exec.
+        for command in ("git fetch --upload-pack='touch x' origin",
+                        "git push --receive-pack=x origin HEAD",
+                        "git push --exec=x origin HEAD",
+                        "git push --rece=x origin HEAD",
+                        "git fetch --upl=x origin",
+                        "git fetch \"--upload-pack=x\" origin",
+                        "git -C . fetch --upl=x",
+                        "git -c core.sshCommand=x fetch",
+                        "git -C . -c core.pager=x log",
+                        "gh api -X DELETE repos/o/r",
+                        "gh api --method=DELETE repos/o/r"):
+            with self.subTest(command=command):
+                self.assertEqual(2, self.decision(command))
+        for command in ("git fetch origin main",
+                        "git log --exec-path",
+                        "gh api repos/o/r/pulls/1/comments/2/replies -f body='use -c'"):
+            with self.subTest(command=command):
+                self.assertEqual(0, self.decision(command))
+
     def test_unconditional_force_remains_blocked(self):
         for flag in ("--force", "-f"):
             with self.subTest(flag=flag):
