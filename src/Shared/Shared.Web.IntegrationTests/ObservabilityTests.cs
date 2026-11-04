@@ -19,7 +19,7 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
     [Fact]
     public async Task Request_WithQueryString_ProducesRouteSpanWithChildDbSpanAndNoUserInput()
     {
-        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString);
+        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString, TestContext.Current.CancellationToken);
         using var client = host.CreateClient();
 
         using var response = await client.GetAsync($"/items/7?search={QueryValue}", TestContext.Current.CancellationToken);
@@ -43,7 +43,7 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
     public async Task HealthProbe_ProducesNoSpan()
     {
         var ct = TestContext.Current.CancellationToken;
-        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString);
+        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString, TestContext.Current.CancellationToken);
         using var client = host.CreateClient();
 
         using var probe = await client.GetAsync("/health/live", ct);
@@ -60,7 +60,7 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
     [Fact]
     public async Task Log_WrittenInsideRequest_CarriesItsTraceId()
     {
-        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString);
+        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString, TestContext.Current.CancellationToken);
         using var client = host.CreateClient();
 
         using var response = await client.GetAsync("/items/3", TestContext.Current.CancellationToken);

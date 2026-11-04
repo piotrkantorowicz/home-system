@@ -48,7 +48,8 @@ internal sealed class ObservabilityHost : IAsyncDisposable
 
     /// <summary>Starts the host against <paramref name="connectionString"/>, with export switched off.</summary>
     /// <param name="connectionString">The database <c>/items/{id}</c> queries.</param>
-    public static async Task<ObservabilityHost> StartAsync(string connectionString)
+    /// <param name="ct">Cancels the host start.</param>
+    public static async Task<ObservabilityHost> StartAsync(string connectionString, CancellationToken ct)
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
@@ -73,7 +74,7 @@ internal sealed class ObservabilityHost : IAsyncDisposable
         });
         app.MapGet("/health/live", () => TypedResults.Ok());
 
-        await app.StartAsync();
+        await app.StartAsync(ct);
         return new ObservabilityHost(app, dataSource, spans, logs);
     }
 
