@@ -95,8 +95,9 @@ public sealed partial class OutboxWorker<TDbContext>(
             try
             {
                 await transport.DispatchAsync(message, ct).ConfigureAwait(false);
-                metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
                 await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+                // Only after the mark: a failed mark is retried and counted once, as "failed".
+                metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

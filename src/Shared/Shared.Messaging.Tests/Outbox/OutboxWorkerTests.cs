@@ -253,4 +253,22 @@ public sealed class OutboxWorkerTests
         pending.LastMeasurement.Tags["homesystem.module"].ShouldBe("Test");
         age.LastMeasurement!.Value.ShouldBe(90);
     }
+
+    /// <summary>If marking a delivered message processed fails, it is counted once as failed and never as published.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenMarkProcessedFails_RecordsOnlyFailed()
+    {
+        var meters = NewMeters();
+        using var duration = new MetricCollector<double>(meters, MessagingMetrics.MeterName, "homesystem.outbox.publish.duration");
+        var msg = MakePending(Guid.NewGuid());
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        store.MarkProcessedAsync(msg.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new InvalidOperationException("db")));
+
+        await SutWith(store, Substitute.For<IIntegrationEventTransport>(), meters: meters)
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+
+        duration.GetMeasurementSnapshot().ShouldHaveSingleItem().Tags["outcome"].ShouldBe("failed");
+    }
 }
