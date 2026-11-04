@@ -271,4 +271,23 @@ public sealed class OutboxWorkerTests
 
         duration.GetMeasurementSnapshot().ShouldHaveSingleItem().Tags["outcome"].ShouldBe("failed");
     }
+
+    /// <summary>A tick that throws still refreshes the backlog gauges.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenTickThrows_StillReportsBacklog()
+    {
+        var meters = NewMeters();
+        using var pending = new MetricCollector<long>(meters, MessagingMetrics.MeterName, "homesystem.outbox.pending");
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<IReadOnlyList<OutboxMessage>>(new InvalidOperationException("db")));
+        store.GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new OutboxPending(4, null));
+
+        var act = () => SutWith(store, Substitute.For<IIntegrationEventTransport>(), meters: meters)
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+        await act.ShouldThrowAsync<InvalidOperationException>();
+
+        pending.RecordObservableInstruments();
+        pending.LastMeasurement!.Value.ShouldBe(4);
+    }
 }

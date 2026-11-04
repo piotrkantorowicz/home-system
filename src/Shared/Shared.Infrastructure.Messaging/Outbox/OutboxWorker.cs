@@ -85,36 +85,54 @@ public sealed partial class OutboxWorker<TDbContext>(
             return;
         }
 
-        IReadOnlyList<OutboxMessage> pending =
-            await store.GetUnprocessedAsync(
-                _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
-
-        foreach (var message in pending)
+        try
         {
-            var started = clock.GetTimestamp();
-            try
+            IReadOnlyList<OutboxMessage> pending =
+                await store.GetUnprocessedAsync(
+                    _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+
+            foreach (var message in pending)
             {
-                await transport.DispatchAsync(message, ct).ConfigureAwait(false);
-                await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
-                // Only after the mark: a failed mark is retried and counted once, as "failed".
-                metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                metrics.RecordPublish(message.EventType, "failed", clock.GetElapsedTime(started));
-                LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
-                var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
-                await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
-                if (message.AttemptCount + 1 >= _options.MaxAttempts)
-                    metrics.RecordDeadLetter(_moduleName, message.EventType);
+                var started = clock.GetTimestamp();
+                try
+                {
+                    await transport.DispatchAsync(message, ct).ConfigureAwait(false);
+                    await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+                    // Only after the mark: a failed mark is retried and counted once, as "failed".
+                    metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    metrics.RecordPublish(message.EventType, "failed", clock.GetElapsedTime(started));
+                    LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
+                    var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
+                    await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
+                    if (message.AttemptCount + 1 >= _options.MaxAttempts)
+                        metrics.RecordDeadLetter(_moduleName, message.EventType);
+                }
             }
         }
+        finally
+        {
+            // Also after a failed tick, so the gauges never freeze on the last good reading.
+            await ReportBacklogAsync(store, ct).ConfigureAwait(false);
+        }
+    }
 
-        var backlog = await store.GetPendingAsync(_options.MaxAttempts, ct).ConfigureAwait(false);
-        var oldestAge = backlog.OldestOccurredAt is { } oldest
-            ? clock.GetUtcNow().UtcDateTime - oldest
-            : TimeSpan.Zero;
-        metrics.SetBacklog(_moduleName, backlog.Count, oldestAge);
+    private async Task ReportBacklogAsync(IOutboxStore store, CancellationToken ct)
+    {
+        try
+        {
+            var backlog = await store.GetPendingAsync(_options.MaxAttempts, ct).ConfigureAwait(false);
+            var oldestAge = backlog.OldestOccurredAt is { } oldest
+                ? clock.GetUtcNow().UtcDateTime - oldest
+                : TimeSpan.Zero;
+            metrics.SetBacklog(_moduleName, backlog.Count, oldestAge);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogBacklogFailed(ex, DbContextName);
+        }
     }
 
     /// <summary>Exponential backoff: base × 2^(failures − 1), capped at <see cref="OutboxWorkerOptions.RetryMaxDelayMs"/>.</summary>
@@ -125,6 +143,9 @@ public sealed partial class OutboxWorker<TDbContext>(
 
     [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
     private partial void LogTickFailed(Exception exception, string dbContext);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "Outbox worker [{DbContext}] could not read the backlog for metrics")]
+    private partial void LogBacklogFailed(Exception exception, string dbContext);
 
     [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no outbox store registered")]
     private partial void LogNoStore(string dbContext);
