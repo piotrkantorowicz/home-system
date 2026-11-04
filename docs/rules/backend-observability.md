@@ -42,7 +42,22 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
+| _(others: none yet)_ | | | |
+
+`HomeSystem.Messaging` instruments (tags: `homesystem.module` = publishing module, `homesystem.event.type` and
+`homesystem.handler.type` = short type names, `outcome`):
+
+| Instrument | Type, unit | Tags |
+|---|---|---|
+| `homesystem.outbox.pending` | observable gauge, `{message}` | module |
+| `homesystem.outbox.oldest_pending_age` | observable gauge, `s` | module |
+| `homesystem.outbox.publish.duration` | histogram, `s` | event type, outcome (`published`, `failed`) |
+| `homesystem.outbox.dead_letters` | counter, `{message}` | module, event type |
+| `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
+
+The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
+excluded); a module without a running worker reports nothing.
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
 `homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in

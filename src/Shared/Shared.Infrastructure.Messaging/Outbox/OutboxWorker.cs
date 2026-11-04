@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 
 /// <summary>
@@ -19,14 +20,17 @@ using Shared.Infrastructure.Messaging.Transport;
 /// <param name="options">Batch size, poll interval, attempt limit and retry backoff.</param>
 /// <param name="logger">Receives tick and dispatch failures.</param>
 /// <param name="clock">Supplies the <c>processed_at</c> timestamp and the retry schedule.</param>
+/// <param name="metrics">Receives publish durations, dead letters and the backlog gauges.</param>
 public sealed partial class OutboxWorker<TDbContext>(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxWorkerOptions> options,
     ILogger<OutboxWorker<TDbContext>> logger,
-    TimeProvider clock) : BackgroundService
+    TimeProvider clock,
+    MessagingMetrics metrics) : BackgroundService
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
+    private readonly string _moduleName = DbContextName.Replace("DbContext", string.Empty, StringComparison.Ordinal);
 
     private readonly OutboxWorkerOptions _options = options.Value;
 
@@ -84,22 +88,32 @@ public sealed partial class OutboxWorker<TDbContext>(
         IReadOnlyList<OutboxMessage> pending =
             await store.GetUnprocessedAsync(
                 _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
-        if (pending.Count == 0) return;
 
         foreach (var message in pending)
         {
+            var started = clock.GetTimestamp();
             try
             {
                 await transport.DispatchAsync(message, ct).ConfigureAwait(false);
+                metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
                 await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                metrics.RecordPublish(message.EventType, "failed", clock.GetElapsedTime(started));
                 LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
                 var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
                 await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
+                if (message.AttemptCount + 1 >= _options.MaxAttempts)
+                    metrics.RecordDeadLetter(_moduleName, message.EventType);
             }
         }
+
+        var backlog = await store.GetPendingAsync(_options.MaxAttempts, ct).ConfigureAwait(false);
+        var oldestAge = backlog.OldestOccurredAt is { } oldest
+            ? clock.GetUtcNow().UtcDateTime - oldest
+            : TimeSpan.Zero;
+        metrics.SetBacklog(_moduleName, backlog.Count, oldestAge);
     }
 
     /// <summary>Exponential backoff: base × 2^(failures − 1), capped at <see cref="OutboxWorkerOptions.RetryMaxDelayMs"/>.</summary>

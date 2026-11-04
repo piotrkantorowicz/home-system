@@ -3,7 +3,9 @@ namespace Shared.Infrastructure.Messaging.Dapper.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Dapper.Inbox;
+using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// DI registration for the Dapper-backed inbox used by Style-2 modules that consume integration
@@ -33,12 +35,14 @@ public static class DapperMessagingExtensions
         where TFactory : class, INpgsqlConnectionFactory
     {
         services.AddScoped<DapperInboxExecutor<TFactory>>();
+        services.AddMessagingMetrics();
         services.AddScoped<THandler>();
 
         services.AddScoped<IIntegrationEventHandler<TEvent>>(sp =>
             new InboxAwareHandler<TEvent>(
                 sp.GetRequiredService<THandler>(),
-                sp.GetRequiredService<DapperInboxExecutor<TFactory>>()));
+                sp.GetRequiredService<DapperInboxExecutor<TFactory>>(),
+                sp.GetRequiredService<MessagingMetrics>()));
 
         return services;
     }

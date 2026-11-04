@@ -36,4 +36,9 @@ public interface IOutboxStore
     /// <param name="nextAttemptAt">Earliest retry time, UTC (backoff).</param>
     /// <param name="ct">Propagates cancellation to the storage call.</param>
     Task RecordFailureAsync(Guid messageId, string errorMessage, DateTime nextAttemptAt, CancellationToken ct);
+
+    /// <summary>Counts the undelivered messages that still have attempts left, for the backlog gauges.</summary>
+    /// <param name="maxAttempts">Messages with this many failed attempts are dead-lettered and not counted.</param>
+    /// <param name="ct">Propagates cancellation to the storage call.</param>
+    Task<OutboxPending> GetPendingAsync(int maxAttempts, CancellationToken ct);
 }
