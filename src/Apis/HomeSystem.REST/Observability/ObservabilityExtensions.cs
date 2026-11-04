@@ -50,7 +50,7 @@ public static class ObservabilityExtensions
                     // Query strings can carry tokens and search terms; the route template is enough.
                     options.EnrichWithHttpRequest = (activity, _) => activity.SetTag(UrlQueryAttribute, null);
                 })
-                // Outgoing url.full keeps query keys only: the instrumentation redacts every value by default.
+                // Outgoing url.full comes from the .NET runtime, which replaces the whole query with "?*" by default.
                 .AddHttpClientInstrumentation()
                 // Npgsql records the SQL text with $n placeholders, never parameter values. EF Core and Dapper both go
                 // through it, so this is the DB span for every module.
