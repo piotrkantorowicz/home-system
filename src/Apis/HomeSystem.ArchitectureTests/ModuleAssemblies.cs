@@ -27,7 +27,7 @@ internal static partial class ModuleAssemblies
             .Select(m => (m.Key, m.Value[layer]));
 
     // Module names come from walking the host's references (the host composes every module, and
-    // a NuGet DLL is never reached through our assemblies); layers come from the output folder,
+    // strong-named package references are skipped); layers come from the output folder,
     // because the compiler drops a reference nothing uses (Notifications.Contracts today).
     private static Dictionary<string, IReadOnlyDictionary<string, Assembly>> Load()
     {
@@ -50,7 +50,7 @@ internal static partial class ModuleAssemblies
         while (pending.TryDequeue(out var assembly))
         {
             foreach (var reference in assembly.GetReferencedAssemblies()
-                .Where(reference => reference.Name is { } name && IsModuleAssembly(name) && seen.Add(name)))
+                .Where(reference => reference.Name is { } name && !IsStrongNamed(reference) && IsModuleAssembly(name) && seen.Add(name)))
             {
                 pending.Enqueue(Assembly.Load(reference));
             }
@@ -58,6 +58,11 @@ internal static partial class ModuleAssemblies
 
         return [.. seen.Select(name => ModuleAssemblyName().Match(name).Groups["module"].Value)];
     }
+
+    // Repo assemblies are unsigned; a strong-named reference is a package (OpenTelemetry.Api, which the host
+    // references directly) even when its name fits {Module}.{Layer}.
+    private static bool IsStrongNamed(AssemblyName reference)
+        => reference.GetPublicKeyToken() is { Length: > 0 };
 
     private static bool IsModuleAssembly(string name)
         => ModuleAssemblyName().Match(name) is { Success: true } m && m.Groups["module"].Value is not "Shared";
