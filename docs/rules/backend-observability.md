@@ -61,7 +61,7 @@ free-text descriptions, e-mail addresses, request or response bodies, query stri
 
 How the host enforces its part:
 
-- the server span drops `url.query`; HttpClient spans keep `url.full` without the query;
+- the server span drops `url.query`; HttpClient spans keep only the query keys in `url.full` (the instrumentation redacts the values by default — never turn that off);
 - Npgsql records SQL text with `$n` placeholders only — never parameter values. Do not turn on parameter
   logging (`EnableSensitiveDataLogging`, Npgsql `IncludeErrorDetail`, parameter tags) in shipped code;
 - request and response bodies are never recorded.

@@ -29,7 +29,6 @@ public static class ObservabilityExtensions
     private const string DeploymentEnvironmentAttribute = "deployment.environment.name";
     private const string RuntimeMeter = "System.Runtime";
     private const string UrlQueryAttribute = "url.query";
-    private const string UrlFullAttribute = "url.full";
 
     /// <summary>Registers tracing, metrics and logging, plus the OTLP exporter when an endpoint is configured.</summary>
     /// <param name="builder">The host builder.</param>
@@ -51,13 +50,8 @@ public static class ObservabilityExtensions
                     // Query strings can carry tokens and search terms; the route template is enough.
                     options.EnrichWithHttpRequest = (activity, _) => activity.SetTag(UrlQueryAttribute, null);
                 })
-                .AddHttpClientInstrumentation(options => options.EnrichWithHttpRequestMessage = (activity, request) =>
-                {
-                    if (request.RequestUri is { IsAbsoluteUri: true } uri)
-                    {
-                        activity.SetTag(UrlFullAttribute, uri.GetComponents(UriComponents.SchemeAndServer | UriComponents.Path, UriFormat.UriEscaped));
-                    }
-                })
+                // Outgoing url.full keeps query keys only: the instrumentation redacts every value by default.
+                .AddHttpClientInstrumentation()
                 // Npgsql records the SQL text with $n placeholders, never parameter values. EF Core and Dapper both go
                 // through it, so this is the DB span for every module.
                 .AddNpgsql())
