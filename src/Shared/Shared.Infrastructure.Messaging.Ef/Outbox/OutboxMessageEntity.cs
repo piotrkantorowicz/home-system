@@ -32,6 +32,9 @@ public sealed class OutboxMessageEntity
     /// <summary>Message of the most recent dispatch failure, if any.</summary>
     public string? LastError { get; set; }
 
+    /// <summary>W3C <c>traceparent</c> of the producer span at enqueue; <see langword="null"/> when untraced.</summary>
+    public string? TraceParent { get; init; }
+
     /// <summary>Earliest time the worker may retry after a failure (backoff); <see langword="null"/> means now.</summary>
     public DateTime? NextAttemptAt { get; set; }
 

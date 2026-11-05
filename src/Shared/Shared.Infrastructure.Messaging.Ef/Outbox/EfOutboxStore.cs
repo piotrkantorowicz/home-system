@@ -26,7 +26,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             .Take(batchSize)
             .Select(x => new OutboxMessage(
                 x.Id, x.EventId, x.EventType, x.Payload, x.OccurredAt,
-                x.ProcessedAt, x.AttemptCount, x.LastError))
+                x.ProcessedAt, x.AttemptCount, x.LastError, x.TraceParent))
             .ToListAsync(ct);
 
     public async Task<OutboxPending> GetPendingAsync(int maxAttempts, CancellationToken ct)
@@ -128,6 +128,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
                 EventId = original.EventId,
                 EventType = original.EventType,
                 Payload = original.Payload,
+                TraceParent = original.TraceParent,
                 OccurredAt = original.OccurredAt,
                 RetryOf = original.Id,
             });
@@ -153,6 +154,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
         OccurredAt = m.OccurredAt,
         ProcessedAt = m.ProcessedAt,
         AttemptCount = m.AttemptCount,
-        LastError = m.LastError
+        LastError = m.LastError,
+        TraceParent = m.TraceParent
     };
 }
