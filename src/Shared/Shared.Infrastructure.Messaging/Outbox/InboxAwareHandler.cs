@@ -18,7 +18,7 @@ internal sealed class InboxAwareHandler<TEvent> : IIntegrationEventHandler<TEven
     {
         // The executor skips the invocation for an already-consumed event, so "not invoked" == duplicate.
         var invoked = false;
-        var outcome = "error";
+        string? outcome = "error";
         var started = Stopwatch.GetTimestamp();
         try
         {
@@ -33,10 +33,19 @@ internal sealed class InboxAwareHandler<TEvent> : IIntegrationEventHandler<TEven
                 ct: ct).ConfigureAwait(false);
             outcome = invoked ? "handled" : "duplicate";
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Shutdown, not a handler failure: record nothing so deploys don't inflate the error rate.
+            outcome = null;
+            throw;
+        }
         finally
         {
-            _metrics.RecordInbox(
-                typeof(TEvent).Name, _inner.GetType().Name, outcome, Stopwatch.GetElapsedTime(started));
+            if (outcome is not null)
+            {
+                _metrics.RecordInbox(
+                    typeof(TEvent).Name, _inner.GetType().Name, outcome, Stopwatch.GetElapsedTime(started));
+            }
         }
     }
 }
