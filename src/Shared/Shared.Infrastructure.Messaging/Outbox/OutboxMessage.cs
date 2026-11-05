@@ -12,6 +12,7 @@ namespace Shared.Infrastructure.Messaging.Outbox;
 /// <param name="ProcessedAt">When the transport delivered the message; <see langword="null"/> while pending.</param>
 /// <param name="AttemptCount">How many dispatch attempts have failed so far.</param>
 /// <param name="LastError">Message of the most recent dispatch failure, if any.</param>
+/// <param name="TraceParent">W3C <c>traceparent</c> of the producer span at enqueue; <see langword="null"/> for rows enqueued untraced or before the column existed.</param>
 public sealed record OutboxMessage(
     Guid Id,
     Guid EventId,
@@ -20,4 +21,5 @@ public sealed record OutboxMessage(
     DateTime OccurredAt,
     DateTime? ProcessedAt,
     int AttemptCount,
-    string? LastError);
+    string? LastError,
+    string? TraceParent = null);

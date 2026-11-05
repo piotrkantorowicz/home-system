@@ -1,9 +1,11 @@
 namespace Shared.Infrastructure.Messaging.Transport;
 
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// v1 transport: deserialises the outbox message and invokes every registered
@@ -29,24 +31,46 @@ public sealed class InProcessIntegrationEventTransport : IIntegrationEventTransp
         var eventType = Type.GetType(message.EventType)
             ?? throw new InvalidOperationException($"Unknown event type: {message.EventType}");
 
-        await using var scope = _rootProvider.CreateAsyncScope();
-        var sp = scope.ServiceProvider;
+        // Consumer span: child of the stored producer context (same TraceId as the originating request),
+        // linked to the worker tick that delivers it. No stored context -> a new root span.
+        var tick = Activity.Current;
+        var hasParent = ActivityContext.TryParse(message.TraceParent, null, out var stored);
+        if (!hasParent) Activity.Current = null; // async-local: scoped to this dispatch; a default parent would fall back to the tick
+        using var consumer = MessagingTracing.Source.StartActivity(
+            $"{eventType.Name} process",
+            ActivityKind.Consumer,
+            hasParent ? stored : default,
+            links: tick is null ? null : [new ActivityLink(tick.Context)]);
+        consumer?.SetTag(MessagingTracing.EventTypeTag, eventType.Name);
+        consumer?.SetTag(MessagingTracing.MessageIdTag, message.Id);
+        consumer?.SetTag(MessagingTracing.EventIdTag, message.EventId);
 
-        var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
-        var @event = serializer.Deserialize(message.Payload, message.EventType);
-
-        // Handlers are pre-decorated with InboxAwareHandler<T> at registration time via
-        // AddIntegrationEventConsumer<TEvent, THandler, TDbContext>(), so the transport
-        // just invokes them — no transport-level inbox concern.
-        var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-        var handlers = sp.GetServices(handlerType).ToList();
-
-        foreach (var handler in handlers)
+        try
         {
-            var task = (Task)handlerType
-                .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
-                .Invoke(handler, [@event, ct])!;
-            await task.ConfigureAwait(false);
+            await using var scope = _rootProvider.CreateAsyncScope();
+            var sp = scope.ServiceProvider;
+
+            var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
+            var @event = serializer.Deserialize(message.Payload, message.EventType);
+
+            // Handlers are pre-decorated with InboxAwareHandler<T> at registration time via
+            // AddIntegrationEventConsumer<TEvent, THandler, TDbContext>(), so the transport
+            // just invokes them — no transport-level inbox concern.
+            var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+            var handlers = sp.GetServices(handlerType).ToList();
+
+            foreach (var handler in handlers)
+            {
+                await ((Task)handlerType
+                    .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
+                    .Invoke(handler, [@event, ct])!).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            // Shutdown cancellation is not a fault (docs/rules/backend-observability.md); everything else is.
+            consumer?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
+            throw;
         }
     }
 }

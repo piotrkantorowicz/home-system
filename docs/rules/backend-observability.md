@@ -45,6 +45,7 @@ that introduces it.
 | `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
+| `HomeSystem.Messaging` | ActivitySource | `Shared.Infrastructure.Messaging` (`MessagingTracing`) | #806 |
 | `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
 | `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
@@ -69,6 +70,12 @@ aborts, not faults.
 The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
+
+`HomeSystem.Messaging` spans: `<Event> publish` (producer, at enqueue, child of the caller's span), `outbox tick`
+(worker, one per non-empty batch) and `<Event> process` (consumer). The producer's W3C `traceparent` is stored in
+the outbox row's nullable `trace_parent` column; the consumer span is its child and links to the tick span. A row
+without `trace_parent` (enqueued untraced or before the column) is handled under a new root span. Attributes:
+event type name, event id, outbox message id. `tracestate` and baggage are not propagated.
 
 `HomeSystem.Assistant` — the chat client is wrapped with `UseOpenTelemetry(sourceName: "HomeSystem.Assistant")` and
 `EnableSensitiveData = false` for every provider (done where `AssistantAgent` is registered), which gives chat
