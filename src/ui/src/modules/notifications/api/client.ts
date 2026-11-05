@@ -9,7 +9,11 @@ const baseUrl: string =
 
 const DEBUG = import.meta.env.DEV;
 
-const baseClient = createClient<paths>({ baseUrl });
+const baseClient = createClient<paths>({
+  baseUrl,
+  // Late-bound: the tracing SDK patches globalThis.fetch after first render.
+  fetch: async (request: Request) => fetch(request),
+});
 
 baseClient.use({
   async onRequest({ request }) {

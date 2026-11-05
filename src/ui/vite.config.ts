@@ -1,11 +1,22 @@
+import { readFileSync } from 'node:fs';
 import path from 'path';
 
 import babel from '@rolldown/plugin-babel';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+const { version } = JSON.parse(
+  readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf8'),
+) as {
+  version: string;
+};
+
+// Local OTLP collector for browser tracing, e.g. OTLP_PROXY_TARGET=http://localhost:4318.
+const otlpTarget = process.env.OTLP_PROXY_TARGET;
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
     react(),
     // React Compiler (babel-plugin-react-compiler) — React 19.2+ ships react/compiler-runtime,
@@ -43,6 +54,7 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/authentik/, ''),
       },
+      ...(otlpTarget ? { '/otlp': { target: otlpTarget, changeOrigin: true } } : {}),
     },
   },
 });
