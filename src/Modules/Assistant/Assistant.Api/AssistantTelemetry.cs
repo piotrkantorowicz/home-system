@@ -19,6 +19,9 @@ internal sealed class AssistantTelemetry
     /// <summary>The tool ran and reported an error.</summary>
     public const string ToolError = "error";
 
+    /// <summary>Tool name recorded for a call to a tool that is not offered: the name comes from the model, so it is not a tag value.</summary>
+    public const string UnknownTool = "unknown";
+
     /// <summary>The tool is not offered or not allowed to run, so it did not run.</summary>
     public const string ToolRefused = "refused";
 
@@ -65,6 +68,10 @@ internal sealed class AssistantTelemetry
             span.SetStatus(ActivityStatusCode.Error);
         span.Dispose();
     }
+
+    /// <summary>Ends the span of a call the client cancelled: no outcome, no count, status left unset.</summary>
+    /// <param name="span">From <see cref="StartToolCall"/>.</param>
+    public static void AbandonToolCall(Activity? span) => span?.Dispose();
 
     /// <summary>Counts a finished turn.</summary>
     /// <param name="outcome">One of the <c>Turn*</c> constants.</param>

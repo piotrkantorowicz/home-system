@@ -364,6 +364,11 @@ internal sealed partial class AssistantAgent(
         {
             result = await invoker.InvokeAsync(user, name, arguments, ct);
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            AssistantTelemetry.AbandonToolCall(span);
+            throw;
+        }
         catch
         {
             telemetry.EndToolCall(span, name, AssistantTelemetry.ToolError);
@@ -379,7 +384,9 @@ internal sealed partial class AssistantAgent(
     private CallToolResult Refused(string name)
     {
         LogToolRefused(logger, name);
-        telemetry.EndToolCall(AssistantTelemetry.StartToolCall(name), name, AssistantTelemetry.ToolRefused);
+        // The name is the model's text: only a tool this deployment offers may reach a tag.
+        string tagged = _gate.ContainsKey(name) ? name : AssistantTelemetry.UnknownTool;
+        telemetry.EndToolCall(AssistantTelemetry.StartToolCall(tagged), tagged, AssistantTelemetry.ToolRefused);
         return new CallToolResult { IsError = true, Content = [new TextContentBlock { Text = $"Tool '{name}' is not available to the assistant." }] };
     }
 
