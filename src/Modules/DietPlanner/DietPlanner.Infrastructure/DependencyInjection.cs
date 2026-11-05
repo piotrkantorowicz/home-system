@@ -22,11 +22,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Abstractions.Core.Domain;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Persistence.Extensions;
@@ -77,6 +79,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IRecipeImageProcessor, RecipeImageProcessor>();
         services.AddScoped<IRecipeImagePersistence, RecipeImagePersistence>();
         services.AddScoped<RecipeImageCleanup>();
+        services.TryAddSingleton<WorkerTelemetry>();
         services.AddHostedService<RecipeImageCleanupWorker>();
 
         services.AddCqrsHandlers(AssemblyReference.Assembly);
@@ -106,6 +109,7 @@ public static partial class InfrastructureDependencyInjection
             .BindConfiguration(DietReminderTickServiceOptions.SectionName)
             .Validate(o => TimeZoneInfo.TryFindSystemTimeZoneById(o.TimeZoneId, out _), "TimeZoneId is not a known time zone.")
             .ValidateOnStart();
+        services.TryAddSingleton<WorkerTelemetry>();
         services.AddHostedService<DietReminderTickService>();
 
         services.AddOptions<ImageStorageOptions>()

@@ -1,10 +1,12 @@
 namespace Shared.Infrastructure.Messaging.Outbox;
 
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 
@@ -20,17 +22,20 @@ using Shared.Infrastructure.Messaging.Transport;
 /// <param name="options">Batch size, poll interval, attempt limit and retry backoff.</param>
 /// <param name="logger">Receives tick and dispatch failures.</param>
 /// <param name="clock">Supplies the <c>processed_at</c> timestamp and the retry schedule.</param>
+/// <param name="telemetry">Wraps each tick in a root span and records its outcome.</param>
 /// <param name="metrics">Receives publish durations, dead letters and the backlog gauges.</param>
 public sealed partial class OutboxWorker<TDbContext>(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxWorkerOptions> options,
     ILogger<OutboxWorker<TDbContext>> logger,
     TimeProvider clock,
+    WorkerTelemetry telemetry,
     MessagingMetrics metrics) : BackgroundService
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
     private readonly string _moduleName = OutboxModule.NameOf(typeof(TDbContext));
+    private readonly string _workerName = $"OutboxWorker.{OutboxModule.NameOf(typeof(TDbContext))}";
 
     private readonly OutboxWorkerOptions _options = options.Value;
 
@@ -65,7 +70,9 @@ public sealed partial class OutboxWorker<TDbContext>(
     /// A no-op until the module has registered a store and the host a transport.
     /// </summary>
     /// <param name="ct">Propagates cancellation to the store and transport.</param>
-    public async Task RunOnceAsync(CancellationToken ct)
+    public Task RunOnceAsync(CancellationToken ct) => telemetry.TrackTickAsync(_workerName, RunTickAsync, ct);
+
+    private async Task RunTickAsync(CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;
@@ -91,10 +98,12 @@ public sealed partial class OutboxWorker<TDbContext>(
                 await store.GetUnprocessedAsync(
                     _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
 
-            // One tick span per non-empty batch (idle polls would only add noise); consumer spans link to it.
-            using var tick = pending.Count > 0 ? MessagingTracing.Source.StartActivity("outbox tick") : null;
-            tick?.SetTag("homesystem.module", _moduleName);
-            tick?.SetTag("homesystem.outbox.batch_size", pending.Count);
+            // Batch tags go on the worker's tick span (current here); consumer spans link to it. Idle polls add none.
+            if (pending.Count > 0)
+            {
+                Activity.Current?.SetTag("homesystem.module", _moduleName);
+                Activity.Current?.SetTag("homesystem.outbox.batch_size", pending.Count);
+            }
 
             foreach (var message in pending)
             {

@@ -3,6 +3,7 @@ namespace Shared.Infrastructure.Messaging.Ef.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
@@ -52,6 +53,7 @@ public static class EfMessagingExtensions
             OutboxModule.NameOf(typeof(TDbContext)),
             typeof(TDbContext)));
 
+        services.TryAddSingleton<WorkerTelemetry>();
         services.AddMessagingMetrics();
         services.AddHostedService<OutboxWorker<TDbContext>>();
         return services;
