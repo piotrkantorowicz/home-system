@@ -35,6 +35,9 @@ public sealed class AssistantApiFactory(
     /// <summary>The scripted model every request in this host talks to.</summary>
     public ScriptedChatClient Model { get; } = new();
 
+    /// <summary>Extra tools registered on the host's MCP server; add before the first request.</summary>
+    public List<ModelContextProtocol.Server.McpServerTool> ExtraTools { get; } = [];
+
     /// <summary>The provider's HTTP endpoint when <c>realProvider</c> is set.</summary>
     public StubProviderHandler Provider { get; } = new();
 
@@ -108,6 +111,8 @@ public sealed class AssistantApiFactory(
 
         builder.ConfigureServices(services =>
         {
+            foreach (var tool in ExtraTools)
+                services.AddSingleton(tool);
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
             if (realProvider)
