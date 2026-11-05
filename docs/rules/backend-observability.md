@@ -45,6 +45,8 @@ that introduces it.
 | `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
+| `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
+| `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
 `HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
 failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
@@ -67,6 +69,16 @@ aborts, not faults.
 The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
+
+`HomeSystem.Assistant` — the chat client is wrapped with `UseOpenTelemetry(sourceName: "HomeSystem.Assistant")` and
+`EnableSensitiveData = false` for every provider (done where `AssistantAgent` is registered), which gives chat
+spans and the GenAI metrics `gen_ai.client.token.usage` and `gen_ai.client.operation.duration` tagged with the
+model and provider. On top: one `execute_tool {name}` span per tool call (tags `gen_ai.tool.name`,
+`homesystem.assistant.outcome`) and counters `homesystem.assistant.tool_calls` (`{call}`; tags `tool`,
+`outcome` = `ok`, `error`, `refused`) and `homesystem.assistant.turns` (`{turn}`; tag `outcome` = `completed`,
+`failed`, `limit_reached`; a cancelled turn or tool call records nothing). Never a prompt, reply, tool argument or result.
+A failed chat span carries `error.type` and the provider's exception message as its status description: provider
+error text, not request content.
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
 `homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
