@@ -122,7 +122,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
               .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-SignalR-User-Agent")
+              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-SignalR-User-Agent", "traceparent", "tracestate")
               .AllowCredentials();
     });
 });
