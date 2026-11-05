@@ -44,6 +44,7 @@ that introduces it.
 |---|---|---|---|
 | `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
+| `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
 
 `HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
 failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
@@ -52,8 +53,23 @@ and metric tags are the same: `cqrs.kind` (`command` / `query`), `cqrs.name` (re
 rule, `cancelled`, `error`). Only `error` sets the span status to Error; the others are 4xx rejections or client
 aborts, not faults.
 
+`HomeSystem.Messaging` instruments (tags: `homesystem.module` = publishing module, `homesystem.event.type` and
+`homesystem.handler.type` = short type names, `outcome`):
+
+| Instrument | Type, unit | Tags |
+|---|---|---|
+| `homesystem.outbox.pending` | observable gauge, `{message}` | module |
+| `homesystem.outbox.oldest_pending_age` | observable gauge, `s` | module |
+| `homesystem.outbox.publish.duration` | histogram, `s` | event type, outcome (`published`, `failed`) |
+| `homesystem.outbox.dead_letters` | counter, `{message}` | module, event type |
+| `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
+
+The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
+excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
+measurement, so deploys do not show up as `error`.
+
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
-`homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
+`homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
 seconds.
 
 ## Attributes — IDs only

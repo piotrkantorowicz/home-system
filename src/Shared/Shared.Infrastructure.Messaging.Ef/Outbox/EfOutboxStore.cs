@@ -29,6 +29,17 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
                 x.ProcessedAt, x.AttemptCount, x.LastError))
             .ToListAsync(ct);
 
+    public async Task<OutboxPending> GetPendingAsync(int maxAttempts, CancellationToken ct)
+    {
+        var stats = await _dbContext.Set<OutboxMessageEntity>()
+            .AsNoTracking()
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount < maxAttempts)
+            .GroupBy(_ => 1)
+            .Select(g => new { Count = g.Count(), Oldest = g.Min(x => x.OccurredAt) })
+            .FirstOrDefaultAsync(ct);
+        return stats is null ? default : new OutboxPending(stats.Count, stats.Oldest);
+    }
+
     public async Task MarkProcessedAsync(Guid messageId, DateTime processedAt, CancellationToken ct)
     {
         await _dbContext.Set<OutboxMessageEntity>()
