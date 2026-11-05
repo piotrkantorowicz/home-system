@@ -35,12 +35,18 @@ describe('resolveTelemetryConfig', () => {
 });
 
 describe('propagationUrls', () => {
-  const urls = propagationUrls('https://api.example.com');
+  // Origin comes from URL parsing, as it does in production (resolveTelemetryConfig), not a literal.
+  const apiOrigin = resolveTelemetryConfig({
+    ...base,
+    apiBaseUrl: 'https://api.example.com/v1',
+  }).apiOrigin;
+  const urls = propagationUrls(apiOrigin);
   const matches = (url: string) => urls.some((re) => re.test(url));
 
   it('matches the API origin only', () => {
     expect(matches('https://api.example.com/api/v1/products?x=1')).toBe(true);
-    expect(matches('https://api.example.com')).toBe(true);
+    expect(matches(apiOrigin)).toBe(true);
+    expect(urls.every((re) => re.source.startsWith('^'))).toBe(true);
   });
 
   it('excludes Authentik and look-alike hosts', () => {
