@@ -97,7 +97,8 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         await cts.CancelAsync();
         await Should.ThrowAsync<OperationCanceledException>(request);
 
-        SpinWait.SpinUntil(() => spans.Spans.Any(a => a.GetTagItem("gen_ai.tool.name") as string == "hang_tool"), TimeSpan.FromSeconds(30)).ShouldBeTrue();
+        // The server span stops last, after the turn handler has seen the cancellation; asserting earlier could pass vacuously.
+        SpinWait.SpinUntil(() => spans.Spans.Any(a => a.Kind == ActivityKind.Server), TimeSpan.FromSeconds(30)).ShouldBeTrue();
         Activity span = spans.Spans.Single(a => a.GetTagItem("gen_ai.tool.name") as string == "hang_tool");
         span.Status.ShouldBe(ActivityStatusCode.Unset);
         span.GetTagItem("homesystem.assistant.outcome").ShouldBeNull();
