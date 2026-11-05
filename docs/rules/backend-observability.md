@@ -45,6 +45,12 @@ that introduces it.
 | `HomeSystem.Workers` | ActivitySource | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
 | `HomeSystem.Workers` | Meter | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
 | `HomeSystem.Mcp` | Meter | `Shared.Infrastructure.Web` (`McpToolMetrics`) | #808 |
+| `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
+| `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
+| `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
+| `HomeSystem.Messaging` | ActivitySource | `Shared.Infrastructure.Messaging` (`MessagingTracing`) | #806 |
+| `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
+| `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
 `HomeSystem.Workers` — every background worker runs its tick through `WorkerTelemetry.TrackTickAsync`: one **root**
 span per tick named `<worker> tick` (current for the whole tick, so the tick's DB and HTTP spans are its children),
@@ -59,8 +65,46 @@ failures calls it *inside* the `try`, so the tick still counts as `error`.
 the registered catalog is `unknown`, so callers cannot grow the series) and `outcome` (`success`, `error` for an
 error result, `exception`, `cancelled`).
 
-Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
-`homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
+`HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
+failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
+and metric tags are the same: `cqrs.kind` (`command` / `query`), `cqrs.name` (request type name),
+`cqrs.outcome` (`success`, `validation_error`, `not_found`, `forbidden`, `conflict`, `rejected` for a domain
+rule, `cancelled`, `error`). Only `error` sets the span status to Error; the others are 4xx rejections or client
+aborts, not faults.
+
+`HomeSystem.Messaging` instruments (tags: `homesystem.module` = publishing module, `homesystem.event.type` and
+`homesystem.handler.type` = short type names, `outcome`):
+
+| Instrument | Type, unit | Tags |
+|---|---|---|
+| `homesystem.outbox.pending` | observable gauge, `{message}` | module |
+| `homesystem.outbox.oldest_pending_age` | observable gauge, `s` | module |
+| `homesystem.outbox.publish.duration` | histogram, `s` | event type, outcome (`published`, `failed`) |
+| `homesystem.outbox.dead_letters` | counter, `{message}` | module, event type |
+| `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
+
+The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
+excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
+measurement, so deploys do not show up as `error`.
+
+`HomeSystem.Messaging` spans: `<Event> publish` (producer, at enqueue, child of the caller's span), `outbox tick`
+(worker, one per non-empty batch) and `<Event> process` (consumer). The producer's W3C `traceparent` is stored in
+the outbox row's nullable `trace_parent` column; the consumer span is its child and links to the tick span. A row
+without `trace_parent` (enqueued untraced or before the column) is handled under a new root span. The `outbox tick` span is a child of the `OutboxWorker.<module> tick` root span from `HomeSystem.Workers`. Attributes:
+event type name, event id, outbox message id. `tracestate` and baggage are not propagated.
+
+`HomeSystem.Assistant` — the chat client is wrapped with `UseOpenTelemetry(sourceName: "HomeSystem.Assistant")` and
+`EnableSensitiveData = false` for every provider (done where `AssistantAgent` is registered), which gives chat
+spans and the GenAI metrics `gen_ai.client.token.usage` and `gen_ai.client.operation.duration` tagged with the
+model and provider. On top: one `execute_tool {name}` span per tool call (tags `gen_ai.tool.name`,
+`homesystem.assistant.outcome`) and counters `homesystem.assistant.tool_calls` (`{call}`; tags `tool`,
+`outcome` = `ok`, `error`, `refused`) and `homesystem.assistant.turns` (`{turn}`; tag `outcome` = `completed`,
+`failed`, `limit_reached`; a cancelled turn or tool call records nothing). Never a prompt, reply, tool argument or result.
+A failed chat span carries `error.type` and the provider's exception message as its status description: provider
+error text, not request content.
+
+Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
+`homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
 seconds.
 
 ## Attributes — IDs only
@@ -106,11 +150,11 @@ internal sealed class CqrsMetrics
     public CqrsMetrics(IMeterFactory meters)
     {
         var meter = meters.Create(MeterName);
-        _duration = meter.CreateHistogram<double>("homesystem.cqrs.dispatch.duration", unit: "s");
+        _duration = meter.CreateHistogram<double>("homesystem.cqrs.duration", unit: "s");
     }
 
     public void RecordDispatch(string requestType, string outcome, TimeSpan elapsed)
-        => _duration.Record(elapsed.TotalSeconds, new("homesystem.request.type", requestType), new("outcome", outcome));
+        => _duration.Record(elapsed.TotalSeconds, new("cqrs.name", requestType), new("cqrs.outcome", outcome));
 }
 
 // registration (module / shared Extensions): services.AddSingleton<CqrsMetrics>();
