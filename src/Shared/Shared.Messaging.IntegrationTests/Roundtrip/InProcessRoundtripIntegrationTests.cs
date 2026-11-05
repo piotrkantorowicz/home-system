@@ -220,7 +220,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
     {
         var stopped = new List<Activity>();
         using var testSource = new ActivitySource("Test.Request");
-        using var listener = Listen(stopped, "Test.Request", MessagingTracing.SourceName);
+        using var listener = Listen(stopped, "Test.Request", MessagingTracing.SourceName, WorkerTelemetry.Name);
 
         string traceId;
         using (var request = testSource.StartActivity("request"))
@@ -232,12 +232,14 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
 
         var producer = stopped.Single(a => a.Kind == ActivityKind.Producer);
-        var tick = stopped.Single(a => a.OperationName == "outbox tick");
+        var tick = stopped.Single(a => a.Source.Name == WorkerTelemetry.Name);
         var consumer = stopped.Single(a => a.Kind == ActivityKind.Consumer);
         producer.TraceId.ToString().ShouldBe(traceId);
         consumer.TraceId.ToString().ShouldBe(traceId);
         consumer.ParentId.ShouldBe(producer.Id);
         consumer.Links.Single().Context.SpanId.ShouldBe(tick.SpanId);
+        tick.GetTagItem("homesystem.outbox.batch_size").ShouldBe(1);
+        tick.GetTagItem("homesystem.module").ShouldNotBeNull();
         consumer.GetTagItem("messaging.message.id").ShouldNotBeNull();
     }
 
@@ -248,7 +250,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         await PublishAsync(Guid.NewGuid(), "hi"); // nothing listens yet -> no producer span -> null TraceParent
 
         var stopped = new List<Activity>();
-        using var listener = Listen(stopped, MessagingTracing.SourceName);
+        using var listener = Listen(stopped, MessagingTracing.SourceName, WorkerTelemetry.Name);
         await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
 
         _sp.GetRequiredService<HelloReceiver>().Received.Count.ShouldBe(1);

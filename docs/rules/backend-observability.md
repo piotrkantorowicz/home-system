@@ -52,6 +52,8 @@ that introduces it.
 | `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
 | `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
+`WorkerTelemetry` lives in `Shared.Abstractions.Core` deliberately: Application-layer workers (`DietReminderTickService`) may only reference `Shared.Abstractions.*`.
+
 `HomeSystem.Workers` — every background worker runs its tick through `WorkerTelemetry.TrackTickAsync`: one **root**
 span per tick named `<worker> tick` (current for the whole tick, so the tick's DB and HTTP spans are its children),
 plus counter `homesystem.worker.ticks` (`{tick}`) and histogram `homesystem.worker.tick.duration` (`s`). Tags on
@@ -63,7 +65,7 @@ failures calls it *inside* the `try`, so the tick still counts as `error`.
 `HomeSystem.Mcp` — histogram `homesystem.mcp.tool.duration` (`s`) for every tool call, on `/mcp`
 (`McpCallLogging`) and in-process (`McpToolInvoker`). Tags: `homesystem.mcp.tool` (the tool name; a name outside
 the registered catalog is `unknown`, so callers cannot grow the series) and `outcome` (`success`, `error` for an
-error result, `exception`, `cancelled`).
+error result or a throwing tool, `cancelled`).
 
 `HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
 failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
@@ -87,10 +89,9 @@ The gauges report the backlog the module's `OutboxWorker` stored at the end of i
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
 
-`HomeSystem.Messaging` spans: `<Event> publish` (producer, at enqueue, child of the caller's span), `outbox tick`
-(worker, one per non-empty batch) and `<Event> process` (consumer). The producer's W3C `traceparent` is stored in
-the outbox row's nullable `trace_parent` column; the consumer span is its child and links to the tick span. A row
-without `trace_parent` (enqueued untraced or before the column) is handled under a new root span. The `outbox tick` span is a child of the `OutboxWorker.<module> tick` root span from `HomeSystem.Workers`. Attributes:
+`HomeSystem.Messaging` spans: `<Event> publish` (producer, at enqueue, child of the caller's span) and `<Event> process` (consumer). The producer's W3C `traceparent` is stored in
+the outbox row's nullable `trace_parent` column; the consumer span is its child and links to the worker's `OutboxWorker.<module> tick` span (`HomeSystem.Workers`), which carries `homesystem.module` and `homesystem.outbox.batch_size` for a non-empty batch. A row
+without `trace_parent` (enqueued untraced or before the column) is handled under a new root span. Attributes:
 event type name, event id, outbox message id. `tracestate` and baggage are not propagated.
 
 `HomeSystem.Assistant` — the chat client is wrapped with `UseOpenTelemetry(sourceName: "HomeSystem.Assistant")` and

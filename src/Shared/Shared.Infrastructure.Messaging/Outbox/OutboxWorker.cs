@@ -1,5 +1,6 @@
 namespace Shared.Infrastructure.Messaging.Outbox;
 
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -97,10 +98,12 @@ public sealed partial class OutboxWorker<TDbContext>(
                 await store.GetUnprocessedAsync(
                     _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
 
-            // One tick span per non-empty batch (idle polls would only add noise); consumer spans link to it.
-            using var tick = pending.Count > 0 ? MessagingTracing.Source.StartActivity("outbox tick") : null;
-            tick?.SetTag("homesystem.module", _moduleName);
-            tick?.SetTag("homesystem.outbox.batch_size", pending.Count);
+            // Batch tags go on the worker's tick span (current here); consumer spans link to it. Idle polls add none.
+            if (pending.Count > 0)
+            {
+                Activity.Current?.SetTag("homesystem.module", _moduleName);
+                Activity.Current?.SetTag("homesystem.outbox.batch_size", pending.Count);
+            }
 
             foreach (var message in pending)
             {
