@@ -41,10 +41,15 @@ internal sealed class CqrsTelemetry
             {
                 CommandValidationException => "validation_error",
                 NotFoundException => "not_found",
+                ForbiddenException => "forbidden",
+                ConflictException => "conflict",
+                DomainException => "rejected",
+                OperationCanceledException => "cancelled",
                 _ => "error",
             };
 
-            // Validation and not-found are caller mistakes, not faults: only "error" marks the span failed.
+            // Rejections the API answers with 4xx, and client aborts, are not faults:
+            // only "error" marks the span failed.
             if (outcome == "error")
                 activity?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
 

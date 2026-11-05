@@ -48,8 +48,9 @@ that introduces it.
 `HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
 failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
 and metric tags are the same: `cqrs.kind` (`command` / `query`), `cqrs.name` (request type name),
-`cqrs.outcome` (`success`, `validation_error`, `not_found`, `error`). Only `error` sets the span status to Error;
-validation and not-found are caller mistakes.
+`cqrs.outcome` (`success`, `validation_error`, `not_found`, `forbidden`, `conflict`, `rejected` for a domain
+rule, `cancelled`, `error`). Only `error` sets the span status to Error; the others are 4xx rejections or client
+aborts, not faults.
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
 `homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in

@@ -39,6 +39,7 @@ public sealed class CqrsTelemetryTests : IDisposable
     private sealed record InvalidCommand : ICommand;
     private sealed record MissingCommand : ICommand<int>;
     private sealed record ChildCommand : ICommand;
+    private sealed record RejectCommand(string Kind) : ICommand;
     private sealed record OkQuery : IQuery<int>;
     private sealed record BoomQuery : IQuery<int>;
 
@@ -48,6 +49,7 @@ public sealed class CqrsTelemetryTests : IDisposable
         ICommandHandler<InvalidCommand>,
         ICommandHandler<MissingCommand, int>,
         ICommandHandler<ChildCommand>,
+        ICommandHandler<RejectCommand>,
         ICommandValidator<InvalidCommand>,
         IQueryHandler<OkQuery, int>,
         IQueryHandler<BoomQuery, int>
@@ -57,6 +59,13 @@ public sealed class CqrsTelemetryTests : IDisposable
         public Task HandleAsync(InvalidCommand command, CancellationToken ct = default) => Task.CompletedTask;
         public Task<int> HandleAsync(MissingCommand command, CancellationToken ct = default) => throw new NotFoundException("Thing", 1);
         public Task HandleAsync(ChildCommand command, CancellationToken ct = default) => Task.CompletedTask;
+        public Task HandleAsync(RejectCommand command, CancellationToken ct = default) => throw command.Kind switch
+        {
+            "forbidden" => new ForbiddenException("x"),
+            "conflict" => new ConflictException("x"),
+            "rejected" => new DomainException("x"),
+            _ => new OperationCanceledException("x"),
+        };
         public Task<int> HandleAsync(OkQuery query, CancellationToken ct = default) => Task.FromResult(1);
         public Task<int> HandleAsync(BoomQuery query, CancellationToken ct = default) => throw new InvalidOperationException("x");
         public IEnumerable<ValidationError> Validate(InvalidCommand command) => [new("Name", "required")];
@@ -73,6 +82,7 @@ public sealed class CqrsTelemetryTests : IDisposable
         services.AddSingleton<ICommandHandler<InvalidCommand>>(h);
         services.AddSingleton<ICommandHandler<MissingCommand, int>>(h);
         services.AddSingleton<ICommandHandler<ChildCommand>>(h);
+        services.AddSingleton<ICommandHandler<RejectCommand>>(h);
         services.AddSingleton<ICommandValidator<InvalidCommand>>(h);
         services.AddSingleton<IQueryHandler<OkQuery, int>>(h);
         services.AddSingleton<IQueryHandler<BoomQuery, int>>(h);
@@ -142,6 +152,26 @@ public sealed class CqrsTelemetryTests : IDisposable
 
         Tag(metrics.GetMeasurementSnapshot().Single(), "cqrs.outcome").ShouldBe("validation_error");
         Span(nameof(InvalidCommand)).Status.ShouldBe(ActivityStatusCode.Unset);
+    }
+
+    /// <summary>4xx rejections and client aborts get their own outcome and leave the span Unset.</summary>
+    /// <param name="outcome">The exception kind the handler throws, which is also the expected outcome.</param>
+    [Theory]
+    [InlineData("forbidden")]
+    [InlineData("conflict")]
+    [InlineData("rejected")]
+    [InlineData("cancelled")]
+    public async Task Rejection_records_its_outcome_without_error_status(string outcome)
+    {
+        using var sp = Build();
+        using var scope = sp.CreateScope();
+        using var metrics = Collect(sp);
+
+        await Should.ThrowAsync<Exception>(() =>
+            scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new RejectCommand(outcome)));
+
+        Tag(metrics.GetMeasurementSnapshot().Single(), "cqrs.outcome").ShouldBe(outcome);
+        Span(nameof(RejectCommand)).Status.ShouldBe(ActivityStatusCode.Unset);
     }
 
     /// <summary>NotFoundException records not_found.</summary>
