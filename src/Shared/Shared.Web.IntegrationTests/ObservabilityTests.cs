@@ -38,6 +38,23 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
         }
     }
 
+    /// <summary>A command dispatched by an endpoint is a child of the request's server span.</summary>
+    [Fact]
+    public async Task Command_DispatchedInRequest_IsChildOfServerSpan()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString, ct);
+        using var client = host.CreateClient();
+
+        using var response = await client.PostAsync("/commands/ping", content: null, ct);
+        response.EnsureSuccessStatusCode();
+
+        var server = host.WaitForSpan(span => span.Kind == ActivityKind.Server && span.DisplayName == "POST /commands/ping");
+        var dispatch = host.WaitForSpan(span => span.Source.Name == "HomeSystem.Cqrs" && span.DisplayName == nameof(PingCommand));
+        dispatch.ParentSpanId.ShouldBe(server.SpanId);
+        dispatch.TraceId.ShouldBe(server.TraceId);
+    }
+
     /// <summary>Probes are filtered out before a span starts.</summary>
     [Fact]
     public async Task HealthProbe_ProducesNoSpan()
