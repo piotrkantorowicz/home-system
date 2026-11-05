@@ -57,10 +57,11 @@ that introduces it.
 | `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
 
 The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
-excluded); a module without a running worker reports nothing.
+excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
+measurement, so deploys do not show up as `error`.
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
-`homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
+`homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
 seconds.
 
 ## Attributes — IDs only
