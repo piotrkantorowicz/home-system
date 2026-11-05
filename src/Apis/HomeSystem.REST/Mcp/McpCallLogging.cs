@@ -38,7 +38,7 @@ internal static partial class McpCallLogging
                 outcome = ex.GetType().Name;
                 metricOutcome = ex is OperationCanceledException && ct.IsCancellationRequested
                     ? McpToolMetrics.Cancelled
-                    : McpToolMetrics.Exception;
+                    : McpToolMetrics.Error;
                 throw;
             }
             finally

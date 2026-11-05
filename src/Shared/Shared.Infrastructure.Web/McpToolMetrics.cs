@@ -25,9 +25,6 @@ public sealed class McpToolMetrics
     /// <summary>The tool returned an error result (bad argument, unknown tool, expected failure).</summary>
     public const string Error = "error";
 
-    /// <summary>The call threw.</summary>
-    public const string Exception = "exception";
-
     /// <summary>The caller cancelled the call.</summary>
     public const string Cancelled = "cancelled";
 
@@ -51,7 +48,7 @@ public sealed class McpToolMetrics
 
     /// <summary>Records one tool call.</summary>
     /// <param name="tool">Tool name as the caller sent it; names outside the catalog are recorded as <see cref="UnknownTool"/>.</param>
-    /// <param name="outcome">One of <see cref="Success"/>, <see cref="Error"/>, <see cref="Exception"/>, <see cref="Cancelled"/>.</param>
+    /// <param name="outcome">One of <see cref="Success"/>, <see cref="Error"/>, <see cref="Cancelled"/>.</param>
     /// <param name="elapsed">Call duration.</param>
     public void RecordCall(string? tool, string outcome, TimeSpan elapsed)
         => _duration.Record(

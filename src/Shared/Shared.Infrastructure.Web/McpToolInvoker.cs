@@ -57,7 +57,7 @@ public sealed partial class McpToolInvoker : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(user);
 
         var started = Stopwatch.GetTimestamp();
-        var outcome = McpToolMetrics.Exception;
+        var outcome = McpToolMetrics.Error;
         try
         {
             CallToolResult result = await CallAsync(user, name, arguments, ct).ConfigureAwait(false);
