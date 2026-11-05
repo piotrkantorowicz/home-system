@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 
 /// <summary>
@@ -25,7 +26,18 @@ public static class MessagingExtensions
         services.TryAddScoped<IIntegrationEventBus, OutboxIntegrationEventBus>();
         services.AddOptions<OutboxWorkerOptions>().BindConfiguration(OutboxWorkerOptions.SectionName);
 
+        services.AddMessagingMetrics();
+
         return new MessagingBuilder(services);
+    }
+
+    /// <summary>Registers <see cref="MessagingMetrics"/> (and the meter factory it needs); safe to call repeatedly.</summary>
+    /// <param name="services">The service collection.</param>
+    public static IServiceCollection AddMessagingMetrics(this IServiceCollection services)
+    {
+        services.AddMetrics();
+        services.TryAddSingleton<MessagingMetrics>();
+        return services;
     }
 
     /// <summary>
