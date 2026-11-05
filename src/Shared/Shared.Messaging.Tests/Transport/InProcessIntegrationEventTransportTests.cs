@@ -1,5 +1,6 @@
 namespace Shared.Messaging.Tests.Transport;
 
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
@@ -93,5 +94,44 @@ public sealed class InProcessIntegrationEventTransportTests
 
         await h1.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());
         await h2.Received(1).HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A handler failure marks the consumer span Error; shutdown cancellation leaves it Unset.</summary>
+    /// <param name="cancelledByShutdown">Whether the handler throws because the dispatch token was cancelled.</param>
+    /// <param name="expected">The consumer span status.</param>
+    [Theory]
+    [InlineData(false, ActivityStatusCode.Error)]
+    [InlineData(true, ActivityStatusCode.Unset)]
+    public async Task DispatchAsync_WhenHandlerThrows_SetsConsumerSpanStatus(bool cancelledByShutdown, ActivityStatusCode expected)
+    {
+        var serializer = new IntegrationEventSerializer(new[] { "Shared." });
+        using var cts = new CancellationTokenSource();
+        var handler = Substitute.For<IIntegrationEventHandler<TestEvent>>();
+        handler.HandleAsync(Arg.Any<TestEvent>(), Arg.Any<CancellationToken>()).Returns(_ => cancelledByShutdown
+            ? Task.FromCanceled(cts.Token)
+            : Task.FromException(new InvalidOperationException("boom")));
+        if (cancelledByShutdown) await cts.CancelAsync();
+        var services = new ServiceCollection();
+        services.AddSingleton<IIntegrationEventSerializer>(serializer);
+        services.AddScoped<IIntegrationEventHandler<TestEvent>>(_ => handler);
+        var sut = new InProcessIntegrationEventTransport(services.BuildServiceProvider());
+        var message = MakeMessage(new TestEvent(Guid.NewGuid(), Now, "x"), serializer);
+
+        Activity? consumer = null;
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "HomeSystem.Messaging",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = activity =>
+            {
+                if (activity.Kind == ActivityKind.Consumer && Equals(activity.GetTagItem("messaging.message.id"), message.Id))
+                    consumer = activity;
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        await Should.ThrowAsync<Exception>(() => sut.DispatchAsync(message, cts.Token));
+
+        consumer.ShouldNotBeNull().Status.ShouldBe(expected);
     }
 }

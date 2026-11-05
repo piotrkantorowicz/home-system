@@ -1,5 +1,6 @@
 namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -195,5 +196,60 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         pending.RecordObservableInstruments();
         pending.LastMeasurement!.Value.ShouldBe(2);
         inbox.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["error", "error"]);
+    }
+
+    private static ActivityListener Listen(List<Activity> stopped, params string[] sources)
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = s => sources.Contains(s.Name),
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = a => { lock (stopped) stopped.Add(a); },
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
+    }
+
+    /// <summary>An event published inside a span is handled in a consumer span with the same TraceId, parented on the producer span and linked to the worker tick.</summary>
+    [Fact]
+    public async Task Publish_InsideSpan_ConsumerSpanSharesTraceIdAndLinksTick()
+    {
+        var stopped = new List<Activity>();
+        using var testSource = new ActivitySource("Test.Request");
+        using var listener = Listen(stopped, "Test.Request", MessagingTracing.SourceName);
+
+        string traceId;
+        using (var request = testSource.StartActivity("request"))
+        {
+            traceId = request!.TraceId.ToString();
+            await PublishAsync(Guid.NewGuid(), "hi");
+        }
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        var producer = stopped.Single(a => a.Kind == ActivityKind.Producer);
+        var tick = stopped.Single(a => a.OperationName == "outbox tick");
+        var consumer = stopped.Single(a => a.Kind == ActivityKind.Consumer);
+        producer.TraceId.ToString().ShouldBe(traceId);
+        consumer.TraceId.ToString().ShouldBe(traceId);
+        consumer.ParentId.ShouldBe(producer.Id);
+        consumer.Links.Single().Context.SpanId.ShouldBe(tick.SpanId);
+        consumer.GetTagItem("messaging.message.id").ShouldNotBeNull();
+    }
+
+    /// <summary>A message with no stored TraceParent is still handled, in a new root consumer span.</summary>
+    [Fact]
+    public async Task Publish_WithoutTraceParent_IsHandledInNewRootSpan()
+    {
+        await PublishAsync(Guid.NewGuid(), "hi"); // nothing listens yet -> no producer span -> null TraceParent
+
+        var stopped = new List<Activity>();
+        using var listener = Listen(stopped, MessagingTracing.SourceName);
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        _sp.GetRequiredService<HelloReceiver>().Received.Count.ShouldBe(1);
+        var consumer = stopped.Single(a => a.Kind == ActivityKind.Consumer);
+        consumer.ParentId.ShouldBeNull();
+        consumer.Links.Count().ShouldBe(1);
     }
 }

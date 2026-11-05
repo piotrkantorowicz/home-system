@@ -18,7 +18,7 @@ namespace Budget.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -645,6 +645,11 @@ namespace Budget.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("RetryOf")
                         .HasColumnType("uuid")
                         .HasColumnName("retry_of");
+
+                    b.Property<string>("TraceParent")
+                        .HasMaxLength(55)
+                        .HasColumnType("character varying(55)")
+                        .HasColumnName("trace_parent");
 
                     b.HasKey("Id");
 
