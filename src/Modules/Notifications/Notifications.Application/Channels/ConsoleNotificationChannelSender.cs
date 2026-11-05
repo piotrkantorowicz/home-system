@@ -13,14 +13,16 @@ internal sealed partial class ConsoleNotificationChannelSender(
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        LogNotification(context.UserId, context.DeliveryId, context.Title, context.Body);
+        LogNotification(context.UserId, context.DeliveryId);
 
         return Task.FromResult(DeliveryOutcome.Sent);
     }
 
+    // IDs only: log placeholders are exported as OTLP attributes (docs/rules/backend-observability.md),
+    // so the notification's title and body stay out of the log.
     [LoggerMessage(
         EventId = 0,
         Level = LogLevel.Information,
-        Message = "[Notification] user={UserId} delivery={DeliveryId} channel=Console title=\"{Title}\" body=\"{Body}\"")]
-    private partial void LogNotification(string userId, Guid deliveryId, string title, string body);
+        Message = "[Notification] user={UserId} delivery={DeliveryId} channel=Console")]
+    private partial void LogNotification(string userId, Guid deliveryId);
 }

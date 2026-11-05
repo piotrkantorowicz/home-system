@@ -11,6 +11,8 @@ import { ThemeProvider } from '@shared/context/ThemeContext';
 import { ToastProvider } from '@shared/context/ToastContext';
 import { initI18n } from '@shared/lib/i18n';
 import { registerModule, getModules } from '@shared/lib/module-registry';
+import { initTelemetry } from '@shared/telemetry/initTelemetry';
+import { resolveTelemetryConfig } from '@shared/telemetry/telemetryConfig';
 import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -50,4 +52,17 @@ ReactDOM.createRoot(rootElement).render(
       </ThemeProvider>
     </AppErrorBoundary>
   </React.StrictMode>,
+);
+
+// 4. Tracing loads after first render so the OTel SDK stays out of the main chunk.
+void initTelemetry(
+  router,
+  resolveTelemetryConfig({
+    runtimeEnabled: window.__CONFIG__?.tracingEnabled,
+    envEnabled: import.meta.env.VITE_TRACING_ENABLED as string | undefined,
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL as string | undefined,
+    dev: import.meta.env.DEV,
+    locationOrigin: window.location.origin,
+    version: __APP_VERSION__,
+  }),
 );

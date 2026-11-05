@@ -1,10 +1,13 @@
 namespace Shared.Infrastructure.Messaging.Outbox;
 
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 
 /// <summary>
@@ -19,14 +22,20 @@ using Shared.Infrastructure.Messaging.Transport;
 /// <param name="options">Batch size, poll interval, attempt limit and retry backoff.</param>
 /// <param name="logger">Receives tick and dispatch failures.</param>
 /// <param name="clock">Supplies the <c>processed_at</c> timestamp and the retry schedule.</param>
+/// <param name="telemetry">Wraps each tick in a root span and records its outcome.</param>
+/// <param name="metrics">Receives publish durations, dead letters and the backlog gauges.</param>
 public sealed partial class OutboxWorker<TDbContext>(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxWorkerOptions> options,
     ILogger<OutboxWorker<TDbContext>> logger,
-    TimeProvider clock) : BackgroundService
+    TimeProvider clock,
+    WorkerTelemetry telemetry,
+    MessagingMetrics metrics) : BackgroundService
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
+    private readonly string _moduleName = OutboxModule.NameOf(typeof(TDbContext));
+    private readonly string _workerName = $"OutboxWorker.{OutboxModule.NameOf(typeof(TDbContext))}";
 
     private readonly OutboxWorkerOptions _options = options.Value;
 
@@ -61,7 +70,9 @@ public sealed partial class OutboxWorker<TDbContext>(
     /// A no-op until the module has registered a store and the host a transport.
     /// </summary>
     /// <param name="ct">Propagates cancellation to the store and transport.</param>
-    public async Task RunOnceAsync(CancellationToken ct)
+    public Task RunOnceAsync(CancellationToken ct) => telemetry.TrackTickAsync(_workerName, RunTickAsync, ct);
+
+    private async Task RunTickAsync(CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;
@@ -81,24 +92,60 @@ public sealed partial class OutboxWorker<TDbContext>(
             return;
         }
 
-        IReadOnlyList<OutboxMessage> pending =
-            await store.GetUnprocessedAsync(
-                _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
-        if (pending.Count == 0) return;
-
-        foreach (var message in pending)
+        try
         {
-            try
+            IReadOnlyList<OutboxMessage> pending =
+                await store.GetUnprocessedAsync(
+                    _options.BatchSize, _options.MaxAttempts, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+
+            // Batch tags go on the worker's tick span (current here); consumer spans link to it. Idle polls add none.
+            if (pending.Count > 0)
             {
-                await transport.DispatchAsync(message, ct).ConfigureAwait(false);
-                await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+                Activity.Current?.SetTag("homesystem.module", _moduleName);
+                Activity.Current?.SetTag("homesystem.outbox.batch_size", pending.Count);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+
+            foreach (var message in pending)
             {
-                LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
-                var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
-                await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
+                var started = clock.GetTimestamp();
+                try
+                {
+                    await transport.DispatchAsync(message, ct).ConfigureAwait(false);
+                    await store.MarkProcessedAsync(message.Id, clock.GetUtcNow().UtcDateTime, ct).ConfigureAwait(false);
+                    // Only after the mark: a failed mark is retried and counted once, as "failed".
+                    metrics.RecordPublish(message.EventType, "published", clock.GetElapsedTime(started));
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    metrics.RecordPublish(message.EventType, "failed", clock.GetElapsedTime(started));
+                    LogDispatchFailed(ex, message.Id, message.EventType, DbContextName);
+                    var nextAttemptAt = clock.GetUtcNow().UtcDateTime + RetryDelay(message.AttemptCount + 1);
+                    await store.RecordFailureAsync(message.Id, ex.Message, nextAttemptAt, ct).ConfigureAwait(false);
+                    if (message.AttemptCount + 1 >= _options.MaxAttempts)
+                        metrics.RecordDeadLetter(_moduleName, message.EventType);
+                }
             }
+        }
+        finally
+        {
+            // Also after a failed tick, so the gauges never freeze on the last good reading.
+            await ReportBacklogAsync(store, ct).ConfigureAwait(false);
+        }
+    }
+
+    private async Task ReportBacklogAsync(IOutboxStore store, CancellationToken ct)
+    {
+        try
+        {
+            var backlog = await store.GetPendingAsync(_options.MaxAttempts, ct).ConfigureAwait(false);
+            var oldestAge = backlog.OldestOccurredAt is { } oldest
+                ? clock.GetUtcNow().UtcDateTime - oldest
+                : TimeSpan.Zero;
+            metrics.SetBacklog(_moduleName, backlog.Count, oldestAge);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogBacklogFailed(ex, DbContextName);
         }
     }
 
@@ -110,6 +157,9 @@ public sealed partial class OutboxWorker<TDbContext>(
 
     [LoggerMessage(EventId = 0, Level = LogLevel.Error, Message = "Outbox worker [{DbContext}] tick failed")]
     private partial void LogTickFailed(Exception exception, string dbContext);
+
+    [LoggerMessage(EventId = 0, Level = LogLevel.Warning, Message = "Outbox worker [{DbContext}] could not read the backlog for metrics")]
+    private partial void LogBacklogFailed(Exception exception, string dbContext);
 
     [LoggerMessage(EventId = 0, Level = LogLevel.Debug, Message = "Outbox worker [{DbContext}] no-op: no outbox store registered")]
     private partial void LogNoStore(string dbContext);

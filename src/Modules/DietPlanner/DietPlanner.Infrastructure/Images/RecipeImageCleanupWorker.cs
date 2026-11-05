@@ -3,9 +3,10 @@ namespace DietPlanner.Infrastructure.Images;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Shared.Abstractions.Core.Telemetry;
 
 internal sealed partial class RecipeImageCleanupWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    ILogger<RecipeImageCleanupWorker> logger, IHostEnvironment environment) : BackgroundService
+    ILogger<RecipeImageCleanupWorker> logger, IHostEnvironment environment, WorkerTelemetry telemetry) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
@@ -20,8 +21,12 @@ internal sealed partial class RecipeImageCleanupWorker(IServiceScopeFactory scop
     {
         try
         {
-            await using AsyncServiceScope scope = scopes.CreateAsyncScope();
-            await scope.ServiceProvider.GetRequiredService<RecipeImageCleanup>().RunOnceAsync(ct);
+            // Tracked inside the try: the failure is swallowed below, and the tick must still count as an error.
+            await telemetry.TrackTickAsync(nameof(RecipeImageCleanupWorker), async token =>
+            {
+                await using AsyncServiceScope scope = scopes.CreateAsyncScope();
+                await scope.ServiceProvider.GetRequiredService<RecipeImageCleanup>().RunOnceAsync(token);
+            }, ct);
         }
         catch (Exception) when (!ct.IsCancellationRequested)
         {

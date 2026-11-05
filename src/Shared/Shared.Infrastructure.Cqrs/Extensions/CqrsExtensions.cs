@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Cqrs;
 using Shared.Infrastructure.Cqrs;
 using Shared.Infrastructure.Cqrs.Decorators;
+using Shared.Infrastructure.Cqrs.Telemetry;
 
 /// <summary>
 /// DI registration for the custom CQRS stack: modules register their handlers with
@@ -22,6 +23,8 @@ public static class CqrsExtensions
     /// </summary>
     public static IServiceCollection AddCqrsDispatchers(this IServiceCollection services)
     {
+        services.AddSingleton<CqrsTelemetry>();
+
         services.AddScoped<ICommandDispatcher>(sp =>
         {
             ICommandDispatcher dispatcher = new CommandDispatcher(sp);
@@ -34,6 +37,9 @@ public static class CqrsExtensions
                 dispatcher,
                 sp.GetRequiredService<ILogger<LoggingCommandDispatcherDecorator>>());
 
+            // Outermost, so validation failures are measured too.
+            dispatcher = new TelemetryCommandDispatcherDecorator(dispatcher, sp.GetRequiredService<CqrsTelemetry>());
+
             return dispatcher;
         });
 
@@ -44,6 +50,8 @@ public static class CqrsExtensions
             dispatcher = new LoggingQueryDispatcherDecorator(
                 dispatcher,
                 sp.GetRequiredService<ILogger<LoggingQueryDispatcherDecorator>>());
+
+            dispatcher = new TelemetryQueryDispatcherDecorator(dispatcher, sp.GetRequiredService<CqrsTelemetry>());
 
             return dispatcher;
         });

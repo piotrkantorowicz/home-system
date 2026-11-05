@@ -1,14 +1,19 @@
 namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
@@ -52,6 +57,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         /// <inheritdoc />
         public Task HandleAsync(HelloIntegrationEvent @event, CancellationToken ct = default)
         {
+            if (@event.Greeting == "boom") throw new InvalidOperationException("boom");
             _receiver.Received.Add(@event);
             return Task.CompletedTask;
         }
@@ -100,7 +106,9 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()),
+            _sp.GetRequiredService<MessagingMetrics>());
 
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -131,10 +139,123 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()),
+            _sp.GetRequiredService<MessagingMetrics>());
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();
         receiver.Received.Count.ShouldBe(1);
+    }
+
+    private OutboxWorker<MessagingTestDbContext> Worker() => new(
+        _sp.GetRequiredService<IServiceScopeFactory>(),
+        Options.Create(new OutboxWorkerOptions()),
+        NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
+        Clock,
+        _sp.GetRequiredService<WorkerTelemetry>(),
+        _sp.GetRequiredService<MessagingMetrics>());
+
+    private MetricCollector<T> Collect<T>(string instrument) where T : struct
+        => new(_sp.GetRequiredService<IMeterFactory>(), MessagingMetrics.MeterName, instrument);
+
+    private async Task PublishAsync(Guid eventId, string greeting)
+    {
+        await using var scope = _sp.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IIntegrationEventBus>();
+        var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
+        await bus.PublishAsync(new HelloIntegrationEvent(eventId, Clock.GetUtcNow().UtcDateTime, greeting), default);
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>Publishing then handling records the publish duration and an inbox duration with outcome handled; a redelivery records duplicate.</summary>
+    [Fact]
+    public async Task Roundtrip_RecordsPublishAndInboxDurations()
+    {
+        using var publish = Collect<double>("homesystem.outbox.publish.duration");
+        using var inbox = Collect<double>("homesystem.inbox.handle.duration");
+        var eventId = Guid.NewGuid();
+        await PublishAsync(eventId, "hi");
+        await PublishAsync(eventId, "hi");
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        publish.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["published", "published"]);
+        publish.LastMeasurement!.Tags["homesystem.event.type"].ShouldBe(nameof(HelloIntegrationEvent));
+        inbox.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["handled", "duplicate"]);
+        inbox.LastMeasurement!.Tags["homesystem.handler.type"].ShouldBe(nameof(HelloHandler));
+    }
+
+    /// <summary>Unpublished messages show in the pending gauge; a failing handler records the error outcome.</summary>
+    [Fact]
+    public async Task FailingHandler_KeepsMessagesPendingAndRecordsError()
+    {
+        using var pending = Collect<long>("homesystem.outbox.pending");
+        using var inbox = Collect<double>("homesystem.inbox.handle.duration");
+        await PublishAsync(Guid.NewGuid(), "boom");
+        await PublishAsync(Guid.NewGuid(), "boom");
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        pending.RecordObservableInstruments();
+        pending.LastMeasurement!.Value.ShouldBe(2);
+        inbox.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["error", "error"]);
+    }
+
+    private static ActivityListener Listen(List<Activity> stopped, params string[] sources)
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = s => sources.Contains(s.Name),
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = a => { lock (stopped) stopped.Add(a); },
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
+    }
+
+    /// <summary>An event published inside a span is handled in a consumer span with the same TraceId, parented on the producer span and linked to the worker tick.</summary>
+    [Fact]
+    public async Task Publish_InsideSpan_ConsumerSpanSharesTraceIdAndLinksTick()
+    {
+        var stopped = new List<Activity>();
+        using var testSource = new ActivitySource("Test.Request");
+        using var listener = Listen(stopped, "Test.Request", MessagingTracing.SourceName, WorkerTelemetry.Name);
+
+        string traceId;
+        using (var request = testSource.StartActivity("request"))
+        {
+            traceId = request!.TraceId.ToString();
+            await PublishAsync(Guid.NewGuid(), "hi");
+        }
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        var producer = stopped.Single(a => a.Kind == ActivityKind.Producer);
+        var tick = stopped.Single(a => a.Source.Name == WorkerTelemetry.Name);
+        var consumer = stopped.Single(a => a.Kind == ActivityKind.Consumer);
+        producer.TraceId.ToString().ShouldBe(traceId);
+        consumer.TraceId.ToString().ShouldBe(traceId);
+        consumer.ParentId.ShouldBe(producer.Id);
+        consumer.Links.Single().Context.SpanId.ShouldBe(tick.SpanId);
+        tick.GetTagItem("homesystem.outbox.batch_size").ShouldBe(1);
+        tick.GetTagItem("homesystem.module").ShouldNotBeNull();
+        consumer.GetTagItem("messaging.message.id").ShouldNotBeNull();
+    }
+
+    /// <summary>A message with no stored TraceParent is still handled, in a new root consumer span.</summary>
+    [Fact]
+    public async Task Publish_WithoutTraceParent_IsHandledInNewRootSpan()
+    {
+        await PublishAsync(Guid.NewGuid(), "hi"); // nothing listens yet -> no producer span -> null TraceParent
+
+        var stopped = new List<Activity>();
+        using var listener = Listen(stopped, MessagingTracing.SourceName, WorkerTelemetry.Name);
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        _sp.GetRequiredService<HelloReceiver>().Received.Count.ShouldBe(1);
+        var consumer = stopped.Single(a => a.Kind == ActivityKind.Consumer);
+        consumer.ParentId.ShouldBeNull();
+        consumer.Links.Count().ShouldBe(1);
     }
 }

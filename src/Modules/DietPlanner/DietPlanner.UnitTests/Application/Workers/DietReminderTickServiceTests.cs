@@ -3,11 +3,13 @@ namespace DietPlanner.UnitTests.Application.Workers;
 #pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 
 /// <summary>Unit tests for <c>DietReminderTickService</c>: jobs are in-memory fakes resolved from a real <c>ServiceCollection</c>.</summary>
 public sealed class DietReminderTickServiceTests
@@ -27,7 +29,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -51,7 +54,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -72,7 +76,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             logger,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -97,12 +102,16 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions { Enabled = false }),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         job.Calls.ShouldBeEmpty();
     }
+
+    private static WorkerTelemetry Telemetry()
+        => new(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>());
 
     private sealed class RecordingJob(string name) : IDietReminderJob
     {

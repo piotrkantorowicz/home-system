@@ -26,8 +26,19 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
             .Take(batchSize)
             .Select(x => new OutboxMessage(
                 x.Id, x.EventId, x.EventType, x.Payload, x.OccurredAt,
-                x.ProcessedAt, x.AttemptCount, x.LastError))
+                x.ProcessedAt, x.AttemptCount, x.LastError, x.TraceParent))
             .ToListAsync(ct);
+
+    public async Task<OutboxPending> GetPendingAsync(int maxAttempts, CancellationToken ct)
+    {
+        var stats = await _dbContext.Set<OutboxMessageEntity>()
+            .AsNoTracking()
+            .Where(x => x.ProcessedAt == null && x.RetriedAt == null && x.AttemptCount < maxAttempts)
+            .GroupBy(_ => 1)
+            .Select(g => new { Count = g.Count(), Oldest = g.Min(x => x.OccurredAt) })
+            .FirstOrDefaultAsync(ct);
+        return stats is null ? default : new OutboxPending(stats.Count, stats.Oldest);
+    }
 
     public async Task MarkProcessedAsync(Guid messageId, DateTime processedAt, CancellationToken ct)
     {
@@ -117,6 +128,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
                 EventId = original.EventId,
                 EventType = original.EventType,
                 Payload = original.Payload,
+                TraceParent = original.TraceParent,
                 OccurredAt = original.OccurredAt,
                 RetryOf = original.Id,
             });
@@ -142,6 +154,7 @@ internal sealed class EfOutboxStore<TDbContext> : IOutboxStore, IOutboxDeadLette
         OccurredAt = m.OccurredAt,
         ProcessedAt = m.ProcessedAt,
         AttemptCount = m.AttemptCount,
-        LastError = m.LastError
+        LastError = m.LastError,
+        TraceParent = m.TraceParent
     };
 }

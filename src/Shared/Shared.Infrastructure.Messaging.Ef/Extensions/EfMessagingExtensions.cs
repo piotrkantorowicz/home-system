@@ -3,10 +3,13 @@ namespace Shared.Infrastructure.Messaging.Ef.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Inbox;
 using Shared.Infrastructure.Messaging.Ef.Outbox;
+using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// DI registration for the EF Core-backed outbox and inbox used by Style-1 modules. The module's
@@ -47,9 +50,11 @@ public static class EfMessagingExtensions
         services.AddKeyedScoped<IOutboxDeadLetterStore>(typeof(TDbContext),
             (sp, _) => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
         services.AddSingleton(new OutboxModule(
-            typeof(TDbContext).Name.Replace("DbContext", string.Empty, StringComparison.Ordinal),
+            OutboxModule.NameOf(typeof(TDbContext)),
             typeof(TDbContext)));
 
+        services.TryAddSingleton<WorkerTelemetry>();
+        services.AddMessagingMetrics();
         services.AddHostedService<OutboxWorker<TDbContext>>();
         return services;
     }
@@ -65,6 +70,7 @@ public static class EfMessagingExtensions
         where TDbContext : DbContext
     {
         services.AddScoped<EfInboxExecutor<TDbContext>>();
+        services.AddMessagingMetrics();
         services.AddScoped<THandler>();
 
         // The decorator wraps THandler with the module's inbox executor, so the registered
@@ -72,7 +78,8 @@ public static class EfMessagingExtensions
         services.AddScoped<IIntegrationEventHandler<TEvent>>(sp =>
             new InboxAwareHandler<TEvent>(
                 sp.GetRequiredService<THandler>(),
-                sp.GetRequiredService<EfInboxExecutor<TDbContext>>()));
+                sp.GetRequiredService<EfInboxExecutor<TDbContext>>(),
+                sp.GetRequiredService<MessagingMetrics>()));
 
         return services;
     }
