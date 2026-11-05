@@ -1,5 +1,7 @@
 namespace Investments.IntegrationTests.Api;
 
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using global::Investments.Domain.ValueObjects;
@@ -8,6 +10,7 @@ using global::Investments.Infrastructure.Persistence;
 using Investments.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Abstractions.Core.Telemetry;
 
 /// <summary>
 /// #576 — NBP rates: backfill on write, values at today's (newest) rate, NBP outages never failing a
@@ -183,6 +186,32 @@ public sealed class FxTests : IClassFixture<InvestmentsDatabaseFixture>, IAsyncL
         (afterFailure[^1].DayNumber - afterFailure[0].DayNumber + 1).ShouldBe(afterFailure.Count);
         afterWorker[0].ShouldBe(new DateOnly(2023, 1, 1));
         afterWorker.Count.ShouldBe(731);
+    }
+
+    /// <summary>#808 — the worker's tick is a root span, and the database calls it makes are its children.</summary>
+    [Fact]
+    public async Task WorkerTick_IsRootSpanParentingItsDatabaseSpans()
+    {
+        _factory.Nbp.Publish(WalletCurrency.EUR, new DateOnly(2023, 2, 27), 4.71m);
+        var h = await _scenario.NewHouseholdAsync();
+        var wallet = await InvestmentsScenario.CreateWalletAsync(h.Owner, "EUR traced", currency: "EUR");
+        (await PutAsync(h.Owner, wallet.Id, "2023-03-01", "10")).EnsureSuccessStatusCode();
+        var spans = new ConcurrentQueue<Activity>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = s => s.Name is WorkerTelemetry.Name or "Npgsql",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = spans.Enqueue,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        await RunWorkerAsync();
+
+        var ticks = spans.Where(s => s.Source.Name == WorkerTelemetry.Name
+            && Equals(s.GetTagItem(WorkerTelemetry.WorkerTag), nameof(NbpFxWorker))).ToList();
+        ticks.ShouldContain(tick => tick.ParentSpanId == default
+            && Equals(tick.GetTagItem(WorkerTelemetry.OutcomeTag), WorkerTelemetry.Success)
+            && spans.Any(db => db.Source.Name == "Npgsql" && db.ParentSpanId == tick.SpanId && db.TraceId == tick.TraceId));
     }
 
     private async Task<List<DateOnly>> StoredEurRatesAsync()

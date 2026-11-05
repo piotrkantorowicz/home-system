@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
@@ -52,6 +53,7 @@ public sealed class OutboxWorkerTests
             Options.Create(new OutboxWorkerOptions()),
             logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance,
             Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()),
             new MessagingMetrics(meters ?? NewMeters()));
 
     private static IMeterFactory NewMeters()

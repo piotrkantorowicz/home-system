@@ -1,5 +1,6 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
+using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
 using DietPlanner.Api;
 using DietPlanner.Application.Commands.ExecutePreviewedImport;
@@ -7,8 +8,11 @@ using DietPlanner.Application.Commands.ValidateImport;
 using DietPlanner.Application.Queries.GetMealEntries;
 using DietPlanner.IntegrationTests.Infrastructure;
 using DietPlanner.Mcp;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
+using Shared.Infrastructure.Web;
 
 /// <summary>Integration tests for <c>execute_plan_import</c>: atomic monthly import, durable replay, stale previews and grants on PostgreSQL.</summary>
 [Collection(DatabaseCollectionDefinition.Name)]
@@ -144,9 +148,14 @@ public sealed class McpExecuteImportTests(DatabaseFixture db) : IDisposable
         await SetScheduleAsync(_mcp, me);
         using (var failing = new McpTestHost(db.ConnectionString, FailingMealEntryRepository.Install))
         {
+            using var duration = new MetricCollector<double>(
+                failing.Host.Services.GetRequiredService<IMeterFactory>(), McpToolMetrics.MeterName, "homesystem.mcp.tool.duration");
             await using var broken = await failing.ConnectAsync(me, ImportScopes);
             var token = await PreviewTokenAsync(broken, plan);
             await McpTestHost.CallExpectingErrorAsync(broken, "execute_plan_import", Args(plan, token, key));
+
+            // A throwing tool is recorded as an error, same as an error result.
+            duration.GetMeasurementSnapshot()[^1].Tags[McpToolMetrics.OutcomeTag].ShouldBe(McpToolMetrics.Error);
         }
 
         await using var client = await _mcp.ConnectAsync(me, ImportScopes);
