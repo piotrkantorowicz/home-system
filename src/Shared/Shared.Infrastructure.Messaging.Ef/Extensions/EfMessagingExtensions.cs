@@ -49,7 +49,7 @@ public static class EfMessagingExtensions
         services.AddKeyedScoped<IOutboxDeadLetterStore>(typeof(TDbContext),
             (sp, _) => sp.GetRequiredService<EfOutboxStore<TDbContext>>());
         services.AddSingleton(new OutboxModule(
-            typeof(TDbContext).Name.Replace("DbContext", string.Empty, StringComparison.Ordinal),
+            OutboxModule.NameOf(typeof(TDbContext)),
             typeof(TDbContext)));
 
         services.AddMessagingMetrics();

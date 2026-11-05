@@ -30,7 +30,7 @@ public sealed partial class OutboxWorker<TDbContext>(
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
-    private readonly string _moduleName = DbContextName.Replace("DbContext", string.Empty, StringComparison.Ordinal);
+    private readonly string _moduleName = OutboxModule.NameOf(typeof(TDbContext));
 
     private readonly OutboxWorkerOptions _options = options.Value;
 
