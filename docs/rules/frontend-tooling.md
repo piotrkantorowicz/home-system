@@ -69,7 +69,7 @@ Single quotes. Tailwind classes are sorted by the plugin — never hand-order th
 
 | Hook | What it does |
 |---|---|
-| `pre-commit` | `lint-staged` in `src/ui` (ESLint `--fix` + Prettier on staged `ts/tsx`, Prettier on `json/css/md`), then `scripts/verify.sh --staged` — path-aware backend/frontend/e2e checks |
+| `pre-commit` | `lint-staged` in `src/ui` (ESLint `--fix` + Prettier on staged `ts/tsx`, Prettier on `json/css/md`), then `scripts/verify.sh --staged --no-integration` — path-aware backend/frontend/e2e checks; integration tests run in `/verify` and CI |
 | `commit-msg` | `commitlint` (`@commitlint/config-conventional`, lower-case subject, header ≤ 72) |
 | `pre-push` | branch name must match `<type>/<issue>-<kebab-slug>` |
 

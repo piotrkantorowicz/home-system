@@ -313,11 +313,14 @@ export default {
 npx --no -- commitlint --edit $1
 ```
 
-**Pre-commit lint** (`.husky/pre-commit`):
+**Pre-commit checks** (`.husky/pre-commit`):
 
 ```bash
-npx lint-staged
+(cd "$REPO_ROOT/src/ui" && npx lint-staged)
+"$REPO_ROOT/scripts/verify.sh" --staged --no-integration
 ```
+
+Integration tests are skipped here; `/verify` (`verify.sh --branch`) and CI run them.
 
 **Branch name enforcement** (`.husky/pre-push`):
 

@@ -3,4 +3,6 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 (cd "$REPO_ROOT/src/ui" && npx lint-staged)
 
 # Path-aware checks for whatever is staged — same script the `verify` skill and CI use.
-"$REPO_ROOT/scripts/verify.sh" --staged
+# Integration tests (Testcontainers) are left to `/verify` (--branch) and CI: a Shared/ change
+# runs every module's suite, ~10 min per commit.
+"$REPO_ROOT/scripts/verify.sh" --staged --no-integration
