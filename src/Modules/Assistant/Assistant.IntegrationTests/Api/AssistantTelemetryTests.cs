@@ -2,7 +2,7 @@ namespace Assistant.IntegrationTests.Api;
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using Assistant.Api;
+using System.Net.Http.Json;
 using Assistant.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
@@ -18,6 +18,8 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
     public async Task Turn_WithFakeModel_RecordsChatSpanTokenUsageAndCompletedTurn()
     {
         using var factory = new AssistantApiFactory(databases);
+        string model = $"scripted-{Guid.CreateVersion7():N}"; // unique: other test hosts report "scripted-model" too
+        factory.Model.ModelId = model;
         using var spans = new SpanProbe();
         using var turns = Collect<long>(factory, "homesystem.assistant.turns");
         using var tokenUsage = new TokenUsageListener();
@@ -26,8 +28,8 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
 
         await AssistantApiFactory.SendAsync(me, new { message = Secret });
 
-        spans.Spans.ShouldContain(a => a.GetTagItem("gen_ai.operation.name") as string == "chat" && a.GetTagItem("gen_ai.request.model") as string == "scripted-model");
-        tokenUsage.Models.ShouldContain("scripted-model");
+        spans.Spans.ShouldContain(a => a.GetTagItem("gen_ai.operation.name") as string == "chat" && a.GetTagItem("gen_ai.request.model") as string == model);
+        tokenUsage.Models.ShouldContain(model);
         turns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["completed"]);
         AssertNoContent(spans, Reply, Secret);
     }
@@ -62,7 +64,10 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         using var failedTurns = Collect<long>(failing, "homesystem.assistant.turns");
         using var failSpans = new SpanProbe();
         failing.Model.Fails();
-        await AssistantApiFactory.SendAsync(failSpans.Trace(await failing.HouseholdOwnerAsync()), new { message = "Hi" });
+        await AssistantApiFactory.SendAsync(failSpans.Trace(await failing.HouseholdOwnerAsync()), new { message = Secret });
+        Activity chat = failSpans.Spans.Single(a => a.GetTagItem("gen_ai.operation.name") as string == "chat");
+        chat.Status.ShouldBe(ActivityStatusCode.Error);
+        AssertNoContent(failSpans, Secret);
 
         using var capped = new AssistantApiFactory(databases, new Dictionary<string, string?> { ["Assistant:MaxToolRounds"] = "1" });
         using var cappedTurns = Collect<long>(capped, "homesystem.assistant.turns");
@@ -73,22 +78,31 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         cappedTurns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["limit_reached"]);
     }
 
-    /// <summary>A call the client cancelled ends its span without an outcome and counts nothing, like a cancelled turn.</summary>
+    /// <summary>A tool call cancelled by the client ends its span without an outcome and counts nothing, like a cancelled turn.</summary>
     [Fact]
-    public void AbandonToolCall_RecordsNoOutcomeAndLeavesStatusUnset()
+    public async Task ToolCall_CancelledByClient_RecordsNoOutcomeAndLeavesStatusUnset()
     {
-        using var services = new ServiceCollection().AddMetrics().BuildServiceProvider();
-        _ = new AssistantTelemetry(services.GetRequiredService<IMeterFactory>());
-        using var calls = new MetricCollector<long>(services.GetRequiredService<IMeterFactory>(), "HomeSystem.Assistant", "homesystem.assistant.tool_calls");
+        var hanging = new HangingTool();
+        using var factory = new AssistantApiFactory(databases);
+        factory.ExtraTools.Add(hanging.Create());
         using var spans = new SpanProbe();
+        using var calls = Collect<long>(factory, "homesystem.assistant.tool_calls");
+        using var turns = Collect<long>(factory, "homesystem.assistant.turns");
+        var me = spans.Trace(await factory.HouseholdOwnerAsync());
+        factory.Model.CallsTool("hang_tool");
+        using var cts = new CancellationTokenSource();
 
-        Activity? span = AssistantTelemetry.StartToolCall("list_wallets");
-        AssistantTelemetry.AbandonToolCall(span);
+        Task<HttpResponseMessage> request = me.PostAsJsonAsync("/api/assistant/messages", new { message = "Hang" }, cts.Token);
+        await hanging.Started.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await cts.CancelAsync();
+        await Should.ThrowAsync<OperationCanceledException>(request);
 
-        calls.GetMeasurementSnapshot().ShouldBeEmpty();
-        span.ShouldNotBeNull();
+        SpinWait.SpinUntil(() => spans.Spans.Any(a => a.GetTagItem("gen_ai.tool.name") as string == "hang_tool"), TimeSpan.FromSeconds(30)).ShouldBeTrue();
+        Activity span = spans.Spans.Single(a => a.GetTagItem("gen_ai.tool.name") as string == "hang_tool");
         span.Status.ShouldBe(ActivityStatusCode.Unset);
         span.GetTagItem("homesystem.assistant.outcome").ShouldBeNull();
+        calls.GetMeasurementSnapshot().ShouldBeEmpty();
+        turns.GetMeasurementSnapshot().ShouldBeEmpty();
     }
 
     private static MetricCollector<T> Collect<T>(AssistantApiFactory factory, string instrument)

@@ -13,6 +13,9 @@ public sealed class ScriptedChatClient : IChatClient
     private readonly ConcurrentQueue<Func<ChatResponse>> _script = new();
     private readonly ConcurrentDictionary<ChatResponse, byte> _failsAfterStreaming = new();
 
+    /// <summary>The model id this client reports in <see cref="ChatClientMetadata"/>; tests that read telemetry set a unique one.</summary>
+    public string ModelId { get; set; } = "scripted-model";
+
     /// <summary>Every call the agent made, in order.</summary>
     public ConcurrentQueue<(IReadOnlyList<ChatMessage> Messages, ChatOptions? Options)> Calls { get; } = new();
 
@@ -72,7 +75,7 @@ public sealed class ScriptedChatClient : IChatClient
 
     /// <inheritdoc />
     public object? GetService(Type serviceType, object? serviceKey = null)
-        => serviceType == typeof(ChatClientMetadata) ? new ChatClientMetadata("scripted", null, "scripted-model") : null;
+        => serviceType == typeof(ChatClientMetadata) ? new ChatClientMetadata("scripted", null, ModelId) : null;
 
     /// <inheritdoc />
     public void Dispose()

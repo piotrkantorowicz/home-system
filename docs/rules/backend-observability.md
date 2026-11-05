@@ -76,7 +76,9 @@ spans and the GenAI metrics `gen_ai.client.token.usage` and `gen_ai.client.opera
 model and provider. On top: one `execute_tool {name}` span per tool call (tags `gen_ai.tool.name`,
 `homesystem.assistant.outcome`) and counters `homesystem.assistant.tool_calls` (`{call}`; tags `tool`,
 `outcome` = `ok`, `error`, `refused`) and `homesystem.assistant.turns` (`{turn}`; tag `outcome` = `completed`,
-`failed`, `limit_reached`; a cancelled turn records nothing). Never a prompt, reply, tool argument or result.
+`failed`, `limit_reached`; a cancelled turn or tool call records nothing). Never a prompt, reply, tool argument or result.
+A failed chat span carries `error.type` and the provider's exception message as its status description: provider
+error text, not request content.
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
 `homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
