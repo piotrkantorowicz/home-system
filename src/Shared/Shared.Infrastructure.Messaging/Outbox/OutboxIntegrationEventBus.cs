@@ -43,7 +43,8 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
             ProcessedAt: null,
             AttemptCount: 0,
             LastError: null,
-            TraceParent: producer?.Id);
+            // Only a W3C id fits the varchar(55) column and parses back as a traceparent.
+            TraceParent: producer?.IdFormat == ActivityIdFormat.W3C ? producer.Id : null);
 
         return _store.AddAsync(message, ct);
     }
