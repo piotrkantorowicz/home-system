@@ -71,7 +71,8 @@ public sealed class ScriptedChatClient : IChatClient
     }
 
     /// <inheritdoc />
-    public object? GetService(Type serviceType, object? serviceKey = null) => null;
+    public object? GetService(Type serviceType, object? serviceKey = null)
+        => serviceType == typeof(ChatClientMetadata) ? new ChatClientMetadata("scripted", null, "scripted-model") : null;
 
     /// <inheritdoc />
     public void Dispose()
