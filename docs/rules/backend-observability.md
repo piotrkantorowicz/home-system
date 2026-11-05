@@ -42,8 +42,16 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
+| `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
+| `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Messaging` | Meter | `Shared.Infrastructure.Messaging` (`MessagingMetrics`) | #805 |
-| _(others: none yet)_ | | | |
+
+`HomeSystem.Cqrs` — one span per dispatched command or query (outermost dispatcher decorator, so validation
+failures are included), named after the request type, plus histogram `homesystem.cqrs.duration` (`s`). Span tags
+and metric tags are the same: `cqrs.kind` (`command` / `query`), `cqrs.name` (request type name),
+`cqrs.outcome` (`success`, `validation_error`, `not_found`, `forbidden`, `conflict`, `rejected` for a domain
+rule, `cancelled`, `error`). Only `error` sets the span status to Error; the others are 4xx rejections or client
+aborts, not faults.
 
 `HomeSystem.Messaging` instruments (tags: `homesystem.module` = publishing module, `homesystem.event.type` and
 `homesystem.handler.type` = short type names, `outcome`):
@@ -60,7 +68,7 @@ The gauges report the backlog the module's `OutboxWorker` stored at the end of i
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
 
-Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
+Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.duration`,
 `homesystem.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in
 seconds.
 
@@ -107,11 +115,11 @@ internal sealed class CqrsMetrics
     public CqrsMetrics(IMeterFactory meters)
     {
         var meter = meters.Create(MeterName);
-        _duration = meter.CreateHistogram<double>("homesystem.cqrs.dispatch.duration", unit: "s");
+        _duration = meter.CreateHistogram<double>("homesystem.cqrs.duration", unit: "s");
     }
 
     public void RecordDispatch(string requestType, string outcome, TimeSpan elapsed)
-        => _duration.Record(elapsed.TotalSeconds, new("homesystem.request.type", requestType), new("outcome", outcome));
+        => _duration.Record(elapsed.TotalSeconds, new("cqrs.name", requestType), new("cqrs.outcome", outcome));
 }
 
 // registration (module / shared Extensions): services.AddSingleton<CqrsMetrics>();

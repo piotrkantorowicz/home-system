@@ -5,15 +5,18 @@ using HomeSystem.REST.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Trace;
+using Shared.Abstractions.Cqrs;
+using Shared.Infrastructure.Cqrs.Extensions;
 
 /// <summary>
 /// A minimal in-memory host with <c>HomeSystem.REST</c>'s <see cref="ObservabilityExtensions.AddHomeSystemObservability"/>
 /// and capturing processors instead of an exporter. <c>/items/{id}</c> logs and runs one parameterised query;
-/// <c>/health/live</c> does nothing.
+/// <c>/commands/ping</c> dispatches <see cref="PingCommand"/>; <c>/health/live</c> does nothing.
 /// </summary>
 internal sealed class ObservabilityHost : IAsyncDisposable
 {
@@ -62,6 +65,9 @@ internal sealed class ObservabilityHost : IAsyncDisposable
         builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddProcessor(spans));
         builder.Services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddProcessor(logs));
 
+        builder.Services.AddScoped<ICommandHandler<PingCommand>, PingCommandHandler>();
+        builder.Services.AddCqrsDispatchers();
+
         var dataSource = NpgsqlDataSource.Create(connectionString);
         var app = builder.Build();
         app.MapGet("/items/{id}", async (int id, ILoggerFactory loggers, CancellationToken ct) =>
@@ -71,6 +77,11 @@ internal sealed class ObservabilityHost : IAsyncDisposable
             command.Parameters.Add(new NpgsqlParameter { Value = ParameterValue });
             await command.ExecuteScalarAsync(ct);
             return TypedResults.Ok();
+        });
+        app.MapPost("/commands/ping", async (ICommandDispatcher dispatcher, CancellationToken ct) =>
+        {
+            await dispatcher.SendAsync(new PingCommand(), ct);
+            return TypedResults.NoContent();
         });
         app.MapGet("/health/live", () => TypedResults.Ok());
 
