@@ -1,7 +1,9 @@
 namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -9,6 +11,7 @@ using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Messaging.IntegrationTests.Fixtures;
 using Shouldly;
 using Xunit;
@@ -52,6 +55,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         /// <inheritdoc />
         public Task HandleAsync(HelloIntegrationEvent @event, CancellationToken ct = default)
         {
+            if (@event.Greeting == "boom") throw new InvalidOperationException("boom");
             _receiver.Received.Add(@event);
             return Task.CompletedTask;
         }
@@ -100,7 +104,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            _sp.GetRequiredService<MessagingMetrics>());
 
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -131,10 +136,64 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            _sp.GetRequiredService<MessagingMetrics>());
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();
         receiver.Received.Count.ShouldBe(1);
+    }
+
+    private OutboxWorker<MessagingTestDbContext> Worker() => new(
+        _sp.GetRequiredService<IServiceScopeFactory>(),
+        Options.Create(new OutboxWorkerOptions()),
+        NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
+        Clock,
+        _sp.GetRequiredService<MessagingMetrics>());
+
+    private MetricCollector<T> Collect<T>(string instrument) where T : struct
+        => new(_sp.GetRequiredService<IMeterFactory>(), MessagingMetrics.MeterName, instrument);
+
+    private async Task PublishAsync(Guid eventId, string greeting)
+    {
+        await using var scope = _sp.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IIntegrationEventBus>();
+        var db = scope.ServiceProvider.GetRequiredService<MessagingTestDbContext>();
+        await bus.PublishAsync(new HelloIntegrationEvent(eventId, Clock.GetUtcNow().UtcDateTime, greeting), default);
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>Publishing then handling records the publish duration and an inbox duration with outcome handled; a redelivery records duplicate.</summary>
+    [Fact]
+    public async Task Roundtrip_RecordsPublishAndInboxDurations()
+    {
+        using var publish = Collect<double>("homesystem.outbox.publish.duration");
+        using var inbox = Collect<double>("homesystem.inbox.handle.duration");
+        var eventId = Guid.NewGuid();
+        await PublishAsync(eventId, "hi");
+        await PublishAsync(eventId, "hi");
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        publish.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["published", "published"]);
+        publish.LastMeasurement!.Tags["homesystem.event.type"].ShouldBe(nameof(HelloIntegrationEvent));
+        inbox.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["handled", "duplicate"]);
+        inbox.LastMeasurement!.Tags["homesystem.handler.type"].ShouldBe(nameof(HelloHandler));
+    }
+
+    /// <summary>Unpublished messages show in the pending gauge; a failing handler records the error outcome.</summary>
+    [Fact]
+    public async Task FailingHandler_KeepsMessagesPendingAndRecordsError()
+    {
+        using var pending = Collect<long>("homesystem.outbox.pending");
+        using var inbox = Collect<double>("homesystem.inbox.handle.duration");
+        await PublishAsync(Guid.NewGuid(), "boom");
+        await PublishAsync(Guid.NewGuid(), "boom");
+
+        await Worker().RunOnceAsync(TestContext.Current.CancellationToken);
+
+        pending.RecordObservableInstruments();
+        pending.LastMeasurement!.Value.ShouldBe(2);
+        inbox.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["error", "error"]);
     }
 }

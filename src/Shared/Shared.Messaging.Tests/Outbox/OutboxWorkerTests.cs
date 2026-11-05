@@ -1,13 +1,16 @@
 namespace Shared.Messaging.Tests.Outbox;
 
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Shared.Infrastructure.Messaging.Outbox;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 using Shouldly;
 
@@ -43,11 +46,23 @@ public sealed class OutboxWorkerTests
     private static OutboxWorker<TestDbContext> SutWith(
         IOutboxStore? store,
         IIntegrationEventTransport? transport,
-        ILogger<OutboxWorker<TestDbContext>>? logger = null) =>
+        ILogger<OutboxWorker<TestDbContext>>? logger = null,
+        IMeterFactory? meters = null) =>
         new(ScopeFactory(store, transport),
             Options.Create(new OutboxWorkerOptions()),
             logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new MessagingMetrics(meters ?? NewMeters()));
+
+    private static IMeterFactory NewMeters()
+        => new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>();
+
+    private static IIntegrationEventTransport Throwing(OutboxMessage msg)
+    {
+        var transport = Substitute.For<IIntegrationEventTransport>();
+        transport.When(t => t.DispatchAsync(msg, Arg.Any<CancellationToken>())).Throw(new InvalidOperationException("boom"));
+        return transport;
+    }
 
     /// <summary>With pending messages: <c>RunOnceAsync</c> dispatches and marks processed.</summary>
     [Fact]
@@ -167,5 +182,112 @@ public sealed class OutboxWorkerTests
     {
         var act = () => SutWith(null, null).RunOnceAsync(TestContext.Current.CancellationToken);
         await act.ShouldNotThrowAsync();
+    }
+
+    /// <summary>A message that fails its last allowed attempt increments the dead-letter counter.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenLastAttemptFails_IncrementsDeadLetters()
+    {
+        var meters = NewMeters();
+        using var deadLetters = new MetricCollector<long>(meters, MessagingMetrics.MeterName, "homesystem.outbox.dead_letters");
+        var msg = MakePending(Guid.NewGuid()) with { AttemptCount = new OutboxWorkerOptions().MaxAttempts - 1 };
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
+
+        await SutWith(store, Throwing(msg), meters: meters).RunOnceAsync(TestContext.Current.CancellationToken);
+
+        var m = deadLetters.GetMeasurementSnapshot().ShouldHaveSingleItem();
+        m.Value.ShouldBe(1);
+        m.Tags["homesystem.event.type"].ShouldBe("Event");
+    }
+
+    /// <summary>A failure with attempts left does not count as a dead letter.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenAttemptsRemain_DoesNotIncrementDeadLetters()
+    {
+        var meters = NewMeters();
+        using var deadLetters = new MetricCollector<long>(meters, MessagingMetrics.MeterName, "homesystem.outbox.dead_letters");
+        var msg = MakePending(Guid.NewGuid());
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
+
+        await SutWith(store, Throwing(msg), meters: meters).RunOnceAsync(TestContext.Current.CancellationToken);
+
+        deadLetters.GetMeasurementSnapshot().ShouldBeEmpty();
+    }
+
+    /// <summary>Each dispatch records the publish duration tagged with event type and outcome.</summary>
+    [Fact]
+    public async Task RunOnceAsync_RecordsPublishDurationWithOutcome()
+    {
+        var meters = NewMeters();
+        using var duration = new MetricCollector<double>(meters, MessagingMetrics.MeterName, "homesystem.outbox.publish.duration");
+        var ok = MakePending(Guid.NewGuid());
+        var bad = MakePending(Guid.NewGuid());
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([ok, bad]);
+
+        await SutWith(store, Throwing(bad), meters: meters).RunOnceAsync(TestContext.Current.CancellationToken);
+
+        duration.GetMeasurementSnapshot().Select(x => (string?)x.Tags["outcome"]).ShouldBe(["published", "failed"]);
+    }
+
+    /// <summary>The backlog gauges report what the store counts, even when nothing was dispatched.</summary>
+    [Fact]
+    public async Task RunOnceAsync_ReportsBacklogGauges()
+    {
+        var meters = NewMeters();
+        using var pending = new MetricCollector<long>(meters, MessagingMetrics.MeterName, "homesystem.outbox.pending");
+        using var age = new MetricCollector<double>(meters, MessagingMetrics.MeterName, "homesystem.outbox.oldest_pending_age");
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([]);
+        store.GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(new OutboxPending(3, Now.UtcDateTime.AddSeconds(-90)));
+
+        await SutWith(store, Substitute.For<IIntegrationEventTransport>(), meters: meters)
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+
+        pending.RecordObservableInstruments();
+        age.RecordObservableInstruments();
+        pending.LastMeasurement!.Value.ShouldBe(3);
+        pending.LastMeasurement.Tags["homesystem.module"].ShouldBe("Test");
+        age.LastMeasurement!.Value.ShouldBe(90);
+    }
+
+    /// <summary>If marking a delivered message processed fails, it is counted once as failed and never as published.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenMarkProcessedFails_RecordsOnlyFailed()
+    {
+        var meters = NewMeters();
+        using var duration = new MetricCollector<double>(meters, MessagingMetrics.MeterName, "homesystem.outbox.publish.duration");
+        var msg = MakePending(Guid.NewGuid());
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([msg]);
+        store.MarkProcessedAsync(msg.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new InvalidOperationException("db")));
+
+        await SutWith(store, Substitute.For<IIntegrationEventTransport>(), meters: meters)
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+
+        duration.GetMeasurementSnapshot().ShouldHaveSingleItem().Tags["outcome"].ShouldBe("failed");
+    }
+
+    /// <summary>A tick that throws still refreshes the backlog gauges.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenTickThrows_StillReportsBacklog()
+    {
+        var meters = NewMeters();
+        using var pending = new MetricCollector<long>(meters, MessagingMetrics.MeterName, "homesystem.outbox.pending");
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<IReadOnlyList<OutboxMessage>>(new InvalidOperationException("db")));
+        store.GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new OutboxPending(4, null));
+
+        var act = () => SutWith(store, Substitute.For<IIntegrationEventTransport>(), meters: meters)
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+        await act.ShouldThrowAsync<InvalidOperationException>();
+
+        pending.RecordObservableInstruments();
+        pending.LastMeasurement!.Value.ShouldBe(4);
     }
 }
