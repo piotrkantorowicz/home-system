@@ -61,35 +61,41 @@ public sealed class WorkerTelemetry
         // (host startup, or a test calling RunOnceAsync).
         var ambient = Activity.Current;
         Activity.Current = null;
-        var activity = Source.StartActivity($"{worker} tick", ActivityKind.Internal);
-        activity?.SetTag(WorkerTag, worker);
-
-        var start = Stopwatch.GetTimestamp();
-        var outcome = Success;
         try
         {
-            await tick(ct).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            outcome = Cancelled;
-            throw;
-        }
-        catch (Exception ex)
-        {
-            outcome = Error;
-            activity?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
-            throw;
+            using var activity = Source.StartActivity($"{worker} tick", ActivityKind.Internal);
+            activity?.SetTag(WorkerTag, worker);
+
+            var start = Stopwatch.GetTimestamp();
+            var outcome = Success;
+            try
+            {
+                await tick(ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                outcome = Cancelled;
+                throw;
+            }
+            catch (Exception ex)
+            {
+                outcome = Error;
+                activity?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
+                throw;
+            }
+            finally
+            {
+                activity?.SetTag(OutcomeTag, outcome);
+
+                var tags = new TagList { { WorkerTag, worker }, { OutcomeTag, outcome } };
+                _ticks.Add(1, tags);
+                _duration.Record(Stopwatch.GetElapsedTime(start).TotalSeconds, tags);
+            }
         }
         finally
         {
-            activity?.SetTag(OutcomeTag, outcome);
-            activity?.Dispose();
+            // After the span is disposed (stopping it resets Current to its null parent).
             Activity.Current = ambient;
-
-            var tags = new TagList { { WorkerTag, worker }, { OutcomeTag, outcome } };
-            _ticks.Add(1, tags);
-            _duration.Record(Stopwatch.GetElapsedTime(start).TotalSeconds, tags);
         }
     }
 }
