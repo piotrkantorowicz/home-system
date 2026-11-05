@@ -45,32 +45,32 @@ public sealed class InProcessIntegrationEventTransport : IIntegrationEventTransp
         consumer?.SetTag(MessagingTracing.MessageIdTag, message.Id);
         consumer?.SetTag(MessagingTracing.EventIdTag, message.EventId);
 
-        await using var scope = _rootProvider.CreateAsyncScope();
-        var sp = scope.ServiceProvider;
-
-        var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
-        var @event = serializer.Deserialize(message.Payload, message.EventType);
-
-        // Handlers are pre-decorated with InboxAwareHandler<T> at registration time via
-        // AddIntegrationEventConsumer<TEvent, THandler, TDbContext>(), so the transport
-        // just invokes them — no transport-level inbox concern.
-        var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-        var handlers = sp.GetServices(handlerType).ToList();
-
-        foreach (var handler in handlers)
+        try
         {
-            var task = (Task)handlerType
-                .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
-                .Invoke(handler, [@event, ct])!;
-            try
+            await using var scope = _rootProvider.CreateAsyncScope();
+            var sp = scope.ServiceProvider;
+
+            var serializer = sp.GetRequiredService<IIntegrationEventSerializer>();
+            var @event = serializer.Deserialize(message.Payload, message.EventType);
+
+            // Handlers are pre-decorated with InboxAwareHandler<T> at registration time via
+            // AddIntegrationEventConsumer<TEvent, THandler, TDbContext>(), so the transport
+            // just invokes them — no transport-level inbox concern.
+            var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+            var handlers = sp.GetServices(handlerType).ToList();
+
+            foreach (var handler in handlers)
             {
-                await task.ConfigureAwait(false);
+                await ((Task)handlerType
+                    .GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!
+                    .Invoke(handler, [@event, ct])!).ConfigureAwait(false);
             }
-            catch (Exception)
-            {
-                consumer?.SetStatus(ActivityStatusCode.Error);
-                throw;
-            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            // Shutdown cancellation is not a fault (docs/rules/backend-observability.md); everything else is.
+            consumer?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
+            throw;
         }
     }
 }
