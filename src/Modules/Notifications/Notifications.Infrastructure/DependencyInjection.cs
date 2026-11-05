@@ -15,6 +15,7 @@ using Notifications.Infrastructure.Persistence;
 using Notifications.Infrastructure.Persistence.Migrations;
 using Notifications.Infrastructure.Persistence.Repositories;
 using Notifications.Infrastructure.Workers;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Messaging.Dapper;
@@ -70,6 +71,7 @@ public static class InfrastructureDependencyInjection
 
         services.AddOptions<RetryDeliveryWorkerOptions>()
             .BindConfiguration(RetryDeliveryWorkerOptions.SectionName);
+        services.TryAddSingleton<WorkerTelemetry>();
         services.AddHostedService<RetryDeliveryWorker>();
 
         // Idempotent inbox for incoming integration events (Dapper-backed; uses inbox_messages)

@@ -1,10 +1,12 @@
 namespace Shared.Messaging.IntegrationTests.Roundtrip;
 
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Ef.Extensions;
 using Shared.Infrastructure.Messaging.Extensions;
@@ -100,7 +102,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()));
 
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -131,7 +134,8 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
             _sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new OutboxWorkerOptions()),
             NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()));
         await worker.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var receiver = _sp.GetRequiredService<HelloReceiver>();

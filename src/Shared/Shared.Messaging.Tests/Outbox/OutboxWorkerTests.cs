@@ -1,5 +1,6 @@
 namespace Shared.Messaging.Tests.Outbox;
 
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Transport;
 using Shouldly;
@@ -47,7 +49,8 @@ public sealed class OutboxWorkerTests
         new(ScopeFactory(store, transport),
             Options.Create(new OutboxWorkerOptions()),
             logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance,
-            Clock);
+            Clock,
+            new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()));
 
     /// <summary>With pending messages: <c>RunOnceAsync</c> dispatches and marks processed.</summary>
     [Fact]

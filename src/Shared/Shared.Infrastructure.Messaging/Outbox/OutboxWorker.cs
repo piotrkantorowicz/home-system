@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;
 
 /// <summary>
@@ -19,14 +20,18 @@ using Shared.Infrastructure.Messaging.Transport;
 /// <param name="options">Batch size, poll interval, attempt limit and retry backoff.</param>
 /// <param name="logger">Receives tick and dispatch failures.</param>
 /// <param name="clock">Supplies the <c>processed_at</c> timestamp and the retry schedule.</param>
+/// <param name="telemetry">Wraps each tick in a root span and records its outcome.</param>
 public sealed partial class OutboxWorker<TDbContext>(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxWorkerOptions> options,
     ILogger<OutboxWorker<TDbContext>> logger,
-    TimeProvider clock) : BackgroundService
+    TimeProvider clock,
+    WorkerTelemetry telemetry) : BackgroundService
     where TDbContext : DbContext
 {
     private static readonly string DbContextName = typeof(TDbContext).Name;
+    private readonly string _workerName =
+        $"OutboxWorker.{DbContextName.Replace("DbContext", string.Empty, StringComparison.Ordinal)}";
 
     private readonly OutboxWorkerOptions _options = options.Value;
 
@@ -61,7 +66,9 @@ public sealed partial class OutboxWorker<TDbContext>(
     /// A no-op until the module has registered a store and the host a transport.
     /// </summary>
     /// <param name="ct">Propagates cancellation to the store and transport.</param>
-    public async Task RunOnceAsync(CancellationToken ct)
+    public Task RunOnceAsync(CancellationToken ct) => telemetry.TrackTickAsync(_workerName, RunTickAsync, ct);
+
+    private async Task RunTickAsync(CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;

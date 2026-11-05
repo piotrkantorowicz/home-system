@@ -12,7 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Cqrs.Extensions;
 using Shared.Infrastructure.Persistence.Extensions;
 
@@ -61,6 +63,7 @@ public static partial class InfrastructureDependencyInjection
         services.AddScoped<IFxRateStore, FxRateStore>();
         services.AddScoped<FxRateSync>();
         services.AddOptions<NbpFxOptions>().BindConfiguration(NbpFxOptions.SectionName);
+        services.TryAddSingleton<WorkerTelemetry>();
         services.AddSingleton<NbpFxWorker>();
         services.AddHostedService(sp => sp.GetRequiredService<NbpFxWorker>());
 

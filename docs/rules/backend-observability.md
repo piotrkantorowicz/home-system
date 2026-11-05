@@ -42,7 +42,22 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| `HomeSystem.Workers` | ActivitySource | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Workers` | Meter | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Mcp` | Meter | `Shared.Infrastructure.Web` (`McpToolMetrics`) | #808 |
+
+`HomeSystem.Workers` — every background worker runs its tick through `WorkerTelemetry.TrackTickAsync`: one **root**
+span per tick named `<worker> tick` (current for the whole tick, so the tick's DB and HTTP spans are its children),
+plus counter `homesystem.worker.ticks` (`{tick}`) and histogram `homesystem.worker.tick.duration` (`s`). Tags on
+both: `homesystem.worker` (the type name; the outbox adds the module, `OutboxWorker.DietPlanner`) and `outcome`
+(`success`, `error` when the tick throws, `cancelled` on shutdown). A new worker calls the helper from its
+`RunOnceAsync` and registers it with `services.TryAddSingleton<WorkerTelemetry>()`; a worker that swallows its own
+failures calls it *inside* the `try`, so the tick still counts as `error`.
+
+`HomeSystem.Mcp` — histogram `homesystem.mcp.tool.duration` (`s`) for every tool call, on `/mcp`
+(`McpCallLogging`) and in-process (`McpToolInvoker`). Tags: `homesystem.mcp.tool` (the tool name; a name outside
+the registered catalog is `unknown`, so callers cannot grow the series) and `outcome` (`success`, `error` for an
+error result, `exception`, `cancelled`).
 
 Instrument names: lower-case, dot-separated, prefixed by the area — `homesystem.cqrs.dispatch.duration`,
 `homesystem.messaging.outbox.pending`. Units follow UCUM (`s`, `By`, `{message}`). Durations are histograms in

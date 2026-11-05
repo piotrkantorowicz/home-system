@@ -4,12 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 
 internal sealed partial class DietReminderTickService(
     IServiceScopeFactory scopeFactory,
     IOptions<DietReminderTickServiceOptions> options,
     ILogger<DietReminderTickService> logger,
-    TimeProvider clock) : BackgroundService
+    TimeProvider clock,
+    WorkerTelemetry telemetry) : BackgroundService
 {
     private readonly DietReminderTickServiceOptions _options = options.Value;
 
@@ -43,6 +45,11 @@ internal sealed partial class DietReminderTickService(
     {
         if (!_options.Enabled) return;
 
+        await telemetry.TrackTickAsync(nameof(DietReminderTickService), RunTickAsync, ct).ConfigureAwait(false);
+    }
+
+    private async Task RunTickAsync(CancellationToken ct)
+    {
         await using var scope = scopeFactory.CreateAsyncScope();
         var jobs = scope.ServiceProvider.GetServices<IDietReminderJob>();
         var nowUtc = clock.GetUtcNow().UtcDateTime;
