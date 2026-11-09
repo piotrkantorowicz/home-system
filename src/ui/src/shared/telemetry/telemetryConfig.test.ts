@@ -1,4 +1,4 @@
-import { propagationUrls, resolveTelemetryConfig } from './telemetryConfig';
+import { ignoredUrls, propagationUrls, resolveTelemetryConfig } from './telemetryConfig';
 
 const base = {
   runtimeEnabled: undefined,
@@ -53,5 +53,24 @@ describe('propagationUrls', () => {
     expect(matches('https://auth.example.com/application/o/token/')).toBe(false);
     expect(matches('https://api.example.com.evil.io/x')).toBe(false);
     expect(matches('http://localhost:9000/application/o/token/')).toBe(false);
+  });
+});
+
+describe('ignoredUrls', () => {
+  const urls = ignoredUrls('https://app.example.com');
+  const matches = (url: string) => urls.some((re) => re.test(url));
+
+  it('matches same-origin Authentik and OTLP calls', () => {
+    expect(matches('https://app.example.com/authentik/application/o/token/')).toBe(true);
+    expect(matches('https://app.example.com/otlp/v1/traces')).toBe(true);
+    expect(matches('https://app.example.com/authentik')).toBe(true);
+  });
+
+  it('leaves API calls and look-alikes alone', () => {
+    expect(matches('https://app.example.com/api/v1/products')).toBe(false);
+    expect(matches('https://app.example.com/authentik-like/x')).toBe(false);
+    expect(matches('https://app.example.com.evil.io/otlp/v1/traces')).toBe(false);
+    expect(matches('https://other.example.com/authentik/x')).toBe(false);
+    expect(urls.every((re) => re.source.startsWith('^'))).toBe(true);
   });
 });

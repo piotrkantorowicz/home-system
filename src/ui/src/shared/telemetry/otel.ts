@@ -14,7 +14,7 @@ import { onCLS, onINP, onLCP } from 'web-vitals';
 
 import { routePattern } from './routePattern';
 import { stripQueryAndFragment } from './sanitizeUrl';
-import { propagationUrls } from './telemetryConfig';
+import { ignoredUrls, propagationUrls } from './telemetryConfig';
 
 import type { TelemetryConfig } from './telemetryConfig';
 import type { Span, SpanProcessor } from '@opentelemetry/sdk-trace-web';
@@ -60,7 +60,7 @@ export function startTelemetry(router: DataRouter, config: TelemetryConfig): voi
       new DocumentLoadInstrumentation(),
       new FetchInstrumentation({
         propagateTraceHeaderCorsUrls: propagationUrls(config.apiOrigin),
-        ignoreUrls: [OTLP_PATH],
+        ignoreUrls: ignoredUrls(window.location.origin),
       }),
     ],
   });

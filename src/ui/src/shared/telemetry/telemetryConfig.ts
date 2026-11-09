@@ -27,7 +27,17 @@ export function resolveTelemetryConfig(input: TelemetryInput): TelemetryConfig {
   };
 }
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /** Matches URLs under the API origin and nothing else (never Authentik or other third parties). */
 export function propagationUrls(apiOrigin: string): RegExp[] {
-  return [new RegExp(`^${apiOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|$)`)];
+  return [new RegExp(`^${escapeRegExp(apiOrigin)}(/|$)`)];
+}
+
+/**
+ * Same-origin proxy prefixes that get no span and no `traceparent`: FetchInstrumentation always propagates
+ * to the page's own origin, whatever `propagationUrls` says, and these go to Authentik or the collector.
+ */
+export function ignoredUrls(pageOrigin: string): RegExp[] {
+  return [new RegExp(`^${escapeRegExp(pageOrigin)}/(authentik|otlp)(/|$)`)];
 }
