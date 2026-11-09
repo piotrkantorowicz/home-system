@@ -54,7 +54,13 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/authentik/, ''),
       },
-      ...(otlpTarget ? { '/otlp': { target: otlpTarget, changeOrigin: true } } : {}),
+      ...(otlpTarget ? {
+            '/otlp': {
+              target: otlpTarget,
+              changeOrigin: true,
+              rewrite: (p) => p.replace(/^\/otlp/, ''),
+            },
+          } : {}),
     },
   },
 });

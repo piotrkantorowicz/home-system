@@ -42,8 +42,8 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
-| `HomeSystem.Workers` | ActivitySource | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
-| `HomeSystem.Workers` | Meter | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Workers` | ActivitySource | `Shared.Infrastructure.Messaging` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Workers` | Meter | `Shared.Infrastructure.Messaging` (`WorkerTelemetry`) | #808 |
 | `HomeSystem.Mcp` | Meter | `Shared.Infrastructure.Web` (`McpToolMetrics`) | #808 |
 | `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
@@ -52,14 +52,14 @@ that introduces it.
 | `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
 | `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
-`WorkerTelemetry` lives in `Shared.Abstractions.Core` deliberately: Application-layer workers (`DietReminderTickService`) may only reference `Shared.Abstractions.*`.
+Workers depend on `IWorkerTelemetry` (`Shared.Abstractions.Core.Telemetry`), so Application-layer workers (`DietReminderTickService`) can use it. The implementation, `WorkerTelemetry` in `Shared.Infrastructure.Messaging`, is registered once by the host (`AddHomeSystemObservability`); modules do not register it.
 
-`HomeSystem.Workers` — every background worker runs its tick through `WorkerTelemetry.TrackTickAsync`: one **root**
+`HomeSystem.Workers` — every background worker runs its tick through `IWorkerTelemetry.TrackTickAsync`: one **root**
 span per tick named `<worker> tick` (current for the whole tick, so the tick's DB and HTTP spans are its children),
 plus counter `homesystem.worker.ticks` (`{tick}`) and histogram `homesystem.worker.tick.duration` (`s`). Tags on
 both: `homesystem.worker` (the type name; the outbox adds the module, `OutboxWorker.DietPlanner`) and `outcome`
-(`success`, `error` when the tick throws, `cancelled` on shutdown). A new worker calls the helper from its
-`RunOnceAsync` and registers it with `services.TryAddSingleton<WorkerTelemetry>()`; a worker that swallows its own
+(`success`, `error` when the tick throws, `cancelled` on shutdown). A new worker takes `IWorkerTelemetry` and calls the helper from its
+`RunOnceAsync`; a worker that swallows its own
 failures calls it *inside* the `try`, so the tick still counts as `error`.
 
 `HomeSystem.Mcp` — histogram `homesystem.mcp.tool.duration` (`s`) for every tool call, on `/mcp`
@@ -85,7 +85,7 @@ aborts, not faults.
 | `homesystem.outbox.dead_letters` | counter, `{message}` | module, event type |
 | `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
 
-The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
+The gauges report the backlog the module's `OutboxWorker` last read (at most once per 15 s, never on shutdown; dead letters are
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
 
@@ -100,7 +100,7 @@ spans and the GenAI metrics `gen_ai.client.token.usage` and `gen_ai.client.opera
 model and provider. On top: one `execute_tool {name}` span per tool call (tags `gen_ai.tool.name`,
 `homesystem.assistant.outcome`) and counters `homesystem.assistant.tool_calls` (`{call}`; tags `tool`,
 `outcome` = `ok`, `error`, `refused`) and `homesystem.assistant.turns` (`{turn}`; tag `outcome` = `completed`,
-`failed`, `limit_reached`; a cancelled turn or tool call records nothing). Never a prompt, reply, tool argument or result.
+`failed`, `limit_reached`; recorded once, when the stream ends, and a failure anywhere in the turn wins; a cancelled turn or tool call records nothing). Never a prompt, reply, tool argument or result.
 A failed chat span carries `error.type` and the provider's exception message as its status description: provider
 error text, not request content.
 
@@ -124,7 +124,8 @@ How the host enforces its part:
 - the server span drops `url.query`; on HttpClient spans the .NET runtime sets `url.full` and replaces the whole query with `?*`. Never switch that off (`System.Net.Http.DisableUriRedaction` / `DOTNET_SYSTEM_NET_HTTP_DISABLEURIREDACTION`);
 - Npgsql records SQL text with `$n` placeholders only — never parameter values. Do not turn on parameter
   logging (`EnableSensitiveDataLogging`, Npgsql `IncludeErrorDetail`, parameter tags) in shipped code;
-- request and response bodies are never recorded.
+- request and response bodies are never recorded;
+- the hosting `Request starting …{QueryString}` log record is filtered out of the OpenTelemetry logger provider (`Microsoft.AspNetCore.Hosting.Diagnostics` is Warning+ there), so query strings never reach exported logs.
 
 Logs follow `backend-coding-standards.md` → Logging: structured placeholders for IDs, no tokens, e-mails or
 bodies. A placeholder value becomes an exported attribute, so the IDs-only rule applies to it too.

@@ -10,7 +10,7 @@ using global::Investments.Infrastructure.Persistence;
 using Investments.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// #576 — NBP rates: backfill on write, values at today's (newest) rate, NBP outages never failing a

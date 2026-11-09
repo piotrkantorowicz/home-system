@@ -1,11 +1,16 @@
 namespace HomeSystem.REST.Observability;
 
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// OpenTelemetry traces, metrics and logs for the host. The pipeline is always built; the OTLP exporter is added
@@ -28,6 +33,7 @@ public static class ObservabilityExtensions
 
     private const string DeploymentEnvironmentAttribute = "deployment.environment.name";
     private const string RuntimeMeter = "System.Runtime";
+    private const string HostingDiagnosticsCategory = "Microsoft.AspNetCore.Hosting.Diagnostics";
     private const string UrlQueryAttribute = "url.query";
 
     /// <summary>Registers tracing, metrics and logging, plus the OTLP exporter when an endpoint is configured.</summary>
@@ -37,6 +43,9 @@ public static class ObservabilityExtensions
     {
         string? version = typeof(ObservabilityExtensions).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        // The one registration every worker's tick telemetry resolves to.
+        builder.Services.TryAddSingleton<IWorkerTelemetry, WorkerTelemetry>();
 
         var telemetry = builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
@@ -62,6 +71,9 @@ public static class ObservabilityExtensions
                 .AddHttpClientInstrumentation()
                 .AddNpgsqlInstrumentation())
             .WithLogging();
+
+        // The hosting "Request starting ..." record carries {QueryString}; keep it out of OTLP, like url.query on spans.
+        builder.Logging.AddFilter<OpenTelemetryLoggerProvider>(HostingDiagnosticsCategory, LogLevel.Warning);
 
         if (!string.IsNullOrWhiteSpace(builder.Configuration[OtlpEndpointVariable]))
         {

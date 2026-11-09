@@ -3,6 +3,7 @@ namespace Assistant.IntegrationTests.Api;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
+using Assistant.Api;
 using Assistant.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
@@ -78,6 +79,21 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         cappedTurns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["limit_reached"]);
     }
 
+    /// <summary>A throw after the turn's last model call (while the history is built) counts the turn once, as failed.</summary>
+    [Fact]
+    public async Task Turn_ThrowingAfterTheLastContent_RecordsOnlyFailed()
+    {
+        using var factory = new AssistantApiFactory(databases);
+        using var turns = Collect<long>(factory, "homesystem.assistant.turns");
+        factory.Model.AnswersThenBreaksHistory(Reply);
+
+        List<System.Net.ServerSentEvents.SseItem<string>> events =
+            await AssistantApiFactory.SendAsync(await factory.HouseholdOwnerAsync(), new { message = Secret });
+
+        events.Select(e => e.EventType).ShouldContain("error");
+        turns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["failed"]);
+    }
+
     /// <summary>A tool call cancelled by the client ends its span without an outcome and counts nothing, like a cancelled turn.</summary>
     [Fact]
     public async Task ToolCall_CancelledByClient_RecordsNoOutcomeAndLeavesStatusUnset()
@@ -105,6 +121,20 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         calls.GetMeasurementSnapshot().ShouldBeEmpty();
         turns.GetMeasurementSnapshot().ShouldBeEmpty();
     }
+
+    /// <summary>A failure is counted even after the client cancelled; every other outcome is dropped once cancelled.</summary>
+    /// <param name="outcome">The turn outcome.</param>
+    /// <param name="cancelled">Whether the request was cancelled.</param>
+    /// <param name="counted">Whether the turn is counted.</param>
+    [Theory]
+    [InlineData("failed", true, true)]
+    [InlineData("failed", false, true)]
+    [InlineData("completed", true, false)]
+    [InlineData("limit_reached", true, false)]
+    [InlineData("completed", false, true)]
+    [InlineData("limit_reached", false, true)]
+    public void CountsTurn_FailureAlways_OthersOnlyWhenNotCancelled(string outcome, bool cancelled, bool counted)
+        => AssistantTelemetry.CountsTurn(outcome, cancelled).ShouldBe(counted);
 
     private static MetricCollector<T> Collect<T>(AssistantApiFactory factory, string instrument)
         where T : struct

@@ -73,6 +73,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         services.AddOutbox<MessagingTestDbContext>();
 
         services.AddSingleton<HelloReceiver>();
+        services.AddSingleton<IWorkerTelemetry, WorkerTelemetry>();
         services.AddIntegrationEventConsumer<HelloIntegrationEvent, HelloHandler, MessagingTestDbContext>();
 
         services.AddLogging();
@@ -153,7 +154,7 @@ public sealed class InProcessRoundtripIntegrationTests : IAsyncLifetime
         Options.Create(new OutboxWorkerOptions()),
         NullLogger<OutboxWorker<MessagingTestDbContext>>.Instance,
         Clock,
-        _sp.GetRequiredService<WorkerTelemetry>(),
+        _sp.GetRequiredService<IWorkerTelemetry>(),
         _sp.GetRequiredService<MessagingMetrics>());
 
     private MetricCollector<T> Collect<T>(string instrument) where T : struct

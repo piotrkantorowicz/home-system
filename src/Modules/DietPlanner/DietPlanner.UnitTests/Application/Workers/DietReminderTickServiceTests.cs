@@ -3,7 +3,6 @@ namespace DietPlanner.UnitTests.Application.Workers;
 #pragma warning disable IDE0005 // REASON: InternalsVisibleTo prevents Roslyn from resolving internal test types.
 using DietPlanner.Application.Workers;
 #pragma warning restore IDE0005
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -110,8 +109,12 @@ public sealed class DietReminderTickServiceTests
         job.Calls.ShouldBeEmpty();
     }
 
-    private static WorkerTelemetry Telemetry()
-        => new(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>());
+    private static PassThroughTelemetry Telemetry() => new();
+
+    private sealed class PassThroughTelemetry : IWorkerTelemetry
+    {
+        public Task TrackTickAsync(string worker, Func<CancellationToken, Task> tick, CancellationToken ct) => tick(ct);
+    }
 
     private sealed class RecordingJob(string name) : IDietReminderJob
     {

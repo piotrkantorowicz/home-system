@@ -73,6 +73,11 @@ internal sealed class AssistantTelemetry
     /// <param name="span">From <see cref="StartToolCall"/>.</param>
     public static void AbandonToolCall(Activity? span) => span?.Dispose();
 
+    /// <summary>Whether a turn that ended with <paramref name="outcome"/> is counted: a failure always, the rest only if not cancelled.</summary>
+    /// <param name="outcome">One of the <c>Turn*</c> constants.</param>
+    /// <param name="cancelled">Whether the request was cancelled by the time the turn ended.</param>
+    internal static bool CountsTurn(string outcome, bool cancelled) => outcome == TurnFailed || !cancelled;
+
     /// <summary>Counts a finished turn.</summary>
     /// <param name="outcome">One of the <c>Turn*</c> constants.</param>
     public void RecordTurn(string outcome) => _turns.Add(1, new KeyValuePair<string, object?>("outcome", outcome));

@@ -2,6 +2,7 @@ namespace Shared.Infrastructure.Messaging.Extensions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shared.Abstractions.Core.Telemetry;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Serialization;
@@ -31,12 +32,14 @@ public static class MessagingExtensions
         return new MessagingBuilder(services);
     }
 
-    /// <summary>Registers <see cref="MessagingMetrics"/> (and the meter factory it needs); safe to call repeatedly.</summary>
+    /// <summary>Registers <see cref="MessagingMetrics"/>, the worker telemetry fallback (and the meter factory it needs); safe to call repeatedly.</summary>
     /// <param name="services">The service collection.</param>
     public static IServiceCollection AddMessagingMetrics(this IServiceCollection services)
     {
         services.AddMetrics();
         services.TryAddSingleton<MessagingMetrics>();
+        // Fallback for a host that does not call AddHomeSystemObservability; the host's own TryAdd keeps it to one.
+        services.TryAddSingleton<IWorkerTelemetry, WorkerTelemetry>();
         return services;
     }
 
