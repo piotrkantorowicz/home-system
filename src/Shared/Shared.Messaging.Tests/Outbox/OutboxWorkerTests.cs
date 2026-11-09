@@ -331,7 +331,7 @@ public sealed class OutboxWorkerTests
             .Returns(async _ =>
             {
                 await cts.CancelAsync();
-                return (IReadOnlyList<OutboxMessage>)[];
+                return [];
             });
 
         await SutWith(store, Substitute.For<IIntegrationEventTransport>(), clock: new FakeTimeProvider(Now))
