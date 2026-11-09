@@ -87,6 +87,23 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
         host.Logs.ShouldContain(log => log.Category == ObservabilityHost.LogCategory && log.TraceId == server.TraceId);
     }
 
+    /// <summary>The hosting "Request starting" record carries the query string, so it must not reach the log exporter.</summary>
+    [Fact]
+    public async Task Log_ForRequestWithQueryString_DoesNotExportTheQueryString()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var host = await ObservabilityHost.StartAsync(database.ConnectionString, ct);
+        using var client = host.CreateClient();
+
+        using var response = await client.GetAsync($"/items/4?search={QueryValue}", ct);
+        response.EnsureSuccessStatusCode();
+
+        var server = host.WaitForSpan(IsItemsServerSpan);
+        // The app's own record from the same request is exported, so the processor is live.
+        host.Logs.ShouldContain(log => log.Category == ObservabilityHost.LogCategory && log.TraceId == server.TraceId);
+        host.Logs.ShouldNotContain(log => log.Text.Contains(QueryValue, StringComparison.Ordinal));
+    }
+
     /// <summary>Without an endpoint nothing is exported; with one, the OTLP exporter is registered.</summary>
     /// <param name="endpoint">The <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> value.</param>
     /// <param name="exported">Whether an OTLP exporter is expected.</param>

@@ -124,7 +124,8 @@ How the host enforces its part:
 - the server span drops `url.query`; on HttpClient spans the .NET runtime sets `url.full` and replaces the whole query with `?*`. Never switch that off (`System.Net.Http.DisableUriRedaction` / `DOTNET_SYSTEM_NET_HTTP_DISABLEURIREDACTION`);
 - Npgsql records SQL text with `$n` placeholders only — never parameter values. Do not turn on parameter
   logging (`EnableSensitiveDataLogging`, Npgsql `IncludeErrorDetail`, parameter tags) in shipped code;
-- request and response bodies are never recorded.
+- request and response bodies are never recorded;
+- the hosting `Request starting …{QueryString}` log record is filtered out of the OpenTelemetry logger provider (`Microsoft.AspNetCore.Hosting.Diagnostics` is Warning+ there), so query strings never reach exported logs.
 
 Logs follow `backend-coding-standards.md` → Logging: structured placeholders for IDs, no tokens, e-mails or
 bodies. A placeholder value becomes an exported attribute, so the IDs-only rule applies to it too.

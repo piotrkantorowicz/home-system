@@ -34,20 +34,20 @@ internal sealed class ObservabilityHost : IAsyncDisposable
     private readonly WebApplication _app;
     private readonly NpgsqlDataSource _dataSource;
     private readonly CapturingProcessor<Activity, Activity> _spans;
-    private readonly CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId)> _logs;
+    private readonly CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId, string Text)> _logs;
 
     private ObservabilityHost(
         WebApplication app,
         NpgsqlDataSource dataSource,
         CapturingProcessor<Activity, Activity> spans,
-        CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId)> logs)
+        CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId, string Text)> logs)
         => (_app, _dataSource, _spans, _logs) = (app, dataSource, spans, logs);
 
     /// <summary>Every finished span, from any host in the process — filter by what the test sent.</summary>
     public IReadOnlyList<Activity> Spans => _spans.Items;
 
-    /// <summary>Category and trace ID of every log record written.</summary>
-    public IReadOnlyList<(string? Category, ActivityTraceId TraceId)> Logs => _logs.Items;
+    /// <summary>Category, trace ID and text (message plus every attribute value) of every log record written.</summary>
+    public IReadOnlyList<(string? Category, ActivityTraceId TraceId, string Text)> Logs => _logs.Items;
 
     /// <summary>Starts the host against <paramref name="connectionString"/>, with export switched off.</summary>
     /// <param name="connectionString">The database <c>/items/{id}</c> queries.</param>
@@ -60,8 +60,8 @@ internal sealed class ObservabilityHost : IAsyncDisposable
         builder.AddHomeSystemObservability();
 
         var spans = new CapturingProcessor<Activity, Activity>(span => span);
-        var logs = new CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId)>(
-            record => (record.CategoryName, record.TraceId));
+        var logs = new CapturingProcessor<LogRecord, (string? Category, ActivityTraceId TraceId, string Text)>(
+            record => (record.CategoryName, record.TraceId, LogText(record)));
         builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddProcessor(spans));
         builder.Services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddProcessor(logs));
 
@@ -88,6 +88,9 @@ internal sealed class ObservabilityHost : IAsyncDisposable
         await app.StartAsync(ct);
         return new ObservabilityHost(app, dataSource, spans, logs);
     }
+
+    private static string LogText(LogRecord record)
+        => record.FormattedMessage + " " + string.Join(' ', record.Attributes?.Select(a => a.Value?.ToString()) ?? []);
 
     /// <summary>A client talking to the in-memory server.</summary>
     public HttpClient CreateClient() => _app.GetTestClient();
