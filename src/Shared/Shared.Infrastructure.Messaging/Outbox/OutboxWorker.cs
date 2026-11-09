@@ -33,11 +33,13 @@ public sealed partial class OutboxWorker<TDbContext>(
     MessagingMetrics metrics) : BackgroundService
     where TDbContext : DbContext
 {
+    private const int BacklogIntervalSeconds = 15;
     private static readonly string DbContextName = typeof(TDbContext).Name;
     private readonly string _moduleName = OutboxModule.NameOf(typeof(TDbContext));
     private readonly string _workerName = $"OutboxWorker.{OutboxModule.NameOf(typeof(TDbContext))}";
 
     private readonly OutboxWorkerOptions _options = options.Value;
+    private long? _backlogReportedAt;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -135,6 +137,16 @@ public sealed partial class OutboxWorker<TDbContext>(
 
     private async Task ReportBacklogAsync(IOutboxStore store, CancellationToken ct)
     {
+        // Runs in a finally: it must never throw, or it would replace the tick's own exception.
+        if (ct.IsCancellationRequested)
+            return;
+
+        // The gauges are read every metric interval, so an aggregate query per idle tick is wasted.
+        // Stamped before the query, so a failing database is not retried on the very next tick either.
+        if (_backlogReportedAt is { } last && clock.GetElapsedTime(last) < TimeSpan.FromSeconds(BacklogIntervalSeconds))
+            return;
+        _backlogReportedAt = clock.GetTimestamp();
+
         try
         {
             var backlog = await store.GetPendingAsync(_options.MaxAttempts, ct).ConfigureAwait(false);
@@ -146,6 +158,10 @@ public sealed partial class OutboxWorker<TDbContext>(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogBacklogFailed(ex, DbContextName);
+        }
+        catch (OperationCanceledException)
+        {
+            // Shutdown mid-query: nothing to report, and the tick's own outcome stands.
         }
     }
 

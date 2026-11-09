@@ -48,11 +48,12 @@ public sealed class OutboxWorkerTests
         IOutboxStore? store,
         IIntegrationEventTransport? transport,
         ILogger<OutboxWorker<TestDbContext>>? logger = null,
-        IMeterFactory? meters = null) =>
+        IMeterFactory? meters = null,
+        TimeProvider? clock = null) =>
         new(ScopeFactory(store, transport),
             Options.Create(new OutboxWorkerOptions()),
             logger ?? NullLogger<OutboxWorker<TestDbContext>>.Instance,
-            Clock,
+            clock ?? Clock,
             new WorkerTelemetry(new ServiceCollection().AddMetrics().BuildServiceProvider().GetRequiredService<IMeterFactory>()),
             new MessagingMetrics(meters ?? NewMeters()));
 
@@ -291,5 +292,70 @@ public sealed class OutboxWorkerTests
 
         pending.RecordObservableInstruments();
         pending.LastMeasurement!.Value.ShouldBe(4);
+    }
+
+    private static IOutboxStore IdleStore()
+    {
+        var store = Substitute.For<IOutboxStore>();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>()).Returns([]);
+        store.GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(new OutboxPending(0, null));
+        return store;
+    }
+
+    /// <summary>Idle ticks inside the interval do not repeat the backlog query; it runs again once the interval has passed.</summary>
+    [Fact]
+    public async Task RunOnceAsync_IdleTicksWithinInterval_QueryBacklogOnce()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(Now);
+        var store = IdleStore();
+        var sut = SutWith(store, Substitute.For<IIntegrationEventTransport>(), clock: clock);
+
+        await sut.RunOnceAsync(ct);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        await sut.RunOnceAsync(ct);
+        await sut.RunOnceAsync(ct);
+        await store.Received(1).GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+
+        clock.Advance(TimeSpan.FromSeconds(15));
+        await sut.RunOnceAsync(ct);
+        await store.Received(2).GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A tick that ends because the host is stopping does not query the backlog.</summary>
+    [Fact]
+    public async Task RunOnceAsync_WhenCancelled_SkipsBacklogQuery()
+    {
+        using var cts = new CancellationTokenSource();
+        var store = IdleStore();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await cts.CancelAsync();
+                return (IReadOnlyList<OutboxMessage>)[];
+            });
+
+        await SutWith(store, Substitute.For<IIntegrationEventTransport>(), clock: new FakeTimeProvider(Now))
+            .RunOnceAsync(cts.Token);
+
+        await store.DidNotReceive().GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A backlog query that throws, even with <c>OperationCanceledException</c>, never replaces the tick's own exception.</summary>
+    [Theory]
+    [InlineData(typeof(OperationCanceledException))]
+    [InlineData(typeof(InvalidOperationException))]
+    public async Task RunOnceAsync_WhenBacklogQueryThrows_KeepsTheTickException(Type backlogFailure)
+    {
+        var store = IdleStore();
+        store.GetUnprocessedAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<IReadOnlyList<OutboxMessage>>(new TimeoutException("tick")));
+        store.GetPendingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<OutboxPending>((Exception)Activator.CreateInstance(backlogFailure)!));
+
+        var act = () => SutWith(store, Substitute.For<IIntegrationEventTransport>(), clock: new FakeTimeProvider(Now))
+            .RunOnceAsync(TestContext.Current.CancellationToken);
+
+        (await act.ShouldThrowAsync<TimeoutException>()).Message.ShouldBe("tick");
     }
 }

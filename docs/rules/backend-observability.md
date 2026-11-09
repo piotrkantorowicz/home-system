@@ -85,7 +85,7 @@ aborts, not faults.
 | `homesystem.outbox.dead_letters` | counter, `{message}` | module, event type |
 | `homesystem.inbox.handle.duration` | histogram, `s` | event type, handler type, outcome (`handled`, `duplicate`, `error`) |
 
-The gauges report the backlog the module's `OutboxWorker` stored at the end of its last tick (dead letters are
+The gauges report the backlog the module's `OutboxWorker` last read (at most once per 15 s, never on shutdown; dead letters are
 excluded); a module without a running worker reports nothing. A handler cancelled by shutdown records no inbox
 measurement, so deploys do not show up as `error`.
 
