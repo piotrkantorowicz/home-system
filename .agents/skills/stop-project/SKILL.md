@@ -59,7 +59,8 @@ cd infrastructure && docker compose --profile diet-planner --profile notificatio
 
 - Add `-v` only for `--volumes` (after explicit user confirmation) — this wipes every
   named volume: `authentik_db_data`, `authentik_redis_data`, `authentik_media`,
-  `authentik_templates`, `dietplanner_db_data`, `notifications_db_data`. Authentik
+  `authentik_templates`, `dietplanner_db_data`, `notifications_db_data`,
+  `household_db_data`, `budget_db_data`, `investments_db_data`. Authentik
   re-bootstraps from blueprints on next `up`; module DBs re-migrate.
 
 ### 3. Report

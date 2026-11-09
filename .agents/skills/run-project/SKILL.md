@@ -44,7 +44,7 @@ $run-project [--infra-only | --no-frontend | --no-observability | --stop]
 
 - Confirm `infrastructure/.env` exists. If not, copy `infrastructure/.env.example` → `infrastructure/.env` and tell the user to fill in real passwords (Authentik will not boot without them). Do not invent secret values.
 - Confirm Docker is running (`docker info`).
-- If `--stop` was passed: run `$stop-project` (it downs every profile, `observability` included), then kill any `dotnet run` / `vite` processes started for this stack, and stop here.
+- If `--stop` was passed: run `$stop-project` (it stops the API and Vite and downs every profile, `observability` included), and stop here.
 
 ### 2. Infrastructure (Docker)
 
