@@ -27,7 +27,8 @@ $stop-project [--app-only | --infra-only | --volumes]
 | 5173 | Vite dev server |
 | 5050 / 7050 | .NET host (`HomeSystem.REST`) |
 | 9000 / 9443 | Authentik (Docker) |
-| 5432 / 5433 | Postgres (Docker) |
+| 5432–5436 | Postgres (Docker) |
+| 18888 / 4317 / 4318 | Aspire dashboard + OTLP (Docker, `observability` profile) |
 
 ## Instructions
 
@@ -53,7 +54,7 @@ $stop-project [--app-only | --infra-only | --volumes]
 ### 2. Docker infra (skip if `--app-only`)
 
 ```bash
-cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household --profile budget --profile investments down
+cd infrastructure && docker compose --profile diet-planner --profile notifications --profile household --profile budget --profile investments --profile observability down
 ```
 
 - Add `-v` only for `--volumes` (after explicit user confirmation) — this wipes every
