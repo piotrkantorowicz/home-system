@@ -44,6 +44,14 @@ public sealed class ScriptedChatClient : IChatClient
     /// <param name="text">The answer.</param>
     public void Answers(string text) => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, text)));
 
+    /// <summary>
+    /// Queues a model turn that answers with text plus a content type the history cannot serialize, so the turn
+    /// finishes its model calls and then throws while the agent builds the <c>history</c> event.
+    /// </summary>
+    /// <param name="text">The answer.</param>
+    public void AnswersThenBreaksHistory(string text)
+        => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, [new TextContent(text), new UnserializableContent()])));
+
     /// <summary>Queues a model turn that streams its text and usage, then fails like a dropped connection.</summary>
     /// <param name="text">The text streamed before the failure.</param>
     public void FailsAfterStreaming(string text) => _script.Enqueue(() =>
@@ -90,3 +98,8 @@ public sealed class ScriptedChatClient : IChatClient
         return response;
     }
 }
+
+/// <summary>An <see cref="AIContent"/> subtype the AI JSON options do not know, so serializing it throws.</summary>
+#pragma warning disable S2094 // a marker type: being unknown to the serializer is the point
+internal sealed class UnserializableContent : AIContent;
+#pragma warning restore S2094

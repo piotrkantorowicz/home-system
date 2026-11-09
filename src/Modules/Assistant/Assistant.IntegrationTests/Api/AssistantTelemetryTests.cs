@@ -78,6 +78,21 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         cappedTurns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["limit_reached"]);
     }
 
+    /// <summary>A throw after the turn's last model call (while the history is built) counts the turn once, as failed.</summary>
+    [Fact]
+    public async Task Turn_ThrowingAfterTheLastContent_RecordsOnlyFailed()
+    {
+        using var factory = new AssistantApiFactory(databases);
+        using var turns = Collect<long>(factory, "homesystem.assistant.turns");
+        factory.Model.AnswersThenBreaksHistory(Reply);
+
+        List<System.Net.ServerSentEvents.SseItem<string>> events =
+            await AssistantApiFactory.SendAsync(await factory.HouseholdOwnerAsync(), new { message = Secret });
+
+        events.Select(e => e.EventType).ShouldContain("error");
+        turns.GetMeasurementSnapshot().Select(m => m.Tags["outcome"]).ShouldBe(["failed"]);
+    }
+
     /// <summary>A tool call cancelled by the client ends its span without an outcome and counts nothing, like a cancelled turn.</summary>
     [Fact]
     public async Task ToolCall_CancelledByClient_RecordsNoOutcomeAndLeavesStatusUnset()
