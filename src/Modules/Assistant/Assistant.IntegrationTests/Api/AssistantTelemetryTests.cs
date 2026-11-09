@@ -3,6 +3,7 @@ namespace Assistant.IntegrationTests.Api;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
+using Assistant.Api;
 using Assistant.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
@@ -120,6 +121,20 @@ public sealed class AssistantTelemetryTests(AssistantDatabaseFixture databases) 
         calls.GetMeasurementSnapshot().ShouldBeEmpty();
         turns.GetMeasurementSnapshot().ShouldBeEmpty();
     }
+
+    /// <summary>A failure is counted even after the client cancelled; every other outcome is dropped once cancelled.</summary>
+    /// <param name="outcome">The turn outcome.</param>
+    /// <param name="cancelled">Whether the request was cancelled.</param>
+    /// <param name="counted">Whether the turn is counted.</param>
+    [Theory]
+    [InlineData("failed", true, true)]
+    [InlineData("failed", false, true)]
+    [InlineData("completed", true, false)]
+    [InlineData("limit_reached", true, false)]
+    [InlineData("completed", false, true)]
+    [InlineData("limit_reached", false, true)]
+    public void CountsTurn_FailureAlways_OthersOnlyWhenNotCancelled(string outcome, bool cancelled, bool counted)
+        => AssistantTelemetry.CountsTurn(outcome, cancelled).ShouldBe(counted);
 
     private static MetricCollector<T> Collect<T>(AssistantApiFactory factory, string instrument)
         where T : struct

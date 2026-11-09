@@ -146,7 +146,9 @@ internal sealed partial class AssistantAgent(
         }
         finally
         {
-            if (!ct.IsCancellationRequested && outcome.Value is { } recorded)
+            // A failure counts even if the client disconnected after the error event; other outcomes do not
+            // count once the turn was cancelled.
+            if (outcome.Value is { } recorded && AssistantTelemetry.CountsTurn(recorded, ct.IsCancellationRequested))
                 telemetry.RecordTurn(recorded);
         }
     }
