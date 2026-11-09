@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
-using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>Hosted cleanup distinguishes provider cancellation from application shutdown.</summary>
 public sealed class RecipeImageCleanupWorkerTests

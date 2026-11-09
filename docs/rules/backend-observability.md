@@ -42,8 +42,8 @@ that introduces it.
 
 | Name | Kind | Owner | Slice |
 |---|---|---|---|
-| `HomeSystem.Workers` | ActivitySource | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
-| `HomeSystem.Workers` | Meter | `Shared.Abstractions.Core` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Workers` | ActivitySource | `Shared.Infrastructure.Messaging` (`WorkerTelemetry`) | #808 |
+| `HomeSystem.Workers` | Meter | `Shared.Infrastructure.Messaging` (`WorkerTelemetry`) | #808 |
 | `HomeSystem.Mcp` | Meter | `Shared.Infrastructure.Web` (`McpToolMetrics`) | #808 |
 | `HomeSystem.Cqrs` | ActivitySource | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
 | `HomeSystem.Cqrs` | Meter | `Shared.Infrastructure.Cqrs` (`CqrsTelemetry`) | #804 |
@@ -52,14 +52,14 @@ that introduces it.
 | `HomeSystem.Assistant` | ActivitySource | `Assistant.Api` (`AssistantTelemetry`; chat spans from the `UseOpenTelemetry` wrapper) | #807 |
 | `HomeSystem.Assistant` | Meter | `Assistant.Api` (`AssistantTelemetry`; GenAI metrics from the wrapper) | #807 |
 
-`WorkerTelemetry` lives in `Shared.Abstractions.Core` deliberately: Application-layer workers (`DietReminderTickService`) may only reference `Shared.Abstractions.*`.
+Workers depend on `IWorkerTelemetry` (`Shared.Abstractions.Core.Telemetry`), so Application-layer workers (`DietReminderTickService`) can use it. The implementation, `WorkerTelemetry` in `Shared.Infrastructure.Messaging`, is registered once by the host (`AddHomeSystemObservability`); modules do not register it.
 
-`HomeSystem.Workers` — every background worker runs its tick through `WorkerTelemetry.TrackTickAsync`: one **root**
+`HomeSystem.Workers` — every background worker runs its tick through `IWorkerTelemetry.TrackTickAsync`: one **root**
 span per tick named `<worker> tick` (current for the whole tick, so the tick's DB and HTTP spans are its children),
 plus counter `homesystem.worker.ticks` (`{tick}`) and histogram `homesystem.worker.tick.duration` (`s`). Tags on
 both: `homesystem.worker` (the type name; the outbox adds the module, `OutboxWorker.DietPlanner`) and `outcome`
-(`success`, `error` when the tick throws, `cancelled` on shutdown). A new worker calls the helper from its
-`RunOnceAsync` and registers it with `services.TryAddSingleton<WorkerTelemetry>()`; a worker that swallows its own
+(`success`, `error` when the tick throws, `cancelled` on shutdown). A new worker takes `IWorkerTelemetry` and calls the helper from its
+`RunOnceAsync`; a worker that swallows its own
 failures calls it *inside* the `try`, so the tick still counts as `error`.
 
 `HomeSystem.Mcp` — histogram `homesystem.mcp.tool.duration` (`s`) for every tool call, on `/mcp`

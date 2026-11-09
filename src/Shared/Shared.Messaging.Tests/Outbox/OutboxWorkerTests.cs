@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
-using Shared.Abstractions.Core.Telemetry;
 using Shared.Infrastructure.Messaging.Outbox;
 using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Infrastructure.Messaging.Transport;

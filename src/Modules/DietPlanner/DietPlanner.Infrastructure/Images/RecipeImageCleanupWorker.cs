@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Shared.Abstractions.Core.Telemetry;
 
 internal sealed partial class RecipeImageCleanupWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    ILogger<RecipeImageCleanupWorker> logger, IHostEnvironment environment, WorkerTelemetry telemetry) : BackgroundService
+    ILogger<RecipeImageCleanupWorker> logger, IHostEnvironment environment, IWorkerTelemetry telemetry) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {

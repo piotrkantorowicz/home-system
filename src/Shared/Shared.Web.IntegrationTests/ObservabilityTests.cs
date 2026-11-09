@@ -3,6 +3,9 @@ namespace Shared.Web.IntegrationTests;
 using System.Diagnostics;
 using HomeSystem.REST.Observability;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 using Shared.Web.IntegrationTests.Infrastructure;
 
 /// <summary>
@@ -121,6 +124,20 @@ public sealed class ObservabilityTests(ObservabilityDatabaseFixture database) : 
         builder.Services
             .Any(descriptor => (descriptor.ImplementationType ?? descriptor.ServiceType).FullName?.Contains("Otlp", StringComparison.Ordinal) == true)
             .ShouldBe(exported);
+    }
+
+    /// <summary>The host registers worker telemetry once, so modules need not.</summary>
+    [Fact]
+    public void Host_RegistersWorkerTelemetryOnce()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration[ObservabilityExtensions.OtlpEndpointVariable] = string.Empty;
+
+        builder.AddHomeSystemObservability();
+
+        builder.Services.Count(d => d.ServiceType == typeof(IWorkerTelemetry)).ShouldBe(1);
+        using var provider = builder.Services.BuildServiceProvider();
+        provider.GetRequiredService<IWorkerTelemetry>().ShouldBeOfType<WorkerTelemetry>();
     }
 
     private static bool IsItemsServerSpan(Activity span)

@@ -17,7 +17,7 @@ internal sealed partial class RetryDeliveryWorker(
     IOptions<RetryDeliveryWorkerOptions> options,
     ILogger<RetryDeliveryWorker> logger,
     TimeProvider clock,
-    WorkerTelemetry telemetry) : BackgroundService
+    IWorkerTelemetry telemetry) : BackgroundService
 {
     private readonly RetryDeliveryWorkerOptions _options = options.Value;
 

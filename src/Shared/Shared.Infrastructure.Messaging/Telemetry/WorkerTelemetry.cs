@@ -1,14 +1,15 @@
-namespace Shared.Abstractions.Core.Telemetry;
+namespace Shared.Infrastructure.Messaging.Telemetry;
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Shared.Abstractions.Core.Telemetry;
 
 /// <summary>
 /// Measures background worker ticks (<c>HomeSystem.Workers</c> source and meter): one root span per tick, so the
 /// database calls a tick makes have a parent, plus a tick counter and a duration histogram tagged by worker and
-/// outcome. Singleton, created through <see cref="IMeterFactory"/>. Conventions: docs/rules/backend-observability.md.
+/// outcome. Singleton, created through <see cref="IMeterFactory"/> and registered once by the host. Conventions: docs/rules/backend-observability.md.
 /// </summary>
-public sealed class WorkerTelemetry
+public sealed class WorkerTelemetry : IWorkerTelemetry
 {
     /// <summary>Name of the <see cref="ActivitySource"/> and the <see cref="Meter"/>; the host subscribes to <c>HomeSystem.*</c>.</summary>
     public const string Name = "HomeSystem.Workers";
@@ -44,15 +45,7 @@ public sealed class WorkerTelemetry
         _duration = meter.CreateHistogram<double>("homesystem.worker.tick.duration", unit: "s");
     }
 
-    /// <summary>
-    /// Runs one tick inside a new root span named <c>&lt;worker&gt; tick</c> and records its outcome. The exception of
-    /// a failed tick is rethrown; cancellation through <paramref name="ct"/> is recorded as <c>cancelled</c>, not
-    /// <c>error</c>.
-    /// </summary>
-    /// <param name="worker">Low-cardinality worker name (the type name, plus the module for per-module workers).</param>
-    /// <param name="tick">The tick body.</param>
-    /// <param name="ct">The worker's stopping token, passed to <paramref name="tick"/>.</param>
-    /// <returns>A task that completes with the tick.</returns>
+    /// <inheritdoc />
     public async Task TrackTickAsync(string worker, Func<CancellationToken, Task> tick, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(tick);

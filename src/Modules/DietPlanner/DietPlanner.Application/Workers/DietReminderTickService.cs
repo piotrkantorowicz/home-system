@@ -11,7 +11,7 @@ internal sealed partial class DietReminderTickService(
     IOptions<DietReminderTickServiceOptions> options,
     ILogger<DietReminderTickService> logger,
     TimeProvider clock,
-    WorkerTelemetry telemetry) : BackgroundService
+    IWorkerTelemetry telemetry) : BackgroundService
 {
     private readonly DietReminderTickServiceOptions _options = options.Value;
 

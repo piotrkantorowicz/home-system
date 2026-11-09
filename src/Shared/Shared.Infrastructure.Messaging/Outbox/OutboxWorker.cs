@@ -29,7 +29,7 @@ public sealed partial class OutboxWorker<TDbContext>(
     IOptions<OutboxWorkerOptions> options,
     ILogger<OutboxWorker<TDbContext>> logger,
     TimeProvider clock,
-    WorkerTelemetry telemetry,
+    IWorkerTelemetry telemetry,
     MessagingMetrics metrics) : BackgroundService
     where TDbContext : DbContext
 {

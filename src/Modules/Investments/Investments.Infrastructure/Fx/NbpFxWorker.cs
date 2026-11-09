@@ -17,7 +17,7 @@ internal sealed partial class NbpFxWorker(
     IOptions<NbpFxOptions> options,
     TimeProvider clock,
     ILogger<NbpFxWorker> logger,
-    WorkerTelemetry telemetry) : BackgroundService
+    IWorkerTelemetry telemetry) : BackgroundService
 {
     // ponytail: hourly instead of a 12:30 schedule; a run with nothing to fetch costs one 404 per
     // currency. Schedule precisely if NBP ever rate-limits.

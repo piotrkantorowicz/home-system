@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
-using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>The tick span, counter and duration histogram recorded by <see cref="WorkerTelemetry"/>.</summary>
 public sealed class WorkerTelemetryTests : IDisposable

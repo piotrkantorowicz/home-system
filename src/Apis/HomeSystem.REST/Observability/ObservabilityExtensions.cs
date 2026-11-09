@@ -1,6 +1,7 @@
 namespace HomeSystem.REST.Observability;
 
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OpenTelemetry;
@@ -8,6 +9,8 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Shared.Abstractions.Core.Telemetry;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// OpenTelemetry traces, metrics and logs for the host. The pipeline is always built; the OTLP exporter is added
@@ -40,6 +43,9 @@ public static class ObservabilityExtensions
     {
         string? version = typeof(ObservabilityExtensions).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        // The one registration every worker's tick telemetry resolves to.
+        builder.Services.TryAddSingleton<IWorkerTelemetry, WorkerTelemetry>();
 
         var telemetry = builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
