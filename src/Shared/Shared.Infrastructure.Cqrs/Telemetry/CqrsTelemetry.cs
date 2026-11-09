@@ -25,20 +25,52 @@ internal sealed class CqrsTelemetry
 
     public async Task<T> TrackAsync<T>(string kind, string name, Func<Task<T>> dispatch)
     {
-        using var activity = Source.StartActivity(name);
-        activity?.SetTag("cqrs.kind", kind);
-        activity?.SetTag("cqrs.name", name);
-
-        var start = Stopwatch.GetTimestamp();
-        var outcome = "success";
+        var scope = Begin(kind, name);
         try
         {
-            return await dispatch();
+            var result = await dispatch();
+            scope.End(null);
+            return result;
         }
         catch (Exception ex)
         {
-            outcome = ex switch
+            scope.End(ex);
+            throw;
+        }
+    }
+
+    public async Task TrackAsync(string kind, string name, Func<Task> dispatch)
+    {
+        var scope = Begin(kind, name);
+        try
+        {
+            await dispatch();
+            scope.End(null);
+        }
+        catch (Exception ex)
+        {
+            scope.End(ex);
+            throw;
+        }
+    }
+
+    // The span starts before the handler runs, so the handler's own spans are its children.
+    private Scope Begin(string kind, string name)
+    {
+        var activity = Source.StartActivity(name);
+        activity?.SetTag("cqrs.kind", kind);
+        activity?.SetTag("cqrs.name", name);
+        return new Scope(_duration, kind, name, activity, Stopwatch.GetTimestamp());
+    }
+
+    private readonly struct Scope(Histogram<double> duration, string kind, string name, Activity? activity, long start)
+    {
+        /// <summary>Records the outcome and ends the span; called exactly once, with the failure or null.</summary>
+        public void End(Exception? failure)
+        {
+            var outcome = failure switch
             {
+                null => "success",
                 CommandValidationException => "validation_error",
                 NotFoundException => "not_found",
                 ForbiddenException => "forbidden",
@@ -51,25 +83,15 @@ internal sealed class CqrsTelemetry
             // Rejections the API answers with 4xx, and client aborts, are not faults:
             // only "error" marks the span failed.
             if (outcome == "error")
-                activity?.SetStatus(ActivityStatusCode.Error, ex.GetType().Name);
+                activity?.SetStatus(ActivityStatusCode.Error, failure!.GetType().Name);
 
-            throw;
-        }
-        finally
-        {
             activity?.SetTag("cqrs.outcome", outcome);
-            _duration.Record(
+            duration.Record(
                 Stopwatch.GetElapsedTime(start).TotalSeconds,
                 new("cqrs.kind", kind),
                 new("cqrs.name", name),
                 new("cqrs.outcome", outcome));
+            activity?.Dispose();
         }
     }
-
-    public async Task TrackAsync(string kind, string name, Func<Task> dispatch)
-        => await TrackAsync(kind, name, async () =>
-        {
-            await dispatch();
-            return true;
-        });
 }
