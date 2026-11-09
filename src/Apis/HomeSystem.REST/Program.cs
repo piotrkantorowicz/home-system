@@ -5,6 +5,7 @@ using DietPlanner.Api;
 using DietPlanner.Infrastructure;
 using HomeSystem.REST;
 using HomeSystem.REST.Mcp;
+using HomeSystem.REST.Observability;
 using Household.Api;
 using Household.Infrastructure;
 using Investments.Api;
@@ -25,6 +26,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Wall clock — every handler, worker and inbox/outbox component reads time through this.
 builder.Services.AddSingleton(TimeProvider.System);
+
+// OpenTelemetry — exports over OTLP only when OTEL_EXPORTER_OTLP_ENDPOINT is set (docs/rules/backend-observability.md).
+builder.AddHomeSystemObservability();
 
 // ==============================================
 // Modules
@@ -118,7 +122,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
               .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-SignalR-User-Agent")
+              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-SignalR-User-Agent", "traceparent", "tracestate")
               .AllowCredentials();
     });
 });

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 
 /// <summary>
 /// Keeps NBP rates current. NBP publishes table A around 11:45–12:15 Warsaw time on business days;
@@ -15,7 +16,8 @@ internal sealed partial class NbpFxWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<NbpFxOptions> options,
     TimeProvider clock,
-    ILogger<NbpFxWorker> logger) : BackgroundService
+    ILogger<NbpFxWorker> logger,
+    IWorkerTelemetry telemetry) : BackgroundService
 {
     // ponytail: hourly instead of a 12:30 schedule; a run with nothing to fetch costs one 404 per
     // currency. Schedule precisely if NBP ever rate-limits.
@@ -44,7 +46,9 @@ internal sealed partial class NbpFxWorker(
 
     /// <summary>One sync of every foreign currency up to today.</summary>
     /// <param name="ct">Cancellation token.</param>
-    public async Task RunOnceAsync(CancellationToken ct)
+    public Task RunOnceAsync(CancellationToken ct) => telemetry.TrackTickAsync(nameof(NbpFxWorker), RunTickAsync, ct);
+
+    private async Task RunTickAsync(CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var sync = scope.ServiceProvider.GetRequiredService<FxRateSync>();

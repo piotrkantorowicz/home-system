@@ -25,6 +25,7 @@ using Shared.Infrastructure.Web;
 /// <param name="usage">Per-user token budget, checked before and counted after every model call.</param>
 /// <param name="pending">Signs held writes.</param>
 /// <param name="clock">Source of today's date for the instructions.</param>
+/// <param name="telemetry">Tool-call spans and tool-call and turn counters.</param>
 /// <param name="logger">Logs tool names, outcomes, durations and token counts; never prompts, arguments or results.</param>
 internal sealed partial class AssistantAgent(
     IChatClient chat,
@@ -34,6 +35,7 @@ internal sealed partial class AssistantAgent(
     AssistantUsage usage,
     PendingActions pending,
     TimeProvider clock,
+    AssistantTelemetry telemetry,
     ILogger<AssistantAgent> logger)
 {
     private const string Instructions = """
@@ -84,7 +86,7 @@ internal sealed partial class AssistantAgent(
     public IAsyncEnumerable<SseItem<object>> RunAsync(
         ClaimsPrincipal user, IReadOnlyList<ChatMessage> history, string message, DataContent? image, AssistantDocument? document,
         TimeZoneInfo zone, CancellationToken ct)
-        => GuardedAsync(TurnAsync(user, history, message, image, document, null, false, zone, ct), ct);
+        => Guarded(outcome => TurnAsync(user, history, message, image, document, null, false, zone, outcome, ct), ct);
 
     /// <summary>Runs the held write on confirm, or tells the model it was cancelled, then continues the turn.</summary>
     /// <param name="user">The signed-in caller; the token was checked to be theirs.</param>
@@ -96,38 +98,65 @@ internal sealed partial class AssistantAgent(
     /// <returns>The event stream (design §3.3).</returns>
     public IAsyncEnumerable<SseItem<object>> DecideAsync(
         ClaimsPrincipal user, IReadOnlyList<ChatMessage> history, PendingAction action, bool confirmed, TimeZoneInfo zone, CancellationToken ct)
-        => GuardedAsync(TurnAsync(user, history, null, null, null, action, confirmed, zone, ct), ct);
+        => Guarded(outcome => TurnAsync(user, history, null, null, null, action, confirmed, zone, outcome, ct), ct);
 
-    // A provider failure mid-turn becomes an error event; the stream still ends with done.
-    private async IAsyncEnumerable<SseItem<object>> GuardedAsync(IAsyncEnumerable<SseItem<object>> events, [EnumeratorCancellation] CancellationToken ct)
+    // What the turn ended as, set by TurnAsync once it knows; read at the single exit of GuardedAsync.
+    private sealed class TurnOutcome
     {
-        await using IAsyncEnumerator<SseItem<object>> turn = events.GetAsyncEnumerator(ct);
-        var failed = false;
-        while (!failed)
+        public string? Value { get; set; }
+    }
+
+    private IAsyncEnumerable<SseItem<object>> Guarded(Func<TurnOutcome, IAsyncEnumerable<SseItem<object>>> turn, CancellationToken ct)
+    {
+        var outcome = new TurnOutcome();
+        return GuardedAsync(turn(outcome), outcome, ct);
+    }
+
+    // A provider failure mid-turn becomes an error event; the stream still ends with done. The turn is counted
+    // exactly once, in the finally: a failure anywhere (even after the last content) wins, and a cancelled or
+    // abandoned turn is not counted.
+    private async IAsyncEnumerable<SseItem<object>> GuardedAsync(
+        IAsyncEnumerable<SseItem<object>> events, TurnOutcome outcome, [EnumeratorCancellation] CancellationToken ct)
+    {
+        try
         {
-            SseItem<object>? next;
-            try
+            await using IAsyncEnumerator<SseItem<object>> turn = events.GetAsyncEnumerator(ct);
+            var failed = false;
+            while (!failed)
             {
-                next = await turn.MoveNextAsync() ? turn.Current : null;
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                LogTurnFailed(logger, ex);
-                next = Event("error", new { message = "The assistant is unavailable right now. Try again later." });
-                failed = true;
+                SseItem<object>? next;
+                try
+                {
+                    next = await turn.MoveNextAsync() ? turn.Current : null;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    LogTurnFailed(logger, ex);
+                    outcome.Value = AssistantTelemetry.TurnFailed;
+                    next = Event("error", new { message = "The assistant is unavailable right now. Try again later." });
+                    failed = true;
+                }
+
+                if (next is null)
+                    break;
+                yield return next.Value;
             }
 
-            if (next is null)
-                break;
-            yield return next.Value;
+            yield return Event("done", new { });
         }
-
-        yield return Event("done", new { });
+        finally
+        {
+            // A failure counts even if the client disconnected after the error event; other outcomes do not
+            // count once the turn was cancelled.
+            if (outcome.Value is { } recorded && AssistantTelemetry.CountsTurn(recorded, ct.IsCancellationRequested))
+                telemetry.RecordTurn(recorded);
+        }
     }
 
     private async IAsyncEnumerable<SseItem<object>> TurnAsync(
         ClaimsPrincipal user, IReadOnlyList<ChatMessage> history, string? message, DataContent? image, AssistantDocument? document,
-        PendingAction? action, bool confirmed, TimeZoneInfo zone, [EnumeratorCancellation] CancellationToken ct)
+        PendingAction? action, bool confirmed, TimeZoneInfo zone, TurnOutcome turnOutcome,
+        [EnumeratorCancellation] CancellationToken ct)
     {
         string subject = AssistantUsage.SubjectOf(user);
         DateTimeOffset now = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), zone);
@@ -185,10 +214,12 @@ internal sealed partial class AssistantAgent(
         }
 
         var rounds = 0;
+        string outcome = AssistantTelemetry.TurnCompleted;
         while (true)
         {
             if (rounds++ == options.MaxToolRounds)
             {
+                outcome = AssistantTelemetry.TurnLimitReached;
                 yield return Event("error", new { message = "The assistant needed too many steps for this request. Try a narrower question." });
                 break;
             }
@@ -197,6 +228,7 @@ internal sealed partial class AssistantAgent(
             // overshoot is at most one call per concurrent request (requests in flight all pass the start check).
             if (usage.IsOverBudget(subject))
             {
+                outcome = AssistantTelemetry.TurnLimitReached;
                 yield return Event("error", new { message = "You have used today's assistant allowance. It resets tomorrow." });
                 break;
             }
@@ -280,6 +312,7 @@ internal sealed partial class AssistantAgent(
                 break;
         }
 
+        turnOutcome.Value = outcome;
         LogTurn(logger, inputTokens, outputTokens);
         // Reasoning blocks carry a provider signature bound to this request's prefix. The browser
         // sends history back on the next turn, so they must not be stored. The in-memory list still
@@ -351,7 +384,24 @@ internal sealed partial class AssistantAgent(
     private async Task<CallToolResult> InvokeAsync(ClaimsPrincipal user, string name, Dictionary<string, JsonElement> arguments, CancellationToken ct)
     {
         long started = Stopwatch.GetTimestamp();
-        CallToolResult result = await invoker.InvokeAsync(user, name, arguments, ct);
+        Activity? span = AssistantTelemetry.StartToolCall(name);
+        CallToolResult result;
+        try
+        {
+            result = await invoker.InvokeAsync(user, name, arguments, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            AssistantTelemetry.AbandonToolCall(span);
+            throw;
+        }
+        catch
+        {
+            telemetry.EndToolCall(span, name, AssistantTelemetry.ToolError);
+            throw;
+        }
+
+        telemetry.EndToolCall(span, name, result.IsError == true ? AssistantTelemetry.ToolError : AssistantTelemetry.ToolOk);
         double durationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
         LogToolCall(logger, name, result.IsError != true, durationMs);
         return result;
@@ -360,6 +410,9 @@ internal sealed partial class AssistantAgent(
     private CallToolResult Refused(string name)
     {
         LogToolRefused(logger, name);
+        // The name is the model's text: only a tool this deployment offers may reach a tag.
+        string tagged = _gate.ContainsKey(name) ? name : AssistantTelemetry.UnknownTool;
+        telemetry.EndToolCall(AssistantTelemetry.StartToolCall(tagged), tagged, AssistantTelemetry.ToolRefused);
         return new CallToolResult { IsError = true, Content = [new TextContentBlock { Text = $"Tool '{name}' is not available to the assistant." }] };
     }
 

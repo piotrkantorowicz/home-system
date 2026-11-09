@@ -13,6 +13,9 @@ public sealed class ScriptedChatClient : IChatClient
     private readonly ConcurrentQueue<Func<ChatResponse>> _script = new();
     private readonly ConcurrentDictionary<ChatResponse, byte> _failsAfterStreaming = new();
 
+    /// <summary>The model id this client reports in <see cref="ChatClientMetadata"/>; tests that read telemetry set a unique one.</summary>
+    public string ModelId { get; set; } = "scripted-model";
+
     /// <summary>Every call the agent made, in order.</summary>
     public ConcurrentQueue<(IReadOnlyList<ChatMessage> Messages, ChatOptions? Options)> Calls { get; } = new();
 
@@ -40,6 +43,14 @@ public sealed class ScriptedChatClient : IChatClient
     /// <summary>Queues a model turn that answers with text.</summary>
     /// <param name="text">The answer.</param>
     public void Answers(string text) => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, text)));
+
+    /// <summary>
+    /// Queues a model turn that answers with text plus a content type the history cannot serialize, so the turn
+    /// finishes its model calls and then throws while the agent builds the <c>history</c> event.
+    /// </summary>
+    /// <param name="text">The answer.</param>
+    public void AnswersThenBreaksHistory(string text)
+        => _script.Enqueue(() => new ChatResponse(new ChatMessage(ChatRole.Assistant, [new TextContent(text), new UnserializableContent()])));
 
     /// <summary>Queues a model turn that streams its text and usage, then fails like a dropped connection.</summary>
     /// <param name="text">The text streamed before the failure.</param>
@@ -71,7 +82,8 @@ public sealed class ScriptedChatClient : IChatClient
     }
 
     /// <inheritdoc />
-    public object? GetService(Type serviceType, object? serviceKey = null) => null;
+    public object? GetService(Type serviceType, object? serviceKey = null)
+        => serviceType == typeof(ChatClientMetadata) ? new ChatClientMetadata("scripted", null, ModelId) : null;
 
     /// <inheritdoc />
     public void Dispose()
@@ -86,3 +98,8 @@ public sealed class ScriptedChatClient : IChatClient
         return response;
     }
 }
+
+/// <summary>An <see cref="AIContent"/> subtype the AI JSON options do not know, so serializing it throws.</summary>
+#pragma warning disable S2094 // a marker type: being unknown to the serializer is the point
+internal sealed class UnserializableContent : AIContent;
+#pragma warning restore S2094

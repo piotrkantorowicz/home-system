@@ -1,5 +1,6 @@
 namespace DietPlanner.IntegrationTests.Mcp;
 
+using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
@@ -7,6 +8,7 @@ using DietPlanner.Api;
 using DietPlanner.IntegrationTests.Infrastructure;
 using DietPlanner.Mcp;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Shared.Infrastructure.Web;
 
 /// <summary>
@@ -94,6 +96,27 @@ public sealed class McpToolInvokerTests(DatabaseFixture db) : IDisposable
 
         result.IsError.ShouldBe(true);
         McpTestHost.Text(result).ShouldContain("Unknown tool");
+    }
+
+    /// <summary>#808 — every call records its duration with the tool and the outcome, in-process and over <c>/mcp</c>.</summary>
+    [Fact]
+    public async Task Calls_RecordToolDurationByToolAndOutcome()
+    {
+        using var duration = new MetricCollector<double>(
+            _mcp.Host.Services.GetRequiredService<IMeterFactory>(), McpToolMetrics.MeterName, "homesystem.mcp.tool.duration");
+        var me = $"inproc-{_tag}";
+        await using var client = await _mcp.ConnectAsync(me, DietPlannerMcp.ReadScope);
+        var arguments = new Dictionary<string, JsonElement> { ["query"] = JsonSerializer.SerializeToElement(_tag) };
+
+        await Invoker.InvokeAsync(Caller(me), "search_products", arguments, TestContext.Current.CancellationToken);
+        await Invoker.InvokeAsync(Caller(me), "drop_database", null, TestContext.Current.CancellationToken);
+        await client.CallToolAsync(
+            "search_products", arguments.ToDictionary(a => a.Key, a => (object?)a.Value), cancellationToken: TestContext.Current.CancellationToken);
+
+        var measurements = duration.GetMeasurementSnapshot();
+        measurements.Select(m => $"{m.Tags[McpToolMetrics.ToolTag]}/{m.Tags[McpToolMetrics.OutcomeTag]}")
+            .ShouldBe(["search_products/success", "unknown/error", "search_products/success"]);
+        measurements.ShouldAllBe(m => m.Value >= 0);
     }
 
     /// <inheritdoc />

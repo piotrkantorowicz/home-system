@@ -146,6 +146,7 @@ in commit metadata.
 | Commands, Queries, Mapping | `docs/rules/backend-cqrs-patterns.md` |
 | EF Core, DbContext, Migrations | `docs/rules/backend-ef-core-patterns.md` |
 | Cross-module integration, event bus, in-process transport | `docs/rules/backend-integration-patterns.md` |
+| Traces, metrics, logs (OpenTelemetry), attribute policy | `docs/rules/backend-observability.md` |
 | API endpoints, request/response | `docs/rules/backend-api-patterns.md` |
 | Backend unit & integration tests | `docs/rules/backend-testing-standards.md` |
 | React + TypeScript coding standards | `docs/rules/frontend-react-typescript.md` |

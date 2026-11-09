@@ -1,5 +1,6 @@
 namespace Shared.Infrastructure.Web;
 
+using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public sealed partial class McpToolInvoker : IAsyncDisposable
     private readonly Dictionary<string, McpServerTool> _tools;
     private readonly IServiceScopeFactory _scopes;
     private readonly ILogger<McpToolInvoker> _logger;
+    private readonly McpToolMetrics _metrics;
 
     // ponytail: never-run server; RequestContext demands one but the tools do not talk to the client.
     // Replace with a real session if a tool ever needs sampling, elicitation or progress.
@@ -28,11 +30,14 @@ public sealed partial class McpToolInvoker : IAsyncDisposable
     /// <param name="scopes">Creates one DI scope per call, as the transport does per request.</param>
     /// <param name="services">Root services the tools resolve against.</param>
     /// <param name="logger">Logs unexpected tool failures; <c>/mcp</c> call logging does not run on this path.</param>
-    public McpToolInvoker(IEnumerable<McpServerTool> tools, IServiceScopeFactory scopes, IServiceProvider services, ILogger<McpToolInvoker> logger)
+    /// <param name="metrics">Records each call's duration and outcome, as <c>/mcp</c> call logging does for that path.</param>
+    public McpToolInvoker(
+        IEnumerable<McpServerTool> tools, IServiceScopeFactory scopes, IServiceProvider services, ILogger<McpToolInvoker> logger, McpToolMetrics metrics)
     {
         _tools = tools.ToDictionary(t => t.ProtocolTool.Name, StringComparer.Ordinal);
         _scopes = scopes;
         _logger = logger;
+        _metrics = metrics;
         _server = McpServer.Create(new StreamServerTransport(Stream.Null, Stream.Null), new McpServerOptions(), serviceProvider: services);
         Tools = [.. _tools.Values.Select(t => t.ProtocolTool).OrderBy(t => t.Name, StringComparer.Ordinal)];
     }
@@ -51,6 +56,31 @@ public sealed partial class McpToolInvoker : IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(user);
 
+        var started = Stopwatch.GetTimestamp();
+        var outcome = McpToolMetrics.Error;
+        try
+        {
+            CallToolResult result = await CallAsync(user, name, arguments, ct).ConfigureAwait(false);
+            outcome = result.IsError == true ? McpToolMetrics.Error : McpToolMetrics.Success;
+            return result;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            outcome = McpToolMetrics.Cancelled;
+            throw;
+        }
+        finally
+        {
+            _metrics.RecordCall(name, outcome, Stopwatch.GetElapsedTime(started));
+        }
+    }
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync() => _server.DisposeAsync();
+
+    private async Task<CallToolResult> CallAsync(
+        ClaimsPrincipal user, string name, IReadOnlyDictionary<string, JsonElement>? arguments, CancellationToken ct)
+    {
         if (!_tools.TryGetValue(name, out McpServerTool? tool))
             return Error($"Unknown tool '{name}'.");
 
@@ -79,9 +109,6 @@ public sealed partial class McpToolInvoker : IAsyncDisposable
             return Error($"An error occurred invoking '{name}'.");
         }
     }
-
-    /// <inheritdoc />
-    public ValueTask DisposeAsync() => _server.DisposeAsync();
 
     private static CallToolResult Error(string message)
         => new() { IsError = true, Content = [new TextContentBlock { Text = message }] };

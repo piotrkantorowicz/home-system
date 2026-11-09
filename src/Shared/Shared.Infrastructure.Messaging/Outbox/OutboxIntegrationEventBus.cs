@@ -1,7 +1,9 @@
 namespace Shared.Infrastructure.Messaging.Outbox;
 
+using System.Diagnostics;
 using Shared.Abstractions.Messaging;
 using Shared.Infrastructure.Messaging.Serialization;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>
 /// The one <see cref="IIntegrationEventBus"/> implementation: serialises the event and stages it in
@@ -25,6 +27,13 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
     {
         ArgumentNullException.ThrowIfNull(integrationEvent);
 
+        // Producer span: child of the caller's span (e.g. the API request). Its id is what the consumer
+        // span later parents on, so request -> event -> handler share one TraceId. Null when nothing listens.
+        using var producer = MessagingTracing.Source.StartActivity(
+            $"{integrationEvent.GetType().Name} publish", ActivityKind.Producer);
+        producer?.SetTag(MessagingTracing.EventTypeTag, integrationEvent.GetType().Name);
+        producer?.SetTag(MessagingTracing.EventIdTag, integrationEvent.EventId);
+
         var message = new OutboxMessage(
             Id: Guid.CreateVersion7(),
             EventId: integrationEvent.EventId,
@@ -33,7 +42,9 @@ public sealed class OutboxIntegrationEventBus : IIntegrationEventBus
             OccurredAt: integrationEvent.OccurredAt,
             ProcessedAt: null,
             AttemptCount: 0,
-            LastError: null);
+            LastError: null,
+            // Only a W3C id fits the varchar(55) column and parses back as a traceparent.
+            TraceParent: producer?.IdFormat == ActivityIdFormat.W3C ? producer.Id : null);
 
         return _store.AddAsync(message, ct);
     }

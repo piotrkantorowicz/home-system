@@ -10,7 +10,11 @@ const baseUrl: string =
 const DEBUG = import.meta.env.DEV;
 
 // Create the base API client
-const baseClient = createClient<paths>({ baseUrl });
+const baseClient = createClient<paths>({
+  baseUrl,
+  // Late-bound: the tracing SDK patches globalThis.fetch after first render.
+  fetch: async (request: Request) => fetch(request),
+});
 const retryRequests = new WeakMap<Request, Request>();
 
 // Add request interceptor for authentication

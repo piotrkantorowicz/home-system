@@ -15,3 +15,9 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "Shared.* root namespace is mandated by the repository layout; 'Shared' is only a keyword in VB.NET.",
     Scope = "namespace",
     Target = "~N:Shared.Messaging.Tests.Transport")]
+[assembly: SuppressMessage(
+    "Naming",
+    "CA1716:Identifiers should not match keywords",
+    Justification = "Shared.* root namespace is mandated by the repository layout; 'Shared' is only a keyword in VB.NET.",
+    Scope = "namespace",
+    Target = "~N:Shared.Messaging.Tests.Telemetry")]

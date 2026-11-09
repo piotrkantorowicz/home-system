@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
+using Shared.Abstractions.Core.Telemetry;
 
 /// <summary>Unit tests for <c>DietReminderTickService</c>: jobs are in-memory fakes resolved from a real <c>ServiceCollection</c>.</summary>
 public sealed class DietReminderTickServiceTests
@@ -27,7 +28,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -51,7 +53,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -72,7 +75,8 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions()),
             logger,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
@@ -97,11 +101,19 @@ public sealed class DietReminderTickServiceTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             Options.Create(new DietReminderTickServiceOptions { Enabled = false }),
             NullLogger<DietReminderTickService>.Instance,
-            TestClock.Create());
+            TestClock.Create(),
+            Telemetry());
 
         await sut.RunOnceAsync(TestContext.Current.CancellationToken);
 
         job.Calls.ShouldBeEmpty();
+    }
+
+    private static PassThroughTelemetry Telemetry() => new();
+
+    private sealed class PassThroughTelemetry : IWorkerTelemetry
+    {
+        public Task TrackTickAsync(string worker, Func<CancellationToken, Task> tick, CancellationToken ct) => tick(ct);
     }
 
     private sealed class RecordingJob(string name) : IDietReminderJob

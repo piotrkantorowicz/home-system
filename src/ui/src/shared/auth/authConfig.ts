@@ -9,6 +9,8 @@ interface RuntimeConfig {
   authentikApp?: string;
   oidcClientId?: string;
   redirectUri?: string;
+  /** Browser tracing (src/shared/telemetry); off unless true. */
+  tracingEnabled?: boolean;
 }
 
 declare global {

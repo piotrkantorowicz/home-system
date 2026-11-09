@@ -10,12 +10,14 @@ using Notifications.Domain.Abstractions;
 using Notifications.Domain.Models;
 using Notifications.Domain.ValueObjects;
 using Notifications.Infrastructure.Persistence;
+using Shared.Abstractions.Core.Telemetry;
 
 internal sealed partial class RetryDeliveryWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<RetryDeliveryWorkerOptions> options,
     ILogger<RetryDeliveryWorker> logger,
-    TimeProvider clock) : BackgroundService
+    TimeProvider clock,
+    IWorkerTelemetry telemetry) : BackgroundService
 {
     private readonly RetryDeliveryWorkerOptions _options = options.Value;
 
@@ -41,7 +43,10 @@ internal sealed partial class RetryDeliveryWorker(
         }
     }
 
-    public async Task RunOnceAsync(CancellationToken ct)
+    public Task RunOnceAsync(CancellationToken ct)
+        => telemetry.TrackTickAsync(nameof(RetryDeliveryWorker), RunTickAsync, ct);
+
+    private async Task RunTickAsync(CancellationToken ct)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var sp = scope.ServiceProvider;

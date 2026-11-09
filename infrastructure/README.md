@@ -12,6 +12,7 @@ Docker Compose setup for shared services used across all home-system modules.
 | Redis                | `redis:7-alpine`              | internal                  | always                          |
 | Diet Planner DB      | `postgres:16-alpine`          | 5432                      | `diet-planner`                  |
 | Recipe image storage | `rustfs/rustfs:1.0.1`         | 127.0.0.1:9100 (S3)       | explicit image-storage override |
+| Aspire dashboard     | `aspire-dashboard:13.6.2`     | 127.0.0.1:18888, 4317, 4318 | `observability`               |
 
 All services share the `home-system-shared` bridge network.
 
@@ -56,6 +57,23 @@ docker compose down
 # Stop and remove volumes (deletes all data)
 docker compose down -v
 ```
+
+## Local observability (Aspire dashboard)
+
+The API exports OpenTelemetry traces, metrics and logs only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set
+(conventions: `docs/rules/backend-observability.md`). For a local viewer:
+
+```bash
+docker compose --profile observability up -d
+
+# from the repo root
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
+  ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Apis/HomeSystem.REST
+```
+
+Open http://localhost:18888. The dashboard keeps data in memory only (it is gone when the container restarts)
+and runs **without authentication**, so its ports bind to `127.0.0.1`. Use it on a dev machine only. Port 4317
+is OTLP gRPC (the API); 4318 is OTLP HTTP, which the SPA's `/otlp` dev proxy targets.
 
 ## Optional private recipe image storage
 
@@ -375,3 +393,4 @@ same-origin revocation proxy or appropriate CORS headers at their reverse proxy.
 | Authentik admin       | http://localhost:9000/if/admin/                                                  |
 | Authentik OIDC config | http://localhost:9000/application/o/home-system/.well-known/openid-configuration |
 | Diet Planner DB       | localhost:5432                                                                   |
+| Aspire dashboard      | http://localhost:18888 (OTLP: gRPC `localhost:4317`, HTTP `localhost:4318`)      |

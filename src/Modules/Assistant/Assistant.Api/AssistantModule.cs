@@ -56,7 +56,15 @@ public static class AssistantModule
 
         services.AddSingleton<AssistantUsage>();
         services.AddSingleton<PendingActions>();
-        services.AddSingleton<AssistantAgent>();
+        services.AddSingleton<AssistantTelemetry>();
+
+        // The model client is wrapped here, once, for every provider: GenAI chat spans and token and
+        // duration metrics, with prompt and reply text left out.
+        services.AddSingleton(sp => ActivatorUtilities.CreateInstance<AssistantAgent>(
+            sp,
+            sp.GetRequiredService<IChatClient>().AsBuilder()
+                .UseOpenTelemetry(sourceName: AssistantTelemetry.Name, configure: c => c.EnableSensitiveData = false)
+                .Build(sp)));
         return services;
     }
 

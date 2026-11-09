@@ -1,10 +1,12 @@
 namespace DietPlanner.IntegrationTests.Images;
 
+using System.Diagnostics.Metrics;
 using DietPlanner.Infrastructure.Images;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
+using Shared.Infrastructure.Messaging.Telemetry;
 
 /// <summary>Hosted cleanup distinguishes provider cancellation from application shutdown.</summary>
 public sealed class RecipeImageCleanupWorkerTests
@@ -24,7 +26,8 @@ public sealed class RecipeImageCleanupWorkerTests
         });
         using IHost host = builder.Build();
         using var worker = new RecipeImageCleanupWorker(host.Services.GetRequiredService<IServiceScopeFactory>(), clock,
-            NullLogger<RecipeImageCleanupWorker>.Instance, builder.Environment);
+            NullLogger<RecipeImageCleanupWorker>.Instance, builder.Environment,
+            new WorkerTelemetry(host.Services.GetRequiredService<IMeterFactory>()));
         await worker.RunOnceAsync(ct);
         await worker.RunOnceAsync(ct);
         attempts.ShouldBe(2);
